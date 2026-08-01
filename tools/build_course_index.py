@@ -1,0 +1,180 @@
+"""Build registry/course_index.yml from the course PDFs and their verification manifest.
+
+The course is the requirements source. Every topic in it carries a stable component ID and a
+metadata strip (STAGE / LAYER / CLAIM TYPE / VALIDATION / COMPONENT); this script turns those into
+machine-readable registry rows so requirement documents are generated rather than hand-transcribed.
+
+Titles come from the PDF text layer, everything else from VERIFICATION_MANIFEST.json. Output scalars
+are JSON-encoded, which is valid YAML and keeps Cyrillic titles readable.
+
+Requires poppler's pdftotext on PATH. Stdlib only otherwise.
+
+Usage:
+    python tools/build_course_index.py [--course-root PATH] [--out PATH] [--check-only]
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import subprocess
+import sys
+from collections import Counter
+from pathlib import Path
+
+DEFAULT_COURSE_ROOT = Path(
+    r"C:\Users\User\Desktop\swing-trading setup"
+    r"\Swing_Trading_Course_Fixed\Swing_Trading_Course_Charts_Layout_Fixed_Verified"
+)
+DEFAULT_OUT = Path(__file__).resolve().parents[1] / "registry" / "course_index.yml"
+
+# Expected shape of the source. A mismatch means the extraction is wrong, not the course.
+EXPECTED_TOPICS = 1379
+EXPECTED_CLAIMS = {
+    "Definition": 916,
+    "Operational Course Rule": 173,
+    "Untested Hypothesis": 124,
+    "Derived Observation": 121,
+    "Inference": 45,
+}
+EXPECTED_VALIDATION = {"Not Applicable": 1209, "Untested": 170}
+
+TOPIC_HEADING = re.compile(r"ТЕМА\s+(\d+)\s+ИЗ\s+\d+[^\n]*\n(.+)")
+
+
+def extract_titles(pdf: Path) -> dict[int, str]:
+    """Return {topic_number: title} for one PDF, read from its text layer."""
+    result = subprocess.run(
+        ["pdftotext", "-enc", "UTF-8", str(pdf), "-"],
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        check=True,
+    )
+    titles: dict[int, str] = {}
+    for match in TOPIC_HEADING.finditer(result.stdout):
+        number = int(match.group(1))
+        title = match.group(2).strip()
+        # A topic's heading repeats on its chart-lab page; the first occurrence is the topic page.
+        if title and number not in titles:
+            titles[number] = title
+    return titles
+
+
+def build_rows(course_root: Path) -> list[dict[str, object]]:
+    manifest_path = course_root / "VERIFICATION_MANIFEST.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+
+    rows: list[dict[str, object]] = []
+    for entry in manifest["files"]:
+        pdf = course_root / "PDF" / entry["file"]
+        titles = extract_titles(pdf)
+        for topic in entry.get("metadata", []):
+            number = int(topic["topic"])
+            figure = topic.get("figure") or {}
+            rows.append(
+                {
+                    "component": topic["component"],
+                    "topic": number,
+                    "kind": entry["kind"],
+                    "source_number": entry["number"],
+                    "source_file": entry["file"],
+                    "source_version": entry["version"],
+                    "title": titles.get(number, ""),
+                    "stage": topic["stage"],
+                    "layer": topic["layer"],
+                    "claim_type": topic["claim"],
+                    "validation": topic["validation"],
+                    "chart_required": bool(figure.get("chart_required", False)),
+                    "chart_family": figure.get("family") or "",
+                    "activation": "registered",
+                }
+            )
+    rows.sort(key=lambda row: (row["topic"], row["component"]))
+    return rows
+
+
+def check(rows: list[dict[str, object]]) -> list[str]:
+    """Return a list of failures; empty means the extraction matches the known source shape."""
+    failures: list[str] = []
+
+    if len(rows) != EXPECTED_TOPICS:
+        failures.append(f"topic count {len(rows)} != expected {EXPECTED_TOPICS}")
+
+    claims = Counter(row["claim_type"] for row in rows)
+    if claims != Counter(EXPECTED_CLAIMS):
+        failures.append(f"claim distribution {dict(claims)} != expected {EXPECTED_CLAIMS}")
+
+    validation = Counter(row["validation"] for row in rows)
+    if validation != Counter(EXPECTED_VALIDATION):
+        failures.append(
+            f"validation distribution {dict(validation)} != expected {EXPECTED_VALIDATION}"
+        )
+
+    missing = [row["component"] for row in rows if not row["title"]]
+    if missing:
+        failures.append(f"{len(missing)} topics have no extracted title: {missing[:5]}")
+
+    duplicates = [c for c, n in Counter(row["component"] for row in rows).items() if n > 1]
+    if duplicates:
+        failures.append(f"duplicate component ids: {duplicates[:5]}")
+
+    return failures
+
+
+def to_yaml(rows: list[dict[str, object]], course_root: Path) -> str:
+    """Emit YAML with JSON-encoded scalars (valid YAML, unambiguous, diff-stable)."""
+    lines = [
+        "# Generated by tools/build_course_index.py - do not edit by hand.",
+        f"# Source: {course_root}",
+        "topics:",
+    ]
+    for row in rows:
+        first = True
+        for key, value in row.items():
+            encoded = json.dumps(value, ensure_ascii=False)
+            lines.append(f"{'  - ' if first else '    '}{key}: {encoded}")
+            first = False
+    return "\n".join(lines) + "\n"
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--course-root", type=Path, default=DEFAULT_COURSE_ROOT)
+    parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    parser.add_argument(
+        "--check-only",
+        action="store_true",
+        help="validate the extraction without writing the registry",
+    )
+    args = parser.parse_args()
+
+    if not (args.course_root / "VERIFICATION_MANIFEST.json").is_file():
+        print(f"course manifest not found under {args.course_root}", file=sys.stderr)
+        return 2
+
+    rows = build_rows(args.course_root)
+    failures = check(rows)
+
+    claims = Counter(row["claim_type"] for row in rows)
+    computable = sum(n for claim, n in claims.items() if claim != "Definition")
+    print(f"topics: {len(rows)}  computable (non-Definition): {computable}")
+    for claim, count in claims.most_common():
+        print(f"  {claim:<24} {count}")
+
+    if failures:
+        for failure in failures:
+            print(f"FAIL: {failure}", file=sys.stderr)
+        return 1
+
+    if not args.check_only:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(to_yaml(rows, args.course_root), encoding="utf-8")
+        print(f"wrote {args.out}")
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

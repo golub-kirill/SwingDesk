@@ -1,0 +1,137 @@
+# Document set
+
+57 documents in 8 tiers. Each row states what the document **freezes** and where its content comes
+from. `verbatim` means the content is transcribed from the course without rewriting, and is checked
+by `tools/verify_transcription.py` against freshly extracted PDF text.
+
+Status values: `planned` · `drafting` · `owner-pending` (blocked on an owner decision) · `frozen`.
+
+## Tier 0 — Charter · `00-charter/`
+
+Frozen first. Amendments are dated records appended to the file, never edits in place.
+
+| # | File | Freezes | Source | Status |
+|---|---|---|---|---|
+| 01 | `CHARTER.md` | Purpose, non-goals, the v1 finish line | Owner | planned |
+| 02 | `SUCCESS_AND_KILL_CRITERIA.md` | What "working" means numerically; what result stops the project | Owner | owner-pending |
+| 03 | `CONSTRAINTS.md` | Markets, timeframes, single user, budget | `verbatim` appendix covers + owner | planned |
+| 04 | `GLOSSARY.md` | Ubiquitous language, English, never translated | `verbatim` Appendix A + Production Rules §3.9 | planned |
+
+## Tier 1 — Requirements · `01-requirements/`
+
+| # | File | Freezes | Source | Status |
+|---|---|---|---|---|
+| 05 | `BRD.md` | Business requirements; the non-negotiable rules | Owner + course | planned |
+| 06 | `USER_STORIES.md` | One story per capability, Gherkin acceptance criteria | Course playbooks (M80–83, M32/M33, M71–76, M67/M68) | planned |
+| 07 | `FRD.md` | The ~460 computable topics as requirement rows, keyed by course ID | Generated from `registry/course_index.yml` | planned |
+| 08 | `NFR.md` | Latency, universe size, determinism, recovery, cost ceiling | Engineering + owner | planned |
+| 09 | `PRODUCT_SURFACES.md` | What CLI, reports, web admin, Telegram and push each own | Owner decisions D3/D6 | planned |
+
+## Tier 2 — Domain specification · `02-domain/`
+
+Mostly transcription. This is the cheapest, highest-value tier — do it early.
+
+| # | File | Freezes | Source | Status |
+|---|---|---|---|---|
+| 10 | `LIFECYCLE_AND_LAYERS.md` | 10-stage lifecycle, 4 layers, the mandatory trace | `verbatim` Production Rules §3.6, §3.8 | planned |
+| 11 | `DECISION_STATE_MACHINE.md` | `Trade/Watch/Skip/Pause`; `PASS/PAUSE/SKIP`; 6 checklist outcomes; 9 watchlist statuses; 4 acceptance states | `verbatim` M32/M33 + appendix footers | planned |
+| 12 | `FAIL_CLOSED_POLICY.md` | The 5-row degradation table with return conditions; critical fail is never compensated | `verbatim` (identical across all sampled modules) | planned |
+| 13 | `CODES.md` | 12 skip codes with actions; 12 error codes with severity and required control | `verbatim` Appendix N, O | drafting |
+| 14 | `COMPONENT_REGISTRY_SPEC.md` | Registry record shape and the three activation states | Production Rules §3.7, §3.8 | planned |
+| 15 | `ALGORITHM_SPEC.md` | Per component: inputs, formula, parameters, units, warm-up, missing-data behaviour, version | Field list `verbatim` §3.6; content authored | planned |
+| 16 | `PARAMETER_REGISTRY.md` | Every threshold with value, unit, provenance, status, UI-editable flag | Authored — **no course source exists** | planned |
+| 17 | `RISK_SPEC.md` | 11 risk formulas + control clauses | `verbatim` Appendix C | planned |
+| 18 | `STATISTICS_SPEC.md` | 11 statistics formulas, 15 M69 metrics, net-of-costs rule, breakdown axes | `verbatim` Appendix D, H, M69 | planned |
+| 19 | `STRATEGY_CARD_SPEC.md` | The strategy definition record | `verbatim` Appendix I (21 fields) + M71 (17 fields) | planned |
+| 20 | `EXIT_MODEL_SPEC.md` | 4-slot exit model + 73-item taxonomy | `verbatim` M52–M58 | planned |
+| 21 | `SCREENER_SPEC.md` | 16 filters, candidate-card fields, 9-step pipeline | `verbatim` M32, M33 | planned |
+| 22 | `REGIME_SPEC.md` | 11 regimes, classifier inputs, regime→strategy→risk matrix | `verbatim` M30/M31/Appendix L; **classifier authored** | planned |
+| 23 | `EVENT_SPEC.md` | 20 event types with per-type field schemas | `verbatim` M34 decision tables | planned |
+| 24 | `CHART_SPEC.md` | Every chart to render: panels, overlays, levels, units | `verbatim` chart metadata (867 chart topics) | planned |
+
+## Tier 3 — Data · `03-data/`, `contracts/`, `adr/`
+
+| # | File | Freezes | Source | Status |
+|---|---|---|---|---|
+| 25 | `contracts/` | One schema per cross-context record; code is generated from these | Engineering | planned |
+| 26 | `POINT_IN_TIME_SPEC.md` | Bitemporal storage; revisions are inserts; raw and adjusted stored separately | Required by Appendix A, J and M72 | planned |
+| 27 | `CALENDAR_SPEC.md` | NYSE + TSX sessions, 1D/30m boundaries, the 1H aggregation stub convention, bar finality, timezone, CAD/USD | Course + engineering | planned |
+| 28 | `VENDOR_COMPARISON.md` + `adr/ADR-0001-market-data.md` | Vendor decision | Owner decision D8 | owner-pending |
+| 29 | `DATA_QUALITY_SPEC.md` | Freshness, conflict, staleness gates and their fail-closed mapping | Course + engineering | planned |
+
+## Tier 4 — Journal, evidence, audit · `04-journal/`
+
+| # | File | Freezes | Source | Status |
+|---|---|---|---|---|
+| 30 | `JOURNAL_SCHEMA.md` | 12-entity ER model + M67 fields + implied fields | `verbatim` Appendix G + M67 | planned |
+| 31 | `AUDIT_AND_IMMUTABILITY.md` | Append-only; the original plan is never rewritten | `verbatim` (every appendix page 1) | planned |
+| 32 | `EVIDENCE_RECORD_SPEC.md` | Evidence panel fields; 9-value validation status enum | `verbatim` Production Rules §3.7 | planned |
+| 33 | `CHECKLIST_SPEC.md` | 97 checklist items as gated forms | `verbatim` Appendices E, H, P, T | planned |
+
+## Tier 5 — Validation · `05-validation/`
+
+| # | File | Freezes | Source | Status |
+|---|---|---|---|---|
+| 34 | `VALIDATION_PROGRAM.md` | The 9-step pipeline and the 5-row acceptance gate | `verbatim` M71–M76 | planned |
+| 35 | `PREREG_TEMPLATE.md` | Pre-registration before any parameter is chosen or changed | Engineering practice (deliberate import) | planned |
+| 36 | `BACKTEST_PROTOCOL.md` | 9 stages and their mandatory records | `verbatim` Appendix J | planned |
+| 37 | `WALKFORWARD_SPEC.md` | 12-field window record; `keep/revise/retire` | `verbatim` Appendix K | planned |
+| 38 | `GO_LIVE_GATES.md` | Staged plans and their gates | `verbatim` Appendices Q, R, S | planned |
+
+## Tier 6 — Architecture & engineering · `06-engineering/`, `adr/`, `runbooks/`
+
+| # | File | Freezes | Status |
+|---|---|---|---|
+| 39 | `ARCHITECTURE.md` | Bounded contexts, mapped onto the course's own layer model | planned |
+| 40 | `DEPENDENCY_LAW.md` | Independence rules as enforceable import contracts | planned |
+| 41 | `CONCURRENCY_MODEL.md` | Async fetching, process pools, single-threaded deterministic decision path | planned |
+| 42 | `DETERMINISM_SPEC.md` | No wall clock in domain code; run manifests | planned |
+| 43 | `adr/` | Append-only decisions with evidence pointers | planned |
+| 44 | `TEST_STRATEGY.md` | Unit → property → golden vectors → contract → replay → chaos | planned |
+| 45 | `OBSERVABILITY_SPEC.md` + `runbooks/` | Log schema; one runbook per fail-closed row | planned |
+| 46 | `SECURITY.md` + `BACKUP_AND_DR.md` | Credentials, masking, tested restore | planned |
+| 47 | `CI_POLICY.md` | Merge gates | planned |
+| 48 | `AGENTS.md` (repo root) + per-package `CONTEXT.md` | How agents work here | planned |
+
+## Tier 7 — UI/UX · `07-ux/`
+
+| # | File | Freezes | Status |
+|---|---|---|---|
+| 49 | `UX_TASK_FLOWS.md` | Weekend prep, daily prep, evening process, weekly review | planned |
+| 50 | `DESIGN_SYSTEM.md` | Tokens, components, states, density | planned |
+| 51 | `CHART_VISUAL_STANDARD.md` | Panel rules, annotation placement, colour semantics, light/dark | planned |
+| 52 | `UX_COPY.md` | English microcopy; controlled vocabulary never paraphrased | planned |
+| 53 | `ACCESSIBILITY.md` | WCAG 2.1 AA | planned |
+| 54 | `DESIGN_HANDOFF.md` | Build specs | planned |
+
+## Tier 8 — Project management · `08-pm/`
+
+| # | File | Freezes | Status |
+|---|---|---|---|
+| 55 | `ROADMAP.md` | Now / Next / Later against the gates | planned |
+| 56 | `RISK_REGISTER.md` | Project risks, incl. parameter-invention and vendor risk | planned |
+| 57 | `DEFINITION_OF_READY_DONE.md` | Entry/exit criteria per work item | planned |
+
+---
+
+## Gates
+
+| Gate | Deliverables | Exit condition |
+|---|---|---|
+| G0 Charter | 01–04 | The v1 finish line and the kill criteria fit in two sentences |
+| G1 Requirements | 05–09 | Every capability has a Gherkin acceptance criterion |
+| G2 Transcription | 10–13, 17–21, 30–33 + `registry/course_index.yml` | Every `verbatim` block diffs clean against the PDF text |
+| G3 Data | 25–29 | Vendor decided by ADR; point-in-time model settled |
+| G4 Architecture | 39–43, 47 | Import contracts compile; determinism check runs |
+| G5 Walking skeleton | one end-to-end vertical slice | Green in CI. **No second component starts before this.** |
+| G6 Catalog build-out | 14–16, 22–24, 34–38 | Components registered in bulk; activation gated per component |
+| G7 Web + Telegram + push | 49–54 | A UI parameter edit versions the component and resets its validation |
+
+## Component activation states
+
+1. `registered` — course ID, name, layer, stage recorded. All ~460 reach this.
+2. `specified` — algorithm spec written, parameters declared with provenance.
+3. `active` — usable in a decision: parameters have values with provenance, golden vectors exist,
+   and the validation status is displayed wherever the component's output appears.
+
+`Untested` is a permitted status for an active component. Hiding it is not.

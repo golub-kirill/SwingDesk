@@ -1,0 +1,71 @@
+[project]
+name = "swingdesk"
+version = "0.0.0"
+description = "Swing-trading decision support for Canadian and US equities and ETFs"
+requires-python = ">=3.12"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+strict = true
+files = ["src", "tools"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tools", "tests"]
+
+[tool.importlinter]
+root_package = "swingdesk"
+
+# Dependency law (docs/06-engineering/DEPENDENCY_LAW.md). Transcribed from the course's own
+# component-independence rules: indicators do not own decisions, patterns produce observations not
+# orders, strategies do not fetch their own facts.
+[[tool.importlinter.contracts]]
+name = "Layered architecture"
+type = "layers"
+layers = [
+    "swingdesk.presentation",
+    "swingdesk.validation",
+    "swingdesk.trade_management",
+    "swingdesk.decision_logic",
+    "swingdesk.derived_observations",
+    "swingdesk.reference_data",
+    "swingdesk.market_data",
+    "swingdesk.platform",
+]
+
+[[tool.importlinter.contracts]]
+name = "Strategies do not fetch their own facts"
+type = "forbidden"
+source_modules = ["swingdesk.derived_observations", "swingdesk.decision_logic"]
+forbidden_modules = ["swingdesk.market_data"]
+
+# journal_evidence is a persistence service, not a layer: trade_management, validation and
+# presentation write to it, but the pure layers must stay side-effect free.
+[[tool.importlinter.contracts]]
+name = "Pure layers do not journal"
+type = "forbidden"
+source_modules = ["swingdesk.derived_observations", "swingdesk.decision_logic"]
+forbidden_modules = ["swingdesk.journal_evidence"]
+
+[[tool.importlinter.contracts]]
+name = "Journal depends only on platform"
+type = "forbidden"
+source_modules = ["swingdesk.journal_evidence"]
+forbidden_modules = [
+    "swingdesk.market_data",
+    "swingdesk.reference_data",
+    "swingdesk.derived_observations",
+    "swingdesk.decision_logic",
+    "swingdesk.trade_management",
+    "swingdesk.validation",
+    "swingdesk.presentation",
+]
