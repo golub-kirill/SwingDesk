@@ -33,9 +33,9 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 
 | # | File | Freezes | Source | Status |
 |---|---|---|---|---|
-| 10 | `LIFECYCLE_AND_LAYERS.md` | 10-stage lifecycle, 4 layers, the mandatory trace | `verbatim` Production Rules §3.6, §3.8 | planned |
-| 11 | `DECISION_STATE_MACHINE.md` | `Trade/Watch/Skip/Pause`; `PASS/PAUSE/SKIP`; 6 checklist outcomes; 9 watchlist statuses; 4 acceptance states | `verbatim` M32/M33 + appendix footers | planned |
-| 12 | `FAIL_CLOSED_POLICY.md` | The 5-row degradation table with return conditions; critical fail is never compensated | `verbatim` (identical across all sampled modules) | planned |
+| 10 | `LIFECYCLE_AND_LAYERS.md` | 10-stage lifecycle, 4 layers, the mandatory trace | `verbatim` Production Rules §3.6, §3.8 | drafting |
+| 11 | `DECISION_STATE_MACHINE.md` | **Five separate enums**: candidate decision (4), module gate (3), watchlist status (9), acceptance (4), checklist outcome (5 worksheet / 6 decision) | `verbatim` M32/M33/M69 + appendix footers | drafting |
+| 12 | `FAIL_CLOSED_POLICY.md` | The 5-row degradation table with return conditions; critical fail is never compensated | `verbatim` (identical across all sampled modules) | drafting |
 | 13 | `CODES.md` | 12 skip codes with actions; 12 error codes with severity and required control | `verbatim` Appendix N, O | drafting |
 | 14 | `COMPONENT_REGISTRY_SPEC.md` | Registry record shape and the three activation states | Production Rules §3.7, §3.8 | planned |
 | 15 | `ALGORITHM_SPEC.md` | Per component: inputs, formula, parameters, units, warm-up, missing-data behaviour, version | Field list `verbatim` §3.6; content authored | planned |
@@ -126,6 +126,26 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | G5 Walking skeleton | one end-to-end vertical slice | Green in CI. **No second component starts before this.** |
 | G6 Catalog build-out | 14–16, 22–24, 34–38 | Components registered in bulk; activation gated per component |
 | G7 Web + Telegram + push | 49–54 | A UI parameter edit versions the component and resets its validation |
+
+## Verification
+
+Every `verbatim` document declares its sources in a machine-readable comment:
+
+```
+<!-- verbatim-sources: Appendix_N_Prichiny_propuska_sdelki_v2.0.pdf, Appendix_O_Tipichnye_oshibki_v2.0.pdf -->
+```
+
+`tools/verify_transcription.py` re-extracts those sources with `pdftotext` and asserts that every
+markdown blockquote in the document appears in them, plus the membership of all load-bearing enums.
+`tools/build_course_index.py --check-only` asserts the registry still extracts to the known shape.
+Both are stdlib-only and run on system Python.
+
+```bash
+python tools/verify_transcription.py && python tools/build_course_index.py --check-only
+```
+
+Quotes containing an elision marker are reported as skipped, never silently passed. Translation
+glosses are excluded from checking — they are ours, not the course's.
 
 ## Component activation states
 

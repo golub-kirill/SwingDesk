@@ -2,6 +2,8 @@
 
 **Status:** drafting · **Tier:** 2 (domain) · **Content:** `verbatim`
 
+<!-- verbatim-sources: Appendix_N_Prichiny_propuska_sdelki_v2.0.pdf, Appendix_O_Tipichnye_oshibki_v2.0.pdf -->
+
 **Source of truth**
 
 | Table | File | Page | Extraction |
