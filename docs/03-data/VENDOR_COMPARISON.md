@@ -71,7 +71,34 @@ available. Each interval carries its own honest depth, and any component reading
 
 Library licence: Apache-2.0. The **data** terms are Yahoo's, not the library's.
 
-### 2.2 Other vendors
+### 2.2 Yahoo — non-bar capabilities, **empirically probed 2026-08-01**
+
+Bars are only part of the requirement list. Probed separately:
+
+| Requirement | Result | Verdict |
+|---|---|---|
+| **Delisted instruments** (M72, survivorship) | `TWTR`, `SIVB`, `FRC`, `ATVI` — **all return 0 rows**, `possibly delisted; no timezone found` | **NOT MET** |
+| **Earnings dates** with `confirmed / estimated` status (M34-T495) | `get_earnings_dates()` returns columns `EPS Estimate`, `Reported EPS`, `Surprise(%)` with a timestamped date (`2026-10-29 16:00:00-04:00`). **No confirmation-status field.** Future vs past is inferable from a null `Reported EPS`; `Confirmed` vs `Estimated` is not. | **PARTIAL** |
+| **Index levels** | `^GSPC`, `^NDX`, `^RUT`, `^GSPTSE`, `^VIX` all return data | MET |
+| **Advance-decline** | `^ADD` → `No data found, symbol may be delisted` | **NOT MET** |
+| **Sector / industry / exchange / currency** | `AAPL` → `Technology` / `Consumer Electronics` / `NMS` / `USD`; `CNQ.TO` → `Energy` / `Oil & Gas E&P` / `TOR` / `CAD` | MET |
+
+**The survivorship finding is the serious one.** Yahoo serves no history for delisted tickers, so a
+universe assembled from currently-listed names is survivorship-biased by construction. M72 names
+`Delisted stocks` as a required control and M72's own `FAIL-CLOSED` forbids
+`survivorship` — and this is the exact failure that has previously invalidated a result the owner
+believed in. It is very unlikely any free source fixes this. Therefore treat it as an unavoidable
+**property of the free path**, stamped on every backtest result and every evidence record, rather
+than as a vendor-selection criterion that some other free vendor will satisfy.
+
+**Breadth is computable, not purchasable.** With `^ADD` unavailable, advance-decline and
+percent-above-MA must be computed in-house from the bars already fetched for the universe. That is
+feasible — but it produces *our universe's* breadth, which is **not** S&P 500 breadth. It must be
+registered as a Derived Observation with its universe stated, and must never be labelled as index
+breadth. M31-T457's own wording (`breadth tests whether index direction is supported by constituent
+participation`) requires constituents we do not have.
+
+### 2.3 Other vendors
 
 | Vendor | Free tier | Status |
 |---|---|---|
@@ -80,6 +107,9 @@ Library licence: Apache-2.0. The **data** terms are Yahoo's, not the library's.
 | **EODHD** | `Free Package` $0/mo, **20 calls/day, past year only, intraday NOT included** | `verified` — eodhd.com/pricing, 2026-08-01 |
 | **Twelve Data** | `Basic`: **800 credits/day, 8/minute, 3 exchanges**; real-time US equities/ETFs, forex, crypto | `verified` — twelvedata.com/pricing, 2026-08-01. **TSX inclusion on free: unverified** (page shows `XTSE` in examples but does not state which 3 exchanges the free tier allocates). |
 | **Finnhub** | 60 API calls/minute; US-only on free; international requires paid | `partially verified` — multiple maintainer/issue reports state the **stock candles (OHLCV) endpoint returns "You don't have access to this resource" on free**, and that previously-free endpoints moved to premium (Finnhub-API issues #271, #546). **Not confirmed against Finnhub's own current docs** — their pricing and rate-limit pages did not render server-side. |
+| **Questrade** | **Free for anyone to use.** Historical OHLC candlesticks for **Canadian and US** stocks and options; TSX supported. Granularity enum includes `HalfHour`, `OneHour`, `OneDay` — exactly the three this system needs. Max **2,000 candles per response**. OAuth 2.0. A practice account carries L1 data access. Rate-limited with HTTP 429 on breach. | `verified` via Questrade developer docs and search, 2026-08-01. **Unverified:** intraday historical depth, exact rate-limit numbers, delisted-symbol availability, redistribution terms. Their doc pages return HTTP 403 to automated fetching, so these need a manual read or a live API probe. |
+| **Tiingo** | `Starter` (free): **500 unique symbols/month, 50 requests/hour, 1,000 requests/day, 1 GB bandwidth, 30+ years of price history**, 5 years fundamentals | `partially verified` — figures from third-party summaries, not Tiingo's own pricing page, 2026-08-01. Canada coverage claimed at platform level; **free-tier Canadian access unverified**. Note the 500-symbol/month cap is a universe-size constraint, not just a rate limit. |
+| **Stooq** | free CSV endpoint | `unverified` — `https://stooq.com/q/d/l/?s=<sym>&i=d` returned **HTTP 404 for all of** `cnq.ca`, `cnq.to`, `aapl.us`, `shop.ca` on 2026-08-01. Either the symbol convention or the endpoint has changed. Not usable until the correct form is established. |
 | **TradingView** | — | **`unverified` and structurally doubtful.** TradingView publishes no documented public REST API for historical OHLCV; its data is licensed from exchanges. Charting-library and widget usage is governed by their terms. **No use until a ToS review is completed and recorded here.** Note: a *calendar* feed is a different question from *price* data and may be assessable separately. |
 
 ### 2.3 Not yet assessed
@@ -113,17 +143,47 @@ requirements and may need a different provider from the bar data.
    breadth from a third. That is precisely why `DATA_CONTRACTS/` and the `Source Facts` layer exist:
    the rest of the system must not know which vendor a fact came from, only its provenance and
    as-of time.
+6. **Questrade is now the strongest candidate on paper and must be evaluated before G5.** It is the
+   only free option verified to be a *licensed, documented API* rather than an unofficial scrape, it
+   is natively Canadian **and** US, and its granularity enum contains exactly `HalfHour`, `OneHour`,
+   `OneDay`. If its intraday depth beats Yahoo's 60 trading days, it supersedes ADR-0001 outright.
+   The blocking unknowns are depth, rate limits and redistribution terms — none obtainable by
+   automated fetch (their docs return 403), so this needs a manual read or a live probe with an
+   account.
+7. **Survivorship bias is a property of the free path, not a vendor choice.** No free source
+   examined serves delisted instruments. Every backtest result on this path carries it, and the
+   evidence record must say so rather than the result being quietly quoted without it.
+8. **Two hard requirements have no source at all yet**: earnings `confirmed / estimated` status
+   (M34-T495) and true index breadth (M31-T457). Universe-breadth computed in-house is a legitimate
+   substitute only if it is labelled as what it is.
 
 ---
 
 ## 4. Open work before this document can be marked `frozen`
 
-- [ ] Confirm Finnhub's free-tier candle access against their own live docs.
+**Blocking (must resolve before G5 / walking skeleton):**
+
+- [ ] **Questrade probe** — intraday historical depth per granularity, exact rate limits, whether an
+      account must be funded, redistribution terms, delisted-symbol availability. Requires a manual
+      docs read or a live API call; automated fetch is blocked by 403. *Highest value item here: it
+      can supersede ADR-0001.*
+- [ ] Decide the **earnings `confirmed / estimated`** source, or formally downgrade M34-T495's status
+      field to `unavailable` and record what the system does without it.
+- [ ] Decide **breadth**: register in-house universe-breadth as a Derived Observation with its
+      universe stated, or find a constituent source.
+
+**Non-blocking:**
+
+- [ ] Confirm Finnhub's free-tier candle access against their own live docs (their pages do not
+      render server-side).
 - [ ] Confirm whether Twelve Data's free `3 exchanges` can include TSX.
-- [ ] Assess Tiingo, Stooq, Alpaca, Questrade, Nasdaq Data Link.
-- [ ] Identify a source for index breadth (advance-decline, % above MA) — hard requirement, no
-      candidate yet.
-- [ ] Identify a source for earnings dates carrying `confirmed / estimated` status — hard
-      requirement (M34-T495), no candidate yet.
+- [ ] Confirm Tiingo's free-tier Canadian access against Tiingo's own pricing page, and whether the
+      500-symbols/month cap is compatible with the intended universe size.
+- [ ] Establish Stooq's current symbol convention (all four probed forms 404'd).
+- [ ] Assess Alpaca (IEX-only free feed) and Nasdaq Data Link.
 - [ ] Record a TradingView ToS review, or formally exclude it.
-- [ ] Measure delisted-instrument availability on the chosen source (survivorship bias, M72).
+
+**Closed:**
+
+- [x] Delisted-instrument availability on Yahoo — **measured: none**. Survivorship bias confirmed
+      unavoidable on this source (§2.2).

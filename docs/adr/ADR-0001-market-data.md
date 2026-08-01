@@ -49,17 +49,34 @@ trading days while `1h` reaches ~725, and deriving would discard ~665 days of av
    failure or a staleness/conflict check failure raises skip code `DATA` → `Automatic Skip until
    corrected`, never a silent fallback to stale bars.
 5. **Bars only.** This ADR does not cover earnings dates with `confirmed/estimated` status, index
-   breadth, sector classification, or borrow availability. Those are separate, still-unsourced
-   requirements and will get their own ADRs.
+   breadth, or borrow availability. Those are separate, still-unsourced requirements and will get
+   their own ADRs. Sector/industry/exchange/currency **are** covered — measured working for both
+   `AAPL` and `CNQ.TO`.
+6. **Survivorship bias is accepted, declared, and stamped.** Measured 2026-08-01: Yahoo returns zero
+   rows for `TWTR`, `SIVB`, `FRC` and `ATVI`. A universe built from currently-listed names is
+   therefore survivorship-biased by construction, which M72 explicitly forbids relying on. No free
+   source examined fixes this. Consequence: every backtest result and every evidence record produced
+   on this source carries an explicit survivorship-bias marker, and no result may be quoted without
+   it. This is a permanent caveat on the free path, not a defect to be fixed later.
+7. **Breadth is computed, not fetched.** `^ADD` is unavailable. Advance-decline and percent-above-MA
+   are computed in-house from the universe's own bars and registered as Derived Observations **with
+   their universe stated**. They may never be presented as index breadth, because index constituents
+   are not available.
 
 ## Alternatives considered
 
 - **Pay for a vendor** (Tiingo/EODHD/massive paid tiers, ~$30–200/month). Solves point-in-time,
   corporate actions and intraday depth properly. Rejected for v1 on the owner's free-tier
   constraint; revisit trigger below.
-- **Questrade API** (free with a Canadian brokerage account). The only candidate with a native
-  Canadian mandate and the only one that could later serve execution too. Not assessed — it is the
-  highest-value item on the open-work list, and could supersede this ADR.
+- **Questrade API** — **the strongest alternative, and deliberately left open.** Verified 2026-08-01:
+  free for anyone to use, historical OHLC candles for Canadian **and** US stocks, TSX supported,
+  granularity enum contains exactly `HalfHour` / `OneHour` / `OneDay`, 2,000 candles per response,
+  OAuth 2.0, practice account carries L1 data access. It is the only free option that is a
+  *licensed, documented API* rather than an unofficial scrape of a consumer site. Not adopted **only**
+  because three blocking facts could not be obtained by automated means (their docs return HTTP 403):
+  intraday historical depth, exact rate limits, and redistribution terms. **If its intraday depth
+  beats Yahoo's 60 trading days, it supersedes this ADR.** Probing it is the highest-value open item
+  in `VENDOR_COMPARISON.md`.
 - **Composite from day one** (Yahoo bars + others for events/breadth). Deferred, not rejected: the
   adapter interface is designed for it, but v1 proves one source end to end first.
 - **Derive `1h` from `30m`.** Rejected on measured evidence, see Decision.
@@ -70,8 +87,9 @@ trading days while `1h` reaches ~725, and deriving would discard ~665 days of av
   regime-spanning backtests M72 requires; identical bar structure across both markets simplifies
   `CALENDAR_SPEC.md`.
 - Negative: no point-in-time from the vendor, so the snapshot layer must exist before any backtest
-  is trustworthy; `30m` research is depth-limited; no SLA; the personal-use term forecloses ever
-  making this a service.
+  is trustworthy; `30m` research is depth-limited; **survivorship bias is unavoidable and permanent
+  on this source**; no SLA; the personal-use term forecloses ever making this a service; two hard
+  requirements (earnings confirmation status, index breadth) remain unsourced.
 - Neutral: NYSE and TSX holiday calendars measurably differ (16 sessions over ~2.9 years), so
   separate exchange calendars are required regardless of vendor.
 
@@ -80,5 +98,5 @@ trading days while `1h` reaches ~725, and deriving would discard ~665 days of av
 - The `30m` ceiling blocks a decision the owner actually wants to make, **or**
 - Yahoo access breaks or degrades (unofficial, no SLA), **or**
 - The project moves beyond single-user personal use, **or**
-- Questrade (or another account-linked source) is assessed and covers the same ground under clearer
-  terms.
+- **Questrade is probed and its intraday depth exceeds 60 trading days** — this is expected to
+  trigger, and the probe is scheduled before G5.
