@@ -38,6 +38,7 @@ DEFAULT_COURSE_ROOT = Path(
 EXTRA_SOURCE_DIRS = [Path(r"C:\Users\User\Desktop\swing-trading setup")]
 
 SOURCES_DECL = re.compile(r"<!--\s*verbatim-sources:\s*(.+?)\s*-->", re.DOTALL)
+FENCED_VERBATIM = re.compile(r"^```verbatim[^\n]*\n(.*?)^```", re.MULTILINE | re.DOTALL)
 ELISION = ("…", "...")
 
 # Enumerations the rest of the system depends on. Membership and cardinality are asserted here so a
@@ -146,6 +147,21 @@ def extract_quotes(markdown: str) -> list[tuple[int, str]]:
     return [(n, q) for n, q in quotes if q]
 
 
+def extract_fenced(markdown: str) -> list[tuple[int, str]]:
+    """Return (line_number, cell) for every line inside a ```verbatim fence.
+
+    Tables in the source PDFs extract as separate column blocks, so the atomic verbatim unit is one
+    cell. A fence carries one cell per line; each is checked independently.
+    """
+    cells: list[tuple[int, str]] = []
+    for block in FENCED_VERBATIM.finditer(markdown):
+        first = markdown[: block.start()].count("\n") + 2
+        for offset, line in enumerate(block.group(1).splitlines()):
+            if line.strip():
+                cells.append((first + offset, line.strip()))
+    return cells
+
+
 def check_document(doc: Path, course_root: Path) -> tuple[list[str], int, int]:
     markdown = doc.read_text(encoding="utf-8")
     declaration = SOURCES_DECL.search(markdown)
@@ -165,7 +181,7 @@ def check_document(doc: Path, course_root: Path) -> tuple[list[str], int, int]:
 
     haystacks = [source_text(p) for p in sources]
     checked = skipped = 0
-    for line_number, quote in extract_quotes(markdown):
+    for line_number, quote in extract_quotes(markdown) + extract_fenced(markdown):
         needle = strip_quotes(normalise(strip_markdown(strip_gloss(quote))))
         if any(marker in needle for marker in ELISION):
             skipped += 1

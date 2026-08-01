@@ -40,8 +40,8 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 14 | `COMPONENT_REGISTRY_SPEC.md` | Registry record shape and the three activation states | Production Rules §3.7, §3.8 | planned |
 | 15 | `ALGORITHM_SPEC.md` | Per component: inputs, formula, parameters, units, warm-up, missing-data behaviour, version | Field list `verbatim` §3.6; content authored | planned |
 | 16 | `PARAMETER_REGISTRY.md` | Every threshold with value, unit, provenance, status, UI-editable flag | Authored — **no course source exists** | planned |
-| 17 | `RISK_SPEC.md` | 11 risk formulas + control clauses | `verbatim` Appendix C | planned |
-| 18 | `STATISTICS_SPEC.md` | 11 statistics formulas, 15 M69 metrics, net-of-costs rule, breakdown axes | `verbatim` Appendix D, H, M69 | planned |
+| 17 | `RISK_SPEC.md` | 11 risk formulas + control clauses + the sizing ordering law | `verbatim` Appendix C, M48, M49 | drafting |
+| 18 | `STATISTICS_SPEC.md` | 11 statistics formulas, 15 M69 metrics, net-of-costs rule, 9 breakdown axes | `verbatim` Appendix D, H, M69 | drafting |
 | 19 | `STRATEGY_CARD_SPEC.md` | The strategy definition record | `verbatim` Appendix I (21 fields) + M71 (17 fields) | planned |
 | 20 | `EXIT_MODEL_SPEC.md` | 4-slot exit model + 73-item taxonomy | `verbatim` M52–M58 | planned |
 | 21 | `SCREENER_SPEC.md` | 16 filters, candidate-card fields, 9-step pipeline | `verbatim` M32, M33 | planned |
@@ -63,7 +63,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 
 | # | File | Freezes | Source | Status |
 |---|---|---|---|---|
-| 30 | `JOURNAL_SCHEMA.md` | 12-entity ER model + M67 fields + implied fields | `verbatim` Appendix G + M67 | planned |
+| 30 | `JOURNAL_SCHEMA.md` | 12-entity ER model + M67 fields + implied fields | `verbatim` Appendix G + M67 | drafting |
 | 31 | `AUDIT_AND_IMMUTABILITY.md` | Append-only; the original plan is never rewritten | `verbatim` (every appendix page 1) | planned |
 | 32 | `EVIDENCE_RECORD_SPEC.md` | Evidence panel fields; 9-value validation status enum | `verbatim` Production Rules §3.7 | planned |
 | 33 | `CHECKLIST_SPEC.md` | 97 checklist items as gated forms | `verbatim` Appendices E, H, P, T | planned |
