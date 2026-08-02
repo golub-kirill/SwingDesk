@@ -39,7 +39,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 13 | `CODES.md` | 12 skip codes with actions; 12 error codes with severity and required control | `verbatim` Appendix N, O | drafting |
 | 14 | `COMPONENT_REGISTRY_SPEC.md` | Record shape, 3 activation states, 9 validation statuses, 8 claim types, 6 unlocked checks | `verbatim` §3.7, §3.8 | drafting |
 | 15 | `ALGORITHM_SPEC.md` | 11-field record template, 7 rules, banned vocabulary, order of work | Field list `verbatim` §3.6; content authored | drafting |
-| 16 | `PARAMETER_REGISTRY.md` | Every threshold with value, unit, provenance, status, UI-editable flag. **74 catalogued, all `unset`** — data in `registry/parameters.yml` | Authored — **no course source exists** | drafting |
+| 16 | `PARAMETER_REGISTRY.md` | Every threshold with value, unit, provenance, status, UI-editable flag. **93 catalogued: 2 `owner`, 1 `assumed`, 90 `unset`** — data in `registry/parameters.yml` | Authored — **no course source exists** | drafting |
 | 17 | `RISK_SPEC.md` | 11 risk formulas + control clauses + the sizing ordering law | `verbatim` Appendix C, M48, M49 | drafting |
 | 18 | `STATISTICS_SPEC.md` | 11 statistics formulas, 15 M69 metrics, net-of-costs rule, 9 breakdown axes | `verbatim` Appendix D, H, M69 | drafting |
 | 19 | `STRATEGY_CARD_SPEC.md` | The strategy definition record + the three condition kinds (required / confirming / prohibiting) | `verbatim` Appendix I (21 fields) + M71 (17) + §3.6 | drafting |
@@ -55,7 +55,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 |---|---|---|---|---|
 | 25 | `contracts/` | 10 cross-context records, 7 rules, columnar exception for `Bar` — Pydantic v2 per `ADR-0003` | Engineering | drafting |
 | 26 | `POINT_IN_TIME_SPEC.md` | Bitemporal `event_time`+`knowledge_time`, revision deltas, raw/adjusted separate, membership as PIT fact | Required by Appendix A, J and M72 | drafting |
-| 27 | `CALENDAR_SPEC.md` | Separate NYSE/TSX calendars (16-session divergence measured), 13/7 bar sessions, trailing stub, bar finality, UTC storage | Course + measured | drafting |
+| 27 | `CALENDAR_SPEC.md` | Separate NYSE/TSX calendars (**30-session** divergence measured over ~2.9 years), 13/7 bar sessions, trailing stub, bar finality, session date stored not derived | Course + measured | drafting |
 | 28 | `VENDOR_COMPARISON.md` + `adr/ADR-0001-market-data.md` | Vendor decision | Evidence gathered 2026-08-01 | drafting — ADR **Proposed**, awaiting ratification |
 | 29 | `DATA_QUALITY_SPEC.md` | 4 course gates, session-completeness check, measured negative results, code mapping | Course + measured | drafting |
 
@@ -72,17 +72,23 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 
 | # | File | Freezes | Source | Status |
 |---|---|---|---|---|
-| 34 | `VALIDATION_PROGRAM.md` | The 9-step pipeline and the 5-row acceptance gate | `verbatim` M71–M76 | planned |
-| 35 | `PREREG_TEMPLATE.md` | Pre-registration before any parameter is chosen or changed | Engineering practice (deliberate import) | planned |
-| 36 | `BACKTEST_PROTOCOL.md` | 9 stages and their mandatory records | `verbatim` Appendix J | planned |
-| 37 | `WALKFORWARD_SPEC.md` | 12-field window record; `keep/revise/retire` | `verbatim` Appendix K | planned |
-| 38 | `GO_LIVE_GATES.md` | Staged plans and their gates | `verbatim` Appendices Q, R, S | planned |
+| 34 | `VALIDATION_PROGRAM.md` | The status ladder and what earns each transition; what a forward test measures that a backtest cannot; the 5 required evidence artefacts | `verbatim` M74 + M72 | drafting |
+| 35 | `PREREG_TEMPLATE.md` | 11-section pre-registration; amendment-after-data downgrades to exploratory; `inconclusive` is first-class | Required by Appendix J/K + the data-snooping prohibition; statistics authored | drafting |
+| 36 | `BACKTEST_PROTOCOL.md` | 9 stages and their mandatory records; the 4 prohibitions; **survivorship stated as unmeetable on free data** | `verbatim` Appendix J + M72 | drafting |
+| 37 | `WALKFORWARD_SPEC.md` | 12-field window record with a **three-way** train/validation/test split; `keep/revise/retire`; the 6 perturbations | `verbatim` Appendix K + M73 | drafting |
+| 38 | `GO_LIVE_GATES.md` | Staged plans, the 5-condition size gate, drawdown as an actuator; calendar time authorises nothing | `verbatim` Appendices Q, R, S + M75 | drafting |
+
+Tier 5's finding, stated once: topics literally titled *minimum number of trades* (twice),
+*minimum forward-test duration*, *maximum allowable drawdown* and *first 100 real trades* contain
+**no numbers at all**. This is the tier where the source was most likely to quantify something, and
+it does not. Appendix S's `100% plan/stop/journal; no critical violations` is the only hard,
+checkable gate in the course.
 
 ## Tier 6 — Architecture & engineering · `06-engineering/`, `adr/`, `runbooks/`
 
 | # | File | Freezes | Status |
 |---|---|---|---|
-| 39 | `ARCHITECTURE.md` | 9 contexts, the purity boundary, where the mandatory trace is materialised, run shape | drafting |
+| 39 | `ARCHITECTURE.md` | 10 contexts, the purity boundary, where the mandatory trace is materialised, run shape | drafting |
 | 40 | `DEPENDENCY_LAW.md` | Independence rules as 4 import-linter contracts in `pyproject.toml` | drafting |
 | 41 | `CONCURRENCY_MODEL.md` | 3 tiers, per-vendor limits, breaker, thread-safety classes, worker-count invariance | drafting |
 | 42 | `DETERMINISM_SPEC.md` | The snapshot as determinism boundary, float-associativity trap, 10-field run manifest, stated scope limits | drafting |
@@ -90,7 +96,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 44 | `TEST_STRATEGY.md` | 7 layers, 9 invariants as property tests, golden vectors as the immutability mechanism, 6 chaos scenarios | drafting |
 | 45 | `OBSERVABILITY_SPEC.md` + `runbooks/` | Structured-log schema, daily health report, trend signals; 5 runbooks with verbatim return conditions | drafting |
 | 46 | `SECURITY.md` + `BACKUP_AND_DR.md` | Threat model, secret rules, Telegram as a control surface; what cannot be re-fetched, restore verified by output hash | drafting |
-| 47 | `CI_POLICY.md` | 11 gates, what each prevents, what CI must never do, local equivalence | drafting |
+| 47 | `CI_POLICY.md` | 13 gates (**9 running**), what each prevents and what each has caught, what CI must never do, local equivalence | drafting |
 | 48 | `AGENTS.md` (repo root) | Trust discipline, 7 non-negotiables, how to add a verbatim doc or a parameter | drafting — per-package `CONTEXT.md` still planned |
 
 ## Tier 7 — UI/UX · `07-ux/`
@@ -122,9 +128,9 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | G1 Requirements | 05–09 | Every capability has a Gherkin acceptance criterion |
 | G2 Transcription | 10–13, 17–21, 30–33 + `registry/course_index.yml` | Every `verbatim` block diffs clean against the PDF text |
 | G3 Data | 25–29 | Vendor decided by ADR; point-in-time model settled |
-| G4 Architecture | 39–43, 47 | Import contracts compile; determinism check runs |
-| G5 Walking skeleton | one end-to-end vertical slice | Green in CI. **No second component starts before this.** |
-| G6 Catalog build-out | 14–16, 22–24, 34–38 | Components registered in bulk; activation gated per component |
+| ~~G4 Architecture~~ | 39–43, 47 | **CLOSED** — 4 import contracts compile; determinism replay runs as a gate |
+| ~~G5 Walking skeleton~~ | one end-to-end vertical slice | **CLOSED 2026-08-02** — 9 gates green from `python tools/check_gates.py`; ATR active with golden vectors |
+| G6 Catalog build-out | 14–16, 22–24, 34–38 | Components registered in bulk; activation gated per component. **34–38 written 2026-08-02.** |
 | G7 Web + Telegram + push | 49–54 | A UI parameter edit versions the component and resets its validation |
 
 ## Verification

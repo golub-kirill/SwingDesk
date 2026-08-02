@@ -747,3 +747,102 @@ parameters:
       violations" - but the accompanying "приемлемый drawdown" and "стабильный process score" are
       unquantified.
     ui_editable: false
+
+  # ---- validation, added with tier 5 (2026-08-02) ----
+  # Every topic below has a title that names a quantity and a body that supplies none. That is not
+  # an omission in the transcription; it is the state of the source.
+
+  - id: validation.backtest_min_trades
+    unit: trades
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M72-T1074]
+    note: >-
+      Distinct from stats.min_sample_for_verdict, which governs reporting a statistic. This one
+      governs whether a backtest may produce a verdict at all. The topic is titled "Минимальное
+      количество сделок" and states no number.
+    ui_editable: false
+
+  - id: validation.backtest_period
+    unit: years or explicit dates
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M72-T1072, M72-T1073]
+    note: >-
+      Topic 1073 requires the period to span different market regimes, which constrains the choice
+      without quantifying it. The regime classifier must exist before this can be checked.
+    ui_editable: false
+
+  - id: validation.parameter_stability_tolerance
+    unit: ratio
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M72-T1087, M73-T1095]
+    note: >-
+      How far a result may move when a parameter moves to its neighbours before the result counts as
+      fragile. Both the neighbourhood width and the tolerance are unspecified.
+    ui_editable: false
+
+  - id: validation.monte_carlo_runs
+    unit: count
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M73-T1096, M73-T1097]
+    note: Resampling method (i.i.d. or block) is an open item, not just the count.
+    ui_editable: false
+
+  - id: validation.missed_trade_rate
+    unit: fraction
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M73-T1101]
+    ui_editable: false
+
+  - id: validation.execution_delay
+    unit: bars
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M73-T1102]
+    ui_editable: false
+
+  - id: validation.qa_recheck_fraction
+    unit: fraction
+    value: null
+    status: unset
+    provenance: null
+    named_in: [Appendix J - QA stage]
+    note: >-
+      Appendix J requires "повторная независимая проверка части выборки" - an independent re-check of
+      part of the sample - and does not say what part.
+    ui_editable: false
+
+  # ---- costs (backtest cost model, distinct from the sizing allowance) ----
+
+  - id: costs.commission_model
+    unit: model
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M72-T1081]
+    note: >-
+      A model, not a scalar: per-trade, per-share and percentage schedules are different functions
+      and the course names none. risk.costs_allowance is the sizing-time allowance; this is what a
+      backtest charges.
+    ui_editable: true
+
+  - id: costs.slippage_model
+    unit: model
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M72-T1082, M74-T1110]
+    note: >-
+      M74-T1110 requires measured live slippage to be compared against this, so the model must be
+      the same shape as the measurement.
+    ui_editable: true
