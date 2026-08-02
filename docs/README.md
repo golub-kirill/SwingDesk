@@ -64,8 +64,8 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | # | File | Freezes | Source | Status |
 |---|---|---|---|---|
 | 30 | `JOURNAL_SCHEMA.md` | 12-entity ER model + M67 fields + implied fields | `verbatim` Appendix G + M67 | drafting |
-| 31 | `AUDIT_AND_IMMUTABILITY.md` | Append-only; the original plan is never rewritten | `verbatim` (every appendix page 1) | planned |
-| 32 | `EVIDENCE_RECORD_SPEC.md` | Evidence panel fields; 9-value validation status enum | `verbatim` Production Rules §3.7 | planned |
+| 31 | `AUDIT_AND_IMMUTABILITY.md` | Append-only; the schema IS the HINDSIGHT control; same discipline as the data layer | `verbatim` Appendix G/O + 7 modules | drafting |
+| 32 | `EVIDENCE_RECORD_SPEC.md` | 11 evidence-panel field groups + 3 project-mandatory fields (survivorship, window ceiling, PIT coverage) | `verbatim` Production Rules §3.7 | drafting |
 | 33 | `CHECKLIST_SPEC.md` | 84 checklist items as gated forms (E 18 · H 13 · P 19 · T 34) | `verbatim` Appendices E, H, P, T | drafting |
 
 ## Tier 5 — Validation · `05-validation/`
