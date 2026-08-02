@@ -38,7 +38,7 @@ LOGIN_URL = "https://login.questrade.com/oauth2/token"
 GRANULARITIES = ("OneDay", "OneHour", "HalfHour")
 PROBE_SYMBOLS = ("AAPL", "CNQ.TO", "SHOP.TO")
 DELISTED_SYMBOLS = ("TWTR", "SIVB", "ATVI")
-LOOKBACK_YEARS = (1, 2, 3, 5, 10)
+LOOKBACK_YEARS = (1, 2, 3, 5, 10, 15, 20, 30)
 
 
 # login.questrade.com sits behind a WAF that rejects the default Python-urllib user agent with a
@@ -165,12 +165,52 @@ def main() -> int:
         probe_depth(api, access_token, symbol)
 
     print("\n=== 2. delisted symbols (survivorship) ===")
+    print("  Resolving a symbol is not the same as having its history. Fetching candles too.")
+    now = datetime.now(timezone.utc)
     for symbol in DELISTED_SYMBOLS:
         try:
             found = find_symbol(api, access_token, symbol)
-            print(f"  {symbol:7s} {'FOUND id=' + str(found['symbolId']) if found else 'not found'}")
         except Exception as error:  # noqa: BLE001
-            print(f"  {symbol:7s} {type(error).__name__}: {error}")
+            print(f"  {symbol:7s} lookup {type(error).__name__}: {error}")
+            continue
+        if not found:
+            print(f"  {symbol:7s} not found")
+            continue
+        print(f"  {symbol:7s} id={found['symbolId']} exch={found.get('listingExchange')} "
+              f"tradable={found.get('isTradable')} quotable={found.get('isQuotable')}")
+        try:
+            rows = candles(api, access_token, found["symbolId"],
+                           now - timedelta(days=365 * 10), now, "OneDay")
+            if rows:
+                print(f"          OneDay -> {len(rows)} bars, "
+                      f"{rows[0]['start'][:10]} .. {rows[-1]['start'][:10]}")
+            else:
+                print("          OneDay -> EMPTY (symbol resolves, history does not)")
+        except urllib.error.HTTPError as error:
+            print(f"          OneDay -> {describe_http_error(error)}")
+        except Exception as error:  # noqa: BLE001
+            print(f"          OneDay -> {type(error).__name__}: {error}")
+
+    print("\n=== 2b. intraday session coverage (US vs Canada) ===")
+    print("  US symbols appear to include extended hours and Canadian ones do not. Confirming.")
+    for symbol in ("AAPL", "CNQ.TO"):
+        found = find_symbol(api, access_token, symbol)
+        if not found:
+            continue
+        try:
+            rows = candles(api, access_token, found["symbolId"],
+                           now - timedelta(days=6), now, "HalfHour")
+        except Exception as error:  # noqa: BLE001
+            print(f"  {symbol:9s} {type(error).__name__}: {error}")
+            continue
+        by_day: dict[str, list[str]] = {}
+        for row in rows:
+            stamp = row["start"]
+            by_day.setdefault(stamp[:10], []).append(stamp[11:16])
+        for day in sorted(by_day)[-1:]:
+            times = by_day[day]
+            print(f"  {symbol:9s} {day}  {len(times)} bars  first={times[0]} last={times[-1]}")
+            print(f"            {times}")
 
     print("\n=== 3. rate limit headers ===")
     print("  Check the response headers X-RateLimit-Remaining / X-RateLimit-Reset in the")
