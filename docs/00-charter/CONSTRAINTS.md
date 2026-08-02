@@ -76,18 +76,50 @@ Three consequences that constrain what the system may ever claim:
 - **No live intraday loop** in v1 — `30m` is fetched for execution refinement, not streamed.
 - **Firebase for push only**; no market data, no journal, no decisions leave the machine.
 
-## 5. Owner-pending
+## 5. Capacity and account (owner, 2026-08-01)
 
-These are budget and capacity limits only the owner can set. They are **not** trading parameters —
-those live in `registry/parameters.yml`.
+| Constraint | Value | Notes |
+|---|---|---|
+| Account equity | **$10,000**, configurable default | Not a hardcoded figure — `account.equity` is a parameter with this default. |
+| Base currency | **USD** | Simplifies FX: Canadian positions carry a currency effect, US positions do not. `FX-adjusted P&L` (Appendix C) applies to `.TO` names only. |
+| Universe | **A-tier** — definition pending, see §6 | Drives fetch volume, rate limits, and whether in-house breadth is meaningful. |
+| Data spend | **$0** (free tier, D8) | See `ADR-0001`. A paid feed is the only thing that would fix point-in-time and survivorship. |
 
-- [ ] **Money**: monthly ceiling for data and infrastructure. Currently assumed **$0** (free tier,
-      D8). If a paid vendor is acceptable, `ADR-0001` changes materially — a paid feed would fix
-      point-in-time and possibly survivorship, which are otherwise permanent limitations.
-- [ ] **Time**: hours per week available. This determines whether the roadmap is months or years,
-      and whether D2's full-catalogue scope is reachable at `specified` or only at `registered`.
-- [ ] **Universe size**: how many instruments. Drives fetch volume, rate limits, and whether
-      in-house breadth is meaningful.
-- [ ] **Account equity and currency** (CAD or USD base). Needed before `risk.per_trade_pct` means
-      anything, and before FX handling can be specified.
-- [ ] **Hardware**: whether backtests run on this machine or somewhere else.
+**A USD base with Canadian holdings makes currency a first-class concern, not an afterthought.** Every
+`.TO` position's result is reported as asset return and currency effect separately — Appendix C,
+`Разделять asset и FX return` — and sizing must convert at a recorded rate with its own as-of time.
+
+## 6. Universe — A-tier by liquidity rule (owner, 2026-08-01)
+
+Membership is **computed from our own bars**, not taken from index constituents:
+
+```
+eligible  <=>  price >= universe.min_price
+           AND 20-day average dollar volume >= universe.min_adtv_20d
+           AND daily history >= universe.min_bar_history
+```
+
+Recomputed daily; membership is therefore itself a point-in-time fact and is stored as one.
+
+**Why not S&P 500 + TSX 60.** Index membership is the intuitive reading of "A-tier", but free
+sources give only *today's* constituents. Backtesting against today's membership means testing on
+the names that survived and were promoted — stacking a second survivorship bias on top of the
+delisting problem `ADR-0001` already accepts. The liquidity rule needs no membership data, behaves
+identically on both exchanges, and its inputs (`Dollar volume` = `Цена × объём`, Appendix A) are
+already in the glossary.
+
+All three thresholds are `unset` in `registry/parameters.yml`.
+
+## 7. Users — single-user, configurable defaults (owner, 2026-08-01)
+
+Equity, risk and universe thresholds are **parameters with defaults**, not constants, so the numbers
+are easy to change. But: **one install, one owner.** The charter non-goals stand, and Yahoo's
+personal-use terms remain satisfied (`ADR-0001` condition 1).
+
+## 8. Still open
+
+- [ ] **Time budget**: hours per week. Determines whether D2's full-catalogue scope is reachable at
+      `specified` or only at `registered`.
+- [ ] **Hardware**: whether backtests run on this machine or elsewhere.
+- [ ] **`k.project_timebox`** in `registry/criteria.yml` — months from G0 close before Track A must
+      be met. The last value blocking G0.

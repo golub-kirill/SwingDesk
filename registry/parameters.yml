@@ -12,6 +12,58 @@
 
 parameters:
 
+  # ---- account (owner, 2026-08-01) ----
+  - id: account.equity
+    unit: USD
+    value: 10000
+    status: owner
+    provenance: owner
+    named_in: [Appendix C - "Equity × risk %"]
+    note: Configurable default, not a constant. Single-user install (CONSTRAINTS §6).
+    ui_editable: true
+
+  - id: account.base_currency
+    unit: ISO 4217
+    value: USD
+    status: owner
+    provenance: owner
+    named_in: [Appendix C - "FX-adjusted P&L", Appendix A - CAD/USD exposure]
+    note: >-
+      USD base with Canadian holdings means every .TO position carries a currency effect reported
+      separately from asset return.
+    ui_editable: false
+
+  # ---- universe (A-tier by liquidity rule, owner decision 2026-08-01) ----
+  - id: universe.min_price
+    unit: USD
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M33-T0479]
+    note: Same knob as screen.min_price but applied at universe construction, before screening.
+    ui_editable: true
+
+  - id: universe.min_adtv_20d
+    unit: USD per day
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M33-T0481, Appendix A - Dollar volume]
+    note: >-
+      20-day average dollar volume. Chosen as the A-tier membership rule because it is computable
+      from our own bars and needs no index constituent data - which no free source provides
+      point-in-time, and which would stack a second survivorship bias on the delisting one.
+    ui_editable: true
+
+  - id: universe.min_bar_history
+    unit: bars
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M72 - warm-up and sample requirements]
+    note: Minimum daily history before an instrument is eligible; also bounds indicator warm-up.
+    ui_editable: true
+
   # ---- sizing and risk (docs/02-domain/RISK_SPEC.md §4) ----
   - id: risk.per_trade_pct
     unit: percent of equity

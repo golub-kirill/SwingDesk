@@ -1,77 +1,94 @@
 # SUCCESS AND KILL CRITERIA
 
-**Status: OWNER-PENDING — this document is deliberately unfinished.**
-**Tier:** 0 (charter) · Gate **G0 cannot close until it is filled in.**
+**Status:** drafting — structure **adopted** by the owner 2026-08-01; values **proposed**, awaiting
+ratification · **Tier:** 0 (charter) · **Data:** `registry/criteria.yml`
+
+**G0 closes when `registry/criteria.yml` reaches `status: ratified` and `k.project_timebox` has a
+value.** That is one decision away.
 
 ---
 
-## Why this is empty
+## 1. Two tracks, and why
 
-Writing these criteria is the single thing in this project that must not be delegated. The previous
-system was built, run, and only then measured against a benchmark — at which point the answer was
-"≈benchmark", and there was no pre-agreed rule for what to do about it. That is not a measurement
-failure. It is a **missing decision, made too late**.
+The system and the strategy are separate accountabilities. Merging them is what made the previous
+project unfalsifiable: when "does it work?" means both *is the machinery sound?* and *is there an
+edge?*, a bad answer to the second contaminates the first and neither gets decided.
 
-Filling this in with plausible-looking numbers would recreate exactly that failure while appearing
-to have avoided it. So it stays open, and G0 stays open with it.
+| | Track A | Track B |
+|---|---|---|
+| Question | Is the system sound? | Is there an edge? |
+| Scope | the whole system | **one strategy card** |
+| Depends on the market | no | entirely |
+| Measurable within | weeks | 100+ closed trades |
+| Satisfiable while every setup is `Untested` | **yes** | no |
+| Gates | G0 | activation of a card beyond `Untested` |
 
-Note that this is separate from the **v1 finish line** in `CHARTER.md` §4, which concerns whether
-the *machinery* is built and honest. This document concerns whether the *trading* is worth doing.
-The two can be answered independently, and the finish line is not blocked on this.
+Track A is what SwingDesk is accountable for and it is fully in our control. Track B is what the
+*trading* is accountable for, and it is pre-registered per card — never project-global, because
+"the system is profitable" is not a testable claim when the system contains 460 components.
 
-## What has to be decided
+**Structure is frozen. Values are configurable.** That is the whole meaning of "flexible" here —
+flexibility in the numbers, never in whether a criterion exists or when it may be edited.
 
-### 1. What "the system works" means, numerically
+## 2. Track A — the G0 bar
 
-The course refuses to supply this too — it defines nine validation statuses and says outright that
-they are not grades. So the bar is yours. Some framings, none recommended over another:
+Seven criteria, all in `registry/criteria.yml`. In short: the run completes for 20 consecutive
+trading days; every candidate carries a decision and a reason code; no refusal is uncoded; a re-run
+reproduces its control byte-identically; plan/stop/journal present on 100% of taken trades; overall
+process compliance ≥ 95%; zero `Critical` errors.
 
-- **Process-first.** Success = the process is followed and recorded: 100% plan/stop/journal, no
-  critical violations, `Process compliance` above a stated level. This is the only bar the course
-  itself states a version of (Appendix S, first 20 trades). It is measurable within weeks and says
-  nothing about profit.
-- **Expectancy with uncertainty.** Success = expectancy positive, net of all costs, with a
-  confidence interval excluding zero, on a stated minimum sample, out of sample.
-- **Benchmark-relative.** Success = risk-adjusted return above buy-and-hold on the same universe,
-  net of costs. Hardest bar; the one the previous system failed.
-- **Decision-support only.** Success = the tool measurably improves the owner's own decisions —
-  fewer `LATE` entries, fewer `WIDE_STOP` violations, better MFE capture — regardless of the
-  strategy's edge. Note this is the bar that actually matches D1, and it is the only one that can be
-  met while every setup remains `Untested`.
+Two of these are the course's own words rather than our invention:
 
-### 2. The minimum sample before any verdict
+- **100% plan/stop/journal, no critical violations** — Appendix S, the single hard numeric gate
+  anywhere in the course.
+- **A re-run matches a control run** — the fail-closed table's return condition after a screener
+  failure, `повторный run совпал с контрольным`. Determinism stated as an operating procedure.
 
-`registry/parameters.yml` → `stats.min_sample_for_verdict`, currently `unset`. The course names
-"малая выборка" as a prohibition and never quantifies it. Until this has a number, **no result is a
-verdict** — the system reports the count and declines the conclusion.
+## 3. Track B — per strategy card
 
-### 3. The kill criteria
+Six criteria. The load-bearing choices:
 
-The harder half, and the half that is almost always skipped. What result makes this project stop?
+- **Minimum 100 closed trades before any verdict.** The course's own figure (Appendix S). Below
+  roughly this the expectancy confidence interval is too wide to act on, because the right tail
+  dominates the mean — a handful of large winners moves the average more than the other ninety
+  trades combined, so a small sample measures luck in tail placement rather than edge.
+- **Deflated Sharpe on the *cumulative* trial count**, across the whole programme rather than
+  per-strategy. With ~460 registered components the search space is large enough that a per-feature
+  significance figure means nothing; the trial count carries forward across every pre-registration.
+- **Benchmark-relative, not absolute.** Beating cash is not the bar.
+- **Era stability.** An effect carried by one stretch of history is not an effect.
+- **The survivorship marker is mandatory** on every Track B result. Not a threshold — a reporting
+  obligation, because no free source serves delisted instruments and every historical number is
+  therefore optimistic by an unknown amount.
 
-- A measured outcome that ends it (and after how many trades, over what window).
-- A time or cost ceiling that ends it regardless of outcome.
-- A condition under which it converts to something smaller — e.g. journal and statistics only,
-  abandoning signal generation.
+## 4. Kill criteria
 
-A project with no kill criterion does not fail; it just continues. That is the failure mode this
-document exists to prevent.
+Boxed by **time and sample**, not only by outcome. A project with no kill criterion does not fail;
+it continues indefinitely, which is the failure mode this document exists to prevent.
 
-### 4. Who decides, and when
+| Scope | Trigger | Action |
+|---|---|---|
+| **project** | Track A not met within the time box | **stop building** |
+| strategy card | after 100 trades, expectancy CI entirely below benchmark | `Rejected`; retire the card — the project continues |
+| programme | every card `Rejected`/`Retired` and no new premise clears the prereg refutation check | convert to journal + statistics only |
+| live | drawdown exceeds the allowable limit | **`Pause`, not kill** — reduce size per the risk-off ladder |
 
-The review cadence at which these criteria are checked, and the rule that they may not be edited
-after seeing a result — the same discipline `PREREG_TEMPLATE.md` applies to individual levers,
-applied to the project itself.
+Note the graduated shape: a failing strategy kills a card, not the project; an exhausted programme
+converts to something smaller rather than to nothing; a drawdown pauses rather than stops. Only one
+trigger stops the build, and it is a **time box**, not an outcome.
 
-## Constraints on whatever gets written here
+## 5. The one value still needed
 
-1. **Criteria are frozen before the run that tests them.** Editing after seeing a result creates a
-   new criterion and voids the claim — §3.7, applied at project level.
-2. **Both branches are written in advance.** What happens on pass, and what happens on fail. A
-   criterion with only a success branch is a hope.
-3. **Net of costs**, always — commission, spread, slippage, borrow, FX.
-4. **The survivorship caveat applies** and cannot be assumed away: no free source serves delisted
-   instruments (`ADR-0001` condition 6). Any historical criterion is optimistic by an unknown
-   amount, and the criterion should say how that is handled.
-5. **A negative result is a result.** `Rejected` is a legitimate terminal validation status and
-   reaching it honestly is a success of the *process*, whatever it means for the strategy.
+`k.project_timebox` — **months from G0 close before Track A must be met.** Everything else in
+`criteria.yml` has a defensible default; this one cannot be defaulted, because only the owner knows
+how long this is worth. Without it, "stop building" has no trigger and the kill criterion is
+decorative.
+
+## 6. Standing rules
+
+1. Criteria are frozen before the run that tests them.
+2. Editing after seeing a result creates a new version and voids the claim — §3.7 at project level.
+3. Both branches written in advance; a criterion with only a success branch is a hope.
+4. Everything net of costs — commission, spread, slippage, borrow, FX.
+5. A negative result is a result. Reaching `Rejected` honestly is a success of the process,
+   whatever it means for the strategy.

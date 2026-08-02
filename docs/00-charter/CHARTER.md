@@ -1,6 +1,6 @@
 # CHARTER
 
-**Status:** drafting — §4 finish line is **PROPOSED**, awaiting owner ratification
+**Status:** drafting — §4 finish line **RATIFIED by the owner 2026-08-01**
 **Tier:** 0 (charter) · **Amendments:** dated entries appended to §7, never edits in place
 
 ---
@@ -39,7 +39,7 @@ Explicit, and each with its reason. A non-goal is not a "later"; reopening one r
 | **Beating a benchmark as the definition of success** | Deliberately excluded here and deferred to `SUCCESS_AND_KILL_CRITERIA.md`. The previous project discovered its edge was ≈benchmark *after* being built; the criterion has to be set before, by the owner, not assumed by the builder. |
 | **Predicting price** | Every setup in the course is classified `Untested Hypothesis`, and the system inherits that status rather than improving on it. |
 
-## 4. The v1 finish line — PROPOSED
+## 4. The v1 finish line — RATIFIED 2026-08-01
 
 Stated as a demonstrable capability, so that "done" is observable rather than argued:
 
@@ -55,8 +55,8 @@ parametrised. Those are the *next* programme, governed by `VALIDATION_PROGRAM.md
 the machinery is honest and reproducible — a target that is reachable in months and cannot be
 argued about.
 
-**Owner ratification needed.** If this is not the right finish line, it is far cheaper to change now
-than after the roadmap is built on it.
+**Ratified by the owner, 2026-08-01.** The roadmap is built on this; changing it now requires an
+amendment in §7.
 
 ## 5. What must be true throughout
 

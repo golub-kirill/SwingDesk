@@ -1,0 +1,169 @@
+# Success and kill criteria.
+#
+# Two tracks, because the system and the strategy are separate accountabilities. Merging them is
+# what made the previous project unfalsifiable.
+#
+# Structure is frozen. Values are configurable - that is what "flexible" means here.
+#
+# status: proposed | ratified | met | failed
+#   proposed  drafted, awaiting owner ratification
+#   ratified  frozen; may not be edited after seeing a result it governs
+#
+# See docs/00-charter/SUCCESS_AND_KILL_CRITERIA.md.
+
+version: 0.1.0
+date: 2026-08-01
+status: proposed          # whole document; owner ratifies
+
+# ---------------------------------------------------------------------------
+# Track A - is the system sound?
+# Measurable in weeks. Independent of market outcome. Satisfiable while every
+# setup remains Untested. This is the G0 gate.
+# ---------------------------------------------------------------------------
+track_a:
+  - id: a.run_completes
+    criterion: The daily run completes and produces a report before the next session open
+    value: 20 consecutive trading days
+    measured_by: run manifests
+    status: proposed
+
+  - id: a.decisions_coded
+    criterion: Every candidate leaves the run with a decision and a reason code
+    value: 100%
+    measured_by: journal query over scan results
+    status: proposed
+    note: Course rule - "Нет кандидатов без следующего действия" (M32/M33 operational standard).
+
+  - id: a.no_uncoded_failures
+    criterion: Every refusal carries a skip or error code; no silent failures
+    value: 0 uncoded
+    measured_by: log and journal audit
+    status: proposed
+
+  - id: a.reproducible
+    criterion: A re-run from a stored manifest reproduces the control run byte-identically
+    value: byte-identical
+    measured_by: tools determinism check
+    status: proposed
+    note: >-
+      Course states this as an operating procedure, not an engineering preference - the return
+      condition after a screener failure is "повторный run совпал с контрольным".
+
+  - id: a.process_compliance_core
+    criterion: Plan, stop and journal present for every taken trade
+    value: 100%
+    measured_by: Process compliance (Appendix D) restricted to these three
+    status: proposed
+    note: The only hard numeric gate the course states (Appendix S, first 20 trades).
+
+  - id: a.process_compliance_overall
+    criterion: Overall process compliance across all checklist items
+    value: '>= 95%'
+    measured_by: Process compliance (Appendix D)
+    status: proposed
+
+  - id: a.no_critical_violations
+    criterion: No Critical-severity error codes recorded
+    value: 0
+    measured_by: error codes (CODES.md) filtered to Critical
+    status: proposed
+
+# ---------------------------------------------------------------------------
+# Track B - is there an edge?
+# Pre-registered PER STRATEGY CARD, never project-global. Nothing here is
+# evaluated until the minimum sample is reached.
+# ---------------------------------------------------------------------------
+track_b:
+  - id: b.min_sample
+    criterion: Minimum closed trades before any verdict on a strategy card
+    value: 100
+    measured_by: journal, per strategy and version
+    status: proposed
+    note: >-
+      The course's own figure (Appendix S, "План первых 100 реальных сделок"). Below roughly this
+      the expectancy CI is too wide to act on, because the right tail dominates the mean.
+
+  - id: b.expectancy
+    criterion: Expectancy positive, net of all costs, bootstrap CI excluding zero
+    value: 'E[R] > 0, CI excludes 0'
+    measured_by: Appendix D expectancy over the pre-registered sample
+    status: proposed
+    note: Costs = commission, spread, slippage, borrow, FX. "После расходов" (Appendix D).
+
+  - id: b.deflated_sharpe
+    criterion: Deflated Sharpe computed on the CUMULATIVE trial count across the whole programme
+    value: '> 0'
+    measured_by: multiple-testing accounting
+    status: proposed
+    note: >-
+      With ~460 registered components the search space is large enough that per-strategy
+      significance is meaningless. The trial count carries forward across every pre-registration.
+
+  - id: b.benchmark_relative
+    criterion: Risk-adjusted return above buy-and-hold on the same universe, net of costs
+    value: 'above benchmark'
+    measured_by: paired comparison on one snapshot
+    status: proposed
+
+  - id: b.era_stability
+    criterion: The effect does not sign-flip across eras and is not carried by a single stretch
+    value: no sign flip
+    measured_by: stress / drop-best-era analysis
+    status: proposed
+
+  - id: b.survivorship_caveat
+    criterion: Every Track B result is reported with its survivorship-bias marker
+    value: mandatory
+    measured_by: evidence record field
+    status: proposed
+    note: >-
+      Not a threshold - a reporting obligation. No free source serves delisted instruments
+      (ADR-0001 condition 6), so every historical number is optimistic by an unknown amount.
+
+# ---------------------------------------------------------------------------
+# Kill criteria.
+# Boxed by time and sample, not only by outcome. A project with no kill
+# criterion does not fail - it just continues.
+# ---------------------------------------------------------------------------
+kill:
+  - id: k.project_timebox
+    scope: project
+    trigger: Track A not met within the time box
+    value: null                  # OWNER MUST SET - months from G0 close
+    action: Stop building. Ship what works or shelve it.
+    status: proposed
+    note: The one value the owner must supply. Everything else here has a defensible default.
+
+  - id: k.strategy_rejected
+    scope: strategy card
+    trigger: After b.min_sample, the expectancy CI lies entirely below the benchmark
+    value: CI entirely below benchmark
+    action: Set validation status Rejected. Retire the card. The project continues.
+    status: proposed
+
+  - id: k.programme_exhausted
+    scope: programme
+    trigger: All strategy cards Rejected or Retired, and no new premise clears the prereg
+      refutation check
+    value: no card active, no new premise
+    action: >-
+      Convert to journal and statistics only. Keep the recording and review value, abandon signal
+      generation.
+    status: proposed
+
+  - id: k.drawdown_pause
+    scope: live
+    trigger: Realised drawdown exceeds validation.max_allowable_drawdown
+    value: see registry/parameters.yml validation.max_allowable_drawdown
+    action: Pause - not kill. Reduce size per the risk-off ladder and review.
+    status: proposed
+    note: Course requires drawdown limits to automatically reduce size and trigger a pause (M69).
+
+# ---------------------------------------------------------------------------
+rules:
+  - Criteria are frozen before the run that tests them.
+  - Editing a criterion after seeing a result creates a new version and voids the claim
+    (Production Rules 3.7, applied at project level).
+  - Both branches are written in advance. A criterion with only a success branch is a hope.
+  - All measurements are net of costs.
+  - A negative result is a result. Reaching Rejected honestly is a success of the process.
