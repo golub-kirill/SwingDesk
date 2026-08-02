@@ -41,18 +41,45 @@ DELISTED_SYMBOLS = ("TWTR", "SIVB", "ATVI")
 LOOKBACK_YEARS = (1, 2, 3, 5, 10)
 
 
-def request(url: str, token: str | None = None) -> dict:
-    headers = {"Authorization": f"Bearer {token}"} if token else {}
-    req = urllib.request.Request(url, headers=headers)
+# login.questrade.com sits behind a WAF that rejects the default Python-urllib user agent with a
+# bare 403 before the request ever reaches the OAuth endpoint. A normal browser UA gets through.
+USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36"
+)
+
+
+def request(url: str, token: str | None = None, method: str = "GET") -> dict:
+    headers = {"User-Agent": USER_AGENT, "Accept": "application/json"}
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    req = urllib.request.Request(url, headers=headers, method=method)
     with urllib.request.urlopen(req, timeout=30) as response:
         return json.loads(response.read().decode("utf-8"))
+
+
+def describe_http_error(error: urllib.error.HTTPError) -> str:
+    """The response body usually says what the status code does not."""
+    try:
+        body = error.read().decode("utf-8", "replace").strip()
+    except Exception:  # noqa: BLE001
+        body = ""
+    return f"HTTP {error.code} {error.reason}" + (f" - {body[:300]}" if body else "")
 
 
 def authenticate(refresh_token: str) -> tuple[str, str, str]:
     query = urllib.parse.urlencode(
         {"grant_type": "refresh_token", "refresh_token": refresh_token}
     )
-    data = request(f"{LOGIN_URL}?{query}")
+    url = f"{LOGIN_URL}?{query}"
+    try:
+        data = request(url)
+    except urllib.error.HTTPError as error:
+        # Some Questrade front ends accept only POST on the token endpoint.
+        if error.code not in (403, 405):
+            raise
+        print(f"  GET failed ({describe_http_error(error)}); retrying as POST")
+        data = request(url, method="POST")
     return data["access_token"], data["api_server"], data["refresh_token"]
 
 
@@ -118,9 +145,15 @@ def main() -> int:
     try:
         access_token, api, new_refresh = authenticate(token)
     except urllib.error.HTTPError as error:
-        print(f"auth failed: HTTP {error.code} {error.reason}", file=sys.stderr)
-        print("A 400 usually means the refresh token was already used or has expired.",
-              file=sys.stderr)
+        print(f"auth failed: {describe_http_error(error)}", file=sys.stderr)
+        if error.code == 400:
+            print("400 = the refresh token was already used or has expired. They are single-use;"
+                  " generate a fresh one in App Hub.", file=sys.stderr)
+        elif error.code == 403:
+            print("403 with a browser user agent usually means the app is not authorised for this"
+                  " account, or the token belongs to a different app than the one that issued it."
+                  " Check App Hub: the app must exist, be enabled, and the token must come from"
+                  " that same app.", file=sys.stderr)
         return 1
 
     print("authenticated.")
