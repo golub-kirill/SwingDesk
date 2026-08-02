@@ -3,6 +3,12 @@ name = "swingdesk"
 version = "0.0.0"
 description = "Swing-trading decision support for Canadian and US equities and ETFs"
 requires-python = ">=3.12"
+dependencies = [
+    # The registries are YAML; tools/verify_parameters.py reads them.
+    # tools/build_course_index.py and tools/verify_transcription.py stay stdlib-only so the
+    # transcription checks run without an environment.
+    "pyyaml>=6",
+]
 
 [build-system]
 requires = ["setuptools>=68"]

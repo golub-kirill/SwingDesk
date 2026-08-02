@@ -1,0 +1,643 @@
+# Parameter registry.
+#
+# Every threshold the system needs and the course does not supply. Seeded from the tier-2
+# transcription; each entry names where the course mentions the concept without quantifying it.
+#
+# Rules (docs/02-domain/PARAMETER_REGISTRY.md):
+#   - value: null means UNSET. An unset parameter makes its component return a coded refusal.
+#   - provenance is mandatory once a value exists: assumed:<citation> | owner | validated:<evidence>
+#   - changing a value creates a new component version and resets that component's validation status
+#
+# Enforced by tools/verify_parameters.py.
+
+parameters:
+
+  # ---- sizing and risk (docs/02-domain/RISK_SPEC.md §4) ----
+  - id: risk.per_trade_pct
+    unit: percent of equity
+    value: null
+    status: unset
+    provenance: null
+    named_in: [Appendix C, M93-T1324]
+    note: 'Course states explicitly: "Риск % задаётся личным планом."'
+    ui_editable: true
+
+  - id: risk.costs_allowance
+    unit: currency per share
+    value: null
+    status: unset
+    provenance: null
+    named_in: [Appendix C]
+    note: Composition of commission, spread and slippage is also unspecified.
+    ui_editable: true
+
+  - id: risk.short_squeeze_gap_allowance
+    unit: currency per share
+    value: null
+    status: unset
+    provenance: null
+    named_in: [Appendix C]
+    ui_editable: true
+
+  - id: risk.max_position_value
+    unit: currency
+    value: null
+    status: unset
+    provenance: null
+    named_in: [Appendix C, M49-T762]
+    ui_editable: true
+
+  - id: risk.liquidity_cap_order_to_adtv_pct
+    unit: percent
+    value: null
+    status: unset
+    provenance: null
+    named_in: [Appendix C, M49-T760]
+    ui_editable: true
+
+  - id: risk.max_open_risk
+    unit: R
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M51-T780, M93-T1326]
+    ui_editable: true
+
+  - id: risk.max_sector_risk
+    unit: R
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M51-T782, M93-T1327]
+    ui_editable: true
+
+  - id: risk.correlation_threshold
+    unit: correlation coefficient
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M49-T761, M51-T781]
+    note: The size adjustment applied above the threshold is also unspecified.
+    ui_editable: true
+
+  - id: risk.max_concurrent_positions
+    unit: count
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M49-T764]
+    ui_editable: true
+
+  - id: risk.max_daily_loss
+    unit: R
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M51-T792, M93-T1328]
+    ui_editable: true
+
+  - id: risk.max_weekly_loss
+    unit: R
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M51-T793, M93-T1329]
+    ui_editable: true
+
+  - id: risk.drawdown_size_reduction_ladder
+    unit: table
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M49-T765, M93]
+    ui_editable: true
+
+  - id: risk.risk_off_ladder
+    unit: table
+    value: null
+    status: unset
+    provenance: null
+    named_in: [FAIL-CLOSED degradation table row 5, M67 standard]
+    note: Named as mandatory in the fail-closed table; levels and streak triggers never stated.
+    ui_editable: true
+
+  - id: risk.stop_too_wide_limit
+    unit: percent or ATR multiple
+    value: null
+    status: unset
+    provenance: null
+    named_in: [Appendix N code STOP, M48-T746]
+    ui_editable: true
+
+  - id: risk.revenge_pause_threshold
+    unit: count or R
+    value: null
+    status: unset
+    provenance: null
+    named_in: [Appendix O code REVENGE - "Pause after threshold"]
+    ui_editable: true
+
+  - id: risk.discipline_threshold
+    unit: count
+    value: null
+    status: unset
+    provenance: null
+    named_in: [Appendix N code PSYCH]
+    ui_editable: true
+
+  # ---- screener filters (docs/02-domain/SCREENER_SPEC.md §2) ----
+  - id: screen.min_price
+    unit: currency
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M33-T0479]
+    ui_editable: true
+
+  - id: screen.min_market_cap
+    unit: currency
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M33-T0480]
+    ui_editable: true
+
+  - id: screen.min_avg_dollar_volume
+    unit: currency per day
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M33-T0481]
+    ui_editable: true
+
+  - id: screen.min_relative_volume
+    unit: multiple of 20D median
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M33-T0482]
+    note: 'Denominator IS specified elsewhere: "RVOL: x 20D median" (M34-T513). Threshold is not.'
+    ui_editable: true
+
+  - id: screen.volatility_band
+    unit: percent
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M33-T0483]
+    ui_editable: true
+
+  - id: screen.atr_pct_band
+    unit: percent of price
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M33-T0484]
+    ui_editable: true
+
+  - id: screen.trend_definition
+    unit: rule
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M33-T0485, M71-T1057]
+    note: Requires a quantitative definition of trend. Pre-registration required before activation.
+    ui_editable: false
+
+  - id: screen.max_distance_from_high_pct
+    unit: percent
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M33-T0486]
+    ui_editable: true
+
+  - id: screen.relative_strength_rule
+    unit: rule
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M33-T0487, M31-T0464]
+    note: Lookback, ranking method and percentile cutoff all unspecified.
+    ui_editable: false
+
+  - id: screen.breakout_definition
+    unit: rule
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M33-T0488]
+    note: Pre-registration required before activation.
+    ui_editable: false
+
+  - id: screen.pullback_definition
+    unit: rule
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M33-T0489, M89-T1276]
+    note: Depth, speed and volume-dry-up all unspecified. Pre-registration required.
+    ui_editable: false
+
+  - id: screen.contraction_definition
+    unit: rule
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M33-T0490, M18-T0285]
+    note: Pre-registration required before activation.
+    ui_editable: false
+
+  - id: screen.gap_threshold_pct
+    unit: percent of prior close
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M33-T0491]
+    note: 'Unit IS specified: "Gap: % prior close to open" (M34-T513). Threshold is not.'
+    ui_editable: true
+
+  - id: screen.earnings_buffer_days
+    unit: trading days
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M33-T0492, M34, Appendix N code EVENT]
+    note: No blackout window length stated anywhere in the course.
+    ui_editable: true
+
+  - id: screen.max_spread_pct
+    unit: percent
+    value: null
+    status: unset
+    provenance: null
+    named_in: [Appendix E item 12, Appendix N code LIQ]
+    ui_editable: true
+
+  - id: watchlist.max_size
+    unit: count
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M32-T0474]
+    ui_editable: true
+
+  - id: watchlist.eviction_rule
+    unit: rule
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M32-T0476]
+    ui_editable: false
+
+  - id: watchlist.daily_priority_limit
+    unit: count
+    value: null
+    status: unset
+    provenance: null
+    named_in: [Appendix T - "Daily Priority 1 ограничен"]
+    ui_editable: true
+
+  # ---- exits (docs/02-domain/EXIT_MODEL_SPEC.md §4) ----
+  - id: exit.atr_period
+    unit: bars
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M48-T0738, M52-T0799, M53-T0815, M55-T0834]
+    ui_editable: true
+
+  - id: exit.atr_stop_multiple
+    unit: multiple of ATR
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M48-T0738]
+    ui_editable: true
+
+  - id: exit.atr_trailing_multiple
+    unit: multiple of ATR
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M55-T0834]
+    ui_editable: true
+
+  - id: exit.chandelier_period
+    unit: bars
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M55-T0835]
+    ui_editable: true
+
+  - id: exit.chandelier_multiple
+    unit: multiple of ATR
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M55-T0835]
+    note: Anchor definition (highest high since entry vs since signal) is also unstated.
+    ui_editable: true
+
+  - id: exit.donchian_lookback
+    unit: bars
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M55-T0842, M27-T0415]
+    ui_editable: true
+
+  - id: exit.extreme_lookback
+    unit: bars
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M55-T0843, M55-T0844]
+    ui_editable: true
+
+  - id: exit.trailing_pct
+    unit: percent
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M55-T0833]
+    ui_editable: true
+
+  - id: exit.percentage_target
+    unit: percent
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M53-T0816]
+    ui_editable: true
+
+  - id: exit.max_holding_period
+    unit: trading days
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M57-T0866, M71-T1067]
+    ui_editable: true
+
+  - id: exit.stagnation_threshold
+    unit: R or bars
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M57-T0865, M57-T0867]
+    ui_editable: true
+
+  - id: exit.ma_cross_semantics
+    unit: rule
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M55-T0838, M55-T0839, M55-T0840, M55-T0841]
+    note: 'Course states only: period fixed in advance, and a touch is not itself a signal.'
+    ui_editable: false
+
+  - id: exit.partial_trigger
+    unit: R or level
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M54-T0821, M54-T0822]
+    ui_editable: true
+
+  - id: exit.stop_move_after_partial
+    unit: rule
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M54-T0827]
+    ui_editable: false
+
+  - id: exit.slot_resolution_order
+    unit: ordering
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M58 standard - "указать количество и порядок исполнения"]
+    note: Course requires an order be stated; it does not state one.
+    ui_editable: false
+
+  # ---- regime and relative strength (docs/02-domain/REGIME_SPEC.md, not yet written) ----
+  - id: regime.adx_threshold
+    unit: index
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M30-T0446, M30-T0450]
+    ui_editable: true
+
+  - id: regime.atr_percentile_bands
+    unit: percentile
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M30-T0442, M30-T0443]
+    ui_editable: true
+
+  - id: regime.breadth_cutoffs
+    unit: percent
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M30-T0448, M31-T0457]
+    ui_editable: true
+
+  - id: regime.pct_above_ma_period
+    unit: bars
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M31-T0459]
+    note: 'Bounded 0-100 with a 50% reference line is specified; which MA is not.'
+    ui_editable: true
+
+  - id: regime.classifier_rule
+    unit: rule
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M30-T0450, Appendix L]
+    note: >-
+      The course defines 11 regimes and the matrix of what each permits, and names the inputs
+      (direction, ATR, ADX, participation), but no rule produces the label. Fully authored, and
+      load-bearing for the whole strategy-selection matrix.
+    ui_editable: false
+
+  - id: rs.lookback
+    unit: trading days
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M31-T0464, M77-T1138]
+    ui_editable: true
+
+  - id: rs.ranking_method
+    unit: rule
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M31-T0465]
+    ui_editable: false
+
+  # ---- statistics conventions (docs/02-domain/STATISTICS_SPEC.md §7) ----
+  - id: stats.sharpe_convention
+    unit: rule
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M69-T1028]
+    note: >-
+      Periodicity, contiguous zero-filled series or not, risk-free rate and annualisation all
+      unstated. A wrong choice here silently inflates the ratio.
+    ui_editable: false
+
+  - id: stats.sortino_mar
+    unit: rate
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M69-T1029]
+    ui_editable: false
+
+  - id: stats.recovery_factor_definition
+    unit: rule
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M69-T1027]
+    ui_editable: false
+
+  - id: stats.breakeven_win_rate_formula
+    unit: rule
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M50-T0775]
+    note: Has a dedicated topic and appears in no formula sheet, including Appendix D.
+    ui_editable: false
+
+  - id: stats.min_sample_for_verdict
+    unit: trades
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M69 fail-closed - "малая выборка", M72-T1074, M74-T1113]
+    ui_editable: true
+
+  - id: stats.rolling_window
+    unit: trades or days
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M69 fail-closed]
+    ui_editable: true
+
+  - id: stats.quality_grade_scale
+    unit: scale
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M68-T1017, Appendix G Setup entity]
+    note: Named as a "standard scale"; no range, no weights.
+    ui_editable: false
+
+  - id: stats.process_score_scale
+    unit: scale
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M68-T1016, Appendix G Review entity]
+    ui_editable: false
+
+  # ---- data quality (docs/03-data/DATA_QUALITY_SPEC.md, not yet written) ----
+  - id: data.freshness_window
+    unit: trading days
+    value: null
+    status: unset
+    provenance: null
+    named_in: [FAIL-CLOSED row 1 return condition, Appendix N code DATA]
+    ui_editable: true
+
+  - id: data.staleness_action_threshold
+    unit: trading days
+    value: null
+    status: unset
+    provenance: null
+    named_in: [Appendix T - "При stale data или mismatch новые сделки блокируются"]
+    ui_editable: true
+
+  # ---- validation gates (docs/05-validation/, not yet written) ----
+  - id: validation.is_oos_split
+    unit: ratio
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M73-T1091, M73-T1092, Appendix K]
+    ui_editable: false
+
+  - id: validation.walkforward_window
+    unit: trading days
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M73-T1093, Appendix K]
+    note: Window length, step size and fold count all unspecified.
+    ui_editable: false
+
+  - id: validation.embargo
+    unit: trading days
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M73 robustness]
+    ui_editable: false
+
+  - id: validation.stress_cost_multiplier
+    unit: multiple
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M73-T1099, M73-T1100]
+    ui_editable: false
+
+  - id: validation.forward_test_min_duration
+    unit: weeks
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M74-T1112]
+    note: Topic exists solely to state this and states no number.
+    ui_editable: false
+
+  - id: validation.forward_test_min_trades
+    unit: trades
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M74-T1113]
+    ui_editable: false
+
+  - id: validation.max_allowable_drawdown
+    unit: R or percent
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M75-T1122]
+    ui_editable: true
+
+  - id: validation.go_live_criteria
+    unit: rule
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M74-T1114, Appendix S]
+    note: >-
+      Appendix S supplies the only hard gate in the course - "100% plan/stop/journal; no critical
+      violations" - but the accompanying "приемлемый drawdown" and "стабильный process score" are
+      unquantified.
+    ui_editable: false

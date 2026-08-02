@@ -39,7 +39,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 13 | `CODES.md` | 12 skip codes with actions; 12 error codes with severity and required control | `verbatim` Appendix N, O | drafting |
 | 14 | `COMPONENT_REGISTRY_SPEC.md` | Registry record shape and the three activation states | Production Rules §3.7, §3.8 | planned |
 | 15 | `ALGORITHM_SPEC.md` | Per component: inputs, formula, parameters, units, warm-up, missing-data behaviour, version | Field list `verbatim` §3.6; content authored | planned |
-| 16 | `PARAMETER_REGISTRY.md` | Every threshold with value, unit, provenance, status, UI-editable flag | Authored — **no course source exists** | planned |
+| 16 | `PARAMETER_REGISTRY.md` | Every threshold with value, unit, provenance, status, UI-editable flag. **74 catalogued, all `unset`** — data in `registry/parameters.yml` | Authored — **no course source exists** | drafting |
 | 17 | `RISK_SPEC.md` | 11 risk formulas + control clauses + the sizing ordering law | `verbatim` Appendix C, M48, M49 | drafting |
 | 18 | `STATISTICS_SPEC.md` | 11 statistics formulas, 15 M69 metrics, net-of-costs rule, 9 breakdown axes | `verbatim` Appendix D, H, M69 | drafting |
 | 19 | `STRATEGY_CARD_SPEC.md` | The strategy definition record + the three condition kinds (required / confirming / prohibiting) | `verbatim` Appendix I (21 fields) + M71 (17) + §3.6 | drafting |
@@ -142,6 +142,14 @@ Both are stdlib-only and run on system Python.
 
 ```bash
 python tools/verify_transcription.py && python tools/build_course_index.py --check-only
+```
+
+`tools/verify_parameters.py` enforces the parameter contract: no value without provenance, no
+`assumed` without a citation, no parameter without a course reference. It needs PyYAML; the two
+checks above are stdlib-only by design so they run anywhere.
+
+```bash
+python tools/verify_parameters.py
 ```
 
 Quotes containing an elision marker are reported as skipped, never silently passed. Translation
