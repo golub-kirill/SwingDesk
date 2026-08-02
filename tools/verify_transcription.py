@@ -72,6 +72,20 @@ ENUMS: dict[str, tuple[str, tuple[str, ...]]] = {
         "02-domain/CODES.md",
         ("Moderate", "Moderate/Major", "Major", "Critical"),
     ),
+    "validation status": (
+        "02-domain/COMPONENT_REGISTRY_SPEC.md",
+        ("Not Applicable", "Untested", "Historically Tested", "Out-of-Sample Tested",
+         "Walk-Forward Tested", "Forward Test Running", "Forward Tested", "Rejected", "Retired"),
+    ),
+    "claim type": (
+        "02-domain/COMPONENT_REGISTRY_SPEC.md",
+        ("Definition", "Source Fact", "Observed Market Mechanism", "Derived Observation",
+         "Inference", "Operational Course Rule", "Empirical Result", "Untested Hypothesis"),
+    ),
+    "activation": (
+        "02-domain/COMPONENT_REGISTRY_SPEC.md",
+        ("registered", "specified", "active"),
+    ),
 }
 
 _source_cache: dict[Path, str] = {}

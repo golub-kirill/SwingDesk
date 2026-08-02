@@ -12,10 +12,10 @@ Frozen first. Amendments are dated records appended to the file, never edits in 
 
 | # | File | Freezes | Source | Status |
 |---|---|---|---|---|
-| 01 | `CHARTER.md` | Purpose, non-goals, the v1 finish line | Owner | planned |
-| 02 | `SUCCESS_AND_KILL_CRITERIA.md` | What "working" means numerically; what result stops the project | Owner | owner-pending |
-| 03 | `CONSTRAINTS.md` | Markets, timeframes, single user, budget | `verbatim` appendix covers + owner | planned |
-| 04 | `GLOSSARY.md` | Ubiquitous language, English, never translated | `verbatim` Appendix A + Production Rules §3.9 | planned |
+| 01 | `CHARTER.md` | Purpose, 8 non-goals, the v1 finish line, 5 standing properties | Owner | drafting — finish line **PROPOSED** |
+| 02 | `SUCCESS_AND_KILL_CRITERIA.md` | What "working" means numerically; what result stops the project | Owner | **owner-pending — G0 blocked on this** |
+| 03 | `CONSTRAINTS.md` | Markets, timeframes, 9 owner decisions, measured data depths | `verbatim` appendix covers + owner | drafting — budget owner-pending |
+| 04 | `GLOSSARY.md` | 35 terms, verbatim | `verbatim` Appendix A + Production Rules §3.9 | drafting |
 
 ## Tier 1 — Requirements · `01-requirements/`
 
@@ -37,7 +37,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 11 | `DECISION_STATE_MACHINE.md` | **Five separate enums**: candidate decision (4), module gate (3), watchlist status (9), acceptance (4), checklist outcome (5 worksheet / 6 decision) | `verbatim` M32/M33/M69 + appendix footers | drafting |
 | 12 | `FAIL_CLOSED_POLICY.md` | The 5-row degradation table with return conditions; critical fail is never compensated | `verbatim` (identical across all sampled modules) | drafting |
 | 13 | `CODES.md` | 12 skip codes with actions; 12 error codes with severity and required control | `verbatim` Appendix N, O | drafting |
-| 14 | `COMPONENT_REGISTRY_SPEC.md` | Registry record shape and the three activation states | Production Rules §3.7, §3.8 | planned |
+| 14 | `COMPONENT_REGISTRY_SPEC.md` | Record shape, 3 activation states, 9 validation statuses, 8 claim types, 6 unlocked checks | `verbatim` §3.7, §3.8 | drafting |
 | 15 | `ALGORITHM_SPEC.md` | Per component: inputs, formula, parameters, units, warm-up, missing-data behaviour, version | Field list `verbatim` §3.6; content authored | planned |
 | 16 | `PARAMETER_REGISTRY.md` | Every threshold with value, unit, provenance, status, UI-editable flag. **74 catalogued, all `unset`** — data in `registry/parameters.yml` | Authored — **no course source exists** | drafting |
 | 17 | `RISK_SPEC.md` | 11 risk formulas + control clauses + the sizing ordering law | `verbatim` Appendix C, M48, M49 | drafting |
