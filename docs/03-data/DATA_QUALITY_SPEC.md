@@ -12,8 +12,11 @@
 
 The fail-closed table's first row states the failure, the response **and** the return condition:
 
-> "Нет/сомнительны данные" → "Остановить новые решения; использовать второй источник и последний
-> валидный snapshot." → "Freshness, symbol/currency, corporate actions и event time подтверждены."
+```verbatim
+Нет/сомнительны данные
+Остановить новые решения; использовать второй источник и последний валидный snapshot.
+Freshness, symbol/currency, corporate actions и event time подтверждены.
+```
 
 Four named gates, and nothing may resume until all four pass:
 

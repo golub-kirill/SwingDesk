@@ -73,7 +73,7 @@ Every gate runs locally with one command, and the CI definition calls the same s
 the two can disagree, the local run stops being trusted and the feedback loop lengthens to a push.
 
 ```bash
-python tools/verify_transcription.py && python tools/build_course_index.py --check-only && python tools/verify_parameters.py
+python tools/verify_transcription.py && python tools/build_course_index.py --check-only && python tools/build_frd.py --check-only && python tools/verify_parameters.py
 ```
 
 ## 6. Open items
