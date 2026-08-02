@@ -39,12 +39,17 @@ decision_logic
     ↓
 derived_observations
     ↓
-reference_data
-    ↓
 market_data
+    ↓
+reference_data
     ↓
 platform
 ```
+
+**`reference_data` sits below `market_data`, not above.** Calendars and symbology do not need
+bars; *interpreting* bars needs calendars — the completeness check compares what a vendor returned
+against what the exchange calendar says the session held. An earlier draft had these reversed, and
+`lint-imports` caught it the moment the check was written.
 
 `journal_evidence` sits **outside** this chain. It is a persistence service: `trade_management`,
 `validation` and `presentation` write to it; `derived_observations` and `decision_logic` must not
@@ -134,6 +139,4 @@ Detail lives in `CONCURRENCY_MODEL.md`. The architectural constraint:
 - [ ] Where the Telegram approval loop lives. It spans `presentation` (the prompt) and
       `trade_management` (the proposed action) and `journal_evidence` (the record). Likely an
       application service in `presentation`; confirm when `PRODUCT_SURFACES.md` is written.
-- [ ] Storage engine choice (owner decision: local DB, Firebase for push only). Parquet + DuckDB is
-      the leading candidate for bars; the journal wants transactional integrity, which points
-      elsewhere. Needs its own ADR.
+- [x] ~~Storage engine choice~~ — **`ADR-0004`: DuckDB for both**, one embedded file.

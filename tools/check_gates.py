@@ -69,6 +69,8 @@ def main() -> int:
         "course index": _run("course index shape",
                              [python, "tools/build_course_index.py", "--check-only"]),
         "frd": _run("FRD current", [python, "tools/build_frd.py", "--check-only"]),
+        "import contracts": _run("import-linter architecture contracts",
+                                 [python, "-m", "importlinter.cli", "lint-imports"]),
         "no wall clock": check_no_wall_clock(),
         "tests": _run("pytest", [python, "-m", "pytest", "tests/", "-q"]),
     }

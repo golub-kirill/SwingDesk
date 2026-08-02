@@ -50,8 +50,8 @@ layers = [
     "swingdesk.trade_management",
     "swingdesk.decision_logic",
     "swingdesk.derived_observations",
-    "swingdesk.reference_data",
     "swingdesk.market_data",
+    "swingdesk.reference_data",
     "swingdesk.platform",
 ]
 

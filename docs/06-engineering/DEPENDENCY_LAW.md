@@ -33,7 +33,7 @@ Plus two rules this project adds, both derived from the purity boundary in `ARCH
 
 ```
 presentation → validation → trade_management → decision_logic
-    → derived_observations → reference_data → market_data → platform
+    → derived_observations → market_data → reference_data → platform
 ```
 
 A package may import anything **below** it and nothing above. `import-linter`'s `layers` contract

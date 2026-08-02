@@ -19,14 +19,14 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 3b | `build_frd.py --check-only` | the FRD drifting from the registry it is generated from | **exists** |
 | 4 | `ruff` | style, obvious errors | to build |
 | 5 | `mypy --strict` | type errors | to build |
-| 6 | `lint-imports` | a package importing across a layer or forbidden boundary | **config exists**, runner to wire |
+| 6 | `lint-imports` | a package importing across a layer or forbidden boundary | **exists** — 4 contracts. Caught a reversed layer order on first run |
 | 7 | no-wall-clock check | `datetime.now` / `date.today` / `time.time` in `derived_observations`, `decision_logic`, `trade_management` | **exists** — AST-parsed, not string-matched, so a mention in a docstring does not trip it |
-| 8 | `pytest` | unit, property and golden-vector tests | **exists** — 11 property tests |
+| 8 | `pytest` | unit, property and golden-vector tests | **exists** — 19 tests, fully offline |
 | 9 | determinism replay | a stored manifest no longer reproducing its `output_hash` | to build |
 | 10 | traceability | a course id with no requirement row, a requirement with no test, a spec id cited by no test | to build |
 | 11 | component registry checks | `implements` not injective; an `active` component with an `unset` parameter | to build, needs `components.yml` |
 
-Gates 1, 2, 3, 3b, 7 and 8 run today via `tools/check_gates.py`. Gates 2 and 3 are stdlib-only; the rest need the project venv.
+Gates 1, 2, 3, 3b, 6, 7 and 8 run today via `tools/check_gates.py`. Gates 2 and 3 are stdlib-only; the rest need the project venv.
 
 ## 2. What each gate protects
 

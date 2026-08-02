@@ -16,18 +16,21 @@ import json
 import platform as platform_info
 import subprocess
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
 from uuid import uuid4
 
+from swingdesk.contracts.market import BarSeries as BarSeriesLike
 from swingdesk.contracts.market import Interval, Series
 from swingdesk.contracts.observation import ObservationSeries
 from swingdesk.contracts.reference import Instrument
 from swingdesk.contracts.run import RunManifest
 from swingdesk.derived_observations import atr
 from swingdesk.journal_evidence.journal import DecisionRecord, Journal
-from swingdesk.market_data import BarStore, VendorUnavailable, YAHOO, check, fetch
+from swingdesk.market_data import BarStore, VendorUnavailable, YAHOO, check
+from swingdesk.market_data import vendor_yahoo
 from swingdesk.platform.clock import Clock
 from swingdesk.platform.parameters import ParameterRegistry
 from swingdesk.reference_data import calendar as cal
@@ -75,6 +78,9 @@ def _config_hash(registry: ParameterRegistry) -> str:
     return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
 
+Fetcher = Callable[[Instrument, Interval, datetime, str | None], "BarSeriesLike"]
+
+
 def run(
     instruments: list[Instrument],
     clock: Clock,
@@ -82,8 +88,15 @@ def run(
     store: BarStore,
     journal: Journal,
     lookback: str = "1y",
+    fetcher: Fetcher | None = None,
 ) -> RunResult:
-    """One pass of the daily pipeline."""
+    """One pass of the daily pipeline.
+
+    `fetcher` is injected so the suite can run offline against recorded fixtures. CI must never
+    touch the network: a suite that fetches is neither deterministic nor available offline, and it
+    would hammer a rate-limited free tier (CI_POLICY 4).
+    """
+    fetch = fetcher or vendor_yahoo.fetch
     started = clock.now()
     # run_id and started_at are identity, not inputs - domain code never reads them, and they are
     # excluded from output_hash. So a replay under a pinned clock must still get a unique id, or
