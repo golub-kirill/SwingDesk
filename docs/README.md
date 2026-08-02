@@ -85,12 +85,12 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 39 | `ARCHITECTURE.md` | 9 contexts, the purity boundary, where the mandatory trace is materialised, run shape | drafting |
 | 40 | `DEPENDENCY_LAW.md` | Independence rules as 4 import-linter contracts in `pyproject.toml` | drafting |
 | 41 | `CONCURRENCY_MODEL.md` | Async fetching, process pools, single-threaded deterministic decision path | planned |
-| 42 | `DETERMINISM_SPEC.md` | No wall clock in domain code; run manifests | planned |
+| 42 | `DETERMINISM_SPEC.md` | The snapshot as determinism boundary, float-associativity trap, 10-field run manifest, stated scope limits | drafting |
 | 43 | `adr/` | ADR-0001 market data (Proposed) · ADR-0002 exchange calendar (Proposed) | drafting |
 | 44 | `TEST_STRATEGY.md` | Unit → property → golden vectors → contract → replay → chaos | planned |
 | 45 | `OBSERVABILITY_SPEC.md` + `runbooks/` | Log schema; one runbook per fail-closed row | planned |
 | 46 | `SECURITY.md` + `BACKUP_AND_DR.md` | Credentials, masking, tested restore | planned |
-| 47 | `CI_POLICY.md` | Merge gates | planned |
+| 47 | `CI_POLICY.md` | 11 gates, what each prevents, what CI must never do, local equivalence | drafting |
 | 48 | `AGENTS.md` (repo root) + per-package `CONTEXT.md` | How agents work here | planned |
 
 ## Tier 7 — UI/UX · `07-ux/`
