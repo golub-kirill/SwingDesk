@@ -12,8 +12,8 @@ Frozen first. Amendments are dated records appended to the file, never edits in 
 
 | # | File | Freezes | Source | Status |
 |---|---|---|---|---|
-| 01 | `CHARTER.md` | Purpose, 8 non-goals, the v1 finish line, 5 standing properties | Owner | drafting — finish line **PROPOSED** |
-| 02 | `SUCCESS_AND_KILL_CRITERIA.md` | What "working" means numerically; what result stops the project | Owner | **owner-pending — G0 blocked on this** |
+| 01 | `CHARTER.md` | Purpose, 8 non-goals, the v1 finish line, 5 standing properties | Owner | **finish line ratified 2026-08-01** |
+| 02 | `SUCCESS_AND_KILL_CRITERIA.md` | 18 criteria: 7 Track A (system), 6 Track B (edge), 5 kill. Data in `registry/criteria.yml` v1.0.0 | Owner | **frozen 2026-08-02** |
 | 03 | `CONSTRAINTS.md` | Markets, timeframes, 9 owner decisions, measured data depths | `verbatim` appendix covers + owner | drafting — budget owner-pending |
 | 04 | `GLOSSARY.md` | 35 terms, verbatim | `verbatim` Appendix A + Production Rules §3.9 | drafting |
 
@@ -118,7 +118,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 
 | Gate | Deliverables | Exit condition |
 |---|---|---|
-| G0 Charter | 01–04 | The v1 finish line and the kill criteria fit in two sentences |
+| ~~G0 Charter~~ | 01–04 | **CLOSED 2026-08-02** — finish line ratified, criteria frozen at v1.0.0 |
 | G1 Requirements | 05–09 | Every capability has a Gherkin acceptance criterion |
 | G2 Transcription | 10–13, 17–21, 30–33 + `registry/course_index.yml` | Every `verbatim` block diffs clean against the PDF text |
 | G3 Data | 25–29 | Vendor decided by ADR; point-in-time model settled |

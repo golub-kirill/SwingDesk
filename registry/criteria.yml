@@ -5,15 +5,16 @@
 #
 # Structure is frozen. Values are configurable - that is what "flexible" means here.
 #
-# status: proposed | ratified | met | failed
-#   proposed  drafted, awaiting owner ratification
-#   ratified  frozen; may not be edited after seeing a result it governs
+# status: proposed | owner-set | ratified | met | failed
+#   proposed   drafted, awaiting owner ratification
+#   owner-set  the value came from the owner directly, not drafted here
+#   ratified   frozen; may not be edited after seeing a result it governs
 #
 # See docs/00-charter/SUCCESS_AND_KILL_CRITERIA.md.
 
-version: 0.1.0
-date: 2026-08-01
-status: proposed          # whole document; owner ratifies
+version: 1.0.0
+date: 2026-08-02
+status: ratified          # owner ratified 2026-08-02; frozen - see rules below
 
 # ---------------------------------------------------------------------------
 # Track A - is the system sound?
@@ -25,26 +26,26 @@ track_a:
     criterion: The daily run completes and produces a report before the next session open
     value: 20 consecutive trading days
     measured_by: run manifests
-    status: proposed
+    status: ratified
 
   - id: a.decisions_coded
     criterion: Every candidate leaves the run with a decision and a reason code
     value: 100%
     measured_by: journal query over scan results
-    status: proposed
+    status: ratified
     note: Course rule - "Нет кандидатов без следующего действия" (M32/M33 operational standard).
 
   - id: a.no_uncoded_failures
     criterion: Every refusal carries a skip or error code; no silent failures
     value: 0 uncoded
     measured_by: log and journal audit
-    status: proposed
+    status: ratified
 
   - id: a.reproducible
     criterion: A re-run from a stored manifest reproduces the control run byte-identically
     value: byte-identical
     measured_by: tools determinism check
-    status: proposed
+    status: ratified
     note: >-
       Course states this as an operating procedure, not an engineering preference - the return
       condition after a screener failure is "повторный run совпал с контрольным".
@@ -53,20 +54,20 @@ track_a:
     criterion: Plan, stop and journal present for every taken trade
     value: 100%
     measured_by: Process compliance (Appendix D) restricted to these three
-    status: proposed
+    status: ratified
     note: The only hard numeric gate the course states (Appendix S, first 20 trades).
 
   - id: a.process_compliance_overall
     criterion: Overall process compliance across all checklist items
     value: '>= 95%'
     measured_by: Process compliance (Appendix D)
-    status: proposed
+    status: ratified
 
   - id: a.no_critical_violations
     criterion: No Critical-severity error codes recorded
     value: 0
     measured_by: error codes (CODES.md) filtered to Critical
-    status: proposed
+    status: ratified
 
 # ---------------------------------------------------------------------------
 # Track B - is there an edge?
@@ -78,7 +79,7 @@ track_b:
     criterion: Minimum closed trades before any verdict on a strategy card
     value: 100
     measured_by: journal, per strategy and version
-    status: proposed
+    status: ratified
     note: >-
       The course's own figure (Appendix S, "План первых 100 реальных сделок"). Below roughly this
       the expectancy CI is too wide to act on, because the right tail dominates the mean.
@@ -87,14 +88,14 @@ track_b:
     criterion: Expectancy positive, net of all costs, bootstrap CI excluding zero
     value: 'E[R] > 0, CI excludes 0'
     measured_by: Appendix D expectancy over the pre-registered sample
-    status: proposed
+    status: ratified
     note: Costs = commission, spread, slippage, borrow, FX. "После расходов" (Appendix D).
 
   - id: b.deflated_sharpe
     criterion: Deflated Sharpe computed on the CUMULATIVE trial count across the whole programme
     value: '> 0'
     measured_by: multiple-testing accounting
-    status: proposed
+    status: ratified
     note: >-
       With ~460 registered components the search space is large enough that per-strategy
       significance is meaningless. The trial count carries forward across every pre-registration.
@@ -103,19 +104,19 @@ track_b:
     criterion: Risk-adjusted return above buy-and-hold on the same universe, net of costs
     value: 'above benchmark'
     measured_by: paired comparison on one snapshot
-    status: proposed
+    status: ratified
 
   - id: b.era_stability
     criterion: The effect does not sign-flip across eras and is not carried by a single stretch
     value: no sign flip
     measured_by: stress / drop-best-era analysis
-    status: proposed
+    status: ratified
 
   - id: b.survivorship_caveat
     criterion: Every Track B result is reported with its survivorship-bias marker
     value: mandatory
     measured_by: evidence record field
-    status: proposed
+    status: ratified
     note: >-
       Not a threshold - a reporting obligation. No free source serves delisted instruments
       (ADR-0001 condition 6), so every historical number is optimistic by an unknown amount.
@@ -144,18 +145,20 @@ kill:
     trigger: G5 reached, or the G5 time box expires
     value: at G5
     action: >-
-      Set the Track A time box using measured throughput from the G5 build, and move this file to
-      status ratified.
+      Set the Track A time box using measured throughput from the G5 build, and issue this file as
+      v1.1.0 with that value added.
     status: owner-set
     date: 2026-08-01
-    note: The Track A time box is deferred on purpose - it will be an evidence-based number.
+    note: >-
+      The Track A time box is deferred on purpose - it will be an evidence-based number. Adding it
+      is an amendment, not an edit: v1.0.0 stays on record.
 
   - id: k.strategy_rejected
     scope: strategy card
     trigger: After b.min_sample, the expectancy CI lies entirely below the benchmark
     value: CI entirely below benchmark
     action: Set validation status Rejected. Retire the card. The project continues.
-    status: proposed
+    status: ratified
 
   - id: k.programme_exhausted
     scope: programme
@@ -165,14 +168,14 @@ kill:
     action: >-
       Convert to journal and statistics only. Keep the recording and review value, abandon signal
       generation.
-    status: proposed
+    status: ratified
 
   - id: k.drawdown_pause
     scope: live
     trigger: Realised drawdown exceeds validation.max_allowable_drawdown
     value: see registry/parameters.yml validation.max_allowable_drawdown
     action: Pause - not kill. Reduce size per the risk-off ladder and review.
-    status: proposed
+    status: ratified
     note: Course requires drawdown limits to automatically reduce size and trigger a pause (M69).
 
 # ---------------------------------------------------------------------------

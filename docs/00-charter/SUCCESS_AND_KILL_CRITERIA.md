@@ -1,10 +1,13 @@
 # SUCCESS AND KILL CRITERIA
 
-**Status:** drafting — structure **adopted** by the owner 2026-08-01; values **proposed**, awaiting
-ratification · **Tier:** 0 (charter) · **Data:** `registry/criteria.yml`
+**Status: FROZEN — ratified by the owner 2026-08-02.** `registry/criteria.yml` v1.0.0.
+**Tier:** 0 (charter)
 
-**G0 closes when `registry/criteria.yml` reaches `status: ratified` and `k.project_timebox` has a
-value.** That is one decision away.
+**G0 is closed.** 18 criteria, all with values: 7 Track A, 6 Track B, 5 kill.
+
+These may not be edited after seeing a result they govern. Changing one is an **amendment** — a new
+version of `criteria.yml` with the change recorded — and it voids any claim that depended on the
+earlier definition (Production Rules §3.7, applied at project level).
 
 ---
 
@@ -95,14 +98,17 @@ for one vertical slice, which means the real risk is not the clock — it is sco
 ~460-component catalogue. The activation gate exists for exactly this: components may sit at
 `registered` indefinitely at no cost, and only reach `active` deliberately.
 
-## 6. Ratification
+## 6. Ratification record
 
-Structure adopted by the owner 2026-08-01. `k.project_timebox` and `k.timebox_review` are
-owner-set. The remaining Track A and Track B values were drafted here for ratification and are still
-`status: proposed`.
+| Date | Event |
+|---|---|
+| 2026-08-01 | Two-track structure adopted by the owner; values drafted here for ratification |
+| 2026-08-01 | `k.project_timebox` (2 months → G5) and `k.timebox_review` set by the owner |
+| **2026-08-02** | **All remaining Track A and Track B values ratified. `criteria.yml` v1.0.0 frozen. G0 closed.** |
 
-**G0 closes when `registry/criteria.yml` moves to `status: ratified`.** That is a single owner
-confirmation, not further work.
+One value is deliberately **absent rather than unset**: the Track A time box. It is scheduled by
+`k.timebox_review` to be added at G5 from measured throughput, as v1.1.0. That is an amendment, not
+an edit — v1.0.0 stays on record.
 
 ## 7. Standing rules
 
