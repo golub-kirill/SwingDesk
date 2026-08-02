@@ -77,14 +77,34 @@ Note the graduated shape: a failing strategy kills a card, not the project; an e
 converts to something smaller rather than to nothing; a drawdown pauses rather than stops. Only one
 trigger stops the build, and it is a **time box**, not an outcome.
 
-## 5. The one value still needed
+## 5. The time box (owner, 2026-08-01)
 
-`k.project_timebox` — **months from G0 close before Track A must be met.** Everything else in
-`criteria.yml` has a defensible default; this one cannot be defaulted, because only the owner knows
-how long this is worth. Without it, "stop building" has no trigger and the kill criterion is
-decorative.
+**2 months from G0 close to reach G5 — the walking skeleton green in CI. Not to reach Track A.**
 
-## 6. Standing rules
+This is the right shape, and the reasoning is worth keeping: **Track A contains its own 4-week
+clock.** `a.run_completes` requires 20 consecutive trading days of the system running, which is a
+calendar month *after* it works. Timeboxing Track A therefore mixes two different questions — *can
+this be built?* and *is it stable?* — and a schedule miss on the first would trip a kill criterion
+meant for the second.
+
+So G5 is boxed, and the Track A box is set afterwards from **measured throughput** rather than
+guessed at now (`k.timebox_review`).
+
+At the owner's stated capacity of ~40 h/week, 2 months is ~**350 working hours**. That is generous
+for one vertical slice, which means the real risk is not the clock — it is scope drifting into the
+~460-component catalogue. The activation gate exists for exactly this: components may sit at
+`registered` indefinitely at no cost, and only reach `active` deliberately.
+
+## 6. Ratification
+
+Structure adopted by the owner 2026-08-01. `k.project_timebox` and `k.timebox_review` are
+owner-set. The remaining Track A and Track B values were drafted here for ratification and are still
+`status: proposed`.
+
+**G0 closes when `registry/criteria.yml` moves to `status: ratified`.** That is a single owner
+confirmation, not further work.
+
+## 7. Standing rules
 
 1. Criteria are frozen before the run that tests them.
 2. Editing after seeing a result creates a new version and voids the claim — §3.7 at project level.

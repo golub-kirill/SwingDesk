@@ -116,10 +116,21 @@ Equity, risk and universe thresholds are **parameters with defaults**, not const
 are easy to change. But: **one install, one owner.** The charter non-goals stand, and Yahoo's
 personal-use terms remain satisfied (`ADR-0001` condition 1).
 
-## 8. Still open
+## 8. Capacity and schedule (owner, 2026-08-01)
 
-- [ ] **Time budget**: hours per week. Determines whether D2's full-catalogue scope is reachable at
-      `specified` or only at `registered`.
-- [ ] **Hardware**: whether backtests run on this machine or elsewhere.
-- [ ] **`k.project_timebox`** in `registry/criteria.yml` — months from G0 close before Track A must
-      be met. The last value blocking G0.
+| | |
+|---|---|
+| Available time | **~40 h/week** (full time) |
+| Time box | **2 months from G0 close to reach G5** (walking skeleton green in CI) |
+| ≈ working hours to G5 | **~350** |
+| Track A time box | deferred — set from measured throughput at G5 (`k.timebox_review`) |
+
+**The binding constraint is scope, not time.** 350 hours is generous for one vertical slice. It is
+nowhere near enough to take ~460 components to `active`, and it does not need to be: D2's
+full-catalogue scope is satisfied at `registered`, which is free, and `specified`/`active` are
+opened deliberately per component.
+
+## 9. Still open
+
+- [ ] **Hardware**: whether backtests run on this machine or elsewhere. Not urgent until G6.
+- [ ] Ratify the remaining `registry/criteria.yml` values (one confirmation; closes G0).

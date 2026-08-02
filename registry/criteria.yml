@@ -128,11 +128,27 @@ track_b:
 kill:
   - id: k.project_timebox
     scope: project
-    trigger: Track A not met within the time box
-    value: null                  # OWNER MUST SET - months from G0 close
-    action: Stop building. Ship what works or shelve it.
-    status: proposed
-    note: The one value the owner must supply. Everything else here has a defensible default.
+    trigger: G5 (walking skeleton green in CI) not reached within the time box
+    value: 2 months from G0 close
+    action: Stop building. The system cannot be delivered at the available throughput.
+    status: owner-set
+    date: 2026-08-01
+    note: >-
+      Deliberately boxes G5 rather than Track A. Track A contains its own 20-trading-day observation
+      window, so timeboxing it would conflate "can this be built" with "is it stable". Owner
+      capacity is ~40 h/week, so this is ~350 working hours - generous for a walking skeleton, which
+      means the real risk is scope drift into the 460-component catalogue rather than time.
+
+  - id: k.timebox_review
+    scope: project
+    trigger: G5 reached, or the G5 time box expires
+    value: at G5
+    action: >-
+      Set the Track A time box using measured throughput from the G5 build, and move this file to
+      status ratified.
+    status: owner-set
+    date: 2026-08-01
+    note: The Track A time box is deferred on purpose - it will be an evidence-based number.
 
   - id: k.strategy_rejected
     scope: strategy card
