@@ -122,6 +122,35 @@ requirements and may need a different provider from the bar data.
 
 ---
 
+### 2.4 Questrade — **empirically probed 2026-08-01** (`tools/probe_questrade.py`)
+
+Run by the owner against a live account. API server `api01.iq.questrade.com`.
+
+| Symbol | Exchange | Currency | `OneDay` | `OneHour` | `HalfHour` |
+|---|---|---|---|---|---|
+| AAPL | NASDAQ | USD | 2498 bars, 2016-08-04 → 2026-07-31 | 1054 bars, **2026-05-04** → | 2046 bars, **2026-05-04** → |
+| CNQ.TO | TSX | CAD | 2507 bars, 2016-08-04 → | 441 bars, **2026-05-04** → | 882 bars, **2026-05-04** → |
+| SHOP.TO | TSX | CAD | 2500 bars, 2016-08-04 → | 441 bars, **2026-05-04** → | 881 bars, **2026-05-04** → |
+
+**Three readings, in order of consequence:**
+
+1. **Questrade does not solve the intraday problem.** Every intraday series begins `2026-05-04` —
+   ~63 trading days, materially the same cap as Yahoo's measured 60. And Yahoo's `1h` reaches ~725
+   trading days, so **Yahoo is roughly 11× deeper on hourly**. The `30m` evidence ceiling stands on
+   both sources.
+2. **Delisted symbols resolve.** `TWTR` (id 4870386), `SIVB` (37744) and `ATVI` (6543) all return
+   symbol records, where Yahoo returns nothing at all. If their *candles* also exist, this fixes
+   survivorship — the one limitation `ADR-0001` currently accepts as permanent. **Resolution is not
+   history**; a follow-up probe fetches their bars. Until that returns, this is a lead, not a fact.
+3. **Session coverage differs by market.** Bars per trading day: AAPL ~16.7 (`1h`) and ~32.5
+   (`30m`); CNQ.TO ~7.0 and ~14.0. The US series carry extended hours, the Canadian ones do not.
+   Unnoticed, this silently corrupts any indicator computed across both markets, and it is a
+   stronger argument for separate per-exchange session handling than the calendar difference
+   already recorded in §2.1.
+
+**Daily depth is not yet known.** The probe requested at most 10 years and got 10 years back, so
+2016-08-04 is the probe's floor, not Questrade's. Re-probing to 30 years.
+
 ## 3. Reading of the evidence
 
 1. **On the free tier, Yahoo is the only verified source that covers Canada *and* provides
@@ -163,10 +192,15 @@ requirements and may need a different provider from the bar data.
 
 **Blocking (must resolve before G5 / walking skeleton):**
 
-- [ ] **Questrade probe** — intraday historical depth per granularity, exact rate limits, whether an
-      account must be funded, redistribution terms, delisted-symbol availability. Requires a manual
-      docs read or a live API call; automated fetch is blocked by 403. *Highest value item here: it
-      can supersede ADR-0001.*
+- [x] ~~Questrade intraday depth~~ — **measured 2026-08-01: ~63 trading days, no better than
+      Yahoo.** Questrade does not supersede `ADR-0001` on bar depth.
+- [ ] **Do delisted symbols have candles in Questrade?** They resolve; history unconfirmed. This is
+      now the single highest-value open question in the project — it is the difference between
+      survivorship being a permanent caveat and a fixable defect.
+- [ ] Questrade daily depth beyond 10 years (probe floor, not vendor floor).
+- [ ] Questrade rate limits and redistribution terms.
+- [ ] Whether Questrade's US extended-hours bars can be filtered to regular hours, or whether the
+      US/Canada session asymmetry has to be handled downstream.
 - [ ] Decide the **earnings `confirmed / estimated`** source, or formally downgrade M34-T495's status
       field to `unavailable` and record what the system does without it.
 - [ ] Decide **breadth**: register in-house universe-breadth as a Derived Observation with its
