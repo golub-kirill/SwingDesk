@@ -95,6 +95,33 @@ Two findings:
 those days, and wrong silently. Where a component needs the session close it reads the **daily**
 series, never the last intraday bar.
 
+### The stub is kept on regular sessions and dropped on early closes
+
+Found while implementing `ExchangeSession.expected_bars`. At `1h`:
+
+| Session | Duration | Full hours | Stub | Calendar says | Yahoo returns |
+|---|---|---|---|---|---|
+| regular | 6.5 h | 6 | 30 min | 7 | **7** — stub kept |
+| early close | 3.5 h | 3 | 30 min | 4 | **3** — stub dropped |
+
+Consistent across all five measured half-days (2023-11-24, 2024-07-03, 2024-11-29, 2024-12-24,
+2025-07-03, 2025-11-28, 2025-12-24). **The reason is unknown**; the behaviour is not.
+
+At `30m` the question does not arise — both 390 and 210 minutes divide evenly, so there is no stub
+either way.
+
+**Architectural consequence, and it matters:** the calendar returns **session truth** and must not be
+bent to match a vendor. If it were, it would stop being an independent check — which is the entire
+reason `ADR-0002` adopts it. Vendor quirks live in the `market_data` adapter as a **vendor profile**:
+
+```
+expected_from_calendar(session, interval)      -> session truth
+vendor_profile.adjust(expected, session, ...)  -> what THIS vendor will actually return
+```
+
+Comparing raw calendar expectation against Yahoo's actual counts would raise `DATA` on **every
+half-day** — precisely the false-positive flood `ADR-0002` was adopted to avoid.
+
 ## 2c. Short sessions are indistinguishable from vendor gaps
 
 The same probe found three sessions that are **not** exchange half-days:

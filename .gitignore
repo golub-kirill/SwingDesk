@@ -25,3 +25,6 @@ firebase-adminsdk*.json
 # generated reports
 out/
 reports/
+
+# project venv
+.venv/
