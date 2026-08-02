@@ -132,24 +132,45 @@ Run by the owner against a live account. API server `api01.iq.questrade.com`.
 | CNQ.TO | TSX | CAD | 2507 bars, 2016-08-04 → | 441 bars, **2026-05-04** → | 882 bars, **2026-05-04** → |
 | SHOP.TO | TSX | CAD | 2500 bars, 2016-08-04 → | 441 bars, **2026-05-04** → | 881 bars, **2026-05-04** → |
 
-**Three readings, in order of consequence:**
+Second run, lookback extended to 30 years:
+
+| Symbol | `OneDay` |
+|---|---|
+| AAPL | 7509 bars, **1996-08-09** → 2026-07-31 |
+| CNQ.TO | 7528 bars, **1996-08-09** → |
+| SHOP.TO | 2803 bars, **2015-05-21** → (its actual listing date) |
+
+**Four readings, in order of consequence:**
 
 1. **Questrade does not solve the intraday problem.** Every intraday series begins `2026-05-04` —
-   ~63 trading days, materially the same cap as Yahoo's measured 60. And Yahoo's `1h` reaches ~725
+   ~63 trading days, materially the same cap as Yahoo's measured 60. Yahoo's `1h` reaches ~725
    trading days, so **Yahoo is roughly 11× deeper on hourly**. The `30m` evidence ceiling stands on
    both sources.
-2. **Delisted symbols resolve.** `TWTR` (id 4870386), `SIVB` (37744) and `ATVI` (6543) all return
-   symbol records, where Yahoo returns nothing at all. If their *candles* also exist, this fixes
-   survivorship — the one limitation `ADR-0001` currently accepts as permanent. **Resolution is not
-   history**; a follow-up probe fetches their bars. Until that returns, this is a lead, not a fact.
-3. **Session coverage differs by market.** Bars per trading day: AAPL ~16.7 (`1h`) and ~32.5
-   (`30m`); CNQ.TO ~7.0 and ~14.0. The US series carry extended hours, the Canadian ones do not.
-   Unnoticed, this silently corrupts any indicator computed across both markets, and it is a
-   stronger argument for separate per-exchange session handling than the calendar difference
-   already recorded in §2.1.
+2. **Delisted history does not exist — confirmed.** `TWTR`, `SIVB` and `ATVI` resolve as symbol
+   records but come back `tradable=False, quotable=False`, and their candles return
+   `HTTP 404 {"code":1019,"message":"Symbol not found"}`. The record is a stub. **Survivorship bias
+   is now measured as unavoidable on two independent sources**, which promotes it from "assumed
+   permanent" to "demonstrated permanent" for the free path.
+3. **Questrade intraday sessions are dirty, and inconsistently so.** Measured on 2026-07-31,
+   `HalfHour`:
+   - AAPL — **33 bars, 03:30 → 19:30** (≈16.5 hours; deep pre- and post-market)
+   - CNQ.TO — **14 bars, 09:00 → 15:30** (7 hours; includes a pre-open 09:00 bar)
 
-**Daily depth is not yet known.** The probe requested at most 10 years and got 10 years back, so
-2016-08-04 is the probe's floor, not Questrade's. Re-probing to 30 years.
+   Neither is regular hours, and the two markets differ from each other. Yahoo returns a clean
+   13-bar RTH session (`09:30 … 15:30`) **identically for both markets**. For a system whose
+   indicators must be comparable across US and Canadian names, Yahoo's intraday is materially
+   cleaner and needs no per-exchange filtering.
+4. **Daily depth ≥30 years, ceiling still unknown** — `1996-08-09` is again the probe's floor, not
+   the vendor's. Yahoo reaches 1980 for AAPL, so Yahoo remains deeper there; for CNQ.TO the two are
+   comparable (Yahoo 1995-01-12 vs Questrade ≤1996-08-09). SHOP.TO returns `2015-05-21` from **both**
+   sources — a useful cross-validation that both are reporting the true listing date rather than a
+   truncated window.
+
+**Where Questrade earns its place anyway.** The fail-closed degradation table's first row requires,
+verbatim, *"использовать второй источник и последний валидный snapshot"* — a **second source** on
+data doubt. Questrade is a licensed, documented API covering exactly the same universe, which makes
+it the natural corroborating source for conflict detection, even though it loses as the primary.
+That satisfies a course requirement that Yahoo alone cannot meet.
 
 ## 3. Reading of the evidence
 
@@ -192,15 +213,14 @@ Run by the owner against a live account. API server `api01.iq.questrade.com`.
 
 **Blocking (must resolve before G5 / walking skeleton):**
 
-- [x] ~~Questrade intraday depth~~ — **measured 2026-08-01: ~63 trading days, no better than
-      Yahoo.** Questrade does not supersede `ADR-0001` on bar depth.
-- [ ] **Do delisted symbols have candles in Questrade?** They resolve; history unconfirmed. This is
-      now the single highest-value open question in the project — it is the difference between
-      survivorship being a permanent caveat and a fixable defect.
-- [ ] Questrade daily depth beyond 10 years (probe floor, not vendor floor).
-- [ ] Questrade rate limits and redistribution terms.
-- [ ] Whether Questrade's US extended-hours bars can be filtered to regular hours, or whether the
-      US/Canada session asymmetry has to be handled downstream.
+- [x] ~~Questrade intraday depth~~ — **~63 trading days, no better than Yahoo.**
+- [x] ~~Do delisted symbols have candles in Questrade?~~ — **no.** They resolve as untradable stubs;
+      candles 404. Survivorship confirmed permanent on both sources.
+- [x] ~~Questrade daily depth~~ — **≥30 years**; ceiling still unmeasured but no longer decision-relevant.
+- [x] ~~Questrade session coverage~~ — **dirty and market-dependent** (US 03:30–19:30, CA 09:00–15:30).
+- [ ] Questrade rate limits and redistribution terms — needed only for its **second-source** role.
+- [ ] Whether Questrade intraday can be filtered to RTH reliably enough for cross-checking, or
+      whether corroboration is restricted to daily bars.
 - [ ] Decide the **earnings `confirmed / estimated`** source, or formally downgrade M34-T495's status
       field to `unavailable` and record what the system does without it.
 - [ ] Decide **breadth**: register in-house universe-breadth as a Derived Observation with its

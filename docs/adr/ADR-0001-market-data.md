@@ -1,8 +1,9 @@
 # ADR-0001 — Market data source for v1
 
-- **Status:** Proposed — awaiting owner ratification
+- **Status:** Proposed — awaiting owner ratification. **Questrade probed 2026-08-01 and does not
+  supersede this decision**; it is adopted instead as the second source (§Decision, point 3).
 - **Date:** 2026-08-01
-- **Evidence:** `docs/03-data/VENDOR_COMPARISON.md`
+- **Evidence:** `docs/03-data/VENDOR_COMPARISON.md` §2.1, §2.2, §2.4
 
 ## Context
 
@@ -33,6 +34,13 @@ Canadian instruments, behind a vendor-agnostic adapter in `swingdesk.market_data
 Store the three intervals **independently**. Do not derive `1h` from `30m`: `30m` is capped at 60
 trading days while `1h` reaches ~725, and deriving would discard ~665 days of available history.
 
+**Adopt Questrade as the second source**, not the primary. The fail-closed degradation table
+requires *"использовать второй источник и последний валидный snapshot"* on data doubt, and Yahoo
+alone cannot satisfy that. Questrade is a licensed, documented API covering the same universe with
+≥30 years of daily history, which makes it the right corroborating source for conflict detection —
+initially on daily bars, where both sources are clean. Its intraday is **not** interchangeable with
+Yahoo's (see below) and must not be silently substituted.
+
 ## Conditions this decision carries
 
 1. **Personal use only.** Yahoo's terms state the API is for personal use. This binds the charter:
@@ -52,10 +60,13 @@ trading days while `1h` reaches ~725, and deriving would discard ~665 days of av
    breadth, or borrow availability. Those are separate, still-unsourced requirements and will get
    their own ADRs. Sector/industry/exchange/currency **are** covered — measured working for both
    `AAPL` and `CNQ.TO`.
-6. **Survivorship bias is accepted, declared, and stamped.** Measured 2026-08-01: Yahoo returns zero
-   rows for `TWTR`, `SIVB`, `FRC` and `ATVI`. A universe built from currently-listed names is
+6. **Survivorship bias is accepted, declared, and stamped.** Measured 2026-08-01 on **two
+   independent sources**: Yahoo returns zero rows for `TWTR`, `SIVB`, `FRC` and `ATVI`; Questrade
+   resolves them as `tradable=False, quotable=False` stubs whose candles return
+   `404 {"code":1019,"message":"Symbol not found"}`. A universe built from currently-listed names is
    therefore survivorship-biased by construction, which M72 explicitly forbids relying on. No free
-   source examined fixes this. Consequence: every backtest result and every evidence record produced
+   source examined fixes this, and the second measurement moves this from an assumption to a
+   demonstrated property of the free path. Consequence: every backtest result and every evidence record produced
    on this source carries an explicit survivorship-bias marker, and no result may be quoted without
    it. This is a permanent caveat on the free path, not a defect to be fixed later.
 7. **Breadth is computed, not fetched.** `^ADD` is unavailable. Advance-decline and percent-above-MA
@@ -68,15 +79,14 @@ trading days while `1h` reaches ~725, and deriving would discard ~665 days of av
 - **Pay for a vendor** (Tiingo/EODHD/massive paid tiers, ~$30–200/month). Solves point-in-time,
   corporate actions and intraday depth properly. Rejected for v1 on the owner's free-tier
   constraint; revisit trigger below.
-- **Questrade API** — **the strongest alternative, and deliberately left open.** Verified 2026-08-01:
-  free for anyone to use, historical OHLC candles for Canadian **and** US stocks, TSX supported,
-  granularity enum contains exactly `HalfHour` / `OneHour` / `OneDay`, 2,000 candles per response,
-  OAuth 2.0, practice account carries L1 data access. It is the only free option that is a
-  *licensed, documented API* rather than an unofficial scrape of a consumer site. Not adopted **only**
-  because three blocking facts could not be obtained by automated means (their docs return HTTP 403):
-  intraday historical depth, exact rate limits, and redistribution terms. **If its intraday depth
-  beats Yahoo's 60 trading days, it supersedes this ADR.** Probing it is the highest-value open item
-  in `VENDOR_COMPARISON.md`.
+- **Questrade API as primary** — **probed 2026-08-01, rejected as primary, adopted as second
+  source.** It is a licensed, documented API with ≥30 years of daily history for both markets, and
+  on paper it looked likely to supersede this decision. Measurement said otherwise on all three
+  counts that mattered: intraday depth is ~63 trading days (**no better than Yahoo**, and Yahoo's
+  `1h` is ~11× deeper); delisted candles do not exist (**does not fix survivorship**); and intraday
+  sessions are dirty and inconsistent between markets (AAPL `03:30–19:30`, CNQ.TO `09:00–15:30`)
+  where Yahoo returns clean regular hours identically for both. Its licensed status is a real
+  advantage over an unofficial scrape and is why it takes the second-source role.
 - **Composite from day one** (Yahoo bars + others for events/breadth). Deferred, not rejected: the
   adapter interface is designed for it, but v1 proves one source end to end first.
 - **Derive `1h` from `30m`.** Rejected on measured evidence, see Decision.
@@ -98,5 +108,7 @@ trading days while `1h` reaches ~725, and deriving would discard ~665 days of av
 - The `30m` ceiling blocks a decision the owner actually wants to make, **or**
 - Yahoo access breaks or degrades (unofficial, no SLA), **or**
 - The project moves beyond single-user personal use, **or**
-- **Questrade is probed and its intraday depth exceeds 60 trading days** — this is expected to
-  trigger, and the probe is scheduled before G5.
+- ~~Questrade is probed and its intraday depth exceeds 60 trading days~~ — **probed 2026-08-01, it
+  does not.** This trigger is spent.
+- A paid vendor becomes acceptable. This is now the **only** path that fixes point-in-time or
+  survivorship; two free sources have been measured and neither does.
