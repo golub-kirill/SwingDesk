@@ -21,12 +21,18 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 5 | `mypy --strict` | type errors | to build |
 | 6 | `lint-imports` | a package importing across a layer or forbidden boundary | **exists** — 4 contracts. Caught a reversed layer order on first run |
 | 7 | no-wall-clock check | `datetime.now` / `date.today` / `time.time` in `derived_observations`, `decision_logic`, `trade_management` | **exists** — AST-parsed, not string-matched, so a mention in a docstring does not trip it |
-| 8 | `pytest` | unit, property and golden-vector tests | **exists** — 19 tests, fully offline |
-| 9 | determinism replay | a stored manifest no longer reproducing its `output_hash` | to build |
+| 7b | `golden.py` | a component's output changing without its version and vectors changing with it | **exists** — 6 vectors, 1 component |
+| 8 | `pytest` | unit, property and golden-vector tests | **exists** — 30 tests, fully offline |
+| 9 | determinism replay | a stored manifest no longer reproducing its `output_hash` | **exists** — 1 case, 4 instruments covering all four decision branches |
 | 10 | traceability | a course id with no requirement row, a requirement with no test, a spec id cited by no test | to build |
 | 11 | component registry checks | `implements` not injective; an `active` component with an `unset` parameter | to build, needs `components.yml` |
 
-Gates 1, 2, 3, 3b, 6, 7 and 8 run today via `tools/check_gates.py`. Gates 2 and 3 are stdlib-only; the rest need the project venv.
+Everything except 4, 5, 10 and 11 runs today via `tools/check_gates.py`. Gates 2 and 3 are
+stdlib-only; the rest need the project venv (`pip install -e ".[dev]"`).
+
+Gates 7b and 9 are also asserted from `pytest`, so a bare `pytest` run is not silently weaker than
+CI. The duplication is deliberate — they are the two gates whose subject is *change over time*, and
+they are the ones a developer is most likely to run without.
 
 ## 2. What each gate protects
 
@@ -37,9 +43,10 @@ Not busywork — each maps to a specific way this project could quietly go wrong
 | 1 | a guessed threshold acquiring the authority of a measurement |
 | 2 | documents drifting from the course while still claiming to transcribe it — **already caught two real errors** and two undeclared sources |
 | 3 | an extraction change silently altering the component catalogue |
-| 6 | a strategy fetching its own facts; an indicator owning a decision; the journal being written from a pure layer |
+| 6 | a strategy fetching its own facts; an indicator owning a decision; the journal being written from a pure layer — **caught a reversed layer order on its first run, and forced `application` out of `presentation` on its second** |
 | 7 | reproducibility breaking invisibly — one hurried commit is enough |
-| 9 | non-determinism entering the decision path |
+| 7b | a behaviour change slipping in unversioned; and, via the file hashes, the cheaper failure of pasting whatever the code now prints into the expected values |
+| 9 | non-determinism entering the decision path — **caught `config_hash` covering only which parameters were set, so a changed threshold would have been reported as a determinism defect** |
 | 10 | a course requirement being dropped without anyone noticing |
 | 11 | two implementations of one component — the thing §3.8 forbids and import analysis cannot see |
 
@@ -78,11 +85,26 @@ python tools/check_gates.py
 
 There is deliberately no `--skip` flag.
 
-## 6. Open items
+## 6. What the gates have actually caught
+
+Kept as a record, because the argument for a gate is empirical and this is the evidence:
+
+| Gate | Caught |
+|---|---|
+| 2 | two real transcription errors, and four documents citing sources they had not declared |
+| 6 | `reference_data` placed above `market_data`, which would have let calendars import bars |
+| 6 | the pipeline sitting in `presentation`, unreachable by the replay harness that needs it |
+| 9 | `config_hash` hashing set-ness instead of values |
+| 9 | a replay fixture whose bars had constant true range, making it blind to the ATR period |
+
+The last one is the useful kind of failure: the gate was green, the fixture was wrong, and only
+trying to make the gate fail on purpose revealed it.
+
+## 7. Open items
 
 - [ ] Choose the runner. GitHub Actions assumes a remote; a local pre-commit hook plus a script
       suits a single-user offline-first project better, and the repo has no remote today.
-- [ ] Decide whether gates 8–11 block from the start or are added as their subjects come into
-      existence. Blocking on a test suite that does not yet exist is theatre.
+- [ ] Gates 10 and 11 block once their subjects exist. Blocking on a registry that does not yet
+      exist is theatre.
 - [ ] Runtime budget. Gates 1–3 take about a minute (dominated by re-extracting 116 PDFs). If that
       becomes friction, cache extraction by file hash rather than weakening the check.

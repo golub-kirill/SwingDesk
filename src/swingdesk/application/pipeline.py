@@ -70,10 +70,24 @@ def _git(*args: str) -> str:
 
 
 def _config_hash(registry: ParameterRegistry) -> str:
-    """Hash of the resolved parameter state. Values are hashed, never recorded (SECURITY 2.5)."""
+    """Hash of the resolved parameter state. Values are hashed, never recorded (SECURITY 2.5).
+
+    The hash covers values and provenance, not merely which ids are set. An earlier version hashed
+    set-ness alone, so changing a threshold left config_hash unmoved - a replay would then report a
+    different output with nothing pinned having changed, and blame the decision path for what was
+    really a config edit. The replay gate surfaced that the first time it was pointed at a case.
+    """
     payload = json.dumps(
-        {pid: registry.is_set(pid) for pid in sorted(registry._entries)},  # noqa: SLF001
+        {
+            pid: (
+                {"value": entry.get("value"), "provenance": entry.get("provenance")}
+                if entry.get("value") is not None
+                else None
+            )
+            for pid, entry in sorted(registry._entries.items())  # noqa: SLF001
+        },
         sort_keys=True,
+        default=str,
     )
     return hashlib.sha256(payload.encode()).hexdigest()[:16]
 

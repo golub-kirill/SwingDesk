@@ -9,7 +9,7 @@ architecture; this maps it onto packages and states what each owns.
 
 ## 1. Contexts
 
-Nine packages under `src/swingdesk/`. The four middle ones are the course's four layers, one to one.
+Ten packages under `src/swingdesk/`. The four middle ones are the course's four layers, one to one.
 
 | Package | Course layer | Owns |
 |---|---|---|
@@ -19,12 +19,19 @@ Nine packages under `src/swingdesk/`. The four middle ones are the course's four
 | `derived_observations` | **Derived Observations** | indicators, structure, levels, patterns, regime, relative strength — **pure functions** |
 | `decision_logic` | **Decision Logic** | gates, conditions, screeners, strategy evaluation, candidate decisions |
 | `trade_management` | **Trade Management** | sizing, stop, target, partial, trailing, time-exit, portfolio constraints |
+| `application` | — | the daily run: sequencing the layers, nothing else |
 | `journal_evidence` | — | append-only journal, audit trail, evidence records, checklists |
 | `validation` | — | backtest, walk-forward, robustness, forward-test harnesses |
 | `presentation` | — | CLI, reports, web API, Telegram, push |
 
-`platform` and `journal_evidence` have no course layer because they are infrastructure: the course
-describes *what must be recorded and reproduced*, not where the code lives.
+`platform`, `application` and `journal_evidence` have no course layer because they are
+infrastructure: the course describes *what must be recorded and reproduced*, not where the code
+lives.
+
+**`application` owns sequencing, not rules.** It exists because the run has more than one caller:
+the CLI runs it live, and the replay harness in `validation` runs it against a recorded snapshot.
+The pipeline originally sat in `presentation`, where neither could import it without inverting the
+chain — the replay gate is what surfaced that.
 
 ## 2. Dependency direction
 
@@ -32,6 +39,8 @@ describes *what must be recorded and reproduced*, not where the code lives.
 presentation
     ↓
 validation
+    ↓
+application
     ↓
 trade_management
     ↓
@@ -52,8 +61,8 @@ against what the exchange calendar says the session held. An earlier draft had t
 `lint-imports` caught it the moment the check was written.
 
 `journal_evidence` sits **outside** this chain. It is a persistence service: `trade_management`,
-`validation` and `presentation` write to it; `derived_observations` and `decision_logic` must not
-touch it, because they are pure. Expressing that needs `forbidden` contracts, not layers — see
+`application`, `validation` and `presentation` write to it; `derived_observations` and
+`decision_logic` must not touch it, because they are pure. Expressing that needs `forbidden` contracts, not layers — see
 `DEPENDENCY_LAW.md`.
 
 ## 3. Purity boundary
@@ -136,7 +145,8 @@ Detail lives in `CONCURRENCY_MODEL.md`. The architectural constraint:
 - [ ] Whether `reference_data` and `market_data` should be one context. They are separate because
       their revision behaviour differs — bars get back-adjusted, calendars do not — but that may not
       justify a boundary. Revisit after the walking skeleton.
-- [ ] Where the Telegram approval loop lives. It spans `presentation` (the prompt) and
-      `trade_management` (the proposed action) and `journal_evidence` (the record). Likely an
-      application service in `presentation`; confirm when `PRODUCT_SURFACES.md` is written.
+- [ ] Where the Telegram approval loop lives. It spans `presentation` (the prompt),
+      `trade_management` (the proposed action) and `journal_evidence` (the record) — so it is an
+      `application` service with a thin `presentation` surface. Confirm when the approval flow is
+      built.
 - [x] ~~Storage engine choice~~ — **`ADR-0004`: DuckDB for both**, one embedded file.

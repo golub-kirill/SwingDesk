@@ -72,7 +72,9 @@ def main() -> int:
         "import contracts": _run("import-linter architecture contracts",
                                  [python, "-m", "importlinter.cli", "lint-imports"]),
         "no wall clock": check_no_wall_clock(),
+        "golden vectors": _run("golden vectors", [python, "tools/golden.py"]),
         "tests": _run("pytest", [python, "-m", "pytest", "tests/", "-q"]),
+        "determinism replay": _run("determinism replay", [python, "tools/replay.py"]),
     }
 
     print("\n" + "=" * 62)

@@ -8,7 +8,7 @@ provenance, and a validation status (CHARTER 4, the ratified v1 finish line). A 
 
 from __future__ import annotations
 
-from swingdesk.presentation.pipeline import RunResult
+from swingdesk.application.pipeline import RunResult
 from swingdesk.trade_management.sizing import Refusal
 
 _RULE = "─" * 78

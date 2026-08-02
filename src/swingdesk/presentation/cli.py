@@ -6,13 +6,13 @@ import argparse
 import sys
 from pathlib import Path
 
+from swingdesk.application.pipeline import run
 from swingdesk.contracts.reference import Instrument
 from swingdesk.journal_evidence.journal import Journal
 from swingdesk.market_data import BarStore
 from swingdesk.platform.clock import FixedClock, SystemClock
 from swingdesk.platform.parameters import ParameterRegistry
 from swingdesk.presentation import report
-from swingdesk.presentation.pipeline import run
 from swingdesk.reference_data import calendar as cal
 
 DEFAULT_DATA = Path("data")

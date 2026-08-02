@@ -53,6 +53,22 @@ Rules:
 - Vectors use `TEST.1`, `TEST.2` … synthetic instruments, never real tickers — a vector referencing
   a real name invites someone to "fix" it against current market data.
 - A changed vector blocks the merge unless the same commit carries the decision record.
+- **Expected values are authored from the source arithmetic, not recorded from the implementation.**
+  Each vector carries a `derivation` field stating how its numbers follow from the formula. A vector
+  that only records what the code printed cannot tell you the code was ever right — it can only tell
+  you the code has not changed.
+
+They live in `golden/components/<component-id>/`, with a `manifest.json` holding a SHA-256 per
+vector. Central rather than beside the source, because two different gates read them and one of
+them is not `pytest`. The hash is the load-bearing part: without it, the cheapest way past a failing
+vector is to paste in whatever the code now prints, which converts the gate into a formality.
+
+`tools/golden.py --regenerate` exists for a deliberate version bump. It is not a way to fix a red
+build.
+
+**ATR is the first component with vectors** — six cases covering Wilder's seed, the smoothing
+recursion, all three true-range branches, the zero-range boundary, warm-up refusal, and a
+non-default period to prove the parameter is read rather than hard-coded.
 
 ## 4. Fixtures, and where they come from
 
@@ -103,10 +119,27 @@ risk on positions already open.
   (`SUCCESS_AND_KILL_CRITERIA.md`).
 - UI appearance.
 
-## 8. Open items
+## 8. Proving a gate can fail
 
-- [ ] Property-test library — Hypothesis is the obvious choice and is not yet a dependency.
-- [ ] Where golden vectors live: alongside the component or centrally. Alongside keeps them visible
-      in review, which is where they do their work.
+A gate that cannot be made to fail is theatre, so the gates guarding *change over time* have tests
+that break something on a copy of the fixtures and assert the breakage is reported — and reported
+with the right cause:
+
+| Broken deliberately | Must be reported as |
+|---|---|
+| a vector edited without rehashing | content changed |
+| a vector's input changed, then rehashed | a value mismatch at a named index |
+| a new vector left out of the manifest | unregistered |
+| a component version moved without its vectors | version bump required |
+| the recorded replay snapshot edited | fixture edited — **not** non-determinism |
+| a parameter value changed | `config_hash` changed — **not** non-determinism |
+
+The last two matter more than they look. A gate that reports every mismatch as non-determinism will
+fire on the first config edit, and the operator will learn to disbelieve it.
+
+## 9. Open items
+
+- [x] ~~Property-test library~~ — Hypothesis, declared in the `dev` extra.
+- [x] ~~Where golden vectors live~~ — `golden/components/`, centrally (§3).
 - [ ] Whether the nightly replay uses the previous real run or a rolling fixture. Real is stronger;
       it also means a genuine vendor revision looks like a failure until triaged.

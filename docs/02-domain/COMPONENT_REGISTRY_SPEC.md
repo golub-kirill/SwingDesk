@@ -66,6 +66,11 @@ against the source. Everything else is authored as a component advances.
 | `specified` | algorithm spec written; parameters declared with provenance; consumers listed | authoring |
 | `active` | parameters have values; verification exists (golden vectors or property test); `implements` points at real code | authoring + evidence |
 
+One component is `active` today: **ATR** (`M18-T0280-v5.0`), implemented at
+`swingdesk.derived_observations.atr`, with six golden vectors and a CI gate that blocks a behaviour
+change unless its version moves with it (`TEST_STRATEGY.md` §3). Its validation status is `Untested`
+and its one parameter is `assumed` — which is exactly what the next row of this table permits.
+
 **`Untested` is a permitted status for an `active` component.** The course is explicit that
 validation statuses are not grades:
 

@@ -9,8 +9,17 @@ parties. The human makes every trading decision; this system prepares and record
 
 ## Status
 
-Pre-implementation. Documents and preparations only — see `docs/README.md` for the document set and
-the gates that must pass before application code is written.
+Walking skeleton, gated. One instrument through one feed, one derived observation, one risk
+calculation, one journal entry, one report — with the merge gates that keep it honest running from
+a single command:
+
+```bash
+python tools/check_gates.py
+```
+
+Nine gates today: parameter provenance, verbatim transcription, course index shape, FRD currency,
+import contracts, no wall clock in domain code, golden vectors, the test suite, and a determinism
+replay. See `docs/06-engineering/CI_POLICY.md`, including a record of what each one has caught.
 
 ## Source of truth
 
@@ -40,7 +49,9 @@ ever displayed as more validated than it is.
 
 - Markets: Canada + US equities and ETFs
 - Timeframes: context `1Y` / `3M` (windows over daily bars) → decision `1D` → confirmation/trigger
-  `1H` (derived from 30m) → execution `30m`. Lower frames refine a setup; they never invent one.
+  `1H` → execution `30m`. Lower frames refine a setup; they never invent one. Each resolution is
+  fetched and stored independently — deriving `1H` from `30m` would cap hourly history at 60
+  trading days when ~725 are available (`ADR-0001`).
 - Storage: local database for bars, features and backtests. Firebase is used for push notifications
   only.
 - Surfaces, in build order: CLI + reports → web admin panel → Telegram approval of open-position
@@ -51,8 +62,9 @@ ever displayed as more validated than it is.
 ```
 docs/        the document set, by tier (see docs/README.md)
 registry/    generated data: course index, component registry, parameter registry
+golden/      frozen fixtures: component vectors and replay cases
 src/         bounded contexts, one package each
-tools/       generators and verification scripts
+tools/       generators, verification scripts, and the gate runner
 tests/
 ```
 

@@ -1,0 +1,57 @@
+{
+  "case": "daily-three-instruments",
+  "note": "Four instruments over one year of recorded sessions, chosen so the output hash covers every branch the slice has: a full run that sizes, a second exchange with a different calendar, a warm-up refusal, and a vendor that returned nothing. A fixture that only exercises the happy path pins the least interesting third of the pipeline.",
+  "as_of": "2026-01-15T21:00:00+00:00",
+  "lookback": "1y",
+  "instruments": [
+    {
+      "id": "TEST.1",
+      "ticker": "TEST1",
+      "exchange": "NYSE",
+      "currency": "USD"
+    },
+    {
+      "id": "TEST.2.TO",
+      "ticker": "TEST2",
+      "exchange": "TSX",
+      "currency": "CAD"
+    },
+    {
+      "id": "TEST.3",
+      "ticker": "TEST3",
+      "exchange": "NYSE",
+      "currency": "USD"
+    },
+    {
+      "id": "TEST.4",
+      "ticker": "TEST4",
+      "exchange": "NYSE",
+      "currency": "USD"
+    }
+  ],
+  "parameters": {
+    "atr.period": 14,
+    "account.equity": 10000,
+    "risk.per_trade_pct": "1.0",
+    "risk.costs_allowance": "0.02",
+    "risk.max_position_value": 1000000
+  },
+  "manifest": {
+    "run_id": "run-20260115T210000Z-ef7cf011",
+    "started_at": "2026-01-15T21:00:00Z",
+    "code_hash": "0d5a478",
+    "code_dirty": true,
+    "config_hash": "7fa042d431fc480f",
+    "snapshot_id": "snap-20260115T210000Z-ef7cf011",
+    "component_versions": {
+      "M18-T0280-v5.0": 1
+    },
+    "parameters": [],
+    "seed": null,
+    "calendar_version": "pandas-market-calendars==5.4.0",
+    "platform": "Windows python3.14.0",
+    "output_hash": "16761d5789d838bb",
+    "completed_at": "2026-01-15T21:00:00Z"
+  },
+  "inputs_digest": "8d8eda94f0b5d4f6"
+}

@@ -17,6 +17,15 @@ dependencies = [
     "duckdb>=1",
 ]
 
+[project.optional-dependencies]
+# Everything the merge gates need. Declared here rather than only in requirements-lock.txt, because
+# a gate whose tooling is undeclared is a gate that stops running on a fresh checkout.
+dev = [
+    "pytest>=8",
+    "hypothesis>=6",      # property tests carry the invariants (TEST_STRATEGY 2)
+    "import-linter>=2",   # the dependency law, executed (DEPENDENCY_LAW)
+]
+
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
@@ -47,6 +56,7 @@ type = "layers"
 layers = [
     "swingdesk.presentation",
     "swingdesk.validation",
+    "swingdesk.application",
     "swingdesk.trade_management",
     "swingdesk.decision_logic",
     "swingdesk.derived_observations",
@@ -61,8 +71,8 @@ type = "forbidden"
 source_modules = ["swingdesk.derived_observations", "swingdesk.decision_logic"]
 forbidden_modules = ["swingdesk.market_data"]
 
-# journal_evidence is a persistence service, not a layer: trade_management, validation and
-# presentation write to it, but the pure layers must stay side-effect free.
+# journal_evidence is a persistence service, not a layer: trade_management, application, validation
+# and presentation write to it, but the pure layers must stay side-effect free.
 [[tool.importlinter.contracts]]
 name = "Pure layers do not journal"
 type = "forbidden"
@@ -79,6 +89,7 @@ forbidden_modules = [
     "swingdesk.derived_observations",
     "swingdesk.decision_logic",
     "swingdesk.trade_management",
+    "swingdesk.application",
     "swingdesk.validation",
     "swingdesk.presentation",
 ]

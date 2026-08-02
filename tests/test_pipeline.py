@@ -13,11 +13,11 @@ from datetime import date, datetime, timezone
 
 import pytest
 
+from swingdesk.application.pipeline import run
 from swingdesk.contracts.market import Interval, Series
 from swingdesk.journal_evidence.journal import Journal
 from swingdesk.market_data import BarStore, YAHOO, check
 from swingdesk.platform.clock import FixedClock
-from swingdesk.presentation.pipeline import run
 from swingdesk.reference_data import calendar as cal
 from tests.conftest import TEST_CA, TEST_US, fixture_fetcher, series_for
 

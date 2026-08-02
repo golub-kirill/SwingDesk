@@ -1,0 +1,62 @@
+{
+  "component": "M18-T0280-v5.0",
+  "name": "ATR",
+  "component_version": 1,
+  "case": "period_two",
+  "derivation": "period=2, so the seed is the mean of the first two true ranges. Bars 1 and 2 give TR = 2.00 each, seeding ATR = 4.00/2 = 2.00 at bar index 2. Bar 3 steps up (H=106.00 against Cprev=100.00) for TR = 6.00, and the recursion gives (2.00*1 + 6.00)/2 = 4.00. This vector exists to prove the period is read from the registry rather than hard-coded at 14.",
+  "parameters": {
+    "atr.period": 2
+  },
+  "instrument_id": "TEST.1",
+  "interval": "1d",
+  "series": "raw",
+  "knowledge_time": "2026-01-15T21:00:00+00:00",
+  "columns": [
+    "session_date",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume"
+  ],
+  "bars": [
+    [
+      "2025-03-03",
+      "100.00",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ],
+    [
+      "2025-03-04",
+      "100.00",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ],
+    [
+      "2025-03-05",
+      "100.00",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ],
+    [
+      "2025-03-06",
+      "104.00",
+      "106.00",
+      "104.00",
+      "105.00",
+      1000000
+    ]
+  ],
+  "expected": [
+    null,
+    null,
+    "2.00",
+    "4.00"
+  ]
+}

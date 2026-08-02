@@ -140,21 +140,41 @@ narrows which.
 
 ## 7. Verification
 
-| Check | When |
-|---|---|
-| no wall clock in domain packages | every CI run |
-| replay a stored manifest, compare `output_hash` | every CI run, on a small fixture |
-| replay the previous real run | nightly / before any release |
-| property test: shuffled input order → identical output | every CI run |
+| Check | When | Status |
+|---|---|---|
+| no wall clock in domain packages | every CI run | **runs** — AST-parsed |
+| replay a stored manifest, compare `output_hash` | every CI run, on a small fixture | **runs** — `tools/replay.py` |
+| replay the previous real run | nightly / before any release | to build |
+| property test: shuffled input order → identical output | every CI run | **runs** |
 
 That last one is the strongest of the four: it catches ordering dependence directly, rather than
 waiting for it to surface as an unreproducible result.
 
+### 7.1 What a replay case must pin
+
+A case is a directory under `golden/replay/`: recorded bars, the inputs that select them, and the
+manifest the run produced. Three things it must get right, each learned by getting it wrong:
+
+1. **The case pins its own inputs.** `inputs_digest` covers the recorded bars, instruments,
+   parameters and as-of. Without it, editing the fixture produces a different output and the gate
+   blames the decision path — a false accusation, and the fastest way to make a gate distrusted.
+2. **`config_hash` covers parameter *values*, not just which ids are set.** The first version hashed
+   set-ness alone, so changing a threshold left it unmoved and the mismatch looked like
+   non-determinism.
+3. **The fixture's data must be sensitive to the parameters.** The first recorded case walked its
+   closes upward with fixed high/low offsets, which made every true range identical at 2.00 — so the
+   ATR was the same for any period, and the case was blind to the parameter it claimed to pin. Bars
+   now vary their range on coprime cycles.
+
+The current case covers all four decision branches: a candidate that sizes, a second exchange whose
+calendar diverges, a warm-up refusal, and a vendor that returned nothing. A fixture that exercises
+only the happy path pins the least interesting third of the run.
+
 ## 8. Open items
 
-- [ ] Whether `output_hash` covers the full trace or just the decisions. Full trace is stricter and
-      catches more, but will churn on cosmetic changes — which trains people to ignore it.
-- [ ] Fixture size for the CI replay: large enough to exercise aggregation, small enough to run on
-      every commit.
+- [ ] Whether `output_hash` covers the full trace or just the decisions. It covers decisions,
+      bar counts and the latest observation today. Full trace is stricter and catches more, but will
+      churn on cosmetic changes — which trains people to ignore it.
 - [ ] Whether a dirty working tree is allowed to produce a journalled run at all, or only a
-      scratch one.
+      scratch one. The manifest records `code_dirty` and the replay diagnosis reports it, but
+      nothing refuses.

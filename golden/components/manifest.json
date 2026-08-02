@@ -1,0 +1,18 @@
+{
+  "note": "Frozen input/output pairs per component. See docs/06-engineering/TEST_STRATEGY.md 3. A hash mismatch is a blocking merge failure; regenerating requires a component version bump and a decision record in the same commit.",
+  "components": {
+    "M18-T0280-v5.0": {
+      "name": "ATR",
+      "module": "swingdesk.derived_observations.atr",
+      "version": 1,
+      "vectors": {
+        "constant_range.json": "977f52252fc1cce90909897d513e9e4a585aaf722c6519ce05d20be3a418a388",
+        "flat_bars.json": "7d7afc5d912e8a1f2ce4caa750c1e2b1b2334c2152429c12dbf467213ddaaa60",
+        "gap_down.json": "49c08055c4ea3091efd0db642f2cbbef8cdc9579a710499b05f71940febda8d1",
+        "gap_up.json": "6278ad48c7fdcd8ea7fcc08efdccbe3046eeb58d429579d692560637ee81dcf7",
+        "period_two.json": "3c93caffd89cfeaaf50febf7369a10c5ca6888b60eda9978b010d84994bfc33e",
+        "warm_up_refusal.json": "5d94a3e8514b09b70dc7b6562b2ae92a22a3b335553a3d71b233c8cf5cfc07ee"
+      }
+    }
+  }
+}

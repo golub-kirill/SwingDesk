@@ -32,7 +32,7 @@ Plus two rules this project adds, both derived from the purity boundary in `ARCH
 ## 2. The layer chain
 
 ```
-presentation → validation → trade_management → decision_logic
+presentation → validation → application → trade_management → decision_logic
     → derived_observations → market_data → reference_data → platform
 ```
 
@@ -43,6 +43,11 @@ enforces the whole chain in one rule.
 we forbid: put it low and `decision_logic` could journal (breaking purity); put it high and
 `trade_management` could not journal (breaking the trace). Two `forbidden` contracts express the
 real shape.
+
+`application` sits between `trade_management` and `validation` because the run has two callers, not
+one: the CLI above it and the replay harness in `validation`. While the pipeline lived in
+`presentation` neither could reach it — the contract that would have been broken is the one that
+made the problem visible.
 
 ## 3. Adding a package
 
