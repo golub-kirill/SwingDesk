@@ -26,15 +26,40 @@ sentence above does not mention it.
 `1Y`, `3M` and `30D` are **not resolutions**. They are windows. Only three series are stored:
 `1d`, `1h`, `30m` — independently, never derived from one another (`ADR-0001`).
 
-## 2. Two exchanges, two calendars — measured
+## 2. Two exchanges, two calendars — enumerated
 
 NYSE and TSX both trade 09:30–16:00 ET, which makes them look interchangeable. They are not.
 
-**Measured 2026-08-01:** over the same ~725-trading-day window, Yahoo returned **5,073** hourly bars
-for AAPL and **5,089** for CNQ.TO and SHOP.TO — a **16-session divergence** from differing holiday
-calendars.
+Measured with `tools/probe_calendar.py` over `2023-09-06 … 2026-07-31`:
 
-The course already forbids merging them:
+| | |
+|---|---|
+| Sessions with US data | **728** |
+| Sessions with CA data | **730** |
+| Sessions in both | 714 |
+| **US open, CA closed** | **14** |
+| **CA open, US closed** | **16** |
+| **Gross divergence** | **30 sessions** |
+
+**The net figure is dangerously misleading.** The bar-count difference is 16 bars ≈ 2 sessions net,
+and an earlier draft of this document reported that as the divergence. It is not: netting hides
+93% of it. **30 sessions** exist where exactly one market traded, and each is a session where a
+cross-market computation would silently compare a real bar to nothing.
+
+**US open, CA closed** — Canadian holidays: Canadian Thanksgiving (2023-10-09, 2024-10-14,
+2025-10-13) · Boxing Day (2023-12-26, 2024-12-26, 2025-12-26) · Victoria Day (2024-05-20,
+2025-05-19, 2026-05-18) · Canada Day (2024-07-01, 2025-07-01, 2026-07-01) · Civic Holiday
+(2024-08-05, 2025-08-04).
+
+**CA open, US closed** — US holidays: US Thanksgiving (2023-11-23, 2024-11-28, 2025-11-27) · MLK
+Day (2024-01-15, 2025-01-20, 2026-01-19) · Memorial Day (2024-05-27, 2025-05-26, 2026-05-25) ·
+Juneteenth (2024-06-19, 2025-06-19, 2026-06-19) · Independence Day (2024-07-04, 2025-07-04,
+2026-07-03) · **2025-01-09**, an unscheduled NYSE closure.
+
+That last date matters more than the others: it is not on any recurring holiday list. **A calendar
+built from a rule rather than a record would have missed it.**
+
+The course already forbids merging the two:
 
 > "Запрещено смешивать USA и Canada без отдельных индексов или игнорировать sector/risk-bucket
 > concentration."
@@ -42,6 +67,64 @@ The course already forbids merging them:
 **Requirement:** separate calendars per exchange, always. Any operation aligning a US and a Canadian
 series must join on timestamp and tolerate missing sessions on either side — never assume index
 alignment, never forward-fill across a foreign holiday.
+
+## 2b. Half-days — measured, and they lose the close
+
+Confirmed at `1h`, where history is deep enough (`30m` reaches only ~60 trading days):
+
+| Date | US | CA |
+|---|---|---|
+| 2023-11-24 | **3 bars** `09:30–11:30` | 7 bars (full) |
+| 2024-07-03 | **3 bars** | 7 bars (full) |
+| 2024-11-29 | **3 bars** | 7 bars (full) |
+| 2024-12-24 | **3 bars** | **3 bars** |
+| 2025-07-03 | **3 bars** | 7 bars (full) |
+| 2025-11-28 | **3 bars** | 7 bars (full) |
+| 2025-12-24 | **3 bars** | **3 bars** |
+
+Two findings:
+
+1. **Half-days rarely coincide.** Of seven US early closes, only the two Christmas Eves are also
+   short on TSX. A shared half-day is the exception.
+2. **The session close is missing from the intraday series.** A 13:00 ET close yields bars at
+   `09:30`, `10:30`, `11:30` — covering 09:30–12:30. The final 12:30–13:00 half-hour **is not
+   returned**. So on a half-day the last intraday close is a 12:30 price, while the daily bar closes
+   at 13:00.
+
+**Consequence:** any component that treats "last intraday close" as "session close" is wrong on
+those days, and wrong silently. Where a component needs the session close it reads the **daily**
+series, never the last intraday bar.
+
+## 2c. Short sessions are indistinguishable from vendor gaps
+
+The same probe found three sessions that are **not** exchange half-days:
+
+| Date | US | CA |
+|---|---|---|
+| 2026-01-30 | 2 bars `09:30–10:30` | 2 bars `09:30–10:30` |
+| 2026-02-02 | 3 bars **`13:30–15:30`** | 3 bars **`13:30–15:30`** |
+| 2025-04-24 | full | 3 bars `13:30–15:30` |
+
+Two of these truncate **both exchanges identically**, and one *starts* at 13:30 — no exchange
+schedule does that. They are consistent with vendor-side gaps, but that cannot be established from
+the bar data, because **a missing session and a closed market have the same signature: absent bars.**
+
+This is the root cause behind the half-day risk, and it generalises:
+
+1. An unhandled short session is an off-by-N in every intraday aggregate.
+2. It cannot be detected by counting bars, because a normal half-day counts short too.
+3. A vendor gap must raise `DATA` and block decisions; a half-day must not.
+4. Distinguishing them requires knowing whether the market was open.
+5. **Nothing in the system knows that independently of the vendor.**
+
+**Requirement, promoted from an open item: an authoritative exchange calendar, independent of the
+bar data.** Without it, `DATA` is either raised on every half-day (crying wolf until the operator
+ignores it) or never raised on a gap (trading on a truncated session). Deriving the calendar from
+observed bars is self-referential and cannot work.
+
+Until such a calendar exists, the honest fallback is: **any session whose bar count differs from the
+exchange's modal count is `DATA`-skipped**, accepting false positives on genuine half-days rather
+than trading through a gap. That is the fail-closed direction.
 
 ## 3. Session and bar boundaries
 
@@ -128,14 +211,18 @@ Base currency USD (`CONSTRAINTS.md` §5), universe spans both markets.
 
 ## 8. Open items
 
-- [ ] **Half-days are unverified.** US markets close at 13:00 on several days a year, which should
-      yield 7 `30m` bars instead of 13 and 4 `1h` bars instead of 7. TSX half-days do not always
-      coincide. Probe a known half-day on both markets before the walking skeleton — an unhandled
-      half-day is a silent off-by-N in every intraday aggregate.
-- [ ] Exchange calendar source. Deriving calendars from observed bar data is self-consistent and
-      needs no dependency, but cannot distinguish "market closed" from "vendor missing data" — which
-      matters, because one is normal and the other is a `DATA` skip.
-- [ ] Whether `1h` bars are stored with their true duration, so the trailing stub is explicit rather
-      than implied by position.
-- [ ] TSX early-close and holiday list differences from NYSE, enumerated rather than inferred from
-      the 16-session count.
+- [x] ~~Half-days are unverified~~ — **measured, §2b.** 3 hourly bars, and the session close is
+      missing from the intraday series.
+- [x] ~~TSX/NYSE differences inferred rather than enumerated~~ — **enumerated, §2.** 30 gross
+      divergent sessions, not the 2 the net suggested.
+- [ ] **Source an authoritative exchange calendar** (§2c). Promoted from optional to required: it
+      is the only way to distinguish a closed market from a vendor gap, and 2025-01-09 shows a
+      rule-based calendar is insufficient — it must be a record, including unscheduled closures.
+- [ ] Confirm whether the three anomalies in §2c are vendor gaps by checking them against the second
+      source (Questrade daily). If Questrade has full sessions on those dates, they are Yahoo gaps
+      and the conflict check would have caught them.
+- [ ] Whether `1h` bars are stored with their true duration, so the trailing stub — and the missing
+      half-day close — are explicit rather than implied by position.
+- [ ] Half-day behaviour at `30m` is still unmeasured: the 60-day window contained no half-day.
+      Re-probe after the next US early close (the pattern predicts 7 bars, `09:30–12:30`, with
+      12:30–13:00 absent).

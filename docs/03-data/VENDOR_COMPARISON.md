@@ -56,9 +56,11 @@ Bar composition (probed separately, timestamps converted to `America/New_York`):
 - The `1h` series is already anchored at 09:30, so the 6.5-hour session's unavoidable half-bar lands
   as a **trailing 30-minute stub** (15:30–16:00). This is Yahoo's convention and it matches what
   `CALENDAR_SPEC.md` needs to state.
-- CNQ.TO and SHOP.TO returned 5089 hourly bars vs AAPL's 5073 — **16 more**, i.e. NYSE and TSX
-  holiday calendars genuinely differ over the window. Confirms that a single shared calendar is a
-  defect, as M30/M31/M33 `FAIL-CLOSED` already requires (`Запрещено смешивать USA и Canada`).
+- CNQ.TO and SHOP.TO returned 5089 hourly bars vs AAPL's 5073 — 16 more. **Do not read that as the
+  divergence**: it is the *net*. Enumerated in `CALENDAR_SPEC.md` §2, the two calendars diverge on
+  **30 sessions** over the window (14 US-only, 16 CA-only), which nets to 2. Netting hides 93% of
+  it. Confirms that a single shared calendar is a defect, as M30/M31/M33 `FAIL-CLOSED` already
+  requires (`Запрещено смешивать USA и Canada`).
 
 **Consequence for the architecture:** `1H` must be **stored independently, not derived from `30m`** —
 deriving it would cap hourly history at 60 trading days and discard ~665 days that are actually
