@@ -42,7 +42,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 16 | `PARAMETER_REGISTRY.md` | Every threshold with value, unit, provenance, status, UI-editable flag | Authored — **no course source exists** | planned |
 | 17 | `RISK_SPEC.md` | 11 risk formulas + control clauses + the sizing ordering law | `verbatim` Appendix C, M48, M49 | drafting |
 | 18 | `STATISTICS_SPEC.md` | 11 statistics formulas, 15 M69 metrics, net-of-costs rule, 9 breakdown axes | `verbatim` Appendix D, H, M69 | drafting |
-| 19 | `STRATEGY_CARD_SPEC.md` | The strategy definition record | `verbatim` Appendix I (21 fields) + M71 (17 fields) | planned |
+| 19 | `STRATEGY_CARD_SPEC.md` | The strategy definition record + the three condition kinds (required / confirming / prohibiting) | `verbatim` Appendix I (21 fields) + M71 (17) + §3.6 | drafting |
 | 20 | `EXIT_MODEL_SPEC.md` | 4-slot exit model + 73-item taxonomy | `verbatim` M52–M58 | planned |
 | 21 | `SCREENER_SPEC.md` | 16 filters, candidate-card fields, 9-step pipeline | `verbatim` M32, M33 | planned |
 | 22 | `REGIME_SPEC.md` | 11 regimes, classifier inputs, regime→strategy→risk matrix | `verbatim` M30/M31/Appendix L; **classifier authored** | planned |
@@ -66,7 +66,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 30 | `JOURNAL_SCHEMA.md` | 12-entity ER model + M67 fields + implied fields | `verbatim` Appendix G + M67 | drafting |
 | 31 | `AUDIT_AND_IMMUTABILITY.md` | Append-only; the original plan is never rewritten | `verbatim` (every appendix page 1) | planned |
 | 32 | `EVIDENCE_RECORD_SPEC.md` | Evidence panel fields; 9-value validation status enum | `verbatim` Production Rules §3.7 | planned |
-| 33 | `CHECKLIST_SPEC.md` | 97 checklist items as gated forms | `verbatim` Appendices E, H, P, T | planned |
+| 33 | `CHECKLIST_SPEC.md` | 84 checklist items as gated forms (E 18 · H 13 · P 19 · T 34) | `verbatim` Appendices E, H, P, T | drafting |
 
 ## Tier 5 — Validation · `05-validation/`
 
