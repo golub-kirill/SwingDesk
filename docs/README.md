@@ -53,7 +53,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 
 | # | File | Freezes | Source | Status |
 |---|---|---|---|---|
-| 25 | `contracts/` | One schema per cross-context record; code is generated from these | Engineering | planned |
+| 25 | `contracts/` | 10 cross-context records, 7 rules, columnar exception for `Bar` — Pydantic v2 per `ADR-0003` | Engineering | drafting |
 | 26 | `POINT_IN_TIME_SPEC.md` | Bitemporal `event_time`+`knowledge_time`, revision deltas, raw/adjusted separate, membership as PIT fact | Required by Appendix A, J and M72 | drafting |
 | 27 | `CALENDAR_SPEC.md` | Separate NYSE/TSX calendars (16-session divergence measured), 13/7 bar sessions, trailing stub, bar finality, UTC storage | Course + measured | drafting |
 | 28 | `VENDOR_COMPARISON.md` + `adr/ADR-0001-market-data.md` | Vendor decision | Evidence gathered 2026-08-01 | drafting — ADR **Proposed**, awaiting ratification |
@@ -86,7 +86,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 40 | `DEPENDENCY_LAW.md` | Independence rules as 4 import-linter contracts in `pyproject.toml` | drafting |
 | 41 | `CONCURRENCY_MODEL.md` | 3 tiers, per-vendor limits, breaker, thread-safety classes, worker-count invariance | drafting |
 | 42 | `DETERMINISM_SPEC.md` | The snapshot as determinism boundary, float-associativity trap, 10-field run manifest, stated scope limits | drafting |
-| 43 | `adr/` | ADR-0001 market data (Proposed) · ADR-0002 exchange calendar (Proposed) | drafting |
+| 43 | `adr/` | ADR-0001 market data · ADR-0002 exchange calendar · ADR-0003 schema language (all Proposed) | drafting |
 | 44 | `TEST_STRATEGY.md` | 7 layers, 9 invariants as property tests, golden vectors as the immutability mechanism, 6 chaos scenarios | drafting |
 | 45 | `OBSERVABILITY_SPEC.md` + `runbooks/` | Log schema; one runbook per fail-closed row | planned |
 | 46 | `SECURITY.md` + `BACKUP_AND_DR.md` | Credentials, masking, tested restore | planned |

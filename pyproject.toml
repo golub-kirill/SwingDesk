@@ -4,6 +4,11 @@ version = "0.0.0"
 description = "Swing-trading decision support for Canadian and US equities and ETFs"
 requires-python = ">=3.12"
 dependencies = [
+    # Contracts (ADR-0003). The model class is the schema.
+    "pydantic>=2",
+    # Authoritative exchange calendar (ADR-0002) - NYSE and TSX differ on 30 sessions
+    # over ~2.9 years, and the difference is not derivable from bar data.
+    "pandas-market-calendars>=4",
     # The registries are YAML; tools/verify_parameters.py reads them.
     # tools/build_course_index.py and tools/verify_transcription.py stay stdlib-only so the
     # transcription checks run without an environment.
