@@ -59,6 +59,15 @@ class Bar(BaseModel):
     interval: Interval
     series: Series
     event_time: datetime = Field(description="Bar open, timezone-aware.")
+    session_date: date = Field(
+        description="The EXCHANGE-LOCAL calendar date this bar belongs to.\n\n"
+                    "Stored, never derived from event_time.date(). A timestamp's date depends on "
+                    "the timezone it happens to carry, and storage layers convert: DuckDB returns "
+                    "TIMESTAMPTZ in the local system timezone, so a 00:00 New York bar read back "
+                    "on a UTC-5 machine reports the previous day. That silently misaligned every "
+                    "session against the calendar until it was caught. The session a bar belongs "
+                    "to is a fact (CALENDAR_SPEC 6), so it is stored as one."
+    )
     open: Decimal
     high: Decimal
     low: Decimal
@@ -81,10 +90,6 @@ class Bar(BaseModel):
         if not (self.low <= self.close <= self.high):
             raise ValueError(f"close {self.close} outside [{self.low}, {self.high}]")
         return self
-
-    @property
-    def session_date(self) -> date:
-        return self.event_time.date()
 
 
 class BarSeries(BaseModel):

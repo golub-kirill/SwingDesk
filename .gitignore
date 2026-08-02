@@ -33,3 +33,6 @@ reports/
 *.egg-info/
 build/
 dist/
+
+# local run data
+data/

@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS bars (
     interval        VARCHAR       NOT NULL,
     series          VARCHAR       NOT NULL,
     event_time      TIMESTAMPTZ   NOT NULL,
+    session_date    DATE          NOT NULL,
     knowledge_time  TIMESTAMPTZ   NOT NULL,
     open            DECIMAL(18,6) NOT NULL,
     high            DECIMAL(18,6) NOT NULL,
@@ -104,7 +105,7 @@ class BarStore:
 
         rows = self._connection.execute(
             f"""
-            SELECT event_time, open, high, low, close, volume, knowledge_time
+            SELECT event_time, session_date, open, high, low, close, volume, knowledge_time
             FROM bars
             WHERE {' AND '.join(clauses)}
             QUALIFY ROW_NUMBER() OVER (
@@ -121,12 +122,13 @@ class BarStore:
                 interval=interval,
                 series=series,
                 event_time=row[0],
-                open=row[1],
-                high=row[2],
-                low=row[3],
-                close=row[4],
-                volume=row[5],
-                knowledge_time=row[6],
+                session_date=row[1],
+                open=row[2],
+                high=row[3],
+                low=row[4],
+                close=row[5],
+                volume=row[6],
+                knowledge_time=row[7],
             )
             for row in rows
         )
@@ -182,7 +184,7 @@ class BarStore:
             new_rows.append(
                 (
                     bar.instrument_id, bar.interval.value, bar.series.value,
-                    bar.event_time, knowledge_time,
+                    bar.event_time, bar.session_date, knowledge_time,
                     bar.open, bar.high, bar.low, bar.close, bar.volume,
                 )
             )
@@ -191,9 +193,9 @@ class BarStore:
             self._connection.executemany(
                 """
                 INSERT OR REPLACE INTO bars
-                    (instrument_id, interval, series, event_time, knowledge_time,
+                    (instrument_id, interval, series, event_time, session_date, knowledge_time,
                      open, high, low, close, volume)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 new_rows,
             )

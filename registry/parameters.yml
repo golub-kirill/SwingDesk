@@ -64,6 +64,19 @@ parameters:
     note: Minimum daily history before an instrument is eligible; also bounds indicator warm-up.
     ui_editable: true
 
+  # ---- derived observations (docs/02-domain/ALGORITHM_SPEC.md) ----
+  - id: atr.period
+    unit: bars
+    value: 14
+    status: assumed
+    provenance: "assumed:Wilder 1978, New Concepts in Technical Trading Systems"
+    named_in: [M18-T0280, M18-T0281, M27, M48-T0738]
+    note: >-
+      The course names ATR repeatedly and never gives a period. 14 is Wilder's original and the de
+      facto standard, which makes it a convention rather than evidence - it has not been tested
+      here and carries no claim about this universe.
+    ui_editable: true
+
   # ---- sizing and risk (docs/02-domain/RISK_SPEC.md §4) ----
   - id: risk.per_trade_pct
     unit: percent of equity

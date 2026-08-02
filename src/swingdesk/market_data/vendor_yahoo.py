@@ -63,17 +63,22 @@ def fetch(
     if frame is None or frame.empty:
         raise VendorUnavailable(f"{instrument.vendor_symbol} {interval.value}: no data returned")
 
+    # The session a bar belongs to is computed HERE, while the timestamp is still in the
+    # exchange's own timezone. yfinance returns a tz-aware index in exchange-local time; once the
+    # value is stored and read back it may come out in any timezone, and its .date() would then be
+    # wrong (CALENDAR_SPEC 6).
     bars: list[Bar] = []
     for stamp, row in frame.iterrows():
-        event_time = stamp.to_pydatetime()
-        if event_time.tzinfo is None:
-            event_time = event_time.replace(tzinfo=timezone.utc)
+        local = stamp.to_pydatetime()
+        session_date = local.date()
+        event_time = local if local.tzinfo is not None else local.replace(tzinfo=timezone.utc)
         try:
             bar = Bar(
                 instrument_id=instrument.id,
                 interval=interval,
                 series=Series.RAW,
                 event_time=event_time,
+                session_date=session_date,
                 open=_decimal(row["Open"]),
                 high=_decimal(row["High"]),
                 low=_decimal(row["Low"]),
