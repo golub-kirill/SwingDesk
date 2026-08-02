@@ -88,8 +88,8 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 42 | `DETERMINISM_SPEC.md` | The snapshot as determinism boundary, float-associativity trap, 10-field run manifest, stated scope limits | drafting |
 | 43 | `adr/` | ADR-0001 market data · ADR-0002 exchange calendar · ADR-0003 schema language (all Proposed) | drafting |
 | 44 | `TEST_STRATEGY.md` | 7 layers, 9 invariants as property tests, golden vectors as the immutability mechanism, 6 chaos scenarios | drafting |
-| 45 | `OBSERVABILITY_SPEC.md` + `runbooks/` | Log schema; one runbook per fail-closed row | planned |
-| 46 | `SECURITY.md` + `BACKUP_AND_DR.md` | Credentials, masking, tested restore | planned |
+| 45 | `OBSERVABILITY_SPEC.md` + `runbooks/` | Structured-log schema, daily health report, trend signals; 5 runbooks with verbatim return conditions | drafting |
+| 46 | `SECURITY.md` + `BACKUP_AND_DR.md` | Threat model, secret rules, Telegram as a control surface; what cannot be re-fetched, restore verified by output hash | drafting |
 | 47 | `CI_POLICY.md` | 11 gates, what each prevents, what CI must never do, local equivalence | drafting |
 | 48 | `AGENTS.md` (repo root) | Trust discipline, 7 non-negotiables, how to add a verbatim doc or a parameter | drafting — per-package `CONTEXT.md` still planned |
 
