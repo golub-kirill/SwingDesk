@@ -82,8 +82,8 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 
 | # | File | Freezes | Status |
 |---|---|---|---|
-| 39 | `ARCHITECTURE.md` | Bounded contexts, mapped onto the course's own layer model | planned |
-| 40 | `DEPENDENCY_LAW.md` | Independence rules as enforceable import contracts | planned |
+| 39 | `ARCHITECTURE.md` | 9 contexts, the purity boundary, where the mandatory trace is materialised, run shape | drafting |
+| 40 | `DEPENDENCY_LAW.md` | Independence rules as 4 import-linter contracts in `pyproject.toml` | drafting |
 | 41 | `CONCURRENCY_MODEL.md` | Async fetching, process pools, single-threaded deterministic decision path | planned |
 | 42 | `DETERMINISM_SPEC.md` | No wall clock in domain code; run manifests | planned |
 | 43 | `adr/` | Append-only decisions with evidence pointers | planned |
