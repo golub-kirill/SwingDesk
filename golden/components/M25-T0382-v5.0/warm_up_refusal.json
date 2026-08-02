@@ -1,0 +1,107 @@
+{
+  "component": "M25-T0382-v5.0",
+  "name": "SMA",
+  "component_version": 1,
+  "case": "warm_up_refusal",
+  "derivation": "Nine bars against period=10. Every observation is empty. A partially-warmed average is indistinguishable from a valid one downstream, so the component declines (ALGORITHM_SPEC 3).",
+  "parameters": {
+    "sma.period": 10
+  },
+  "instrument_id": "TEST.1",
+  "interval": "1d",
+  "series": "raw",
+  "knowledge_time": "2026-01-15T21:00:00+00:00",
+  "columns": [
+    "session_date",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume"
+  ],
+  "bars": [
+    [
+      "2025-03-03",
+      "99.75",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ],
+    [
+      "2025-03-04",
+      "99.75",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ],
+    [
+      "2025-03-05",
+      "99.75",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ],
+    [
+      "2025-03-06",
+      "99.75",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ],
+    [
+      "2025-03-07",
+      "99.75",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ],
+    [
+      "2025-03-10",
+      "99.75",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ],
+    [
+      "2025-03-11",
+      "99.75",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ],
+    [
+      "2025-03-12",
+      "99.75",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ],
+    [
+      "2025-03-13",
+      "99.75",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ]
+  ],
+  "expected": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ]
+}

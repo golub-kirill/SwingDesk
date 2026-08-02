@@ -1,5 +1,7 @@
 # PREREG: Does a regime classifier improve decisions, or only partition them?
 
+<!-- verbatim-sources: Module_30_Rynochnye_rezhimy_v5.0.pdf -->
+
 ```
 id:      PR-002
 date:    2026-08-02
@@ -118,4 +120,22 @@ from this data, which is the only claim that matters for a decision at the bar.
 
 ## 10. Amendments
 
-None.
+**2026-08-02 — before any data was seen, before the study ran.** The random-partition baseline in §3
+was registered as an authored design choice. It is not: the course requires it.
+
+Topic M30-T0450, `Определение текущего режима`:
+
+> "Инструмент используется как измеритель, а не как источник уверенности. Параметры фиксируются
+> версией стратегии, а добавленная ценность проверяется против простой базовой модели."
+>
+> *(The instrument is used as a gauge, not as a source of confidence. Parameters are fixed by the
+> strategy version, and the added value is checked against a simple baseline model.)*
+
+`добавленная ценность проверяется против простой базовой модели` — added value is checked against a
+simple baseline model. That is the requirement this study's design already satisfies, and it is
+stronger for being the course's own standard rather than an import. §3 and §6 are unchanged; only
+their provenance is corrected.
+
+The first sentence is worth keeping in view too: a classifier is a gauge, not a source of confidence.
+A regime label that raises conviction rather than constraining the strategy set is being used the way
+the topic prohibits.

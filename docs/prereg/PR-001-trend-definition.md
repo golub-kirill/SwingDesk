@@ -122,4 +122,20 @@ pairs agree. The claim is that the *family* is interchangeable; one member that 
 
 ## 10. Amendments
 
-None.
+**2026-08-02 — before any data was seen, before the study ran.** Checked whether the five candidate
+definitions are course-sourced. Four are; one is not.
+
+ADX appears nowhere in the course as a rule, a definition or a topic title. It occurs only as a
+chart-panel label (`S 94.5 ADX · ATR`) on Module 30 figures. The regime topics that carry those
+figures define a regime as direction, breadth and volatility, and name no indicator at all.
+
+**Definition E is therefore an authored candidate, not an inherited one**, and is marked as such
+here rather than allowed to look like transcription. It stays in the study — an outside definition
+is a legitimate comparison and arguably the most informative one, since it is the only candidate not
+built from moving averages. But if E wins, adopting it is a decision record with no course backing,
+and that has to be visible at the moment the choice is made rather than discovered later.
+
+Definitions A, B and C rest on `M25-T0382` (SMA). Definition D rests on `M12-T0201`/`M12-T0202`
+(previous high, previous low) and `M09-T0162`/`M09-T0163` (loss of the previous low/high).
+
+No other section changed.

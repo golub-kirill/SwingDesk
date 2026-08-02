@@ -493,7 +493,13 @@ parameters:
     value: null
     status: unset
     provenance: null
-    named_in: [M30-T0446, M30-T0450]
+    named_in: [M30-T0446 chart panel, M30-T0450 chart panel]
+    note: >-
+      WEAK CITATION, verified 2026-08-02. ADX appears in the course only as a chart-panel label
+      ("S 94.5 ADX · ATR") on Module 30 figures - never in a topic title, definition or rule. The
+      regime topics define a regime as direction + breadth + volatility and name no indicator. So
+      ADX is an AUTHORED choice of regime input, not an inherited one, and setting this value is a
+      decision record rather than a transcription.
     ui_editable: true
 
   - id: regime.atr_percentile_bands

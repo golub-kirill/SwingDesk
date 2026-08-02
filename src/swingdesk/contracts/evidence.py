@@ -18,22 +18,14 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-#: Validation statuses, verbatim from Production Rules 3.7 (COMPONENT_REGISTRY_SPEC 4).
-#: Ordered - index is the rung on the ladder for the first seven; the last two are terminal.
-VALIDATION_STATUSES = (
-    "Not Applicable",
-    "Untested",
-    "Historically Tested",
-    "Out-of-Sample Tested",
-    "Walk-Forward Tested",
-    "Forward Test Running",
-    "Forward Tested",
-    "Rejected",
-    "Retired",
-)
+from swingdesk.contracts.observation import MEASURED_STATUSES, VALIDATION_STATUSES
 
-#: Statuses that assert something was measured. These are the ones the disclosures qualify.
-MEASURED_STATUSES = frozenset(VALIDATION_STATUSES[2:7])
+__all__ = [
+    "MEASURED_STATUSES",
+    "VALIDATION_STATUSES",
+    "EvidenceRecord",
+    "SurvivorshipCoverage",
+]
 
 
 class SurvivorshipCoverage(StrEnum):

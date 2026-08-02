@@ -1,0 +1,89 @@
+{
+  "component": "M25-T0382-v5.0",
+  "name": "SMA",
+  "component_version": 1,
+  "case": "arithmetic_ramp",
+  "derivation": "Closes rise by exactly 1.00 per bar from 10.00. The mean of any 4 consecutive terms of an arithmetic sequence is the mean of its endpoints, so the value at bar index 3 is (10+13)/2 = 11.50 and each subsequent value is 1.00 higher. An implementation whose rolling sum failed to drop the oldest term would drift upward from here and nowhere else.",
+  "parameters": {
+    "sma.period": 4
+  },
+  "instrument_id": "TEST.1",
+  "interval": "1d",
+  "series": "raw",
+  "knowledge_time": "2026-01-15T21:00:00+00:00",
+  "columns": [
+    "session_date",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume"
+  ],
+  "bars": [
+    [
+      "2025-03-03",
+      "9.75",
+      "11.00",
+      "9.00",
+      "10.00",
+      1000000
+    ],
+    [
+      "2025-03-04",
+      "10.75",
+      "12.00",
+      "10.00",
+      "11.00",
+      1000000
+    ],
+    [
+      "2025-03-05",
+      "11.75",
+      "13.00",
+      "11.00",
+      "12.00",
+      1000000
+    ],
+    [
+      "2025-03-06",
+      "12.75",
+      "14.00",
+      "12.00",
+      "13.00",
+      1000000
+    ],
+    [
+      "2025-03-07",
+      "13.75",
+      "15.00",
+      "13.00",
+      "14.00",
+      1000000
+    ],
+    [
+      "2025-03-10",
+      "14.75",
+      "16.00",
+      "14.00",
+      "15.00",
+      1000000
+    ],
+    [
+      "2025-03-11",
+      "15.75",
+      "17.00",
+      "15.00",
+      "16.00",
+      1000000
+    ]
+  ],
+  "expected": [
+    null,
+    null,
+    null,
+    "11.50",
+    "12.50",
+    "13.50",
+    "14.50"
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "component": "M25-T0382-v5.0",
+  "name": "SMA",
+  "component_version": 1,
+  "case": "constant_close",
+  "derivation": "Every close is 100.00, so every 5-bar mean is 100.00. The first four bars have fewer than 5 closes and emit nothing; from bar index 4 onward the value is 100.00. This pins the warm-up boundary at exactly `period` bars - unlike Wilder's ATR, an SMA needs no seeding lag and emits on the period-th bar, not the period+1-th.",
+  "parameters": {
+    "sma.period": 5
+  },
+  "instrument_id": "TEST.1",
+  "interval": "1d",
+  "series": "raw",
+  "knowledge_time": "2026-01-15T21:00:00+00:00",
+  "columns": [
+    "session_date",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume"
+  ],
+  "bars": [
+    [
+      "2025-03-03",
+      "99.75",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ],
+    [
+      "2025-03-04",
+      "99.75",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ],
+    [
+      "2025-03-05",
+      "99.75",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ],
+    [
+      "2025-03-06",
+      "99.75",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ],
+    [
+      "2025-03-07",
+      "99.75",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ],
+    [
+      "2025-03-10",
+      "99.75",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ],
+    [
+      "2025-03-11",
+      "99.75",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ],
+    [
+      "2025-03-12",
+      "99.75",
+      "101.00",
+      "99.00",
+      "100.00",
+      1000000
+    ]
+  ],
+  "expected": [
+    null,
+    null,
+    null,
+    null,
+    "100.00",
+    "100.00",
+    "100.00",
+    "100.00"
+  ]
+}

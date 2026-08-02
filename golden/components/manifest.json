@@ -13,6 +13,18 @@
         "period_two.json": "3c93caffd89cfeaaf50febf7369a10c5ca6888b60eda9978b010d84994bfc33e",
         "warm_up_refusal.json": "5d94a3e8514b09b70dc7b6562b2ae92a22a3b335553a3d71b233c8cf5cfc07ee"
       }
+    },
+    "M25-T0382-v5.0": {
+      "name": "SMA",
+      "module": "swingdesk.derived_observations.moving_average",
+      "version": 1,
+      "vectors": {
+        "arithmetic_ramp.json": "37a908c8b0737f1e76b57f8f37523907eca0d6284097cdb143596e2ed783e2a8",
+        "constant_close.json": "de5b4d7cf903c50d684b55d4374f6e46ffbf6439869c4a925228a1adea23407f",
+        "period_one.json": "3731d033ffe5196e430ddb7e02e29555844c97b84ad47acbcb76764b7d779f68",
+        "repeating_decimal.json": "b274ee81a5f81733797ba88181052a839bf15787c7dc7b885da598d51f6bb88d",
+        "warm_up_refusal.json": "8ab63f8a7db943403140c9f3a521dea4736b145e23a96209ad810d47cb8c04dc"
+      }
     }
   }
 }

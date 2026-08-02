@@ -31,15 +31,34 @@ from types import ModuleType
 from typing import Any
 
 from swingdesk.contracts.market import Bar, BarSeries, Interval, Series
-from swingdesk.derived_observations import atr
+from swingdesk.contracts.observation import ObservationSeries, ParameterUse
+from swingdesk.derived_observations import atr, moving_average
 from swingdesk.platform.parameters import ParameterRegistry
 
 GOLDEN_ROOT = Path(__file__).resolve().parents[3] / "golden" / "components"
 MANIFEST = GOLDEN_ROOT / "manifest.json"
 
-#: Component id -> the module implementing it. An `active` component missing from this map has no
-#: vectors, which COMPONENT_REGISTRY_SPEC 3 says it may not be.
-IMPLEMENTATIONS: dict[str, ModuleType] = {atr.COMPONENT: atr}
+
+def _run_atr(series: BarSeries, parameters: dict[str, Any]) -> ObservationSeries:
+    return atr.compute(series, _registry_for(parameters))
+
+
+def _run_sma(series: BarSeries, parameters: dict[str, Any]) -> ObservationSeries:
+    """SMA takes its period from the caller, not the registry - it has no period of its own."""
+    period = int(parameters["sma.period"])
+    return moving_average.compute(
+        series, period,
+        ParameterUse(id="sma.period", value=str(period), provenance="golden vector"),
+    )
+
+
+#: Component id -> (module, runner). The module supplies VERSION; the runner knows how to call it,
+#: because components legitimately differ in how they receive parameters. An `active` component
+#: missing from this map has no vectors, which COMPONENT_REGISTRY_SPEC 3 says it may not be.
+IMPLEMENTATIONS: dict[str, tuple[ModuleType, Any]] = {
+    atr.COMPONENT: (atr, _run_atr),
+    moving_average.COMPONENT: (moving_average, _run_sma),
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -131,8 +150,8 @@ def _sha256(path: Path) -> str:
 
 
 def _recompute(vector: Vector) -> tuple[Decimal | None, ...]:
-    module = IMPLEMENTATIONS[vector.component]
-    produced = module.compute(vector.bars, _registry_for(vector.parameters))
+    _, run = IMPLEMENTATIONS[vector.component]
+    produced = run(vector.bars, vector.parameters)
     return tuple(observation.value for observation in produced.observations)
 
 
@@ -146,10 +165,11 @@ def verify(root: Path = GOLDEN_ROOT) -> list[str]:
     failures: list[str] = []
 
     for component, entry in sorted(manifest["components"].items()):
-        module = IMPLEMENTATIONS.get(component)
-        if module is None:
+        entry_impl = IMPLEMENTATIONS.get(component)
+        if entry_impl is None:
             failures.append(f"{component}: manifest names it, but no implementation is registered")
             continue
+        module, _ = entry_impl
 
         if module.VERSION != entry["version"]:
             failures.append(
@@ -239,7 +259,7 @@ def regenerate(root: Path = GOLDEN_ROOT) -> list[str]:
     changed: list[str] = []
 
     for component, entry in sorted(manifest["components"].items()):
-        module = IMPLEMENTATIONS[component]
+        module, _ = IMPLEMENTATIONS[component]
         entry["version"] = module.VERSION
         vectors: dict[str, str] = {}
         for path in sorted((root / component).glob("*.json")):

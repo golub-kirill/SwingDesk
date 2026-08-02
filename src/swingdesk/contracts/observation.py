@@ -13,6 +13,24 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+#: The nine validation statuses, verbatim from Production Rules 3.7 (COMPONENT_REGISTRY_SPEC 4).
+#: Order is the course's. Lives here rather than in evidence.py because an observation carries one
+#: and observations are the more fundamental record.
+VALIDATION_STATUSES = (
+    "Not Applicable",
+    "Untested",
+    "Historically Tested",
+    "Out-of-Sample Tested",
+    "Walk-Forward Tested",
+    "Forward Test Running",
+    "Forward Tested",
+    "Rejected",
+    "Retired",
+)
+
+#: Statuses that assert a measurement was made. These are the ones a disclosure qualifies.
+MEASURED_STATUSES = frozenset(VALIDATION_STATUSES[2:7])
+
 
 class ParameterUse(BaseModel):
     """A parameter value as it was used, with where it came from.
@@ -75,6 +93,12 @@ class ObservationSeries(BaseModel):
 
     @model_validator(mode="after")
     def _consistent(self) -> ObservationSeries:
+        if self.validation_status not in VALIDATION_STATUSES:
+            raise ValueError(
+                f"{self.validation_status!r} is not one of the nine validation statuses. "
+                f"Extending the enum needs a dated amendment (COMPONENT_REGISTRY_SPEC 4), "
+                f"not a new string."
+            )
         previous: datetime | None = None
         for observation in self.observations:
             if observation.component != self.component:

@@ -1,0 +1,62 @@
+{
+  "component": "M25-T0382-v5.0",
+  "name": "SMA",
+  "component_version": 1,
+  "case": "repeating_decimal",
+  "derivation": "Closes 1.00, 2.00, 2.00 sum to 5.00 and 5/3 does not terminate. Decimal division carries the default 28 significant digits, so the value is 1.666666666666666666666666667 - rounded at the last digit, not truncated. This vector exists so a future change to the decimal context or to a float implementation fails loudly instead of shifting every average slightly.",
+  "parameters": {
+    "sma.period": 3
+  },
+  "instrument_id": "TEST.1",
+  "interval": "1d",
+  "series": "raw",
+  "knowledge_time": "2026-01-15T21:00:00+00:00",
+  "columns": [
+    "session_date",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume"
+  ],
+  "bars": [
+    [
+      "2025-03-03",
+      "0.75",
+      "2.00",
+      "0.00",
+      "1.00",
+      1000000
+    ],
+    [
+      "2025-03-04",
+      "1.75",
+      "3.00",
+      "1.00",
+      "2.00",
+      1000000
+    ],
+    [
+      "2025-03-05",
+      "1.75",
+      "3.00",
+      "1.00",
+      "2.00",
+      1000000
+    ],
+    [
+      "2025-03-06",
+      "1.75",
+      "3.00",
+      "1.00",
+      "2.00",
+      1000000
+    ]
+  ],
+  "expected": [
+    null,
+    null,
+    "1.666666666666666666666666667",
+    "2.00"
+  ]
+}

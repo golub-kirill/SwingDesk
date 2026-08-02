@@ -192,10 +192,16 @@ def test_atr_is_deterministic(closes: list[Decimal]) -> None:
 
 
 def test_atr_carries_provenance_and_status() -> None:
-    """A number arrives knowing what produced it and how trustworthy that is."""
+    """A number arrives knowing what produced it and how trustworthy that is.
+
+    The status is the one in this component's registry row - `Not Applicable`, which is what the
+    course gives a calculation it treats as a definition. This test previously asserted `Untested`,
+    a status the component emitted and the registry never granted it; tests/test_components.py now
+    pins the two together so the mirror cannot drift again.
+    """
     result = atr.compute(_series([Decimal(100 + i) for i in range(30)]), _registry())
     assert result.component == atr.COMPONENT
-    assert result.validation_status == "Untested"
+    assert result.validation_status == atr.VALIDATION == "Not Applicable"
     assert result.uses_assumed_parameters
     assert [p.id for p in result.parameters] == ["atr.period"]
 

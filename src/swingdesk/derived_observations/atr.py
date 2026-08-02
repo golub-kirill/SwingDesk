@@ -35,6 +35,15 @@ COMPONENT = "M18-T0280-v5.0"
 VERSION = 1
 UNITS = "price units"
 
+#: The course's own validation status for this topic, mirrored from registry/course_index.yml.
+#: It is generated data and must not be hand-edited (COMPONENT_REGISTRY_SPEC 2); a test asserts the
+#: two agree. Declared here because this package is pure and cannot read the registry itself.
+#:
+#: This previously emitted "Untested", contradicting the registry row it came from. Corrected
+#: 2026-08-02 - a defect, not a behaviour change, so no version bump: the component was reporting a
+#: status it never had. Advancing it is the job of evidence, and there is none.
+VALIDATION = "Not Applicable"
+
 
 def true_range(high: Decimal, low: Decimal, previous_close: Decimal) -> Decimal:
     """Wilder's true range: the largest of the three candidate ranges.
@@ -97,7 +106,7 @@ def compute(series: BarSeries, registry: ParameterRegistry) -> ObservationSeries
         instrument_id=series.instrument_id,
         units=UNITS,
         parameters=(parameter,),
-        validation_status="Untested",
+        validation_status=VALIDATION,
         knowledge_time=series.knowledge_time,
         observations=tuple(observations),
     )

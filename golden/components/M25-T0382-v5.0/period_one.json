@@ -1,0 +1,53 @@
+{
+  "component": "M25-T0382-v5.0",
+  "name": "SMA",
+  "component_version": 1,
+  "case": "period_one",
+  "derivation": "With period=1 the SMA is the close itself, emitted from the first bar. This is the degenerate case and it is worth pinning: it proves the warm-up arithmetic has no off-by-one, because period=1 is where an off-by-one is impossible to hide.",
+  "parameters": {
+    "sma.period": 1
+  },
+  "instrument_id": "TEST.1",
+  "interval": "1d",
+  "series": "raw",
+  "knowledge_time": "2026-01-15T21:00:00+00:00",
+  "columns": [
+    "session_date",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume"
+  ],
+  "bars": [
+    [
+      "2025-03-03",
+      "41.75",
+      "43.00",
+      "41.00",
+      "42.00",
+      1000000
+    ],
+    [
+      "2025-03-04",
+      "43.25",
+      "44.50",
+      "42.50",
+      "43.50",
+      1000000
+    ],
+    [
+      "2025-03-05",
+      "41.00",
+      "42.25",
+      "40.25",
+      "41.25",
+      1000000
+    ]
+  ],
+  "expected": [
+    "42.00",
+    "43.50",
+    "41.25"
+  ]
+}
