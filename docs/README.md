@@ -23,7 +23,7 @@ Frozen first. Amendments are dated records appended to the file, never edits in 
 |---|---|---|---|---|
 | 05 | `BRD.md` | 16 capabilities, 12 non-negotiable business rules, priority ordering | Owner + course | drafting |
 | 06 | `USER_STORIES.md` | 21 stories with Gherkin criteria, grouped by the course's four playbooks; covers Track A completely | Course playbooks (M80–83, M32/M33, M71–76, M67/M68) | drafting |
-| 07 | `FRD.md` | The ~460 computable topics as requirement rows, keyed by course ID | Generated from `registry/course_index.yml` | planned |
+| 07 | `FRD.md` | **463 requirements** keyed by course component id, grouped by layer and module | **Generated** by `tools/build_frd.py` | generated |
 | 08 | `NFR.md` | ~20M bar rows, ≤45 min daily run, byte-identical re-runs, $0/mo, revision-delta storage | Engineering + owner | drafting |
 | 09 | `PRODUCT_SURFACES.md` | 4 surfaces, what each owns, notification matrix, what none may do | Owner decisions D3/D6 | drafting |
 

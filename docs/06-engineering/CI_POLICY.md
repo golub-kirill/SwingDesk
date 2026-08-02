@@ -16,6 +16,7 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 1 | `verify_parameters.py` | a value without provenance; `assumed` without a citation; a parameter with no course reference | **exists** |
 | 2 | `verify_transcription.py` | a `verbatim` block that no longer matches its source; an enum drifting from its spec | **exists** |
 | 3 | `build_course_index.py --check-only` | the course index no longer extracting to its known shape | **exists** |
+| 3b | `build_frd.py --check-only` | the FRD drifting from the registry it is generated from | **exists** |
 | 4 | `ruff` | style, obvious errors | to build |
 | 5 | `mypy --strict` | type errors | to build |
 | 6 | `lint-imports` | a package importing across a layer or forbidden boundary | **config exists**, runner to wire |
