@@ -15,6 +15,9 @@ Checks:
        - status validated      =>  provenance starts with 'validated:' and cites an evidence id
   4. named_in is non-empty - a parameter with no course reference is either invented scope or a
      missing citation, and both need a human to look.
+  5. A provenance citing a decision record (`assumed:DR-NNN`) resolves to a file in docs/decisions/.
+     A citation nobody can follow is not a citation, and a DR id is the easiest thing in this
+     registry to mistype or to leave pointing at a document that was never written.
 
 Usage:
     python tools/verify_parameters.py [--registry PATH]
@@ -33,6 +36,12 @@ DEFAULT_REGISTRY = REPO / "registry" / "parameters.yml"
 REQUIRED_FIELDS = ("id", "unit", "value", "status", "provenance", "named_in", "ui_editable")
 VALID_STATUS = ("unset", "assumed", "owner", "validated")
 ID_PATTERN = re.compile(r"^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$")
+DECISION_REF = re.compile(r"\b(DR-\d{3})\b")
+DECISIONS_DIR = REPO / "docs" / "decisions"
+
+
+def decision_record_exists(reference: str) -> bool:
+    return any(DECISIONS_DIR.glob(f"{reference}-*.md"))
 
 
 def load_entries(path: Path) -> list[dict]:
@@ -95,6 +104,13 @@ def check(entries: list[dict]) -> list[str]:
             elif status == "validated" and not re.match(r"^validated:\s*\S+", str(provenance)):
                 failures.append(
                     f"{label}: status 'validated' requires provenance 'validated:<evidence-id>'"
+                )
+
+        for reference in DECISION_REF.findall(str(provenance or "")):
+            if not decision_record_exists(reference):
+                failures.append(
+                    f"{label}: provenance cites {reference}, and no docs/decisions/{reference}-*.md "
+                    f"exists"
                 )
 
         if not entry["named_in"]:

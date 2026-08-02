@@ -124,7 +124,9 @@ Honest, and short:
 | Components at `active` | 1 (ATR) |
 | Components above `Untested` | **0** |
 | Studies run | 0 |
-| Pre-registrations written | 0 |
+| Pre-registrations written | 2 (`PR-001`, `PR-002` — registered, both blocked on the harness) |
+| Decision records | 2 (`DR-001` Sharpe convention, `DR-002` process score) |
+| Parameters at `assumed` | 4 of 93 |
 
 The four largest authored gaps — the regime classifier, the trend / breakout / pullback / contraction
 definitions, the Sharpe convention, and the per-strategy exit mapping — are each a parameter or rule
@@ -136,8 +138,9 @@ is not a gap in the documentation, it is the documentation working.
 
 - [ ] Order of the first four studies. The regime classifier gates the regime breakdown that
       `WALKFORWARD_SPEC.md` §2 requires, which argues for it first.
-- [ ] Whether a component may advance to `Historically Tested` while survivorship remains unmet
-      (`BACKTEST_PROTOCOL.md` §6). Leaning no: the status would assert something the evidence does
-      not support. A separate status, or an explicit flag on the record, may be the honest answer.
+- [x] ~~Whether a component may advance while survivorship remains unmet~~ — **yes, with a mandatory
+      disclosure** (owner, 2026-08-02). Enforced as a required field on `EvidenceRecord`; the nine
+      statuses stay exactly as the course defines them, and the qualification rides on the record
+      rather than on a tenth status.
 - [ ] Where the forward test runs. It needs the real schedule, which means the scheduled daily run
       must be reliable before the forward test can measure anything about it.

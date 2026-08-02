@@ -552,13 +552,15 @@ parameters:
   # ---- statistics conventions (docs/02-domain/STATISTICS_SPEC.md §7) ----
   - id: stats.sharpe_convention
     unit: rule
-    value: null
-    status: unset
-    provenance: null
+    value: "daily zero-filled portfolio returns, net of costs, rf=0, annualised x sqrt(252)"
+    status: assumed
+    provenance: "assumed:DR-001"
     named_in: [M69-T1028]
     note: >-
       Periodicity, contiguous zero-filled series or not, risk-free rate and annualisation all
-      unstated. A wrong choice here silently inflates the ratio.
+      unstated by the course. A wrong choice here silently inflates the ratio, and zero-filling is
+      the load-bearing part. The sqrt(252) factor assumes i.i.d. returns; PR-003 is registered to
+      test that assumption once a return series exists.
     ui_editable: false
 
   - id: stats.sortino_mar
@@ -604,19 +606,26 @@ parameters:
 
   - id: stats.quality_grade_scale
     unit: scale
-    value: null
-    status: unset
-    provenance: null
+    value: "A|B|C|D ordinal, assigned on the setup before the outcome is known"
+    status: assumed
+    provenance: "assumed:DR-002"
     named_in: [M68-T1017, Appendix G Setup entity]
-    note: Named as a "standard scale"; no range, no weights.
+    note: >-
+      Named as a "standard scale"; no range, no weights. Deliberately separate from the process
+      score - setup quality judges the opportunity, process score measures the execution.
     ui_editable: false
 
   - id: stats.process_score_scale
     unit: scale
-    value: null
-    status: unset
-    provenance: null
+    value: "100 minus severity weights (Moderate 10, Moderate/Major 20, Major 35, Critical 100), floor 0"
+    status: assumed
+    provenance: "assumed:DR-002"
     named_in: [M68-T1016, Appendix G Review entity]
+    note: >-
+      Computed from journalled error codes, never hand-entered - a self-reported score drifts with
+      P&L, which VALIDATION_PROGRAM 3 prohibits. The severities are the course's; their numeric
+      spacing is authored and is the weakest part of DR-002. PR-004 tests whether the weights change
+      any ranking.
     ui_editable: false
 
   # ---- data quality (docs/03-data/DATA_QUALITY_SPEC.md, not yet written) ----

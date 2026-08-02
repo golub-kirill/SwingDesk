@@ -146,13 +146,23 @@ symbol as a non-tradable stub whose candle endpoint returns `code 1019`.
 The consequence, stated without softening:
 
 - Every backtest this project runs is **survivorship-biased upward** by an amount it cannot measure.
-- The bias is recorded as a mandatory field on the evidence record, not as a caveat in prose
-  (`EVIDENCE_RECORD_SPEC.md`).
 - No result may be reported as satisfying topic 1084 while this holds.
-- The only remedy is a paid vendor. That is a budget decision, not an engineering one.
+- The only remedy is a paid vendor. That is a budget decision, not an engineering one, and it is
+  deferred until a specific study is blocked by it rather than settled on principle.
+
+**Owner decision, 2026-08-02: a component may still advance above `Untested`, provided the record
+discloses the coverage and every display of that component shows it.** The alternative — blocking
+advancement — would mean nothing ever advances on free data, which converts an honest limitation
+into a permanent halt.
+
+That decision rests entirely on the disclosure being impossible to omit, so it is enforced rather
+than documented: `survivorship` is a **required field with no default** on
+`swingdesk.contracts.evidence.EvidenceRecord`, and a record constructed without it raises. The
+qualification then travels with the number wherever it is displayed — adjacent to it, not in a
+footnote (`PARAMETER_REGISTRY.md` §5, same rule as `assumed` parameters).
 
 Reporting a survivorship-biased result *as though* it met the standard would violate the prohibition
-in §3 directly. Reporting it with the bias named does not.
+in §3 directly. Reporting it with the bias named, on every display, does not.
 
 ## 7. Independent re-check (the QA stage)
 

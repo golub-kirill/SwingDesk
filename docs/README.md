@@ -78,6 +78,17 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 37 | `WALKFORWARD_SPEC.md` | 12-field window record with a **three-way** train/validation/test split; `keep/revise/retire`; the 6 perturbations | `verbatim` Appendix K + M73 | drafting |
 | 38 | `GO_LIVE_GATES.md` | Staged plans, the 5-condition size gate, drawdown as an actuator; calendar time authorises nothing | `verbatim` Appendices Q, R, S + M75 | drafting |
 
+Two working directories serve this tier and are not numbered documents:
+
+| Directory | Holds | Rule |
+|---|---|---|
+| `decisions/` | `DR-NNN` — a **choice that is not a hypothesis** (a convention, a definition) | written before use; leaves a parameter at `assumed:DR-NNN`, **never** `validated` |
+| `prereg/` | `PR-NNN` — a **claim that could be false** | committed before the study runs; only its evidence can reach `validated` |
+
+That split is the point. A convention dressed as a hypothesis produces a study that cannot fail, and
+a hypothesis settled by decree produces a value with the authority of a measurement it never had.
+`tools/verify_parameters.py` checks that every `DR-NNN` a parameter cites actually exists.
+
 Tier 5's finding, stated once: topics literally titled *minimum number of trades* (twice),
 *minimum forward-test duration*, *maximum allowable drawdown* and *first 100 real trades* contain
 **no numbers at all**. This is the tier where the source was most likely to quantify something, and

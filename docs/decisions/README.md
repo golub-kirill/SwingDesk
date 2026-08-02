@@ -1,0 +1,87 @@
+# Decision records
+
+**Status:** drafting · **Tier:** cross-cutting
+
+Four documents already require a "decision record" and none defined it (`contracts/README.md` §7,
+`ADR-0003` §3, `EXIT_MODEL_SPEC.md`, `TEST_STRATEGY.md` §3). This is that definition.
+
+---
+
+## 1. What a decision record is for
+
+A **choice that is not a hypothesis.**
+
+Some things this project must fix cannot be tested, because they are conventions rather than claims.
+Whether a Sharpe ratio annualises by √252 or √12 is not true or false — it is a convention, and two
+studies that pick differently are not comparable. Choosing one is a decision; the record is what
+makes it auditable.
+
+The distinction that matters:
+
+| | Instrument | Produces | Provenance it earns |
+|---|---|---|---|
+| a convention or definition | **decision record** (`DR-NNN`) | a fixed choice, usable immediately | `assumed:DR-NNN` or `assumed:<citation>` |
+| a claim that could be false | **pre-registration** (`PR-NNN`, `../prereg/`) | a study | `validated:<evidence-id>` |
+
+Both are written **before** the value is used. That is the whole discipline: a DR is not a
+retrospective justification of a number someone already picked.
+
+A choice frequently needs both — a DR to pick a starting value so the system can run, and a PR to
+register the study that would confirm or refute it. `screen.trend_definition` is the archetype: you
+need *a* definition to have a strategy at all, and whether that definition is any good is a separate,
+testable question.
+
+## 2. Format
+
+One file per decision, `DR-NNN-<slug>.md`:
+
+```
+# DR-NNN: <the choice, in one line>
+
+date:      YYYY-MM-DD
+status:    proposed | accepted | superseded by DR-NNN
+parameters: <ids in registry/parameters.yml this sets>
+components: <component ids whose version this moves, if any>
+
+## Decision
+What was chosen. Precisely enough that two people implement it identically.
+
+## Why this one
+The reasoning, and the citation if there is one.
+
+## Alternatives rejected
+Each with the reason. An alternatives section with one entry is a decision that was never made.
+
+## What would overturn this
+The observation or study that would change it. Names the PR if one is registered.
+
+## Consequences
+What now has to be true elsewhere.
+```
+
+## 3. Rules
+
+1. **Written before use.** The commit that sets the parameter carries the DR.
+2. **Never edited after `accepted`.** Superseded by a new DR that names the old one. Same rule as the
+   journal and the pre-registrations, for the same reason.
+3. **A DR that sets a parameter must name it**, and the parameter's provenance must point back —
+   `assumed:DR-007`. `tools/verify_parameters.py` accepts that form because a decision record is a
+   citation.
+4. **A DR that changes component behaviour bumps the component version** and regenerates its golden
+   vectors in the same commit (`COMPONENT_REGISTRY_SPEC.md` §6, `CI_POLICY.md` §3).
+5. **`assumed` is where a DR leaves a parameter — never `validated`.** Only evidence from a
+   pre-registered study moves a value to `validated`, and a decision record is not evidence. This is
+   the line that keeps a considered guess from acquiring the authority of a measurement.
+
+## 4. Not an ADR
+
+`docs/adr/` holds architecture decisions: storage engine, schema language, calendar source. Those are
+structural and rarely revisited. A DR is about a **value or a definition** the domain needs, and it
+is expected to be superseded when a study says so. Different lifetimes, different directories.
+
+## 5. Index
+
+| ID | Decision | Sets | Status |
+|---|---|---|---|
+| `DR-001` | Sharpe ratio convention | `stats.sharpe_convention` | proposed |
+| `DR-002` | Process score scale | `stats.process_score_scale` | proposed |

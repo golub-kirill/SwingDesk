@@ -103,9 +103,15 @@ and downgrades the result to exploratory.
 3. **An amendment made after seeing data downgrades the study to exploratory.** Exploratory results
    are useful and are not evidence. They may generate the next pre-registration; they may not
    advance a validation status.
-4. **A study without a pre-registration is not evidence.** Same status as a survivorship-biased
-   backtest (`BACKTEST_PROTOCOL.md` §6): it can be reported, it cannot be relied on.
-5. **`inconclusive` is a first-class outcome.** A decision rule with only accept and reject
+4. **A study without a pre-registration is not evidence.** It can be reported as exploratory and
+   cannot advance a validation status. `EvidenceRecord.prereg_id` is nullable precisely so this state
+   is representable, and a record without one discloses `exploratory: no pre-registration` alongside
+   its numbers.
+5. **A choice that cannot come out "no" is not a pre-registration.** Conventions and definitions —
+   Sharpe annualisation, a score scale, which moving average counts as a trend — go through a
+   decision record instead (`../decisions/README.md`). The two instruments are not
+   interchangeable, and a convention dressed as a hypothesis produces a study that cannot fail.
+6. **`inconclusive` is a first-class outcome.** A decision rule with only accept and reject
    guarantees one of them, which is how a coin flip becomes a finding.
 
 ## 4. Section 0 deserves its own explanation
@@ -124,12 +130,14 @@ different question rather than another draw from the same one.
 
 ## 5. Section 5's `statistic` field
 
-Named explicitly because this project has an unset parameter for exactly this: `stats.sharpe_convention`.
-
 Annualisation factor, whether the risk-free rate is subtracted, whether returns are per-trade or
 per-period, and whether costs are inside the number all change the figure without changing the
 strategy. A study that names "Sharpe" without naming the convention has not specified its decision
 rule, and two such studies cannot be compared.
+
+`stats.sharpe_convention` is now set by `DR-001` — `daily zero-filled portfolio returns, net of
+costs, rf=0, annualised ×√252`, provenance `assumed:DR-001`. A study may use a different convention;
+it must say so, and it must say why, because the comparison to every other study breaks.
 
 The same applies to any figure in `STATISTICS_SPEC.md` whose convention is a choice rather than a
 definition.
