@@ -623,6 +623,47 @@ parameters:
     named_in: [Appendix T - "При stale data или mismatch новые сделки блокируются"]
     ui_editable: true
 
+  - id: data.revision_epsilon
+    unit: relative tolerance per series
+    value: null
+    status: unset
+    provenance: null
+    named_in: [POINT_IN_TIME_SPEC 3 - revision deltas]
+    note: >-
+      Without a tolerance, vendor float noise produces phantom revisions on every fetch. Price,
+      volume and adjusted series need different values.
+    ui_editable: false
+
+  - id: data.volume_ratio_outlier_factor
+    unit: multiple of the instrument's own median ratio
+    value: null
+    status: unset
+    provenance: null
+    named_in: [CALENDAR_SPEC 2d - measured]
+    note: >-
+      Only extreme outliers are informative. Measured overlap: normal 0.366-0.824, half-day
+      0.160-0.749, confirmed gap 0.003-0.677. CNQ.TO at 0.003 against a ~0.48 norm was detectable;
+      nothing in the overlapping band is.
+    ui_editable: true
+
+  - id: data.source_conflict_tolerance
+    unit: relative difference
+    value: null
+    status: unset
+    provenance: null
+    named_in: [FAIL-CLOSED row 1 - "использовать второй источник"]
+    note: Beyond this, the two sources disagree and the instrument is DATA-skipped. Never averaged.
+    ui_editable: true
+
+  - id: data.max_missing_sessions_per_instrument
+    unit: sessions
+    value: null
+    status: unset
+    provenance: null
+    named_in: [DATA_QUALITY_SPEC 2.2]
+    note: Repeated DATA skips should eventually drop an instrument from the universe.
+    ui_editable: true
+
   # ---- validation gates (docs/05-validation/, not yet written) ----
   - id: validation.is_oos_split
     unit: ratio

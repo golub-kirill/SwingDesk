@@ -57,7 +57,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 26 | `POINT_IN_TIME_SPEC.md` | Bitemporal `event_time`+`knowledge_time`, revision deltas, raw/adjusted separate, membership as PIT fact | Required by Appendix A, J and M72 | drafting |
 | 27 | `CALENDAR_SPEC.md` | Separate NYSE/TSX calendars (16-session divergence measured), 13/7 bar sessions, trailing stub, bar finality, UTC storage | Course + measured | drafting |
 | 28 | `VENDOR_COMPARISON.md` + `adr/ADR-0001-market-data.md` | Vendor decision | Evidence gathered 2026-08-01 | drafting — ADR **Proposed**, awaiting ratification |
-| 29 | `DATA_QUALITY_SPEC.md` | Freshness, conflict, staleness gates and their fail-closed mapping | Course + engineering | planned |
+| 29 | `DATA_QUALITY_SPEC.md` | 4 course gates, session-completeness check, measured negative results, code mapping | Course + measured | drafting |
 
 ## Tier 4 — Journal, evidence, audit · `04-journal/`
 
@@ -86,7 +86,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 40 | `DEPENDENCY_LAW.md` | Independence rules as 4 import-linter contracts in `pyproject.toml` | drafting |
 | 41 | `CONCURRENCY_MODEL.md` | Async fetching, process pools, single-threaded deterministic decision path | planned |
 | 42 | `DETERMINISM_SPEC.md` | No wall clock in domain code; run manifests | planned |
-| 43 | `adr/` | Append-only decisions with evidence pointers | planned |
+| 43 | `adr/` | ADR-0001 market data (Proposed) · ADR-0002 exchange calendar (Proposed) | drafting |
 | 44 | `TEST_STRATEGY.md` | Unit → property → golden vectors → contract → replay → chaos | planned |
 | 45 | `OBSERVABILITY_SPEC.md` + `runbooks/` | Log schema; one runbook per fail-closed row | planned |
 | 46 | `SECURITY.md` + `BACKUP_AND_DR.md` | Credentials, masking, tested restore | planned |

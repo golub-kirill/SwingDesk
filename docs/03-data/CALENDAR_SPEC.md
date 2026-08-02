@@ -292,9 +292,9 @@ Base currency USD (`CONSTRAINTS.md` §5), universe spans both markets.
       missing from the intraday series.
 - [x] ~~TSX/NYSE differences inferred rather than enumerated~~ — **enumerated, §2.** 30 gross
       divergent sessions, not the 2 the net suggested.
-- [ ] **Source an authoritative exchange calendar** (§2c). Promoted from optional to required: it
-      is the only way to distinguish a closed market from a vendor gap, and 2025-01-09 shows a
-      rule-based calendar is insufficient — it must be a record, including unscheduled closures.
+- [x] ~~Source an authoritative exchange calendar~~ — **`ADR-0002`: `pandas_market_calendars`**,
+      `NYSE` + `TSX`, applied to **both** live and backtest. It is a record rather than a rule, so
+      2025-01-09 is covered.
 - [x] ~~Confirm whether the three anomalies in §2c are vendor gaps~~ — **confirmed, §2c.** All three
       dates have normal daily bars, so the markets were open. Yahoo's own daily series contradicts
       its intraday series. The second source was not needed.
