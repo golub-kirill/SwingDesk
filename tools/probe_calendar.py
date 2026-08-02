@@ -105,6 +105,35 @@ def main() -> int:
         fmt = lambda bars: (f"{len(bars):2d} bars {bars[0]}..{bars[-1]}" if bars else "CLOSED")
         print(f"  {day}   US {fmt(u):<28} CA {fmt(c)}")
 
+    print("\n=== C2. daily-vs-intraday reconciliation ===")
+    print("  A daily bar on a short session means the market was open, so the intraday series is")
+    print("  incomplete. Note the ratio is never 1.0 even on normal days - see CALENDAR_SPEC 2d.")
+    suspects = ["2026-01-30", "2026-02-02", "2025-04-24"]
+    controls = ["2026-01-29", "2026-02-03", "2025-04-23"]
+    for ticker in (US, CA):
+        handle = yf.Ticker(ticker)
+        daily = handle.history(period="3y", interval="1d", auto_adjust=False)
+        hourly = handle.history(period="730d", interval="1h", auto_adjust=False)
+        if daily.empty or hourly.empty:
+            continue
+        daily.index = daily.index.tz_convert(TZ)
+        hourly.index = hourly.index.tz_convert(TZ)
+        print(f"  -- {ticker}")
+        for label, days in (("suspect", suspects), ("control", controls), ("half-day", HALF_DAY_CANDIDATES[-3:])):
+            for day in days:
+                drow = daily[daily.index.strftime("%Y-%m-%d") == day]
+                hrow = hourly[hourly.index.strftime("%Y-%m-%d") == day]
+                if drow.empty:
+                    print(f"     {label:9s} {day}  no daily bar - market closed")
+                    continue
+                dv = float(drow["Volume"].iloc[0])
+                hv = float(hrow["Volume"].sum()) if len(hrow) else 0.0
+                dc = float(drow["Close"].iloc[0])
+                hc = float(hrow["Close"].iloc[-1]) if len(hrow) else float("nan")
+                ratio = hv / dv if dv else float("nan")
+                print(f"     {label:9s} {day}  bars={len(hrow):2d}  vol_ratio={ratio:5.3f}  "
+                      f"daily_close={dc:9.2f}  last_1h={hc:9.2f}  diff={dc - hc:+7.2f}")
+
     print("\n=== D. recent divergence at 30m (60-day window) ===")
     us30 = sessions(US, "30m", "60d")
     ca30 = sessions(CA, "30m", "60d")

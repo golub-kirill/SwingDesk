@@ -106,8 +106,29 @@ The same probe found three sessions that are **not** exchange half-days:
 | 2025-04-24 | full | 3 bars `13:30–15:30` |
 
 Two of these truncate **both exchanges identically**, and one *starts* at 13:30 — no exchange
-schedule does that. They are consistent with vendor-side gaps, but that cannot be established from
-the bar data, because **a missing session and a closed market have the same signature: absent bars.**
+schedule does that.
+
+**Confirmed as vendor gaps by cross-checking Yahoo against itself.** Every suspect date has a
+**normal daily bar**, so the market was open:
+
+| Date | Instrument | Daily volume | Σ intraday volume | ratio | bars | daily close | last 1h close |
+|---|---|---|---|---|---|---|---|
+| 2026-01-30 | AAPL | 92,443,400 | 19,006,396 | **0.21** | 2 | 259.48 | **254.92** |
+| 2026-01-30 | CNQ.TO | 5,517,400 | **16,838** | **0.003** | 2 | 50.63 | 50.34 |
+| 2026-02-02 | AAPL | 73,913,400 | 20,132,165 | 0.27 | 3 | 270.01 | 269.96 |
+| 2025-04-24 | CNQ.TO | 5,695,300 | 2,447,587 | 0.43 | 3 | 40.69 | 40.70 |
+| *control* 2026-01-29 | AAPL | 67,253,000 | 31,998,989 | 0.48 | 7 | 258.28 | 258.17 |
+| *control* 2026-02-03 | CNQ.TO | 6,255,300 | 2,976,990 | 0.48 | 7 | 51.11 | 51.12 |
+
+`CNQ.TO` on 2026-01-30 carries **0.3% of its daily volume** across two bars — unambiguously broken
+data, not a short session. `AAPL` the same day is missing $4.56 of close movement between its last
+hourly bar and the daily close.
+
+**But this does not solve the classification problem**, and it is important to say why. A missing
+session and a closed market still have the same signature in the intraday series. What the daily
+series adds is *evidence the market was open* — which is only decisive because the daily series is
+independently more complete. It narrows the ambiguity; it does not remove it, because a genuine
+half-day also produces a daily bar with reduced volume and a short intraday session.
 
 This is the root cause behind the half-day risk, and it generalises:
 
@@ -125,6 +146,62 @@ observed bars is self-referential and cannot work.
 Until such a calendar exists, the honest fallback is: **any session whose bar count differs from the
 exchange's modal count is `DATA`-skipped**, accepting false positives on genuine half-days rather
 than trading through a gap. That is the fail-closed direction.
+
+## 2d. Volume does not reconcile, even on good days
+
+A tempting completeness check — "does the sum of intraday volume equal daily volume?" — **does not
+work**, and would produce constant false alarms if used naively.
+
+Measured ratios of Σ(hourly volume) to daily volume, across both instruments:
+
+| Session type | Observed range |
+|---|---|
+| normal | 0.366 – 0.824 |
+| genuine half-day | 0.160 – 0.749 |
+| confirmed vendor gap | 0.003 – 0.677 |
+
+**The three ranges overlap almost completely.** Volume ratio classifies nothing. A half-day at 0.749
+is *higher* than a normal session at 0.366, and a confirmed gap at 0.677 sits inside the normal
+band.
+
+Consequences for `DATA_QUALITY_SPEC.md`:
+
+- **Never** gate on `Σ intraday == daily`. It is false on every session — the daily figure is
+  consolidated and includes activity the regular-hours bars do not carry.
+- **Never** gate on the ratio alone. Measured, it separates only catastrophic loss: `CNQ.TO` at
+  **0.003** against its own ~0.48 norm is two orders of magnitude out and unmistakable. Everything
+  between 0.16 and 0.82 is uninformative.
+- Comparison must be **per instrument against its own history**, and only an extreme outlier counts.
+
+### What each signal can and cannot detect
+
+| Signal | Detects | Blind to |
+|---|---|---|
+| bar count ≠ modal | any truncation | cannot separate half-day from gap |
+| daily close vs last intraday close | **end**-truncation (missing final bars) | start-truncation — 2026-02-02 starts at 13:30 and its diff is +0.05 |
+| volume ratio | catastrophic loss only | everything else; ranges overlap |
+| daily bar exists | market was open | says nothing about intraday completeness |
+
+**No single signal classifies a short session, and neither does the combination.** Each is blind
+where another sees, but none distinguishes a legitimate half-day from a gap — which is precisely
+the distinction that decides whether to raise `DATA`. This is the measured case for §2c's
+requirement.
+
+## 2e. The half-day close discrepancy, quantified
+
+From §2b, a half-day's final half-hour is absent. Measured:
+
+| Date | Instrument | daily close | last 1h close | difference |
+|---|---|---|---|---|
+| 2025-11-28 | AAPL | 278.85 | 277.05 | **1.80** (~0.65%) |
+| 2025-12-24 | AAPL | 273.81 | 275.36 | **1.55** (~0.57%) |
+| 2025-12-24 | CNQ.TO | 45.07 | 45.36 | 0.29 (~0.64%) |
+
+Roughly **0.6% in both directions**. That is larger than many of the thresholds this system will
+compare against, so it is not a rounding concern — a component reading "last intraday close" as the
+session close on a half-day is materially wrong, in an unpredictable direction.
+
+**Rule:** the session close comes from the daily series. Always.
 
 ## 3. Session and bar boundaries
 
@@ -218,9 +295,12 @@ Base currency USD (`CONSTRAINTS.md` §5), universe spans both markets.
 - [ ] **Source an authoritative exchange calendar** (§2c). Promoted from optional to required: it
       is the only way to distinguish a closed market from a vendor gap, and 2025-01-09 shows a
       rule-based calendar is insufficient — it must be a record, including unscheduled closures.
-- [ ] Confirm whether the three anomalies in §2c are vendor gaps by checking them against the second
-      source (Questrade daily). If Questrade has full sessions on those dates, they are Yahoo gaps
-      and the conflict check would have caught them.
+- [x] ~~Confirm whether the three anomalies in §2c are vendor gaps~~ — **confirmed, §2c.** All three
+      dates have normal daily bars, so the markets were open. Yahoo's own daily series contradicts
+      its intraday series. The second source was not needed.
+- [ ] Re-check the same dates against Questrade daily anyway, to establish whether the cross-source
+      conflict check would independently have flagged them. Useful as a test of the check, not of
+      the dates.
 - [ ] Whether `1h` bars are stored with their true duration, so the trailing stub — and the missing
       half-day close — are explicit rather than implied by position.
 - [ ] Half-day behaviour at `30m` is still unmeasured: the 60-day window contained no half-day.
