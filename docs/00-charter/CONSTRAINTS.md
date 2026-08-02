@@ -2,7 +2,7 @@
 
 **Status:** drafting — budget items **owner-pending** · **Tier:** 0 (charter) · **Content:** `verbatim` + owner decisions
 
-<!-- verbatim-sources: Appendix_C_Formuly_upravleniya_riskom_v2.0.pdf, Appendix_T_Professionalnyi_chek_list_treidera_v2.0.pdf -->
+<!-- verbatim-sources: Appendix_C_Formuly_upravleniya_riskom_v2.0.pdf, Appendix_T_Professionalnyi_chek_list_treidera_v2.0.pdf, Module_33_Skrinery_v5.0.pdf -->
 
 ---
 

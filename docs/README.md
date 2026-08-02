@@ -54,8 +54,8 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | # | File | Freezes | Source | Status |
 |---|---|---|---|---|
 | 25 | `contracts/` | One schema per cross-context record; code is generated from these | Engineering | planned |
-| 26 | `POINT_IN_TIME_SPEC.md` | Bitemporal storage; revisions are inserts; raw and adjusted stored separately | Required by Appendix A, J and M72 | planned |
-| 27 | `CALENDAR_SPEC.md` | NYSE + TSX sessions, 1D/30m boundaries, the 1H aggregation stub convention, bar finality, timezone, CAD/USD | Course + engineering | planned |
+| 26 | `POINT_IN_TIME_SPEC.md` | Bitemporal `event_time`+`knowledge_time`, revision deltas, raw/adjusted separate, membership as PIT fact | Required by Appendix A, J and M72 | drafting |
+| 27 | `CALENDAR_SPEC.md` | Separate NYSE/TSX calendars (16-session divergence measured), 13/7 bar sessions, trailing stub, bar finality, UTC storage | Course + measured | drafting |
 | 28 | `VENDOR_COMPARISON.md` + `adr/ADR-0001-market-data.md` | Vendor decision | Evidence gathered 2026-08-01 | drafting — ADR **Proposed**, awaiting ratification |
 | 29 | `DATA_QUALITY_SPEC.md` | Freshness, conflict, staleness gates and their fail-closed mapping | Course + engineering | planned |
 
