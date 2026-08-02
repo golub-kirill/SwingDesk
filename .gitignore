@@ -28,3 +28,8 @@ reports/
 
 # project venv
 .venv/
+
+# build artifacts
+*.egg-info/
+build/
+dist/

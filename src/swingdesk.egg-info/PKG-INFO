@@ -1,8 +1,0 @@
-Metadata-Version: 2.4
-Name: swingdesk
-Version: 0.0.0
-Summary: Swing-trading decision support for Canadian and US equities and ETFs
-Requires-Python: >=3.12
-Requires-Dist: pydantic>=2
-Requires-Dist: pandas-market-calendars>=4
-Requires-Dist: pyyaml>=6

@@ -1,3 +1,0 @@
-pydantic>=2
-pandas-market-calendars>=4
-pyyaml>=6
