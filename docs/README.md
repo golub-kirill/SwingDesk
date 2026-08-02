@@ -21,11 +21,11 @@ Frozen first. Amendments are dated records appended to the file, never edits in 
 
 | # | File | Freezes | Source | Status |
 |---|---|---|---|---|
-| 05 | `BRD.md` | Business requirements; the non-negotiable rules | Owner + course | planned |
-| 06 | `USER_STORIES.md` | One story per capability, Gherkin acceptance criteria | Course playbooks (M80–83, M32/M33, M71–76, M67/M68) | planned |
+| 05 | `BRD.md` | 16 capabilities, 12 non-negotiable business rules, priority ordering | Owner + course | drafting |
+| 06 | `USER_STORIES.md` | 21 stories with Gherkin criteria, grouped by the course's four playbooks; covers Track A completely | Course playbooks (M80–83, M32/M33, M71–76, M67/M68) | drafting |
 | 07 | `FRD.md` | The ~460 computable topics as requirement rows, keyed by course ID | Generated from `registry/course_index.yml` | planned |
-| 08 | `NFR.md` | Latency, universe size, determinism, recovery, cost ceiling | Engineering + owner | planned |
-| 09 | `PRODUCT_SURFACES.md` | What CLI, reports, web admin, Telegram and push each own | Owner decisions D3/D6 | planned |
+| 08 | `NFR.md` | ~20M bar rows, ≤45 min daily run, byte-identical re-runs, $0/mo, revision-delta storage | Engineering + owner | drafting |
+| 09 | `PRODUCT_SURFACES.md` | 4 surfaces, what each owns, notification matrix, what none may do | Owner decisions D3/D6 | drafting |
 
 ## Tier 2 — Domain specification · `02-domain/`
 
