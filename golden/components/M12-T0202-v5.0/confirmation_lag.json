@@ -1,0 +1,91 @@
+{
+  "component": "M12-T0202-v5.0",
+  "name": "Previous low",
+  "component_version": 1,
+  "case": "confirmation_lag",
+  "derivation": "The mirror of the high case. Lows 20, 19, 15, 18, 19, 20, 20: bar 2 is the swing low, confirmed at bar 4. Frozen separately because a mirrored implementation that flipped one comparison would still pass the high vectors.",
+  "parameters": {
+    "pivot.left": 2,
+    "pivot.right": 2,
+    "pivot.highs": false
+  },
+  "instrument_id": "TEST.1",
+  "interval": "1d",
+  "series": "raw",
+  "knowledge_time": "2026-01-15T21:00:00+00:00",
+  "columns": [
+    "session_date",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume"
+  ],
+  "bars": [
+    [
+      "2025-03-03",
+      "22.5",
+      "25",
+      "20",
+      "22.5",
+      1000000
+    ],
+    [
+      "2025-03-04",
+      "21.5",
+      "24",
+      "19",
+      "21.5",
+      1000000
+    ],
+    [
+      "2025-03-05",
+      "17.5",
+      "20",
+      "15",
+      "17.5",
+      1000000
+    ],
+    [
+      "2025-03-06",
+      "20.5",
+      "23",
+      "18",
+      "20.5",
+      1000000
+    ],
+    [
+      "2025-03-07",
+      "21.5",
+      "24",
+      "19",
+      "21.5",
+      1000000
+    ],
+    [
+      "2025-03-10",
+      "22.5",
+      "25",
+      "20",
+      "22.5",
+      1000000
+    ],
+    [
+      "2025-03-11",
+      "22.5",
+      "25",
+      "20",
+      "22.5",
+      1000000
+    ]
+  ],
+  "expected": [
+    null,
+    null,
+    null,
+    null,
+    "15",
+    "15",
+    "15"
+  ]
+}

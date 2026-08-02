@@ -1,0 +1,91 @@
+{
+  "component": "M12-T0201-v5.0",
+  "name": "Previous high",
+  "component_version": 1,
+  "case": "carried_forward_then_replaced",
+  "derivation": "Highs 10, 14, 10, 11, 18, 11, 10. With left=right=1 bar 1 is a swing high confirmed at bar 2, and bar 4 is a higher swing high confirmed at bar 5. The value is carried forward between confirmations - a previous high stays the previous high until a newer one replaces it. Bar 4 is the case worth freezing: the new, higher swing HAPPENS there and the series still reads 14, because at bar 4 that swing is not yet confirmed. Reading 18 at bar 4 would mean using bar 5 to answer a question dated bar 4. An earlier hand-derivation of this vector expected None at bar 4, and the checker caught it - the carry-forward and the confirmation lag interact, and that interaction is easy to get wrong in prose and hard to get wrong once it is a number.",
+  "parameters": {
+    "pivot.left": 1,
+    "pivot.right": 1,
+    "pivot.highs": true
+  },
+  "instrument_id": "TEST.1",
+  "interval": "1d",
+  "series": "raw",
+  "knowledge_time": "2026-01-15T21:00:00+00:00",
+  "columns": [
+    "session_date",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume"
+  ],
+  "bars": [
+    [
+      "2025-03-03",
+      "7.5",
+      "10",
+      "5",
+      "7.5",
+      1000000
+    ],
+    [
+      "2025-03-04",
+      "11.5",
+      "14",
+      "9",
+      "11.5",
+      1000000
+    ],
+    [
+      "2025-03-05",
+      "7.5",
+      "10",
+      "5",
+      "7.5",
+      1000000
+    ],
+    [
+      "2025-03-06",
+      "8.5",
+      "11",
+      "6",
+      "8.5",
+      1000000
+    ],
+    [
+      "2025-03-07",
+      "15.5",
+      "18",
+      "13",
+      "15.5",
+      1000000
+    ],
+    [
+      "2025-03-10",
+      "8.5",
+      "11",
+      "6",
+      "8.5",
+      1000000
+    ],
+    [
+      "2025-03-11",
+      "7.5",
+      "10",
+      "5",
+      "7.5",
+      1000000
+    ]
+  ],
+  "expected": [
+    null,
+    null,
+    "14",
+    "14",
+    "14",
+    "18",
+    "18"
+  ]
+}

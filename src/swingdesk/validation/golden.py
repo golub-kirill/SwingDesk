@@ -27,12 +27,12 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
-from types import ModuleType
 from typing import Any
 
+from swingdesk.contracts.component import ComponentSpec
 from swingdesk.contracts.market import Bar, BarSeries, Interval, Series
 from swingdesk.contracts.observation import ObservationSeries, ParameterUse
-from swingdesk.derived_observations import atr, moving_average
+from swingdesk.derived_observations import atr, moving_average, pivots
 from swingdesk.platform.parameters import ParameterRegistry
 
 GOLDEN_ROOT = Path(__file__).resolve().parents[3] / "golden" / "components"
@@ -52,12 +52,25 @@ def _run_sma(series: BarSeries, parameters: dict[str, Any]) -> ObservationSeries
     )
 
 
-#: Component id -> (module, runner). The module supplies VERSION; the runner knows how to call it,
-#: because components legitimately differ in how they receive parameters. An `active` component
-#: missing from this map has no vectors, which COMPONENT_REGISTRY_SPEC 3 says it may not be.
-IMPLEMENTATIONS: dict[str, tuple[ModuleType, Any]] = {
-    atr.COMPONENT: (atr, _run_atr),
-    moving_average.COMPONENT: (moving_average, _run_sma),
+def _run_pivot(series: BarSeries, parameters: dict[str, Any]) -> ObservationSeries:
+    left, right = int(parameters["pivot.left"]), int(parameters["pivot.right"])
+    return pivots.compute(
+        series, left, right,
+        ParameterUse(id="pivot.left", value=str(left), provenance="golden vector"),
+        ParameterUse(id="pivot.right", value=str(right), provenance="golden vector"),
+        highs=bool(parameters["pivot.highs"]),
+    )
+
+
+#: Component id -> (spec, runner). Keyed on the SPEC rather than the module, because one module may
+#: implement more than one component - swing highs and swing lows are the same algorithm mirrored,
+#: and the course gives them separate ids. An `active` component missing from this map has no
+#: vectors, which COMPONENT_REGISTRY_SPEC 3 says it may not be.
+IMPLEMENTATIONS: dict[str, tuple[ComponentSpec, Any]] = {
+    atr.SPEC.component: (atr.SPEC, _run_atr),
+    moving_average.SPEC.component: (moving_average.SPEC, _run_sma),
+    pivots.SWING_HIGH.component: (pivots.SWING_HIGH, _run_pivot),
+    pivots.SWING_LOW.component: (pivots.SWING_LOW, _run_pivot),
 }
 
 
@@ -169,11 +182,11 @@ def verify(root: Path = GOLDEN_ROOT) -> list[str]:
         if entry_impl is None:
             failures.append(f"{component}: manifest names it, but no implementation is registered")
             continue
-        module, _ = entry_impl
+        spec, _ = entry_impl
 
-        if module.VERSION != entry["version"]:
+        if spec.version != entry["version"]:
             failures.append(
-                f"{component}: module is version {module.VERSION}, manifest froze version "
+                f"{component}: code is version {spec.version}, manifest froze version "
                 f"{entry['version']}. A version bump regenerates the vectors and resets validation "
                 f"status (COMPONENT_REGISTRY_SPEC 6)."
             )
@@ -199,10 +212,10 @@ def verify(root: Path = GOLDEN_ROOT) -> list[str]:
                 continue
 
             vector = load(path)
-            if vector.component_version != module.VERSION:
+            if vector.component_version != spec.version:
                 failures.append(
                     f"{component}/{name}: vector declares version {vector.component_version}, "
-                    f"module is {module.VERSION}"
+                    f"code is {spec.version}"
                 )
                 continue
 
@@ -259,18 +272,18 @@ def regenerate(root: Path = GOLDEN_ROOT) -> list[str]:
     changed: list[str] = []
 
     for component, entry in sorted(manifest["components"].items()):
-        module, _ = IMPLEMENTATIONS[component]
-        entry["version"] = module.VERSION
+        spec, _ = IMPLEMENTATIONS[component]
+        entry["version"] = spec.version
         vectors: dict[str, str] = {}
         for path in sorted((root / component).glob("*.json")):
             document = json.loads(path.read_text(encoding="utf-8"))
             vector = load(path)
             produced = _recompute(vector)
             expected = [None if value is None else str(value) for value in produced]
-            if document["expected"] != expected or document["component_version"] != module.VERSION:
+            if document["expected"] != expected or document["component_version"] != spec.version:
                 changed.append(f"{component}/{path.name}")
             document["expected"] = expected
-            document["component_version"] = module.VERSION
+            document["component_version"] = spec.version
             path.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
             vectors[path.name] = _sha256(path)
         entry["vectors"] = vectors

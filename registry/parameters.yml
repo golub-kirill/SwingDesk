@@ -861,3 +861,40 @@ parameters:
       M74-T1110 requires measured live slippage to be compared against this, so the model must be
       the same shape as the measurement.
     ui_editable: true
+
+  # ---- swing structure (M12-T0201/T0202, added with the pivot component 2026-08-02) ----
+
+  - id: pivot.left
+    unit: bars
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M12-T0201, M12-T0202]
+    note: >-
+      Bars required to the left of a swing point. The course marks a pivot as "зона или структура"
+      and never says how wide the neighbourhood is.
+    ui_editable: true
+
+  - id: pivot.right
+    unit: bars
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M12-T0201, M12-T0202]
+    note: >-
+      Bars required to the right BEFORE the pivot counts as confirmed - "подтверждается завершёнными
+      барами". This is the look-ahead lag, not a cosmetic smoothing knob: a pivot is emitted at
+      P + right, never at P. Raising it makes structure more reliable and later.
+    ui_editable: true
+
+  - id: screen.trend_pivot_count
+    unit: pivots
+    value: null
+    status: unset
+    provenance: null
+    named_in: [M10-T0166, M71-T1057]
+    note: >-
+      How many consecutive rising highs and rising lows constitute "higher highs and higher lows"
+      for TrendDefinition.STRUCTURE. Two is the minimum that can express a direction; the course
+      names the structure and no count.
+    ui_editable: true

@@ -1,0 +1,91 @@
+{
+  "component": "M12-T0201-v5.0",
+  "name": "Previous high",
+  "component_version": 1,
+  "case": "no_pivot_in_a_monotonic_series",
+  "derivation": "Strictly rising highs. No bar has a lower-or-equal bar on its right within the neighbourhood, so nothing qualifies and every observation is empty. A trending instrument with no completed swing is a real state, not a failure.",
+  "parameters": {
+    "pivot.left": 2,
+    "pivot.right": 2,
+    "pivot.highs": true
+  },
+  "instrument_id": "TEST.1",
+  "interval": "1d",
+  "series": "raw",
+  "knowledge_time": "2026-01-15T21:00:00+00:00",
+  "columns": [
+    "session_date",
+    "open",
+    "high",
+    "low",
+    "close",
+    "volume"
+  ],
+  "bars": [
+    [
+      "2025-03-03",
+      "7.5",
+      "10",
+      "5",
+      "7.5",
+      1000000
+    ],
+    [
+      "2025-03-04",
+      "8.5",
+      "11",
+      "6",
+      "8.5",
+      1000000
+    ],
+    [
+      "2025-03-05",
+      "9.5",
+      "12",
+      "7",
+      "9.5",
+      1000000
+    ],
+    [
+      "2025-03-06",
+      "10.5",
+      "13",
+      "8",
+      "10.5",
+      1000000
+    ],
+    [
+      "2025-03-07",
+      "11.5",
+      "14",
+      "9",
+      "11.5",
+      1000000
+    ],
+    [
+      "2025-03-10",
+      "12.5",
+      "15",
+      "10",
+      "12.5",
+      1000000
+    ],
+    [
+      "2025-03-11",
+      "13.5",
+      "16",
+      "11",
+      "13.5",
+      1000000
+    ]
+  ],
+  "expected": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ]
+}

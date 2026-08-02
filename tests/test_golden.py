@@ -75,8 +75,14 @@ def test_gate_catches_an_unregistered_vector(vectors) -> None:
 
 
 def test_gate_catches_a_version_drift(vectors, monkeypatch) -> None:
-    """A component version that moved without its vectors moving is a blocking failure."""
-    monkeypatch.setattr(atr, "VERSION", atr.VERSION + 1)
+    """A component version that moved without its vectors moving is a blocking failure.
+
+    Patches the registered spec rather than the module alias, because the spec is what the harness
+    reads - one module may implement several components, so the version lives on the component.
+    """
+    spec, runner = golden.IMPLEMENTATIONS[COMPONENT]
+    bumped = spec.model_copy(update={"version": spec.version + 1})
+    monkeypatch.setitem(golden.IMPLEMENTATIONS, COMPONENT, (bumped, runner))
 
     failures = golden.verify(vectors)
     assert any("version bump" in failure for failure in failures)

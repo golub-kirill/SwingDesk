@@ -25,6 +25,25 @@
         "repeating_decimal.json": "b274ee81a5f81733797ba88181052a839bf15787c7dc7b885da598d51f6bb88d",
         "warm_up_refusal.json": "8ab63f8a7db943403140c9f3a521dea4736b145e23a96209ad810d47cb8c04dc"
       }
+    },
+    "M12-T0201-v5.0": {
+      "name": "Previous high",
+      "module": "swingdesk.derived_observations.pivots",
+      "version": 1,
+      "vectors": {
+        "carried_forward_then_replaced.json": "e6336ee6f3ec8dc0c5fce543146f2559b369a742fcf23798bf5113d3d9215ded",
+        "confirmation_lag.json": "8eb2b657ad61b8553a77d6209d53427f542464c7d52d79cbd97eaa3a0354a0b8",
+        "no_pivot_in_a_monotonic_series.json": "9116cea406daab4580096045042534d340ee27d4424fa98685def1f424111c25",
+        "plateau_keeps_first_bar.json": "0322535cec3e6878ea97fd7134e31c8cd850ede7a514909e6e3cd357f68fcd9e"
+      }
+    },
+    "M12-T0202-v5.0": {
+      "name": "Previous low",
+      "module": "swingdesk.derived_observations.pivots",
+      "version": 1,
+      "vectors": {
+        "confirmation_lag.json": "ed884a66b30b6696314fc2b554338f5a93aeecb5dd254698adedcccb8da6772a"
+      }
     }
   }
 }

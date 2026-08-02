@@ -25,15 +25,21 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+from swingdesk.contracts.component import ComponentSpec
 from swingdesk.contracts.market import BarSeries
 from swingdesk.contracts.observation import Observation, ObservationSeries, ParameterUse
 
-COMPONENT = "M25-T0382-v5.0"
-VERSION = 1
-UNITS = "price units"
+#: Mirrored from registry/course_index.yml and pinned to it by test (COMPONENT_REGISTRY_SPEC 2).
+SPEC = ComponentSpec(
+    component="M25-T0382-v5.0", name="SMA", version=1,
+    validation="Not Applicable", units="price units",
+)
+SPECS = (SPEC,)
 
-#: The course's own validation status, mirrored from registry/course_index.yml and asserted by test.
-VALIDATION = "Not Applicable"
+COMPONENT = SPEC.component
+VERSION = SPEC.version
+VALIDATION = SPEC.validation
+UNITS = SPEC.units
 
 
 def compute(series: BarSeries, period: int, parameter: ParameterUse) -> ObservationSeries:
