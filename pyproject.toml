@@ -13,6 +13,8 @@ dependencies = [
     # tools/build_course_index.py and tools/verify_transcription.py stay stdlib-only so the
     # transcription checks run without an environment.
     "pyyaml>=6",
+    # Bitemporal store and journal (ADR-0004). Embedded, columnar, single file.
+    "duckdb>=1",
 ]
 
 [build-system]
