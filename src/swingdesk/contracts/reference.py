@@ -30,8 +30,19 @@ class Instrument(BaseModel):
 
     id: str = Field(description="Internal stable identity. Never derived from the ticker alone.")
     ticker: str
-    exchange: Exchange
+    exchange: Exchange = Field(
+        description="The SESSION CALENDAR this instrument trades on, not necessarily the venue "
+                    "that lists it. NASDAQ and NYSE were measured identical over 2016-2026 - 2523 "
+                    "sessions each, no one-sided session, no differing open or close - so both map "
+                    "here and the listing venue is recorded separately."
+    )
     currency: str = Field(min_length=3, max_length=3, description="ISO 4217. Mandatory (BR-9).")
+    listing_venue: str | None = Field(
+        default=None,
+        description="Where the symbol directory says it is listed: NASDAQ, NYSE Arca, IEX. "
+                    "Reference metadata - nothing computes from it. Kept because collapsing it "
+                    "into `exchange` would make the record assert something it never measured.",
+    )
     sector: str | None = None
     industry: str | None = None
 

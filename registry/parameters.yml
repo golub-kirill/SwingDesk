@@ -36,32 +36,40 @@ parameters:
   # ---- universe (A-tier by liquidity rule, owner decision 2026-08-01) ----
   - id: universe.min_price
     unit: USD
-    value: null
-    status: unset
-    provenance: null
+    value: 5.00
+    status: assumed
+    provenance: "assumed:DR-003"
     named_in: [M33-T0479]
-    note: Same knob as screen.min_price but applied at universe construction, before screening.
+    note: >-
+      Same knob as screen.min_price but applied at universe construction, before screening. Costs
+      about four names in a 115-instrument sample; it earns its place on the cost side, since below
+      5.00 a one-cent spread is 20bp or worse.
     ui_editable: true
 
   - id: universe.min_adtv_20d
     unit: USD per day
-    value: null
-    status: unset
-    provenance: null
+    value: 5000000
+    status: assumed
+    provenance: "assumed:DR-003"
     named_in: [M33-T0481, Appendix A - Dollar volume]
     note: >-
       20-day average dollar volume. Chosen as the A-tier membership rule because it is computable
       from our own bars and needs no index constituent data - which no free source provides
-      point-in-time, and which would stack a second survivorship bias on the delisting one.
+      point-in-time, and which would stack a second survivorship bias on the delisting one. The
+      measured distribution has a gap between the median (~1.2M) and p75 (~34M): membership moves by
+      2 instruments in 115 between 5M and 10M, so the value sits on a plateau rather than a cliff.
     ui_editable: true
 
   - id: universe.min_bar_history
     unit: bars
-    value: null
-    status: unset
-    provenance: null
+    value: 250
+    status: assumed
+    provenance: "assumed:DR-003"
     named_in: [M72 - warm-up and sample requirements]
-    note: Minimum daily history before an instrument is eligible; also bounds indicator warm-up.
+    note: >-
+      Minimum daily history before an instrument is eligible; also bounds indicator warm-up. 250 is
+      about one year and covers the longest warm-up currently in scope, SMA(200), with margin. An
+      instrument that cannot warm up its inputs produces a candidate that silently never qualifies.
     ui_editable: true
 
   # ---- derived observations (docs/02-domain/ALGORITHM_SPEC.md) ----

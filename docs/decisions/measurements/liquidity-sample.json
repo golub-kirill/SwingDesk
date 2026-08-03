@@ -1,0 +1,948 @@
+{
+  "seed": 20260802,
+  "sample_requested": 120,
+  "adtv_window": 20,
+  "directory_rows": 13081,
+  "eligible_rows": 13048,
+  "measured": 117,
+  "fetch_failures": 3,
+  "as_of": "2026-08-02T22:59:42.524482+00:00",
+  "rows": [
+    {
+      "symbol": "AIRS",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "4.810000",
+      "adtv": "1830747.900000"
+    },
+    {
+      "symbol": "ALRG",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "30.718000",
+      "adtv": "12973.865250"
+    },
+    {
+      "symbol": "AMZW",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 125,
+      "close": "40.549999",
+      "adtv": "581945.382200"
+    },
+    {
+      "symbol": "ARAI",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "0.235000",
+      "adtv": "162902.370000"
+    },
+    {
+      "symbol": "ARTNA",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "34.349998",
+      "adtv": "1054303.182110"
+    },
+    {
+      "symbol": "AVGW",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 125,
+      "close": "39.430000",
+      "adtv": "752759.811025"
+    },
+    {
+      "symbol": "BAND",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "39.139999",
+      "adtv": "81279415.201550"
+    },
+    {
+      "symbol": "BBAX",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 125,
+      "close": "63.680000",
+      "adtv": "14953880.431515"
+    },
+    {
+      "symbol": "BBWI",
+      "venue": "N",
+      "is_etf": false,
+      "bars": 125,
+      "close": "20.120001",
+      "adtv": "99468912.687425"
+    },
+    {
+      "symbol": "BFOR",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "23.690001",
+      "adtv": "629416.291505"
+    },
+    {
+      "symbol": "BGCG",
+      "venue": "Q",
+      "is_etf": true,
+      "bars": 43,
+      "close": "26.600000",
+      "adtv": "484361.053785"
+    },
+    {
+      "symbol": "BNDC",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "21.709999",
+      "adtv": "212127.624710"
+    },
+    {
+      "symbol": "BPOP",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "175.210007",
+      "adtv": "88397775.762015"
+    },
+    {
+      "symbol": "BRZU",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "99.500000",
+      "adtv": "1577192.632280"
+    },
+    {
+      "symbol": "BTCZ",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 125,
+      "close": "5.660000",
+      "adtv": "110426656.950000"
+    },
+    {
+      "symbol": "CAIE",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "26.860001",
+      "adtv": "16271157.867990"
+    },
+    {
+      "symbol": "CHARU",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "10.800000",
+      "adtv": "0.000000"
+    },
+    {
+      "symbol": "CHCO",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "145.110001",
+      "adtv": "20579745.690850"
+    },
+    {
+      "symbol": "CHRD",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "140.380005",
+      "adtv": "99205504.975725"
+    },
+    {
+      "symbol": "CLCV",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "30.620001",
+      "adtv": "96712.276095"
+    },
+    {
+      "symbol": "CLIM",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 98,
+      "close": "27.090000",
+      "adtv": "4904.650010"
+    },
+    {
+      "symbol": "CLMT",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "44.189999",
+      "adtv": "46334133.091555"
+    },
+    {
+      "symbol": "CLUB",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 60,
+      "close": "25.150000",
+      "adtv": "170243.396155"
+    },
+    {
+      "symbol": "CNQQ",
+      "venue": "Q",
+      "is_etf": true,
+      "bars": 125,
+      "close": "23.530001",
+      "adtv": "459083.671000"
+    },
+    {
+      "symbol": "CNTB",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "2.020000",
+      "adtv": "1167718.600000"
+    },
+    {
+      "symbol": "CTRE",
+      "venue": "N",
+      "is_etf": false,
+      "bars": 125,
+      "close": "41.939999",
+      "adtv": "89019061.281095"
+    },
+    {
+      "symbol": "DDFY",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 63,
+      "close": "20.139999",
+      "adtv": "251883.056210"
+    },
+    {
+      "symbol": "DIV",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "19.700001",
+      "adtv": "3876836.429160"
+    },
+    {
+      "symbol": "DNLI",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "23.020000",
+      "adtv": "41117245.832135"
+    },
+    {
+      "symbol": "DRDB",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "10.620000",
+      "adtv": "442127.935000"
+    },
+    {
+      "symbol": "ECL",
+      "venue": "N",
+      "is_etf": false,
+      "bars": 125,
+      "close": "277.630005",
+      "adtv": "327957717.225095"
+    },
+    {
+      "symbol": "EDSA",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "5.110000",
+      "adtv": "392674.050000"
+    },
+    {
+      "symbol": "EFXT",
+      "venue": "N",
+      "is_etf": false,
+      "bars": 125,
+      "close": "22.280001",
+      "adtv": "11291894.418245"
+    },
+    {
+      "symbol": "EMQQ",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "34.380001",
+      "adtv": "1133401.284610"
+    },
+    {
+      "symbol": "ENTL",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 28,
+      "close": "5.660000",
+      "adtv": "30943.500000"
+    },
+    {
+      "symbol": "EVRG",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "83.010002",
+      "adtv": "176786852.839020"
+    },
+    {
+      "symbol": "EXP",
+      "venue": "N",
+      "is_etf": false,
+      "bars": 125,
+      "close": "204.940002",
+      "adtv": "109444981.751920"
+    },
+    {
+      "symbol": "EZM",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "75.839996",
+      "adtv": "1334175.956995"
+    },
+    {
+      "symbol": "FEIG",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "39.973000",
+      "adtv": "191371.186900"
+    },
+    {
+      "symbol": "FGDL",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "54.029999",
+      "adtv": "917662.744820"
+    },
+    {
+      "symbol": "FLTB",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "49.840000",
+      "adtv": "2693143.163850"
+    },
+    {
+      "symbol": "FLTR",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "25.610001",
+      "adtv": "34056033.958900"
+    },
+    {
+      "symbol": "FN",
+      "venue": "N",
+      "is_etf": false,
+      "bars": 125,
+      "close": "435.410004",
+      "adtv": "375953747.072795"
+    },
+    {
+      "symbol": "GBAB",
+      "venue": "N",
+      "is_etf": false,
+      "bars": 125,
+      "close": "13.790000",
+      "adtv": "1173349.800000"
+    },
+    {
+      "symbol": "GENI",
+      "venue": "N",
+      "is_etf": false,
+      "bars": 125,
+      "close": "6.930000",
+      "adtv": "34696497.150000"
+    },
+    {
+      "symbol": "GFEB",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 125,
+      "close": "44.303001",
+      "adtv": "559212.813540"
+    },
+    {
+      "symbol": "GGUS",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "64.320000",
+      "adtv": "912179.153915"
+    },
+    {
+      "symbol": "GNPX",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "5.990000",
+      "adtv": "301870.433700"
+    },
+    {
+      "symbol": "GQGU",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "26.219999",
+      "adtv": "3605334.716200"
+    },
+    {
+      "symbol": "GQQQ",
+      "venue": "Q",
+      "is_etf": true,
+      "bars": 125,
+      "close": "34.715000",
+      "adtv": "646488.554845"
+    },
+    {
+      "symbol": "GTENU",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "10.680000",
+      "adtv": "694.200000"
+    },
+    {
+      "symbol": "HOMZ",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "45.404999",
+      "adtv": "136972.863765"
+    },
+    {
+      "symbol": "HYGM",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 71,
+      "close": "24.440001",
+      "adtv": "25145.549965"
+    },
+    {
+      "symbol": "IACQW",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 1,
+      "close": "0.550000",
+      "adtv": null
+    },
+    {
+      "symbol": "IAGG",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 125,
+      "close": "49.750000",
+      "adtv": "67861309.828745"
+    },
+    {
+      "symbol": "IBCB",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 88,
+      "close": "24.600000",
+      "adtv": "1291967.638300"
+    },
+    {
+      "symbol": "IBGK",
+      "venue": "Q",
+      "is_etf": true,
+      "bars": 125,
+      "close": "22.242001",
+      "adtv": "16583.314920"
+    },
+    {
+      "symbol": "IBLC",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "43.360001",
+      "adtv": "488024.530205"
+    },
+    {
+      "symbol": "IBTG",
+      "venue": "Q",
+      "is_etf": true,
+      "bars": 125,
+      "close": "22.895000",
+      "adtv": "9087039.141515"
+    },
+    {
+      "symbol": "IVVD",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "0.535000",
+      "adtv": "2489506.005000"
+    },
+    {
+      "symbol": "JHEM",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "38.099998",
+      "adtv": "1910405.112700"
+    },
+    {
+      "symbol": "JHPI",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "22.540001",
+      "adtv": "1130119.920400"
+    },
+    {
+      "symbol": "JVAL",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "57.720001",
+      "adtv": "2400908.330985"
+    },
+    {
+      "symbol": "KALA",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "0.756000",
+      "adtv": "171464.625000"
+    },
+    {
+      "symbol": "KRAQU",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "10.100000",
+      "adtv": "32832.850000"
+    },
+    {
+      "symbol": "LCID",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "7.380000",
+      "adtv": "161446135.300000"
+    },
+    {
+      "symbol": "LOWV",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "82.584999",
+      "adtv": "280461.519900"
+    },
+    {
+      "symbol": "LTH",
+      "venue": "N",
+      "is_etf": false,
+      "bars": 125,
+      "close": "45.099998",
+      "adtv": "113427540.303525"
+    },
+    {
+      "symbol": "LYV",
+      "venue": "N",
+      "is_etf": false,
+      "bars": 125,
+      "close": "174.130005",
+      "adtv": "363349769.219565"
+    },
+    {
+      "symbol": "MEGL",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "1.210000",
+      "adtv": "21890.785000"
+    },
+    {
+      "symbol": "MNDR",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "1.880000",
+      "adtv": "169267.275000"
+    },
+    {
+      "symbol": "NDLS",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "18.620001",
+      "adtv": "1052209.705180"
+    },
+    {
+      "symbol": "NDSN",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "297.779999",
+      "adtv": "94710838.763855"
+    },
+    {
+      "symbol": "NEO",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "15.290000",
+      "adtv": "46182446.550000"
+    },
+    {
+      "symbol": "NUMG",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 125,
+      "close": "46.040001",
+      "adtv": "620381.054020"
+    },
+    {
+      "symbol": "NVA",
+      "venue": "A",
+      "is_etf": false,
+      "bars": 125,
+      "close": "4.420000",
+      "adtv": "1241658.400000"
+    },
+    {
+      "symbol": "NYAX",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "68.269997",
+      "adtv": "751884.900820"
+    },
+    {
+      "symbol": "OBAWW",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 1,
+      "close": "0.212100",
+      "adtv": null
+    },
+    {
+      "symbol": "OBIO",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "3.980000",
+      "adtv": "793022.850000"
+    },
+    {
+      "symbol": "PGF",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "13.590000",
+      "adtv": "1712648.900000"
+    },
+    {
+      "symbol": "PIEL",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 125,
+      "close": "28.382000",
+      "adtv": "6689.460005"
+    },
+    {
+      "symbol": "PLTR",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "123.059998",
+      "adtv": "4407248709.853590"
+    },
+    {
+      "symbol": "PLTW",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 125,
+      "close": "16.870001",
+      "adtv": "2678680.212720"
+    },
+    {
+      "symbol": "PNBK",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "1.140000",
+      "adtv": "290085.050000"
+    },
+    {
+      "symbol": "PPLC",
+      "venue": "N",
+      "is_etf": false,
+      "bars": 110,
+      "close": "46.980000",
+      "adtv": "11046202.805370"
+    },
+    {
+      "symbol": "QUAL",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 125,
+      "close": "219.320007",
+      "adtv": "242491213.100935"
+    },
+    {
+      "symbol": "RILY",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "7.160000",
+      "adtv": "3611142.650000"
+    },
+    {
+      "symbol": "RIME",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "0.400000",
+      "adtv": "107499.450000"
+    },
+    {
+      "symbol": "RKX",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 23,
+      "close": "10.070000",
+      "adtv": "48230.849950"
+    },
+    {
+      "symbol": "ROUS",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "66.800003",
+      "adtv": "3732919.732595"
+    },
+    {
+      "symbol": "RTACU",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "10.710000",
+      "adtv": "31265.175000"
+    },
+    {
+      "symbol": "RWAYI",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 123,
+      "close": "24.799999",
+      "adtv": "120983.249355"
+    },
+    {
+      "symbol": "RWTN",
+      "venue": "N",
+      "is_etf": false,
+      "bars": 125,
+      "close": "24.900000",
+      "adtv": "117629.899365"
+    },
+    {
+      "symbol": "RZG",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "68.449997",
+      "adtv": "1552224.564950"
+    },
+    {
+      "symbol": "SAA",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "36.160000",
+      "adtv": "113425.501805"
+    },
+    {
+      "symbol": "SCMY",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 58,
+      "close": "25.540001",
+      "adtv": "10745.200010"
+    },
+    {
+      "symbol": "SEPM",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 125,
+      "close": "33.035000",
+      "adtv": "43302.155215"
+    },
+    {
+      "symbol": "SFST",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "62.400002",
+      "adtv": "7257895.703475"
+    },
+    {
+      "symbol": "SGRT",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "31.280001",
+      "adtv": "1247873.807175"
+    },
+    {
+      "symbol": "SH",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "33.160000",
+      "adtv": "242763410.984785"
+    },
+    {
+      "symbol": "SNDQ",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 69,
+      "close": "32.209999",
+      "adtv": "742676603.3639155"
+    },
+    {
+      "symbol": "STHO",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "9.370000",
+      "adtv": "108881.300000"
+    },
+    {
+      "symbol": "SVIX",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 125,
+      "close": "24.209999",
+      "adtv": "60755472.946765"
+    },
+    {
+      "symbol": "SWK",
+      "venue": "N",
+      "is_etf": false,
+      "bars": 125,
+      "close": "94.580002",
+      "adtv": "162429547.243270"
+    },
+    {
+      "symbol": "TDEC",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 125,
+      "close": "26.115999",
+      "adtv": "77539.329680"
+    },
+    {
+      "symbol": "THRY",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "4.050000",
+      "adtv": "1699569.725000"
+    },
+    {
+      "symbol": "TLSI",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "4.540000",
+      "adtv": "921457.350000"
+    },
+    {
+      "symbol": "TRTY",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 125,
+      "close": "30.990000",
+      "adtv": "268237.748380"
+    },
+    {
+      "symbol": "TWN",
+      "venue": "N",
+      "is_etf": false,
+      "bars": 125,
+      "close": "82.110001",
+      "adtv": "3660671.479420"
+    },
+    {
+      "symbol": "VSS",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "150.520004",
+      "adtv": "30374749.251715"
+    },
+    {
+      "symbol": "VUSB",
+      "venue": "Z",
+      "is_etf": true,
+      "bars": 125,
+      "close": "49.759998",
+      "adtv": "72267242.244430"
+    },
+    {
+      "symbol": "WEAT",
+      "venue": "P",
+      "is_etf": true,
+      "bars": 125,
+      "close": "23.809999",
+      "adtv": "12884043.495920"
+    },
+    {
+      "symbol": "WENNU",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "10.500000",
+      "adtv": "5695.500000"
+    },
+    {
+      "symbol": "WSFS",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "80.199997",
+      "adtv": "37903433.937785"
+    },
+    {
+      "symbol": "XRAY",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "13.370000",
+      "adtv": "66175656.050000"
+    },
+    {
+      "symbol": "ZBAO",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "0.200000",
+      "adtv": "19042285.120000"
+    },
+    {
+      "symbol": "ZJYL",
+      "venue": "Q",
+      "is_etf": false,
+      "bars": 125,
+      "close": "1.980000",
+      "adtv": "31319.540000"
+    }
+  ]
+}
