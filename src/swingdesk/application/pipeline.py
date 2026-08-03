@@ -31,6 +31,7 @@ from swingdesk.contracts.position import ActionKind, ManagementAction, Position
 from swingdesk.contracts.reference import Instrument
 from swingdesk.contracts.run import RunManifest
 from swingdesk.application import checklist as checklist_builder
+from swingdesk.application.universe import UniverseSelection
 from swingdesk.derived_observations import atr
 from swingdesk.journal_evidence.journal import DecisionRecord, Journal
 from swingdesk.market_data import BarStore, VendorUnavailable, YAHOO, check
@@ -72,6 +73,7 @@ class RunResult:
     outcomes: list[InstrumentOutcome] = field(default_factory=list)
     positions: list[PositionOutcome] = field(default_factory=list)
     steps: tuple[str, ...] = ()
+    universe: UniverseSelection | None = None
 
     @property
     def decisions(self) -> list[DecisionRecord]:
@@ -144,6 +146,28 @@ def _config_hash(registry: ParameterRegistry) -> str:
     return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
 
+def _universe_hash(selection: UniverseSelection) -> str:
+    """Hash of the rule and the members it selected.
+
+    The universe is an INPUT, so it is pinned like config is. Both halves matter: the rule alone
+    would not move when the store gained bars for a newly-liquid symbol, and the member list alone
+    would not move when a threshold changed on a day it happened to admit the same names.
+    """
+    payload = json.dumps(
+        {
+            "rule": {
+                "min_price": str(selection.rule.min_price),
+                "min_adtv": str(selection.rule.min_adtv),
+                "adtv_window": selection.rule.adtv_window,
+                "min_history": selection.rule.min_history,
+            },
+            "members": [member.instrument.id for member in selection.members],
+        },
+        sort_keys=True,
+    )
+    return hashlib.sha256(payload.encode()).hexdigest()[:16]
+
+
 Fetcher = Callable[[Instrument, Interval, datetime, str | None], "BarSeriesLike"]
 
 
@@ -157,14 +181,21 @@ def run(
     fetcher: Fetcher | None = None,
     positions: PositionStore | None = None,
     exits: ExitPolicy | None = None,
+    universe: UniverseSelection | None = None,
 ) -> RunResult:
     """One pass of the daily pipeline.
 
     `fetcher` is injected so the suite can run offline against recorded fixtures. CI must never
     touch the network: a suite that fetches is neither deterministic nor available offline, and it
     would hammer a rate-limited free tier (CI_POLICY 4).
+
+    `universe` supplies the candidates when `instruments` is empty - the rule-driven path
+    (CHARTER 4). Passing both is allowed and means "these instruments, and here is the universe they
+    were judged against", which is how a held position that has fallen out still gets evaluated.
     """
     fetch = fetcher or vendor_yahoo.fetch
+    if universe is not None and not instruments:
+        instruments = universe.instruments
     started = clock.now()
     # run_id and started_at are identity, not inputs - domain code never reads them, and they are
     # excluded from output_hash. So a replay under a pinned clock must still get a unique id, or
@@ -184,11 +215,13 @@ def run(
         calendar_version=cal.calendar_version(),
         platform=f"{platform_info.system()} python{sys.version.split()[0]}",
         component_versions={atr.COMPONENT: atr.VERSION},
+        parameters=universe.parameters if universe is not None else (),
+        universe_hash=_universe_hash(universe) if universe is not None else None,
     )
     journal.start_run(manifest)
     store.create_snapshot(snapshot_id, started, started, note=run_id)
 
-    result = RunResult(manifest=manifest)
+    result = RunResult(manifest=manifest, universe=universe)
     steps: list[str] = []
 
     # --- open positions, BEFORE any candidate -------------------------------------------
@@ -302,7 +335,7 @@ def run(
             continue
         outcome.checklist = checklist_builder.generate(
             outcome.instrument, run_id, started,
-            risk=outcome.risk, decision=outcome.decision, exits=policy,
+            risk=outcome.risk, decision=outcome.decision, exits=policy, universe=universe,
         )
 
     result.steps = tuple(steps)

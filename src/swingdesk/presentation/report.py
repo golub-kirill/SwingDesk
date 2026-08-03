@@ -14,6 +14,67 @@ from swingdesk.trade_management.sizing import Refusal
 _RULE = "─" * 78
 
 
+def _universe_block(result: RunResult) -> list[str]:
+    """How the candidates were chosen, and how complete that choice was.
+
+    The coverage line is the point. "47 instruments" reads like the rule's answer; "47 admitted, out
+    of 312 measured of 13,048 eligible" reads like what it is - a subset that will grow as bars are
+    fetched. Printing only the first would let a partial universe be mistaken for the population.
+    """
+    selection = result.universe
+    if selection is None:
+        return []
+
+    rule = selection.rule
+    lines = [
+        "UNIVERSE — selected by rule, not by a list (DR-003)",
+        _RULE,
+        f"  rule           close >= {rule.min_price} · {rule.adtv_window}d ADTV >= "
+        f"{rule.min_adtv:,.0f} · >= {rule.min_history} bars",
+        f"  members        {len(selection.members)}",
+        f"  coverage       {selection.measured} of {selection.eligible} eligible symbols have "
+        f"stored bars ({selection.coverage:.1%})",
+    ]
+    if selection.directory_pull is not None:
+        lines.append(f"  directory      pulled {selection.directory_pull:%Y-%m-%d}")
+    for parameter in selection.parameters:
+        flag = "  <- ASSUMED, not evidence" if parameter.is_assumed else ""
+        lines.append(f"      {parameter.id:<26} {parameter.value}   [{parameter.provenance}]{flag}")
+
+    if selection.is_partial:
+        lines += [
+            "",
+            "  PARTIAL UNIVERSE. This is a subset of what the rule admits, not the rule's answer:",
+            "  a symbol with no stored bars cannot be measured, so it cannot be admitted. Run",
+            "  tools/refresh_universe.py to raise coverage.",
+        ]
+    if selection.capped_from is not None:
+        lines += [
+            "",
+            f"  CAPPED to {len(selection.members)} of {selection.capped_from} admitted, by dollar",
+            "  volume. A cap is a RANKING and the rule is not — these results are about the most",
+            "  liquid members, and do not describe the universe.",
+        ]
+    return lines
+
+
+def render_empty_universe(selection) -> str:
+    """What to say when the rule admits nobody. Not an error, and not silence either."""
+    return "\n".join([
+        _RULE,
+        "UNIVERSE EMPTY — no instrument met the DR-003 liquidity rule",
+        _RULE,
+        f"  eligible symbols in the directory   {selection.eligible}",
+        f"  of those, with stored bars          {selection.measured}",
+        f"  admitted by the rule                0",
+        "",
+        "  With no bars stored, this is a coverage problem rather than a market one:",
+        "    python tools/fetch_directory.py     # if the directory is empty",
+        "    python tools/refresh_universe.py    # to fetch bars for eligible symbols",
+        _RULE,
+    ])
+
+
 def _positions_block(result: RunResult) -> list[str]:
     """Open positions first, because that is the order the run used and the order that matters.
 
@@ -81,11 +142,18 @@ def render(result: RunResult) -> str:
         f"  calendar       {manifest.calendar_version}",
         f"  platform       {manifest.platform}",
         f"  output hash    {manifest.output_hash}",
-        "",
     ]
+    if manifest.universe_hash is not None:
+        lines.append(f"  universe hash  {manifest.universe_hash}")
+    lines.append("")
+
+    universe = _universe_block(result)
+    if universe:
+        lines.extend(universe)
+        lines.append("")
 
     lines.extend(_positions_block(result))
-    if result.positions:
+    if result.positions or result.universe is not None:
         lines.extend(["", "CANDIDATES", _RULE])
 
     for outcome in result.outcomes:

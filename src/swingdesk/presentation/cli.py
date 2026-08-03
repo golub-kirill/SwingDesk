@@ -6,6 +6,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from swingdesk.application import universe as universe_builder
 from swingdesk.application.pipeline import run
 from swingdesk.contracts.reference import Instrument
 from swingdesk.journal_evidence.journal import Journal
@@ -14,6 +15,8 @@ from swingdesk.platform.clock import FixedClock, SystemClock
 from swingdesk.platform.parameters import ParameterRegistry
 from swingdesk.presentation import report
 from swingdesk.reference_data import calendar as cal
+from swingdesk.reference_data.directory import DirectoryStore
+from swingdesk.trade_management.sizing import Refusal
 
 DEFAULT_DATA = Path("data")
 
@@ -46,7 +49,12 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
 
     scan = sub.add_parser("scan", help="run the daily pipeline and produce a report")
-    scan.add_argument("tickers", nargs="+", help="e.g. AAPL CNQ.TO")
+    scan.add_argument("tickers", nargs="*", help="e.g. AAPL CNQ.TO; omit and pass --universe")
+    scan.add_argument("--universe", action="store_true",
+                      help="take candidates from the DR-003 liquidity rule instead of a list")
+    scan.add_argument("--limit", type=int, default=None,
+                      help="cap the universe by dollar volume. A cap is a RANKING, not the rule, "
+                           "and the report says so")
     scan.add_argument("--data", type=Path, default=DEFAULT_DATA)
     scan.add_argument("--lookback", default="1y")
     scan.add_argument("--as-of", default=None,
@@ -57,6 +65,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "scan":
         from datetime import datetime, timezone
 
+        if bool(args.tickers) == bool(args.universe):
+            parser.error("pass either tickers or --universe, not both and not neither")
+
         clock = (
             FixedClock(datetime.fromisoformat(args.as_of).replace(tzinfo=timezone.utc))
             if args.as_of
@@ -64,9 +75,28 @@ def main(argv: list[str] | None = None) -> int:
         )
         registry = ParameterRegistry.load()
         instruments = [_instrument(t) for t in args.tickers]
+        selection = None
 
         with BarStore(args.data / "bars.duckdb") as store, Journal(args.data / "journal.duckdb") as journal:
-            result = run(instruments, clock, registry, store, journal, lookback=args.lookback)
+            if args.universe:
+                built = universe_builder.rule_from_registry(registry)
+                if isinstance(built, Refusal):
+                    # Fail closed and say which parameter. A universe that silently admitted
+                    # everything would be worse than no run at all.
+                    print(f"universe REFUSED  {built}", file=sys.stderr)
+                    return 2
+                rule, parameters = built
+                with DirectoryStore(args.data / "directory.duckdb") as directory:
+                    selection = universe_builder.select(
+                        directory, store, rule, clock.now(),
+                        parameters=parameters, limit=args.limit,
+                    )
+                if not selection.members:
+                    print(report.render_empty_universe(selection), file=sys.stderr)
+                    return 3
+
+            result = run(instruments, clock, registry, store, journal,
+                         lookback=args.lookback, universe=selection)
             print(report.render(result))
         return 0
 

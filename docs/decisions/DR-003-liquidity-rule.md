@@ -112,3 +112,12 @@ admitting it produces a candidate that silently never qualifies.
    here because dollar volume involves no forward returns and so cannot leak outcome information,
    and because PR-001's design was frozen before this measurement existed. It is not nothing, and it
    is recorded as a limitation rather than glossed.
+4. **The rule costs more to evaluate than the daily budget allows** — found when the universe path
+   was built (2026-08-03). ~4,300 admitted instruments is over an hour of free-tier fetching against
+   `NFR.md`'s 45 minutes, so bars are widened by a budgeted background pass and the daily run reads
+   what is stored. Until coverage is complete the universe is a **subset** of what this rule admits,
+   `UniverseSelection.is_partial` says so, and every report prints the coverage fraction. This does
+   not change the thresholds; it changes how long they take to be fully applied.
+5. **The plateau was located on 115 instruments and should be re-checked on the population.** Once
+   coverage is complete the same percentiles can be computed over every eligible symbol rather than
+   a sample, which is the cheap confirmation that 5M–25M really is flat (ROADMAP X6).

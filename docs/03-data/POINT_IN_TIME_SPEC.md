@@ -104,6 +104,19 @@ A backtest on date D uses the membership computed from data available at D — n
 membership. Using today's list is exactly the survivorship mechanism the course names, and it would
 be self-inflicted, unlike the delisting gap which is imposed by the vendor.
 
+**Implemented 2026-08-03.** `reference_data.directory.DirectoryStore` holds symbol-directory pulls
+and reads them as-of; `application.universe.select` joins them with as-of bars and applies the
+DR-003 rule. The store differs from `BarStore` in one deliberate way: **a pull is a complete
+snapshot, not a set of independent facts**, so `as_of` reads the latest pull at or before K rather
+than the union of everything known by K. Unioning would keep a symbol in the universe forever after
+it stopped being listed — manufacturing survivorship bias in the store that is supposed to bound it.
+
+That choice buys the one thing free data can still give us: `departures()` reports what was in an
+earlier pull and is absent from a later one. It is the **only survivorship evidence this project can
+ever collect**, it only ever looks forward, and it is an observation rather than a delisting — a
+ticker change looks identical from here. Recording it costs one directory pull; not recording it
+loses the evidence permanently.
+
 ## 7. What we still cannot fix
 
 Stated plainly so it is never mistaken for solved:

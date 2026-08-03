@@ -35,6 +35,13 @@ class RunManifest(BaseModel):
 
     component_versions: dict[str, int] = Field(default_factory=dict)
     parameters: tuple[ParameterUse, ...] = ()
+    universe_hash: str | None = Field(
+        default=None,
+        description="Hash of the rule and the member ids it selected. The universe is a run INPUT: "
+                    "without it pinned, a changed universe moves output_hash with nothing in the "
+                    "manifest explaining why - the same defect gate 9 caught in config_hash. None "
+                    "means the run took an explicit instrument list.",
+    )
     seed: int | None = None
     calendar_version: str = Field(description="pandas-market-calendars version (ADR-0002).")
     platform: str = Field(description="OS, Python and key library versions.")

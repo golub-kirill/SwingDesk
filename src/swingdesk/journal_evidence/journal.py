@@ -46,6 +46,10 @@ CREATE TABLE IF NOT EXISTS decisions (
     version         INTEGER NOT NULL DEFAULT 1,
     PRIMARY KEY (run_id, instrument_id, version)
 );
+
+-- Added after `runs` shipped. Written as a migration rather than folded into the CREATE above,
+-- because an existing journal is append-only: its rows must survive the schema growing.
+ALTER TABLE runs ADD COLUMN IF NOT EXISTS universe_hash VARCHAR;
 """
 
 #: The four states of the candidate-decision enum (DECISION_STATE_MACHINE 1). A decision outside
@@ -98,8 +102,8 @@ class Journal:
             """
             INSERT INTO runs (run_id, started_at, completed_at, code_hash, code_dirty,
                               config_hash, snapshot_id, calendar_version, platform, seed,
-                              parameters_json, components_json, output_hash)
-            VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL)
+                              parameters_json, components_json, output_hash, universe_hash)
+            VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)
             """,
             [
                 manifest.run_id, manifest.started_at, manifest.code_hash, manifest.code_dirty,
@@ -107,6 +111,7 @@ class Journal:
                 manifest.platform, manifest.seed,
                 json.dumps([p.model_dump() for p in manifest.parameters], sort_keys=True),
                 json.dumps(manifest.component_versions, sort_keys=True),
+                manifest.universe_hash,
             ],
         )
 

@@ -156,3 +156,90 @@ def test_as_of_ignores_later_knowledge(stores, registry) -> None:
     after = store.as_of(TEST_US.id, Interval.DAY, Series.RAW, later)
     assert [b.close for b in before.bars] == [b.close for b in original.bars]
     assert [b.close for b in after.bars] == [b.close for b in revised]
+
+
+# ------------------------------------------------------------------ the universe path
+
+
+def _universe_selection(instruments):
+    """A selection standing in for one the builder would produce, so the pipeline test stays
+    about the pipeline rather than about two stores."""
+    from decimal import Decimal
+
+    from swingdesk.application.universe import Membership, UniverseSelection
+    from swingdesk.reference_data.universe import LiquidityRule
+
+    return UniverseSelection(
+        as_of=AS_OF,
+        rule=LiquidityRule(min_price=Decimal("5.00"), min_adtv=Decimal("5000000"),
+                           adtv_window=20, min_history=250),
+        parameters=(), directory_pull=AS_OF,
+        eligible=len(instruments), measured=len(instruments),
+        members=tuple(
+            Membership(instrument=i, close=Decimal("100"), adtv=Decimal("10000000"), bars=300)
+            for i in instruments
+        ),
+    )
+
+
+def test_a_universe_supplies_the_candidates(stores, registry) -> None:
+    """The CHARTER 4 shape: the run starts from a rule, not from a typed list."""
+    store, journal = stores
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    selection = _universe_selection([TEST_US])
+
+    result = run([], FixedClock(AS_OF), registry, store, journal,
+                 fetcher=fixture_fetcher({TEST_US.id: sessions}), universe=selection)
+
+    assert [o.instrument.id for o in result.outcomes] == [TEST_US.id]
+    assert result.universe is selection
+
+
+def test_the_universe_is_pinned_in_the_manifest(stores, registry) -> None:
+    """The universe is a run INPUT. Unpinned, a changed universe moves output_hash with nothing in
+    the manifest explaining why - the defect gate 9 caught in config_hash."""
+    store, journal = stores
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    fetcher = fixture_fetcher({TEST_US.id: sessions, TEST_CA.id: sessions})
+
+    one = run([], FixedClock(AS_OF), registry, store, journal, fetcher=fetcher,
+              universe=_universe_selection([TEST_US]))
+    two = run([], FixedClock(AS_OF), registry, store, journal, fetcher=fetcher,
+              universe=_universe_selection([TEST_US, TEST_CA]))
+
+    assert one.manifest.universe_hash is not None
+    assert one.manifest.universe_hash != two.manifest.universe_hash
+
+
+def test_a_run_without_a_universe_pins_nothing(stores, registry) -> None:
+    """None means "explicit instrument list", and must not be confused with an empty universe."""
+    store, journal = stores
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    result = run([TEST_US], FixedClock(AS_OF), registry, store, journal,
+                 fetcher=fixture_fetcher({TEST_US.id: sessions}))
+    assert result.manifest.universe_hash is None
+    assert result.universe is None
+
+
+def test_the_universe_hash_moves_when_the_rule_moves(stores, registry) -> None:
+    """Members alone would not move when a threshold changed on a day it admitted the same names."""
+    from dataclasses import replace
+    from decimal import Decimal
+
+    from swingdesk.reference_data.universe import LiquidityRule
+
+    store, journal = stores
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    fetcher = fixture_fetcher({TEST_US.id: sessions})
+
+    loose = _universe_selection([TEST_US])
+    strict = replace(
+        loose,
+        rule=LiquidityRule(min_price=Decimal("5.00"), min_adtv=Decimal("25000000"),
+                           adtv_window=20, min_history=250),
+    )
+
+    one = run([], FixedClock(AS_OF), registry, store, journal, fetcher=fetcher, universe=loose)
+    two = run([], FixedClock(AS_OF), registry, store, journal, fetcher=fetcher, universe=strict)
+
+    assert one.manifest.universe_hash != two.manifest.universe_hash

@@ -40,6 +40,21 @@ a spike in source conflicts.
 **Return:** all four named gates pass — freshness, symbol/currency, corporate actions, event time
 (`DATA_QUALITY_SPEC.md` §1). Not three of four.
 
+**An empty or shrinking universe is a coverage symptom, not a market one.** `scan --universe` reads
+stored bars; a symbol never fetched cannot be measured and so cannot be admitted. If the member
+count drops or reaches zero, check coverage before concluding anything about liquidity:
+
+```bash
+python tools/fetch_directory.py
+```
+
+```bash
+python tools/refresh_universe.py --budget 500
+```
+
+The report prints the coverage fraction on every run precisely so this is visible before it is
+mistaken for a finding.
+
 ## 2. Broker or platform failure
 
 ```verbatim

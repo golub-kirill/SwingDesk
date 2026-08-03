@@ -9,7 +9,7 @@ items anyway or quietly demote them to human questions, each evaluator returns `
 names what is missing — so the checklist reports the truth about the system as well as about the
 candidate.
 
-Four of eighteen are genuinely answerable today. That number is meant to be read, and to go up.
+Five of eighteen are genuinely answerable today. That number is meant to be read, and to go up.
 """
 
 from __future__ import annotations
@@ -61,6 +61,48 @@ def _time_stop_recorded(context: dict) -> tuple[ItemState, str]:
     )
 
 
+def _universe_membership(context: dict) -> tuple[ItemState, str]:
+    """E02: is this instrument in the admissible trading universe?
+
+    Answerable only when the run built one. An explicit ticker list is not a universe, and reporting
+    PASS because the operator typed the symbol would make the item mean "you asked for it".
+
+    A partial universe still answers this item. Coverage bounds which OTHER symbols might qualify;
+    it does not weaken the measurement on a symbol that was measured. The caveat is printed anyway,
+    because a member of a 40-name universe and a member of a 4,000-name one are different facts.
+    """
+    selection = context.get("universe")
+    if selection is None:
+        return ItemState.UNAVAILABLE, (
+            "this run took an explicit instrument list, so no universe was constructed. "
+            "`swingdesk scan --universe` applies the DR-003 liquidity rule"
+        )
+
+    instrument = context["instrument"]
+    member = selection.by_id.get(instrument.id)
+    rule = selection.rule
+    if member is None:
+        return ItemState.FAIL, (
+            f"not admitted by the DR-003 rule as of {selection.as_of:%Y-%m-%d}: requires close "
+            f">= {rule.min_price}, {rule.adtv_window}d ADTV >= {rule.min_adtv:,.0f} and "
+            f"{rule.min_history} bars of history"
+        )
+
+    note = (
+        f"admitted: close {member.close}, {rule.adtv_window}d ADTV {member.adtv:,.0f} "
+        f"(floor {rule.min_adtv:,.0f}), {member.bars} bars. "
+        f"Universe of {len(selection.members)} as of {selection.as_of:%Y-%m-%d}"
+    )
+    if selection.is_partial:
+        note += (
+            f"; PARTIAL - bars stored for {selection.measured} of {selection.eligible} eligible "
+            f"symbols, so this universe is a subset of the rule's answer"
+        )
+    if selection.capped_from is not None:
+        note += f"; capped to {len(selection.members)} of {selection.capped_from} by dollar volume"
+    return ItemState.PASS, note
+
+
 def _no_skip_condition(context: dict) -> tuple[ItemState, str]:
     decision = context.get("decision")
     if decision is None:
@@ -80,14 +122,11 @@ def _unavailable(reason: str):
 #: that are not yet answerable say exactly which machinery is missing rather than being omitted.
 EVALUATORS = {
     "instrument_identity": _instrument_identity,
+    "universe_membership": _universe_membership,
     "risk_recomputed": _risk_recomputed,
     "time_stop_recorded": _time_stop_recorded,
     "no_skip_condition": _no_skip_condition,
 
-    "universe_membership": _unavailable(
-        "the run takes an explicit instrument list; the DR-003 liquidity rule is not applied as a "
-        "universe filter yet (ROADMAP X1)"
-    ),
     "data_freshness": _unavailable(
         "session completeness is checked, but corporate actions are not - and this item requires "
         "both. Half an answer is not an answer"
@@ -127,6 +166,7 @@ def generate(
     risk=None,
     decision=None,
     exits=None,
+    universe=None,
     appendix: str = "E",
 ) -> Checklist:
     """One filled pre-trade checklist for one candidate."""
@@ -135,6 +175,7 @@ def generate(
         "risk": risk,
         "decision": decision,
         "exits": exits,
+        "universe": universe,
     }
 
     items: list[ChecklistItem] = []
@@ -162,7 +203,12 @@ def generate(
 
 
 def machine_coverage(appendix: str = "E") -> tuple[int, int]:
-    """(answerable today, total). Reported so the gap is a number rather than an impression."""
+    """(answerable today, total). Reported so the gap is a number rather than an impression.
+
+    Counts what the SYSTEM can answer, not what a given run did answer. E02 is answerable because
+    the universe path exists; a run that took an explicit ticker list still reports it `unavailable`,
+    and that is a property of the run rather than a missing capability.
+    """
     rows = _load_items(appendix)
     answerable = sum(
         1 for row in rows

@@ -14,7 +14,7 @@ event (POINT_IN_TIME_SPEC 3).
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -139,6 +139,33 @@ class BarStore:
             knowledge_time=knowledge_time,
             bars=bars,
         )
+
+    def instrument_ids(self, knowledge_time: datetime) -> tuple[str, ...]:
+        """Every instrument with at least one bar known at `knowledge_time`, sorted.
+
+        Universe construction needs this: the directory names thousands of eligible symbols and the
+        store holds bars for a fraction of them. Asking the store which ones it can answer for turns
+        a scan of the whole directory into a scan of what exists, and - more importantly - lets the
+        caller report the difference instead of presenting a partial universe as the rule's answer.
+        """
+        rows = self._connection.execute(
+            "SELECT DISTINCT instrument_id FROM bars WHERE knowledge_time <= ? ORDER BY 1",
+            [knowledge_time],
+        ).fetchall()
+        return tuple(row[0] for row in rows)
+
+    def last_sessions(self, knowledge_time: datetime) -> dict[str, date]:
+        """Latest stored session per instrument, known at `knowledge_time`.
+
+        One query instead of one per instrument. A refresh pass has to order thousands of symbols by
+        staleness, and doing that with a read per symbol makes the ordering cost more than the work.
+        """
+        rows = self._connection.execute(
+            "SELECT instrument_id, MAX(session_date) FROM bars "
+            "WHERE knowledge_time <= ? GROUP BY instrument_id",
+            [knowledge_time],
+        ).fetchall()
+        return {row[0]: row[1] for row in rows}
 
     def revision_count(self, instrument_id: str | None = None) -> int:
         """Total stored rows. A spike between runs means a vendor re-adjusted history."""

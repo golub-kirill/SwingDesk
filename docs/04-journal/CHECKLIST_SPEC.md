@@ -44,16 +44,20 @@ Alert и резервный ручной план готовы.
 so the item text is never hand-copied a third time, and `swingdesk.application.checklist` fills it
 per candidate.
 
-**Four of the eighteen are answerable today, not twelve.** The paragraph below says twelve are
+**Five of the eighteen are answerable today, not twelve.** The paragraph below says twelve are
 machine-checkable *given the data the system already holds*, and the system does not hold all of it
 yet. Rather than tick them anyway, each unanswerable item reports `unavailable` and names what is
-missing — nine of them do. An `unavailable` item is a gap in the **system**, so it is shown beside
+missing — eight of them do. An `unavailable` item is a gap in the **system**, so it is shown beside
 the passes and counted as unanswered; demoting it to a human question would hide the gap behind a
 person and make the coverage look better than it is.
 
 | Answerable now | Blocked on |
 |---|---|
-| E01 identity · E13 risk recomputed · E16 time stop · E17 no skip condition | E02 universe rule not applied · E03 corporate actions · E04 regime not wired · E05 no sector source · E08 no trigger/max entry · E09 no maximum entry · E11 no event calendar · E12 no spread data · E14 no exposure buckets |
+| E01 identity · **E02 universe membership** · E13 risk recomputed · E16 time stop · E17 no skip condition | E03 corporate actions · E04 regime not wired · E05 no sector source · E08 no trigger/max entry · E09 no maximum entry · E11 no event calendar · E12 no spread data · E14 no exposure buckets |
+
+E02 moved when the universe path landed (ROADMAP X1), and it carries a distinction worth keeping:
+the count above is what the **system** can answer, and a run that took an explicit ticker list still
+reports E02 `unavailable`. Membership is a fact about a rule; typing a symbol is not evidence of one.
 
 Twelve of these are **machine-checkable** given the data the system already holds — ticker/exchange/
 currency, universe membership, data freshness, regime recorded, sector/benchmark, trigger
