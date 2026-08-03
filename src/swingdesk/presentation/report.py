@@ -43,6 +43,31 @@ def _positions_block(result: RunResult) -> list[str]:
     return lines
 
 
+def _checklist_block(outcome) -> list[str]:
+    """The pre-trade checklist, with the unanswered items shown rather than summarised away.
+
+    An `unavailable` item is a gap in the SYSTEM, and printing it next to the passes is the only
+    way the operator can tell the difference between "checked and fine" and "nobody checked".
+    """
+    checklist = outcome.checklist
+    if checklist is None:
+        return []
+
+    counts = checklist.counts
+    lines = [
+        f"  pre-trade checklist  Appendix {checklist.appendix} · {checklist.terminal_state()}",
+        f"      {counts['pass']} pass · {counts['fail']} fail · "
+        f"{counts['unavailable']} unavailable · {counts['human']} for you",
+    ]
+    for item in checklist.failures:
+        lines.append(f"      FAIL  {item.id}  {item.text}")
+        lines.append(f"            {item.note}")
+    unavailable = [i for i in checklist.items if i.state.value == "unavailable"]
+    if unavailable:
+        lines.append(f"      not checkable yet: {', '.join(i.id for i in unavailable)}")
+    return lines
+
+
 def render(result: RunResult) -> str:
     manifest = result.manifest
     lines: list[str] = [
@@ -103,6 +128,7 @@ def render(result: RunResult) -> str:
             lines.append(f"  DECISION             {decision.decision}{detail}")
             if decision.reason:
                 lines.append(f"      {decision.reason}")
+        lines.extend(_checklist_block(outcome))
         lines.append("")
 
     assumed = sorted(

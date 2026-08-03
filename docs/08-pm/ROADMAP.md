@@ -16,8 +16,8 @@ The finish line it serves is `CHARTER.md` §4, ratified 2026-08-01 and unchanged
 |---|---|
 | Gates closed | G0 charter · G4 architecture · **G5 walking skeleton** |
 | Gates open | G1 requirements · G2 transcription · G3 data · G6 catalogue · G7 surfaces |
-| Merge gates running | 11, from one command |
-| Tests | 182 |
+| Merge gates running | 12, from one command |
+| Tests | 216 |
 | Components implemented | 7 · 6 with golden vectors (25) · **0 `active`** — five blocked by an unset parameter, which is the fail-closed design working |
 | Parameters | 96 — 84 `unset`, 9 `assumed`, 2 `owner`, **1 `validated`** |
 | Studies | 4 registered, 4 reported — **3 refuted, 1 accepted and quantifiably fragile** |
@@ -35,11 +35,13 @@ known, and what is known is mostly negative.
 | every displayed number traces to a component with provenance and validation status | **done** for the components that exist; the trace is carried by `ObservationSeries`, not reconstructed |
 | the whole run is reproducible from its manifest | **done** — replay is a merge gate |
 | every candidate carries `Trade`/`Watch`/`Skip`/`Pause` with a reason code | **done** — asserted by test and by the journal's uncoded-refusal count |
-| open positions are evaluated before new candidates | **ordering exists, subject does not.** There is no position store, so nothing is evaluated first because nothing is open |
-| the pre-trade checklist is generated with machine-verifiable items pre-filled | **not built.** `CHECKLIST_SPEC.md` transcribes 84 items; none is generated |
+| open positions are evaluated before new candidates | **done** — a position store, evaluated first, with the run's own step trace as the evidence |
+| the pre-trade checklist is generated with machine-verifiable items pre-filled | **done** — generated per candidate from the transcription. 4 of 18 items answerable today, 9 reporting `unavailable` with the reason, 5 human |
 
-Two gaps, both concrete, neither requiring a research result. **That is the whole remaining v1
-scope**, and it is deliberately unglamorous.
+**All six are now done** (2026-08-02). The v1 finish line as ratified on 2026-08-01 is reached.
+
+That is a smaller claim than it sounds, and deliberately so: the finish line requires the machinery
+to be honest and reproducible, not the strategy to work. §7 still stands unchanged.
 
 ## 3. Now
 
@@ -48,8 +50,8 @@ Work that is started or next, and that nothing else waits on.
 | # | Item | Why now |
 |---|---|---|
 | ~~N1~~ | ~~Golden vectors for `breadth` and `regime`~~ | **DONE 2026-08-02.** 9 vectors added, plus a differential check against pandas and seven metamorphic relations. The vector format grew a `kind` so a cross-sectional measure and a fit/apply classifier can have vectors at all |
-| N2 | **Position store + open-position evaluation** | The finish line's fifth capability. Needs a positions table, an open-position path through the pipeline before candidates, and the `Management` record from `JOURNAL_SCHEMA.md` |
-| N3 | **Checklist generation** | The finish line's sixth capability. 84 transcribed items, each classified machine-verifiable or human-only; the machine ones pre-filled from the run |
+| ~~N2~~ | ~~Position store + open-position evaluation~~ | **DONE 2026-08-02.** Append-only, read as-of; the run proposes and never applies (D1, D6); the step order is recorded rather than asserted |
+| ~~N3~~ | ~~Checklist generation~~ | **DONE 2026-08-02.** 84 items parsed from the transcription, Appendix E generated per candidate. 4 of 18 answerable today; the other 9 machine items report `unavailable` and name what is missing |
 | ~~N4~~ | ~~`registry/components.yml`~~ | **DONE 2026-08-02.** 465 rows, and gate 11 runs all six checks. It caught swing high and swing low sharing one function on its first run — the violation import analysis cannot see, because both imports are legal |
 
 ## 4. Next

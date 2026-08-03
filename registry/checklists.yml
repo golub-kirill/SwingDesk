@@ -1,0 +1,518 @@
+# Checklist registry.
+#
+# GENERATED item text, parsed from docs/04-journal/CHECKLIST_SPEC.md, which gate 2 checks against
+# the appendix PDFs. Never hand-copied - a third transcription is a third place to drift.
+#
+# AUTHORED: `evidence`. It names the run fact that answers a machine item; null means only a human
+# can answer it. Carried forward across regenerations.
+#
+# Terminal states are the worksheet set (DECISION_STATE_MACHINE 5):
+#   Complete - Research - Pause - Skip - Error
+#
+# Enforced by tools/build_checklists.py --check-only.
+
+items:
+
+  - id: E01
+    appendix: E
+    position: 1
+    text: "Тикер, биржа и валюта проверены."
+    evidence: instrument_identity
+
+  - id: E02
+    appendix: E
+    position: 2
+    text: "Инструмент входит в допустимую торговую вселенную."
+    evidence: universe_membership
+
+  - id: E03
+    appendix: E
+    position: 3
+    text: "Данные свежие; corporate actions учтены."
+    evidence: data_freshness
+
+  - id: E04
+    appendix: E
+    position: 4
+    text: "Market regime USA/Canada записан."
+    evidence: regime_recorded
+
+  - id: E05
+    appendix: E
+    position: 5
+    text: "Сектор/отрасль и benchmark проверены."
+    evidence: sector_benchmark
+
+  - id: E06
+    appendix: E
+    position: 6
+    text: "1Y и 3M поддерживают идею."
+    evidence: null
+
+  - id: E07
+    appendix: E
+    position: 7
+    text: "30D setup соответствует версии стратегии."
+    evidence: null
+
+  - id: E08
+    appendix: E
+    position: 8
+    text: "Trigger измерим и ещё не Late."
+    evidence: trigger_not_late
+
+  - id: E09
+    appendix: E
+    position: 9
+    text: "Entry zone и maximum entry записаны."
+    evidence: entry_zone_recorded
+
+  - id: E10
+    appendix: E
+    position: 10
+    text: "Stop связан с invalidation."
+    evidence: null
+
+  - id: E11
+    appendix: E
+    position: 11
+    text: "Earnings и другие события проверены."
+    evidence: event_proximity
+
+  - id: E12
+    appendix: E
+    position: 12
+    text: "Spread, dollar volume и expected slippage допустимы."
+    evidence: liquidity_acceptable
+
+  - id: E13
+    appendix: E
+    position: 13
+    text: "Risk $ и shares рассчитаны заново."
+    evidence: risk_recomputed
+
+  - id: E14
+    appendix: E
+    position: 14
+    text: "Open risk, sector bucket, currency и event exposure допустимы."
+    evidence: exposure_within_limits
+
+  - id: E15
+    appendix: E
+    position: 15
+    text: "Order type и partial-fill/gap сценарий понятны."
+    evidence: null
+
+  - id: E16
+    appendix: E
+    position: 16
+    text: "Target, trailing, failure exit и time stop записаны."
+    evidence: time_stop_recorded
+
+  - id: E17
+    appendix: E
+    position: 17
+    text: "No-trade/Skip conditions не выполнены."
+    evidence: no_skip_condition
+
+  - id: E18
+    appendix: E
+    position: 18
+    text: "Alert и резервный ручной план готовы."
+    evidence: null
+
+  - id: H01
+    appendix: H
+    position: 1
+    text: "Broker reconciliation завершён."
+    evidence: null
+
+  - id: H02
+    appendix: H
+    position: 2
+    text: "Net P&L, R и расходы рассчитаны."
+    evidence: null
+
+  - id: H03
+    appendix: H
+    position: 3
+    text: "Drawdown и максимальный open risk проверены."
+    evidence: null
+
+  - id: H04
+    appendix: H
+    position: 4
+    text: "Результаты разделены по strategy/version/regime/country/sector."
+    evidence: null
+
+  - id: H05
+    appendix: H
+    position: 5
+    text: "Entry, exit, slippage, MFE и MAE проверены."
+    evidence: null
+
+  - id: H06
+    appendix: H
+    position: 6
+    text: "Outcome и Decision Quality разделены."
+    evidence: null
+
+  - id: H07
+    appendix: H
+    position: 7
+    text: "Major/critical violations перечислены."
+    evidence: null
+
+  - id: H08
+    appendix: H
+    position: 8
+    text: "Лучшее решение недели выбрано."
+    evidence: null
+
+  - id: H09
+    appendix: H
+    position: 9
+    text: "Худшее решение недели выбрано."
+    evidence: null
+
+  - id: H10
+    appendix: H
+    position: 10
+    text: "Watchlist funnel и Skip quality проверены."
+    evidence: null
+
+  - id: H11
+    appendix: H
+    position: 11
+    text: "Market regime и sector leadership обновлены."
+    evidence: null
+
+  - id: H12
+    appendix: H
+    position: 12
+    text: "Risk level следующей недели выбран."
+    evidence: null
+
+  - id: H13
+    appendix: H
+    position: 13
+    text: "Одна измеримая задача улучшения записана."
+    evidence: null
+
+  - id: P01
+    appendix: P
+    position: 1
+    text: "Идея появилась из разрешённого процесса поиска."
+    evidence: null
+
+  - id: P02
+    appendix: P
+    position: 2
+    text: "Market regime и risk level определены."
+    evidence: null
+
+  - id: P03
+    appendix: P
+    position: 3
+    text: "Sector/industry/commodity context проверен."
+    evidence: null
+
+  - id: P04
+    appendix: P
+    position: 4
+    text: "1Y/3M/30D screenshots сохранены."
+    evidence: null
+
+  - id: P05
+    appendix: P
+    position: 5
+    text: "Setup и strategy version записаны."
+    evidence: null
+
+  - id: P06
+    appendix: P
+    position: 6
+    text: "Trigger, entry zone и maximum entry записаны."
+    evidence: null
+
+  - id: P07
+    appendix: P
+    position: 7
+    text: "Invalidation, stop, targets и time stop записаны."
+    evidence: null
+
+  - id: P08
+    appendix: P
+    position: 8
+    text: "Event, liquidity, borrow и currency проверены."
+    evidence: null
+
+  - id: P09
+    appendix: P
+    position: 9
+    text: "Position size и portfolio fit рассчитаны."
+    evidence: null
+
+  - id: P10
+    appendix: P
+    position: 10
+    text: "Order type и fail scenarios проверены."
+    evidence: null
+
+  - id: P11
+    appendix: P
+    position: 11
+    text: "Fills импортированы и actual risk пересчитан."
+    evidence: null
+
+  - id: P12
+    appendix: P
+    position: 12
+    text: "Management actions соответствуют правилам."
+    evidence: null
+
+  - id: P13
+    appendix: P
+    position: 13
+    text: "Partials и stop changes записаны."
+    evidence: null
+
+  - id: P14
+    appendix: P
+    position: 14
+    text: "Final exit имеет код причины."
+    evidence: null
+
+  - id: P15
+    appendix: P
+    position: 15
+    text: "Net P&L, R, MFE, MAE и holding period рассчитаны."
+    evidence: null
+
+  - id: P16
+    appendix: P
+    position: 16
+    text: "Outcome и Decision Quality оценены отдельно."
+    evidence: null
+
+  - id: P17
+    appendix: P
+    position: 17
+    text: "Ошибки и стоимость нарушения классифицированы."
+    evidence: null
+
+  - id: P18
+    appendix: P
+    position: 18
+    text: "Статистика стратегии/версии обновлена."
+    evidence: null
+
+  - id: P19
+    appendix: P
+    position: 19
+    text: "Одна применимая корректировка процесса сформулирована."
+    evidence: null
+
+  - id: T01
+    appendix: T
+    position: 1
+    text: "Данные и брокер сверены."
+    evidence: null
+
+  - id: T02
+    appendix: T
+    position: 2
+    text: "USA/Canada regime определён."
+    evidence: null
+
+  - id: T03
+    appendix: T
+    position: 3
+    text: "Sector map и commodities/CADUSD проверены."
+    evidence: null
+
+  - id: T04
+    appendix: T
+    position: 4
+    text: "Открытые позиции и events обновлены."
+    evidence: null
+
+  - id: T05
+    appendix: T
+    position: 5
+    text: "Weekly watchlist и risk budget созданы."
+    evidence: null
+
+  - id: T06
+    appendix: T
+    position: 6
+    text: "No-trade scenarios записаны."
+    evidence: null
+
+  - id: T07
+    appendix: T
+    position: 7
+    text: "Overnight/futures/news проверены."
+    evidence: null
+
+  - id: T08
+    appendix: T
+    position: 8
+    text: "Открытые позиции и gaps проверены первыми."
+    evidence: null
+
+  - id: T09
+    appendix: T
+    position: 9
+    text: "Daily Priority 1 ограничен."
+    evidence: null
+
+  - id: T10
+    appendix: T
+    position: 10
+    text: "Entry/exit plans и sizes пересчитаны."
+    evidence: null
+
+  - id: T11
+    appendix: T
+    position: 11
+    text: "Alerts установлены."
+    evidence: null
+
+  - id: T12
+    appendix: T
+    position: 12
+    text: "No-trade condition сохранено."
+    evidence: null
+
+  - id: T13
+    appendix: T
+    position: 13
+    text: "Тикер/биржа/валюта/направление верны."
+    evidence: null
+
+  - id: T14
+    appendix: T
+    position: 14
+    text: "Setup/trigger сохранены."
+    evidence: null
+
+  - id: T15
+    appendix: T
+    position: 15
+    text: "Price не Late."
+    evidence: null
+
+  - id: T16
+    appendix: T
+    position: 16
+    text: "Stop и risk/share верны."
+    evidence: null
+
+  - id: T17
+    appendix: T
+    position: 17
+    text: "Shares и portfolio fit подтверждены."
+    evidence: null
+
+  - id: T18
+    appendix: T
+    position: 18
+    text: "Order type и gap/partial scenario понятны."
+    evidence: null
+
+  - id: T19
+    appendix: T
+    position: 19
+    text: "Stop не расширяется."
+    evidence: null
+
+  - id: T20
+    appendix: T
+    position: 20
+    text: "Добавление только по отдельному setup и total-risk check."
+    evidence: null
+
+  - id: T21
+    appendix: T
+    position: 21
+    text: "No Action допускается."
+    evidence: null
+
+  - id: T22
+    appendix: T
+    position: 22
+    text: "Management action имеет правило и timestamp."
+    evidence: null
+
+  - id: T23
+    appendix: T
+    position: 23
+    text: "Event/sector/market changes контролируются."
+    evidence: null
+
+  - id: T24
+    appendix: T
+    position: 24
+    text: "Fills и costs импортированы."
+    evidence: null
+
+  - id: T25
+    appendix: T
+    position: 25
+    text: "Screenshots сохранены."
+    evidence: null
+
+  - id: T26
+    appendix: T
+    position: 26
+    text: "R/MFE/MAE/slippage рассчитаны."
+    evidence: null
+
+  - id: T27
+    appendix: T
+    position: 27
+    text: "Outcome и Decision Quality разделены."
+    evidence: null
+
+  - id: T28
+    appendix: T
+    position: 28
+    text: "Error code и process score записаны."
+    evidence: null
+
+  - id: T29
+    appendix: T
+    position: 29
+    text: "Статистика версии обновлена."
+    evidence: null
+
+  - id: T30
+    appendix: T
+    position: 30
+    text: "Ручной список позиций/stops/targets доступен."
+    evidence: null
+
+  - id: T31
+    appendix: T
+    position: 31
+    text: "Broker — источник фактических позиций."
+    evidence: null
+
+  - id: T32
+    appendix: T
+    position: 32
+    text: "При stale data или mismatch новые сделки блокируются."
+    evidence: null
+
+  - id: T33
+    appendix: T
+    position: 33
+    text: "После critical violation активируется Pause."
+    evidence: null
+
+  - id: T34
+    appendix: T
+    position: 34
+    text: "Возврат возможен только по записанным критериям."
+    evidence: null

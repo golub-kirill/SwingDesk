@@ -24,11 +24,13 @@ from pathlib import Path
 from uuid import uuid4
 
 from swingdesk.contracts.market import BarSeries as BarSeriesLike
+from swingdesk.contracts.checklist import Checklist
 from swingdesk.contracts.market import Interval, Series
 from swingdesk.contracts.observation import ObservationSeries
 from swingdesk.contracts.position import ActionKind, ManagementAction, Position
 from swingdesk.contracts.reference import Instrument
 from swingdesk.contracts.run import RunManifest
+from swingdesk.application import checklist as checklist_builder
 from swingdesk.derived_observations import atr
 from swingdesk.journal_evidence.journal import DecisionRecord, Journal
 from swingdesk.market_data import BarStore, VendorUnavailable, YAHOO, check
@@ -52,6 +54,7 @@ class InstrumentOutcome:
     observations: ObservationSeries | None = None
     risk: RiskSnapshot | Refusal | None = None
     decision: DecisionRecord | None = None
+    checklist: Checklist | None = None
 
 
 @dataclass
@@ -290,6 +293,17 @@ def run(
 
         outcome.decision = DecisionRecord(instrument.id, "Watch", None,
                                           "sized; awaiting a trigger")
+
+    # The pre-trade checklist is generated for every candidate that reached a decision - including
+    # a Skip, because a skipped candidate's checklist is what makes the skip reviewable.
+    policy = exits or ExitPolicy(Decimal("2.0"), 20)
+    for outcome in result.outcomes:
+        if outcome.decision is None:
+            continue
+        outcome.checklist = checklist_builder.generate(
+            outcome.instrument, run_id, started,
+            risk=outcome.risk, decision=outcome.decision, exits=policy,
+        )
 
     result.steps = tuple(steps)
     journal.record_decisions(run_id, clock.now(), result.decisions)

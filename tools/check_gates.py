@@ -69,6 +69,8 @@ def main() -> int:
         "course index": _run("course index shape",
                              [python, "tools/build_course_index.py", "--check-only"]),
         "frd": _run("FRD current", [python, "tools/build_frd.py", "--check-only"]),
+        "checklists current": _run("checklist registry current",
+                                   [python, "tools/build_checklists.py", "--check-only"]),
         "components current": _run("component registry current",
                                    [python, "tools/build_components.py", "--check-only"]),
         "component contract": _run("component registry contract",
