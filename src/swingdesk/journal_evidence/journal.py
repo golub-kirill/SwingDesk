@@ -126,6 +126,15 @@ class Journal:
     def record_decisions(
         self, run_id: str, recorded_at: datetime, decisions: list[DecisionRecord]
     ) -> None:
+        """Record every candidate's outcome. An empty run is a run, not an error.
+
+        A day on which the universe produces no candidates is ordinary - everything filtered out,
+        or a run whose only work was managing open positions. duckdb's executemany rejects an empty
+        batch, so this returned an exception where it should have returned nothing. Found when
+        positions landed and the first positions-only run crashed.
+        """
+        if not decisions:
+            return
         self._connection.executemany(
             """
             INSERT INTO decisions

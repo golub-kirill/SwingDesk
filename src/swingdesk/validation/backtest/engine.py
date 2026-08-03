@@ -23,7 +23,7 @@ from swingdesk.contracts.market import BarSeries
 from swingdesk.contracts.observation import ObservationSeries
 from swingdesk.contracts.trade import ExitReason, Trade
 from swingdesk.validation.backtest.costs import CostModel
-from swingdesk.validation.backtest.exits import ExitPolicy
+from swingdesk.trade_management.exits import ExitPolicy
 
 
 class Skipped(StrEnum):

@@ -14,6 +14,35 @@ from swingdesk.trade_management.sizing import Refusal
 _RULE = "─" * 78
 
 
+def _positions_block(result: RunResult) -> list[str]:
+    """Open positions first, because that is the order the run used and the order that matters.
+
+    A proposal is shown as a proposal. Nothing here has happened; D6 routes stop moves and partial
+    exits through the owner, and a report that reads like a confirmation would be lying about that.
+    """
+    if not result.positions:
+        return []
+
+    lines = ["", "OPEN POSITIONS — evaluated before candidates (CHECKLIST_SPEC 4)", _RULE]
+    for outcome in result.positions:
+        position = outcome.position
+        flag = "  [STALE DATA]" if outcome.stale else ""
+        lines.append(
+            f"  {position.instrument_id:<12} {position.shares:>5} sh @ {position.entry_price}"
+            f"  stop {position.current_stop}  open risk {position.open_risk}{flag}"
+        )
+        if outcome.action is not None:
+            action = outcome.action
+            marker = "NEEDS YOUR APPROVAL" if action.is_actionable else "no action"
+            lines.append(f"      proposed: {action.kind.value:<14} {marker}")
+            lines.append(f"      because:  {action.reason}")
+    pending = len(result.actionable)
+    if pending:
+        lines.append("")
+        lines.append(f"  {pending} proposal(s) await your approval. Nothing has been done.")
+    return lines
+
+
 def render(result: RunResult) -> str:
     manifest = result.manifest
     lines: list[str] = [
@@ -29,6 +58,10 @@ def render(result: RunResult) -> str:
         f"  output hash    {manifest.output_hash}",
         "",
     ]
+
+    lines.extend(_positions_block(result))
+    if result.positions:
+        lines.extend(["", "CANDIDATES", _RULE])
 
     for outcome in result.outcomes:
         instrument = outcome.instrument

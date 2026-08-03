@@ -1,5 +1,11 @@
 """How a position ends, decided by rule.
 
+Lives in `trade_management` because that is the layer the course assigns exits to - M52-M58 are
+Trade Management topics, and `EXIT_MODEL_SPEC.md` owns the four-slot model. It sat in
+`validation.backtest` until N2 needed it on the live path too, which is the moment a shared rule
+stops being a backtest detail. The backtest imports it from here; there is one implementation, not
+two (Production Rules 3.8).
+
 Appendix J's `Выход` stage: `Все rules без discretionary hindsight` - every exit follows a rule, and
 the thing being excluded is named as discretionary hindsight.
 

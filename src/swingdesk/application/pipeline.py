@@ -19,12 +19,14 @@ import sys
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date, datetime
+from decimal import Decimal
 from pathlib import Path
 from uuid import uuid4
 
 from swingdesk.contracts.market import BarSeries as BarSeriesLike
 from swingdesk.contracts.market import Interval, Series
 from swingdesk.contracts.observation import ObservationSeries
+from swingdesk.contracts.position import ActionKind, ManagementAction, Position
 from swingdesk.contracts.reference import Instrument
 from swingdesk.contracts.run import RunManifest
 from swingdesk.derived_observations import atr
@@ -34,6 +36,9 @@ from swingdesk.market_data import vendor_yahoo
 from swingdesk.platform.clock import Clock
 from swingdesk.platform.parameters import ParameterRegistry
 from swingdesk.reference_data import calendar as cal
+from swingdesk.journal_evidence.positions import PositionStore
+from swingdesk.trade_management import manage
+from swingdesk.trade_management.exits import ExitPolicy
 from swingdesk.trade_management.sizing import Refusal, RiskSnapshot, size_long
 
 
@@ -50,13 +55,57 @@ class InstrumentOutcome:
 
 
 @dataclass
+class PositionOutcome:
+    """One open position and what the run proposed for it."""
+
+    position: Position
+    action: ManagementAction | None = None
+    stale: bool = False
+
+
+@dataclass
 class RunResult:
     manifest: RunManifest
     outcomes: list[InstrumentOutcome] = field(default_factory=list)
+    positions: list[PositionOutcome] = field(default_factory=list)
+    steps: tuple[str, ...] = ()
 
     @property
     def decisions(self) -> list[DecisionRecord]:
         return [o.decision for o in self.outcomes if o.decision is not None]
+
+    @property
+    def actionable(self) -> list[ManagementAction]:
+        """Proposals needing the owner's answer before anything happens (D6)."""
+        return [p.action for p in self.positions if p.action is not None and p.action.is_actionable]
+
+    @property
+    def positions_ran_first(self) -> bool:
+        """The run's own record of its order, not an assertion about it.
+
+        `CHECKLIST_SPEC` §4 requires open positions and gaps to be checked first, and a claim that
+        they were is worth less than a trace showing it.
+        """
+        if "positions" not in self.steps or "candidates" not in self.steps:
+            return "positions" in self.steps
+        return self.steps.index("positions") < self.steps.index("candidates")
+
+
+def _held_instrument(instrument_id: str) -> Instrument:
+    """An Instrument for a position whose id is not among today's candidates.
+
+    A position is held regardless of whether the screener still nominates it, so the run must be
+    able to fetch it anyway. The exchange comes from the same symbology rule the CLI uses; nothing
+    here is guessed beyond what that rule already encodes.
+    """
+    exchange = cal.exchange_for(instrument_id)
+    base = instrument_id.upper().removesuffix(".TO")
+    return Instrument(
+        id=instrument_id,
+        ticker=base,
+        exchange=exchange,
+        currency="USD" if exchange.value == "NYSE" else "CAD",
+    )
 
 
 def _git(*args: str) -> str:
@@ -103,6 +152,8 @@ def run(
     journal: Journal,
     lookback: str = "1y",
     fetcher: Fetcher | None = None,
+    positions: PositionStore | None = None,
+    exits: ExitPolicy | None = None,
 ) -> RunResult:
     """One pass of the daily pipeline.
 
@@ -135,6 +186,57 @@ def run(
     store.create_snapshot(snapshot_id, started, started, note=run_id)
 
     result = RunResult(manifest=manifest)
+    steps: list[str] = []
+
+    # --- open positions, BEFORE any candidate -------------------------------------------
+    # CHECKLIST_SPEC 4: "Открытые позиции и gaps проверены первыми". Not a preference about tidy
+    # code - a data failure must never lock the owner out of managing risk on positions already
+    # open (TEST_STRATEGY 6), so this phase runs before anything that can fail on fresh data.
+    if positions is not None:
+        steps.append("positions")
+        known = {instrument.id: instrument for instrument in instruments}
+        for position in positions.open_as_of(started):
+            outcome = PositionOutcome(position=position)
+            result.positions.append(outcome)
+
+            # Refresh the held instrument's bars whether or not it is a candidate today. A position
+            # is held regardless of whether the screener still likes it, and evaluating one against
+            # the previous run's bars would manage yesterday's risk.
+            #
+            # Fetching is FAIL-OPEN (FAIL_CLOSED_POLICY row 1): a vendor failure falls back to the
+            # last valid stored snapshot rather than blocking. Only when there is no snapshot at all
+            # does the position pause - the one case where risk genuinely cannot be evaluated.
+            instrument = known.get(position.instrument_id) or _held_instrument(position.instrument_id)
+            try:
+                refreshed = fetch(instrument, Interval.DAY, started, period=lookback)
+            except VendorUnavailable:
+                pass
+            else:
+                store.write(refreshed.bars, started)
+
+            held = store.as_of(position.instrument_id, Interval.DAY, Series.RAW, started)
+            if not held.bars:
+                # No bars for a position we hold. Recorded as stale rather than skipped: the owner
+                # must be told a position could not be evaluated, not left to infer it from silence.
+                outcome.stale = True
+                outcome.action = ManagementAction(
+                    position_id=position.position_id, proposed_at=started,
+                    kind=ActionKind.PAUSE, reason_code="DATA",
+                    reason="no bars available for an open position; management cannot be evaluated",
+                    old_stop=position.current_stop,
+                )
+            else:
+                bar = held.bars[-1]
+                bars_held = sum(1 for b in held.bars if b.session_date >= position.opened_on) - 1
+                policy = exits or ExitPolicy(Decimal("2.0"), 20)
+                observations = atr.compute(held, registry)
+                latest_atr = observations.observations[-1].value
+                outcome.action = manage.evaluate(
+                    position, bar, policy, started, bars_held=max(bars_held, 0), atr=latest_atr
+                )
+            positions.propose(outcome.action, run_id=run_id)
+
+    steps.append("candidates")
 
     for instrument in instruments:
         outcome = InstrumentOutcome(instrument=instrument)
@@ -189,6 +291,7 @@ def run(
         outcome.decision = DecisionRecord(instrument.id, "Watch", None,
                                           "sized; awaiting a trigger")
 
+    result.steps = tuple(steps)
     journal.record_decisions(run_id, clock.now(), result.decisions)
 
     output_hash = hashlib.sha256(
