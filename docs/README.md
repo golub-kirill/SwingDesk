@@ -39,7 +39,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 13 | `CODES.md` | 12 skip codes with actions; 12 error codes with severity and required control | `verbatim` Appendix N, O | drafting |
 | 14 | `COMPONENT_REGISTRY_SPEC.md` | Record shape, 3 activation states, 9 validation statuses, 8 claim types, 6 unlocked checks | `verbatim` §3.7, §3.8 | drafting |
 | 15 | `ALGORITHM_SPEC.md` | 11-field record template, 7 rules, banned vocabulary, order of work | Field list `verbatim` §3.6; content authored | drafting |
-| 16 | `PARAMETER_REGISTRY.md` | Every threshold with value, unit, provenance, status, UI-editable flag. **93 catalogued: 2 `owner`, 1 `assumed`, 90 `unset`** — data in `registry/parameters.yml` | Authored — **no course source exists** | drafting |
+| 16 | `PARAMETER_REGISTRY.md` | Every threshold with value, unit, provenance, status, UI-editable flag. **96 catalogued: 84 `unset`, 9 `assumed`, 2 `owner`, 1 `validated`** — data in `registry/parameters.yml` | Authored — **no course source exists** | drafting |
 | 17 | `RISK_SPEC.md` | 11 risk formulas + control clauses + the sizing ordering law | `verbatim` Appendix C, M48, M49 | drafting |
 | 18 | `STATISTICS_SPEC.md` | 11 statistics formulas, 15 M69 metrics, net-of-costs rule, 9 breakdown axes | `verbatim` Appendix D, H, M69 | drafting |
 | 19 | `STRATEGY_CARD_SPEC.md` | The strategy definition record + the three condition kinds (required / confirming / prohibiting) | `verbatim` Appendix I (21 fields) + M71 (17) + §3.6 | drafting |
@@ -125,9 +125,9 @@ checkable gate in the course.
 
 | # | File | Freezes | Status |
 |---|---|---|---|
-| 55 | `ROADMAP.md` | Now / Next / Later against the gates | planned |
-| 56 | `RISK_REGISTER.md` | Project risks, incl. parameter-invention and vendor risk | planned |
-| 57 | `DEFINITION_OF_READY_DONE.md` | Entry/exit criteria per work item | planned |
+| 55 | `ROADMAP.md` | Now / Next / Later, built on four reported studies rather than before them. Two concrete gaps remain to the ratified finish line | drafting |
+| 56 | `RISK_REGISTER.md` | 8 **realised** risks with what caught each, plus 18 open. Every realised one was found by a gate or a test, none by review | drafting |
+| 57 | `DEFINITION_OF_READY_DONE.md` | Entry/exit criteria for 5 kinds of work item: component, parameter, study, document, surface | drafting |
 
 ---
 
@@ -141,8 +141,22 @@ checkable gate in the course.
 | G3 Data | 25–29 | Vendor decided by ADR; point-in-time model settled |
 | ~~G4 Architecture~~ | 39–43, 47 | **CLOSED** — 4 import contracts compile; determinism replay runs as a gate |
 | ~~G5 Walking skeleton~~ | one end-to-end vertical slice | **CLOSED 2026-08-02** — 9 gates green from `python tools/check_gates.py`; ATR active with golden vectors |
-| G6 Catalog build-out | 14–16, 22–24, 34–38 | Components registered in bulk; activation gated per component. **34–38 written 2026-08-02.** |
+| G6 Catalog build-out | 14–16, 22–24, 34–38 | Components registered in bulk; activation gated per component. **34–38 written 2026-08-02**; 7 components implemented, 4 with golden vectors |
 | G7 Web + Telegram + push | 49–54 | A UI parameter edit versions the component and resets its validation |
+
+## Studies
+
+Pre-registrations in `prereg/`, results in `prereg/results/`, decision records in `decisions/`.
+
+| | Question | Verdict |
+|---|---|---|
+| `PR-001` | Do the trend definitions select the same instruments? | **REJECT** — overlaps as low as 0.30 |
+| `PR-005` | Do their different populations then behave differently? | **REJECT** — every arm inside the ungated interval |
+| `PR-002` | Does a regime label carry decision-relevant information? | **ACCEPT** — and ~2% of trades missing at −2R would erase it |
+
+Three refuted hypotheses and one fragile positive. `screen.trend_definition` is closed by evidence;
+`regime.classifier_rule` is the first `validated` parameter and carries its bound in the registry
+note. Planning follows in `08-pm/ROADMAP.md`.
 
 ## Verification
 
