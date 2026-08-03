@@ -54,6 +54,7 @@ Work that is started or next, and that nothing else waits on.
 | ~~N3~~ | ~~Checklist generation~~ | **DONE 2026-08-02.** 84 items parsed from the transcription, Appendix E generated per candidate. 4 of 18 answerable when it landed, 5 since X1; the remaining 8 machine items report `unavailable` and name what is missing |
 | ~~N4~~ | ~~`registry/components.yml`~~ | **DONE 2026-08-02.** 465 rows, and gate 11 runs all six checks. It caught swing high and swing low sharing one function on its first run — the violation import analysis cannot see, because both imports are legal |
 | ~~X1~~ | ~~Universe path end to end~~ | **DONE 2026-08-03.** `scan --universe` applies the DR-003 rule. The symbol directory is now a stored, as-of-readable snapshot rather than a per-tool download, the universe is pinned in the manifest as a run input, and E02 answers. §4 has the fetch-budget consequence |
+| ~~X2~~ | ~~`REGIME_SPEC.md`~~ | **DONE 2026-08-03.** 12 quotes, gate-2 verified. **The regime→strategy matrix does not exist** — topic 451 is an `Operational Course Rule` whose entire content is one sentence, and no mapping is enumerated anywhere. Recorded as a finding rather than authored. Also states plainly that the shipped classifier covers **one axis of three**, and that the two-axis variant was measured and rejected on stability |
 
 ## 4. Next
 
@@ -74,7 +75,6 @@ survivorship filter of our own making**, which is exactly what DR-003 exists to 
 | # | Item | Waits on |
 |---|---|---|
 | X6 | **Universe coverage** — run the refresh passes until `is_partial` is False, then re-check DR-003's plateau against the full population rather than a 115-symbol sample | nothing; it is elapsed time and fetch budget, not code |
-| X2 | **`REGIME_SPEC.md`** — transcribe the 11 regimes, the regime→strategy matrix, and record that this project's classifier covers one axis of three | PR-002 is reported, so the doc can state what was measured rather than what was hoped |
 | X3 | **CI gates 4, 5, 10** — ruff, mypy, traceability | nothing; gate 11 shipped with N4 |
 | X4 | **`EVENT_SPEC.md`, `CHART_SPEC.md`** | nothing; they are transcription and were deferred, not blocked |
 | X5 | **Tier 7 UX** — six documents, none started | the surfaces they describe do not exist yet, so they are cheap to defer and expensive to write early |
