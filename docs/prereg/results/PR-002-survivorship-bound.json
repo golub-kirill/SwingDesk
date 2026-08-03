@@ -1,0 +1,56 @@
+{
+  "note": "POST-HOC bound on PR-002. Not part of its registered decision rule.",
+  "source": "PR-002.json",
+  "shapes": {
+    "1x": {
+      "gap": "0.3602345166759100365580275438",
+      "threshold": "0.2344530733779375811578357569",
+      "concentrated": [
+        {
+          "missing_r": "-1",
+          "missing_trades": 54,
+          "fraction_of_low_cell": "0.1038461538461538461538461538",
+          "fraction_of_all": "0.04365400161681487469684721099"
+        },
+        {
+          "missing_r": "-2",
+          "missing_trades": 28,
+          "fraction_of_low_cell": "0.05668016194331983805668016194",
+          "fraction_of_all": "0.02312138728323699421965317919"
+        },
+        {
+          "missing_r": "-3",
+          "missing_trades": 19,
+          "fraction_of_low_cell": "0.03917525773195876288659793814",
+          "fraction_of_all": "0.01580698835274542429284525790"
+        }
+      ],
+      "proportional_fraction": "0.3491654393882901284741211629"
+    },
+    "3x": {
+      "gap": "0.3364687112020285486667062023",
+      "threshold": "0.2363728475168275337475226140",
+      "concentrated": [
+        {
+          "missing_r": "-1",
+          "missing_trades": 47,
+          "fraction_of_low_cell": "0.09055876685934489402697495183",
+          "fraction_of_all": "0.03787268331990330378726833199"
+        },
+        {
+          "missing_r": "-2",
+          "missing_trades": 24,
+          "fraction_of_low_cell": "0.04838709677419354838709677419",
+          "fraction_of_all": "0.01970443349753694581280788177"
+        },
+        {
+          "missing_r": "-3",
+          "missing_trades": 16,
+          "fraction_of_low_cell": "0.03278688524590163934426229508",
+          "fraction_of_all": "0.01322314049586776859504132231"
+        }
+      ],
+      "proportional_fraction": "0.2974893663295178433273488042"
+    }
+  }
+}

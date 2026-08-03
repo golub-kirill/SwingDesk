@@ -109,6 +109,43 @@ data.
 separation itself is harder to explain away than its sign, but the sign is the part anyone would act
 on.
 
+### How much bias would it take? — post-hoc bound, 2026-08-02
+
+Owner decision D10 reaffirmed the free tier, so this confound will not be measured. It can still be
+**bounded**, and the bound is the useful thing: not "how much bias is there" — unanswerable — but
+"how much would there have to be".
+
+Missing trades added to the `BREADTH_LOW` cell only, enough to pull the gap down to the date-block
+null's 95th percentile:
+
+| Missing trades at | count | share of the LOW cell | share of all trades |
+|---|---|---|---|
+| −1R each | 54 | 10.4% | **4.4%** |
+| −2R each | 28 | 5.7% | **2.3%** |
+| −3R each | 19 | 3.9% | **1.6%** |
+
+Spread **proportionally** across both cells instead: **34.9%** of all trades would have to be
+missing. (The missing trades' R cancels entirely in that shape — the gap simply scales by 1/(1+p) —
+which is why the concentrated shape is the one that decides this.)
+
+**This is the most important number in the report.** A delisted instrument is not a −1R trade; it is
+a halt, a gap and a severe loss, so the −2R and −3R rows are the relevant ones. **Somewhere between
+1.6% and 2.3% of trades going missing, concentrated in the stressed regime, erases the finding.**
+Over a three-year window containing a drawdown, that is not an extreme assumption — it is a likely
+one.
+
+So the honest reading is narrower than the verdict:
+
+- The **verdict stands** — it was computed under a rule fixed before the run, and the rule was met.
+- The **result is fragile** to the one bias this project structurally cannot correct, and fragile at
+  a magnitude that is plausible rather than far-fetched.
+- What survives confidently is the weaker claim: **breadth is not obviously irrelevant**, and a
+  breadth-conditioned study on survivorship-complete data would be worth running if such data ever
+  became available.
+
+Nothing here changes PR-002's verdict, and it is labelled post-hoc for that reason. It changes what
+a careful reader should do with it.
+
 ## Other limitations
 
 | | |

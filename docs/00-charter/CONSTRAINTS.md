@@ -45,7 +45,21 @@ Measured consequence: over a ~2.9-year window, NYSE and TSX differed by 16 tradi
 | D6 | Telegram approves open-position actions (stop moves, partial exits) | 2026-08-01 |
 | D7 | English throughout — documents, code, UI | 2026-08-01 |
 | D8 | Market data: free tier (see `ADR-0001`, status Proposed) | 2026-08-01 |
+| D10 | **Free tier reaffirmed after seeing what it costs.** No paid vendor. | 2026-08-02 |
 | D9 | Timeframes: `1Y`/`3M` context → `1D` decision → `1H` confirmation → `30m` execution | 2026-08-01 |
+
+**D10 was taken with the price known, which is what makes it a decision rather than a default.**
+PR-002 produced this project's first non-refuted result — breadth separates breakout outcomes out of
+sample — and its direction cannot be confirmed on free data, because survivorship bias is a
+mechanism that would produce that exact result with no real effect present
+(`docs/prereg/results/PR-002-report.md`). The owner reaffirmed the free tier on 2026-08-02 knowing
+this.
+
+The standing consequence, stated once so it is not rediscovered each time: **no historical result
+this project produces can have its survivorship exposure confirmed.** Results may still be produced,
+reported and acted on — the owner decision of 2026-08-02 permits advancement with a mandatory
+disclosure — but a claim that a result is survivorship-clean is not available, and any figure that
+would require it is refused rather than estimated.
 
 **D9 is an extension beyond the course.** Appendix T's conclusion names 1Y/3M/30D/1D/30m and does
 **not** mention 1H. The hourly confirmation layer is the owner's addition, recorded as such so it is

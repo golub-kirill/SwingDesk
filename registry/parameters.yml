@@ -558,11 +558,18 @@ parameters:
       test window only: BREADTH_LOW +0.2299R vs BREADTH_HIGH -0.1304R over 1183 trades, percentile
       100 against the registered null and 100 against a stricter date-block null added post-hoc.
       Holds under 3x cost stress.
-      READ THE CONFOUND BEFORE USING THIS. Survivorship is absent, low-breadth periods are
-      drawdowns, and the instruments that failed during those drawdowns are missing from the sample
-      - a mechanism that would produce this exact result with no real effect present. The direction
-      is UNCONFIRMED until reproduced on survivorship-complete data. The separation is more robust
-      than its sign, and the sign is what anyone would act on.
+      READ THE BOUND BEFORE USING THIS. Survivorship is absent, low-breadth periods are drawdowns,
+      and the instruments that failed during those drawdowns are missing from the sample - a
+      mechanism that would produce this exact result with no real effect present. Quantified
+      post-hoc: if 2.3% of all trades are missing at -2R each, or 1.6% at -3R, concentrated in the
+      low-breadth cell, the separation disappears. A delisted instrument is a halt and a severe
+      loss, not a -1R trade, so those are the relevant rows - and over a three-year window
+      containing a drawdown that share is likely rather than far-fetched. Spread proportionally
+      across both cells it would take 34.9%, but delisting is not proportional.
+      The verdict stands under the rule fixed before the run. The result is FRAGILE at a plausible
+      magnitude. What survives confidently is only the weaker claim that breadth is not obviously
+      irrelevant. Owner decision D10 (2026-08-02) reaffirmed the free tier knowing this, so the
+      direction will not be confirmed.
       A regime is a gauge, not a source of confidence (M30-T0450); ACTING on it is M30-T0451, a
       separate Untested topic. See docs/prereg/results/PR-002-report.md.
     named_in: [M30-T0450, Appendix L]
