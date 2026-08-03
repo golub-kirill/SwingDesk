@@ -139,3 +139,46 @@ Definitions A, B and C rest on `M25-T0382` (SMA). Definition D rests on `M12-T02
 (previous high, previous low) and `M09-T0162`/`M09-T0163` (loss of the previous low/high).
 
 No other section changed.
+
+---
+
+**2026-08-02, second amendment — still before any data was seen, before the study ran.** Three
+changes, each forced by something that turned out to be true rather than by a preference.
+
+**1. The study runs on A–D. Definition E is deferred to PR-001b.**
+
+E needs `regime.adx_threshold`, which is `unset` and whose only citation is a chart-panel label.
+Setting it would mean choosing a number that changes which instruments E selects — inside a study
+whose entire question is whether the choice of definition changes which instruments get selected.
+That is the study answering part of itself.
+
+PR-001b will run E across a **range** of thresholds and report overlap as a function of threshold,
+rather than picking one. That is strictly more informative and it needs no arbitrary choice. It is
+registered separately because it is a different design, not a footnote to this one.
+
+Consequence for §6: the decision rule applies to the six pairs among A–D. A verdict on those six
+is a verdict about the moving-average family plus structure, not about "all five candidates", and
+must be reported as such.
+
+**2. The universe is US-only, and this is a limitation, not a scope choice.**
+
+`DR-003` set the liquidity rule, and the Canadian side has no free symbol directory in hand — the
+rule applies to `.TO` identically but the instruments cannot be *enumerated*. §4 said "both
+exchanges, reported separately per BR-9". That cannot be honoured, so the result is a US result and
+says so. Rerunning on Canada when enumeration is solved is a separate run, not a silent extension.
+
+**3. Pairs are compared only over instruments both definitions could evaluate.**
+
+§5 said the statistic is the daily Jaccard between selected sets. Implementing it revealed an
+ambiguity that matters: a definition that *cannot answer* for an instrument selects nothing there,
+and a naive Jaccard scores that as disagreement. STRUCTURE warms up later than the moving-average
+definitions, so it would have scored artificially low against all three for exactly the reason §3
+of the original registration warned about — a definition looking different for a reason unrelated
+to trend.
+
+The statistic is therefore computed on the co-decidable subset per session, and each pair reports
+`mean_decidable` so a comparison made over three instruments is distinguishable from one made over
+forty. Sessions where neither could answer contribute no observation rather than a 1 or a 0.
+
+This is a clarification of §5, not a change of question — but it changes numbers, so it is recorded
+here rather than absorbed into the code.

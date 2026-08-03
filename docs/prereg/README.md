@@ -10,7 +10,8 @@ has to happen first, not the thing that has to happen last.
 
 | ID | Question | Status | Blocked on |
 |---|---|---|---|
-| `PR-001` | Does the trend definition change which population is selected, or only its size? | registered | backtest harness |
+| `PR-001` | Does the trend definition change which population is selected, or only its size? | registered | fetch + run (A-D only; US only) |
+| `PR-001b` | Does definition E's ADX threshold change the answer, across its whole range? | not written | PR-001 |
 | `PR-002` | Does a regime classifier improve decisions, or only partition them? | registered | harness + PR-001 |
 | `PR-003` | Is √252 annualisation wrong enough to matter for this return series? | not written | a daily return series |
 | `PR-004` | Do the process-score weights change any ranking? | not written | ~100 journalled trades |
