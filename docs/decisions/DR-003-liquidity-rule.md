@@ -96,6 +96,11 @@ admitting it produces a candidate that silently never qualifies.
    expects another form, and `to_instrument` passes the ACT symbol through unchanged. Until mapped,
    these are silently absent from every universe, and the exclusion is **systematic rather than
    random**: preferred shares and units, not an arbitrary 2.5%.
+
+   Confirmed 2026-08-03 on a larger, deliberately non-random slice: the first 400 eligible symbols
+   alphabetically returned **33 failures (8.25%)**, every one of them a `$` preferred, a `.U` unit or
+   a `W`/`PW` warrant. The higher rate is not a worse vendor — it is the alphabetical head being
+   dense in exactly those forms, which is what "systematic" predicts and a random 2.5% would not.
 3. **The sample is 115 instruments.** Adequate for choosing between order-of-magnitude thresholds
    and for locating the plateau. Not adequate for tail percentiles, and the p90 figure above should
    not be quoted as though it were precise.
