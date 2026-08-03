@@ -549,9 +549,22 @@ parameters:
 
   - id: regime.classifier_rule
     unit: rule
-    value: null
-    status: unset
-    provenance: null
+    value: "BREADTH_MEDIAN: share of universe above its own 200d SMA, split at the train-window median (0.647)"
+    status: validated
+    provenance: "validated:PR-002"
+    note: >-
+      FIRST VALIDATED PARAMETER. PR-002 (reported 2026-08-02) fitted thresholds on train, selected
+      the variant on validation by STABILITY rather than by outcome, and measured separation on the
+      test window only: BREADTH_LOW +0.2299R vs BREADTH_HIGH -0.1304R over 1183 trades, percentile
+      100 against the registered null and 100 against a stricter date-block null added post-hoc.
+      Holds under 3x cost stress.
+      READ THE CONFOUND BEFORE USING THIS. Survivorship is absent, low-breadth periods are
+      drawdowns, and the instruments that failed during those drawdowns are missing from the sample
+      - a mechanism that would produce this exact result with no real effect present. The direction
+      is UNCONFIRMED until reproduced on survivorship-complete data. The separation is more robust
+      than its sign, and the sign is what anyone would act on.
+      A regime is a gauge, not a source of confidence (M30-T0450); ACTING on it is M30-T0451, a
+      separate Untested topic. See docs/prereg/results/PR-002-report.md.
     named_in: [M30-T0450, Appendix L]
     note: >-
       The course defines 11 regimes and the matrix of what each permits, and names the inputs
@@ -861,9 +874,9 @@ parameters:
 
   - id: costs.commission_model
     unit: model
-    value: null
-    status: unset
-    provenance: null
+    value: "0.005 USD per share, each side"
+    status: assumed
+    provenance: "assumed:DR-004"
     named_in: [M72-T1081]
     note: >-
       A model, not a scalar: per-trade, per-share and percentage schedules are different functions
@@ -873,9 +886,9 @@ parameters:
 
   - id: costs.slippage_model
     unit: model
-    value: null
-    status: unset
-    provenance: null
+    value: "5 bps of price, each side, applied to the fill"
+    status: assumed
+    provenance: "assumed:DR-004"
     named_in: [M72-T1082, M74-T1110]
     note: >-
       M74-T1110 requires measured live slippage to be compared against this, so the model must be

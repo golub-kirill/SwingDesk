@@ -139,3 +139,51 @@ their provenance is corrected.
 The first sentence is worth keeping in view too: a classifier is a gauge, not a source of confidence.
 A regime label that raises conviction rather than constraining the strategy set is being used the way
 the topic prohibits.
+
+---
+
+**2026-08-02, second amendment — before any data was seen, before the study ran.** §5 said "among
+classifier variants" without saying which, and "difference in mean forward R" without saying how a
+multi-cell difference becomes one number. Both are decisions that could be made after seeing results
+if they are not made now.
+
+**1. The variants, enumerated.**
+
+The course defines a regime as `сочетание направления, breadth и volatility` (M30-T0446) and names
+no indicator. All three components are computable from this project's own bars — breadth especially,
+via M31-T0459 `Доля акций выше средних`, which needs no index data and no vendor beyond what the
+universe already fetches.
+
+| Variant | Regimes | Built from |
+|---|---|---|
+| `BREADTH_TERCILE` | 3 | share of universe above its own 200-day SMA, split at train terciles |
+| `BREADTH_MEDIAN` | 2 | the same measure, split at the train median |
+| `VOL_TERCILE` | 3 | cross-sectional median 20-day realised volatility, split at train terciles |
+| `BREADTH_X_VOL` | 4 | breadth above/below train median × volatility above/below train median |
+
+**Thresholds are fitted on the training window only and then frozen.** A tercile boundary computed
+over the full sample is a label that used the future, and this study's null is precisely that
+regimes are identifiable in hindsight and not in advance. Freezing train-fitted thresholds is what
+makes the test-window labels honest.
+
+**2. The statistic, defined.**
+
+For a variant with *k* regimes, the observed statistic is the **range of mean net R across the
+regime cells** — highest cell mean minus lowest. One number, comparable across variants with
+different *k*, and it is the quantity a trader would actually act on: how much better is the best
+regime than the worst.
+
+The baseline is 1000 random partitions of the same trades into cells **of the same sizes**, with a
+recorded seed, and the same range statistic computed on each. §6's thresholds apply to the observed
+range's percentile within that distribution.
+
+**3. Canada is unavailable.**
+
+§6 requires significance "in BOTH countries independently". `DR-003` records that no free Canadian
+symbol directory is in hand, so the universe is US-only, exactly as in PR-001 and PR-005. The
+two-country requirement cannot be met and is **not** quietly dropped: a single-market result is
+reported as a single-market result, which §6's own inconclusive branch already describes as the
+right handling.
+
+**4. Costs are now set.** `DR-004` fixes `costs.commission_model` and `costs.slippage_model`, which
+§4 named as a precondition. The study runs at 1× and 3×.

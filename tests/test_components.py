@@ -18,7 +18,7 @@ import yaml
 
 from swingdesk.contracts.observation import VALIDATION_STATUSES, ObservationSeries, ParameterUse
 from swingdesk.decision_logic import trend
-from swingdesk.derived_observations import atr, moving_average, pivots
+from swingdesk.derived_observations import atr, breadth, moving_average, pivots, regime
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -29,6 +29,8 @@ SPECS = [
     *[(spec, "derived_observations.atr") for spec in atr.SPECS],
     *[(spec, "derived_observations.moving_average") for spec in moving_average.SPECS],
     *[(spec, "derived_observations.pivots") for spec in pivots.SPECS],
+    *[(spec, "derived_observations.breadth") for spec in breadth.SPECS],
+    *[(spec, "derived_observations.regime") for spec in regime.SPECS],
     (trend.TREND_FILTER, "decision_logic.trend"),
 ]
 

@@ -13,7 +13,7 @@ has to happen first, not the thing that has to happen last.
 | `PR-001` | Does the trend definition change which population is selected, or only its size? | **reported — REJECT** | — |
 | `PR-001b` | Does definition E's ADX threshold change the answer, across its whole range? | not written | — |
 | `PR-005` | Do the trend definitions' populations behave differently, net of costs? | **reported — REJECT** | — |
-| `PR-002` | Does a regime classifier improve decisions, or only partition them? | registered | harness + PR-001 |
+| `PR-002` | Does a regime classifier improve decisions, or only partition them? | **reported — ACCEPT** | — |
 | `PR-003` | Is √252 annualisation wrong enough to matter for this return series? | not written | a daily return series |
 | `PR-004` | Do the process-score weights change any ranking? | not written | ~100 journalled trades |
 
@@ -23,6 +23,11 @@ needs evidence about what its population does, not just that it differs. They ar
 unwritten so the debt is visible rather than implied.
 
 Results live in `results/`, one JSON of record plus a written report.
+
+**PR-002 is the first hypothesis this project has failed to refute.** Breadth separates breakout
+outcomes out of sample, under cost stress and under a stricter null than the one registered — and a
+survivorship confound could produce the same result with no real effect present. Read
+`results/PR-002-report.md` before using `regime.classifier_rule`.
 
 **The trend-definition family is closed.** PR-001 found the definitions select different
 instruments; PR-005 found those different instruments then do the same thing. Two refuted
