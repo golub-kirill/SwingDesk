@@ -32,7 +32,7 @@ from typing import Any
 from swingdesk.contracts.component import ComponentSpec
 from swingdesk.contracts.market import Bar, BarSeries, Interval, Series
 from swingdesk.contracts.observation import ObservationSeries, ParameterUse
-from swingdesk.derived_observations import atr, moving_average, pivots
+from swingdesk.derived_observations import atr, breadth, moving_average, pivots, regime
 from swingdesk.platform.parameters import ParameterRegistry
 
 GOLDEN_ROOT = Path(__file__).resolve().parents[3] / "golden" / "components"
@@ -62,6 +62,79 @@ def _run_pivot(series: BarSeries, parameters: dict[str, Any]) -> ObservationSeri
     )
 
 
+def _run_breadth(document: dict[str, Any]) -> list[Any]:
+    """Cross-sectional: a panel of members in, one ratio per session out.
+
+    The vector supplies each member's closes and its own moving average directly, rather than bars
+    plus a period. That keeps the case about BREADTH - a member whose average is missing must be
+    excluded from both sides of the ratio - instead of re-testing the SMA, which has its own
+    vectors.
+    """
+    from swingdesk.contracts.market import Bar, BarSeries, Interval, Series
+    from swingdesk.contracts.observation import Observation, ObservationSeries
+
+    knowledge = datetime.fromisoformat(document["knowledge_time"])
+    sessions = [date.fromisoformat(d) for d in document["sessions"]]
+
+    series_by_id: dict[str, BarSeries] = {}
+    sma_by_id: dict[str, ObservationSeries] = {}
+    for member_id, member in sorted(document["members"].items()):
+        offset = int(member.get("first_session_index", 0))
+        member_sessions = sessions[offset: offset + len(member["closes"])]
+        bars = tuple(
+            Bar(
+                instrument_id=member_id, interval=Interval.DAY, series=Series.RAW,
+                event_time=datetime(s.year, s.month, s.day, tzinfo=knowledge.tzinfo),
+                session_date=s, open=Decimal(c), high=Decimal(c), low=Decimal(c),
+                close=Decimal(c), volume=1_000_000, knowledge_time=knowledge,
+            )
+            for s, c in zip(member_sessions, member["closes"])
+        )
+        series_by_id[member_id] = BarSeries(
+            instrument_id=member_id, interval=Interval.DAY, series=Series.RAW,
+            knowledge_time=knowledge, bars=bars,
+        )
+        sma_by_id[member_id] = ObservationSeries(
+            component=moving_average.SPEC.component, component_version=1,
+            instrument_id=member_id, units="price units", parameters=(),
+            validation_status="Not Applicable", knowledge_time=knowledge,
+            observations=tuple(
+                Observation(
+                    component=moving_average.SPEC.component, component_version=1,
+                    instrument_id=member_id, event_time=bar.event_time,
+                    value=None if v is None else Decimal(v),
+                    units="price units", knowledge_time=knowledge,
+                )
+                for bar, v in zip(bars, member["sma"])
+            ),
+        )
+
+    points = breadth.above_average(
+        series_by_id, sma_by_id, min_members=int(document["parameters"]["min_members"])
+    )
+    return [point.value for point in points]
+
+
+def _run_regime(document: dict[str, Any]) -> list[Any]:
+    """Fit on a training window, then answer point queries. Two operations, one vector.
+
+    Splitting them into separate vectors would let the fit drift from the apply without either
+    vector noticing, and the fit/apply split is the whole point of the component.
+    """
+    variant = regime.Variant(document["parameters"]["variant"])
+    train_breadth = [None if v is None else Decimal(v) for v in document["train_breadth"]]
+    train_volatility = [None if v is None else Decimal(v) for v in document["train_volatility"]]
+    classifier = regime.fit(variant, train_breadth, train_volatility)
+
+    produced: list[Any] = [str(cut) for cut in classifier.breadth_cuts]
+    produced += [str(cut) for cut in classifier.volatility_cuts]
+    for query in document["queries"]:
+        b = None if query[0] is None else Decimal(query[0])
+        v = None if query[1] is None else Decimal(query[1])
+        produced.append(classifier.label(b, v))
+    return produced
+
+
 #: Component id -> (spec, runner). Keyed on the SPEC rather than the module, because one module may
 #: implement more than one component - swing highs and swing lows are the same algorithm mirrored,
 #: and the course gives them separate ids. An `active` component missing from this map has no
@@ -71,22 +144,33 @@ IMPLEMENTATIONS: dict[str, tuple[ComponentSpec, Any]] = {
     moving_average.SPEC.component: (moving_average.SPEC, _run_sma),
     pivots.SWING_HIGH.component: (pivots.SWING_HIGH, _run_pivot),
     pivots.SWING_LOW.component: (pivots.SWING_LOW, _run_pivot),
+    breadth.SPEC.component: (breadth.SPEC, _run_breadth),
+    regime.SPEC.component: (regime.SPEC, _run_regime),
 }
 
 
 @dataclass(frozen=True, slots=True)
 class Vector:
-    """One frozen case."""
+    """One frozen case.
+
+    `kind` says what shape the inputs take, because not every component consumes one instrument's
+    bars. A cross-sectional measure takes a panel; a fitted classifier takes a training window and
+    then answers point queries. Forcing those through a bar-series loader would have meant either
+    no vectors for them - which is how `breadth` and `regime` ended up used by a reported study with
+    no vectors at all - or a loader that lies about its inputs.
+    """
 
     path: Path
     component: str
     component_version: int
     case: str
+    kind: str
     parameters: dict[str, Any]
-    instrument_id: str
-    knowledge_time: datetime
-    bars: BarSeries
-    expected: tuple[Decimal | None, ...]
+    document: dict[str, Any]
+    expected: tuple[Any, ...]
+    instrument_id: str = ""
+    knowledge_time: datetime | None = None
+    bars: BarSeries | None = None
 
 
 def _registry_for(parameters: dict[str, Any]) -> ParameterRegistry:
@@ -109,8 +193,32 @@ def _registry_for(parameters: dict[str, Any]) -> ParameterRegistry:
     )
 
 
+def _expected(document: dict[str, Any]) -> tuple[Any, ...]:
+    """Numeric expectations become Decimals; text ones stay strings.
+
+    A label is not a number and comparing it as one would silently pass on `Decimal("0")` versus
+    `"0"`. The kind decides, not a guess about the contents.
+    """
+    if document.get("expected_kind", "numeric") == "text":
+        return tuple(document["expected"])
+    return tuple(None if v is None else Decimal(v) for v in document["expected"])
+
+
 def load(path: Path) -> Vector:
     document = json.loads(path.read_text(encoding="utf-8"))
+    kind = document.get("kind", "series")
+    if kind != "series":
+        return Vector(
+            path=path,
+            component=document["component"],
+            component_version=int(document["component_version"]),
+            case=document["case"],
+            kind=kind,
+            parameters=document.get("parameters", {}),
+            document=document,
+            expected=_expected(document),
+        )
+
     knowledge_time = datetime.fromisoformat(document["knowledge_time"])
     interval = Interval(document["interval"])
     series = Series(document["series"])
@@ -144,7 +252,9 @@ def load(path: Path) -> Vector:
         component=document["component"],
         component_version=int(document["component_version"]),
         case=document["case"],
+        kind="series",
         parameters=document["parameters"],
+        document=document,
         instrument_id=document["instrument_id"],
         knowledge_time=knowledge_time,
         bars=BarSeries(
@@ -154,7 +264,7 @@ def load(path: Path) -> Vector:
             knowledge_time=knowledge_time,
             bars=tuple(bars),
         ),
-        expected=tuple(None if value is None else Decimal(value) for value in document["expected"]),
+        expected=_expected(document),
     )
 
 
@@ -162,10 +272,12 @@ def _sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _recompute(vector: Vector) -> tuple[Decimal | None, ...]:
+def _recompute(vector: Vector) -> tuple[Any, ...]:
     _, run = IMPLEMENTATIONS[vector.component]
-    produced = run(vector.bars, vector.parameters)
-    return tuple(observation.value for observation in produced.observations)
+    if vector.kind == "series":
+        produced = run(vector.bars, vector.parameters)
+        return tuple(observation.value for observation in produced.observations)
+    return tuple(run(vector.document))
 
 
 def verify(root: Path = GOLDEN_ROOT) -> list[str]:

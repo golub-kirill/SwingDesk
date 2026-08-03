@@ -1,0 +1,40 @@
+{
+  "component": "M30-T0450-v5.0",
+  "name": "Current regime",
+  "component_version": 1,
+  "case": "median_fit_then_apply",
+  "kind": "fit_apply",
+  "derivation": "Train breadth is 0.10, 0.20, 0.30, 0.40. Nearest-rank median on four values takes index round(0.5 * 3) = round(1.5) = 2 under banker's rounding, so the cut is the THIRD value, 0.30. Then: 0.50 is above the cut and labels HIGH; 0.05 is below and labels LOW; 0.30 sits exactly ON the cut and labels LOW, because the comparison is strictly greater-than. The boundary case is the reason this vector exists - > and >= are both defensible and only one is implemented.",
+  "parameters": {
+    "variant": "BREADTH_MEDIAN"
+  },
+  "train_breadth": [
+    "0.10",
+    "0.20",
+    "0.30",
+    "0.40"
+  ],
+  "train_volatility": [],
+  "queries": [
+    [
+      "0.50",
+      null
+    ],
+    [
+      "0.05",
+      null
+    ],
+    [
+      "0.30",
+      null
+    ]
+  ],
+  "note": "expected is the fitted cuts first (breadth then volatility), then one label per query",
+  "expected_kind": "text",
+  "expected": [
+    "0.30",
+    "BREADTH_HIGH",
+    "BREADTH_LOW",
+    "BREADTH_LOW"
+  ]
+}

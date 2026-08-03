@@ -1,0 +1,43 @@
+{
+  "component": "M31-T0459-v5.0",
+  "name": "Share of stocks above their averages",
+  "component_version": 1,
+  "case": "all_above_and_none_above",
+  "kind": "panel",
+  "derivation": "The two boundaries of the declared output range [0, 1]. Both members above gives exactly 1; a member exactly AT its average is not above it - the comparison is strict - so the second session, where both closes equal their averages, gives exactly 0. The equality case is the one worth freezing: > and >= differ here and both look reasonable in code.",
+  "parameters": {
+    "min_members": 1
+  },
+  "knowledge_time": "2026-01-15T21:00:00+00:00",
+  "sessions": [
+    "2025-03-03",
+    "2025-03-04"
+  ],
+  "members": {
+    "A": {
+      "closes": [
+        "10",
+        "10"
+      ],
+      "sma": [
+        "5",
+        "10"
+      ]
+    },
+    "B": {
+      "closes": [
+        "10",
+        "10"
+      ],
+      "sma": [
+        "5",
+        "10"
+      ]
+    }
+  },
+  "expected_kind": "numeric",
+  "expected": [
+    "1",
+    "0"
+  ]
+}

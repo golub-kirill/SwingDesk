@@ -1,0 +1,85 @@
+{
+  "component": "M31-T0459-v5.0",
+  "name": "Share of stocks above their averages",
+  "component_version": 1,
+  "case": "three_of_five_above",
+  "kind": "panel",
+  "derivation": "Five members, each with a constant close and a constant average. A, B and C close above their averages; D and E close below. The ratio is 3/5 = 0.6 on every session. Authored from the definition - count above, divide by count considered - not read off the implementation.",
+  "parameters": {
+    "min_members": 1
+  },
+  "knowledge_time": "2026-01-15T21:00:00+00:00",
+  "sessions": [
+    "2025-03-03",
+    "2025-03-04",
+    "2025-03-05"
+  ],
+  "members": {
+    "A": {
+      "closes": [
+        "10",
+        "10",
+        "10"
+      ],
+      "sma": [
+        "5",
+        "5",
+        "5"
+      ]
+    },
+    "B": {
+      "closes": [
+        "10",
+        "10",
+        "10"
+      ],
+      "sma": [
+        "5",
+        "5",
+        "5"
+      ]
+    },
+    "C": {
+      "closes": [
+        "10",
+        "10",
+        "10"
+      ],
+      "sma": [
+        "5",
+        "5",
+        "5"
+      ]
+    },
+    "D": {
+      "closes": [
+        "10",
+        "10",
+        "10"
+      ],
+      "sma": [
+        "20",
+        "20",
+        "20"
+      ]
+    },
+    "E": {
+      "closes": [
+        "10",
+        "10",
+        "10"
+      ],
+      "sma": [
+        "20",
+        "20",
+        "20"
+      ]
+    }
+  },
+  "expected_kind": "numeric",
+  "expected": [
+    "0.6",
+    "0.6",
+    "0.6"
+  ]
+}

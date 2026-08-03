@@ -44,6 +44,29 @@
       "vectors": {
         "confirmation_lag.json": "ed884a66b30b6696314fc2b554338f5a93aeecb5dd254698adedcccb8da6772a"
       }
+    },
+    "M31-T0459-v5.0": {
+      "name": "Share of stocks above their averages",
+      "module": "swingdesk.derived_observations.breadth",
+      "version": 1,
+      "vectors": {
+        "all_above_and_none_above.json": "be31fb8127ea23b1769cb0cbc87435634a61e3a546127b316aeca6446b0fdc34",
+        "below_the_member_floor_declines.json": "e30a8ca84704fb37307e4c32f2af2cbf63e273be900c5ffc8a405792ac6e0245",
+        "member_absent_from_a_session.json": "9fa556edc6d4fbbc2fe70a4b9e14ec2afda1c8828c636a0b984704564678436d",
+        "three_of_five_above.json": "ceb1040cbba51a81b8ffb6bd90e17cac19954a743960d44ab3528a45685019ef",
+        "unwarmed_member_leaves_both_sides.json": "9fbfd3bb50def6ba45bbbb3349bc48fed7f8d338795e10d9bc038283b38bd7a0"
+      }
+    },
+    "M30-T0450-v5.0": {
+      "name": "Current regime",
+      "module": "swingdesk.derived_observations.regime",
+      "version": 1,
+      "vectors": {
+        "median_fit_then_apply.json": "b7082652c1bc96afeb5a3ffa4acbc3187c2f6de294feef2182b456d153e9e12d",
+        "tercile_fit_then_apply.json": "10b742d1a7f00e2086b58103ba5d457749230c1bb6fd68683efe84d535b0575b",
+        "two_axis_quadrants.json": "d56c237ea3fc2a297242ea20a7c5696d33614a36d16678856e1f90e0f265bb13",
+        "volatility_terciles_ignore_breadth.json": "aa967d3044defcef7212dd2ab4479134b3733a09250c46e05daa9c07f9765791"
+      }
     }
   }
 }

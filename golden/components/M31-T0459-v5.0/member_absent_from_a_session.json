@@ -1,0 +1,48 @@
+{
+  "component": "M31-T0459-v5.0",
+  "name": "Share of stocks above their averages",
+  "component_version": 1,
+  "case": "member_absent_from_a_session",
+  "kind": "panel",
+  "derivation": "B lists one session late, so session 1 is measured over A alone: 1/1 = 1. Sessions 2 and 3 have both, with B below, giving 1/2 = 0.5. A member that did not trade a session is absent from it, not below its average on it.",
+  "parameters": {
+    "min_members": 1
+  },
+  "knowledge_time": "2026-01-15T21:00:00+00:00",
+  "sessions": [
+    "2025-03-03",
+    "2025-03-04",
+    "2025-03-05"
+  ],
+  "members": {
+    "A": {
+      "closes": [
+        "10",
+        "10",
+        "10"
+      ],
+      "sma": [
+        "5",
+        "5",
+        "5"
+      ]
+    },
+    "B": {
+      "closes": [
+        "10",
+        "10"
+      ],
+      "sma": [
+        "20",
+        "20"
+      ],
+      "first_session_index": 1
+    }
+  },
+  "expected_kind": "numeric",
+  "expected": [
+    "1",
+    "0.5",
+    "0.5"
+  ]
+}

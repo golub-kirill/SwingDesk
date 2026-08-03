@@ -1,0 +1,43 @@
+{
+  "component": "M31-T0459-v5.0",
+  "name": "Share of stocks above their averages",
+  "component_version": 1,
+  "case": "below_the_member_floor_declines",
+  "kind": "panel",
+  "derivation": "Two members against a floor of ten. A ratio over two members and over sixty are different claims, so the component emits nothing rather than a confident 1.0 computed from two names.",
+  "parameters": {
+    "min_members": 10
+  },
+  "knowledge_time": "2026-01-15T21:00:00+00:00",
+  "sessions": [
+    "2025-03-03",
+    "2025-03-04"
+  ],
+  "members": {
+    "A": {
+      "closes": [
+        "10",
+        "10"
+      ],
+      "sma": [
+        "5",
+        "5"
+      ]
+    },
+    "B": {
+      "closes": [
+        "10",
+        "10"
+      ],
+      "sma": [
+        "5",
+        "5"
+      ]
+    }
+  },
+  "expected_kind": "numeric",
+  "expected": [
+    null,
+    null
+  ]
+}

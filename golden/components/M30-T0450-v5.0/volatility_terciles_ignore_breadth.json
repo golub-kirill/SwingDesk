@@ -1,0 +1,48 @@
+{
+  "component": "M30-T0450-v5.0",
+  "name": "Current regime",
+  "component_version": 1,
+  "case": "volatility_terciles_ignore_breadth",
+  "kind": "fit_apply",
+  "derivation": "The variant reads volatility only, so a present breadth value must not change its answer and a missing one must not prevent it. Train volatility 0.01 through 0.06 in steps of 0.01, six values: index round(0.3333 * 5) = round(1.667) = 2 gives 0.03; index round(0.6667 * 5) = round(3.33) = 3 gives 0.04. The last two queries are the same volatility with and without a breadth reading and must agree.",
+  "parameters": {
+    "variant": "VOL_TERCILE"
+  },
+  "train_breadth": [],
+  "train_volatility": [
+    "0.01",
+    "0.02",
+    "0.03",
+    "0.04",
+    "0.05",
+    "0.06"
+  ],
+  "queries": [
+    [
+      "0.9",
+      "0.02"
+    ],
+    [
+      "0.9",
+      "0.035"
+    ],
+    [
+      "0.9",
+      "0.09"
+    ],
+    [
+      null,
+      "0.02"
+    ]
+  ],
+  "note": "expected is the fitted cuts first (breadth then volatility), then one label per query",
+  "expected_kind": "text",
+  "expected": [
+    "0.03",
+    "0.04",
+    "VOL_LOW",
+    "VOL_MID",
+    "VOL_HIGH",
+    "VOL_LOW"
+  ]
+}

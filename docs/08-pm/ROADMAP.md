@@ -17,8 +17,8 @@ The finish line it serves is `CHARTER.md` §4, ratified 2026-08-01 and unchanged
 | Gates closed | G0 charter · G4 architecture · **G5 walking skeleton** |
 | Gates open | G1 requirements · G2 transcription · G3 data · G6 catalogue · G7 surfaces |
 | Merge gates running | 9, from one command |
-| Tests | 155 |
-| Components implemented | 7 · **4 with golden vectors** |
+| Tests | 178 |
+| Components implemented | 7 · **6 with golden vectors** (25 vectors) |
 | Parameters | 96 — 84 `unset`, 9 `assumed`, 2 `owner`, **1 `validated`** |
 | Studies | 4 registered, 4 reported — **3 refuted, 1 accepted and quantifiably fragile** |
 
@@ -47,7 +47,7 @@ Work that is started or next, and that nothing else waits on.
 
 | # | Item | Why now |
 |---|---|---|
-| N1 | **Golden vectors for `breadth` and `regime`** | Both are used by a reported study and neither has vectors, so by `COMPONENT_REGISTRY_SPEC` §3 they are `specified`, not `active` — while `regime.classifier_rule` is already `validated`. That is inconsistent and was found by counting, which is a poor way to find it |
+| ~~N1~~ | ~~Golden vectors for `breadth` and `regime`~~ | **DONE 2026-08-02.** 9 vectors added, plus a differential check against pandas and seven metamorphic relations. The vector format grew a `kind` so a cross-sectional measure and a fit/apply classifier can have vectors at all |
 | N2 | **Position store + open-position evaluation** | The finish line's fifth capability. Needs a positions table, an open-position path through the pipeline before candidates, and the `Management` record from `JOURNAL_SCHEMA.md` |
 | N3 | **Checklist generation** | The finish line's sixth capability. 84 transcribed items, each classified machine-verifiable or human-only; the machine ones pre-filled from the run |
 | N4 | **`registry/components.yml`** | `COMPONENT_REGISTRY_SPEC` §7 lists six checks that cannot run without it, including `implements` injectivity — currently a hand-maintained list in a test |

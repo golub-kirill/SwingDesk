@@ -66,9 +66,36 @@ vector is to paste in whatever the code now prints, which converts the gate into
 `tools/golden.py --regenerate` exists for a deliberate version bump. It is not a way to fix a red
 build.
 
-**ATR is the first component with vectors** — six cases covering Wilder's seed, the smoothing
+### What a golden vector cannot do
+
+Freeze behaviour, yes. Prove correctness, no. If a hand-derivation and an implementation share the
+same misreading of the definition, they agree and the vector passes — so a component with no
+external oracle needs two more layers, both free:
+
+| Layer | Catches | Example |
+|---|---|---|
+| **differential** | an implementation bug the authored cases did not reach | breadth recomputed in pandas over randomised panels — different code, same definition |
+| **metamorphic** | a shared misreading, by constraining how the answer must *change* rather than what it is | scale every price and breadth is unchanged; shift every reading and the regime labels are unchanged, because percentile thresholds are equivariant |
+
+Metamorphic relations are the technique for a component nothing can be checked against. You cannot
+say what the right answer is; you can say that scaling the inputs must not change it, and a
+component failing that is wrong regardless of what any expected value claims.
+
+**Six components have vectors, 25 in total.** ATR was first — Wilder's seed, the smoothing
 recursion, all three true-range branches, the zero-range boundary, warm-up refusal, and a
 non-default period to prove the parameter is read rather than hard-coded.
+
+Not every component takes one instrument's bars, so the vector format carries a `kind`:
+
+| `kind` | Shape | Components |
+|---|---|---|
+| `series` | one `BarSeries` in, one value per bar out | ATR, SMA, swing high, swing low |
+| `panel` | many members in, one value per session out | breadth |
+| `fit_apply` | a training window in, thresholds plus point answers out | regime |
+
+Forcing the last two through a bar-series loader would have meant either no vectors for them — which
+is exactly how `breadth` and `regime` came to be used by a reported study with none — or a loader
+that lies about its inputs.
 
 ## 4. Fixtures, and where they come from
 

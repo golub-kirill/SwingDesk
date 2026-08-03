@@ -1,0 +1,52 @@
+{
+  "component": "M30-T0450-v5.0",
+  "name": "Current regime",
+  "component_version": 1,
+  "case": "two_axis_quadrants",
+  "kind": "fit_apply",
+  "derivation": "Two medians, fitted independently. Train breadth 0.4, 0.6 gives index round(0.5 * 1) = round(0.5) = 0 under banker's rounding, so the cut is 0.4. Train volatility 0.01, 0.03 gives the cut 0.01 by the same rule. STRONG is breadth > 0.4, LOUD is volatility > 0.01. The four queries name one quadrant each, and the fifth confirms a missing input yields no label rather than a default quadrant.",
+  "parameters": {
+    "variant": "BREADTH_X_VOL"
+  },
+  "train_breadth": [
+    "0.4",
+    "0.6"
+  ],
+  "train_volatility": [
+    "0.01",
+    "0.03"
+  ],
+  "queries": [
+    [
+      "0.7",
+      "0.04"
+    ],
+    [
+      "0.7",
+      "0.005"
+    ],
+    [
+      "0.3",
+      "0.04"
+    ],
+    [
+      "0.3",
+      "0.005"
+    ],
+    [
+      null,
+      "0.04"
+    ]
+  ],
+  "note": "expected is the fitted cuts first (breadth then volatility), then one label per query",
+  "expected_kind": "text",
+  "expected": [
+    "0.4",
+    "0.01",
+    "LOUD_STRONG",
+    "QUIET_STRONG",
+    "LOUD_WEAK",
+    "QUIET_WEAK",
+    null
+  ]
+}

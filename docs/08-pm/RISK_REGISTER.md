@@ -59,7 +59,7 @@ aesthetic.
 | ID | Risk | Rating | Control |
 |---|---|---|---|
 | B-1 | **Solo project, no second reviewer.** Every finding above was caught by a machine because there is nobody else to catch it | **certain / structural** | 9 merge gates from one command; gates that are themselves tested for the ability to fail |
-| B-2 | **Component activation drifts from its definition.** `breadth` and `regime` are used by a reported study and have no golden vectors, so they are `specified` and not `active` — while `regime.classifier_rule` is `validated` | **realised, open** | Found by counting, which is the wrong way. `ROADMAP.md` N1 and N4 fix it; gate 11 makes it mechanical |
+| B-2 | **Component activation drifts from its definition.** `breadth` and `regime` were used by a reported study with no golden vectors — `specified`, not `active`, while `regime.classifier_rule` was already `validated` | **realised, closed 2026-08-02** | Vectors added for both. The underlying exposure remains until gate 11 makes activation mechanical (`ROADMAP.md` N4) — it was found by counting, and counting does not scale to 460 components |
 | B-3 | **Documentation drifts from code.** 25 documents, several already found stale | **medium** | Gates 2, 3 and 3b cover transcription, the course index and the FRD. Nothing covers authored prose |
 | B-4 | **Scope creep into the course's 1379 topics.** ~460 are computable and 7 are built | **medium** | The v1 finish line requires *no* particular component to exist. Catalogue growth is G6, deliberately after the machinery |
 

@@ -1,0 +1,49 @@
+{
+  "component": "M31-T0459-v5.0",
+  "name": "Share of stocks above their averages",
+  "component_version": 1,
+  "case": "unwarmed_member_leaves_both_sides",
+  "kind": "panel",
+  "derivation": "B's average is missing for the first two sessions. It is excluded from the numerator AND the denominator, so sessions 1 and 2 are 1/1 = 1 (A alone, above). On session 3 B's average arrives at 20 against a close of 10, so B is below and the ratio is 1/2 = 0.5. Counting an unwarmed member as 'not above' would report 0.5 on every session - a statement about listing dates rather than about breadth.",
+  "parameters": {
+    "min_members": 1
+  },
+  "knowledge_time": "2026-01-15T21:00:00+00:00",
+  "sessions": [
+    "2025-03-03",
+    "2025-03-04",
+    "2025-03-05"
+  ],
+  "members": {
+    "A": {
+      "closes": [
+        "10",
+        "10",
+        "10"
+      ],
+      "sma": [
+        "5",
+        "5",
+        "5"
+      ]
+    },
+    "B": {
+      "closes": [
+        "10",
+        "10",
+        "10"
+      ],
+      "sma": [
+        null,
+        null,
+        "20"
+      ]
+    }
+  },
+  "expected_kind": "numeric",
+  "expected": [
+    "1",
+    "1",
+    "0.5"
+  ]
+}
