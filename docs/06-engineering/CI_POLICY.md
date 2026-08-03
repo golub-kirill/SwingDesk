@@ -17,17 +17,18 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 2 | `verify_transcription.py` | a `verbatim` block that no longer matches its source; an enum drifting from its spec | **exists** |
 | 3 | `build_course_index.py --check-only` | the course index no longer extracting to its known shape | **exists** |
 | 3b | `build_frd.py --check-only` | the FRD drifting from the registry it is generated from | **exists** |
+| 3c | `build_components.py --check-only` | a generated component field hand-edited; the registry going stale against the course | **exists** — 465 rows |
 | 4 | `ruff` | style, obvious errors | to build |
 | 5 | `mypy --strict` | type errors | to build |
 | 6 | `lint-imports` | a package importing across a layer or forbidden boundary | **exists** — 4 contracts. Caught a reversed layer order on first run |
 | 7 | no-wall-clock check | `datetime.now` / `date.today` / `time.time` in `derived_observations`, `decision_logic`, `trade_management` | **exists** — AST-parsed, not string-matched, so a mention in a docstring does not trip it |
-| 7b | `golden.py` | a component's output changing without its version and vectors changing with it | **exists** — 6 vectors, 1 component |
-| 8 | `pytest` | unit, property and golden-vector tests | **exists** — 30 tests, fully offline |
+| 7b | `golden.py` | a component's output changing without its version and vectors changing with it | **exists** — 25 vectors, 6 components |
+| 8 | `pytest` | unit, property and golden-vector tests | **exists** — 182 tests, fully offline |
 | 9 | determinism replay | a stored manifest no longer reproducing its `output_hash` | **exists** — 1 case, 4 instruments covering all four decision branches |
 | 10 | traceability | a course id with no requirement row, a requirement with no test, a spec id cited by no test | to build |
-| 11 | component registry checks | `implements` not injective; an `active` component with an `unset` parameter | to build, needs `components.yml` |
+| 11 | `verify_components.py` | `implements` not injective; an `active` component missing `implements`/`verification`/`spec`; a dangling parameter reference; an `active` component with an `unset` parameter; an `implements` pointing at a symbol that does not exist; a non-Definition topic with no row | **exists** — caught two components sharing one function on its first run |
 
-Everything except 4, 5, 10 and 11 runs today via `tools/check_gates.py`. Gates 2 and 3 are
+Everything except 4, 5 and 10 runs today via `tools/check_gates.py`. Gates 2 and 3 are
 stdlib-only; the rest need the project venv (`pip install -e ".[dev]"`).
 
 Gates 7b and 9 are also asserted from `pytest`, so a bare `pytest` run is not silently weaker than
@@ -48,7 +49,7 @@ Not busywork — each maps to a specific way this project could quietly go wrong
 | 7b | a behaviour change slipping in unversioned; and, via the file hashes, the cheaper failure of pasting whatever the code now prints into the expected values |
 | 9 | non-determinism entering the decision path — **caught `config_hash` covering only which parameters were set, so a changed threshold would have been reported as a determinism defect** |
 | 10 | a course requirement being dropped without anyone noticing |
-| 11 | two implementations of one component — the thing §3.8 forbids and import analysis cannot see |
+| 11 | two implementations of one component — the thing §3.8 forbids and import analysis cannot see, because both imports are perfectly legal. **Caught `M12-T0201` and `M12-T0202` both claiming `pivots:compute`**, which a linter would never question |
 
 ## 3. Merge rules
 
@@ -96,15 +97,18 @@ Kept as a record, because the argument for a gate is empirical and this is the e
 | 6 | the pipeline sitting in `presentation`, unreachable by the replay harness that needs it |
 | 9 | `config_hash` hashing set-ness instead of values |
 | 9 | a replay fixture whose bars had constant true range, making it blind to the ATR period |
+| 11 | swing high and swing low sharing one function, so `implements` could not say which component a symbol served |
 
-The last one is the useful kind of failure: the gate was green, the fixture was wrong, and only
-trying to make the gate fail on purpose revealed it.
+Two of these deserve a note. The constant-true-range fixture was the useful kind of failure — the
+gate was green, the fixture was wrong, and only trying to make the gate fail on purpose revealed it.
+The shared `pivots:compute` is the other kind: a gate finding a real defect the first time it ran,
+before anyone had a chance to trust the thing it was checking.
 
 ## 7. Open items
 
 - [ ] Choose the runner. GitHub Actions assumes a remote; a local pre-commit hook plus a script
       suits a single-user offline-first project better, and the repo has no remote today.
-- [ ] Gates 10 and 11 block once their subjects exist. Blocking on a registry that does not yet
-      exist is theatre.
+- [ ] Gate 10 (traceability) blocks once its subject exists. Blocking on a mapping that does not
+      yet exist is theatre.
 - [ ] Runtime budget. Gates 1–3 take about a minute (dominated by re-extracting 116 PDFs). If that
       becomes friction, cache extraction by file hash rather than weakening the check.

@@ -35,6 +35,24 @@ SPECS = [
 ]
 
 
+def test_every_declared_spec_has_a_registry_row() -> None:
+    """The list above is hand-maintained, and a hand-maintained list is what drifted.
+
+    `registry/components.yml` is the authority; this asserts the two agree in both directions, so
+    adding a component without registering it fails here rather than being noticed by counting
+    months later.
+    """
+    data = yaml.safe_load((REPO / "registry" / "components.yml").read_text(encoding="utf-8"))
+    registered = {
+        row["component"] for row in data["components"] if row.get("implements")
+    }
+    declared = {spec.component for spec, _ in SPECS}
+    assert declared == registered, (
+        f"declared but unregistered: {sorted(declared - registered)}; "
+        f"registered but undeclared: {sorted(registered - declared)}"
+    )
+
+
 @pytest.fixture(scope="module")
 def course_rows() -> dict[str, dict]:
     data = yaml.safe_load((REPO / "registry" / "course_index.yml").read_text(encoding="utf-8"))

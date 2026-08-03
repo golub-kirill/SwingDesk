@@ -66,10 +66,20 @@ against the source. Everything else is authored as a component advances.
 | `specified` | algorithm spec written; parameters declared with provenance; consumers listed | authoring |
 | `active` | parameters have values; verification exists (golden vectors or property test); `implements` points at real code | authoring + evidence |
 
-One component is `active` today: **ATR** (`M18-T0280-v5.0`), implemented at
-`swingdesk.derived_observations.atr`, with six golden vectors and a CI gate that blocks a behaviour
-change unless its version moves with it (`TEST_STRATEGY.md` §3). Its validation status is `Untested`
-and its one parameter is `assumed` — which is exactly what the next row of this table permits.
+**Seven components are implemented and none is `active`** (2026-08-02). Six have golden vectors;
+five are blocked from activating because a parameter they need is `unset`:
+
+| Component | Blocked by |
+|---|---|
+| `M12-T0201` / `M12-T0202` swing high / low | `pivot.left`, `pivot.right` |
+| `M31-T0459` breadth | `regime.pct_above_ma_period` |
+| `M30-T0450` regime | `regime.breadth_cutoffs` |
+| `M33-T0485` trend filter | `screen.trend_definition` — closed by evidence (PR-001, PR-005) |
+
+That is the fail-closed design working rather than a backlog. A component whose threshold is missing
+must refuse, and `active` is the state that asserts it will not have to. ATR and SMA could activate
+today — ATR's period is `assumed`, SMA has no parameter of its own — and are held at `specified`
+only until `verification` and `spec` anchors are written for them.
 
 **`Untested` is a permitted status for an `active` component.** The course is explicit that
 validation statuses are not grades:
@@ -165,10 +175,15 @@ Currently review-only (`DEPENDENCY_LAW.md` §4), mechanisable once `components.y
 
 ## 8. Open items
 
-- [ ] Create `registry/components.yml`, generated from `course_index.yml` for the ~460 non-Definition
-      topics at `registered`, then hand-advanced.
-- [ ] Decide whether Definition topics get rows at all. They compute nothing — but they carry
-      glossary content and the `GLOSSARY.md` seed, so a lighter record may be warranted.
-- [ ] `tools/verify_components.py` implementing §7.
+- [x] ~~Create `registry/components.yml`~~ — **465 rows, 2026-08-02.** Generated for the
+      course-derived fields, authored for the rest, regenerable without losing authored work.
+- [x] ~~Decide whether Definition topics get rows~~ — **non-Definition topics, plus any Definition
+      with an implementation.** The second clause is not a technicality: `M31-T0459` breadth and
+      `M30-T0450` regime are Definitions in the course and are implemented, so excluding Definitions
+      would have left this project's only `validated` parameter on a component with no row.
+- [x] ~~`tools/verify_components.py`~~ — all six checks, wired as gate 11. It caught swing high and
+      swing low both claiming `pivots:compute` on its first run: two components, one symbol, and
+      `implements` unable to say which was which. Fixed with per-component entry points rather than
+      by weakening the check.
 - [ ] Owner field: trivially "the owner" today, but the field exists to survive that not being true.
       Keep it required.

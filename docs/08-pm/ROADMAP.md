@@ -16,9 +16,9 @@ The finish line it serves is `CHARTER.md` §4, ratified 2026-08-01 and unchanged
 |---|---|
 | Gates closed | G0 charter · G4 architecture · **G5 walking skeleton** |
 | Gates open | G1 requirements · G2 transcription · G3 data · G6 catalogue · G7 surfaces |
-| Merge gates running | 9, from one command |
-| Tests | 178 |
-| Components implemented | 7 · **6 with golden vectors** (25 vectors) |
+| Merge gates running | 11, from one command |
+| Tests | 182 |
+| Components implemented | 7 · 6 with golden vectors (25) · **0 `active`** — five blocked by an unset parameter, which is the fail-closed design working |
 | Parameters | 96 — 84 `unset`, 9 `assumed`, 2 `owner`, **1 `validated`** |
 | Studies | 4 registered, 4 reported — **3 refuted, 1 accepted and quantifiably fragile** |
 
@@ -50,7 +50,7 @@ Work that is started or next, and that nothing else waits on.
 | ~~N1~~ | ~~Golden vectors for `breadth` and `regime`~~ | **DONE 2026-08-02.** 9 vectors added, plus a differential check against pandas and seven metamorphic relations. The vector format grew a `kind` so a cross-sectional measure and a fit/apply classifier can have vectors at all |
 | N2 | **Position store + open-position evaluation** | The finish line's fifth capability. Needs a positions table, an open-position path through the pipeline before candidates, and the `Management` record from `JOURNAL_SCHEMA.md` |
 | N3 | **Checklist generation** | The finish line's sixth capability. 84 transcribed items, each classified machine-verifiable or human-only; the machine ones pre-filled from the run |
-| N4 | **`registry/components.yml`** | `COMPONENT_REGISTRY_SPEC` §7 lists six checks that cannot run without it, including `implements` injectivity — currently a hand-maintained list in a test |
+| ~~N4~~ | ~~`registry/components.yml`~~ | **DONE 2026-08-02.** 465 rows, and gate 11 runs all six checks. It caught swing high and swing low sharing one function on its first run — the violation import analysis cannot see, because both imports are legal |
 
 ## 4. Next
 
@@ -60,7 +60,7 @@ Ready to start once Now is done. Ordered by what unblocks the most.
 |---|---|---|
 | X1 | **Universe path end to end** — the CLI takes a rule, not a ticker list | N4, and `DR-003` is already set |
 | X2 | **`REGIME_SPEC.md`** — transcribe the 11 regimes, the regime→strategy matrix, and record that this project's classifier covers one axis of three | PR-002 is reported, so the doc can state what was measured rather than what was hoped |
-| X3 | **CI gates 4, 5, 10, 11** — ruff, mypy, traceability, component registry | N4 for gate 11 |
+| X3 | **CI gates 4, 5, 10** — ruff, mypy, traceability | nothing; gate 11 shipped with N4 |
 | X4 | **`EVENT_SPEC.md`, `CHART_SPEC.md`** | nothing; they are transcription and were deferred, not blocked |
 | X5 | **Tier 7 UX** — six documents, none started | the surfaces they describe do not exist yet, so they are cheap to defer and expensive to write early |
 

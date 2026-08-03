@@ -1,0 +1,6531 @@
+# Component registry.
+#
+# GENERATED for the course-derived fields; AUTHORED for the rest. Regenerate with
+# tools/build_components.py, which preserves every authored field.
+#
+#   generated : component, name, layer, stage, claim_type, validation
+#   authored  : activation, implements, parameters, consumers, owner, verification, spec
+#
+# Hand-editing a generated field is a defect - `--check-only` catches it.
+#
+# Rows exist for every non-Definition topic, plus any Definition topic with an implementation.
+# See tools/build_components.py for why the second clause is not a technicality.
+#
+# Activation (COMPONENT_REGISTRY_SPEC 3):
+#   registered - the course row exists. Free.
+#   specified  - algorithm spec written, parameters declared with provenance, consumers listed.
+#   active     - parameters have values, verification exists, `implements` points at real code.
+#
+# Enforced by tools/verify_components.py.
+
+components:
+
+  - component: M01-T0007-v6.0
+    name: Почему движение цены нельзя предсказывать точно
+    layer: Decision Logic
+    stage: Context
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M01-T0008-v6.0
+    name: Вероятностное мышление трейдера
+    layer: Decision Logic
+    stage: Context
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M01-T0009-v6.0
+    name: Преимущество стратегии и роль случайности
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M01-T0013-v6.0
+    name: Почему высокий процент прибыльных сделок не гарантирует прибыль
+    layer: Decision Logic
+    stage: Context
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M02-T0018-v5.0
+    name: Институциональные инвесторы
+    layer: Source Facts
+    stage: Context
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M02-T0023-v5.0
+    name: Высокочастотная торговля
+    layer: Source Facts
+    stage: Context
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M02-T0028-v5.0
+    name: Волатильность
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M02-T0032-v5.0
+    name: Почему цена движется между зонами спроса и предложения
+    layer: Source Facts
+    stage: Context
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M04-T0052-v5.0
+    name: Выбор брокера
+    layer: Source Facts
+    stage: Context
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M04-T0070-v5.0
+    name: Резервный план на случай технических проблем
+    layer: Decision Logic
+    stage: Context
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M05-T0088-v5.0
+    name: Выбор типа ордера под конкретный сетап
+    layer: Trade Management
+    stage: Entry
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M06-T0093-v5.0
+    name: Свечной график
+    layer: Source Facts
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M06-T0106-v5.0
+    name: Выбор рабочего таймфрейма
+    layer: Source Facts
+    stage: Context
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M07-T0108-v6.0
+    name: Тело свечи
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M07-T0111-v6.0
+    name: Бычья свеча
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M07-T0112-v6.0
+    name: Медвежья свеча
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M07-T0113-v6.0
+    name: Сильное закрытие
+    layer: Derived Observations
+    stage: Context
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M07-T0114-v6.0
+    name: Слабое закрытие
+    layer: Derived Observations
+    stage: Context
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M07-T0115-v6.0
+    name: Широкодиапазонная свеча
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M07-T0116-v6.0
+    name: Узкодиапазонная свеча
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M07-T0117-v6.0
+    name: Импульсная свеча
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M07-T0118-v6.0
+    name: Свеча нерешительности
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M07-T0124-v6.0
+    name: Бычье поглощение
+    layer: Derived Observations
+    stage: Context
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M07-T0125-v6.0
+    name: Медвежье поглощение
+    layer: Derived Observations
+    stage: Context
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M07-T0131-v6.0
+    name: Значение последовательности свечей
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M07-T0132-v6.0
+    name: Почему форма свечи без контекста почти бесполезна
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M08-T0133-v5.0
+    name: Свеча внутри тренда
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M08-T0134-v5.0
+    name: Свеча после длительного роста
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M08-T0135-v5.0
+    name: Свеча после длительного падения
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M08-T0136-v5.0
+    name: Свеча около поддержки
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M08-T0137-v5.0
+    name: Свеча около сопротивления
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M08-T0138-v5.0
+    name: Свеча после пробоя
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M08-T0139-v5.0
+    name: Свеча на ретесте
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M08-T0140-v5.0
+    name: Свеча внутри диапазона
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M08-T0141-v5.0
+    name: Свеча на высоком объёме
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M08-T0142-v5.0
+    name: Свеча на низком объёме
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M08-T0143-v5.0
+    name: Подтверждение следующей свечой
+    layer: Derived Observations
+    stage: Trigger
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M08-T0144-v5.0
+    name: Отмена свечного сигнала
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M08-T0145-v5.0
+    name: Сильный и слабый свечной контекст
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M08-T0146-v5.0
+    name: Ошибки механической торговли свечными моделями
+    layer: Derived Observations
+    stage: Review
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M09-T0153-v5.0
+    name: Восходящая структура
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M09-T0154-v5.0
+    name: Нисходящая структура
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M09-T0155-v5.0
+    name: Боковая структура
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M09-T0158-v5.0
+    name: Структурный уровень
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M09-T0159-v5.0
+    name: Внутренняя и внешняя структура
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M09-T0162-v5.0
+    name: Потеря предыдущего минимума
+    layer: Derived Observations
+    stage: Context
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M09-T0163-v5.0
+    name: Потеря предыдущего максимума
+    layer: Derived Observations
+    stage: Context
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M09-T0165-v5.0
+    name: Ложная смена структуры
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M10-T0166-v5.0
+    name: Здоровый восходящий тренд
+    layer: Derived Observations
+    stage: Context
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M10-T0167-v5.0
+    name: Здоровый нисходящий тренд
+    layer: Derived Observations
+    stage: Context
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M10-T0169-v5.0
+    name: Ослабевающий тренд
+    layer: Derived Observations
+    stage: Context
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M10-T0175-v5.0
+    name: Перекрытие свечей
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M10-T0180-v5.0
+    name: Первые признаки истощения
+    layer: Derived Observations
+    stage: Context
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M12-T0196-v5.0
+    name: Почему уровни работают
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M12-T0201-v5.0
+    name: Предыдущий максимум
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: specified
+    implements: "swingdesk.derived_observations.pivots:compute"
+    parameters: [pivot.left, pivot.right]
+    consumers: [M33-T0485-v5.0]
+    owner: owner
+    verification: golden vectors
+    spec: "docs/02-domain/ALGORITHM_SPEC.md#swing-high"
+
+  - component: M12-T0202-v5.0
+    name: Предыдущий минимум
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: specified
+    implements: "swingdesk.derived_observations.pivots:compute_low"
+    parameters: [pivot.left, pivot.right]
+    consumers: [M33-T0485-v5.0]
+    owner: owner
+    verification: golden vectors
+    spec: "docs/02-domain/ALGORITHM_SPEC.md#swing-low"
+
+  - component: M12-T0203-v5.0
+    name: Исторический максимум
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M12-T0204-v5.0
+    name: Исторический минимум
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M13-T0209-v5.0
+    name: Почему уровень является зоной
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M13-T0211-v5.0
+    name: Тела свечей и тени
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M13-T0214-v5.0
+    name: Сильное удержание зоны
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M13-T0215-v5.0
+    name: Слабое удержание зоны
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M15-T0241-v5.0
+    name: Anchored VWAP
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M15-T0242-v5.0
+    name: Session VWAP
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M15-T0243-v5.0
+    name: Предыдущий anchored VWAP
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M16-T0251-v5.0
+    name: Относительный объём
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M16-T0254-v5.0
+    name: Объём отдельной свечи
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M16-T0262-v5.0
+    name: Поглощение предложения
+    layer: Derived Observations
+    stage: Context
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M16-T0263-v5.0
+    name: Поглощение спроса
+    layer: Derived Observations
+    stage: Context
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M18-T0276-v5.0
+    name: Что такое волатильность
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M18-T0277-v5.0
+    name: Историческая волатильность
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M18-T0278-v5.0
+    name: Реализованная волатильность
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M18-T0280-v5.0
+    name: ATR в долларах
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: specified
+    implements: "swingdesk.derived_observations.atr:compute"
+    parameters: [atr.period]
+    consumers: []
+    owner: owner
+    verification: golden vectors
+    spec: "docs/02-domain/ALGORITHM_SPEC.md#atr"
+
+  - component: M18-T0281-v5.0
+    name: ATR в процентах
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M18-T0283-v5.0
+    name: Расширение волатильности
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M18-T0284-v5.0
+    name: Сжатие волатильности
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M18-T0285-v5.0
+    name: Volatility contraction
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M18-T0286-v5.0
+    name: Volatility expansion
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M18-T0287-v5.0
+    name: Волатильность перед отчётностью
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M18-T0288-v5.0
+    name: Волатильность после отчётности
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M18-T0289-v5.0
+    name: Волатильность и размер стопа
+    layer: Trade Management
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M18-T0290-v5.0
+    name: Волатильность и размер позиции
+    layer: Trade Management
+    stage: Risk
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M19-T0291-v5.0
+    name: Ликвидность над максимумами
+    layer: Derived Observations
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M19-T0292-v5.0
+    name: Ликвидность под минимумами
+    layer: Derived Observations
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M19-T0302-v5.0
+    name: Почему не каждый прокол является манипуляцией
+    layer: Derived Observations
+    stage: Risk
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M20-T0311-v5.0
+    name: Консолидация у максимума
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M20-T0312-v5.0
+    name: Консолидация у минимума
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M20-T0317-v5.0
+    name: Признаки накопления
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M20-T0318-v5.0
+    name: Признаки распределения
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M20-T0319-v5.0
+    name: Почему боковой рынок не всегда является накоплением
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M21-T0323-v5.0
+    name: Широкая пробойная свеча
+    layer: Derived Observations
+    stage: Trigger
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M21-T0330-v5.0
+    name: Пробой исторического максимума
+    layer: Derived Observations
+    stage: Trigger
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M22-T0342-v5.0
+    name: Failed breakout
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M23-T0360-v5.0
+    name: Volatility contraction pattern
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M23-T0362-v5.0
+    name: Inside-day breakout
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M23-T0365-v5.0
+    name: Критерии качественной модели
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M24-T0378-v5.0
+    name: Island reversal
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M24-T0379-v5.0
+    name: Gap reversal
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M25-T0382-v5.0
+    name: SMA
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: specified
+    implements: "swingdesk.derived_observations.moving_average:compute"
+    parameters: []
+    consumers: [M31-T0459-v5.0, M33-T0485-v5.0]
+    owner: owner
+    verification: golden vectors
+    spec: "docs/02-domain/ALGORITHM_SPEC.md#sma"
+
+  - component: M25-T0383-v5.0
+    name: EMA
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M25-T0386-v5.0
+    name: Положение цены относительно средней
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M25-T0388-v5.0
+    name: Moving-average pullback
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M26-T0393-v5.0
+    name: RSI
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M26-T0396-v5.0
+    name: RSI в тренде
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M26-T0397-v5.0
+    name: RSI mean reversion
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M26-T0398-v5.0
+    name: RSI divergence
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M26-T0402-v5.0
+    name: Relative strength
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M26-T0403-v5.0
+    name: Relative strength line
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M26-T0404-v5.0
+    name: Почему индикатор не должен заменять анализ цены
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M27-T0405-v5.0
+    name: Bollinger Bands
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M27-T0406-v5.0
+    name: Bollinger squeeze
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M27-T0410-v5.0
+    name: ATR bands
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M27-T0412-v5.0
+    name: Volatility stop
+    layer: Trade Management
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M27-T0413-v5.0
+    name: Donchian Channels
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M27-T0414-v5.0
+    name: Donchian breakout
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M27-T0415-v5.0
+    name: Donchian exit
+    layer: Trade Management
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M28-T0416-v5.0
+    name: Session VWAP
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M28-T0417-v5.0
+    name: Anchored VWAP
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M28-T0418-v5.0
+    name: Выбор точки привязки
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M28-T0419-v5.0
+    name: VWAP reclaim
+    layer: Derived Observations
+    stage: Trigger
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M28-T0420-v5.0
+    name: VWAP rejection
+    layer: Derived Observations
+    stage: Trigger
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M28-T0421-v5.0
+    name: VWAP pullback
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M29-T0429-v5.0
+    name: Дневной сетап
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M29-T0434-v5.0
+    name: Рабочий таймфрейм для сетапа
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M29-T0438-v5.0
+    name: Стандартизированный процесс анализа
+    layer: Derived Observations
+    stage: Context
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M30-T0442-v5.0
+    name: Высоковолатильный рынок
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M30-T0443-v5.0
+    name: Низковолатильный рынок
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M30-T0450-v5.0
+    name: Определение текущего режима
+    layer: Derived Observations
+    stage: Context
+    claim_type: Definition
+    validation: Not Applicable
+    activation: specified
+    implements: "swingdesk.derived_observations.regime:fit"
+    parameters: [regime.classifier_rule, regime.breadth_cutoffs]
+    consumers: []
+    owner: owner
+    verification: golden vectors
+    spec: "docs/02-domain/REGIME_SPEC.md#classifier"
+
+  - component: M30-T0451-v5.0
+    name: Выбор стратегии под режим
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M30-T0452-v5.0
+    name: Когда не торговать
+    layer: Derived Observations
+    stage: Context
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M31-T0459-v5.0
+    name: Доля акций выше средних
+    layer: Derived Observations
+    stage: Context
+    claim_type: Definition
+    validation: Not Applicable
+    activation: specified
+    implements: "swingdesk.derived_observations.breadth:above_average"
+    parameters: [regime.pct_above_ma_period]
+    consumers: [M30-T0450-v5.0]
+    owner: owner
+    verification: golden vectors
+    spec: "docs/02-domain/REGIME_SPEC.md#breadth"
+
+  - component: M31-T0460-v5.0
+    name: Сильные и слабые секторы
+    layer: Derived Observations
+    stage: Context
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M31-T0461-v5.0
+    name: Сильные и слабые отрасли
+    layer: Derived Observations
+    stage: Context
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M31-T0464-v5.0
+    name: Relative strength против индекса
+    layer: Derived Observations
+    stage: Context
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M31-T0465-v5.0
+    name: Long strongest / short weakest
+    layer: Derived Observations
+    stage: Context
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M32-T0476-v5.0
+    name: Удаление слабых кандидатов
+    layer: Decision Logic
+    stage: Candidate
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M32-T0477-v5.0
+    name: Приоритизация сетапов
+    layer: Decision Logic
+    stage: Candidate
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M32-T0478-v5.0
+    name: Создание торгового плана на неделю
+    layer: Decision Logic
+    stage: Candidate
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M33-T0479-v5.0
+    name: Фильтр по цене
+    layer: Decision Logic
+    stage: Candidate
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M33-T0480-v5.0
+    name: Фильтр по капитализации
+    layer: Decision Logic
+    stage: Candidate
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M33-T0481-v5.0
+    name: Фильтр по среднему объёму
+    layer: Decision Logic
+    stage: Candidate
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M33-T0482-v5.0
+    name: Фильтр по относительному объёму
+    layer: Decision Logic
+    stage: Candidate
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M33-T0483-v5.0
+    name: Фильтр по волатильности
+    layer: Decision Logic
+    stage: Candidate
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M33-T0484-v5.0
+    name: Фильтр по ATR
+    layer: Decision Logic
+    stage: Candidate
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M33-T0485-v5.0
+    name: Фильтр по тренду
+    layer: Decision Logic
+    stage: Candidate
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: specified
+    implements: "swingdesk.decision_logic.trend:is_uptrend"
+    parameters: [screen.trend_definition, screen.trend_pivot_count]
+    consumers: []
+    owner: owner
+    verification: null
+    spec: "docs/02-domain/SCREENER_SPEC.md#trend-filter"
+
+  - component: M33-T0486-v5.0
+    name: Фильтр по близости к максимуму
+    layer: Decision Logic
+    stage: Candidate
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M33-T0487-v5.0
+    name: Фильтр по относительной силе
+    layer: Decision Logic
+    stage: Candidate
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M33-T0488-v5.0
+    name: Фильтр по пробою
+    layer: Decision Logic
+    stage: Candidate
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M33-T0489-v5.0
+    name: Фильтр по откату
+    layer: Decision Logic
+    stage: Candidate
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M33-T0490-v5.0
+    name: Фильтр по сжатию
+    layer: Decision Logic
+    stage: Candidate
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M33-T0491-v5.0
+    name: Фильтр по гэпу
+    layer: Decision Logic
+    stage: Candidate
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M33-T0492-v5.0
+    name: Фильтр по отчётности
+    layer: Decision Logic
+    stage: Candidate
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M33-T0493-v5.0
+    name: Фильтр для short-selling
+    layer: Decision Logic
+    stage: Candidate
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M34-T0497-v5.0
+    name: Изменение прогноза компании
+    layer: Source Facts
+    stage: Candidate
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M34-T0503-v5.0
+    name: Слияния и поглощения
+    layer: Source Facts
+    stage: Candidate
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M34-T0513-v5.0
+    name: Торговля после события
+    layer: Source Facts
+    stage: Candidate
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M35-T0519-v5.0
+    name: Откат к 10 EMA
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M35-T0520-v5.0
+    name: Откат к 20 EMA
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M35-T0521-v5.0
+    name: Откат к 50 SMA
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M35-T0522-v5.0
+    name: Откат к anchored VWAP
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M35-T0523-v5.0
+    name: Shallow pullback
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M35-T0524-v5.0
+    name: Deep pullback
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M35-T0525-v5.0
+    name: Three-bar pullback
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M35-T0526-v5.0
+    name: Momentum continuation
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M35-T0527-v5.0
+    name: Пробой 20-дневного максимума
+    layer: Decision Logic
+    stage: Trigger
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M35-T0528-v5.0
+    name: Пробой 50-дневного максимума
+    layer: Decision Logic
+    stage: Trigger
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M35-T0529-v5.0
+    name: Пробой 52-недельного максимума
+    layer: Decision Logic
+    stage: Trigger
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M35-T0530-v5.0
+    name: Donchian breakout
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M35-T0531-v5.0
+    name: Relative-strength breakout
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M35-T0532-v5.0
+    name: Sector-leader breakout
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M35-T0535-v5.0
+    name: Momentum ignition
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M35-T0536-v5.0
+    name: Условия пропуска momentum-сделки
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M36-T0542-v5.0
+    name: Volatility contraction breakout
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M36-T0543-v5.0
+    name: Squeeze breakout
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M36-T0544-v5.0
+    name: Inside-day breakout
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M36-T0545-v5.0
+    name: NR4/NR7 breakout
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M36-T0546-v5.0
+    name: Пробой исторического максимума
+    layer: Decision Logic
+    stage: Trigger
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M36-T0550-v5.0
+    name: Breakout–retest
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M36-T0553-v5.0
+    name: Opening-range breakout для исполнения свинг-сетапа
+    layer: Decision Logic
+    stage: Entry
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M36-T0554-v5.0
+    name: Gap breakout
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M36-T0555-v5.0
+    name: Условия пропуска пробоя
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M37-T0556-v5.0
+    name: Pullback к бывшему сопротивлению
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M37-T0557-v5.0
+    name: Pullback к бывшей поддержке для short
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M37-T0558-v5.0
+    name: Pullback к moving average
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M37-T0559-v5.0
+    name: Pullback к anchored VWAP
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M37-T0560-v5.0
+    name: Pullback к трендовой линии
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M37-T0561-v5.0
+    name: Pullback в зону объёмной поддержки
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M37-T0562-v5.0
+    name: Pullback с уменьшающимся объёмом
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M37-T0563-v5.0
+    name: Pullback после earnings gap
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M37-T0564-v5.0
+    name: Pullback внутри сильного сектора
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M37-T0565-v5.0
+    name: Pullback после breakaway gap
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M37-T0566-v5.0
+    name: Вход по подтверждающей свече
+    layer: Trade Management
+    stage: Entry
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M37-T0567-v5.0
+    name: Вход по пробою локального максимума
+    layer: Trade Management
+    stage: Entry
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M37-T0571-v5.0
+    name: Отмена pullback-сетапа
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M38-T0574-v5.0
+    name: RSI mean reversion
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M38-T0575-v5.0
+    name: Bollinger Band reversion
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M38-T0576-v5.0
+    name: Возврат к VWAP
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M38-T0577-v5.0
+    name: Возврат к anchored VWAP
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M38-T0580-v5.0
+    name: Overbought pullback
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M38-T0581-v5.0
+    name: Exhaustion reversal
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M38-T0582-v5.0
+    name: Capitulation reversal
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M38-T0583-v5.0
+    name: Mean reversion после нескольких экстремальных свечей
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M38-T0585-v5.0
+    name: Short-term reversal
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M38-T0586-v5.0
+    name: Опасность mean reversion против сильного тренда
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M38-T0587-v5.0
+    name: Условия пропуска mean-reversion сделки
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M39-T0590-v5.0
+    name: Failed breakout reversal
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M39-T0591-v5.0
+    name: Failed breakdown reversal
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M39-T0597-v5.0
+    name: Ложный пробой исторического максимума
+    layer: Decision Logic
+    stage: Trigger
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M39-T0601-v5.0
+    name: Вход по пробою разворотной свечи
+    layer: Trade Management
+    stage: Entry
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M39-T0605-v5.0
+    name: Условия пропуска liquidity-сетапа
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M40-T0607-v5.0
+    name: Earnings gap continuation
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M40-T0608-v5.0
+    name: Earnings gap pullback
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M40-T0614-v5.0
+    name: Continuation после повышения прогноза
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M40-T0615-v5.0
+    name: Reversal после слабой реакции на хорошие новости
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M40-T0618-v5.0
+    name: Analyst-upgrade momentum
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M40-T0619-v5.0
+    name: Contract-driven breakout
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M40-T0620-v5.0
+    name: FDA-event continuation
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M40-T0621-v5.0
+    name: Торговля после макроэкономического события
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M40-T0623-v5.0
+    name: Условия пропуска event-driven сделки
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M41-T0627-v5.0
+    name: Inverse head-and-shoulders breakout
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M41-T0633-v5.0
+    name: Selling climax reversal
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M41-T0634-v5.0
+    name: Buying climax reversal
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M41-T0637-v5.0
+    name: Island reversal
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M41-T0638-v5.0
+    name: Reversal gap
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M41-T0639-v5.0
+    name: Divergence с подтверждением структуры
+    layer: Derived Observations
+    stage: Trigger
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M41-T0640-v5.0
+    name: Почему нельзя угадывать вершины и основания
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M42-T0646-v5.0
+    name: Failed breakout short
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M42-T0649-v5.0
+    name: Gap-down continuation
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M42-T0651-v5.0
+    name: Short слабой акции в слабом секторе
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M42-T0658-v5.0
+    name: Управление размером короткой позиции
+    layer: Trade Management
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M42-T0659-v5.0
+    name: Условия пропуска short-сделки
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M43-T0661-v5.0
+    name: Выбор пары
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M43-T0662-v5.0
+    name: Корреляция и коинтеграция
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M43-T0663-v5.0
+    name: Spread mean reversion
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M43-T0665-v5.0
+    name: Long strongest / short weakest
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M43-T0666-v5.0
+    name: Relative-value breakout
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M43-T0671-v5.0
+    name: Cross-sectional momentum
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M44-T0674-v5.0
+    name: Trend + pullback + support
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M44-T0676-v5.0
+    name: Momentum + relative strength + volume
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M44-T0677-v5.0
+    name: Earnings + consolidation + breakout
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M44-T0679-v5.0
+    name: Sector strength + breakout
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M44-T0681-v5.0
+    name: Breakout + retest + volume dry-up
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M44-T0682-v5.0
+    name: Mean reversion + structural support
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M44-T0683-v5.0
+    name: Event catalyst + relative strength
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M44-T0685-v5.0
+    name: Опасность переусложнения фильтров
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M44-T0686-v5.0
+    name: Минимальное количество условий для сетапа
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M45-T0689-v5.0
+    name: Breakout entry
+    layer: Trade Management
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M45-T0696-v5.0
+    name: Вход по пробою локальной свечи
+    layer: Trade Management
+    stage: Entry
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M45-T0699-v5.0
+    name: Intraday trigger для дневного сетапа
+    layer: Decision Logic
+    stage: Trigger
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M46-T0716-v4.0
+    name: Максимальная концентрация
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M47-T0722-v4.0
+    name: Технический сетап
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M47-T0725-v4.0
+    name: Условия отмены
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M47-T0731-v4.0
+    name: Причины пропуска сделки
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M48-T0733-v4.0
+    name: Структурный стоп
+    layer: Trade Management
+    stage: Risk
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M48-T0738-v4.0
+    name: ATR stop
+    layer: Trade Management
+    stage: Risk
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M48-T0739-v4.0
+    name: Volatility stop
+    layer: Trade Management
+    stage: Risk
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M49-T0752-v4.0
+    name: Допустимый риск на сделку
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M49-T0761-v4.0
+    name: Поправка на корреляцию
+    layer: Derived Observations
+    stage: Risk
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M49-T0762-v4.0
+    name: Максимальный размер позиции
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M49-T0763-v4.0
+    name: Максимальный риск портфеля
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M49-T0765-v4.0
+    name: Снижение размера во время просадки
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M50-T0775-v4.0
+    name: Breakeven win rate
+    layer: Derived Observations
+    stage: Management
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M50-T0776-v4.0
+    name: Вероятность достижения цели
+    layer: Derived Observations
+    stage: Risk
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M50-T0777-v4.0
+    name: Почему высокий R не гарантирует хорошую сделку
+    layer: Derived Observations
+    stage: Risk
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M50-T0778-v4.0
+    name: Зависимость win rate от метода выхода
+    layer: Trade Management
+    stage: Exit
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M50-T0779-v4.0
+    name: Сравнение сетапов через expectancy
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M51-T0781-v4.0
+    name: Корреляция акций
+    layer: Derived Observations
+    stage: Risk
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M51-T0792-v4.0
+    name: Максимальный дневной убыток
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M51-T0793-v4.0
+    name: Максимальный недельный убыток
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M51-T0794-v4.0
+    name: Правила остановки торговли
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M52-T0796-v4.0
+    name: Выход при немедленном провале сетапа
+    layer: Trade Management
+    stage: Exit
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M52-T0798-v4.0
+    name: Выход при пробое структуры
+    layer: Trade Management
+    stage: Exit
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M52-T0799-v4.0
+    name: Выход по ATR
+    layer: Trade Management
+    stage: Exit
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M52-T0800-v4.0
+    name: Выход по volatility stop
+    layer: Trade Management
+    stage: Exit
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M53-T0812-v4.0
+    name: Выход у предыдущего максимума
+    layer: Trade Management
+    stage: Exit
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M53-T0813-v4.0
+    name: Выход у предыдущего минимума
+    layer: Trade Management
+    stage: Exit
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M53-T0815-v4.0
+    name: ATR target
+    layer: Trade Management
+    stage: Exit
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M54-T0827-v4.0
+    name: Перенос стопа после частичной фиксации
+    layer: Trade Management
+    stage: Exit
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M54-T0831-v4.0
+    name: Стабильное правило частичных выходов
+    layer: Trade Management
+    stage: Exit
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M55-T0834-v4.0
+    name: Trailing stop по ATR
+    layer: Trade Management
+    stage: Exit
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M55-T0839-v4.0
+    name: 10 EMA exit
+    layer: Trade Management
+    stage: Exit
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M55-T0840-v4.0
+    name: 20 EMA exit
+    layer: Trade Management
+    stage: Exit
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M55-T0841-v4.0
+    name: 50 SMA exit
+    layer: Trade Management
+    stage: Exit
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M55-T0842-v4.0
+    name: Donchian exit
+    layer: Trade Management
+    stage: Exit
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M56-T0850-v4.0
+    name: Потеря momentum
+    layer: Trade Management
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M56-T0855-v4.0
+    name: Heavy-volume reversal
+    layer: Trade Management
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M56-T0858-v4.0
+    name: Failed breakout
+    layer: Trade Management
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M56-T0862-v4.0
+    name: Потеря relative strength
+    layer: Derived Observations
+    stage: Exit
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M56-T0863-v4.0
+    name: Ослабление сектора
+    layer: Trade Management
+    stage: Exit
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M56-T0864-v4.0
+    name: Ослабление широкого рынка
+    layer: Trade Management
+    stage: Exit
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M57-T0866-v4.0
+    name: Максимальный срок удержания
+    layer: Trade Management
+    stage: Exit
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M57-T0868-v4.0
+    name: Снижение волатильности после входа
+    layer: Trade Management
+    stage: Entry
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M58-T0875-v4.0
+    name: Выход для momentum breakout
+    layer: Trade Management
+    stage: Exit
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M58-T0876-v4.0
+    name: Выход для trend pullback
+    layer: Trade Management
+    stage: Exit
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M58-T0877-v4.0
+    name: Выход для mean reversion
+    layer: Trade Management
+    stage: Exit
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M58-T0878-v4.0
+    name: Выход для false breakout
+    layer: Trade Management
+    stage: Exit
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M58-T0881-v4.0
+    name: Выход для reversal
+    layer: Trade Management
+    stage: Exit
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M58-T0883-v4.0
+    name: Выход для pairs trade
+    layer: Trade Management
+    stage: Exit
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M58-T0884-v4.0
+    name: Выход для volatility breakout
+    layer: Trade Management
+    stage: Exit
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M58-T0886-v4.0
+    name: Стандартизация правил выхода
+    layer: Trade Management
+    stage: Exit
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M59-T0894-v4.0
+    name: Проверка сетапа
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M60-T0913-v4.0
+    name: Отмена неисполненного ордера
+    layer: Trade Management
+    stage: Entry
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M60-T0915-v4.0
+    name: Установка оповещений
+    layer: Trade Management
+    stage: Entry
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M61-T0920-v4.0
+    name: Мгновенный провал сетапа
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M62-T0927-v4.0
+    name: Сопровождение по первоначальному плану
+    layer: Decision Logic
+    stage: Management
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M62-T0928-v4.0
+    name: Нормальная волатильность
+    layer: Derived Observations
+    stage: Management
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M62-T0930-v4.0
+    name: Перенос стопа в безубыток
+    layer: Trade Management
+    stage: Management
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M62-T0932-v4.0
+    name: Перенос стопа под новую структуру
+    layer: Trade Management
+    stage: Management
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M62-T0942-v4.0
+    name: Изменение торгового плана
+    layer: Decision Logic
+    stage: Management
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M64-T0959-v4.0
+    name: Слишком ранний перенос в безубыток
+    layer: Decision Logic
+    stage: Management
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M64-T0962-v4.0
+    name: Наблюдение каждой свечи
+    layer: Decision Logic
+    stage: Management
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M64-T0963-v4.0
+    name: Нарушение плана под влиянием эмоций
+    layer: Decision Logic
+    stage: Management
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M66-T0975-v4.0
+    name: Максимальная ожидаемая серия
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M66-T0976-v4.0
+    name: Drawdown
+    layer: Trade Management
+    stage: Risk
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M66-T0977-v4.0
+    name: Снижение размера позиции
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M66-T0979-v4.0
+    name: Проверка стратегии
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M66-T0982-v4.0
+    name: Критерии возвращения к нормальному риску
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M67-T0987-v4.0
+    name: Сетап
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M67-T1003-v4.0
+    name: Соблюдение плана
+    layer: Decision Logic
+    stage: Review
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M68-T1010-v4.0
+    name: Качество анализа
+    layer: Derived Observations
+    stage: Review
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M68-T1011-v4.0
+    name: Качество входа
+    layer: Trade Management
+    stage: Entry
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M68-T1012-v4.0
+    name: Качество стопа
+    layer: Trade Management
+    stage: Review
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M68-T1013-v4.0
+    name: Качество размера позиции
+    layer: Trade Management
+    stage: Review
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M68-T1014-v4.0
+    name: Качество сопровождения
+    layer: Derived Observations
+    stage: Management
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M68-T1015-v4.0
+    name: Качество выхода
+    layer: Trade Management
+    stage: Exit
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M68-T1017-v4.0
+    name: Оценка по стандартной шкале
+    layer: Derived Observations
+    stage: Review
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M69-T1019-v4.0
+    name: Win rate
+    layer: Derived Observations
+    stage: Review
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M69-T1024-v4.0
+    name: Expectancy
+    layer: Derived Observations
+    stage: Review
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M69-T1025-v4.0
+    name: Profit factor
+    layer: Derived Observations
+    stage: Review
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M69-T1026-v4.0
+    name: Максимальная просадка
+    layer: Derived Observations
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M69-T1030-v4.0
+    name: Максимальная серия побед
+    layer: Derived Observations
+    stage: Review
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M69-T1031-v4.0
+    name: Максимальная серия убытков
+    layer: Derived Observations
+    stage: Review
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M69-T1033-v4.0
+    name: Результат по сетапам
+    layer: Decision Logic
+    stage: Review
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M70-T1047-v4.0
+    name: Торговля перед событием
+    layer: Derived Observations
+    stage: Review
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M70-T1048-v4.0
+    name: Торговля без подтверждения
+    layer: Derived Observations
+    stage: Trigger
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M70-T1051-v4.0
+    name: Нарушение максимального риска
+    layer: Derived Observations
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M70-T1053-v4.0
+    name: План устранения ошибок
+    layer: Decision Logic
+    stage: Review
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M71-T1056-v4.0
+    name: Допустимые рыночные режимы
+    layer: Derived Observations
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M71-T1057-v4.0
+    name: Условия тренда
+    layer: Decision Logic
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M71-T1058-v4.0
+    name: Условия сетапа
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M71-T1059-v4.0
+    name: Условия входа
+    layer: Trade Management
+    stage: Entry
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M71-T1060-v4.0
+    name: Условия подтверждения
+    layer: Decision Logic
+    stage: Trigger
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M71-T1061-v4.0
+    name: Условия отмены
+    layer: Decision Logic
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M71-T1062-v4.0
+    name: Правило stop-loss
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M71-T1063-v4.0
+    name: Правило размера позиции
+    layer: Trade Management
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M71-T1064-v4.0
+    name: Правило цели
+    layer: Decision Logic
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M71-T1065-v4.0
+    name: Правило trailing exit
+    layer: Trade Management
+    stage: Exit
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M71-T1066-v4.0
+    name: Правило частичной фиксации
+    layer: Decision Logic
+    stage: Exit
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M71-T1067-v4.0
+    name: Максимальный срок удержания
+    layer: Decision Logic
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M71-T1068-v4.0
+    name: Правила пропуска сделки
+    layer: Decision Logic
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M71-T1069-v4.0
+    name: Правила портфельного риска
+    layer: Decision Logic
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M71-T1070-v4.0
+    name: Полный чек-лист стратегии
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M72-T1072-v4.0
+    name: Выбор исторического периода
+    layer: Derived Observations
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M72-T1074-v4.0
+    name: Минимальное количество сделок
+    layer: Derived Observations
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M73-T1104-v4.0
+    name: Критерии устойчивой стратегии
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M74-T1112-v4.0
+    name: Минимальный срок форвард-теста
+    layer: Derived Observations
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M74-T1113-v4.0
+    name: Минимальное количество сделок
+    layer: Derived Observations
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M74-T1114-v4.0
+    name: Критерии перехода к реальным деньгам
+    layer: Derived Observations
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M75-T1115-v4.0
+    name: Минимальный размер позиции
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M75-T1117-v4.0
+    name: Торговля одной стратегии
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M75-T1120-v4.0
+    name: Критерии увеличения риска
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M75-T1121-v4.0
+    name: Критерии снижения риска
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M75-T1122-v4.0
+    name: Максимальная допустимая просадка
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M75-T1124-v4.0
+    name: План первых 100 реальных сделок
+    layer: Decision Logic
+    stage: Entry
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M76-T1125-v4.0
+    name: Дискреционная стратегия
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M76-T1126-v4.0
+    name: Правиловая стратегия
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M76-T1127-v4.0
+    name: Полностью алгоритмическая стратегия
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M77-T1136-v4.0
+    name: Price momentum
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M77-T1137-v4.0
+    name: Earnings momentum
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M77-T1138-v4.0
+    name: Relative strength
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M77-T1141-v4.0
+    name: Low volatility
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M77-T1144-v4.0
+    name: Cross-sectional momentum
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M77-T1145-v4.0
+    name: Time-series momentum
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M78-T1148-v4.0
+    name: Прогноз против классификации
+    layer: Derived Observations
+    stage: Validation
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M78-T1152-v4.0
+    name: Volatility features
+    layer: Derived Observations
+    stage: Validation
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M78-T1161-v4.0
+    name: AI как фильтр, а не гарантия
+    layer: Decision Logic
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M78-T1162-v4.0
+    name: Проверка AI-стратегии на реальном исполнении
+    layer: Decision Logic
+    stage: Entry
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M80-T1181-v4.0
+    name: Поиск новых сетапов
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M80-T1185-v4.0
+    name: Планирование общего риска
+    layer: Decision Logic
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M81-T1194-v4.0
+    name: План входа
+    layer: Trade Management
+    stage: Entry
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M81-T1195-v4.0
+    name: План выхода
+    layer: Trade Management
+    stage: Exit
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M81-T1196-v4.0
+    name: Установка оповещений
+    layer: Decision Logic
+    stage: Context
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M82-T1200-v4.0
+    name: Перенос стопов по правилам
+    layer: Trade Management
+    stage: Management
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M82-T1203-v4.0
+    name: Разбор пропущенных сетапов
+    layer: Decision Logic
+    stage: Review
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M82-T1207-v4.0
+    name: План следующего дня
+    layer: Decision Logic
+    stage: Review
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M83-T1210-v4.0
+    name: Результат по стратегиям
+    layer: Decision Logic
+    stage: Review
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M84-T1220-v4.0
+    name: Полный разбор trend pullback
+    layer: Derived Observations
+    stage: Review
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M84-T1221-v4.0
+    name: Полный разбор breakout
+    layer: Derived Observations
+    stage: Review
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M84-T1222-v4.0
+    name: Полный разбор breakout–retest
+    layer: Derived Observations
+    stage: Review
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M84-T1223-v4.0
+    name: Полный разбор volatility contraction
+    layer: Derived Observations
+    stage: Review
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M84-T1225-v4.0
+    name: Полный разбор earnings gap continuation
+    layer: Derived Observations
+    stage: Review
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M84-T1226-v4.0
+    name: Полный разбор relative-strength breakout
+    layer: Derived Observations
+    stage: Review
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M84-T1228-v4.0
+    name: Полный разбор mean reversion
+    layer: Derived Observations
+    stage: Review
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M84-T1229-v4.0
+    name: Полный разбор pairs trade
+    layer: Derived Observations
+    stage: Review
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M85-T1230-v4.0
+    name: Хороший сетап, нормальный стоп
+    layer: Trade Management
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M85-T1231-v4.0
+    name: Правильный breakout, который не продолжился
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M85-T1232-v4.0
+    name: Правильный pullback, сломанный рынком
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M85-T1233-v4.0
+    name: Правильный short перед squeeze
+    layer: Derived Observations
+    stage: Review
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M85-T1234-v4.0
+    name: Правильный event trade с неожиданной новостью
+    layer: Derived Observations
+    stage: Review
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M85-T1235-v4.0
+    name: Правильное исполнение при отрицательном результате
+    layer: Derived Observations
+    stage: Review
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M86-T1237-v4.0
+    name: Прибыль после входа без плана
+    layer: Trade Management
+    stage: Entry
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M86-T1242-v4.0
+    name: Почему случайная прибыль закрепляет плохие привычки
+    layer: Derived Observations
+    stage: Review
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M87-T1247-v4.0
+    name: Определение сетапа
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M87-T1250-v4.0
+    name: Выбор входа
+    layer: Trade Management
+    stage: Entry
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M88-T1259-v4.0
+    name: Допустимые инструменты
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M88-T1260-v4.0
+    name: Рыночный фильтр
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M88-T1261-v4.0
+    name: Секторный фильтр
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M88-T1263-v4.0
+    name: Рабочий сетап
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M88-T1270-v4.0
+    name: Максимальный срок удержания
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M88-T1271-v4.0
+    name: Условия пропуска
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M88-T1272-v4.0
+    name: Предторговый чек-лист
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M89-T1274-v4.0
+    name: Условия рынка
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M89-T1275-v4.0
+    name: Условия тренда
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M89-T1276-v4.0
+    name: Качество отката
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M89-T1279-v4.0
+    name: Подтверждающая свеча
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M89-T1285-v4.0
+    name: Условия отмены
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M89-T1286-v4.0
+    name: Правила тестирования
+    layer: Decision Logic
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M90-T1287-v4.0
+    name: Условия рынка
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M90-T1288-v4.0
+    name: Качество базы
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M90-T1289-v4.0
+    name: Сжатие волатильности
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M90-T1290-v4.0
+    name: Относительная сила
+    layer: Derived Observations
+    stage: Setup
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M90-T1293-v4.0
+    name: Breakout entry
+    layer: Trade Management
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M90-T1298-v4.0
+    name: Failed-breakout exit
+    layer: Trade Management
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M90-T1299-v4.0
+    name: Условия отмены
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M90-T1300-v4.0
+    name: Правила тестирования
+    layer: Decision Logic
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M91-T1310-v4.0
+    name: Условия отмены
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M91-T1311-v4.0
+    name: Правила тестирования
+    layer: Decision Logic
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M92-T1313-v4.0
+    name: Качество гэпа
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Inference
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M92-T1321-v4.0
+    name: Максимальный срок удержания
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M92-T1322-v4.0
+    name: Условия отмены
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M92-T1323-v4.0
+    name: Правила тестирования
+    layer: Decision Logic
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M93-T1324-v4.0
+    name: Стандартный риск на сделку
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M93-T1326-v4.0
+    name: Максимальный риск позиции
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M93-T1327-v4.0
+    name: Максимальный открытый риск
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M93-T1328-v4.0
+    name: Максимальный секторный риск
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M93-T1329-v4.0
+    name: Максимальный дневной убыток
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M93-T1330-v4.0
+    name: Максимальный недельный убыток
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M93-T1331-v4.0
+    name: Правила после серии убытков
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M93-T1332-v4.0
+    name: Правила увеличения размера
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M93-T1333-v4.0
+    name: Правила уменьшения размера
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M93-T1334-v4.0
+    name: Правила остановки торговли
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M94-T1336-v4.0
+    name: Чтение свечей
+    layer: Decision Logic
+    stage: Validation
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M94-T1337-v4.0
+    name: Рыночная структура
+    layer: Derived Observations
+    stage: Validation
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M94-T1340-v4.0
+    name: Волатильность
+    layer: Derived Observations
+    stage: Validation
+    claim_type: Derived Observation
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M94-T1344-v4.0
+    name: Стратегии входа
+    layer: Trade Management
+    stage: Entry
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M94-T1345-v4.0
+    name: Стратегии выхода
+    layer: Trade Management
+    stage: Exit
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M94-T1346-v4.0
+    name: Управление риском
+    layer: Trade Management
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M95-T1354-v4.0
+    name: Поиск breakout-сетапа
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M95-T1355-v4.0
+    name: Поиск pullback-сетапа
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M95-T1357-v4.0
+    name: Создание плана сделки
+    layer: Decision Logic
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M95-T1358-v4.0
+    name: Выбор подходящего выхода
+    layer: Trade Management
+    stage: Exit
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M95-T1361-v4.0
+    name: Создание собственного чек-листа
+    layer: Decision Logic
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M95-T1363-v4.0
+    name: Подготовка итогового торгового плана
+    layer: Decision Logic
+    stage: Validation
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M96-T1365-v4.0
+    name: Допустимый капитал
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M96-T1366-v4.0
+    name: Допустимый риск
+    layer: Decision Logic
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M96-T1368-v4.0
+    name: Выбранные стратегии
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Untested Hypothesis
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M96-T1371-v4.0
+    name: Правила входа
+    layer: Trade Management
+    stage: Entry
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M96-T1372-v4.0
+    name: Правила выхода
+    layer: Trade Management
+    stage: Exit
+    claim_type: Operational Course Rule
+    validation: Untested
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M96-T1373-v4.0
+    name: Правила сопровождения
+    layer: Decision Logic
+    stage: Management
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M96-T1374-v4.0
+    name: Правила портфельного риска
+    layer: Decision Logic
+    stage: Risk
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M96-T1375-v4.0
+    name: Правила ведения журнала
+    layer: Decision Logic
+    stage: Review
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M96-T1376-v4.0
+    name: Правила еженедельного обзора
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M96-T1377-v4.0
+    name: Правила остановки торговли
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M96-T1378-v4.0
+    name: План первых 100 сделок
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null
+
+  - component: M96-T1379-v4.0
+    name: План дальнейшего развития
+    layer: Decision Logic
+    stage: Setup
+    claim_type: Operational Course Rule
+    validation: Not Applicable
+    activation: registered
+    implements: null
+    parameters: []
+    consumers: []
+    owner: null
+    verification: null
+    spec: null

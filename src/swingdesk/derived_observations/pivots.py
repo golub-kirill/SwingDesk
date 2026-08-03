@@ -164,6 +164,29 @@ def compute(
     )
 
 
+def compute_high(
+    series: BarSeries, left: int, right: int,
+    left_parameter: ParameterUse, right_parameter: ParameterUse,
+) -> ObservationSeries:
+    """`Предыдущий максимум` (M12-T0201). The component's canonical entry point."""
+    return compute(series, left, right, left_parameter, right_parameter, highs=True)
+
+
+def compute_low(
+    series: BarSeries, left: int, right: int,
+    left_parameter: ParameterUse, right_parameter: ParameterUse,
+) -> ObservationSeries:
+    """`Предыдущий минимум` (M12-T0202). The component's canonical entry point.
+
+    Swing high and swing low are one algorithm mirrored, and the course gives them separate ids -
+    so they need separate symbols. The registry's `implements` field must be injective ("each
+    component has one canonical definition", Production Rules 3.8), and a single `compute` with a
+    boolean flag cannot say which component it is. These two wrappers give each component a name
+    while the algorithm stays in one place; the check that forced this caught it on its first run.
+    """
+    return compute(series, left, right, left_parameter, right_parameter, highs=False)
+
+
 def warm_up_bars(left: int, right: int) -> int:
     """Bars before a first confirmation is even possible."""
     return left + right + 1
