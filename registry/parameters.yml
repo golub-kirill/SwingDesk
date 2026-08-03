@@ -274,12 +274,17 @@ parameters:
     status: unset
     provenance: null
     note: >-
-      STAYS UNSET BY EVIDENCE, not by omission. PR-001 (2026-08-02, reported) tested whether the
-      five candidate definitions select the same instruments and REFUTED it: no pair cleared the
-      accept bar, four of six cleared the reject bar, and STRUCTURE overlaps the moving-average
-      definitions by about a third. So this may not be chosen by convenience or simplicity - those
-      criteria were only admissible if the definitions had proved interchangeable. Adopting one
-      needs PR-005, a performance study. See docs/prereg/results/PR-001-report.md.
+      STAYS UNSET BY EVIDENCE, and the family is CLOSED. Two pre-registered studies, both
+      reported 2026-08-02, both refuted:
+        PR-001 - the five candidates do not select the same instruments. No pair cleared the accept
+          bar; STRUCTURE overlaps the moving-average definitions by about a third.
+        PR-005 - those different populations then behave the same. All four gated arms sit inside
+          the ungated arm's permutation interval, at 1x and 3x costs, primary and holdout.
+      So the difference is real and, for this trigger and exit model, decorative. If a value is
+      ever set here it is set by OWNER PREFERENCE with that recorded - provenance 'owner', never
+      'validated:' - unless a study with a different trigger or exit model separates them, which
+      would be a new question that does not inherit these results.
+      See docs/prereg/results/PR-001-report.md and PR-005-report.md.
     named_in: [M33-T0485, M71-T1057]
     note: Requires a quantitative definition of trend. Pre-registration required before activation.
     ui_editable: false

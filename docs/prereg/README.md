@@ -12,7 +12,7 @@ has to happen first, not the thing that has to happen last.
 |---|---|---|---|
 | `PR-001` | Does the trend definition change which population is selected, or only its size? | **reported — REJECT** | — |
 | `PR-001b` | Does definition E's ADX threshold change the answer, across its whole range? | not written | — |
-| `PR-005` | Which trend definition's population performs differently, net of costs? | not written | backtest harness |
+| `PR-005` | Do the trend definitions' populations behave differently, net of costs? | **reported — REJECT** | — |
 | `PR-002` | Does a regime classifier improve decisions, or only partition them? | registered | harness + PR-001 |
 | `PR-003` | Is √252 annualisation wrong enough to matter for this return series? | not written | a daily return series |
 | `PR-004` | Do the process-score weights change any ranking? | not written | ~100 journalled trades |
@@ -22,8 +22,12 @@ has to happen first, not the thing that has to happen last.
 needs evidence about what its population does, not just that it differs. They are listed here
 unwritten so the debt is visible rather than implied.
 
-Results live in `results/`, one JSON of record plus a written report. **PR-001 is refuted** — see
-`results/PR-001-report.md`.
+Results live in `results/`, one JSON of record plus a written report.
+
+**The trend-definition family is closed.** PR-001 found the definitions select different
+instruments; PR-005 found those different instruments then do the same thing. Two refuted
+hypotheses, both pre-registered, and `screen.trend_definition` stays `unset` as a result. See
+`results/PR-001-report.md` and `results/PR-005-report.md`.
 
 ## Status values
 
