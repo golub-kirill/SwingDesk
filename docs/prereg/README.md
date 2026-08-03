@@ -10,14 +10,20 @@ has to happen first, not the thing that has to happen last.
 
 | ID | Question | Status | Blocked on |
 |---|---|---|---|
-| `PR-001` | Does the trend definition change which population is selected, or only its size? | registered | fetch + run (A-D only; US only) |
-| `PR-001b` | Does definition E's ADX threshold change the answer, across its whole range? | not written | PR-001 |
+| `PR-001` | Does the trend definition change which population is selected, or only its size? | **reported — REJECT** | — |
+| `PR-001b` | Does definition E's ADX threshold change the answer, across its whole range? | not written | — |
+| `PR-005` | Which trend definition's population performs differently, net of costs? | not written | backtest harness |
 | `PR-002` | Does a regime classifier improve decisions, or only partition them? | registered | harness + PR-001 |
 | `PR-003` | Is √252 annualisation wrong enough to matter for this return series? | not written | a daily return series |
 | `PR-004` | Do the process-score weights change any ranking? | not written | ~100 journalled trades |
 
 `PR-003` and `PR-004` are named in `DR-001` and `DR-002` as the studies that would overturn them.
-They are listed here unwritten so the debt is visible rather than implied.
+`PR-005` is required by PR-001's result: the definitions are not interchangeable, so choosing one
+needs evidence about what its population does, not just that it differs. They are listed here
+unwritten so the debt is visible rather than implied.
+
+Results live in `results/`, one JSON of record plus a written report. **PR-001 is refuted** — see
+`results/PR-001-report.md`.
 
 ## Status values
 

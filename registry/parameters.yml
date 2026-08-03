@@ -273,6 +273,13 @@ parameters:
     value: null
     status: unset
     provenance: null
+    note: >-
+      STAYS UNSET BY EVIDENCE, not by omission. PR-001 (2026-08-02, reported) tested whether the
+      five candidate definitions select the same instruments and REFUTED it: no pair cleared the
+      accept bar, four of six cleared the reject bar, and STRUCTURE overlaps the moving-average
+      definitions by about a third. So this may not be chosen by convenience or simplicity - those
+      criteria were only admissible if the definitions had proved interchangeable. Adopting one
+      needs PR-005, a performance study. See docs/prereg/results/PR-001-report.md.
     named_in: [M33-T0485, M71-T1057]
     note: Requires a quantitative definition of trend. Pre-registration required before activation.
     ui_editable: false
