@@ -89,9 +89,13 @@ Three places where the source language legitimately survives into output, and on
 
 ## 5. Open items
 
-- [ ] No glossary maps the course's Russian terms to the English ones this product uses.
-      Appendix A is the course's own term dictionary and is not yet transcribed; it is the natural
-      source, and transcribing it is a prerequisite for any second surface.
+- [ ] **`GLOSSARY.md` is the authority for term wording and this document must not restate it.**
+      35 terms, transcribed verbatim from Appendix A and verified 2026-08-01, and it already says
+      the definitions are identical across code identifiers, database columns, UI labels and
+      documents. An earlier draft of this section claimed Appendix A was untranscribed — it is not,
+      and the claim would have sent someone to redo finished work. The real gap is narrower: the
+      glossary gives Russian definitions of English-named terms, so a *surface* string for each term
+      is still unwritten. That is copy, not transcription.
 - [ ] Error-code descriptions in `CODES.md` are partly Russian with an English column, and partly
       English only. Consistent, but only by accident — worth settling before a second surface reads
       them.
