@@ -66,6 +66,8 @@ def main() -> int:
                            [python, "tools/verify_parameters.py"]),
         "transcription": _run("verbatim transcription + enums",
                               [python, "tools/verify_transcription.py"]),
+        "doc references": _run("documentation cross-references",
+                               [python, "tools/verify_docs.py"]),
         "course index": _run("course index shape",
                              [python, "tools/build_course_index.py", "--check-only"]),
         "frd": _run("FRD current", [python, "tools/build_frd.py", "--check-only"]),

@@ -145,10 +145,15 @@ narrows which.
 | no wall clock in domain packages | every CI run | **runs** — AST-parsed |
 | replay a stored manifest, compare `output_hash` | every CI run, on a small fixture | **runs** — `tools/replay.py` |
 | replay the previous real run | nightly / before any release | to build |
-| property test: shuffled input order → identical output | every CI run | **runs** |
+| property test: shuffled input order → identical output | every CI run | **runs — on `breadth`** |
 
 That last one is the strongest of the four: it catches ordering dependence directly, rather than
-waiting for it to surface as an unreproducible result.
+waiting for it to surface as an unreproducible result. Its scope needs stating, because "runs"
+on its own reads as general coverage and it is not: `breadth` is the **only** component whose
+input is an unordered collection. Every other one takes a `BarSeries`, which rejects unordered
+input at the boundary, so there is no shuffle for them to be invariant to. `INVARIANTS.md` §3
+carries the audit and names the one thing this does not cover — nothing forces a *future*
+unordered-input component to bring its own invariance test.
 
 ### 7.1 What a replay case must pin
 

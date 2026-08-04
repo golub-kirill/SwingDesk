@@ -39,7 +39,7 @@ Verbatim:
 | Row | Obligation | Where |
 |---|---|---|
 | 1 | Last-valid snapshot must exist and be reachable — you cannot "use the last valid snapshot" without a bitemporal store. Freshness, symbol/currency, corporate-action and event-time checks are the four named return gates. | `POINT_IN_TIME_SPEC.md`, `DATA_QUALITY_SPEC.md` |
-| 2 | A manual position/stop/target/event list must be printable **without the platform running**. Return requires reconciliation. | `runbooks/`, `RECONCILIATION_SPEC.md` |
+| 2 | A manual position/stop/target/event list must be printable **without the platform running**. Return requires reconciliation. | `runbooks/`, `UX_TASK_FLOWS.md` §4 |
 | 3 | Automated signals are **invalid**, not merely suspect, during a screener failure. Return requires a **repeat run matching a control** — so a reproducible control run must exist. | `DETERMINISM_SPEC.md`, `runbooks/` |
 | 4 | Unclear risk forces `Watch`/`Skip`. Return requires a complete card and risk snapshot **filled without assumptions** — i.e. no defaults substituted for missing values. | `DECISION_STATE_MACHINE.md`, `PARAMETER_REGISTRY.md` |
 | 5 | A risk-off ladder must exist as a named, pre-set mechanism. **The course names it and never quantifies it** — parameter registry entry, provenance `assumed`. | `RISK_SPEC.md`, `PARAMETER_REGISTRY.md` |
