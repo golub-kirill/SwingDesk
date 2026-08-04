@@ -55,6 +55,7 @@ Work that is started or next, and that nothing else waits on.
 | ~~N4~~ | ~~`registry/components.yml`~~ | **DONE 2026-08-02.** 465 rows, and gate 11 runs all six checks. It caught swing high and swing low sharing one function on its first run — the violation import analysis cannot see, because both imports are legal |
 | ~~X1~~ | ~~Universe path end to end~~ | **DONE 2026-08-03.** `scan --universe` applies the DR-003 rule. The symbol directory is now a stored, as-of-readable snapshot rather than a per-tool download, the universe is pinned in the manifest as a run input, and E02 answers. §4 has the fetch-budget consequence |
 | ~~X3~~ | ~~CI gates 4, 5~~ | **DONE 2026-08-03.** ruff and `mypy --strict` both green and wired into `check_gates.py`, 14 gates. They paid for themselves immediately: a `date.today()` in the pipeline's completeness window that gate 7 could not see, an `ExitDecision` that could claim an exit with no price, and a `Fetcher` type that had drifted from every one of its call sites. **Gate 10 stays unwired** — its strongest check is "every `active` component has a test" and there are zero `active` components, so it would pass vacuously |
+| ~~X4~~ | ~~`EVENT_SPEC.md`, `CHART_SPEC.md`~~ | **DONE 2026-08-03.** 11 quotes, gate-2 verified. EVENT_SPEC settles why E11 is blocked: M34 and M40 name 38 event types between them and carry **two** pass/fail criteria total, one per module, repeated identically on every topic — so there is no course basis for `screen.earnings_buffer_days` or for treating any catalyst differently from another. 8 of M40's 18 topics are `Untested Hypothesis` by the course's own label. CHART_SPEC records that the course's figures are synthetic teaching data with a frozen cutoff, and that **512 of the 867 "charts" are not price charts at all** |
 | ~~X2~~ | ~~`REGIME_SPEC.md`~~ | **DONE 2026-08-03.** 12 quotes, gate-2 verified. **The regime→strategy matrix does not exist** — topic 451 is an `Operational Course Rule` whose entire content is one sentence, and no mapping is enumerated anywhere. Recorded as a finding rather than authored. Also states plainly that the shipped classifier covers **one axis of three**, and that the two-axis variant was measured and rejected on stability |
 
 ## 4. Next
@@ -76,7 +77,6 @@ survivorship filter of our own making**, which is exactly what DR-003 exists to 
 | # | Item | Waits on |
 |---|---|---|
 | X6 | **Universe coverage** — run the refresh passes until `is_partial` is False, then re-check DR-003's plateau against the full population rather than a 115-symbol sample | nothing; it is elapsed time and fetch budget, not code |
-| X4 | **`EVENT_SPEC.md`, `CHART_SPEC.md`** | nothing; they are transcription and were deferred, not blocked |
 | X5 | **Tier 7 UX** — six documents, none started | the surfaces they describe do not exist yet, so they are cheap to defer and expensive to write early |
 
 ## 5. Later

@@ -156,7 +156,9 @@ EVALUATORS: dict[str, Evaluator] = {
         "entry is recorded; maximum entry is not, and this item requires both"
     ),
     "event_proximity": _unavailable(
-        "no event calendar - screen.earnings_buffer_days is unset and no source is wired"
+        "no event calendar is wired, AND the course supplies no buffer to apply if one were: "
+        "M34/M40 give one criterion for all 20 catalyst types and no lead time at all (EVENT_SPEC). "
+        "screen.earnings_buffer_days needs a decision record or a study, not a transcription"
     ),
     "liquidity_acceptable": _unavailable(
         "dollar volume is computable from stored bars; spread and expected slippage are not "
