@@ -21,8 +21,6 @@ from swingdesk.derived_observations import atr
 from swingdesk.platform.parameters import ParameterRegistry
 from swingdesk.trade_management.sizing import Refusal, r_multiple, size_long
 
-UTC = UTC
-
 
 def _registry(**overrides: object) -> ParameterRegistry:
     """An in-memory registry. Tests never read the real one, so they cannot break when it changes."""

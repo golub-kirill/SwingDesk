@@ -20,7 +20,6 @@ from swingdesk.reference_data.directory import DirectoryStore
 from swingdesk.reference_data.universe import DirectoryEntry, LiquidityRule
 from swingdesk.trade_management.sizing import Refusal
 
-UTC = UTC
 AS_OF = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
 
 #: Deliberately small so a fixture can satisfy it. The shipped values are DR-003's.

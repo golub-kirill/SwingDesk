@@ -27,7 +27,6 @@ from swingdesk.platform.clock import FixedClock
 from swingdesk.trade_management import manage
 from swingdesk.trade_management.exits import ExitPolicy
 
-UTC = UTC
 AS_OF = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
 
 

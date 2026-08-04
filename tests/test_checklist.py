@@ -20,7 +20,6 @@ from swingdesk.journal_evidence.journal import DecisionRecord
 from swingdesk.trade_management.exits import ExitPolicy
 from swingdesk.trade_management.sizing import Refusal, RiskSnapshot
 
-UTC = UTC
 AS_OF = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
 POLICY = ExitPolicy(Decimal("2.0"), 20)
 

@@ -21,7 +21,6 @@ from swingdesk.market_data import YAHOO, BarStore, check
 from swingdesk.platform.clock import FixedClock
 from swingdesk.reference_data import calendar as cal
 
-UTC = UTC
 AS_OF = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
 
 

@@ -16,7 +16,6 @@ from swingdesk.contracts.observation import Observation, ObservationSeries
 from swingdesk.derived_observations import breadth, regime
 from swingdesk.derived_observations.regime import Classifier, Variant
 
-UTC = UTC
 KNOWN = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
 
 

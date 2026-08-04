@@ -19,7 +19,6 @@ from swingdesk.decision_logic import trend
 from swingdesk.decision_logic.trend import TrendDefinition, TrendInputs, is_uptrend
 from swingdesk.derived_observations import pivots
 
-UTC = UTC
 KNOWN = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
 
 

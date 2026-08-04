@@ -83,6 +83,9 @@ select = [
     "DTZ",      # naive datetimes. Load-bearing here: every stored time is tz-aware
     "SLF",      # private access across module boundaries
     "BLE",      # blind `except Exception`
+    "PLW0127",  # self-assignment. Added after ruff's own UP017 autofix produced `UTC = UTC`
+                # in twelve test files - the import it introduced shadowed the module constant
+                # it was assigning. An autofix can create dead code; the gate now catches it.
     "RUF",
 ]
 ignore = [

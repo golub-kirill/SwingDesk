@@ -15,7 +15,6 @@ import pytest
 from swingdesk.reference_data.directory import DirectoryStore
 from swingdesk.reference_data.universe import DirectoryEntry
 
-UTC = UTC
 MONDAY = datetime(2026, 1, 12, 21, 0, tzinfo=UTC)
 FRIDAY = MONDAY + timedelta(days=4)
 

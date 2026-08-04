@@ -19,8 +19,6 @@ from swingdesk.contracts.evidence import (
     SurvivorshipCoverage,
 )
 
-UTC = UTC
-
 BASE = {
     "evidence_id": "EV-001",
     "component": "M18-T0280-v5.0",

@@ -22,7 +22,6 @@ from swingdesk.validation.backtest.engine import (
     run_arm,
 )
 
-UTC = UTC
 KNOWN = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
 FREE = CostModel(commission_per_share=Decimal(0), slippage_bps=Decimal(0))
 

@@ -17,8 +17,6 @@ from swingdesk.contracts.market import Bar, BarSeries, Interval, Series
 from swingdesk.contracts.reference import Exchange, Instrument
 from swingdesk.platform.parameters import ParameterRegistry
 
-UTC = UTC
-
 #: Synthetic instruments. Never real tickers - a fixture naming a real name invites someone to
 #: "fix" it against current market data.
 TEST_US = Instrument(id="TEST.1", ticker="TEST1", exchange=Exchange.NYSE, currency="USD")
