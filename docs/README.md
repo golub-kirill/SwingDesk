@@ -114,12 +114,23 @@ checkable gate in the course.
 
 | # | File | Freezes | Status |
 |---|---|---|---|
-| 49 | `UX_TASK_FLOWS.md` | Weekend prep, daily prep, evening process, weekly review | planned |
-| 50 | `DESIGN_SYSTEM.md` | Tokens, components, states, density | planned |
-| 51 | `CHART_VISUAL_STANDARD.md` | Panel rules, annotation placement, colour semantics, light/dark | planned |
-| 52 | `UX_COPY.md` | English microcopy; controlled vocabulary never paraphrased | planned |
-| 53 | `ACCESSIBILITY.md` | WCAG 2.1 AA | planned |
-| 54 | `DESIGN_HANDOFF.md` | Build specs | planned |
+| 49 | `UX_TASK_FLOWS.md` | Appendix T's six phases mapped to what the system does today — **11 of 34 items served** | drafting |
+| 50 | `DESIGN_SYSTEM.md` | Tokens, components, states, density | **deferred — no surface** |
+| 51 | `CHART_VISUAL_STANDARD.md` | Panel rules, annotation placement, colour semantics, light/dark | **deferred — no surface** |
+| 52 | `UX_COPY.md` | Controlled vocabulary that is never paraphrased, tone, Russian-in-English rules | drafting |
+| 53 | `ACCESSIBILITY.md` | WCAG 2.1 AA | **deferred — no surface** |
+| 54 | `DESIGN_HANDOFF.md` | Build specs | **deferred — no surface** |
+
+**Four of the six are deferred deliberately, not overlooked.** They specify a visual surface
+that does not exist: `PRODUCT_SURFACES.md` §3.1 names the CLI as the complete v1 surface, and
+colour semantics, density tokens and WCAG criteria for a UI nobody has designed would be
+invention dressed as specification. `CHART_SPEC.md` declined the same thing for the same reason.
+They unblock at G7, with the web admin (D3).
+
+The two that were written are surface-independent: the operator's cadence comes from Appendix T
+and holds whatever renders it, and the controlled vocabulary is already enum members in
+`contracts/` that gate 2 checks — freezing "never paraphrased" costs nothing now and prevents a
+second surface inventing synonyms later.
 
 ## Tier 8 — Project management · `08-pm/`
 

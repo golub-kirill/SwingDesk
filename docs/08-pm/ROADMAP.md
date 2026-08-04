@@ -17,7 +17,7 @@ The finish line it serves is `CHARTER.md` §4, ratified 2026-08-01 and unchanged
 | Gates closed | G0 charter · G4 architecture · **G5 walking skeleton** |
 | Gates open | G1 requirements · G2 transcription · G3 data · G6 catalogue · G7 surfaces |
 | Merge gates running | 14, from one command |
-| Tests | 244 |
+| Tests | 249 |
 | Components implemented | 7 · 6 with golden vectors (25) · **0 `active`** — five blocked by an unset parameter, which is the fail-closed design working |
 | Parameters | 96 — 84 `unset`, 9 `assumed`, 2 `owner`, **1 `validated`** |
 | Studies | 4 registered, 4 reported — **3 refuted, 1 accepted and quantifiably fragile** |
@@ -55,6 +55,7 @@ Work that is started or next, and that nothing else waits on.
 | ~~N4~~ | ~~`registry/components.yml`~~ | **DONE 2026-08-02.** 465 rows, and gate 11 runs all six checks. It caught swing high and swing low sharing one function on its first run — the violation import analysis cannot see, because both imports are legal |
 | ~~X1~~ | ~~Universe path end to end~~ | **DONE 2026-08-03.** `scan --universe` applies the DR-003 rule. The symbol directory is now a stored, as-of-readable snapshot rather than a per-tool download, the universe is pinned in the manifest as a run input, and E02 answers. §4 has the fetch-budget consequence |
 | ~~X3~~ | ~~CI gates 4, 5~~ | **DONE 2026-08-03.** ruff and `mypy --strict` both green and wired into `check_gates.py`, 14 gates. They paid for themselves immediately: a `date.today()` in the pipeline's completeness window that gate 7 could not see, an `ExitDecision` that could claim an exit with no price, and a `Fetcher` type that had drifted from every one of its call sites. **Gate 10 stays unwired** — its strongest check is "every `active` component has a test" and there are zero `active` components, so it would pass vacuously |
+| ~~X5~~ | ~~Tier 7 UX~~ | **DONE 2026-08-03, as two documents rather than six.** `UX_TASK_FLOWS.md` maps Appendix T's six phases onto the code and reports **11 of 34 items served** — the `После сделки` phase is 0 of 6, and structurally so, because D1 means nothing executes and nothing comes back. `UX_COPY.md` freezes the controlled vocabulary. The other four specify a visual surface that does not exist and are deferred to G7 with the reason recorded in `docs/README.md` |
 | ~~X4~~ | ~~`EVENT_SPEC.md`, `CHART_SPEC.md`~~ | **DONE 2026-08-03.** 11 quotes, gate-2 verified. EVENT_SPEC settles why E11 is blocked: M34 and M40 name 38 event types between them and carry **two** pass/fail criteria total, one per module, repeated identically on every topic — so there is no course basis for `screen.earnings_buffer_days` or for treating any catalyst differently from another. 8 of M40's 18 topics are `Untested Hypothesis` by the course's own label. CHART_SPEC records that the course's figures are synthetic teaching data with a frozen cutoff, and that **512 of the 867 "charts" are not price charts at all** |
 | ~~X2~~ | ~~`REGIME_SPEC.md`~~ | **DONE 2026-08-03.** 12 quotes, gate-2 verified. **The regime→strategy matrix does not exist** — topic 451 is an `Operational Course Rule` whose entire content is one sentence, and no mapping is enumerated anywhere. Recorded as a finding rather than authored. Also states plainly that the shipped classifier covers **one axis of three**, and that the two-axis variant was measured and rejected on stability |
 
@@ -77,7 +78,6 @@ survivorship filter of our own making**, which is exactly what DR-003 exists to 
 | # | Item | Waits on |
 |---|---|---|
 | X6 | **Universe coverage** — run the refresh passes until `is_partial` is False, then re-check DR-003's plateau against the full population rather than a 115-symbol sample | nothing; it is elapsed time and fetch budget, not code |
-| X5 | **Tier 7 UX** — six documents, none started | the surfaces they describe do not exist yet, so they are cheap to defer and expensive to write early |
 
 ## 5. Later
 
@@ -87,8 +87,6 @@ Named so they are not rediscovered as ideas.
   be complete first — a second surface built on an incomplete first one duplicates the gap.
 - **Canada.** Blocked on enumerating a `.TO` universe (`DR-003` gap 1). Until then every result is
   single-market and says so.
-- **Share-class symbology.** `AMH$G`-style symbols fail to fetch; the exclusion is systematic
-  (preferred shares and units), not random.
 - **A second exit model.** `PR-005` tested two of the course's four exit slots. Its sharpest
   limitation, and the cheapest genuinely new question available.
 - **`PR-001b`** — sweep the ADX threshold rather than pick one.
