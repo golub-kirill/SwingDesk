@@ -9,7 +9,7 @@ It has already caught one: ATR emitted `Untested` while its registry row said `N
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import UTC, date, timedelta
 from decimal import Decimal
 from pathlib import Path
 
@@ -102,14 +102,14 @@ def test_layer_matches_the_registry(pair, course_rows) -> None:
 
 def test_series_rejects_a_status_outside_the_enum() -> None:
     """The nine are the course's. A tenth needs a dated amendment, not a string literal."""
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     with pytest.raises(ValueError, match="not one of the nine"):
         ObservationSeries(
             component="M25-T0382-v5.0", component_version=1, instrument_id="TEST.1",
             units="price units", parameters=(),
             validation_status="Historically Tested (survivorship-limited)",
-            knowledge_time=datetime(2026, 1, 15, tzinfo=timezone.utc), observations=(),
+            knowledge_time=datetime(2026, 1, 15, tzinfo=UTC), observations=(),
         )
 
 

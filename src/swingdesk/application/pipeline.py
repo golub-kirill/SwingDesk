@@ -16,30 +16,30 @@ import json
 import platform as platform_info
 import subprocess
 import sys
-from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Protocol
 from uuid import uuid4
 
-from swingdesk.contracts.market import BarSeries as BarSeriesLike
+from swingdesk.application import checklist as checklist_builder
+from swingdesk.application.universe import UniverseSelection
 from swingdesk.contracts.checklist import Checklist
+from swingdesk.contracts.market import BarSeries as BarSeriesLike
 from swingdesk.contracts.market import Interval, Series
 from swingdesk.contracts.observation import ObservationSeries
 from swingdesk.contracts.position import ActionKind, ManagementAction, Position
 from swingdesk.contracts.reference import Instrument
 from swingdesk.contracts.run import RunManifest
-from swingdesk.application import checklist as checklist_builder
-from swingdesk.application.universe import UniverseSelection
 from swingdesk.derived_observations import atr
 from swingdesk.journal_evidence.journal import DecisionRecord, Journal
-from swingdesk.market_data import BarStore, VendorUnavailable, YAHOO, check
-from swingdesk.market_data import vendor_yahoo
+from swingdesk.journal_evidence.positions import PositionStore
+from swingdesk.market_data import YAHOO, BarStore, VendorUnavailable, check, vendor_yahoo
+from swingdesk.market_data.completeness import SessionFinding
 from swingdesk.platform.clock import Clock
 from swingdesk.platform.parameters import ParameterRegistry
 from swingdesk.reference_data import calendar as cal
-from swingdesk.journal_evidence.positions import PositionStore
 from swingdesk.trade_management import manage
 from swingdesk.trade_management.exits import ExitPolicy
 from swingdesk.trade_management.sizing import Refusal, RiskSnapshot, size_long
@@ -51,7 +51,7 @@ class InstrumentOutcome:
 
     instrument: Instrument
     bars: int = 0
-    completeness_findings: tuple = ()
+    completeness_findings: tuple[SessionFinding, ...] = ()
     observations: ObservationSeries | None = None
     risk: RiskSnapshot | Refusal | None = None
     decision: DecisionRecord | None = None
@@ -168,7 +168,21 @@ def _universe_hash(selection: UniverseSelection) -> str:
     return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
 
-Fetcher = Callable[[Instrument, Interval, datetime, str | None], "BarSeriesLike"]
+class Fetcher(Protocol):
+    """What the run needs from a bar source.
+
+    A Protocol rather than a Callable alias, because every call site passes `period` by keyword and
+    a positional alias silently permitted that while describing something else. mypy found the
+    mismatch: the declared type and the real contract had drifted apart with nothing to notice.
+    """
+
+    def __call__(
+        self,
+        instrument: Instrument,
+        interval: Interval,
+        knowledge_time: datetime,
+        period: str | None = None,
+    ) -> BarSeriesLike: ...
 
 
 def run(
@@ -232,8 +246,8 @@ def run(
         steps.append("positions")
         known = {instrument.id: instrument for instrument in instruments}
         for position in positions.open_as_of(started):
-            outcome = PositionOutcome(position=position)
-            result.positions.append(outcome)
+            managed = PositionOutcome(position=position)
+            result.positions.append(managed)
 
             # Refresh the held instrument's bars whether or not it is a candidate today. A position
             # is held regardless of whether the screener still likes it, and evaluating one against
@@ -254,8 +268,8 @@ def run(
             if not held.bars:
                 # No bars for a position we hold. Recorded as stale rather than skipped: the owner
                 # must be told a position could not be evaluated, not left to infer it from silence.
-                outcome.stale = True
-                outcome.action = ManagementAction(
+                managed.stale = True
+                managed.action = ManagementAction(
                     position_id=position.position_id, proposed_at=started,
                     kind=ActionKind.PAUSE, reason_code="DATA",
                     reason="no bars available for an open position; management cannot be evaluated",
@@ -267,10 +281,10 @@ def run(
                 policy = exits or ExitPolicy(Decimal("2.0"), 20)
                 observations = atr.compute(held, registry)
                 latest_atr = observations.observations[-1].value
-                outcome.action = manage.evaluate(
+                managed.action = manage.evaluate(
                     position, bar, policy, started, bars_held=max(bars_held, 0), atr=latest_atr
                 )
-            positions.propose(outcome.action, run_id=run_id)
+            positions.propose(managed.action, run_id=run_id)
 
     steps.append("candidates")
 
@@ -292,8 +306,12 @@ def run(
         outcome.bars = len(stored)
 
         # 2. Completeness, against the calendar. This is what separates a half-day from a gap.
-        window_start = stored.bars[0].session_date if stored.bars else date.today()
-        window_end = stored.bars[-1].session_date if stored.bars else date.today()
+        # The empty-bars fallback uses the RUN's clock, not the wall clock. It read date.today()
+        # until ruff's DTZ011 found it: a replay of an old manifest would have measured completeness
+        # against the date of the replay, so that branch was reproducible only on the day it ran.
+        # Gate 7 could not see it - `application` is not one of the pure packages it guards.
+        window_start = stored.bars[0].session_date if stored.bars else started.date()
+        window_end = stored.bars[-1].session_date if stored.bars else started.date()
         report = check(stored, instrument.exchange, YAHOO, window_start, window_end)
         outcome.completeness_findings = report.findings
         if not report.is_complete:

@@ -14,6 +14,7 @@ from __future__ import annotations
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import duckdb
 
@@ -96,12 +97,13 @@ class PositionStore:
 
     def propose(self, action: ManagementAction, run_id: str | None = None) -> None:
         """Append a proposal. Sequence is monotonic per position, so order survives equal clocks."""
-        next_sequence = int(
-            self._connection.execute(
-                "SELECT COALESCE(MAX(sequence), 0) + 1 FROM management WHERE position_id = ?",
-                [action.position_id],
-            ).fetchone()[0]
-        )
+        row = self._connection.execute(
+            "SELECT COALESCE(MAX(sequence), 0) + 1 FROM management WHERE position_id = ?",
+            [action.position_id],
+        ).fetchone()
+        # COALESCE guarantees a row and a value; 1 is the same answer this query gives for a
+        # position with no proposals yet, so the fallback cannot introduce a different sequence.
+        next_sequence = int(row[0]) if row is not None else 1
         self._connection.execute(
             "INSERT INTO management VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
@@ -170,14 +172,13 @@ class PositionStore:
     def pending_approvals(self) -> int:
         """Proposals awaiting the owner. Reported on every run - a proposal nobody answered is not
         an approval, and an unanswered queue is an operational fact (D6)."""
-        return int(
-            self._connection.execute(
-                "SELECT COUNT(*) FROM management WHERE status = 'proposed' AND kind <> 'hold'"
-            ).fetchone()[0]
-        )
+        row = self._connection.execute(
+            "SELECT COUNT(*) FROM management WHERE status = 'proposed' AND kind <> 'hold'"
+        ).fetchone()
+        return int(row[0]) if row is not None else 0
 
     @staticmethod
-    def _row(r) -> Position:
+    def _row(r: tuple[Any, ...]) -> Position:
         return Position(
             position_id=r[0], version=r[1], instrument_id=r[2],
             opened_on=r[3] if isinstance(r[3], date) else date.fromisoformat(str(r[3])),

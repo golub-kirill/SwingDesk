@@ -24,7 +24,7 @@ from collections import Counter
 
 warnings.filterwarnings("ignore")
 
-import yfinance as yf  # noqa: E402
+import yfinance as yf
 
 US = "AAPL"
 CA = "CNQ.TO"
@@ -102,7 +102,8 @@ def main() -> int:
     for day in HALF_DAY_CANDIDATES:
         u = us.get(day)
         c = ca.get(day)
-        fmt = lambda bars: (f"{len(bars):2d} bars {bars[0]}..{bars[-1]}" if bars else "CLOSED")
+        def fmt(bars):
+            return (f"{len(bars):2d} bars {bars[0]}..{bars[-1]}" if bars else "CLOSED")
         print(f"  {day}   US {fmt(u):<28} CA {fmt(c)}")
 
     print("\n=== C2. daily-vs-intraday reconciliation ===")
@@ -119,7 +120,9 @@ def main() -> int:
         daily.index = daily.index.tz_convert(TZ)
         hourly.index = hourly.index.tz_convert(TZ)
         print(f"  -- {ticker}")
-        for label, days in (("suspect", suspects), ("control", controls), ("half-day", HALF_DAY_CANDIDATES[-3:])):
+        groups = (("suspect", suspects), ("control", controls),
+                  ("half-day", HALF_DAY_CANDIDATES[-3:]))
+        for label, days in groups:
             for day in days:
                 drow = daily[daily.index.strftime("%Y-%m-%d") == day]
                 hrow = hourly[hourly.index.strftime("%Y-%m-%d") == day]

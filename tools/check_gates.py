@@ -75,6 +75,8 @@ def main() -> int:
                                    [python, "tools/build_components.py", "--check-only"]),
         "component contract": _run("component registry contract",
                                    [python, "tools/verify_components.py"]),
+        "ruff": _run("ruff", [python, "-m", "ruff", "check", "."]),
+        "mypy": _run("mypy --strict", [python, "-m", "mypy"]),
         "import contracts": _run("import-linter architecture contracts",
                                  [python, "-m", "importlinter.cli", "lint-imports"]),
         "no wall clock": check_no_wall_clock(),

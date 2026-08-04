@@ -13,8 +13,8 @@ Two properties are structural rather than tested-for:
     reason nobody defined, and a run cannot end with positions quietly dropped.
 """
 
+from swingdesk.trade_management.exits import ExitPolicy
 from swingdesk.validation.backtest.costs import CostModel
 from swingdesk.validation.backtest.engine import ArmResult, BacktestConfig, Skipped, run_arm
-from swingdesk.trade_management.exits import ExitPolicy
 
 __all__ = ["ArmResult", "BacktestConfig", "CostModel", "ExitPolicy", "Skipped", "run_arm"]

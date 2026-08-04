@@ -37,6 +37,17 @@ class ExitDecision:
     price: Decimal | None = None
     reason: ExitReason | None = None
 
+    def __post_init__(self) -> None:
+        """An exit without a price or a reason is not an exit.
+
+        The fields are optional because a non-exit has neither, and that left
+        `ExitDecision(exited=True)` constructible - it would have produced a Trade with a None exit
+        price and no recorded reason. mypy surfaced it at the backtest engine's call site as an
+        unnarrowed `Decimal | None`; the fix belongs here, where the invariant lives.
+        """
+        if self.exited and (self.price is None or self.reason is None):
+            raise ValueError("an exit must carry both a price and a reason")
+
 
 @dataclass(frozen=True, slots=True)
 class ExitPolicy:

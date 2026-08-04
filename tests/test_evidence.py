@@ -7,7 +7,7 @@ these tests exist to prove it is not optional.
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -19,7 +19,7 @@ from swingdesk.contracts.evidence import (
     SurvivorshipCoverage,
 )
 
-UTC = timezone.utc
+UTC = UTC
 
 BASE = {
     "evidence_id": "EV-001",

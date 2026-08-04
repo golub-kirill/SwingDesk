@@ -8,7 +8,8 @@ provenance, and a validation status (CHARTER 4, the ratified v1 finish line). A 
 
 from __future__ import annotations
 
-from swingdesk.application.pipeline import RunResult
+from swingdesk.application.pipeline import InstrumentOutcome, RunResult
+from swingdesk.application.universe import UniverseSelection
 from swingdesk.trade_management.sizing import Refusal
 
 _RULE = "─" * 78
@@ -58,7 +59,7 @@ def _universe_block(result: RunResult) -> list[str]:
     return lines
 
 
-def render_empty_universe(selection) -> str:
+def render_empty_universe(selection: UniverseSelection) -> str:
     """What to say when the rule admits nobody. Not an error, and not silence either."""
     return "\n".join([
         _RULE,
@@ -66,7 +67,7 @@ def render_empty_universe(selection) -> str:
         _RULE,
         f"  eligible symbols in the directory   {selection.eligible}",
         f"  of those, with stored bars          {selection.measured}",
-        f"  admitted by the rule                0",
+        "  admitted by the rule                0",
         "",
         "  With no bars stored, this is a coverage problem rather than a market one:",
         "    python tools/fetch_directory.py     # if the directory is empty",
@@ -104,7 +105,7 @@ def _positions_block(result: RunResult) -> list[str]:
     return lines
 
 
-def _checklist_block(outcome) -> list[str]:
+def _checklist_block(outcome: InstrumentOutcome) -> list[str]:
     """The pre-trade checklist, with the unanswered items shown rather than summarised away.
 
     An `unavailable` item is a gap in the SYSTEM, and printing it next to the passes is the only

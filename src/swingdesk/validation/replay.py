@@ -27,7 +27,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from swingdesk.application.pipeline import run
+from swingdesk.application.pipeline import Fetcher, run
 from swingdesk.contracts.market import Bar, BarSeries, Interval, Series
 from swingdesk.contracts.reference import Exchange, Instrument
 from swingdesk.contracts.run import RunManifest
@@ -183,8 +183,13 @@ def load_case(directory: Path) -> ReplayCase:
     )
 
 
-def _fetcher(case: ReplayCase):
-    def fetch(instrument, interval, knowledge_time, period=None):  # noqa: ANN001, ARG001
+def _fetcher(case: ReplayCase) -> Fetcher:
+    def fetch(
+        instrument: Instrument,
+        interval: Interval,  # noqa: ARG001
+        knowledge_time: datetime,  # noqa: ARG001
+        period: str | None = None,  # noqa: ARG001
+    ) -> BarSeries:
         series = case.bars.get(instrument.id)
         if series is None:
             # An instrument deliberately absent from the recording. The refusal path is part of what

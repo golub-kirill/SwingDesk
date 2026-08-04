@@ -19,6 +19,7 @@ the guard holds through composition rather than being re-imposed here.
 
 from __future__ import annotations
 
+import itertools
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
@@ -26,6 +27,7 @@ from enum import StrEnum
 from swingdesk.contracts.component import ComponentSpec
 from swingdesk.contracts.observation import ObservationSeries
 from swingdesk.derived_observations.pivots import Pivot
+
 
 class UnsetThreshold(Exception):
     """A definition asked for a threshold nobody has set.
@@ -109,8 +111,8 @@ def is_uptrend(definition: TrendDefinition, inputs: TrendInputs, *, pivot_count:
                 return None
             highs = inputs.swing_highs[-pivot_count:]
             lows = inputs.swing_lows[-pivot_count:]
-            rising_highs = all(b > a for a, b in zip(highs, highs[1:]))
-            rising_lows = all(b > a for a, b in zip(lows, lows[1:]))
+            rising_highs = all(b > a for a, b in itertools.pairwise(highs))
+            rising_lows = all(b > a for a, b in itertools.pairwise(lows))
             return rising_highs and rising_lows
 
         case TrendDefinition.ADX_DI:

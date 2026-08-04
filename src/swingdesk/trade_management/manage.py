@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
+from typing import Any
 
 from swingdesk.contracts.market import Bar
 from swingdesk.contracts.position import ActionKind, ManagementAction, Position
@@ -102,7 +103,7 @@ def apply_approved(position: Position, action: ManagementAction, now: datetime) 
     if action.position_id != position.position_id:
         raise ValueError("action does not belong to this position")
 
-    update: dict = {"version": position.version + 1, "knowledge_time": now}
+    update: dict[str, Any] = {"version": position.version + 1, "knowledge_time": now}
     if action.kind is ActionKind.MOVE_STOP and action.new_stop is not None:
         update["current_stop"] = action.new_stop
     elif action.kind is ActionKind.PARTIAL_EXIT and action.shares_affected:

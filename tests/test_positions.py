@@ -6,14 +6,14 @@ executes anything (D1), and a proposal is not permission (D6).
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
+from tests.conftest import TEST_CA, TEST_US, fixture_fetcher
 
 from swingdesk.application.pipeline import run
-from swingdesk.contracts.market import Interval, Series
 from swingdesk.contracts.position import (
     ActionKind,
     ActionStatus,
@@ -26,9 +26,8 @@ from swingdesk.market_data import BarStore
 from swingdesk.platform.clock import FixedClock
 from swingdesk.trade_management import manage
 from swingdesk.trade_management.exits import ExitPolicy
-from tests.conftest import TEST_CA, TEST_US, fixture_fetcher
 
-UTC = timezone.utc
+UTC = UTC
 AS_OF = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
 
 

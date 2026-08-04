@@ -8,7 +8,7 @@ excellent backtest, and it passes every test that does not specifically look for
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -19,7 +19,7 @@ from swingdesk.decision_logic import trend
 from swingdesk.decision_logic.trend import TrendDefinition, TrendInputs, is_uptrend
 from swingdesk.derived_observations import pivots
 
-UTC = timezone.utc
+UTC = UTC
 KNOWN = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
 
 
@@ -27,7 +27,7 @@ def _series(highs: list[str], lows: list[str] | None = None) -> BarSeries:
     """A series with the given highs; lows mirror them unless supplied."""
     lows = lows or [str(Decimal(h) - Decimal("5.00")) for h in highs]
     bars = []
-    for offset, (high, low) in enumerate(zip(highs, lows)):
+    for offset, (high, low) in enumerate(zip(highs, lows, strict=False)):
         session = date(2025, 1, 6) + timedelta(days=offset)
         h, low_d = Decimal(high), Decimal(low)
         mid = (h + low_d) / 2
@@ -174,7 +174,7 @@ def test_adx_definition_refuses_rather_than_inventing_a_threshold() -> None:
     A default here would silently become the answer PR-001 exists to find.
     """
     inputs = TrendInputs(adx=Decimal("30"), plus_di=Decimal("25"), minus_di=Decimal("15"))
-    with pytest.raises(trend.UnsetThreshold, match="regime.adx_threshold"):
+    with pytest.raises(trend.UnsetThreshold, match=r"regime.adx_threshold"):
         is_uptrend(TrendDefinition.ADX_DI, inputs)
 
 

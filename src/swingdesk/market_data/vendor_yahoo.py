@@ -11,8 +11,9 @@ becomes "traded on stale data".
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
+from typing import SupportsFloat
 
 from swingdesk.contracts.market import Bar, BarSeries, Interval, Series
 from swingdesk.contracts.reference import Instrument
@@ -57,7 +58,7 @@ def fetch(
         frame = yf.Ticker(instrument.vendor_symbol).history(
             period=period, interval=_INTERVAL_ARG[interval], auto_adjust=False
         )
-    except Exception as error:  # noqa: BLE001 - any vendor failure degrades the same way
+    except Exception as error:
         raise VendorUnavailable(f"{instrument.vendor_symbol} {interval.value}: {error}") from error
 
     if frame is None or frame.empty:
@@ -71,7 +72,7 @@ def fetch(
     for stamp, row in frame.iterrows():
         local = stamp.to_pydatetime()
         session_date = local.date()
-        event_time = local if local.tzinfo is not None else local.replace(tzinfo=timezone.utc)
+        event_time = local if local.tzinfo is not None else local.replace(tzinfo=UTC)
         try:
             bar = Bar(
                 instrument_id=instrument.id,
@@ -107,7 +108,7 @@ def fetch(
     )
 
 
-def _decimal(value: object) -> Decimal:
+def _decimal(value: SupportsFloat) -> Decimal:
     """Vendor floats to Decimal, quantised.
 
     Prices arrive as float64. Converting the repr rather than the float avoids carrying binary

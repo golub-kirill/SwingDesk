@@ -53,7 +53,7 @@ def load_entries(path: Path) -> list[dict]:
             "install it into the project environment (pip install pyyaml).",
             file=sys.stderr,
         )
-        raise SystemExit(2)
+        raise SystemExit(2) from None
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     return data.get("parameters") or []
 

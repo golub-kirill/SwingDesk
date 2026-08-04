@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import random
 from dataclasses import dataclass, field
+from datetime import date
 from decimal import Decimal
 
 from swingdesk.contracts.trade import Trade
@@ -145,7 +146,7 @@ def evaluate(
 
 def evaluate_by_date(
     variant: str,
-    labels_by_date: dict,
+    labels_by_date: dict[date, str | None],
     trades: list[Trade],
     *,
     seed: int,
@@ -185,7 +186,7 @@ def evaluate_by_date(
 
     observed = _range_across(list(by_regime.values()))
 
-    trades_by_date: dict = {}
+    trades_by_date: dict[date, list[Decimal]] = {}
     for trade in trades:
         trades_by_date.setdefault(trade.signal_date, []).append(trade.net_r)
 
@@ -195,7 +196,7 @@ def evaluate_by_date(
         shuffled = observed_labels[:]
         rng.shuffle(shuffled)
         groups: dict[str, list[Decimal]] = {}
-        for session, label in zip(dates, shuffled):
+        for session, label in zip(dates, shuffled, strict=False):
             if label is None:
                 continue
             groups.setdefault(label, []).extend(trades_by_date.get(session, []))

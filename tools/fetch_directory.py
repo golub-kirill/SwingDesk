@@ -17,13 +17,13 @@ from __future__ import annotations
 import argparse
 import sys
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from swingdesk.reference_data import universe  # noqa: E402
-from swingdesk.reference_data.directory import DirectoryStore  # noqa: E402
+from swingdesk.reference_data import universe
+from swingdesk.reference_data.directory import DirectoryStore
 
 SOURCE = "nasdaqtrader.com/SymDir"
 FILES = {
@@ -48,7 +48,7 @@ def main() -> int:
         *universe.parse_other_listed(_download(FILES["otherlisted.txt"])),
     ]
     eligible = [e for e in entries if e.is_eligible]
-    knowledge_time = datetime.now(timezone.utc)
+    knowledge_time = datetime.now(UTC)
 
     with DirectoryStore(args.data / "directory.duckdb") as store:
         previous = store.latest_pull(knowledge_time)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from datetime import UTC
 from pathlib import Path
 
 from swingdesk.application import universe as universe_builder
@@ -63,13 +64,13 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command == "scan":
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         if bool(args.tickers) == bool(args.universe):
             parser.error("pass either tickers or --universe, not both and not neither")
 
         clock = (
-            FixedClock(datetime.fromisoformat(args.as_of).replace(tzinfo=timezone.utc))
+            FixedClock(datetime.fromisoformat(args.as_of).replace(tzinfo=UTC))
             if args.as_of
             else SystemClock()
         )

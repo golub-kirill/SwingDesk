@@ -7,20 +7,20 @@ statement about the trade.
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
+from tests.conftest import TEST_US
 
 from swingdesk.application import checklist as builder
 from swingdesk.contracts.checklist import TERMINAL_STATES, Checklist, ChecklistItem, ItemState
 from swingdesk.journal_evidence.journal import DecisionRecord
 from swingdesk.trade_management.exits import ExitPolicy
 from swingdesk.trade_management.sizing import Refusal, RiskSnapshot
-from tests.conftest import TEST_US
 
-UTC = timezone.utc
+UTC = UTC
 AS_OF = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
 POLICY = ExitPolicy(Decimal("2.0"), 20)
 
@@ -224,12 +224,13 @@ def test_unanswered_includes_the_unavailable_ones() -> None:
 
 def test_the_run_generates_a_checklist_for_every_decided_candidate(tmp_path, registry) -> None:
     """Including a Skip - a skipped candidate's checklist is what makes the skip reviewable."""
+    from tests.conftest import TEST_CA, fixture_fetcher
+
     from swingdesk.application.pipeline import run
     from swingdesk.journal_evidence.journal import Journal
     from swingdesk.market_data import BarStore
     from swingdesk.platform.clock import FixedClock
     from swingdesk.reference_data import calendar as cal
-    from tests.conftest import TEST_CA, fixture_fetcher
 
     sessions = [s.session_date
                 for s in cal.sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))]

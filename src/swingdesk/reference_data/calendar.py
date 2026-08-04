@@ -11,8 +11,9 @@ than generating dates from rules.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from functools import lru_cache
+from typing import Any, cast
 
 import pandas as pd
 import pandas_market_calendars as mcal
@@ -33,13 +34,14 @@ def exchange_for(ticker: str) -> Exchange:
 
 
 @lru_cache(maxsize=4)
-def _calendar(exchange: Exchange):
+def _calendar(exchange: Exchange) -> Any:
     return mcal.get_calendar(exchange.value)
 
 
 @lru_cache(maxsize=64)
 def _schedule(exchange: Exchange, start: date, end: date) -> pd.DataFrame:
-    return _calendar(exchange).schedule(start_date=start, end_date=end)
+    schedule: pd.DataFrame = _calendar(exchange).schedule(start_date=start, end_date=end)
+    return schedule
 
 
 def sessions(exchange: Exchange, start: date, end: date) -> tuple[ExchangeSession, ...]:
@@ -51,7 +53,10 @@ def sessions(exchange: Exchange, start: date, end: date) -> tuple[ExchangeSessio
     frame = _schedule(exchange, start, end)
     tz = _calendar(exchange).tz
     result: list[ExchangeSession] = []
+    # `iterrows` types the index as Hashable. This frame's index is a DatetimeIndex - that is
+    # what pandas_market_calendars returns - so the cast states a fact the stubs cannot.
     for stamp, row in frame.iterrows():
+        stamp = cast(pd.Timestamp, stamp)
         open_local = row["market_open"].tz_convert(tz)
         close_local = row["market_close"].tz_convert(tz)
         result.append(
@@ -76,7 +81,8 @@ def is_open(exchange: Exchange, on: date) -> bool:
     return session(exchange, on) is not None
 
 
-def last_completed_session(exchange: Exchange, as_of, lookback_days: int = 15) -> ExchangeSession:
+def last_completed_session(exchange: Exchange, as_of: datetime,
+                           lookback_days: int = 15) -> ExchangeSession:
     """The most recent session whose close is at or before `as_of`.
 
     A still-open or not-yet-opened session is excluded, so a mid-session call resolves to the prior
@@ -93,7 +99,7 @@ def last_completed_session(exchange: Exchange, as_of, lookback_days: int = 15) -
     return completed[-1]
 
 
-def sessions_behind(exchange: Exchange, last_bar: date, as_of) -> int:
+def sessions_behind(exchange: Exchange, last_bar: date, as_of: datetime) -> int:
     """How many completed sessions the data is behind. 0 means fresh.
 
     Staleness is measured in *sessions*, never in calendar days - a Friday close is not stale on

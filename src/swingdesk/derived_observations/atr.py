@@ -28,8 +28,8 @@ from __future__ import annotations
 from decimal import Decimal
 
 from swingdesk.contracts.component import ComponentSpec
-from swingdesk.contracts.market import BarSeries
-from swingdesk.contracts.observation import Observation, ObservationSeries, ParameterUse
+from swingdesk.contracts.market import Bar, BarSeries
+from swingdesk.contracts.observation import Observation, ObservationSeries
 from swingdesk.platform.parameters import ParameterRegistry
 
 #: Mirrored from registry/course_index.yml, which is generated and must not be hand-edited
@@ -124,7 +124,7 @@ def warm_up_bars(registry: ParameterRegistry) -> int:
     return period + 1
 
 
-def _empty(series: BarSeries, bar) -> Observation:  # noqa: ANN001 - Bar, avoiding a cycle
+def _empty(series: BarSeries, bar: Bar) -> Observation:
     return Observation(
         component=COMPONENT,
         component_version=VERSION,

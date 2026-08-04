@@ -19,19 +19,19 @@ import json
 import random
 import sys
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from swingdesk.contracts.market import Interval  # noqa: E402
-from swingdesk.contracts.observation import ParameterUse  # noqa: E402
-from swingdesk.decision_logic import trend  # noqa: E402
-from swingdesk.derived_observations import moving_average, pivots  # noqa: E402
-from swingdesk.market_data import vendor_yahoo  # noqa: E402
-from swingdesk.reference_data import universe  # noqa: E402
-from swingdesk.validation.studies import trend_overlap as study  # noqa: E402
+from swingdesk.contracts.market import Interval
+from swingdesk.contracts.observation import ParameterUse
+from swingdesk.decision_logic import trend
+from swingdesk.derived_observations import moving_average, pivots
+from swingdesk.market_data import vendor_yahoo
+from swingdesk.reference_data import universe
+from swingdesk.validation.studies import trend_overlap as study
 
 DIRECTORY = {
     "nasdaq": "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
@@ -88,7 +88,7 @@ def main() -> int:
     sample = sorted(rng.sample(eligible, min(args.sample, len(eligible))), key=lambda e: e.symbol)
     print(f"directory {len(entries)} rows, {len(eligible)} eligible, sampled {len(sample)}")
 
-    as_of = datetime.now(timezone.utc)
+    as_of = datetime.now(UTC)
     admitted: dict[str, object] = {}
     rejected = failed = short_history = 0
 
@@ -120,8 +120,8 @@ def main() -> int:
     # Per-instrument observations, computed once.
     short_p = ParameterUse(id="sma.period", value=str(SMA_SHORT), provenance="assumed:PR-001")
     long_p = ParameterUse(id="sma.period", value=str(SMA_LONG), provenance="assumed:PR-001")
-    left_p = ParameterUse(id="pivot.left", value=str(PIVOT_LEFT), provenance="assumed:PR-001")
-    right_p = ParameterUse(id="pivot.right", value=str(PIVOT_RIGHT), provenance="assumed:PR-001")
+    ParameterUse(id="pivot.left", value=str(PIVOT_LEFT), provenance="assumed:PR-001")
+    ParameterUse(id="pivot.right", value=str(PIVOT_RIGHT), provenance="assumed:PR-001")
 
     prepared: dict[str, dict] = {}
     for instrument_id, series in admitted.items():

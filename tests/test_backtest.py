@@ -6,7 +6,7 @@ and passes every test that is not specifically looking for it.
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -22,7 +22,7 @@ from swingdesk.validation.backtest.engine import (
     run_arm,
 )
 
-UTC = timezone.utc
+UTC = UTC
 KNOWN = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
 FREE = CostModel(commission_per_share=Decimal(0), slippage_bps=Decimal(0))
 

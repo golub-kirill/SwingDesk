@@ -9,7 +9,7 @@ a real name invites someone to "fix" it against current market data.
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -21,7 +21,7 @@ from swingdesk.derived_observations import atr
 from swingdesk.platform.parameters import ParameterRegistry
 from swingdesk.trade_management.sizing import Refusal, r_multiple, size_long
 
-UTC = timezone.utc
+UTC = UTC
 
 
 def _registry(**overrides: object) -> ParameterRegistry:

@@ -33,7 +33,7 @@ def load_rows() -> list[dict]:
         import yaml
     except ModuleNotFoundError:
         print("PyYAML required (pip install pyyaml)", file=sys.stderr)
-        raise SystemExit(2)
+        raise SystemExit(2) from None
     data = yaml.safe_load(REGISTRY.read_text(encoding="utf-8"))
     return data["topics"]
 

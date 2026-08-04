@@ -7,7 +7,7 @@ test issue, because both are what a naive parser gets wrong.
 
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import UTC, date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -75,19 +75,21 @@ def test_instrument_records_the_venue_separately_from_the_calendar() -> None:
 # ------------------------------------------------------------------ liquidity
 
 def _series(closes: list[str], volumes: list[int]):
-    from tests.conftest import TEST_US
-    from swingdesk.contracts.market import Bar, BarSeries, Interval, Series
-    from datetime import datetime, timezone
+    from datetime import datetime
 
-    known = datetime(2026, 1, 15, 21, 0, tzinfo=timezone.utc)
+    from tests.conftest import TEST_US
+
+    from swingdesk.contracts.market import Bar, BarSeries, Interval, Series
+
+    known = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
     bars = []
-    for offset, (close, volume) in enumerate(zip(closes, volumes)):
+    for offset, (close, volume) in enumerate(zip(closes, volumes, strict=False)):
         session = date(2025, 1, 6) + timedelta(days=offset)
         c = Decimal(close)
         bars.append(
             Bar(
                 instrument_id=TEST_US.id, interval=Interval.DAY, series=Series.RAW,
-                event_time=datetime(session.year, session.month, session.day, tzinfo=timezone.utc),
+                event_time=datetime(session.year, session.month, session.day, tzinfo=UTC),
                 session_date=session, open=c, high=c, low=c, close=c,
                 volume=volume, knowledge_time=known,
             )

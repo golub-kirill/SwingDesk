@@ -76,7 +76,7 @@ def _load_yaml(path: Path):
         import yaml
     except ModuleNotFoundError:
         print("PyYAML required (pip install pyyaml)", file=sys.stderr)
-        raise SystemExit(2)
+        raise SystemExit(2) from None
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 

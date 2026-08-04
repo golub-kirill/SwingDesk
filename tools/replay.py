@@ -15,7 +15,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from swingdesk.validation import replay as harness  # noqa: E402
+from swingdesk.validation import replay as harness
 
 
 def main(argv: list[str] | None = None) -> int:

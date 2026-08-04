@@ -19,22 +19,27 @@ import json
 import random
 import sys
 import urllib.request
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from swingdesk.contracts.market import BarSeries, Interval  # noqa: E402
-from swingdesk.contracts.observation import ParameterUse  # noqa: E402
-from swingdesk.derived_observations import atr as atr_component  # noqa: E402
-from swingdesk.derived_observations import breadth, moving_average, regime  # noqa: E402
-from swingdesk.derived_observations.regime import Variant  # noqa: E402
-from swingdesk.market_data import vendor_yahoo  # noqa: E402
-from swingdesk.platform.parameters import ParameterRegistry  # noqa: E402
-from swingdesk.reference_data import universe  # noqa: E402
-from swingdesk.validation.backtest import BacktestConfig, CostModel, ExitPolicy, run_arm  # noqa: E402
-from swingdesk.validation.studies import regime_value  # noqa: E402
+from swingdesk.contracts.market import BarSeries, Interval
+from swingdesk.contracts.observation import ParameterUse
+from swingdesk.derived_observations import atr as atr_component
+from swingdesk.derived_observations import breadth, moving_average, regime
+from swingdesk.derived_observations.regime import Variant
+from swingdesk.market_data import vendor_yahoo
+from swingdesk.platform.parameters import ParameterRegistry
+from swingdesk.reference_data import universe
+from swingdesk.validation.backtest import (
+    BacktestConfig,
+    CostModel,
+    ExitPolicy,
+    run_arm,
+)
+from swingdesk.validation.studies import regime_value
 
 DIRECTORY = {
     "nasdaq": "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
@@ -113,7 +118,7 @@ def main() -> int:
     sample = sorted(rng.sample(eligible, min(args.sample, len(eligible))), key=lambda e: e.symbol)
     print(f"directory {len(entries)} rows, {len(eligible)} eligible, sampled {len(sample)}")
 
-    as_of = datetime.now(timezone.utc)
+    as_of = datetime.now(UTC)
     admitted: dict[str, BarSeries] = {}
     rejected = short_history = failed = 0
     for index, entry in enumerate(sample, start=1):
@@ -213,7 +218,7 @@ def main() -> int:
     regimes_of_cost = {"1x": base_costs, "3x": base_costs.stressed(STRESS_MULTIPLE)}
     trades_by_cost: dict[str, list] = {name: [] for name in regimes_of_cost}
 
-    for count, (instrument_id, series) in enumerate(sorted(admitted.items()), start=1):
+    for count, (_instrument_id, series) in enumerate(sorted(admitted.items()), start=1):
         atr_series = atr_component.compute(series, registry)
         gate = [True] * len(series.bars)
         for cost_name, costs in regimes_of_cost.items():

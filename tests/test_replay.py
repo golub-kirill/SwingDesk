@@ -78,7 +78,7 @@ def test_changed_config_is_named(case_dir) -> None:
     _rewrite(
         case_dir,
         lambda document: document.update(
-            {"inputs_digest": harness._inputs_digest(case_dir, document)}  # noqa: SLF001
+            {"inputs_digest": harness._inputs_digest(case_dir, document)}
         ),
     )
 

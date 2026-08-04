@@ -8,14 +8,14 @@ project cannot afford to add to the one it already cannot escape.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
 from swingdesk.reference_data.directory import DirectoryStore
 from swingdesk.reference_data.universe import DirectoryEntry
 
-UTC = timezone.utc
+UTC = UTC
 MONDAY = datetime(2026, 1, 12, 21, 0, tzinfo=UTC)
 FRIDAY = MONDAY + timedelta(days=4)
 

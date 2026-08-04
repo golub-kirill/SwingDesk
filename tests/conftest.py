@@ -8,7 +8,7 @@ the fixture rather than in a known-issues list (TEST_STRATEGY 4).
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 import pytest
@@ -17,7 +17,7 @@ from swingdesk.contracts.market import Bar, BarSeries, Interval, Series
 from swingdesk.contracts.reference import Exchange, Instrument
 from swingdesk.platform.parameters import ParameterRegistry
 
-UTC = timezone.utc
+UTC = UTC
 
 #: Synthetic instruments. Never real tickers - a fixture naming a real name invites someone to
 #: "fix" it against current market data.
@@ -90,7 +90,7 @@ def series_for(instrument: Instrument, sessions: list[date]) -> BarSeries:
 def fixture_fetcher(sessions_by_instrument: dict[str, list[date]]):
     """A fetcher that serves recorded sessions instead of calling a vendor."""
 
-    def _fetch(instrument, interval, knowledge_time, period=None):  # noqa: ANN001, ARG001
+    def _fetch(instrument, interval, knowledge_time, period=None):
         sessions = sessions_by_instrument.get(instrument.id, [])
         if not sessions:
             from swingdesk.market_data import VendorUnavailable

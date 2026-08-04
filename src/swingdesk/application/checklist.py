@@ -14,23 +14,34 @@ Five of eighteen are genuinely answerable today. That number is meant to be read
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
+from swingdesk.application.universe import UniverseSelection
 from swingdesk.contracts.checklist import Checklist, ChecklistItem, ItemState
-from swingdesk.trade_management.sizing import Refusal
+from swingdesk.contracts.reference import Instrument
+from swingdesk.journal_evidence.journal import DecisionRecord
+from swingdesk.trade_management.exits import ExitPolicy
+from swingdesk.trade_management.sizing import Refusal, RiskSnapshot
 
 REGISTRY = Path(__file__).resolve().parents[3] / "registry" / "checklists.yml"
 
+#: What an evaluator is handed. Heterogeneous by nature - a risk snapshot, a decision,
+#: an exit policy and a universe selection have nothing in common but the run.
+Context = dict[str, Any]
+Evaluator = Callable[[Context], tuple[ItemState, str]]
 
-def _load_items(appendix: str = "E") -> list[dict]:
+
+def _load_items(appendix: str = "E") -> list[dict[str, Any]]:
     import yaml
 
     data = yaml.safe_load(REGISTRY.read_text(encoding="utf-8"))
     return [item for item in data["items"] if item["appendix"] == appendix]
 
 
-def _instrument_identity(context: dict) -> tuple[ItemState, str]:
+def _instrument_identity(context: Context) -> tuple[ItemState, str]:
     instrument = context["instrument"]
     if instrument.ticker and instrument.exchange and instrument.currency:
         return ItemState.PASS, (
@@ -39,7 +50,7 @@ def _instrument_identity(context: dict) -> tuple[ItemState, str]:
     return ItemState.FAIL, "one of ticker, exchange or currency is missing"
 
 
-def _risk_recomputed(context: dict) -> tuple[ItemState, str]:
+def _risk_recomputed(context: Context) -> tuple[ItemState, str]:
     risk = context["risk"]
     if risk is None:
         return ItemState.UNAVAILABLE, "sizing did not run for this candidate"
@@ -50,7 +61,7 @@ def _risk_recomputed(context: dict) -> tuple[ItemState, str]:
     )
 
 
-def _time_stop_recorded(context: dict) -> tuple[ItemState, str]:
+def _time_stop_recorded(context: Context) -> tuple[ItemState, str]:
     policy = context.get("exits")
     if policy is None:
         return ItemState.UNAVAILABLE, "no exit policy was supplied to the run"
@@ -61,7 +72,7 @@ def _time_stop_recorded(context: dict) -> tuple[ItemState, str]:
     )
 
 
-def _universe_membership(context: dict) -> tuple[ItemState, str]:
+def _universe_membership(context: Context) -> tuple[ItemState, str]:
     """E02: is this instrument in the admissible trading universe?
 
     Answerable only when the run built one. An explicit ticker list is not a universe, and reporting
@@ -103,7 +114,7 @@ def _universe_membership(context: dict) -> tuple[ItemState, str]:
     return ItemState.PASS, note
 
 
-def _no_skip_condition(context: dict) -> tuple[ItemState, str]:
+def _no_skip_condition(context: Context) -> tuple[ItemState, str]:
     decision = context.get("decision")
     if decision is None:
         return ItemState.UNAVAILABLE, "the candidate has no decision yet"
@@ -112,15 +123,15 @@ def _no_skip_condition(context: dict) -> tuple[ItemState, str]:
     return ItemState.PASS, f"no skip condition fired; decision {decision.decision}"
 
 
-def _unavailable(reason: str):
-    def evaluate(_context: dict) -> tuple[ItemState, str]:
+def _unavailable(reason: str) -> Evaluator:
+    def evaluate(_context: Context) -> tuple[ItemState, str]:
         return ItemState.UNAVAILABLE, reason
     return evaluate
 
 
 #: Evidence key -> evaluator. Every key in registry/checklists.yml must appear here, and the ones
 #: that are not yet answerable say exactly which machinery is missing rather than being omitted.
-EVALUATORS = {
+EVALUATORS: dict[str, Evaluator] = {
     "instrument_identity": _instrument_identity,
     "universe_membership": _universe_membership,
     "risk_recomputed": _risk_recomputed,
@@ -159,14 +170,14 @@ EVALUATORS = {
 
 
 def generate(
-    instrument,
+    instrument: Instrument,
     run_id: str,
     generated_at: datetime,
     *,
-    risk=None,
-    decision=None,
-    exits=None,
-    universe=None,
+    risk: RiskSnapshot | Refusal | None = None,
+    decision: DecisionRecord | None = None,
+    exits: ExitPolicy | None = None,
+    universe: UniverseSelection | None = None,
     appendix: str = "E",
 ) -> Checklist:
     """One filled pre-trade checklist for one candidate."""

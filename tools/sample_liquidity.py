@@ -20,14 +20,14 @@ import json
 import random
 import sys
 import urllib.request
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from swingdesk.contracts.market import Interval  # noqa: E402
-from swingdesk.market_data import VendorUnavailable, vendor_yahoo  # noqa: E402
-from swingdesk.reference_data import universe  # noqa: E402
+from swingdesk.contracts.market import Interval
+from swingdesk.market_data import VendorUnavailable, vendor_yahoo
+from swingdesk.reference_data import universe
 
 DIRECTORY = {
     "nasdaq": "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
@@ -61,7 +61,7 @@ def main() -> int:
     rng = random.Random(args.seed)
     sample = sorted(rng.sample(eligible, min(args.sample, len(eligible))), key=lambda e: e.symbol)
 
-    as_of = datetime.now(timezone.utc)
+    as_of = datetime.now(UTC)
     measured: list[dict] = []
     failed = 0
     for index, entry in enumerate(sample, start=1):

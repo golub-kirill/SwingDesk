@@ -11,7 +11,7 @@ cannot be enforced by review.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Protocol
 
 
@@ -29,7 +29,7 @@ class SystemClock:
     __slots__ = ()
 
     def now(self) -> datetime:
-        return datetime.now(timezone.utc)
+        return datetime.now(UTC)
 
     def __repr__(self) -> str:
         return "SystemClock()"
@@ -47,7 +47,7 @@ class FixedClock:
     def __init__(self, instant: datetime) -> None:
         if instant.tzinfo is None:
             raise ValueError("FixedClock requires a timezone-aware instant")
-        self._instant = instant.astimezone(timezone.utc)
+        self._instant = instant.astimezone(UTC)
 
     def now(self) -> datetime:
         return self._instant

@@ -163,10 +163,9 @@ class Journal:
 
     def uncoded_refusals(self, run_id: str) -> int:
         """Skips with no reason code. Track A `a.no_uncoded_failures` requires this to be zero."""
-        return int(
-            self._connection.execute(
-                "SELECT COUNT(*) FROM decisions "
-                "WHERE run_id = ? AND decision = 'Skip' AND (reason_code IS NULL OR reason_code = '')",
-                [run_id],
-            ).fetchone()[0]
-        )
+        row = self._connection.execute(
+            "SELECT COUNT(*) FROM decisions "
+            "WHERE run_id = ? AND decision = 'Skip' AND (reason_code IS NULL OR reason_code = '')",
+            [run_id],
+        ).fetchone()
+        return int(row[0]) if row is not None else 0

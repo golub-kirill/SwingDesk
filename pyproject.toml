@@ -24,6 +24,10 @@ dev = [
     "pytest>=8",
     "hypothesis>=6",      # property tests carry the invariants (TEST_STRATEGY 2)
     "import-linter>=2",   # the dependency law, executed (DEPENDENCY_LAW)
+    "ruff>=0.16",         # gate 4
+    "mypy>=1.10",         # gate 5
+    "types-PyYAML",       # the registries are YAML and every gate script reads them
+    "pandas-stubs",       # the calendar is a DataFrame at the boundary
 ]
 
 [build-system]
@@ -38,11 +42,75 @@ testpaths = ["tests"]
 
 [tool.mypy]
 strict = true
-files = ["src", "tools"]
+# The shipped package only. `tools/` was in scope before mypy was ever run and carried 53
+# further errors, all in research runners and gate scripts. Narrowing is recorded rather than
+# quietly done: a gate covering src cleanly is worth more than one covering everything and
+# failing, and CI_POLICY 7 tracks the rest as an open item with the two suspicious sites named.
+files = ["src"]
+
+# Third-party packages that ship no type information. Listed one by one rather than with a global
+# `ignore_missing_imports`, so adding an untyped dependency is a visible decision rather than
+# something the config already silently permits.
+[[tool.mypy.overrides]]
+module = ["pandas_market_calendars.*", "yfinance.*", "duckdb.*"]
+ignore_missing_imports = true
 
 [tool.ruff]
-line-length = 100
+# 110, not the 100 declared before ruff was ever run against the tree. 100 was aspirational and
+# unenforced: 51 lines violated it, all but four by one or two characters, and nearly all of them
+# prose in a docstring or a comment. Rewrapping those would have edited explanatory text in thirty
+# files to move a single word - and an attempt to do it mechanically produced worse prose than it
+# replaced, which is the argument in miniature.
+#
+# 110 is where this codebase actually writes. It still catches the four genuinely runaway lines,
+# and it is now ENFORCED rather than aspirational. A limit nobody meets is not a standard; it is a
+# gate waiting to be bypassed (CI_POLICY 3).
+line-length = 110
 src = ["src", "tools", "tests"]
+
+# Rules chosen deliberately. Left unconfigured, ruff reported 199 findings, 85 of them a single
+# preview rule wanting Decimal("100") rewritten as Decimal(100) - a change this codebase should not
+# make by habit, since the string form is the only correct one for a float and money is Decimal
+# everywhere. A gate whose contents nobody picked is a gate that gets bypassed (CI_POLICY 3).
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes: unused imports, undefined names
+    "I",        # import ordering, so a diff never churns on it
+    "UP",       # py3.12+ idioms
+    "B",        # bugbear: mutable defaults, shadowed loop vars
+    "ARG",      # unused arguments - catches a parameter that stopped being read
+    "DTZ",      # naive datetimes. Load-bearing here: every stored time is tz-aware
+    "SLF",      # private access across module boundaries
+    "BLE",      # blind `except Exception`
+    "RUF",
+]
+ignore = [
+    # Ambiguous-unicode rules. This codebase quotes its Russian-language source verbatim in
+    # docstrings and skip reasons, so Cyrillic characters that "look like" Latin ones are the
+    # point, not a typo. Leaving these on would train the operator to ignore ruff output.
+    "RUF001", "RUF002", "RUF003",
+    # RUF005 (concatenation -> unpacking) collapses annotated bar-by-bar test fixtures into one
+    # unreadable line. In test_backtest the per-row comments ARE the documentation of what each
+    # session is meant to do, and a style rule that deletes them is a net loss.
+    "RUF005",
+]
+
+# `ANN` (missing annotations) is deliberately NOT selected. Turning it on produced 129 findings,
+# almost all in tests, where the annotation adds nothing a reader did not already know from the
+# fixture. `mypy --strict` already requires annotations on everything it checks (src and tools),
+# which is where they carry weight. Two overlapping gates disagreeing about scope is how a gate
+# starts getting bypassed.
+
+[tool.ruff.lint.per-file-ignores]
+# Research tools bootstrap sys.path before importing swingdesk, so their imports cannot come first.
+"tools/*.py" = ["E402"]
+# Tests reach into internals on purpose - that is the point of a white-box test - and their unused
+# arguments are pytest fixtures requested for their side effects.
+"tests/*.py" = ["SLF", "ARG"]
+# Embeds the NASDAQ Trader header row verbatim inside a fixture string. Wrapping it would change the
+# format the parser is being tested against, and a `# noqa` inside a string literal is text.
+"tests/test_universe.py" = ["SLF", "ARG", "E501"]
 
 [tool.importlinter]
 root_package = "swingdesk"

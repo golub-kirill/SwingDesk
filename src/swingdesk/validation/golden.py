@@ -88,7 +88,7 @@ def _run_breadth(document: dict[str, Any]) -> list[Any]:
                 session_date=s, open=Decimal(c), high=Decimal(c), low=Decimal(c),
                 close=Decimal(c), volume=1_000_000, knowledge_time=knowledge,
             )
-            for s, c in zip(member_sessions, member["closes"])
+            for s, c in zip(member_sessions, member["closes"], strict=False)
         )
         series_by_id[member_id] = BarSeries(
             instrument_id=member_id, interval=Interval.DAY, series=Series.RAW,
@@ -105,7 +105,7 @@ def _run_breadth(document: dict[str, Any]) -> list[Any]:
                     value=None if v is None else Decimal(v),
                     units="price units", knowledge_time=knowledge,
                 )
-                for bar, v in zip(bars, member["sma"])
+                for bar, v in zip(bars, member["sma"], strict=False)
             ),
         )
 
@@ -338,7 +338,7 @@ def verify(root: Path = GOLDEN_ROOT) -> list[str]:
                     f"{len(vector.expected)}"
                 )
                 continue
-            for index, (got, want) in enumerate(zip(produced, vector.expected)):
+            for index, (got, want) in enumerate(zip(produced, vector.expected, strict=False)):
                 if got is None and want is None:
                     continue
                 if got is None or want is None or got != want:

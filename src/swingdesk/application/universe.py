@@ -30,9 +30,9 @@ from swingdesk.reference_data import universe as rules
 from swingdesk.reference_data.directory import DirectoryStore
 from swingdesk.trade_management.sizing import Refusal
 
-#: The ADTV averaging window, in sessions. Encoded in the parameter's own id - `universe.min_adtv_20d`
-#: is a 20-day figure - and fixed by DR-003. Changing one without the other is a defect, which is why
-#: the window is not separately configurable.
+#: The ADTV averaging window, in sessions. Encoded in the parameter's own id -
+#: `universe.min_adtv_20d` is a 20-day figure - and fixed by DR-003. Changing one without the
+#: other is a defect, which is why the window is not separately configurable.
 ADTV_WINDOW = 20
 
 
@@ -88,7 +88,10 @@ class UniverseSelection:
         return self.measured < self.eligible
 
 
-def rule_from_registry(registry: ParameterRegistry) -> tuple[rules.LiquidityRule, tuple[ParameterUse, ...]] | Refusal:
+BuiltRule = tuple[rules.LiquidityRule, tuple[ParameterUse, ...]]
+
+
+def rule_from_registry(registry: ParameterRegistry) -> BuiltRule | Refusal:
     """Build the DR-003 rule from the registry, or refuse.
 
     Fail-closed: an unset threshold produces a refusal naming it, never a default. A universe built
@@ -164,7 +167,7 @@ def select(
     capped_from: int | None = None
     if limit is not None and len(members) > limit:
         # Truncation IS a ranking, so it is done explicitly and recorded. The rule says who is
-        # admissible; a cap says who we had time for, and the two must never be confused in a report.
+        # admissible; a cap says who we had time for, and the two must never be confused.
         capped_from = len(members)
         members = sorted(members, key=lambda m: m.adtv, reverse=True)[:limit]
         members.sort(key=lambda member: member.instrument.id)

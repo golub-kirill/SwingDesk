@@ -7,7 +7,7 @@ we happen to hold as though it were the rule's answer over the whole directory.
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -20,7 +20,7 @@ from swingdesk.reference_data.directory import DirectoryStore
 from swingdesk.reference_data.universe import DirectoryEntry, LiquidityRule
 from swingdesk.trade_management.sizing import Refusal
 
-UTC = timezone.utc
+UTC = UTC
 AS_OF = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
 
 #: Deliberately small so a fixture can satisfy it. The shipped values are DR-003's.

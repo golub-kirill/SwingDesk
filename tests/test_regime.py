@@ -6,7 +6,7 @@ exact hindsight PR-002's null describes - and it produces a beautifully separate
 
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -16,7 +16,7 @@ from swingdesk.contracts.observation import Observation, ObservationSeries
 from swingdesk.derived_observations import breadth, regime
 from swingdesk.derived_observations.regime import Classifier, Variant
 
-UTC = timezone.utc
+UTC = UTC
 KNOWN = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
 
 
@@ -51,7 +51,7 @@ def _sma(series: BarSeries, values: list[str | None]) -> ObservationSeries:
                 value=None if value is None else Decimal(value),
                 units="price units", knowledge_time=KNOWN,
             )
-            for bar, value in zip(series.bars, values)
+            for bar, value in zip(series.bars, values, strict=False)
         ),
     )
 

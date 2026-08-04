@@ -18,12 +18,13 @@ from collections import Counter
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import StrEnum
+from typing import Any
 
-from swingdesk.contracts.market import BarSeries
+from swingdesk.contracts.market import Bar, BarSeries
 from swingdesk.contracts.observation import ObservationSeries
 from swingdesk.contracts.trade import ExitReason, Trade
-from swingdesk.validation.backtest.costs import CostModel
 from swingdesk.trade_management.exits import ExitPolicy
+from swingdesk.validation.backtest.costs import CostModel
 
 
 class Skipped(StrEnum):
@@ -99,7 +100,7 @@ def run_arm(
     if len(bars) != len(gate) or len(bars) != len(atr.observations):
         raise ValueError("gate and ATR series must align with the bars, one entry per bar")
 
-    position: dict | None = None
+    position: dict[str, Any] | None = None
 
     for index in range(len(bars) - 1):
         bar = bars[index]
@@ -114,7 +115,7 @@ def run_arm(
             position["mfe"] = max(position["mfe"], high_r)
             position["mae"] = min(position["mae"], low_r)
 
-            if decision.exited:
+            if decision.exited and decision.price is not None and decision.reason is not None:
                 result.trades.append(_close(position, bar, decision.price, decision.reason, config))
                 position = None
             continue
@@ -169,7 +170,8 @@ def run_arm(
     return result
 
 
-def _close(position: dict, bar, quoted: Decimal, reason: ExitReason, config: BacktestConfig) -> Trade:
+def _close(position: dict[str, Any], bar: Bar, quoted: Decimal, reason: ExitReason,
+           config: BacktestConfig) -> Trade:
     exit_price = config.costs.sell_fill(quoted)
     return Trade(
         instrument_id=position["instrument_id"],

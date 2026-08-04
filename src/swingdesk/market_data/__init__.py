@@ -6,6 +6,14 @@ from swingdesk.market_data.vendor_profile import QUESTRADE, YAHOO, VendorProfile
 from swingdesk.market_data.vendor_yahoo import VendorUnavailable, fetch
 
 __all__ = [
-    "BarStore", "CompletenessReport", "QUESTRADE", "SessionFinding", "VendorProfile",
-    "VendorUnavailable", "WriteResult", "YAHOO", "check", "fetch",
+    "QUESTRADE",
+    "YAHOO",
+    "BarStore",
+    "CompletenessReport",
+    "SessionFinding",
+    "VendorProfile",
+    "VendorUnavailable",
+    "WriteResult",
+    "check",
+    "fetch",
 ]

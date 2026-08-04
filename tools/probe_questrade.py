@@ -32,7 +32,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 LOGIN_URL = "https://login.questrade.com/oauth2/token"
 GRANULARITIES = ("OneDay", "OneHour", "HalfHour")
@@ -110,7 +110,7 @@ def probe_depth(api: str, token: str, symbol: str) -> None:
     print(f"  {symbol:9s} id={symbol_id} exch={found.get('listingExchange')} "
           f"currency={found.get('currency')} tradable/quotable={listed}")
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     for interval in GRANULARITIES:
         deepest = None
         for years in LOOKBACK_YEARS:
@@ -166,7 +166,7 @@ def main() -> int:
 
     print("\n=== 2. delisted symbols (survivorship) ===")
     print("  Resolving a symbol is not the same as having its history. Fetching candles too.")
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     for symbol in DELISTED_SYMBOLS:
         try:
             found = find_symbol(api, access_token, symbol)

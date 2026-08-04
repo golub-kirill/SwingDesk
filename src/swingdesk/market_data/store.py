@@ -170,12 +170,14 @@ class BarStore:
     def revision_count(self, instrument_id: str | None = None) -> int:
         """Total stored rows. A spike between runs means a vendor re-adjusted history."""
         if instrument_id is None:
-            return int(self._connection.execute("SELECT COUNT(*) FROM bars").fetchone()[0])
-        return int(
-            self._connection.execute(
+            row = self._connection.execute("SELECT COUNT(*) FROM bars").fetchone()
+        else:
+            row = self._connection.execute(
                 "SELECT COUNT(*) FROM bars WHERE instrument_id = ?", [instrument_id]
-            ).fetchone()[0]
-        )
+            ).fetchone()
+        # An aggregate always returns a row; the guard exists because the driver's type does not
+        # say so, and zero is the right answer for a count over nothing either way.
+        return int(row[0]) if row is not None else 0
 
     # ----------------------------------------------------------------- writes
 
@@ -248,7 +250,8 @@ class BarStore:
         ).fetchone()
         if row is None:
             raise LookupError(f"unknown snapshot {snapshot_id!r}")
-        return row[0]
+        stored: datetime = row[0]
+        return stored
 
 
 class WriteResult:

@@ -20,7 +20,7 @@ Both are free: synthetic panels, no vendor, no network.
 from __future__ import annotations
 
 import random
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -30,7 +30,7 @@ from swingdesk.contracts.observation import Observation, ObservationSeries
 from swingdesk.derived_observations import breadth, regime
 from swingdesk.derived_observations.regime import Variant
 
-UTC = timezone.utc
+UTC = UTC
 KNOWN = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
 
 
@@ -44,7 +44,7 @@ def _panel(closes: dict[str, list[Decimal]], smas: dict[str, list[Decimal | None
                 event_time=datetime(s.year, s.month, s.day, tzinfo=UTC), session_date=s,
                 open=v, high=v, low=v, close=v, volume=1_000_000, knowledge_time=KNOWN,
             )
-            for s, v in zip(sessions, values)
+            for s, v in zip(sessions, values, strict=False)
         )
         series_by_id[member] = BarSeries(
             instrument_id=member, interval=Interval.DAY, series=Series.RAW,
@@ -59,7 +59,7 @@ def _panel(closes: dict[str, list[Decimal]], smas: dict[str, list[Decimal | None
                     component="M25-T0382-v5.0", component_version=1, instrument_id=member,
                     event_time=bar.event_time, value=v, units="price units", knowledge_time=KNOWN,
                 )
-                for bar, v in zip(bars, smas[member])
+                for bar, v in zip(bars, smas[member], strict=False)
             ),
         )
     return series_by_id, sma_by_id

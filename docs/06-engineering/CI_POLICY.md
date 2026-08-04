@@ -19,8 +19,8 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 3b | `build_frd.py --check-only` | the FRD drifting from the registry it is generated from | **exists** |
 | 3c | `build_components.py --check-only` | a generated component field hand-edited; the registry going stale against the course | **exists** — 465 rows |
 | 3d | `build_checklists.py --check-only` | the checklist registry drifting from the transcription it is parsed from | **exists** — 84 items |
-| 4 | `ruff` | style, obvious errors | to build |
-| 5 | `mypy --strict` | type errors | to build |
+| 4 | `ruff` | unused imports, naive datetimes, blind excepts, import order | **exists** — 10 rule families, chosen deliberately |
+| 5 | `mypy --strict` | type errors | **exists** — clean over `src`; `tools/` is out of scope, see §7 |
 | 6 | `lint-imports` | a package importing across a layer or forbidden boundary | **exists** — 4 contracts. Caught a reversed layer order on first run |
 | 7 | no-wall-clock check | `datetime.now` / `date.today` / `time.time` in `derived_observations`, `decision_logic`, `trade_management` | **exists** — AST-parsed, not string-matched, so a mention in a docstring does not trip it |
 | 7b | `golden.py` | a component's output changing without its version and vectors changing with it | **exists** — 25 vectors, 6 components |
@@ -29,7 +29,7 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 10 | traceability | a course id with no requirement row, a requirement with no test, a spec id cited by no test | to build |
 | 11 | `verify_components.py` | `implements` not injective; an `active` component missing `implements`/`verification`/`spec`; a dangling parameter reference; an `active` component with an `unset` parameter; an `implements` pointing at a symbol that does not exist; a non-Definition topic with no row | **exists** — caught two components sharing one function on its first run |
 
-Everything except 4, 5 and 10 runs today via `tools/check_gates.py`. Gates 2 and 3 are
+Everything except 10 runs today via `tools/check_gates.py` — **14 gates**. Gates 2 and 3 are
 stdlib-only; the rest need the project venv (`pip install -e ".[dev]"`).
 
 Gates 7b and 9 are also asserted from `pytest`, so a bare `pytest` run is not silently weaker than
@@ -49,6 +49,8 @@ Not busywork — each maps to a specific way this project could quietly go wrong
 | 7 | reproducibility breaking invisibly — one hurried commit is enough |
 | 7b | a behaviour change slipping in unversioned; and, via the file hashes, the cheaper failure of pasting whatever the code now prints into the expected values |
 | 9 | non-determinism entering the decision path — **caught `config_hash` covering only which parameters were set, so a changed threshold would have been reported as a determinism defect** |
+| 4 | a wall-clock call or an unused binding surviving review. Both are invisible in a diff and neither is caught by a test that happens to pass |
+| 5 | a declared type and the real contract drifting apart. **Caught the `Fetcher` alias describing positional arguments while every call site passed `period` by keyword** |
 | 10 | a course requirement being dropped without anyone noticing |
 | 11 | two implementations of one component — the thing §3.8 forbids and import analysis cannot see, because both imports are perfectly legal. **Caught `M12-T0201` and `M12-T0202` both claiming `pivots:compute`**, which a linter would never question |
 
@@ -99,6 +101,9 @@ Kept as a record, because the argument for a gate is empirical and this is the e
 | 9 | `config_hash` hashing set-ness instead of values |
 | 9 | a replay fixture whose bars had constant true range, making it blind to the ATR period |
 | 11 | swing high and swing low sharing one function, so `implements` could not say which component a symbol served |
+| 4 | **`date.today()` in the pipeline's completeness window.** On the empty-bars branch the run measured completeness against the wall clock instead of its own pinned clock, so a replay of an old manifest would have used the date of the replay. Gate 7 could not see it — `application` is not one of the pure packages it guards |
+| 5 | **`ExitDecision(exited=True)` constructible with no price and no reason**, which would have produced a Trade with a None exit price. The invariant now lives in `__post_init__` |
+| 5 | the `Fetcher` type declaring four positional arguments while every caller passed `period` by keyword |
 
 Two of these deserve a note. The constant-true-range fixture was the useful kind of failure — the
 gate was green, the fixture was wrong, and only trying to make the gate fail on purpose revealed it.
@@ -109,7 +114,15 @@ before anyone had a chance to trust the thing it was checking.
 
 - [ ] Choose the runner. GitHub Actions assumes a remote; a local pre-commit hook plus a script
       suits a single-user offline-first project better, and the repo has no remote today.
-- [ ] Gate 10 (traceability) blocks once its subject exists. Blocking on a mapping that does not
-      yet exist is theatre.
+- [ ] **Gate 10 (traceability) would pass vacuously today, which is why it is still not wired.**
+      Its strongest available check is "every `active` component has a test", and there are
+      **zero** `active` components — five are blocked on an unset parameter, which is the
+      fail-closed design working. A green gate that asserts nothing trains the operator to
+      trust it. It lands with the first `active` component.
+- [ ] **`mypy --strict` covers `src` only.** `tools/` carried 53 further errors, mostly
+      `type-arg` and `no-any-return` in study runners. Two sites are worth a look rather than a
+      blanket annotation pass: `run_pr002.py:209` calls `min(key=...)` over a key that can
+      return `None`, and `run_pr005.py:267` builds a `Decimal` from an `object`. Neither
+      affected a reported result — checked, not assumed — because the runs completed.
 - [ ] Runtime budget. Gates 1–3 take about a minute (dominated by re-extracting 116 PDFs). If that
       becomes friction, cache extraction by file hash rather than weakening the check.

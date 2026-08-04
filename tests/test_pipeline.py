@@ -9,19 +9,19 @@ neither fetch nor depend on the current date (CI_POLICY 4).
 
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
 import pytest
+from tests.conftest import TEST_CA, TEST_US, fixture_fetcher, series_for
 
 from swingdesk.application.pipeline import run
 from swingdesk.contracts.market import Interval, Series
 from swingdesk.journal_evidence.journal import Journal
-from swingdesk.market_data import BarStore, YAHOO, check
+from swingdesk.market_data import YAHOO, BarStore, check
 from swingdesk.platform.clock import FixedClock
 from swingdesk.reference_data import calendar as cal
-from tests.conftest import TEST_CA, TEST_US, fixture_fetcher, series_for
 
-UTC = timezone.utc
+UTC = UTC
 AS_OF = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
 
 

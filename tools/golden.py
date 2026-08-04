@@ -16,7 +16,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from swingdesk.validation import golden  # noqa: E402
+from swingdesk.validation import golden
 
 
 def main(argv: list[str] | None = None) -> int:

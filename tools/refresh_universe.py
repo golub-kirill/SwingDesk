@@ -27,15 +27,15 @@ from __future__ import annotations
 import argparse
 import sys
 import time
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from swingdesk.contracts.market import Interval  # noqa: E402
-from swingdesk.market_data import BarStore, VendorUnavailable, vendor_yahoo  # noqa: E402
-from swingdesk.reference_data import universe  # noqa: E402
-from swingdesk.reference_data.directory import DirectoryStore  # noqa: E402
+from swingdesk.contracts.market import Interval
+from swingdesk.market_data import BarStore, VendorUnavailable, vendor_yahoo
+from swingdesk.reference_data import universe
+from swingdesk.reference_data.directory import DirectoryStore
 
 
 def main() -> int:
@@ -49,7 +49,7 @@ def main() -> int:
                         help="seconds between fetches, if the vendor starts throttling")
     args = parser.parse_args()
 
-    as_of = datetime.now(timezone.utc)
+    as_of = datetime.now(UTC)
 
     with (
         DirectoryStore(args.data / "directory.duckdb") as directory,
