@@ -101,6 +101,30 @@ admitting it produces a candidate that silently never qualifies.
    alphabetically returned **33 failures (8.25%)**, every one of them a `$` preferred, a `.U` unit or
    a `W`/`PW` warrant. The higher rate is not a worse vendor — it is the alphabetical head being
    dense in exactly those forms, which is what "systematic" predicts and a random 2.5% would not.
+
+   **Mostly RESOLVED 2026-08-03, and it was worse than recorded.** A 1,500-symbol pass surfaced
+   `BRK.A` and `BRK.B` among the failures, reported by the vendor as "possibly delisted". Berkshire
+   Hathaway is not delisted — the directory and the vendor simply disagree on separators, and this
+   record had filed the whole class under "preferred shares and units", which sounded peripheral.
+   It was not: the exclusion was silently removing **the most liquid names the rule could admit**.
+
+   `reference_data.universe.vendor_symbol` now maps both forms, each verified against the vendor
+   before being written:
+
+   | Directory | Vendor | Kind |
+   |---|---|---|
+   | `BRK.B` | `BRK-B` | class shares — dot becomes hyphen |
+   | `AMH$G` | `AMH-PG` | preferred series — `$` becomes `-P` |
+
+   That covers **546 of 13,043 eligible symbols** (160 dot-form, 386 dollar-form). Warrants, units
+   and rights (`.W`, `.U`, `.R`) map to nothing the vendor accepts — `ACHR.W` resolves as neither
+   `ACHR-W` nor `ACHR-WT` — and are left unchanged rather than given an invented form, so they stay
+   visible as an unmappable kind instead of becoming a plausible symbol that resolves elsewhere.
+   They are also outside what `CHARTER.md` scopes: equities and ETFs.
+
+   **The lesson is about the record, not the code.** Gap 2 was accurate about the mechanism and
+   wrong about the stakes, because 2.5% of a random sample of 120 made it look like a rounding
+   error. It took a pass large enough to contain a household name before anyone looked again.
 3. **The sample is 115 instruments.** Adequate for choosing between order-of-magnitude thresholds
    and for locating the plateau. Not adequate for tail percentiles, and the p90 figure above should
    not be quoted as though it were precise.

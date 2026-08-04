@@ -156,3 +156,49 @@ def test_membership_as_of_a_past_date_ignores_later_bars() -> None:
 def test_adtv_rejects_a_nonsense_window() -> None:
     with pytest.raises(ValueError, match="window must be >= 1"):
         universe.average_dollar_volume(_series(["10.00"], [1]), 0)
+
+
+# ------------------------------------------------------------------ vendor symbology
+
+
+def test_class_shares_map_dot_to_hyphen() -> None:
+    """BRK.A and BRK.B were absent from every universe, indexed as "possibly delisted".
+
+    They are the most liquid names the rule could admit, and the exclusion was a separator
+    disagreement between the directory and the vendor - not a market fact.
+    """
+    assert universe.vendor_symbol("BRK.B") == "BRK-B"
+    assert universe.vendor_symbol("BRK.A") == "BRK-A"
+    assert universe.vendor_symbol("AKO.A") == "AKO-A"
+
+
+def test_preferred_series_map_dollar_to_hyphen_p() -> None:
+    """`$` is the directory's preferred-series separator; the vendor writes `-P`."""
+    assert universe.vendor_symbol("AMH$G") == "AMH-PG"
+    assert universe.vendor_symbol("BAC$B") == "BAC-PB"
+    assert universe.vendor_symbol("BNY$K") == "BNY-PK"
+
+
+def test_warrants_units_and_rights_are_left_alone() -> None:
+    """They map to nothing the vendor accepts, and inventing a form would fabricate a lookup.
+
+    Left unchanged so the failure stays visible as an unmappable form rather than becoming a
+    plausible-looking symbol that quietly resolves to something else.
+    """
+    for symbol in ("ACHR.W", "AAC.U", "AIIA.R"):
+        assert universe.vendor_symbol(symbol) == symbol
+
+
+def test_an_ordinary_symbol_is_unchanged() -> None:
+    assert universe.vendor_symbol("AAPL") == "AAPL"
+
+
+def test_identity_stays_the_directory_symbol() -> None:
+    """`id` must not follow the vendor. Re-keying stored bars because a vendor changed a separator
+    is the one thing a bitemporal store cannot recover from."""
+    entry = universe.DirectoryEntry(symbol="BRK.B", name="Berkshire Hathaway Class B",
+                                    venue="N", is_etf=False, is_test_issue=False)
+    instrument = universe.to_instrument(entry)
+    assert instrument.id == "BRK.B"
+    assert instrument.ticker == "BRK-B"
+    assert instrument.vendor_symbol == "BRK-B"

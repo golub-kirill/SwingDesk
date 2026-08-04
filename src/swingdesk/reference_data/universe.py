@@ -103,15 +103,48 @@ def parse_other_listed(text: str) -> tuple[DirectoryEntry, ...]:
     return tuple(entries)
 
 
+#: Directory suffixes the vendor does not accept in any mapped form. Warrants, units and rights are
+#: not what CHARTER scopes ("equities and ETFs"), and `ACHR.W` resolves to neither `ACHR-W` nor
+#: `ACHR-WT`. Listed so their absence is a recorded exclusion rather than a fetch failure that looks
+#: random.
+UNMAPPABLE_SUFFIXES = (".W", ".U", ".R")
+
+
+def vendor_symbol(symbol: str) -> str:
+    """A NASDAQ Trader symbol in the form the price vendor expects.
+
+    The directory and Yahoo disagree on separators, and the disagreement was silently costing this
+    project its most liquid names: `BRK.A` and `BRK.B` were absent from every universe, indexed as
+    "possibly delisted". They are not.
+
+        BRK.B  -> BRK-B    class shares: the dot becomes a hyphen
+        AMH$G  -> AMH-PG   preferred series: `$` becomes `-P`
+
+    Both verified against the vendor before this function was written, on BRK.A/B, AKO.A, AGM.A,
+    LEN.B, BAC$B, AMH$G, F$B and BNY$K. Warrants, units and rights map to nothing and are left
+    alone - see UNMAPPABLE_SUFFIXES.
+    """
+    if "$" in symbol:
+        base, _, series = symbol.partition("$")
+        return f"{base}-P{series}"
+    if symbol.endswith(UNMAPPABLE_SUFFIXES):
+        return symbol
+    return symbol.replace(".", "-")
+
+
 def to_instrument(entry: DirectoryEntry) -> Instrument:
     """A directory row as an Instrument. Identity is the symbol *plus* the venue's market.
 
     Tickers get reused after a delisting and we cannot detect reuse from price continuity, because
     no free source serves delisted history. The id is a label we control, not a fact we inferred.
+
+    `id` stays the DIRECTORY symbol and `ticker` carries the vendor's form. Keeping them separate
+    means a vendor changing its separator convention does not rewrite the identity of every stored
+    bar - which is exactly the kind of silent re-keying a bitemporal store cannot recover from.
     """
     return Instrument(
         id=entry.symbol,
-        ticker=entry.symbol,
+        ticker=vendor_symbol(entry.symbol),
         exchange=US_VENUE_CALENDAR[entry.venue],
         currency="USD",
         listing_venue=VENUE_NAME.get(entry.venue, entry.venue),
