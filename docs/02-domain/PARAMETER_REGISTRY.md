@@ -22,7 +22,12 @@ quoted in a decision, and six months later nobody remembers it was a guess.
 
 This registry exists to make that impossible.
 
-**Current census: 74 parameters, all `unset`.**
+**Current census: 96 parameters — 84 `unset`, 9 `assumed`, 2 `owner`, 1 `validated`.**
+
+The registry shipped at 74, all `unset`, and that sentence stood in this document after twelve of
+them had been set. It was caught by an audit rather than by a gate, which is the honest version of
+how it was found. The counts above are the ones `python -c` prints from `registry/parameters.yml`
+today; treat any hard-coded census in prose as a claim with a date on it.
 
 ## 2. Record shape
 
@@ -64,9 +69,10 @@ From the module gate, verbatim:
 > не догадку."
 
 **— а не догадку. Not a guess.** A component whose parameter is unset returns a coded refusal
-(`FAIL_CLOSED_POLICY.md`), not a fallback value. This is why the registry can honestly ship with all
-74 unset: the system is fully functional and simply declines to make decisions it has no basis for,
-which is exactly what the course prescribes.
+(`FAIL_CLOSED_POLICY.md`), not a fallback value. This is why the registry could honestly ship with
+every parameter unset: the system is fully functional and simply declines to make decisions it has
+no basis for, which is exactly what the course prescribes. **84 of 96 are still unset**, and that
+is not a backlog — it is the design working.
 
 There is no `default:` field in the record shape. That absence is deliberate — a default is an
 assumed value that forgot to say so.
@@ -103,24 +109,39 @@ change it *quietly*. `ui_editable: false` marks parameters that are rules rather
 (`regime.classifier_rule`, `stats.sharpe_convention`, `exit.ma_cross_semantics`) — those require a
 spec change and a pre-registration, not a form field.
 
-## 7. What the 74 cover
+## 7. What the parameters cover
+
+Counted from `registry/parameters.yml` on 2026-08-03. Three rows were stale and five groups were
+missing entirely when this was audited — the table had been written at 74 parameters and never
+recounted.
 
 | Group | Count | Notes |
 |---|---|---|
 | `risk.*` | 16 | including `risk.per_trade_pct`, all portfolio caps, both loss limits, and both ladders |
 | `screen.*` / `watchlist.*` | 19 | all 16 M33 filters plus watchlist size, eviction and daily priority |
 | `exit.*` | 15 | every ATR/Chandelier/Donchian/percentage/holding parameter, plus slot resolution order |
-| `regime.*` / `rs.*` | 8 | includes `regime.classifier_rule` — see below |
+| `validation.*` | 15 | IS/OOS split, walk-forward window, embargo, forward-test minimums, go-live |
 | `stats.*` | 8 | Sharpe/Sortino/Recovery conventions, breakeven win rate, both scales |
-| `data.*` | 2 | freshness and staleness windows |
-| `validation.*` | 8 | IS/OOS split, walk-forward window, embargo, forward-test minimums, go-live |
+| `regime.*` / `rs.*` | 7 | includes `regime.classifier_rule`, the one `validated` entry — see below |
+| `data.*` | 6 | freshness, staleness, revision tolerance |
+| `universe.*` | 3 | the DR-003 liquidity rule: price floor, ADTV floor, history floor |
+| `account.*` · `costs.*` · `pivot.*` · `atr.*` | 7 | equity and currency; commission and slippage model; pivot left/right; ATR period |
+| **Total** | **96** | 84 `unset`, 9 `assumed`, 2 `owner`, 1 `validated` |
 
 **Three entries are not numbers but missing rules**, and they are the largest authored work in the
 project:
 
-- `regime.classifier_rule` — the course defines 11 regimes and a matrix of what each permits, and
-  names the inputs (direction, ATR, ADX, participation), but **no rule produces the label**. The
-  entire strategy-selection matrix depends on it.
+- `regime.classifier_rule` — the course names 11 regimes and the inputs (direction, ATR, ADX,
+  participation) but **no rule produces the label**. This entry is now `validated:PR-002` and is
+  the project's only one; it covers **one axis of three** (breadth), and its registry note carries
+  the bound that ~2% of trades missing at −2R would erase the finding.
+
+  An earlier draft of this bullet said the course also defines "a matrix of what each regime
+  permits" and that the strategy-selection matrix depended on this parameter. **`REGIME_SPEC.md`
+  §3 established that the matrix does not exist** — topic 451 carries the course's strongest
+  claim type and one sentence of content, and no mapping is enumerated anywhere. Corrected here
+  because two documents disagreeing about whether a source artefact exists is worse than either
+  of them being wrong alone.
 - `screen.trend_definition`, `screen.breakout_definition`, `screen.pullback_definition`,
   `screen.contraction_definition` — the four concepts the course teaches most extensively and never
   quantifies.
