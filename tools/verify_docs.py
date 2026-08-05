@@ -78,7 +78,7 @@ def _load_yaml(path: Path):
 #: The numbered ТЗ-track files at root are deliberately NOT here: 31 of their 32 unresolved
 #: references are forward entries in `46_Build_Plan`'s own plan table, and all of them disappear
 #: when that material is folded into docs/. Allowlisting them would be 32 throwaway entries.
-ROOT_DOCS = ("README.md", "AGENTS.md")
+ROOT_DOCS = ("README.md", "AGENTS.md", "HANDOFF.md")
 
 
 def main() -> int:

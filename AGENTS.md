@@ -2,6 +2,9 @@
 
 Read this before changing anything. It is short on purpose.
 
+**Starting a fresh session?** Read `HANDOFF.md` first — measured state, what is closed by evidence,
+and what to do next in ranked order.
+
 ---
 
 ## 0. What this project is
