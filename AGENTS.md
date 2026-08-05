@@ -13,6 +13,28 @@ document set and gates.
 The course is the requirements source. It supplies a complete governance and taxonomy specification
 and **zero numeric thresholds**. Every threshold here is authored and carries its provenance.
 
+### If you were told this is a documentation-only project, read this first
+
+**`docs/` is canonical** (owner decision, 2026-08-04). So is `src/`, `tests/`, `registry/` and
+`tools/` — 15 merge gates run from `python tools/check_gates.py` and they are what keep the
+documents honest.
+
+A second effort briefly built a parallel tree at the repo root: ten numbered documents
+(`00_…`–`46_…`) written to master-ТЗ v1.0 §47, plus `schemas/`, `catalogs/`, `examples/`, `adr/`.
+It was written without sight of `docs/` or `src/`, so its build plan scheduled roughly ten
+specification sections as future work that was already done here — architecture, NFR, testing,
+observability, security, evidence, research governance, backtest semantics, market regime, and the
+acceptance gates.
+
+That material is **preserved, not discarded** (commit `dee8f37`, verbatim). The master ТЗ is being
+applied the way its own §56 asks — as a gap analysis against what exists — in
+`docs/08-pm/SPEC_GAP_ANALYSIS.md`. Do not rebuild the numbered tree; §8 of that same specification
+forbids maintaining one logic in two places, and for a while this repo was doing exactly that.
+
+**Before writing any new specification, check whether `docs/` already holds it.** Four studies are
+reported and three of their hypotheses are refuted — re-deriving them is not neutral, it risks
+contradicting evidence that already exists.
+
 ## 1. Trust discipline — the rule that matters most
 
 **Never trust a document's claim about the code, or the code's claim about the course, without
