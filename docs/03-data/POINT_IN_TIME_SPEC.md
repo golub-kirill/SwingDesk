@@ -46,6 +46,44 @@ that ignores `knowledge_time` — that is how look-ahead gets in.
 update. The prior value stays readable forever, because a backtest run last month must still
 reproduce.
 
+### 2.1 Two times are a collapse of eight, and the collapse is only safe for bars
+
+The full model distinguishes **eight** instants (master ТЗ §12):
+
+| Time | Meaning |
+|---|---|
+| `event_time` | when the event occurred in the world |
+| `observation_time` | when the value became observable |
+| `publication_time` | when the source published it |
+| **`available_time`** | **when it became available to us — the one that decides admissibility** |
+| `ingestion_time` | when the system accepted it |
+| `processing_time` | when processing finished |
+| `decision_time` | when the system decided |
+| `execution_time` | when the decision was executed |
+
+The rule that matters: a decision at `decision_time = T` may use only values with
+`available_time ≤ T`. A report published at 16:05, transmitted at 16:05:07 and processed at
+16:05:12 **may not** inform a decision stamped 16:05:00.
+
+**This store implements two of the eight, and that has cost nothing so far — because the subject is
+daily bars.** For a bar, `event_time` is the session, and observation, publication and availability
+all collapse onto the session close: the bar is knowable the moment the session ends and not before.
+`knowledge_time` then carries the whole right-hand side of the table. The collapse is correct, not
+lazy.
+
+**It stops being correct the moment a non-bar source arrives.** For an earnings date, an SEC filing
+or a news item, `publication_time` and `available_time` genuinely differ — a filing published at
+16:05 may reach a free feed minutes or hours later, and a *scheduled* earnings date is known long
+before the earnings themselves occur. Collapsing those onto one field silently grants look-ahead.
+
+So this is a **latent** defect, not a live one: nothing in the tree reads a non-bar source today
+(`EVENT_SPEC.md` §4 — there is no event feed at all). The obligation is recorded here so that
+whoever wires the first non-bar source extends the model *before* using it, rather than discovering
+the gap from an unreproducible result.
+
+**`available_time` is the field to add first**, because it is the only one of the six missing that
+a correctness rule references directly.
+
 ## 3. Revision deltas, not snapshots
 
 The naive implementation of §2 — write everything you fetched — is unworkable, and specifically

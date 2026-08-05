@@ -109,6 +109,10 @@ building 48 documents.
 Ranked by what unblocks the most, not by ТЗ order.
 
 1. **§15 Rule Specification** — the ТЗ's central object. Everything from §16 to §20 references it.
+   A 276-line draft exists in the parallel track's `11_Rule_Specification.md`, preserved in commit
+   `dee8f37`. It is the seed for `docs/02-domain/RULE_SPEC.md`, not a substitute: it is in Russian,
+   and it specifies the object without checking which parts this tree's components already satisfy —
+   the same omission that produced the rest of this analysis.
 2. **§16 Event Specification.** Note the collision: `EVENT_SPEC.md` here means the *market-event
    catalogue*. The ТЗ's Event is the formal discrete-transition object. Two different things share
    one name, which is precisely the §11 terminology failure the specification warns about. The new
@@ -135,10 +139,16 @@ Ranked by what unblocks the most, not by ТЗ order.
 safe the moment any non-bar source arrives — earnings dates, filings, news — because for those,
 publication and availability genuinely differ.
 
-**§8 — two hand-maintained schema copies.** `schemas/common_metadata.schema.json` and
-`schemas/parameter.schema.json` overlap `src/swingdesk/contracts/*.py`. The specification's own §8
-forbids this. One must generate the other; the Pydantic models should win, since they are already
-enforced at runtime and by 249 tests.
+**§8 — two hand-maintained schema copies. Resolved by removal, pending a generator.**
+`schemas/common_metadata.schema.json` and `schemas/parameter.schema.json` overlapped
+`src/swingdesk/contracts/*.py`. The specification's own §8 forbids maintaining one logic in two
+places, so the hand-written copies were removed rather than left to drift; both are preserved
+verbatim in `dee8f37`.
+
+The requirement itself stands and is unmet: **JSON Schema should be generated from the Pydantic
+models** (`model_json_schema()`), with a `--check-only` gate like every other registry here. The
+contracts win because they are already enforced at runtime and by 249 tests, so a divergence between
+them and a hand-written schema would always be the schema's fault.
 
 ## 6. What the parallel track contributed
 
