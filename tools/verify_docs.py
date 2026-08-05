@@ -53,7 +53,11 @@ PARAMETER_NAMESPACES = (
     "screen.", "sma.", "universe.", "validation.",
 )
 
-DOC_REF = re.compile(r"`([A-Z][A-Z_0-9]+\.md)`")
+#: A document reference, bare (`FOO_SPEC.md`) or path-qualified (`docs/08-pm/FOO_SPEC.md`). The
+#: path form was invisible to an earlier version of this pattern, which anchored on the opening
+#: backtick and so skipped anything starting with a lowercase directory name - the citation style
+#: used across most of the tree.
+DOC_REF = re.compile(r"`(?:[A-Za-z0-9_./-]*/)?([A-Z][A-Za-z_0-9-]*\.md)`")
 PARAM_REF = re.compile(r"`([a-z_]+\.[a-z_0-9]+)`")
 TOPIC_REF = re.compile(r"\bM\d{1,3}-T\d{4}\b")
 STATUS_LINE = re.compile(r"\*\*Status:\*\*\s*([a-z-]+)")
@@ -65,8 +69,15 @@ def _load_yaml(path: Path):
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
+#: Root-level documents that are permanent entry points and must be checked like any other.
+#: The numbered ТЗ-track files at root are deliberately NOT here: 31 of their 32 unresolved
+#: references are forward entries in `46_Build_Plan`'s own plan table, and all of them disappear
+#: when that material is folded into docs/. Allowlisting them would be 32 throwaway entries.
+ROOT_DOCS = ("README.md", "AGENTS.md")
+
+
 def main() -> int:
-    markdown = sorted(DOCS.rglob("*.md"))
+    markdown = sorted(DOCS.rglob("*.md")) + [REPO / name for name in ROOT_DOCS]
     # Documents that exist anywhere in the tree, plus the repo-root ones docs legitimately cite.
     known_docs = {p.name for p in markdown} | {p.name for p in REPO.glob("*.md")} | PLANNED
 
