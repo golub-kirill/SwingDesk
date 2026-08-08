@@ -16,7 +16,7 @@ The finish line it serves is `CHARTER.md` §4, ratified 2026-08-01 and unchanged
 |---|---|
 | Gates closed | G0 charter · G4 architecture · **G5 walking skeleton** |
 | Gates open | G1 requirements · G2 transcription · G3 data · G6 catalogue · G7 surfaces |
-| Merge gates running | 16, from one command |
+| Merge gates running | 17, from one command |
 | Tests | 250 |
 | Components implemented | 7 · 6 with golden vectors (25) · **0 `active`** — five blocked by an unset parameter, which is the fail-closed design working |
 | Parameters | 96 — 69 `unset`, 24 `assumed`, 2 `owner`, **1 `validated`** |

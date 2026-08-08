@@ -24,7 +24,7 @@ justified deviation, **MAY** is an option.
 |---|---|---|
 | `REQ-DATA-001` | The event calendar MUST be a point-in-time dataset with the same bitemporal semantics as market data. **No event date may appear as a literal in executable code.** Every record carries `source_id`, `known_from`, `checksum`. | **partially met** — no date literals in `src/` (verified); no event calendar exists at all (`EVENT_SPEC.md` §4) |
 | `REQ-DATA-002` | A missing or stale critical input MUST NOT silently become zero or a neutral value. It MUST produce `UNKNOWN`; on a live path a critical `UNKNOWN` MUST produce `NO_TRADE`. | **met** — components refuse rather than default (`INVARIANTS.md` #9); ATR emits `None` before warm-up |
-| `REQ-VALIDATION-001` | Every gate, veto or eligibility filter MUST have a pair of inputs producing different verdicts. An object whose verdict is invariant across all inputs MUST NOT reach runtime. | **NOT met** — no mutation testing. See §2 |
+| `REQ-VALIDATION-001` | Every gate, veto or eligibility filter MUST have a pair of inputs producing different verdicts. An object whose verdict is invariant across all inputs MUST NOT reach runtime. | **partially met** — gate 3g enforces the narrow half for criteria (2026-08-08); no mutation testing. See §2 |
 | `REQ-VALIDATION-002` | For an identical bar and an identical versioned config, the backtest path and the live path MUST produce an identical `Decision`. Divergence MUST fail the build. | **NOT met, and structurally so** — see §3 |
 | `REQ-OUTPUT-001` | Every numeric value in a decision output MUST carry its source identifier — estimate version, cohort key, or model reference. A value without provenance MUST NOT be displayed. | **largely met** — `ParameterUse` travels with every computed value; the report marks `assumed` inputs adjacent to the number |
 | `REQ-EVIDENCE-001` | Assigning a validation stage MUST reference a validation run that actually executed in an automated pipeline. An implemented-but-uncalled validation function MUST NOT justify a stage. | **met in practice, unchecked** — `regime.classifier_rule` is `validated:PR-002` and PR-002 has a report with real figures; nothing enforces the link |
@@ -51,8 +51,18 @@ purpose: a gate that went from unable-to-fail to untested has improved without y
 
 The check is mechanical and belongs in CI: for every ratified criterion and every veto, assert that
 the parameters its trigger references are set, and that forcing the gate's inverse changes at least
-one verdict in the test corpus. The first half would pass today and should land with `DR-005`'s
-ratification rather than before it.
+one verdict in the test corpus.
+
+**The first half landed 2026-08-08 as gate 3g** (`tools/verify_criteria.py`), in the same change that
+ratified `DR-005`. It also checks two things the requirement implies rather than states: that a
+reference resolves at all, and that a criterion's `status` is on the declared ladder — the second
+because a typo there would exempt the row from the first check, which would make the gate quietly
+weaker rather than loudly wrong. All three were mutation-checked against a deliberately broken
+registry before the gate was trusted.
+
+**The second half — mutation testing — still does not exist**, and it needs a corpus of evaluated
+criteria before it can. Nothing evaluates these yet, so a mutation gate here would have nothing to
+flip.
 
 ## 3. `REQ-VALIDATION-002` — backtest and live are two code paths today
 
@@ -93,15 +103,15 @@ The ТЗ's vocabulary, mapped to what runs here:
 |---|---|
 | `inspection` | review; the weakest, used only where nothing else applies |
 | `schema_test` | Pydantic contracts in `src/swingdesk/contracts/`, gate 8 |
-| `static_validation` | gates 1, 3e, 6, 7, 11 — registries, references, layers, wall clock |
+| `static_validation` | gates 1, 3e, 3f, 3g, 6, 7, 11 — registries, references, criteria, layers, wall clock |
 | `unit_test` / `integration_test` | gate 8, 250 tests |
 | `replay_test` | gate 9 — a stored manifest must reproduce its `output_hash` |
 | `mutation_test` | **does not exist** — the gap `REQ-VALIDATION-001` names |
 
 ## 6. Open items
 
-- [ ] `REQ-VALIDATION-001` needs a gate. The narrow version — every ratified criterion's referenced
-      parameters are set — is cheap and would have caught `k.drawdown_pause`.
+- [x] ~~`REQ-VALIDATION-001` needs a gate~~ — **narrow version landed 2026-08-08, gate 3g.** The
+      mutation half remains, and remains blocked on a corpus of evaluated criteria.
 - [ ] `REQ-VALIDATION-002` needs the trigger to exist once rather than twice, **before** the live
       path gets one.
 - [ ] `REQ-EVIDENCE-001` is met by practice and not by a check. Gate 11 already verifies that an

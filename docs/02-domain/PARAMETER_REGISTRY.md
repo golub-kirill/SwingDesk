@@ -24,9 +24,9 @@ This registry exists to make that impossible.
 
 **Current census: 96 parameters — 69 `unset`, 24 `assumed`, 2 `owner`, 1 `validated`.**
 
-**15 of the 24 `assumed` are pending owner ratification** — the `validation.*` block, proposed
-in `DR-005-validation-thresholds.md` on 2026-08-08. Until that record is ratified they carry a
-proposal's authority, which is exactly what `assumed` means.
+**15 of the 24 `assumed` arrived together** — the `validation.*` block, set by
+`DR-005-validation-thresholds.md` and ratified by the owner on 2026-08-08. Ratified still means
+`assumed`: a decision record never produces a `validated` value, however it was approved.
 
 The registry shipped at 74, all `unset`, and that sentence stood in this document after twelve of
 them had been set. It was caught by an audit rather than by a gate, which is the honest version of

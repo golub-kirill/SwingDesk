@@ -348,14 +348,18 @@ If a score is ever introduced:
 
 | Check | Extends | Cost | Would have caught |
 |---|---|---|---|
-| every ratified criterion's referenced parameters are set | `tools/verify_parameters.py` (gate 1) | hours | `k.drawdown_pause` — and it would pass today, since `DR-005` set them. It should land with that record's ratification, not before: a gate that fails on merge is a blocked repository, not a gate |
+| ~~every ratified criterion's referenced parameters are set~~ | **landed 2026-08-08 as gate 3g**, `tools/verify_criteria.py` | done | `k.drawdown_pause` |
 | every rule with a verdict names a discriminating-pair test that exists | `tools/verify_components.py` (gate 11) | hours | rows 2 and 8 above |
 | `consumed_by` non-empty for any rule on the decision path | gate 11 | hours | a decorative rule |
 | one `effect.class` per rule; no rule both gates and scores | gate 11 | hours | a weighted gate |
 | forcing a rule's inverse changes ≥1 verdict in the corpus | new gate, needs a corpus | days | an inert gate with a live test |
 
-The first row is the one `REQUIREMENTS.md` §6 and `HANDOFF.md` §5 both already name, and it is
-cheap: the parameters are in one registry, the criteria are in another, and the join is four lines.
+The first row is done. It cost about eighty lines, and the join between the two registries was
+indeed four of them — the rest is naming *which* criterion and *which* parameter, because a gate that
+says only "failed" sends the reader back to do the work it just did. It also grew a check the
+requirement implies rather than states: a criterion's `status` must be on the declared ladder, since
+a typo there would exempt the row from the parameter check and make the gate quietly weaker rather
+than loudly wrong.
 
 `CI_POLICY.md`'s standing rule applies to all of them — a gate that is wrong gets fixed or removed,
 never skipped.

@@ -128,7 +128,7 @@ Restated 2026-08-08; the previous version of this table predated the studies.
 | Studies reported | 3 (`PR-001` REJECT, `PR-005` REJECT, `PR-002` ACCEPT), plus one post-hoc survivorship bound carrying no verdict |
 | Pre-registrations written | 3; three more named and unwritten (`PR-001b`, `PR-003`, `PR-004`) |
 | Decision records | 4 (`DR-001` Sharpe convention, `DR-002` process score, `DR-003` liquidity rule, `DR-004` cost model) |
-| Parameters at `assumed` | 24 of 96, 15 of them pending ratification (`DR-005`) · `validated` 1 (`regime.classifier_rule`, from PR-002) |
+| Parameters at `assumed` | 24 of 96, 15 of them from `DR-005` (ratified 2026-08-08) · `validated` 1 (`regime.classifier_rule`, from PR-002) |
 
 The four largest authored gaps — the regime classifier, the trend / breakout / pullback / contraction
 definitions, the Sharpe convention, and the per-strategy exit mapping — are each a parameter or rule

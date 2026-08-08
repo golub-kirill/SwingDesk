@@ -2,10 +2,16 @@
 
 ```
 date:       2026-08-08
-status:     proposed — owner ratification required
+status:     accepted — ratified by the owner 2026-08-08
 parameters: validation.* (all fifteen)
 components: none - these govern the validation programme, not a computation
 ```
+
+**Ratified as proposed, no amendment.** Provenance therefore stays `assumed:DR-005` on all fifteen
+rather than becoming `owner` — the values were drafted here and accepted, not supplied by the owner
+(`decisions/README.md` §3 rule 5: a decision record leaves a parameter at `assumed`, never
+`validated`, however it was approved). This record is now frozen; changing any value takes a new
+record that names this one.
 
 Fifteen parameters, all `unset`. The consequence is not theoretical: `registry/criteria.yml` ratifies
 `k.drawdown_pause`, whose trigger reads *"realised drawdown exceeds

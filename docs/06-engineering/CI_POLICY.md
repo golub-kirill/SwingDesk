@@ -21,6 +21,7 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 3d | `build_checklists.py --check-only` | the checklist registry drifting from the transcription it is parsed from | **exists** — 84 items |
 | 3e | `verify_docs.py` | a document citing a spec, parameter or component id that does not exist; a status outside the ladder | **exists** — caught 4 dangling references on its first run, one of them cited by three documents |
 | 3f | `verify_studies.py` | a report with no pre-registration; the prereg index disagreeing with the report it points at; a `validated:` parameter citing a study that did not ACCEPT; a `\| Studies \|` row whose numbers do not match the reports on disk | **exists** — caught `4 studies, 3 refuted` quoted in five documents against three reports with two REJECTs |
+| 3g | `verify_criteria.py` | a criterion in force referencing a parameter with no value; a reference to a parameter or criterion that does not exist; a status outside the ladder | **exists** — the narrow half of `REQ-VALIDATION-001` |
 | 4 | `ruff` | unused imports, naive datetimes, blind excepts, import order | **exists** — 10 rule families, chosen deliberately |
 | 5 | `mypy --strict` | type errors | **exists** — clean over `src`; `tools/` is out of scope, see §7 |
 | 6 | `lint-imports` | a package importing across a layer or forbidden boundary | **exists** — 4 contracts. Caught a reversed layer order on first run |
@@ -31,7 +32,7 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 10 | traceability | a course id with no requirement row, a requirement with no test, a spec id cited by no test | to build |
 | 11 | `verify_components.py` | `implements` not injective; an `active` component missing `implements`/`verification`/`spec`; a dangling parameter reference; an `active` component with an `unset` parameter; an `implements` pointing at a symbol that does not exist; a non-Definition topic with no row | **exists** — caught two components sharing one function on its first run |
 
-Everything except 10 runs today via `tools/check_gates.py` — **16 gates**. Gates 2, 3 and 3f are
+Everything except 10 runs today via `tools/check_gates.py` — **17 gates**. Gates 2, 3 and 3f are
 stdlib-only; the rest need the project venv (`pip install -e ".[dev]"`).
 
 Gates 7b and 9 are also asserted from `pytest`, so a bare `pytest` run is not silently weaker than
@@ -55,6 +56,7 @@ Not busywork — each maps to a specific way this project could quietly go wrong
 | 5 | a declared type and the real contract drifting apart. **Caught the `Fetcher` alias describing positional arguments while every call site passed `period` by keyword** |
 | 3e | a document asserting something about the system that stopped being true. Every defect of this kind found by hand so far read as correct — a stale claim does not look like a bug |
 | 3f | the summary of the evidence drifting from the evidence. Gate 3e cannot see it, because every reference in the wrong sentence resolves; only recomputing from the reports does |
+| 3g | a safeguard that cannot fire. A ratified criterion whose threshold is unset reads as protection and provides none, and nobody looks for a second one |
 | 10 | a course requirement being dropped without anyone noticing |
 | 11 | two implementations of one component — the thing §3.8 forbids and import analysis cannot see, because both imports are perfectly legal. **Caught `M12-T0201` and `M12-T0202` both claiming `pivots:compute`**, which a linter would never question |
 
@@ -110,6 +112,7 @@ Kept as a record, because the argument for a gate is empirical and this is the e
 | 5 | the `Fetcher` type declaring four positional arguments while every caller passed `period` by keyword |
 | 3e | **`INVARIANTS.md` cited by three documents and never written** — `TEST_STRATEGY.md` described it as "not prose to be read", `RISK_SPEC.md` and `SCREENER_SPEC.md` deferred to it. Writing it surfaced that invariant 4 is enforced by a function signature rather than a test, and that `DETERMINISM_SPEC.md` §7 claimed general shuffle-invariance coverage while testing one component |
 | 3e | `RECONCILIATION_SPEC.md`, cited by `FAIL_CLOSED_POLICY.md`'s safety row and never written |
+| 3g | **`k.drawdown_pause`, ratified since 2026-08-02 with `validation.max_allowable_drawdown` unset.** Found by hand on 2026-08-03 and closed by `DR-005` on 2026-08-08; the gate exists so the next one is not found by hand. Mutation-checked on all three of its checks, including the quiet one — a typo in a criterion's `status` would exempt it from the parameter check, so the ladder is verified before anything else |
 | 3f | **`4 studies, 3 refuted` in five documents.** Three pre-registrations are reported and two of them REJECT; the fourth "study" is the post-hoc survivorship bound, which carries no verdict at all. The evidence was right and every summary of it was wrong, in the direction of overstating how much had been tested |
 
 Two of these deserve a note. The constant-true-range fixture was the useful kind of failure — the

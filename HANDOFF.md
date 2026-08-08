@@ -19,7 +19,7 @@ the documentation is implementable.
 
 | | |
 |---|---|
-| Merge gates | **16**, one command, all green |
+| Merge gates | **17**, one command, all green |
 | Tests | **250**, fully offline |
 | Docs | 77 files across 8 tiers |
 | Components | 465 registered · 7 `specified` · **0 `active`** |
@@ -113,11 +113,11 @@ overdue, not because they are hard.
    trigger *"G5 reached"*, action *"set the Track A time box from measured throughput and issue this
    file as v1.1.0"*. G5 closed 2026-08-02; the file is still v1.0.0. This is the guard against scope
    drift that the project was built to have.
-2. **Ratify, amend or reject `DR-005-validation-thresholds.md`.** Drafted 2026-08-08: all fifteen
-   `validation.*` parameters now carry proposed values with provenance `assumed:DR-005`, so
-   `k.drawdown_pause` can evaluate. Four ratify what PR-002 and PR-005 already used; eight are
-   authored; `max_allowable_drawdown` at **−15R** is the weakest and names the permutation study that
-   should replace it. Nothing here is `validated` and nothing pretends to be.
+2. ~~**Set the 15 `validation.*` parameters.**~~ **Done — `DR-005-validation-thresholds.md`
+   ratified by the owner 2026-08-08.** All fifteen carry `assumed:DR-005`; four ratify what PR-002
+   and PR-005 already used, eight are authored, and `max_allowable_drawdown` at **−15R** is the
+   weakest — it names the permutation study that should replace it, and that study is the next
+   thing this decision needs. Nothing here is `validated` and nothing pretends to be.
 3. **`UDR-004`: which regime ontology is canonical** — the ТЗ's eight or the course's eleven? Only
    the course list has evidence behind it (`REGIME_SPEC.md`).
 
@@ -134,8 +134,9 @@ overdue, not because they are hard.
    *only* because live implements no strategy — see `REQUIREMENTS.md` §3. Cheap now, expensive later.
 7. **Wire the regime classifier into the daily run.** PR-002 is the only validated finding in the
    project and it is not used; checklist item E04 reports `unavailable`.
-8. **A mutation gate for `REQ-VALIDATION-001`.** The narrow version — every ratified criterion's
-   referenced parameters are set — is cheap and would have caught `k.drawdown_pause`.
+8. **A mutation gate for `REQ-VALIDATION-001`.** The narrow half landed 2026-08-08 as gate 3g. What
+   remains is the hard half — forcing a gate's inverse must change a verdict — and it is blocked on
+   a corpus of evaluated criteria, because nothing evaluates these yet.
 9. **Finish universe coverage** — ~5 more `tools/refresh_universe.py` passes to 100%, then re-check
    DR-003's liquidity plateau against the full population.
 10. **Fill the ranked gaps** in `SPEC_GAP_ANALYSIS.md` §4. The top four are written (§4a above);
@@ -149,8 +150,11 @@ Three cheap items fell out of §4a and are worth doing before they get expensive
 12. ~~**Count `POSITION_OPEN`**, and split the trigger's "no window" from its "did not trigger".~~
     **Done 2026-08-08** — two counters, one test, no trade moved. `EXECUTION_MODEL.md` §5 records
     what changed and the one caveat: PR-005's stored skip counts predate the counters.
-13. **The narrow `REQ-VALIDATION-001` gate** (item 8) is now specified in `RULE_SPEC.md` §9 with the
-    four checks ranked by cost. The first one is a four-line join between two registries.
+13. ~~**The narrow `REQ-VALIDATION-001` gate**~~ **Done 2026-08-08 — gate 3g,
+    `tools/verify_criteria.py`.** Three checks, all mutation-tested against a deliberately broken
+    registry: a criterion in force whose parameter is unset, a reference that does not resolve, and
+    a `status` off the ladder. The third matters most — a typo there would exempt the row from the
+    first check, making the gate quietly weaker instead of loudly wrong.
 
 ## 6. Closed by evidence — do not re-open
 
@@ -192,5 +196,5 @@ docs/08-pm          roadmap, risk register, gap analysis, definition of done
 docs/prereg         four pre-registrations and their reports
 registry/           parameters, components, course index, checklists, criteria
 src/swingdesk/      the reference implementation — the vertical slice ТЗ §50 requires
-tools/              the 16 gates, plus network tools that never run in CI
+tools/              the 17 gates, plus network tools that never run in CI
 ```
