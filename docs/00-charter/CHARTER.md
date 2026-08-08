@@ -79,4 +79,42 @@ Five properties, each traceable to a course rule, each enforced somewhere rather
 
 ## 7. Amendments
 
-_None yet. Each amendment: date, what changed, why, who decided._
+Each amendment: date, what changed, why, who decided. Appended, never edited in place.
+
+---
+
+### A-001 — the authority of an AI agent · 2026-08-08 · owner
+
+**What changed.** The scope of an AI decision agent, previously unrecorded here and wrongly reported
+elsewhere as settled. `COVERAGE_AUDIT.md` §4 established that three documents deferred the contour
+citing "`CHARTER.md` §3 non-goal", and that **this charter did not mention AI, LLMs or agents
+anywhere.** The deferral had no basis. This amendment supplies one.
+
+**The decision, in the order it binds:**
+
+1. **The final trading decision is human-only.** Absolute, and stronger than a non-goal because it
+   admits no configuration. It extends D1 from *placing orders* to *deciding*: the system may not
+   reach a trading decision without a human reaching it, whatever produced the analysis.
+2. **No automated trading of any kind.** The §3 non-goal stands and now explicitly covers an AI
+   path. An agent that trades — directly, on a schedule, or by any delegation — is excluded by the
+   charter, not by configuration.
+3. **An AI agent is IN scope**, in one role: **to subsume context and present a global picture.**
+   Synthesis, not authority. It may assemble what is known, relate it, and surface what a human
+   would otherwise have to hold in their head across 465 components and a 1,133-name universe.
+4. **It may never** decide, size a position, override a veto, alter a parameter, extend its own
+   permissions, or originate a number. `REQ-AI-001` and `REQ-AI-002` are therefore **applicable
+   requirements, not deferred ones** — they were written for exactly this boundary.
+5. **Outside the v1 finish line.** §4 is ratified and unchanged; this amendment does not reopen it.
+   Moving AI inside v1 would be a separate amendment and is not this one.
+
+**Why.** The role the owner describes is the one this system was already built for — every component
+carries provenance and validation status precisely so a reader can see the whole picture honestly.
+An agent that summarises that is continuous with the design. An agent that acts on it is the failure
+the entire project exists to prevent: the previous system's post-mortem supplies six of the nine
+normative requirements, and its defining defect was a gate that looked valid and decided nothing.
+
+**Standing condition.** The owner's instruction was that this is *very sensitive and must be
+well-built.* It is therefore specification-first like everything else here: **nothing is implemented
+before the authority model is written and gated.** An AI path that arrives ahead of its
+specification would be the one component in this tree whose correctness nobody could check — and it
+would be reading a system whose own documents were wrong in fourteen places three days ago.

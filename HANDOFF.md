@@ -163,12 +163,16 @@ overdue, not because they are hard.
    about. Rename the catalogue, or name the new object something else. **This blocks the top
    remaining spec gap.** Recommend the latter: the catalogue is cited from several documents.
 
-6. **Is an AI decision agent in scope?** `COVERAGE_AUDIT.md` §4 found that three documents
-   deferred the whole contour citing `CHARTER.md` §3 — **and the charter does not mention AI
-   anywhere.** Its nearest non-goal, "Automated trading of any kind", excludes an autonomous trader
-   and says nothing about an assistant proposing a decision a human approves. `IN_V1` / `LATER` /
-   `OUT_OF_SCOPE`. If the answer is out of scope, the fix is a **charter amendment adding the
-   non-goal**, not a citation to a clause nobody wrote.
+6. **The AI authority model needs writing.** Scope was resolved 2026-08-08 by **charter amendment
+   A-001**, the first this charter has carried: an agent is **in scope to subsume context and
+   present a global picture, and may never decide** — the final trading decision is human-only,
+   which extends D1 from *placing orders* to *deciding*. It sits **outside** the ratified v1 finish
+   line; §4 was not reopened.
+
+   A-001 carries a standing condition: **nothing is implemented before the authority model is
+   written and gated.** `COVERAGE_AUDIT.md` §5 licenses that document and only that one — model
+   governance follows it, never precedes it. `REQ-AI-001` and `REQ-AI-002` are now *applicable and
+   unmet* rather than deferred; they were written for exactly this boundary.
 
 Two more are recorded in `PR-007` §6 and want a ruling: whether Track B criteria evaluate on
 backtest trades or only journalled ones (`b.min_sample` says `measured_by: journal`, so on a literal

@@ -54,7 +54,7 @@ Taken from §8.1.
 | **Expectation, baseline, calibration** | `STATISTICS_SPEC.md`, `VALIDATION_PROGRAM.md` | `PARTIALLY_COVERED` | expectancy is defined and net-of-costs is enforced; the ТЗ's **definition/estimate split** and a first-class baseline object are not there. The studies each carry an ad-hoc baseline instead | extend `STATISTICS_SPEC.md` — this is the strongest candidate for a new document if the split proves too large to graft |
 | **Execution & order lifecycle** | `EXECUTION_MODEL.md`, `contracts/`, `EXIT_MODEL_SPEC.md` | `OUT_OF_SCOPE` | order states, fills, broker reconciliation and idempotency are genuinely absent — and **`CHARTER.md` §3 makes "Placing orders" a ratified non-goal** (D1). Fills are *modelled* for backtesting; none are ever requested | none. Reopening requires a charter amendment, not a specification |
 | **Drift monitoring** | — | `MISSING` | inspected `OBSERVABILITY_SPEC.md` and `GO_LIVE_GATES.md` directly: **the word "drift" does not appear in either.** Confirms `SPEC_GAP_ANALYSIS.md` §45 rather than contradicting it | needs a live record first; `UX_TASK_FLOWS.md` §3 measures the post-trade phase at 0 of 6 |
-| **AI decision agent & authority** | — | **`OWNER_PENDING`** | see §4. Not deferred by the charter, because the charter does not mention it | owner decision required before anything is written |
+| **AI decision agent & authority** | `CHARTER.md` A-001 | `MISSING` | scope **resolved 2026-08-08**: in scope as a context-synthesis layer, never deciding, outside v1 (§4). The authority model itself is unwritten | write the authority model before any implementation — A-001 makes that a standing condition |
 | **Runtime source of truth** | `COMPONENT_REGISTRY_SPEC.md`, `ARCHITECTURE.md`, `DEPENDENCY_LAW.md` | `PARTIALLY_COVERED` | activation states exist and are gated; the ТЗ §7.1 **runtime-permission layer** does not. `active` and `live-authorized` are the same field today, and 0 components are `active` so nothing currently depends on the distinction | extend `COMPONENT_REGISTRY_SPEC.md` before the first component goes `active` |
 
 ## 4. The finding that changes a decision
@@ -76,15 +76,29 @@ this system's every other component already takes.
 Gate 3e verifies that a cited *document* exists. Nothing verifies that a cited *provision* does, so
 this survived three documents and an earlier gap analysis.
 
-**Status is therefore `OWNER_PENDING`, not `DEFERRED`.** ТЗ §11.1 asks the scope to be determined
-from the Charter; determined from the Charter, the answer is that the Charter is silent. The options
-are `IN_V1` / `LATER` / `OUT_OF_SCOPE`, and only the owner can pick. Until then:
+### Resolved 2026-08-08 — charter amendment A-001
 
-- `REQ-AI-001` and `REQ-AI-002` stay unmet rather than deferred — their justification is void.
-- No AI document may be written. §49 permits one only where coverage is genuinely absent *and* in
-  scope, and scope is exactly what is unresolved.
-- If the answer is `OUT_OF_SCOPE`, the honest fix is a **charter amendment adding the non-goal**, not
-  a citation to a clause that was never written.
+The owner took the decision the moment the gap was surfaced, and it is now recorded where it should
+have been all along: `CHARTER.md` §7, the charter's **first amendment**.
+
+| | |
+|---|---|
+| **Final trading decision** | **human-only**, absolute. Extends D1 from *placing orders* to *deciding* |
+| **Automated trading** | excluded, and the §3 non-goal now explicitly covers an AI path |
+| **AI's permitted role** | subsume context and present a global picture — synthesis, never authority |
+| **AI may never** | decide, size, override a veto, alter a parameter, extend its permissions, or originate a number |
+| **Timing** | in scope for the project, **outside the ratified v1 finish line**. §4 unchanged |
+| **Standing condition** | specification-first — nothing implemented before the authority model is written and gated |
+
+Two consequences worth stating separately, because they invert what the tree said yesterday:
+
+1. **`REQ-AI-001` and `REQ-AI-002` are applicable requirements, not deferred ones.** They were
+   written for precisely this boundary — no bypassing an independent risk engine, no numbers
+   generated from text. They are unmet because no agent exists, which is a different and more
+   honest status than "deferred".
+2. **The coverage status is `MISSING`, not `OUT_OF_SCOPE`.** The contour is in scope and has no
+   home. That makes an authority-model document justified under §49 — the only one of the four
+   AI-adjacent candidates in §5 that this audit now licenses, and only in that order.
 
 ## 5. What this audit licenses
 
@@ -95,13 +109,14 @@ Per §49, a new document is justified only where a requirement has no correct ca
 | EXPECTATION_BASELINE_AND_CALIBRATION_SPEC | **defensible** — the definition/estimate split has no home. Try extending `STATISTICS_SPEC.md` first |
 | PORTFOLIO_AND_CAPITAL_ALLOCATION_SPEC | **not yet** — `RISK_SPEC.md` holds the objects; the gap is five unset values and ТЗ §31 ranking |
 | EXECUTION_AND_ORDER_STATE_SPEC | **no** — out of scope by ratified charter |
-| AI_DECISION_AGENT_AND_AUTHORITY_MODEL | **blocked** — scope unresolved, see §4 |
-| AI_MODEL_GOVERNANCE_AND_EVALUATION | **blocked** — follows the above |
+| AI_DECISION_AGENT_AND_AUTHORITY_MODEL | **licensed, and now the gating one** — A-001 puts the contour in scope with no home, and makes writing this a precondition of any implementation |
+| AI_MODEL_GOVERNANCE_AND_EVALUATION | **not yet** — model, prompt and schema versioning matter once an agent exists. Follows the authority model, does not precede it |
 | EXTERNAL_API_QUALIFICATION_SPEC | **not yet** — `VENDOR_COMPARISON.md` carries the substance; revisit when a second vendor is adopted |
 | STRATEGY_VALIDATION_DOSSIER | **defensible** — `VALIDATION_PROGRAM.md` names the artefacts but no template collects them per strategy |
 
-**Two of seven.** The other five would each have duplicated an existing home, been forbidden by the
-charter, or specified something whose scope is undecided — which is the outcome §8 exists to produce.
+**Three of seven**, after A-001 resolved the AI scope on 2026-08-08 — it was two while that was
+undecided. The other four would each have duplicated an existing home, been forbidden by the
+charter, or preceded a document they depend on, which is the outcome §8 exists to produce.
 
 ## 6. Open items
 

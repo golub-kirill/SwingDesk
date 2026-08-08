@@ -65,8 +65,8 @@ keeping wholesale.
 | 29 | Order Management SM | DEFERRED | D1 — the system never places orders |
 | 30 | Risk Engine | PARTIAL | `RISK_SPEC.md`, `trade_management/sizing.py`; **no portfolio layer** — correlation, sector and open-risk caps all `unset` |
 | 31 | Capital Allocation / Ranking | **ABSENT** | no deterministic ranking when candidates exceed capital |
-| 32 | AI Decision Agent | **OWNER_PENDING** | was recorded DEFERRED citing `CHARTER.md` §3 — **which does not mention AI at all** (`COVERAGE_AUDIT.md` §4). Scope is undecided, not excluded |
-| 33 | LLM / Model Governance | **OWNER_PENDING** | follows §32 |
+| 32 | AI Decision Agent | **ABSENT, in scope** | resolved by charter amendment **A-001** (2026-08-08): an agent may subsume context and present a global picture, and may never decide. Outside the v1 finish line. Nothing is written yet, and nothing may be implemented before the authority model is |
+| 33 | LLM / Model Governance | **ABSENT, in scope** | follows §32 under A-001. Model, prompt and output-schema versioning have no home yet |
 | 34 | Decision Record | FULL | `JOURNAL_SCHEMA.md`, `AUDIT_AND_IMMUTABILITY.md`, `journal_evidence/journal.py` |
 | 35 | System Modes | FULL | `SYSTEM_MODES.md` (2026-08-05) — all six named, with reads/writes/determinism per mode. PAPER and SHADOW are specified and **not built**, which the document states rather than implies |
 | 36 | System Architecture | FULL | `ARCHITECTURE.md`, `DEPENDENCY_LAW.md`, `CONCURRENCY_MODEL.md` |
