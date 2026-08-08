@@ -26,7 +26,7 @@ the documentation is implementable.
 |---|---|
 | Merge gates | **19**, one command, all green |
 | Tests | **270**, fully offline |
-| Docs | 79 files across **nine** tiers, Tier 0–8 · indexed by `registry/project_manifest.yml` |
+| Docs | 80 files across **nine** tiers, Tier 0–8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 83 `unset`, 9 `assumed`, 3 `owner`, **1 `validated`** |
 | Studies | 4 registered · **3 reported — 2 refuted**, 1 accepted and quantifiably fragile |

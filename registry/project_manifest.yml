@@ -709,3 +709,13 @@ documents:
     readme_status_text: "drafting"
     generated: false
     file_expected: true
+  - id: DOC-42B
+    display_number: "42b"
+    tier_ref: TIER-6
+    artifact_class: SUPPLEMENTAL_DELIVERABLE
+    path: docs/06-engineering/AI_AUTHORITY_MODEL.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true

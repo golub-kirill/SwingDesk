@@ -116,6 +116,7 @@ checkable gate in the course.
 | 41 | `CONCURRENCY_MODEL.md` | 3 tiers, per-vendor limits, breaker, thread-safety classes, worker-count invariance | drafting |
 | 42 | `DETERMINISM_SPEC.md` | The snapshot as determinism boundary, float-associativity trap, 10-field run manifest, stated scope limits | drafting |
 | 42a | `SYSTEM_MODES.md` | ТЗ §35. RESEARCH · BACKTEST · REPLAY · PAPER · SHADOW · LIVE — reads, writes, network, determinism per mode. **PAPER and SHADOW do not exist; LIVE has no trigger.** Mode is structural, not a runtime flag | drafting |
+| 42b | `AI_AUTHORITY_MODEL.md` | Required by charter **A-001**. The agent may subsume context and **may never decide**; the human is the only authority, not the last approver. The synthesis-versus-recommendation boundary, abstention, and where determinism stops | Authored from ТЗ §37–39, bounded by A-001 | drafting |
 | 43 | `adr/` | ADR-0001 market data · 0002 calendar · 0003 schema language · 0004 storage engine (all Proposed) | drafting |
 | 44a | `INVARIANTS.md` | The 9 invariants audited against the tests that enforce them: 7 by test, 1 by a function signature, 1 partial | drafting |
 | 44 | `TEST_STRATEGY.md` | 7 layers, 9 invariants as property tests, golden vectors as the immutability mechanism, 6 chaos scenarios | drafting |
