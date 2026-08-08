@@ -11,6 +11,10 @@ This document exists because checklist item **E11** — event proximity — repo
 `screen.earnings_buffer_days` is `unset`. The question it had to answer was whether the course
 supplies a value. **It does not, and it does not supply the shape of one either.**
 
+**Looking for the ТЗ's §16 Event object?** It is in `TRANSITION_SPEC.md`, under a different name.
+Here, *event* always means something that happened in the market — the course's meaning, and the
+reason this file has the name. Something that happened in the *system* is a **transition**.
+
 ---
 
 ## 1. The two operational criteria, in full
