@@ -1,24 +1,25 @@
 # HANDOFF — start here in a fresh session
 
-Written 2026-08-04 after reconciling two parallel documentation efforts; updated **2026-08-08** after
-a documentation-integrity pass against master ТЗ §53. Read this, then `AGENTS.md`, then
-`docs/README.md`. Everything below is measured from the tree, not remembered.
+Written 2026-08-04; rewritten **2026-08-08** at the end of a session that ran 08-05 → 08-08. Read
+this, then `AGENTS.md`, then `docs/README.md`. Everything below is measured from the tree, not
+remembered — and where a gate derives a number, the gate is named.
 
-**Nothing in this branch is committed.** The working tree holds the whole of 2026-08-05 → 08-08:
-four new gates, a project manifest, three specifications, a decision record and a pre-registration.
-19 gates pass on it. Review before committing.
+**Everything is committed and pushed.** Branch `claude/swingdesk-handoff-continue-1feb49`, 8 commits,
+remote `github.com/golub-kirill/SwingDesk` (public). `master` is the default branch and sits at the
+state before this session; nothing has been merged.
 
 ---
 
 ## 1. What this is
 
 Decision-support software for swing trading Canadian and US equities and ETFs, specified from the
-owner's 116-PDF swing-trading course. **It never places orders** — owner decision D1. The human
-makes every trading decision; the system prepares, checks and records them.
+owner's 116-PDF swing-trading course. **It never places orders** — owner decision D1. **The final
+trading decision is human-only** — charter amendment A-001. The system prepares, checks and records;
+the human decides.
 
-The project's founding premise: previous attempts failed *upstream of code* — goals, limits and the
-algorithm were never frozen first. So documentation is the deliverable and the code exists to prove
-the documentation is implementable.
+The founding premise: previous attempts failed *upstream of code* — goals, limits and the algorithm
+were never frozen first. So documentation is the deliverable, and the code exists to prove the
+documentation is implementable.
 
 ## 2. State, measured
 
@@ -26,13 +27,16 @@ the documentation is implementable.
 |---|---|
 | Merge gates | **19**, one command, all green |
 | Tests | **270**, fully offline |
-| Docs | 81 files across **nine** tiers, Tier 0–8 · indexed by `registry/project_manifest.yml` |
+| Docs | 81 files across nine tiers, Tier 0–8 · indexed by `registry/project_manifest.yml` (66 entries) |
 | Components | 465 catalogued · 458 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 83 `unset`, 9 `assumed`, 3 `owner`, **1 `validated`** |
+| Golden vectors | 25 across 6 components |
 | Studies | 4 registered · **3 reported — 2 refuted**, 1 accepted and quantifiably fragile |
 | Universe | 1,133 members · 3,687 of 13,043 measured · **28.3% coverage** |
-| Directory | 3 pulls (08-03, 08-05, 08-08) · 14 departures observed · **still unscheduled — see §5.5** |
-| Costs | slippage **measured** 2026-08-05 — 25bps per side (DR-005); commission still assumed |
+| Directory | 3 pulls (08-03, 08-05, 08-08) · 14 departures observed · **unscheduled** |
+| Costs | slippage **measured** — 25bps per side (`DR-005`); commission still assumed |
+| Criteria | `criteria.yml` **v1.1.0**, amended 2026-08-08; v1.0.0 on record |
+| ТЗ coverage | FULL 29 · PARTIAL 19 · ABSENT 5 · DEFERRED 3 (`SPEC_GAP_ANALYSIS.md`) |
 | Project gates | G0, G4, G5 closed · G1, G2, G3, G6, G7 open |
 
 ```bash
@@ -47,43 +51,38 @@ That must stay green. A gate that is wrong gets **fixed or removed, never skippe
 negative.**
 
 - The base strategy measured **+0.028R per trade** at 1× costs and **−0.123R under 3× cost stress**
-  (PR-005). **As of 2026-08-05 the second number is the operative one.** Slippage is no longer
-  assumed: it measures ~**25bps per side** across the A-tier universe against DR-004's assumed 5
-  (DR-005), and every aggregate tried puts it at 2.3× the assumption or more. The 1× column was
-  never the applicable one.
+  (PR-005). **The second number is the operative one.** Slippage is no longer assumed: it measures
+  ~**25bps per side** against DR-004's assumed 5 (`DR-005`), and every aggregate puts it at 2.3× the
+  assumption or more. The 1× column was never the applicable one.
 - The one positive finding (PR-002: breadth separates breakout outcomes) is erased by **1.6–2.3% of
   trades missing at −2R**, and Yahoo serves no delisted history, so that exposure can never be
   confirmed on the free tier.
-- `CHARTER.md` §4's v1 finish line is a **machinery** target and was reached 2026-08-02. Reaching
-  v1 and reporting no validated edge is a **success** against the ratified criteria, not a failure.
+- **There is no legal source of probability in this system today.** No expectation estimate exists,
+  no calibrated model exists (`EXPECTATION_SPEC.md` §6). Any probability displayed would be
+  manufactured.
+- **Two ratified criteria are inert.** `k.strategy_rejected` cannot fire — Track B evaluates on
+  journalled trades only, and its benchmark comparison is not commensurable. See §5.
+- `CHARTER.md` §4's v1 finish line is a **machinery** target and was reached 2026-08-02. Reaching v1
+  and reporting no validated edge is a **success** against the ratified criteria, not a failure.
 
-Do not write anything that implies more confidence than that. `UX_COPY.md` §3 carries the standing
+Do not write anything implying more confidence than that. `UX_COPY.md` §3 carries the standing
 warning verbatim.
 
-## 4. What just happened
+## 4. What happened, and what it settled
 
-### 2026-08-08 — the documentation was audited against itself, and it did not hold
+### The documentation was audited against itself and did not hold (2026-08-08)
 
-A master requirements document arrived (master ТЗ, §§1–54) asking for the documentation to be
-**verified and updated, not rewritten**. Its §53 gives the order; **steps 1–4 and part of 8 are
-done** — the coverage audit is `docs/08-pm/COVERAGE_AUDIT.md`.
+A master requirements document (ТЗ §§1–54) asked for the documentation to be **verified and updated,
+not rewritten**. Its §53 gives the order; **steps 1–4 are done**, and step 8 is in progress.
 
-Its §4 listed seven suspected inconsistencies in `docs/README.md`. **All seven were confirmed
-against the tree**, and the audit found more:
+Its §4 listed seven suspected inconsistencies in `docs/README.md`. **All seven were confirmed**, and
+the audit found more: a study census overstated in fourteen places, three written specifications
+marked `planned`, two specifications indexed nowhere, and `RISK_REGISTER.md` claiming the gates were
+tested for their ability to fail when nothing tested them.
 
-- **The study count was wrong in fourteen places.** Six documents each claimed one more study run
-  than exists, and one more refutation. The record holds three studies carrying a verdict — PR-001
-  `reject`, PR-002 `accept`, PR-005 `reject`.
-  The cause: `PR-002-survivorship-bound.json` has no `prereg` id and no `verdict`, so it is a
-  supporting analysis, and counting it inflated every summary quoting it — including
-  `RISK_REGISTER.md`'s statement of the project's central risk. **It claimed more negative evidence
-  than exists**, which is the direction nobody checks.
-- **Three specifications were marked `planned` and were written.** `REGIME_SPEC.md`, `EVENT_SPEC.md`
-  and `CHART_SPEC.md`, 118–161 lines each, all declaring `drafting` in their own headers.
-- **Two specifications were indexed nowhere.** `REQUIREMENTS.md` and `SPEC_GAP_ANALYSIS.md`.
-- **"57 documents in 8 tiers"** — both numbers wrong; the tiers run 0–8, which is nine.
-- **`RISK_REGISTER.md` B-1 claimed the gates were tested for their ability to fail.** They were not.
-  That row is the mitigation for this project's structural risk, and it was decoration.
+**The census error claimed *more* negative evidence than existed**, which is the direction nobody
+checks. Its cause: `PR-002-survivorship-bound.json` carries no `prereg` id and no `verdict`, so it is
+a supporting analysis, and counting it inflated every summary that quoted it.
 
 **Four gates now cover the class**, because a defect found by hand will be found by hand again:
 
@@ -92,150 +91,107 @@ against the tree**, and the audit found more:
 | 12 `verify_criteria.py` | a committed criterion that cannot fire |
 | 13 `verify_study_summary.py` | a stated study count the result files do not support |
 | 14 `verify_counts.py` | any hard-coded count drifted from the registries |
-| 15 `verify_project_manifest.py` | the index drifting from the tree or from a document's own header |
+| 15 `verify_project_manifest.py` | the index drifting from the tree or a document's own header |
 
-`registry/project_manifest.yml` is new and is now the machine source of truth for the document set —
-9 tiers, 63 documents. `docs/README.md` is checked against it in both directions. Gates 13 and 15
-are themselves tested for the ability to fail (`tests/test_gates.py`); **the other seventeen are
-not**, and `RISK_REGISTER.md` now says so.
+`registry/project_manifest.yml` is the machine source of truth for the document set, and
+`docs/README.md` is checked against it both ways. Gates 13 and 15 have **failure tests**
+(`tests/test_gates.py`); the other seventeen do not, and `RISK_REGISTER.md` says so.
 
-Also written: `RULE_SPEC.md` (ТЗ §15, the central object — the reconciliation found **eleven of its
-requirements already met here**, several more strictly than the ТЗ asks), `SYSTEM_MODES.md` (§35)
-and `EXECUTION_MODEL.md` (§28, the intrabar policy written while it is still free to write).
+### Costs measured, the clock started (2026-08-05)
 
-### 2026-08-08 (later) — four owner decisions, and criteria.yml v1.1.0
+`DR-005` supersedes DR-004's slippage: **25bps per side**, from Corwin-Schultz (2012) and
+Abdi-Ranaldo (2017) over the A-tier instruments already in `data/bars.duckdb`. **No network** —
+DR-004 had rejected spread-derived slippage as "correct and unavailable" because no free source
+serves historical *quotes*, and these estimators never needed quotes. Evidence in
+`docs/decisions/measurements/spread-sample.json`, reproducible byte-identically.
 
-**`criteria.yml` is amended for the first time**, from v1.0.0 to **v1.1.0**. Two changes, both owner:
+The survivorship clock: `directory.duckdb` had **one** pull, so `departures()` could not answer at
+all. Three pulls now exist and **14 departures** are recorded across two windows.
 
-- **`k.timebox_review` actioned by removing the Track A time box**, not by setting one. The criterion
-  asked for an evidence-based number; the evidence argued against having one. G5 closed 2026-08-02
-  inside a two-month box, so the clock was never binding, and `SUCCESS_AND_KILL_CRITERIA.md` §5 had
-  already reasoned that boxing Track A conflates *can this be built* with *is it stable* — Track A
-  carries its own 20-trading-day clock in `a.run_completes`. **What this removes is an explicit
-  calendar guard**; what remains against scope drift is the activation gate.
-- **Track B evaluates on journalled trades only.** A backtest is evidence about a hypothesis, never
-  about a strategy card. So **no backtest can advance or reject a card**, and `k.strategy_rejected`
-  cannot fire until real trades exist. `PR-007` carries a dated amendment recording this.
+### Owner decisions, all 2026-08-08
 
-Also decided: **§16's collision resolves by naming the new object differently** — the market-event
-catalogue keeps `EVENT_SPEC.md`; and **§31 is specified with its five caps left `unset`**.
+| Decision | Where it lives |
+|---|---|
+| An AI agent is **in scope**, to subsume context and present a global picture; it **may never decide** | `CHARTER.md` **A-001**, the charter's first amendment |
+| The synthesis/recommendation boundary, including *any ordering must name a deterministic key* | `AI_AUTHORITY_MODEL.md` §3, **ratified as written** |
+| AI provider: local Ollama model — keeps `$0/month` | `AI_AUTHORITY_MODEL.md` §10 |
+| `k.timebox_review` actioned by **removing** the Track A time box, not setting one | `criteria.yml` v1.1.0 |
+| Track B evaluates on **journalled trades only** | `criteria.yml` v1.1.0 |
+| §16's collision resolves by naming the **new** object differently | this file, §5 |
+| §31 is specified with its five portfolio caps left `unset` | this file, §5 |
+| `validation.max_allowable_drawdown` = **20% of equity** | `parameters.yml`, `status: owner` |
 
-`AI_AUTHORITY_MODEL.md` §3 was **ratified as written**, and the advisor's provider is a local Ollama
-model, which keeps `$0/month` intact. A four-case trial on a known defect scored 4/4 — see that
-document §10.
+**A-001 carries a standing condition**: nothing AI is implemented before the authority model is
+written and gated. The model is written; nothing is gated yet.
 
-### 2026-08-05 — costs measured, the clock started, the inert gate closed
+**Removing the Track A time box removed a guard.** What remains against scope drift is the activation
+gate — components sit at `registered` at no cost and reach `active` only deliberately, and none is
+`active`.
 
-**Slippage is measured.** `DR-005` supersedes DR-004's slippage component: **25bps per side**, from
-Corwin-Schultz (2012) and Abdi-Ranaldo (2017) run over the 1,131 A-tier instruments already in
-`data/bars.duckdb`. No network — DR-004 had rejected spread-derived slippage as "correct and
-unavailable" because no free source serves historical *quotes*, and these estimators never needed
-quotes. Evidence in `docs/decisions/measurements/spread-sample.json`, reproducible byte-identically.
+### Two efforts reconciled (2026-08-04)
 
-**The survivorship clock is running.** `directory.duckdb` had exactly **one** pull, so
-`departures()` could not return anything at all. There are now two, and the first observation is
-recorded: **7 symbols gone, 32 new** between 2026-08-03 and 2026-08-05. It is an observation, not a
-delisting — a ticker change looks identical from here. **It still is not scheduled**, and every day
-without a pull is permanently lost.
+A second track built ten numbered documents at root to ТЗ §47 — Russian, "documentation only" —
+having never opened `docs/`, `src/` or `registry/`. Its build plan scheduled ~10 specification
+sections as future work already done here.
 
-**`k.drawdown_pause` can fire.** The owner set `validation.max_allowable_drawdown` to **20% of
-equity**, and gate 12 (`verify_criteria.py`) now fails the build if any ratified or owner-set
-criterion references an `unset` parameter. `REQ-VALIDATION-001` moves to *partially* met — the
-mutation half, which is the half it leads with, is still open.
-
-### 2026-08-04 — two documentation efforts reconciled
-
-Two efforts had been writing into this repo without knowing about each other. A second track built
-ten numbered documents at root to master-ТЗ v1.0 §47 — Russian, "documentation only" — having never
-opened `docs/`, `src/` or `registry/`. Consequences: its build plan scheduled ~10 specification
-sections as future work that was already done, and its README rewrite dropped the "It does not place
-orders" line.
-
-Resolved: `docs/` is canonical (owner decision). All of that track's work is preserved verbatim in
-commit **`dee8f37`**, its genuinely new material is folded in, and the duplicates are gone.
-`docs/08-pm/SPEC_GAP_ANALYSIS.md` is the real §56 analysis: **FULL 29 · PARTIAL 19 · ABSENT 5 ·
-DEFERRED 3** (was 28/16/9/3 until §35, §28 and §15 were written on 2026-08-05).
-
-**Do not rebuild the numbered tree.** Master ТЗ §8 forbids maintaining one logic in two places, and
-for a day this repo was doing exactly that.
+`docs/` is canonical (owner). That track is preserved verbatim in commit **`dee8f37`**, its genuinely
+new material folded in, duplicates gone. **Do not rebuild the numbered tree** — ТЗ §8 forbids
+maintaining one logic in two places, and for a day this repo was doing exactly that.
 
 ## 5. What to do next, ranked
 
-Three of these are decisions only the owner can make. They are listed first because they are
-overdue, not because they are hard.
+### Owner decisions — three remain
 
-### Owner decisions
-
-1. **Set the remaining 14 `validation.*` parameters**, `go_live_criteria` first —
-   `GO_LIVE_GATES.md` cannot be evaluated without it. `max_allowable_drawdown` was set 2026-08-05
-   (20% of equity) and gate 12 now enforces that a ratified criterion's parameters exist.
-2. **The five portfolio caps** — `risk.max_open_risk`, `max_sector_risk`, `correlation_threshold`,
-   `max_concurrent_positions`, `max_position_value`, all `unset`. Owner decision 2026-08-08: **§31 is
-   specified with them unset**, which is the design working. They stay listed because setting them
-   is what would make `k.strategy_rejected` evaluable — see `EXPECTATION_SPEC.md` §5.
-3. **`UDR-004`: which regime ontology is canonical** — the ТЗ's eight or the course's eleven? Only
+1. **Set the remaining 14 `validation.*` parameters**, `go_live_criteria` first — `GO_LIVE_GATES.md`
+   cannot be evaluated without it.
+2. **`UDR-004`: which regime ontology is canonical** — the ТЗ's eight or the course's eleven? Only
    the course list has evidence behind it (`REGIME_SPEC.md`).
-4. **Does the base strategy survive measured costs?** DR-005 makes PR-005's 3× column the operative
-   one without a re-run, which settles the *direction*. Quantifying it needs `PR-007` — now
-   registered and blocked on a re-fetch, since its window is 2016-08-01 → 2026-07-31 and the store
-   holds two years. **Running it is the decision**; registering it cost nothing.
-5. **`UDR-004` and the two below are the whole owner list.** §16's naming, `k.timebox_review`,
-   Track B's scope and the AI boundary were all decided on 2026-08-08 and are now work, not
-   decisions — see §4.
+3. **Does `PR-007` run?** It is registered and blocked on a re-fetch — its window is
+   2016-08-01 → 2026-07-31 and the store holds two years. DR-005 already settles the *direction*;
+   the study buys a confidence interval at the measured cost vector. Registering cost nothing;
+   running is the decision.
 
-**One question from `PR-007` §6 is still open**: how an expectancy CI in R is made comparable to a
-buy-and-hold benchmark. `EXPECTATION_SPEC.md` §5 shows the conversion needs a horizon and an exposure
-assumption — portfolio quantities — so it is blocked on the portfolio layer rather than on a ruling.
-Its companion question was settled by `criteria.yml` v1.1.0.
+**Deliberately not owner decisions:** the five portfolio caps stay `unset` (2026-08-08) — that is the
+fail-closed design working, and §31 is specified around it. Setting them is what would make
+`k.strategy_rejected` evaluable, so they are listed here as leverage, not as debt.
 
 ### Work, highest leverage first
 
-5. **Schedule `tools/fetch_directory.py`. This is the only irreversible clock and it is still
-   unscheduled** — three pulls exist because someone remembered three times, which is not a
-   mechanism. It accumulates *forward only*: a symbol that left and was replaced inside a gap is
-   invisible forever, and the gaps so far were 2 and 3 days. ~5 seconds a day.
+4. **Schedule `tools/fetch_directory.py`.** The only irreversible clock, and still unscheduled —
+   three pulls exist because someone remembered three times, which is not a mechanism. It accumulates
+   *forward only*: a symbol that left and was replaced inside a gap is invisible forever.
 
-   The rate is now measurable and it is not small. **14 departures across two windows** — 7 between
-   08-03 and 08-05, 7 more between 08-05 and 08-08 — against a directory of ~13,100 names. Whatever
-   fraction of those are genuine delistings rather than ticker changes is the survivorship exposure
-   `PR-002` cannot bound and D10 makes unbuyable. Every unscheduled day discards a sample of it.
+   The rate is measurable and not small: **14 departures across two windows** (7 in 2 days, 7 in 3)
+   against ~13,100 names. Whatever fraction are genuine delistings is the survivorship exposure
+   `PR-002` cannot bound and D10 makes unbuyable. **~5 seconds a day.**
 
    ```bash
    python tools/fetch_directory.py --data C:/PycharmProjects/SwingDesk/data
    ```
 
-   Run it from the main repo, not a worktree: `data/` is gitignored and exists only there, and the
+   Run from the main repo, not a worktree: `data/` is gitignored and exists only there, and the
    tool's `--data` default would create a fresh empty store that accumulates nothing.
-6. **Act on `COVERAGE_AUDIT.md`.** It is written and it licensed **two of seven** proposed
-   documents — an expectation/baseline specification and a strategy validation dossier — refusing
-   the other five as already-housed, charter-excluded or scope-undecided. Read it before writing any
-   new document; that is what it is for (§49).
-
-   Its §4 is the finding that matters: **the AI contour was deferred by three documents citing a
-   charter clause that does not exist.** Corrected to `OWNER_PENDING` in `SPEC_GAP_ANALYSIS.md` and
-   `REQUIREMENTS.md`; the decision itself is owner item 6 above.
+5. **§31 Capital Allocation** — the top absent section, specified with caps `unset`. It is the layer
+   the commensurability rule needs, so it unblocks a ratified criterion as well as filling a gap.
+6. **§16's transition object**, under a name that is not `EVENT_SPEC.md` — that stays with the
+   market-event catalogue (M34, verbatim). The ТЗ's Event is a formal discrete-transition object.
 7. **Unify the trigger before the live path gets one.** `validation/backtest/engine.py` owns
    `breakout_high` and the entry decision; `application/pipeline.py` has none. No divergence yet
-   *only* because live implements no strategy — see `REQUIREMENTS.md` §3. Cheap now, expensive later.
-   **This is the top code task.**
-8. **Wire the regime classifier into the daily run.** PR-002 is the only validated finding in the
-   project and it is not used; checklist item E04 reports `unavailable`.
-9. **Finish universe coverage** — ~5 more `tools/refresh_universe.py` passes to 100%, then re-check
-   DR-003's liquidity plateau against the full population. It also re-runs DR-005's measurement over
-   the full A-tier population in minutes, which is the cheapest way to improve that number.
-10. **The mutation half of `REQ-VALIDATION-001`.** Gate 12 checks a criterion's inputs exist; nothing
-    checks that a gate's verdict ever changes. `if is_long: return True` with every parameter set
-    still passes. That is the failure the requirement leads with.
-11. **Failure tests for the other seventeen gates.** Two are covered. The pattern is established in
-    `tests/test_gates.py` — point a verifier at a fixture tree with `SWINGDESK_ROOT` and assert it
-    reports *that* defect. Nothing mutates the real tree.
-12. **The remaining ranked gaps** in `SPEC_GAP_ANALYSIS.md` §4, after the coverage audit says they
-    are genuinely absent: §16 (blocked on the naming decision above), then §23 Expectation Model and
-    §31 Capital Allocation.
-
-Done 2026-08-05 → 08-08: the directory clock started, costs measured (`DR-005`), `PR-007`
-registered, the three top-ranked spec gaps closed (`RULE_SPEC.md`, `SYSTEM_MODES.md`,
-`EXECUTION_MODEL.md`), and gates 12–15 built with the project manifest behind them.
+   *only* because live implements no strategy (`REQUIREMENTS.md` §3). **Top code task.**
+8. **Build the AI claim reviewer.** Plan and rationale are settled — retrieve deterministically, ask
+   the model only whether evidence supports a claim. It **can never be a merge gate**: `CI_POLICY.md`
+   §4 bars network in CI and `a.reproducible` is ratified. Its success metric is how many gates it
+   causes, not how many findings it repeats. A four-case trial scored 4/4 on a known defect.
+9. **Wire the regime classifier into the daily run.** PR-002 is the only validated finding and it is
+   not used; checklist item E04 reports `unavailable`.
+10. **Finish universe coverage** — ~5 more `tools/refresh_universe.py` passes to 100%, then re-check
+    DR-003's liquidity plateau and re-run DR-005's measurement over the full population.
+11. **The mutation half of `REQ-VALIDATION-001`.** Gate 12 checks a criterion's inputs exist; nothing
+    checks that a verdict ever changes. `if is_long: return True` with every parameter set still
+    passes — the failure the requirement leads with.
+12. **Failure tests for the other seventeen gates.** The pattern is in `tests/test_gates.py`: point a
+    verifier at a fixture tree with `SWINGDESK_ROOT` and assert it reports *that* defect. Nothing
+    mutates the real tree.
 
 ## 6. Closed by evidence — do not re-open
 
@@ -245,72 +201,74 @@ registered, the three top-ranked spec gaps closed (`RULE_SPEC.md`, `SYSTEM_MODES
 | Paid market data | Owner decision D10, taken with the survivorship cost known |
 | Tuning the current parameters | PR-005 measured the strategy flat before costs and negative under stress |
 | New entry filters | Same family, same evidence |
-| Order placement, automation, multi-user | `CHARTER.md` §3 non-goals — reopening needs a charter amendment |
+| Order placement, automation, multi-user | `CHARTER.md` §3 non-goals — reopening needs an amendment |
+| An AI that decides, sizes, or ranks by desirability | `CHARTER.md` A-001 and `AI_AUTHORITY_MODEL.md` §3, ratified |
+| A Track A time box | `criteria.yml` v1.1.0 — removed deliberately, reasoning recorded |
 
 ## 7. The habits that matter here
 
-- **Verify before asserting.** Three documentation defects were found on 2026-08-03, and all three
-  read as correct: a stale count, a claim that a transcribed appendix was untranscribed, and a
-  framing that made a Berkshire-sized exclusion sound like a rounding error. A careful read did not
-  catch them; gates did. When you find that class of defect, add a gate rather than fixing the
-  instance.
+- **Verify before asserting.** Every documentation defect this project has had read as correct to its
+  author. A careful read did not catch them; gates did. **When you find that class of defect, add a
+  gate rather than fixing the instance.**
+- **A count is not a fact until something derives it.** Counts were reconciled by hand three times
+  and every pass left stale numbers behind — gate 14 found eight more the moment it existed. Before
+  typing a number that describes this repository, check whether a gate derives it.
+- **History is not drift.** A roadmap line reading `DONE 2026-08-03, 14 gates` is correct *about that
+  date*. Gate 14 skips struck-through and dated-completion lines for this reason; do not "fix" them
+  and do not remove that exclusion.
 - **`unavailable` is not `fail`.** A gap in the *system* and a fact about the *trade* are different
   claims. Collapsing them is the most damaging error this product can make.
 - **An `UNSET` parameter is the design working**, not a backlog item. Components refuse rather than
   default.
-- **Never hand-edit** a `verbatim` block or a generated registry field. Gates 2, 3b–3e exist to
-  catch it, which is the point.
-- Docs **are** committed here. Every threshold is authored and carries its provenance.
-- **A count is not a fact until something derives it.** Counts were reconciled by hand three times
-  and every pass left stale numbers behind — gate 14 found eight more the moment it existed. If you
-  are about to type a number that describes this repository, check whether a gate derives it first.
-- **History is not drift.** A roadmap line reading `DONE 2026-08-03, 14 gates` is a correct statement
-  about that date. Gate 14 skips struck-through and dated-completion lines for this reason; do not
-  "fix" them, and do not remove that exclusion.
-- **Check the clock against the data.** This session ran 2026-08-05 → 08-08 and the directory pull
-  is stamped with the machine time, not the day the work felt like. Dates that came from a
-  conversation are not measurements; the ones in `directory.duckdb` and `spread-sample.json` are.
-- **Run the gates with the project venv, and mind worktrees.** Under a bare interpreter 11 of the
-  19 gates fail for missing PyYAML, ruff, mypy and import-linter — that is the environment, not a
-  regression. Worse in a worktree: the editable install resolves `swingdesk` to
-  `C:/PycharmProjects/SwingDesk/src`, so a worktree's tests silently exercise the **main** tree's
-  source unless `PYTHONPATH` points at the worktree's `src`. Both were hit on 2026-08-05.
+- **Records are append-only.** A pre-registration gets a dated amendment, never an edit; `criteria.yml`
+  gets a version; a decision record gets superseded. `PR-007` and A-001 are the worked examples.
+- **Never hand-edit** a `verbatim` block or a generated registry field. Gates 2, 3b–3e catch it.
+- **Check the clock against the data.** This session ran 08-05 → 08-08; the directory pull is stamped
+  with machine time, not the day the work felt like. Dates from a conversation are not measurements;
+  the ones in `directory.duckdb` and `spread-sample.json` are.
+- **Run the gates with the project venv, and mind worktrees.** Under a bare interpreter **14 of the
+  19 gates fail** for missing PyYAML, ruff, mypy and import-linter — environment, not regression.
+  Worse in a worktree: the editable install resolves `swingdesk` to `C:/PycharmProjects/SwingDesk/src`,
+  so a worktree's tests silently exercise the **main** tree unless `PYTHONPATH` points at the
+  worktree's `src`. Both were hit on 2026-08-05.
 
 ## 8. Where things live
 
 ```
-docs/00-charter     what this is, what done means, glossary, kill criteria
+docs/00-charter      charter (+ amendment A-001), kill criteria, constraints, glossary
 docs/01-requirements BRD, user stories, NFR, surfaces, REQ registry
-docs/02-domain      the course, transcribed and specified
-docs/03-data        point-in-time, calendar, vendors, quality
-docs/04-journal     audit, checklists, journal schema, evidence records
-docs/05-validation  backtest protocol, walk-forward, prereg template, go-live gates
-docs/06-engineering architecture, dependency law, determinism, CI policy, invariants
-docs/07-ux          task flows, controlled vocabulary
-docs/08-pm          roadmap, risk register, gap analysis, definition of done
-docs/prereg         four pre-registrations, three of them reported
-docs/decisions      five decision records and the measurements behind them
-registry/           parameters, components, course index, checklists, criteria,
-                    project_manifest — the document set's machine source of truth
-src/swingdesk/      the reference implementation — the vertical slice ТЗ §50 requires
-tools/              the 19 gates, plus network tools that never run in CI
-tests/test_gates.py the gates' own failure tests — gates 13 and 15 only, so far
+docs/02-domain       the course transcribed and specified; RULE, EXECUTION_MODEL, EXPECTATION
+docs/03-data         point-in-time, calendar, vendors, quality
+docs/04-journal      audit, checklists, journal schema, evidence records
+docs/05-validation   backtest protocol, walk-forward, prereg template, go-live gates
+docs/06-engineering  architecture, determinism, CI policy, SYSTEM_MODES, AI_AUTHORITY_MODEL
+docs/07-ux           task flows, controlled vocabulary
+docs/08-pm           roadmap, risk register, gap analysis, COVERAGE_AUDIT, definition of done
+docs/prereg          four pre-registrations, three of them reported
+docs/decisions       five decision records and the measurements behind them
+registry/            parameters, components, course index, checklists, criteria (v1.1.0),
+                     project_manifest — the document set's machine source of truth
+src/swingdesk/       the reference implementation — the vertical slice ТЗ §50 requires
+tools/               the 19 gates, plus network tools that never run in CI
+tests/test_gates.py  the gates' own failure tests — gates 13 and 15 only, so far
 ```
 
 ## 9. If you are here to apply the master ТЗ
 
-Read `docs/08-pm/SPEC_GAP_ANALYSIS.md` before writing anything. Its §56 method is the one the ТЗ
-itself asks for: apply the specification **as a gap analysis against what exists**, not as a second
-tree. A previous effort skipped that step and scheduled ten sections as future work that were
-already done here (§4, 2026-08-04).
+Read `docs/08-pm/COVERAGE_AUDIT.md` **before writing any new document** — that is what it is for
+(ТЗ §49). It licensed three of the seven documents the ТЗ proposes and refused four as already-housed,
+charter-excluded, or dependent on something unwritten. Then `SPEC_GAP_ANALYSIS.md` for the §56
+section-by-section view.
 
-Three findings from applying it that will save the next session the same discovery:
+Four findings that will save you the same discovery:
 
-1. **Much of the ТЗ is already law here under other names.** `RULE_SPEC.md` §9 is the worked
-   example. Check before specifying.
-2. **Its stated numbers go stale.** The version received on 2026-08-08 quoted the parameter census
-   and the golden-vector count as they were days earlier. Verify its claims too — §1 requires it.
-3. **Do not adopt its status vocabulary.** This tree's ladder is `planned | drafting | owner-pending
-   | frozen | generated`, enforced by gate 3e on every document header. The ТЗ §6.1 proposes a
-   richer set; adopting it would mean two vocabularies in one repository, which §8 of that same
-   document forbids. Recorded in the manifest as an extension point, not a gap.
+1. **Much of the ТЗ is already law here under other names.** `RULE_SPEC.md` §9 is the worked example
+   — eleven of §15's requirements were already met, several more strictly than asked. Check first.
+2. **Nothing may be called missing because its name is not in an index** (§8.2). Inspection reversed
+   three verdicts in the coverage audit, in both directions.
+3. **Its stated numbers go stale.** The version received on 2026-08-08 quoted the parameter census and
+   golden-vector count as they were days earlier. Verify its claims too — its own §1 requires it.
+4. **Do not adopt its status vocabulary.** This tree's ladder is `planned | drafting | owner-pending |
+   frozen | generated`, enforced by gate 3e on every document header. ТЗ §6.1 proposes a richer set;
+   adopting it would mean two vocabularies in one repository, which §8 of that same document forbids.
+   Recorded in the manifest as an extension point, not a gap.
