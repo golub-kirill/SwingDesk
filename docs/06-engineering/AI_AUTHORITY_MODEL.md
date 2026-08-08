@@ -58,7 +58,7 @@ Adopted from ТЗ §37.5 and §35.2, and binding under A-001:
 `REQ-AI-001` and `REQ-AI-002` state the first four of these normatively and are **applicable and
 unmet** — unmet because no agent exists, not because they are deferred.
 
-## 3. The boundary that actually matters: synthesis versus recommendation
+## 3. The boundary that actually matters: synthesis versus recommendation — RATIFIED 2026-08-08
 
 A-001 says the agent may present a global picture and may never decide. The whole difficulty is that
 those two shade into each other, and this section is the reason this document had to be written
@@ -81,6 +81,8 @@ has decided**, whatever the surrounding prose says. So:
 
 Rule 3 is what makes rules 1 and 2 checkable rather than aspirational: every ordering carries the key
 it used, and a reviewer can recompute it.
+
+**Ratified by the owner, 2026-08-08, as written.** Everything else in this document inherits it.
 
 ### What it may do
 
@@ -203,11 +205,38 @@ streak, and silent strategy mutation. All four are the same failure — a change
 pre-registration predicted and no version records. `AUDIT_AND_IMMUTABILITY.md` and the prereg
 discipline already forbid this for humans; the agent gets no exemption.
 
-## 10. Open items
+## 10. How it runs, and what a trial measured
 
-- [ ] **Owner ratification of §3.** The synthesis/recommendation boundary is the load-bearing part
-      of this document and it is authored, not derived. Rule 3 — *an ordering must name a
-      deterministic key* — is the specific proposal that wants a yes or no.
+**Local model, so `$0/month` survives.** Ollama on `127.0.0.1:11434`, `qwen3.5:9b`. No repository
+content leaves the machine — which matters here beyond cost, because this tree carries 393 verbatim
+quotes from a commercial course.
+
+**An AI check can never be a merge gate.** `CI_POLICY.md` §4 forbids CI touching the network and
+`a.reproducible` is a ratified criterion requiring byte-identical replay. The advisor therefore runs
+in RESEARCH mode (`SYSTEM_MODES.md`), above the determinism boundary, advisory only.
+
+**The design constraint that follows from a small model: give it a narrow question with the evidence
+already retrieved.** Deterministic code finds the candidate claim and gathers what bears on it; the
+model answers only *does this evidence support this claim*. That is the gate-first principle applied
+one level deeper — maximise the reproducible part, minimise what rests on judgement.
+
+**Measured 2026-08-08**, on the citation defect that `COVERAGE_AUDIT.md` §4 found by hand:
+
+| Claim put to the model | Truth | Answer |
+|---|---|---|
+| §3 makes an AI agent a non-goal | false | **false** |
+| §3 makes placing orders a non-goal | true | **true** |
+| §3 makes multi-user a non-goal | true | **true** |
+| §3 makes storing intraday bars a non-goal | false | **false** |
+
+**4 of 4, about a second each.** The fourth is the one that matters: *an intraday strategy engine* is
+a non-goal and *storing intraday bars* is not, and the model separated them — so it is discriminating
+rather than matching keywords. The pair is deliberate, because a checker that answers "unsupported"
+to everything passes a one-sided test, and that is the inert-gate defect `REQ-VALIDATION-001` names.
+
+## 11. Open items
+
+- [x] **Owner ratification of §3** — ratified as written, 2026-08-08.
 - [ ] **No expectation estimate exists**, so §5's probability row has no source. The agent cannot
       state an outcome probability at all until `COVERAGE_AUDIT.md`'s expectation/baseline work
       lands, and it should refuse rather than approximate.
