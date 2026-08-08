@@ -283,7 +283,7 @@ Eight decision points produce verdicts. Measured against §2, not against intent
 | 5 | Liquidity / universe rule | `swingdesk.application.universe`, `DR-003` | `HARD_GATE` | yes | `test_universe_selection.py::test_a_symbol_the_store_has_never_seen_is_not_measured_and_not_admitted` | plateau re-check pending full coverage |
 | 6 | Session completeness | `swingdesk.market_data.completeness` | `HARD_GATE` | yes | `test_pipeline.py::test_missing_session_raises_data` vs `::test_half_day_does_not_raise_data` | — |
 | 7 | Pre-trade checklist items | `swingdesk.application.checklist` | mixed | yes | partial — `test_checklist.py` | 5 of 18 answerable, by design and stated |
-| 8 | Success and kill criteria | `registry/criteria.yml` | `HARD_GATE` | no | **none** | `k.drawdown_pause` is inert — §9 |
+| 8 | Success and kill criteria | `registry/criteria.yml` | `HARD_GATE` | no | **none** | `k.drawdown_pause` was inert until 2026-08-08 — §9 |
 
 Row 6 is the model the others should be read against. A missing session raises `DATA`; a half-day
 and a US/Canada calendar divergence do not. Three tests, one pair of verdicts, and the rule's meaning
@@ -311,10 +311,16 @@ The general form is what to take from it: a rule that cannot answer and a rule t
 must be distinguishable **in the record**, not only in the code path. Nothing downstream
 distinguished them here, which is exactly why nobody noticed.
 
-**Row 8 is the inert gate this project already owns.** `k.drawdown_pause` is ratified and its trigger
-references `validation.max_allowable_drawdown`, which is `unset` along with all fifteen
-`validation.*` parameters. Its verdict is therefore invariant across every input the system can
-produce — a `HARD_GATE` that cannot fail. It was found by hand on 2026-08-03.
+**Row 8 was the inert gate this project already owned.** `k.drawdown_pause` is ratified and its
+trigger references `validation.max_allowable_drawdown`, which was `unset` along with all fifteen
+`validation.*` parameters — so its verdict was invariant across every input the system could produce,
+a `HARD_GATE` that could not fail. Found by hand on 2026-08-03.
+
+`DR-005-validation-thresholds.md` proposes values for all fifteen (2026-08-08), which makes the
+criterion able to evaluate. **It still has no discriminating pair**, because nothing exercises it —
+there is no realised drawdown to test against, and the threshold itself is the weakest value in that
+record. The gate went from unable to fail to untested, which is progress and is not the same as
+working.
 
 ## 8. Weights, scoring and double counting
 
@@ -342,7 +348,7 @@ If a score is ever introduced:
 
 | Check | Extends | Cost | Would have caught |
 |---|---|---|---|
-| every ratified criterion's referenced parameters are set | `tools/verify_parameters.py` (gate 1) | hours | `k.drawdown_pause` |
+| every ratified criterion's referenced parameters are set | `tools/verify_parameters.py` (gate 1) | hours | `k.drawdown_pause` — and it would pass today, since `DR-005` set them. It should land with that record's ratification, not before: a gate that fails on merge is a blocked repository, not a gate |
 | every rule with a verdict names a discriminating-pair test that exists | `tools/verify_components.py` (gate 11) | hours | rows 2 and 8 above |
 | `consumed_by` non-empty for any rule on the decision path | gate 11 | hours | a decorative rule |
 | one `effect.class` per rule; no rule both gates and scores | gate 11 | hours | a weighted gate |

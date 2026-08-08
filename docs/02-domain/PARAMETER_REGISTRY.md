@@ -22,7 +22,11 @@ quoted in a decision, and six months later nobody remembers it was a guess.
 
 This registry exists to make that impossible.
 
-**Current census: 96 parameters — 84 `unset`, 9 `assumed`, 2 `owner`, 1 `validated`.**
+**Current census: 96 parameters — 69 `unset`, 24 `assumed`, 2 `owner`, 1 `validated`.**
+
+**15 of the 24 `assumed` are pending owner ratification** — the `validation.*` block, proposed
+in `DR-005-validation-thresholds.md` on 2026-08-08. Until that record is ratified they carry a
+proposal's authority, which is exactly what `assumed` means.
 
 The registry shipped at 74, all `unset`, and that sentence stood in this document after twelve of
 them had been set. It was caught by an audit rather than by a gate, which is the honest version of
@@ -71,7 +75,7 @@ From the module gate, verbatim:
 **— а не догадку. Not a guess.** A component whose parameter is unset returns a coded refusal
 (`FAIL_CLOSED_POLICY.md`), not a fallback value. This is why the registry could honestly ship with
 every parameter unset: the system is fully functional and simply declines to make decisions it has
-no basis for, which is exactly what the course prescribes. **84 of 96 are still unset**, and that
+no basis for, which is exactly what the course prescribes. **69 of 96 are still unset**, and that
 is not a backlog — it is the design working.
 
 There is no `default:` field in the record shape. That absence is deliberate — a default is an
@@ -126,7 +130,7 @@ recounted.
 | `data.*` | 6 | freshness, staleness, revision tolerance |
 | `universe.*` | 3 | the DR-003 liquidity rule: price floor, ADTV floor, history floor |
 | `account.*` · `costs.*` · `pivot.*` · `atr.*` | 7 | equity and currency; commission and slippage model; pivot left/right; ATR period |
-| **Total** | **96** | 84 `unset`, 9 `assumed`, 2 `owner`, 1 `validated` |
+| **Total** | **96** | 69 `unset`, 24 `assumed`, 2 `owner`, 1 `validated` |
 
 **Three entries are not numbers but missing rules**, and they are the largest authored work in the
 project:

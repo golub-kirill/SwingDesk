@@ -32,21 +32,27 @@ justified deviation, **MAY** is an option.
 | `REQ-AI-001` | AI output MUST NOT bypass an independent risk engine, and a risk veto MUST NOT be overridable by the agent. | **deferred** — `CHARTER.md` §3 makes an AI agent a v1 non-goal |
 | `REQ-AI-002` | An AI agent MUST NOT generate numeric quantities (win rate, probability, expectancy, score, stop, target, position size, weights, slippage, edge) from text. These MUST come from deterministic engines or a validated expectation estimate. | **deferred** — as above |
 
-## 2. `REQ-VALIDATION-001` — the inert-gate requirement, and one this tree already has
+## 2. `REQ-VALIDATION-001` — the inert-gate requirement, and the one this tree had
 
 The rationale is worth quoting because it is not hypothetical: in TradAlert an R:R gate was
 `if is_long: return True` and **passed seven audits**, because it is a valid function with valid
 references. Prose review cannot catch that. Only an executable test on a pair of inputs can.
 
-**This tree already contains one instance of the failure.** `registry/criteria.yml` ratifies
-`k.drawdown_pause`, whose trigger references `validation.max_allowable_drawdown` — which is `unset`,
+**This tree contained one instance of the failure.** `registry/criteria.yml` ratifies
+`k.drawdown_pause`, whose trigger references `validation.max_allowable_drawdown` — which was `unset`,
 along with all fifteen `validation.*` parameters. A ratified kill criterion that cannot evaluate is
 a gate whose verdict is invariant across all inputs. It was found by hand on 2026-08-03, which is
 exactly the detection method this requirement says does not scale.
 
+**Closed 2026-08-08 by `DR-005-validation-thresholds.md`**, which proposes values for all fifteen.
+The criterion can now evaluate. It is still *untested* — nothing exercises it, because there is no
+realised drawdown to exercise it against — and `RULE_SPEC.md` §7 keeps those two states apart on
+purpose: a gate that went from unable-to-fail to untested has improved without yet working.
+
 The check is mechanical and belongs in CI: for every ratified criterion and every veto, assert that
 the parameters its trigger references are set, and that forcing the gate's inverse changes at least
-one verdict in the test corpus.
+one verdict in the test corpus. The first half would pass today and should land with `DR-005`'s
+ratification rather than before it.
 
 ## 3. `REQ-VALIDATION-002` — backtest and live are two code paths today
 

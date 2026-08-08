@@ -23,7 +23,7 @@ the documentation is implementable.
 | Tests | **250**, fully offline |
 | Docs | 77 files across 8 tiers |
 | Components | 465 registered · 7 `specified` · **0 `active`** |
-| Parameters | 96 — 84 `unset`, 9 `assumed`, 2 `owner`, **1 `validated`** |
+| Parameters | 96 — 69 `unset`, 24 `assumed`, 2 `owner`, **1 `validated`** |
 | Studies | 3 reported — **2 refuted**, 1 accepted and quantifiably fragile; plus one post-hoc bound |
 | Universe | 1,133 members · 3,687 of 13,043 measured · **28.3% coverage** |
 | Project gates | G0, G4, G5 closed · G1, G2, G3, G6, G7 open |
@@ -113,8 +113,11 @@ overdue, not because they are hard.
    trigger *"G5 reached"*, action *"set the Track A time box from measured throughput and issue this
    file as v1.1.0"*. G5 closed 2026-08-02; the file is still v1.0.0. This is the guard against scope
    drift that the project was built to have.
-2. **Set the 15 `validation.*` parameters.** All unset, including `go_live_criteria` and
-   `max_allowable_drawdown` — which makes the ratified `k.drawdown_pause` inert.
+2. **Ratify, amend or reject `DR-005-validation-thresholds.md`.** Drafted 2026-08-08: all fifteen
+   `validation.*` parameters now carry proposed values with provenance `assumed:DR-005`, so
+   `k.drawdown_pause` can evaluate. Four ratify what PR-002 and PR-005 already used; eight are
+   authored; `max_allowable_drawdown` at **−15R** is the weakest and names the permutation study that
+   should replace it. Nothing here is `validated` and nothing pretends to be.
 3. **`UDR-004`: which regime ontology is canonical** — the ТЗ's eight or the course's eleven? Only
    the course list has evidence behind it (`REGIME_SPEC.md`).
 

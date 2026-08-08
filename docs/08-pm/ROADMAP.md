@@ -19,7 +19,7 @@ The finish line it serves is `CHARTER.md` §4, ratified 2026-08-01 and unchanged
 | Merge gates running | 16, from one command |
 | Tests | 250 |
 | Components implemented | 7 · 6 with golden vectors (25) · **0 `active`** — five blocked by an unset parameter, which is the fail-closed design working |
-| Parameters | 96 — 84 `unset`, 9 `assumed`, 2 `owner`, **1 `validated`** |
+| Parameters | 96 — 69 `unset`, 24 `assumed`, 2 `owner`, **1 `validated`** |
 | Studies | 3 pre-registered, 3 reported — **2 refuted, 1 accepted and quantifiably fragile**; plus one post-hoc bound carrying no verdict |
 
 **The one-line summary:** the machinery is real and honest; almost nothing about the strategy is

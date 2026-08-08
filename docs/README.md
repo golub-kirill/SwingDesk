@@ -40,7 +40,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 14 | `COMPONENT_REGISTRY_SPEC.md` | Record shape, 3 activation states, 9 validation statuses, 8 claim types, 6 unlocked checks | `verbatim` §3.7, §3.8 | drafting |
 | 15 | `ALGORITHM_SPEC.md` | 11-field record template, 7 rules, banned vocabulary, order of work | Field list `verbatim` §3.6; content authored | drafting |
 | 15a | `RULE_SPEC.md` | The Rule object: 11 mandatory parts, three-valued output, 4 effect classes, the discriminating pair. **173 registered rows carry claim type `Operational Course Rule`**; 8 decision points audited against the form | ТЗ §15, seeded from `dee8f37`; audited against the tree | drafting |
-| 16 | `PARAMETER_REGISTRY.md` | Every threshold with value, unit, provenance, status, UI-editable flag. **96 catalogued: 84 `unset`, 9 `assumed`, 2 `owner`, 1 `validated`** — data in `registry/parameters.yml` | Authored — **no course source exists** | drafting |
+| 16 | `PARAMETER_REGISTRY.md` | Every threshold with value, unit, provenance, status, UI-editable flag. **96 catalogued: 69 `unset`, 24 `assumed`, 2 `owner`, 1 `validated`** — data in `registry/parameters.yml` | Authored — **no course source exists** | drafting |
 | 17 | `RISK_SPEC.md` | 11 risk formulas + control clauses + the sizing ordering law | `verbatim` Appendix C, M48, M49 | drafting |
 | 18 | `STATISTICS_SPEC.md` | 11 statistics formulas, 15 M69 metrics, net-of-costs rule, 9 breakdown axes | `verbatim` Appendix D, H, M69 | drafting |
 | 19 | `STRATEGY_CARD_SPEC.md` | The strategy definition record + the three condition kinds (required / confirming / prohibiting) | `verbatim` Appendix I (21 fields) + M71 (17) + §3.6 | drafting |
