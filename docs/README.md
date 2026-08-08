@@ -154,6 +154,7 @@ second surface inventing synonyms later.
 | 56 | `RISK_REGISTER.md` | 8 **realised** risks with what caught each, plus 18 open. Every realised one was found by a gate or a test, none by review | drafting |
 | 57 | `DEFINITION_OF_READY_DONE.md` | Entry/exit criteria for 5 kinds of work item: component, parameter, study, document, surface | drafting |
 | 57a | `SPEC_GAP_ANALYSIS.md` | Master ТЗ §56 applied as a gap analysis against this tree: 56 sections classified FULL / PARTIAL / ABSENT / DEFERRED, with the absent ones ranked | Authored — measured against the tree | drafting |
+| 57b | `COVERAGE_AUDIT.md` | Master ТЗ §8: each contour's canonical home, coverage status and shortfall. **Consulted before any new document is written** — it licensed two of seven proposed and refused five | Authored — inspected, not name-searched | drafting |
 
 ---
 

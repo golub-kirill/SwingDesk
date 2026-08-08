@@ -26,7 +26,7 @@ the documentation is implementable.
 |---|---|
 | Merge gates | **19**, one command, all green |
 | Tests | **270**, fully offline |
-| Docs | 78 files across **nine** tiers, Tier 0–8 · indexed by `registry/project_manifest.yml` |
+| Docs | 79 files across **nine** tiers, Tier 0–8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 83 `unset`, 9 `assumed`, 3 `owner`, **1 `validated`** |
 | Studies | 4 registered · **3 reported — 2 refuted**, 1 accepted and quantifiably fragile |
@@ -65,8 +65,8 @@ warning verbatim.
 ### 2026-08-08 — the documentation was audited against itself, and it did not hold
 
 A master requirements document arrived (master ТЗ, §§1–54) asking for the documentation to be
-**verified and updated, not rewritten**. Its §53 gives the order; steps 1–3 and part of 8 are done,
-**step 4 is not** — see §5.6.
+**verified and updated, not rewritten**. Its §53 gives the order; **steps 1–4 and part of 8 are
+done** — the coverage audit is `docs/08-pm/COVERAGE_AUDIT.md`.
 
 Its §4 listed seven suspected inconsistencies in `docs/README.md`. **All seven were confirmed
 against the tree**, and the audit found more:
@@ -163,6 +163,13 @@ overdue, not because they are hard.
    about. Rename the catalogue, or name the new object something else. **This blocks the top
    remaining spec gap.** Recommend the latter: the catalogue is cited from several documents.
 
+6. **Is an AI decision agent in scope?** `COVERAGE_AUDIT.md` §4 found that three documents
+   deferred the whole contour citing `CHARTER.md` §3 — **and the charter does not mention AI
+   anywhere.** Its nearest non-goal, "Automated trading of any kind", excludes an autonomous trader
+   and says nothing about an assistant proposing a decision a human approves. `IN_V1` / `LATER` /
+   `OUT_OF_SCOPE`. If the answer is out of scope, the fix is a **charter amendment adding the
+   non-goal**, not a citation to a clause nobody wrote.
+
 Two more are recorded in `PR-007` §6 and want a ruling: whether Track B criteria evaluate on
 backtest trades or only journalled ones (`b.min_sample` says `measured_by: journal`, so on a literal
 reading **no backtest can ever fire `k.strategy_rejected`**), and how an expectancy CI in R is made
@@ -186,21 +193,14 @@ comparable to a buy-and-hold benchmark. Both make a ratified criterion un-evalua
 
    Run it from the main repo, not a worktree: `data/` is gitignored and exists only there, and the
    tool's `--data` default would create a fresh empty store that accumulates nothing.
-6. **The coverage audit — master ТЗ §53 step 4, and the next structural piece.** Build
-   `docs/08-pm/COVERAGE_AUDIT.md`: for each contour, which existing document already holds it, at
-   what coverage, and what the conflict is. Statuses are `COVERED` / `PARTIALLY_COVERED` /
-   `CONFLICTING` / `MISSING` / `INTENTIONALLY_DEFERRED` / `OUT_OF_SCOPE` / `OWNER_PENDING` /
-   `UNVERIFIED`.
+6. **Act on `COVERAGE_AUDIT.md`.** It is written and it licensed **two of seven** proposed
+   documents — an expectation/baseline specification and a strategy validation dossier — refusing
+   the other five as already-housed, charter-excluded or scope-undecided. Read it before writing any
+   new document; that is what it is for (§49).
 
-   **Its §8.2 is the important half: nothing may be declared missing because its name is not visible
-   in the index.** Inspect first — AI scope in `CHARTER.md`/`BRD.md`, portfolio in `RISK_SPEC.md`/
-   `FRD.md`/`contracts/`, execution in `EXIT_MODEL_SPEC.md`/`JOURNAL_SCHEMA.md`, expectation in
-   `STATISTICS_SPEC.md`/`VALIDATION_PROGRAM.md`, drift in `OBSERVABILITY_SPEC.md`/`GO_LIVE_GATES.md`.
-   `RULE_SPEC.md` §9 is the worked example of why: eleven requirements looked absent and were
-   already law under other names.
-
-   **This audit is what decides whether any new document is justified** (§49). Until it exists, do
-   not create one.
+   Its §4 is the finding that matters: **the AI contour was deferred by three documents citing a
+   charter clause that does not exist.** Corrected to `OWNER_PENDING` in `SPEC_GAP_ANALYSIS.md` and
+   `REQUIREMENTS.md`; the decision itself is owner item 6 above.
 7. **Unify the trigger before the live path gets one.** `validation/backtest/engine.py` owns
    `breakout_high` and the entry decision; `application/pipeline.py` has none. No divergence yet
    *only* because live implements no strategy — see `REQUIREMENTS.md` §3. Cheap now, expensive later.
