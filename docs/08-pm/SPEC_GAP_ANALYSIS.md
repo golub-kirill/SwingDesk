@@ -56,7 +56,7 @@ keeping wholesale.
 | 20 | Constraint Model | PARTIAL | `CODES.md` (12 skip + 12 error codes), `FAIL_CLOSED_POLICY.md`; no constraint object with `priority` / `override_policy` |
 | 21 | Outcome Definition | PARTIAL | `contracts/trade.py`, `BACKTEST_PROTOCOL.md`; intrabar ambiguity policy undefined |
 | 22 | Метрики стратегии | PARTIAL | `STATISTICS_SPEC.md`; no capacity estimate, no exposure/turnover |
-| 23 | Expectation Model | **ABSENT** | the three reported studies carry baselines; no Expectation object, no estimate/definition split |
+| 23 | Expectation Model | PARTIAL | `EXPECTATION_SPEC.md` (2026-08-08) — Definition/Estimate split, mandatory baselines, commensurability. Shortfall: no expectation defined for any strategy yet, and effective sample size has no method |
 | 24 | Evidence Framework | FULL | `EVIDENCE_RECORD_SPEC.md`, `contracts/evidence.py`, three reported studies |
 | 25 | Research Governance | FULL | `PREREG_TEMPLATE.md` + **three executed pre-registrations**, a fourth registered and unrun |
 | 26 | Validation Protocol | FULL | `VALIDATION_PROGRAM.md`, `WALKFORWARD_SPEC.md` |
@@ -96,19 +96,19 @@ keeping wholesale.
 | Coverage | Count |
 |---|---|
 | FULL | **29** |
-| PARTIAL | 18 |
-| ABSENT | **6** |
+| PARTIAL | 19 |
+| ABSENT | **5** |
 | DEFERRED | 3 |
 
 **Half the specification is already met.** That is the finding the parallel analysis could not
-reach, and it changes the plan: the work is filling six holes and closing eighteen shortfalls, not
+reach, and it changes the plan: the work is filling five holes and closing nineteen shortfalls, not
 building 48 documents.
 
 *Updated 2026-08-05: §35 moved ABSENT → FULL; §28 and §15 moved ABSENT → PARTIAL, on
 `SYSTEM_MODES.md`, `EXECUTION_MODEL.md` and `RULE_SPEC.md`. The counts above are hand-maintained and
 no gate re-derives them.*
 
-## 4. The six absent sections, ranked
+## 4. The five absent sections, ranked
 
 Ranked by what unblocks the most, not by ТЗ order.
 
@@ -116,14 +116,12 @@ Ranked by what unblocks the most, not by ТЗ order.
    catalogue*. The ТЗ's Event is the formal discrete-transition object. Two different things share
    one name, which is precisely the §11 terminology failure the specification warns about. The new
    document needs a different name.
-2. **§23 Expectation Model** — the studies have baselines; the object that would make them
-   comparable does not exist.
-3. **§31 Capital Allocation** — needed the moment candidates exceed capital. With 1,133 universe
+2. **§31 Capital Allocation** — needed the moment candidates exceed capital. With 1,133 universe
    members that day is close.
-4. **§5 Coverage Matrix** — the ТЗ forbids claiming coverage without formal basis.
-5. **§45 Drift Monitoring** and **§44 Learning Engine** — both need a live record first, and
+3. **§5 Coverage Matrix** — the ТЗ forbids claiming coverage without formal basis.
+4. **§45 Drift Monitoring** and **§44 Learning Engine** — both need a live record first, and
    `UX_TASK_FLOWS.md` §3 measures the post-trade phase at 0 of 6.
-6. **§46 Knowledge Graph** — a projection of registries that already exist. Lowest urgency.
+5. **§46 Knowledge Graph** — a projection of registries that already exist. Lowest urgency.
 
 **Closed 2026-08-05**, previously ranked 1st, 3rd and 4th: **§15 Rule Specification**
 (`RULE_SPEC.md`), **§35 System Modes** (`SYSTEM_MODES.md`) and **§28 Execution Model**

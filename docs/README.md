@@ -56,6 +56,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 20 | `EXIT_MODEL_SPEC.md` | 4-slot exit model (protective/profit/contextual/time + quantity + order) over 92 M52–M58 topics | `verbatim` M52–M58 + `registry/` | drafting |
 | 20a | `EXECUTION_MODEL.md` | ТЗ §28. Entry at next open, fills with slippage applied to price, the 4 exit reasons, and the **intrabar stop-versus-target policy written before a target exists** | Authored — engine measured, `exit.slot_resolution_order` still `unset` | drafting |
 | 20b | `RULE_SPEC.md` | ТЗ §15, the central object. 11 mandatory parts, 4 effect classes, three-valued logic, the mandatory discriminating pair — and a reconciliation showing **11 requirements already met** in this tree | Seed `dee8f37` + authored; no rule registry exists yet | drafting |
+| 20c | `EXPECTATION_SPEC.md` | ТЗ §22–23. The Definition/Estimate split, mandatory baselines, effective sample size, and the **commensurability rule** a ratified kill criterion turns out to need | Authored — reconciled against the three reported studies | drafting |
 | 21 | `SCREENER_SPEC.md` | 16 filters, 8 candidate-card fields, 9-step pipeline, 6 watchlist partitions | `verbatim` M32, M33 + `registry/` | drafting |
 | 22 | `REGIME_SPEC.md` | 11 regimes, classifier inputs, regime→strategy→risk matrix | `verbatim` M30/M31/Appendix L; **classifier authored** | drafting |
 | 23 | `EVENT_SPEC.md` | 20 event types with per-type field schemas | `verbatim` M34 decision tables | drafting |

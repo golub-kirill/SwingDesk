@@ -26,7 +26,7 @@ the documentation is implementable.
 |---|---|
 | Merge gates | **19**, one command, all green |
 | Tests | **270**, fully offline |
-| Docs | 80 files across **nine** tiers, Tier 0–8 · indexed by `registry/project_manifest.yml` |
+| Docs | 81 files across **nine** tiers, Tier 0–8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 83 `unset`, 9 `assumed`, 3 `owner`, **1 `validated`** |
 | Studies | 4 registered · **3 reported — 2 refuted**, 1 accepted and quantifiably fragile |
@@ -132,7 +132,7 @@ orders" line.
 
 Resolved: `docs/` is canonical (owner decision). All of that track's work is preserved verbatim in
 commit **`dee8f37`**, its genuinely new material is folded in, and the duplicates are gone.
-`docs/08-pm/SPEC_GAP_ANALYSIS.md` is the real §56 analysis: **FULL 29 · PARTIAL 18 · ABSENT 6 ·
+`docs/08-pm/SPEC_GAP_ANALYSIS.md` is the real §56 analysis: **FULL 29 · PARTIAL 19 · ABSENT 5 ·
 DEFERRED 3** (was 28/16/9/3 until §35, §28 and §15 were written on 2026-08-05).
 
 **Do not rebuild the numbered tree.** Master ТЗ §8 forbids maintaining one logic in two places, and
