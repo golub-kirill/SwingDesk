@@ -784,11 +784,18 @@ parameters:
     ui_editable: false
 
   - id: validation.max_allowable_drawdown
-    unit: R or percent
-    value: null
-    status: unset
-    provenance: null
+    unit: percent of equity
+    value: 20
+    status: owner
+    provenance: owner
     named_in: [M75-T1122]
+    note: >-
+      Owner decision, 2026-08-05. M75-T1122 names "Максимальная допустимая просадка" and gives no
+      number, as the course does for every threshold. Percent of equity rather than R: the criterion
+      is `k.drawdown_pause`, whose scope is live, and a live limit is felt against the account.
+      Choosing the unit was part of the decision - the registry carried "R or percent" until now.
+      Setting this makes the ratified `k.drawdown_pause` evaluable; while it was unset that
+      criterion could not fire, which is the inert-gate failure REQ-VALIDATION-001 names.
     ui_editable: true
 
   - id: validation.go_live_criteria
@@ -893,13 +900,15 @@ parameters:
 
   - id: costs.slippage_model
     unit: model
-    value: "5 bps of price, each side, applied to the fill"
+    value: "25 bps of price, each side, applied to the fill"
     status: assumed
-    provenance: "assumed:DR-004"
+    provenance: "assumed:DR-005"
     named_in: [M72-T1082, M74-T1110]
     note: >-
       M74-T1110 requires measured live slippage to be compared against this, so the model must be
-      the same shape as the measurement.
+      the same shape as the measurement. Raised from DR-004's assumed 5bps to a figure measured
+      from daily OHLC across 1,131 A-tier instruments (DR-005). Still `assumed`: a decision record
+      is not a pre-registered study, however the number was arrived at.
     ui_editable: true
 
   # ---- swing structure (M12-T0201/T0202, added with the pivot component 2026-08-02) ----

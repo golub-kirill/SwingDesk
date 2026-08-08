@@ -48,7 +48,7 @@ keeping wholesale.
 | 12 | Требования к данным, время | **PARTIAL** | `POINT_IN_TIME_SPEC.md`, `DATA_QUALITY_SPEC.md`, `CALENDAR_SPEC.md`. **2 of 8 time types** |
 | 13 | Feature / Indicator Spec | FULL | `COMPONENT_REGISTRY_SPEC.md`, `registry/components.yml` (465), 25 golden vectors, gates 3c/7b/11 |
 | 14 | Parameter Registry | FULL | `PARAMETER_REGISTRY.md`, `registry/parameters.yml` (96), gate 1 |
-| 15 | Rule Specification | **ABSENT** | no formal Rule object: no expression tree, no three-valued output contract, no `vetoed_by` |
+| 15 | Rule Specification | PARTIAL | `RULE_SPEC.md` (2026-08-05) — the form, its 11 mandatory parts, effect classes, three-valued logic, the discriminating pair, and a reconciliation finding **11 requirements already met here**. Shortfalls: no rule registry, expression tree unspecified beyond an example, `vetoed_by` has no carrier |
 | 16 | Event Specification | **ABSENT** | `EVENT_SPEC.md` is the *market-event catalogue* (M34/M40), not the formal Event object. Name collision — see §4 |
 | 17 | State / State Machine | PARTIAL | `DECISION_STATE_MACHINE.md` covers candidate decisions; no instrument state machine, no hysteresis policy |
 | 18 | Market Regime | FULL | `REGIME_SPEC.md`, `derived_observations/regime.py`, **PR-002 validated** |
@@ -56,22 +56,22 @@ keeping wholesale.
 | 20 | Constraint Model | PARTIAL | `CODES.md` (12 skip + 12 error codes), `FAIL_CLOSED_POLICY.md`; no constraint object with `priority` / `override_policy` |
 | 21 | Outcome Definition | PARTIAL | `contracts/trade.py`, `BACKTEST_PROTOCOL.md`; intrabar ambiguity policy undefined |
 | 22 | Метрики стратегии | PARTIAL | `STATISTICS_SPEC.md`; no capacity estimate, no exposure/turnover |
-| 23 | Expectation Model | **ABSENT** | the four studies carry baselines; no Expectation object, no estimate/definition split |
+| 23 | Expectation Model | **ABSENT** | the three reported studies carry baselines; no Expectation object, no estimate/definition split |
 | 24 | Evidence Framework | FULL | `EVIDENCE_RECORD_SPEC.md`, `contracts/evidence.py`, three reported studies |
-| 25 | Research Governance | FULL | `PREREG_TEMPLATE.md` + **four executed pre-registrations** |
+| 25 | Research Governance | FULL | `PREREG_TEMPLATE.md` + **three executed pre-registrations**, a fourth registered and unrun |
 | 26 | Validation Protocol | FULL | `VALIDATION_PROGRAM.md`, `WALKFORWARD_SPEC.md` |
 | 27 | Backtest Semantics | PARTIAL | `BACKTEST_PROTOCOL.md`, `validation/backtest/engine.py`; intrabar policy absent |
-| 28 | Execution Model | **ABSENT** | `validation/backtest/costs.py` models commission and slippage only |
+| 28 | Execution Model | PARTIAL | `EXECUTION_MODEL.md` (2026-08-05) specifies entry, fills, the four exit reasons and the intrabar stop-versus-target policy. Shortfall: `exit.slot_resolution_order` is `unset` — the resolution is recommended, not yet bound by a decision record |
 | 29 | Order Management SM | DEFERRED | D1 — the system never places orders |
 | 30 | Risk Engine | PARTIAL | `RISK_SPEC.md`, `trade_management/sizing.py`; **no portfolio layer** — correlation, sector and open-risk caps all `unset` |
 | 31 | Capital Allocation / Ranking | **ABSENT** | no deterministic ranking when candidates exceed capital |
 | 32 | AI Decision Agent | DEFERRED | `CHARTER.md` §3 non-goal for v1 |
 | 33 | LLM / Model Governance | DEFERRED | follows §32 |
 | 34 | Decision Record | FULL | `JOURNAL_SCHEMA.md`, `AUDIT_AND_IMMUTABILITY.md`, `journal_evidence/journal.py` |
-| 35 | System Modes | **ABSENT** | no RESEARCH / BACKTEST / REPLAY / PAPER / SHADOW / LIVE definition |
+| 35 | System Modes | FULL | `SYSTEM_MODES.md` (2026-08-05) — all six named, with reads/writes/determinism per mode. PAPER and SHADOW are specified and **not built**, which the document states rather than implies |
 | 36 | System Architecture | FULL | `ARCHITECTURE.md`, `DEPENDENCY_LAW.md`, `CONCURRENCY_MODEL.md` |
 | 37 | Non-Functional Requirements | FULL | `NFR.md` |
-| 38 | Testing Strategy | FULL | `TEST_STRATEGY.md`, `INVARIANTS.md`, 249 tests, 15 gates |
+| 38 | Testing Strategy | FULL | `TEST_STRATEGY.md`, `INVARIANTS.md`, 270 tests, 19 gates |
 | 39 | Golden Datasets | PARTIAL | `golden/` holds 25 component **vectors**; the ТЗ's 25 named end-to-end **scenarios** do not exist |
 | 40 | Observability / Audit | FULL | `OBSERVABILITY_SPEC.md`, `docs/runbooks/` |
 | 41 | Security | FULL | `SECURITY.md`, `BACKUP_AND_DR.md` |
@@ -95,40 +95,48 @@ keeping wholesale.
 
 | Coverage | Count |
 |---|---|
-| FULL | **28** |
-| PARTIAL | 16 |
-| ABSENT | **9** |
+| FULL | **29** |
+| PARTIAL | 18 |
+| ABSENT | **6** |
 | DEFERRED | 3 |
 
 **Half the specification is already met.** That is the finding the parallel analysis could not
-reach, and it changes the plan: the work is filling nine holes and closing sixteen shortfalls, not
+reach, and it changes the plan: the work is filling six holes and closing eighteen shortfalls, not
 building 48 documents.
 
-## 4. The nine absent sections, ranked
+*Updated 2026-08-05: §35 moved ABSENT → FULL; §28 and §15 moved ABSENT → PARTIAL, on
+`SYSTEM_MODES.md`, `EXECUTION_MODEL.md` and `RULE_SPEC.md`. The counts above are hand-maintained and
+no gate re-derives them.*
+
+## 4. The six absent sections, ranked
 
 Ranked by what unblocks the most, not by ТЗ order.
 
-1. **§15 Rule Specification** — the ТЗ's central object. Everything from §16 to §20 references it.
-   A 276-line draft exists in the parallel track's `11_Rule_Specification.md`, preserved in commit
-   `dee8f37`. It is the seed for `docs/02-domain/RULE_SPEC.md`, not a substitute: it is in Russian,
-   and it specifies the object without checking which parts this tree's components already satisfy —
-   the same omission that produced the rest of this analysis.
-2. **§16 Event Specification.** Note the collision: `EVENT_SPEC.md` here means the *market-event
+1. **§16 Event Specification.** Note the collision: `EVENT_SPEC.md` here means the *market-event
    catalogue*. The ТЗ's Event is the formal discrete-transition object. Two different things share
    one name, which is precisely the §11 terminology failure the specification warns about. The new
    document needs a different name.
-3. **§35 System Modes** — cheap, and every other section references the mode it applies in.
-4. **§28 Execution Model** — currently latent rather than harmful: the engine has a protective stop
-   and a time stop and no target, so stop-and-target-in-one-bar cannot arise. It becomes a
-   correctness defect the day a target exists.
-5. **§23 Expectation Model** — the studies have baselines; the object that would make them
+2. **§23 Expectation Model** — the studies have baselines; the object that would make them
    comparable does not exist.
-6. **§31 Capital Allocation** — needed the moment candidates exceed capital. With 1,133 universe
+3. **§31 Capital Allocation** — needed the moment candidates exceed capital. With 1,133 universe
    members that day is close.
-7. **§5 Coverage Matrix** — the ТЗ forbids claiming coverage without formal basis.
-8. **§45 Drift Monitoring** and **§44 Learning Engine** — both need a live record first, and
+4. **§5 Coverage Matrix** — the ТЗ forbids claiming coverage without formal basis.
+5. **§45 Drift Monitoring** and **§44 Learning Engine** — both need a live record first, and
    `UX_TASK_FLOWS.md` §3 measures the post-trade phase at 0 of 6.
-9. **§46 Knowledge Graph** — a projection of registries that already exist. Lowest urgency.
+6. **§46 Knowledge Graph** — a projection of registries that already exist. Lowest urgency.
+
+**Closed 2026-08-05**, previously ranked 1st, 3rd and 4th: **§15 Rule Specification**
+(`RULE_SPEC.md`), **§35 System Modes** (`SYSTEM_MODES.md`) and **§28 Execution Model**
+(`EXECUTION_MODEL.md`).
+
+§15 and §28 landed PARTIAL rather than FULL, each with a named shortfall. §28 specifies the intrabar
+stop-versus-target policy and recommends a resolution; binding it needs a decision record setting
+`exit.slot_resolution_order`. §15 specifies the rule form and reconciles it against the tree — the
+finding being that **eleven of its requirements are already satisfied here**, several by mechanisms
+stricter than the ТЗ asks — but no rule registry exists to populate it.
+
+Both were written while still cheap, per this section's own argument: the engine has no profit slot
+and there are no rules, so no result yet depends on either choice.
 
 ## 5. The two shortfalls that are defects rather than gaps
 
@@ -147,7 +155,7 @@ verbatim in `dee8f37`.
 
 The requirement itself stands and is unmet: **JSON Schema should be generated from the Pydantic
 models** (`model_json_schema()`), with a `--check-only` gate like every other registry here. The
-contracts win because they are already enforced at runtime and by 249 tests, so a divergence between
+contracts win because they are already enforced at runtime and by 270 tests, so a divergence between
 them and a hand-written schema would always be the schema's fault.
 
 ## 6. What the parallel track contributed

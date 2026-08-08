@@ -2,7 +2,7 @@
 
 **Status:** drafting · **Tier:** 8 (project management) · **Content:** authored
 
-**Written 2026-08-02, after four studies rather than before them.** A roadmap drafted at G0 would
+**Written 2026-08-02, after three studies rather than before them.** A roadmap drafted at G0 would
 have planned a trend-filter programme that the evidence has since closed. This one is built on what
 was measured.
 
@@ -17,10 +17,10 @@ The finish line it serves is `CHARTER.md` §4, ratified 2026-08-01 and unchanged
 | Gates closed | G0 charter · G4 architecture · **G5 walking skeleton** |
 | Gates open | G1 requirements · G2 transcription · G3 data · G6 catalogue · G7 surfaces |
 | Merge gates running | 14, from one command |
-| Tests | 249 |
+| Tests | 260 |
 | Components implemented | 7 · 6 with golden vectors (25) · **0 `active`** — five blocked by an unset parameter, which is the fail-closed design working |
-| Parameters | 96 — 84 `unset`, 9 `assumed`, 2 `owner`, **1 `validated`** |
-| Studies | 4 registered, 4 reported — **3 refuted, 1 accepted and quantifiably fragile** |
+| Parameters | 96 — 83 `unset`, 9 `assumed`, 3 `owner`, **1 `validated`** |
+| Studies | 4 registered, 3 reported — **2 refuted, 1 accepted and quantifiably fragile** |
 
 **The one-line summary:** the machinery is real and honest; almost nothing about the strategy is
 known, and what is known is mostly negative.
@@ -109,7 +109,7 @@ Recording these stops them being re-proposed.
 The v1 finish line is a machinery target and needs no profitable strategy — that was the point of
 ratifying it that way. Everything in §2, §3 and §4 lands it.
 
-Track B is different. Four studies produced one fragile positive, on a base strategy measured as
+Track B is different. Three studies produced one fragile positive, on a base strategy measured as
 flat before costs and negative after stress. Nothing in this roadmap fixes that, because a roadmap
 cannot. `SUCCESS_AND_KILL_CRITERIA.md` `k.programme_exhausted` exists for the case where the
 validation programme runs out of hypotheses without one surviving, and that outcome is live.
@@ -132,7 +132,7 @@ itself the pattern that made the reconciliation necessary. Dispositioned:
 
 | | Question | Disposition |
 |---|---|---|
-| `UDR-001` | Lessons incomplete, so domain extraction cannot finish | **OPEN and genuinely new.** The 116-PDF course *is* fully extracted — 1379 topics, 465 components, four studies run. This entry refers to a **forthcoming book** the owner is still writing. That is new information and it changes nothing structural: the catalogues fill from it when it arrives |
+| `UDR-001` | Lessons incomplete, so domain extraction cannot finish | **OPEN and genuinely new.** The 116-PDF course *is* fully extracted — 1379 topics, 465 components, three studies run. This entry refers to a **forthcoming book** the owner is still writing. That is new information and it changes nothing structural: the catalogues fill from it when it arrives |
 | `UDR-002` | Which graph database for the Knowledge Graph projection | **OPEN, owner input needed.** Low urgency — §46 ranks last of nine absent sections, and the logical schema does not depend on the engine |
 | `UDR-003` | Scope of the execution and broker layer | **CLOSED.** Owner decision D1, `CHARTER.md` — the system never places orders. §29 is `DEFERRED` with its ontology slot fixed |
 | `UDR-004` | Canonical regime ontology | **OPEN, and sharper than recorded.** The ТЗ suggests eight regimes; the course names **eleven** (`REGIME_SPEC.md` §2) and they are a vocabulary, not a partition. PR-002 validated a classifier on one axis of three. The real question is whether the ТЗ list or the course list is canonical — and only the course list has evidence behind it |

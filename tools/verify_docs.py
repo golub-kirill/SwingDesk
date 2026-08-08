@@ -20,11 +20,15 @@ Stdlib plus PyYAML, so it runs wherever the other registry gates do.
 
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
+#: Root of the tree being checked. Overridable so a test can point the gate at a fixture and
+#: assert it goes red - a gate nobody has seen fail is a gate nobody has tested. Never set in
+#: normal use; `check_gates.py` does not set it.
+REPO = Path(os.environ.get("SWINGDESK_ROOT") or Path(__file__).resolve().parents[1])
 DOCS = REPO / "docs"
 
 #: The status ladder, from docs/README.md. A value outside it is a defect rather than a nuance.
@@ -42,9 +46,10 @@ PLANNED = {
     "CONTEXT.md",
     # The top-ranked absent sections from `SPEC_GAP_ANALYSIS.md` §4. Listed so the analysis can name
     # its own targets without dangling, and so adding one is a decision rather than a silent gap.
-    "RULE_SPEC.md",         # ТЗ §15 - the central object; seed draft preserved in dee8f37
-    "SYSTEM_MODES.md",      # ТЗ §35 - RESEARCH / BACKTEST / REPLAY / PAPER / SHADOW / LIVE
-    "EXECUTION_MODEL.md",   # ТЗ §28 - incl. the intrabar stop-and-target ambiguity policy
+    # Master ТЗ §53 step 4: the coverage matrix that must exist before any NEW document is
+    # justified (§49). Named here so HANDOFF.md can point the next session at it by name without
+    # the reference dangling - which is the whole purpose of this list.
+    "COVERAGE_AUDIT.md",
     # Broker reconciliation. `UX_TASK_FLOWS.md` §4 argues the hole is real under D1 - the broker is
     # authoritative for positions and the journal must yield - but a spec cannot be written before
     # there is a position source to reconcile against. Named here rather than deleted from
@@ -81,6 +86,29 @@ def _load_yaml(path: Path):
 ROOT_DOCS = ("README.md", "AGENTS.md", "HANDOFF.md")
 
 
+def _unindexed_decisions() -> list[str]:
+    """Every decision record must appear in the decisions index.
+
+    Found the hard way: `DR-004` had existed for three days and the index in §5 listed DR-001 to
+    DR-003, so the one record that set the cost model underneath every R in the system was invisible
+    to anyone reading the index. Same defect shape as the others this gate catches - a claim that
+    reads as correct because what is missing leaves no trace.
+    """
+    index = DOCS / "decisions" / "README.md"
+    if not index.is_file():
+        return []
+
+    listed = set(re.findall(r"`(DR-\d{3})`", index.read_text(encoding="utf-8")))
+    failures = []
+    for path in sorted((DOCS / "decisions").glob("DR-*.md")):
+        identifier = "-".join(path.name.split("-")[:2])
+        if identifier not in listed:
+            failures.append(
+                f"docs/decisions/README.md: {identifier} exists and is not in the index"
+            )
+    return failures
+
+
 def main() -> int:
     markdown = sorted(DOCS.rglob("*.md")) + [REPO / name for name in ROOT_DOCS]
     # Documents that exist anywhere in the tree, plus the repo-root ones docs legitimately cite.
@@ -114,6 +142,8 @@ def main() -> int:
             failures.append(
                 f"{rel}: status {status.group(1)!r} is outside the ladder {sorted(STATUSES)}"
             )
+
+    failures.extend(_unindexed_decisions())
 
     for failure in failures:
         print(f"  {failure}")

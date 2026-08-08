@@ -1,10 +1,19 @@
 # Document set
 
-57 documents in 8 tiers. Each row states what the document **freezes** and where its content comes
-from. `verbatim` means the content is transcribed from the course without rewriting, and is checked
-by `tools/verify_transcription.py` against freshly extracted PDF text.
+**78 documents across nine tiers, Tier 0 to Tier 8.** Each row states what the document **freezes**
+and where its content comes from. `verbatim` means the content is transcribed from the course
+without rewriting, and is checked by `tools/verify_transcription.py` against freshly extracted PDF
+text.
 
-Status values: `planned` · `drafting` · `owner-pending` (blocked on an owner decision) · `frozen`.
+*The header read "57 documents in 8 tiers" until 2026-08-05. Both numbers were wrong: the tiers are
+numbered 0–8, which is nine, and the numbered rows below had reached 61 while the count stayed at
+57. Gate 14 (`verify_counts.py`) now derives the document total from the filesystem.*
+
+**The Status column mixes several things** — document progress, gate closure, ADR state and dates —
+and separating them is an open item. Document progress uses `planned` · `drafting` ·
+`owner-pending` (blocked on an owner decision) · `frozen`; a row reading `generated`,
+`finish line ratified 2026-08-01` or `frozen 2026-08-02` is stating something else in the same
+column.
 
 ## Tier 0 — Charter · `00-charter/`
 
@@ -26,6 +35,7 @@ Frozen first. Amendments are dated records appended to the file, never edits in 
 | 07 | `FRD.md` | **463 requirements** keyed by course component id, grouped by layer and module | **Generated** by `tools/build_frd.py` | generated |
 | 08 | `NFR.md` | ~20M bar rows, ≤45 min daily run, byte-identical re-runs, $0/mo, revision-delta storage | Engineering + owner | drafting |
 | 09 | `PRODUCT_SURFACES.md` | 4 surfaces, what each owns, notification matrix, what none may do | Owner decisions D3/D6 | drafting |
+| 09a | `REQUIREMENTS.md` | 9 normative requirements with stable ids, each carrying an executable verification method; the inert-gate and backtest/live-divergence requirements | Authored — 6 of 9 from the TradAlert post-mortem | drafting |
 
 ## Tier 2 — Domain specification · `02-domain/`
 
@@ -39,15 +49,17 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 13 | `CODES.md` | 12 skip codes with actions; 12 error codes with severity and required control | `verbatim` Appendix N, O | drafting |
 | 14 | `COMPONENT_REGISTRY_SPEC.md` | Record shape, 3 activation states, 9 validation statuses, 8 claim types, 6 unlocked checks | `verbatim` §3.7, §3.8 | drafting |
 | 15 | `ALGORITHM_SPEC.md` | 11-field record template, 7 rules, banned vocabulary, order of work | Field list `verbatim` §3.6; content authored | drafting |
-| 16 | `PARAMETER_REGISTRY.md` | Every threshold with value, unit, provenance, status, UI-editable flag. **96 catalogued: 84 `unset`, 9 `assumed`, 2 `owner`, 1 `validated`** — data in `registry/parameters.yml` | Authored — **no course source exists** | drafting |
+| 16 | `PARAMETER_REGISTRY.md` | Every threshold with value, unit, provenance, status, UI-editable flag. **96 catalogued: 83 `unset`, 9 `assumed`, 3 `owner`, 1 `validated`** — data in `registry/parameters.yml` | Authored — **no course source exists** | drafting |
 | 17 | `RISK_SPEC.md` | 11 risk formulas + control clauses + the sizing ordering law | `verbatim` Appendix C, M48, M49 | drafting |
 | 18 | `STATISTICS_SPEC.md` | 11 statistics formulas, 15 M69 metrics, net-of-costs rule, 9 breakdown axes | `verbatim` Appendix D, H, M69 | drafting |
 | 19 | `STRATEGY_CARD_SPEC.md` | The strategy definition record + the three condition kinds (required / confirming / prohibiting) | `verbatim` Appendix I (21 fields) + M71 (17) + §3.6 | drafting |
 | 20 | `EXIT_MODEL_SPEC.md` | 4-slot exit model (protective/profit/contextual/time + quantity + order) over 92 M52–M58 topics | `verbatim` M52–M58 + `registry/` | drafting |
+| 20a | `EXECUTION_MODEL.md` | ТЗ §28. Entry at next open, fills with slippage applied to price, the 4 exit reasons, and the **intrabar stop-versus-target policy written before a target exists** | Authored — engine measured, `exit.slot_resolution_order` still `unset` | drafting |
+| 20b | `RULE_SPEC.md` | ТЗ §15, the central object. 11 mandatory parts, 4 effect classes, three-valued logic, the mandatory discriminating pair — and a reconciliation showing **11 requirements already met** in this tree | Seed `dee8f37` + authored; no rule registry exists yet | drafting |
 | 21 | `SCREENER_SPEC.md` | 16 filters, 8 candidate-card fields, 9-step pipeline, 6 watchlist partitions | `verbatim` M32, M33 + `registry/` | drafting |
-| 22 | `REGIME_SPEC.md` | 11 regimes, classifier inputs, regime→strategy→risk matrix | `verbatim` M30/M31/Appendix L; **classifier authored** | planned |
-| 23 | `EVENT_SPEC.md` | 20 event types with per-type field schemas | `verbatim` M34 decision tables | planned |
-| 24 | `CHART_SPEC.md` | Every chart to render: panels, overlays, levels, units | `verbatim` chart metadata (867 chart topics) | planned |
+| 22 | `REGIME_SPEC.md` | 11 regimes, classifier inputs, regime→strategy→risk matrix | `verbatim` M30/M31/Appendix L; **classifier authored** | drafting |
+| 23 | `EVENT_SPEC.md` | 20 event types with per-type field schemas | `verbatim` M34 decision tables | drafting |
+| 24 | `CHART_SPEC.md` | Every chart to render: panels, overlays, levels, units | `verbatim` chart metadata (867 chart topics) | drafting |
 
 ## Tier 3 — Data · `03-data/`, `contracts/`, `adr/`
 
@@ -103,12 +115,13 @@ checkable gate in the course.
 | 40 | `DEPENDENCY_LAW.md` | Independence rules as 4 import-linter contracts in `pyproject.toml` | drafting |
 | 41 | `CONCURRENCY_MODEL.md` | 3 tiers, per-vendor limits, breaker, thread-safety classes, worker-count invariance | drafting |
 | 42 | `DETERMINISM_SPEC.md` | The snapshot as determinism boundary, float-associativity trap, 10-field run manifest, stated scope limits | drafting |
+| 42a | `SYSTEM_MODES.md` | ТЗ §35. RESEARCH · BACKTEST · REPLAY · PAPER · SHADOW · LIVE — reads, writes, network, determinism per mode. **PAPER and SHADOW do not exist; LIVE has no trigger.** Mode is structural, not a runtime flag | drafting |
 | 43 | `adr/` | ADR-0001 market data · 0002 calendar · 0003 schema language · 0004 storage engine (all Proposed) | drafting |
 | 44a | `INVARIANTS.md` | The 9 invariants audited against the tests that enforce them: 7 by test, 1 by a function signature, 1 partial | drafting |
 | 44 | `TEST_STRATEGY.md` | 7 layers, 9 invariants as property tests, golden vectors as the immutability mechanism, 6 chaos scenarios | drafting |
 | 45 | `OBSERVABILITY_SPEC.md` + `runbooks/` | Structured-log schema, daily health report, trend signals; 5 runbooks with verbatim return conditions | drafting |
 | 46 | `SECURITY.md` + `BACKUP_AND_DR.md` | Threat model, secret rules, Telegram as a control surface; what cannot be re-fetched, restore verified by output hash | drafting |
-| 47 | `CI_POLICY.md` | 16 gates (**15 running**), what each prevents and what each has caught, what CI must never do, local equivalence | drafting |
+| 47 | `CI_POLICY.md` | **19 running** gates plus gate 10 still to build, what each prevents and what each has caught, what CI must never do, local equivalence | drafting |
 | 48 | `AGENTS.md` (repo root) | Trust discipline, 7 non-negotiables, how to add a verbatim doc or a parameter | drafting — per-package `CONTEXT.md` still planned |
 
 ## Tier 7 — UI/UX · `07-ux/`
@@ -137,9 +150,10 @@ second surface inventing synonyms later.
 
 | # | File | Freezes | Status |
 |---|---|---|---|
-| 55 | `ROADMAP.md` | Now / Next / Later, built on four reported studies rather than before them. Two concrete gaps remain to the ratified finish line | drafting |
+| 55 | `ROADMAP.md` | Now / Next / Later, built on three reported studies rather than before them. Two concrete gaps remain to the ratified finish line | drafting |
 | 56 | `RISK_REGISTER.md` | 8 **realised** risks with what caught each, plus 18 open. Every realised one was found by a gate or a test, none by review | drafting |
 | 57 | `DEFINITION_OF_READY_DONE.md` | Entry/exit criteria for 5 kinds of work item: component, parameter, study, document, surface | drafting |
+| 57a | `SPEC_GAP_ANALYSIS.md` | Master ТЗ §56 applied as a gap analysis against this tree: 56 sections classified FULL / PARTIAL / ABSENT / DEFERRED, with the absent ones ranked | Authored — measured against the tree | drafting |
 
 ---
 
@@ -166,7 +180,7 @@ Pre-registrations in `prereg/`, results in `prereg/results/`, decision records i
 | `PR-005` | Do their different populations then behave differently? | **REJECT** — every arm inside the ungated interval |
 | `PR-002` | Does a regime label carry decision-relevant information? | **ACCEPT** — and ~2% of trades missing at −2R would erase it |
 
-Three refuted hypotheses and one fragile positive. `screen.trend_definition` is closed by evidence;
+Two refuted hypotheses and one fragile positive. `screen.trend_definition` is closed by evidence;
 `regime.classifier_rule` is the first `validated` parameter and carries its bound in the registry
 note. Planning follows in `08-pm/ROADMAP.md`.
 

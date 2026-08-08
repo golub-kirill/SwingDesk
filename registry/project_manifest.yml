@@ -1,0 +1,701 @@
+# Canonical project manifest — the machine source of truth for the document set.
+#
+# Master TZ section 5. Written because docs/README.md was a hand-maintained index that had drifted:
+# it claimed 57 documents in 8 tiers while carrying 61 numbered rows across nine, marked three
+# written specifications `planned`, and omitted REQUIREMENTS.md and SPEC_GAP_ANALYSIS.md entirely.
+#
+# This is AUTHORED data, like parameters.yml. tools/verify_project_manifest.py checks it against the
+# filesystem and checks docs/README.md against it, so the index can no longer drift silently.
+#
+# `document_status` uses THIS TREE's existing ladder - planned | drafting | owner-pending | frozen |
+# generated - which gate 3e already enforces on every document's own header. The master TZ section
+# 6.1 proposes a richer set (IN_REVIEW, SUPERSEDED, DEPRECATED); adopting it would mean two status
+# vocabularies in one repository, which section 8 of that same specification forbids. It is an
+# extension point, not a gap.
+#
+# The status comes from the DOCUMENT's own header where it has one, not from the index - the index
+# was the thing that was wrong. `readme_status_text` keeps the index wording verbatim so every
+# difference stays visible instead of being silently resolved.
+
+project:
+  manifest_version: 1.0.0
+  source_commit: 9a07fab0de02c15efb2764e1fa08ff1175e433f6
+  bootstrapped_from: docs/README.md
+  bootstrapped_at: 2026-08-05
+
+tiers:
+  - id: TIER-0
+    number: 0
+    title: "Charter"
+    paths: [00-charter/]
+  - id: TIER-1
+    number: 1
+    title: "Requirements"
+    paths: [01-requirements/]
+  - id: TIER-2
+    number: 2
+    title: "Domain specification"
+    paths: [02-domain/]
+  - id: TIER-3
+    number: 3
+    title: "Data"
+    paths: [03-data/, contracts/, adr/]
+  - id: TIER-4
+    number: 4
+    title: "Journal, evidence, audit"
+    paths: [04-journal/]
+  - id: TIER-5
+    number: 5
+    title: "Validation"
+    paths: [05-validation/]
+  - id: TIER-6
+    number: 6
+    title: "Architecture & engineering"
+    paths: [06-engineering/, adr/, runbooks/]
+  - id: TIER-7
+    number: 7
+    title: "UI/UX"
+    paths: [07-ux/]
+  - id: TIER-8
+    number: 8
+    title: "Project management"
+    paths: [08-pm/]
+
+documents:
+  - id: DOC-01
+    display_number: "01"
+    tier_ref: TIER-0
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/00-charter/CHARTER.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "**finish line ratified 2026-08-01**"
+    generated: false
+    file_expected: true
+    gate_note: "**finish line ratified 2026-08-01**"
+  - id: DOC-02
+    display_number: "02"
+    tier_ref: TIER-0
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/00-charter/SUCCESS_AND_KILL_CRITERIA.md
+    document_status: frozen
+    status_source: index
+    readme_status_text: "**frozen 2026-08-02**"
+    generated: false
+    file_expected: true
+  - id: DOC-03
+    display_number: "03"
+    tier_ref: TIER-0
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/00-charter/CONSTRAINTS.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting — budget owner-pending"
+    generated: false
+    file_expected: true
+    owner_pending: true
+  - id: DOC-04
+    display_number: "04"
+    tier_ref: TIER-0
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/00-charter/GLOSSARY.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-05
+    display_number: "05"
+    tier_ref: TIER-1
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/01-requirements/BRD.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-06
+    display_number: "06"
+    tier_ref: TIER-1
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/01-requirements/USER_STORIES.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-07
+    display_number: "07"
+    tier_ref: TIER-1
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/01-requirements/FRD.md
+    document_status: generated
+    status_source: document
+    readme_status_text: "generated"
+    generated: true
+    file_expected: true
+  - id: DOC-08
+    display_number: "08"
+    tier_ref: TIER-1
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/01-requirements/NFR.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-09
+    display_number: "09"
+    tier_ref: TIER-1
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/01-requirements/PRODUCT_SURFACES.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-09A
+    display_number: "09a"
+    tier_ref: TIER-1
+    artifact_class: SUPPLEMENTAL_DELIVERABLE
+    path: docs/01-requirements/REQUIREMENTS.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-10
+    display_number: "10"
+    tier_ref: TIER-2
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/02-domain/LIFECYCLE_AND_LAYERS.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-11
+    display_number: "11"
+    tier_ref: TIER-2
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/02-domain/DECISION_STATE_MACHINE.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-12
+    display_number: "12"
+    tier_ref: TIER-2
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/02-domain/FAIL_CLOSED_POLICY.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-13
+    display_number: "13"
+    tier_ref: TIER-2
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/02-domain/CODES.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-14
+    display_number: "14"
+    tier_ref: TIER-2
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/02-domain/COMPONENT_REGISTRY_SPEC.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-15
+    display_number: "15"
+    tier_ref: TIER-2
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/02-domain/ALGORITHM_SPEC.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-16
+    display_number: "16"
+    tier_ref: TIER-2
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/02-domain/PARAMETER_REGISTRY.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-17
+    display_number: "17"
+    tier_ref: TIER-2
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/02-domain/RISK_SPEC.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-18
+    display_number: "18"
+    tier_ref: TIER-2
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/02-domain/STATISTICS_SPEC.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-19
+    display_number: "19"
+    tier_ref: TIER-2
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/02-domain/STRATEGY_CARD_SPEC.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-20
+    display_number: "20"
+    tier_ref: TIER-2
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/02-domain/EXIT_MODEL_SPEC.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-20A
+    display_number: "20a"
+    tier_ref: TIER-2
+    artifact_class: SUPPLEMENTAL_DELIVERABLE
+    path: docs/02-domain/EXECUTION_MODEL.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-20B
+    display_number: "20b"
+    tier_ref: TIER-2
+    artifact_class: SUPPLEMENTAL_DELIVERABLE
+    path: docs/02-domain/RULE_SPEC.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-21
+    display_number: "21"
+    tier_ref: TIER-2
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/02-domain/SCREENER_SPEC.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-22
+    display_number: "22"
+    tier_ref: TIER-2
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/02-domain/REGIME_SPEC.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-23
+    display_number: "23"
+    tier_ref: TIER-2
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/02-domain/EVENT_SPEC.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-24
+    display_number: "24"
+    tier_ref: TIER-2
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/02-domain/CHART_SPEC.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-25
+    display_number: "25"
+    tier_ref: TIER-3
+    artifact_class: PRIMARY_DELIVERABLE
+    path: null
+    directories: [contracts/]
+    document_status: drafting
+    status_source: index
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-26
+    display_number: "26"
+    tier_ref: TIER-3
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/03-data/POINT_IN_TIME_SPEC.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-27
+    display_number: "27"
+    tier_ref: TIER-3
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/03-data/CALENDAR_SPEC.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-28
+    display_number: "28"
+    tier_ref: TIER-3
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/03-data/VENDOR_COMPARISON.md
+    additional_paths: [docs/adr/ADR-0001-market-data.md]
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting — ADR **Proposed**, awaiting ratification"
+    generated: false
+    file_expected: true
+  - id: DOC-29
+    display_number: "29"
+    tier_ref: TIER-3
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/03-data/DATA_QUALITY_SPEC.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-30
+    display_number: "30"
+    tier_ref: TIER-4
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/04-journal/JOURNAL_SCHEMA.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-31
+    display_number: "31"
+    tier_ref: TIER-4
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/04-journal/AUDIT_AND_IMMUTABILITY.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-32
+    display_number: "32"
+    tier_ref: TIER-4
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/04-journal/EVIDENCE_RECORD_SPEC.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-33
+    display_number: "33"
+    tier_ref: TIER-4
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/04-journal/CHECKLIST_SPEC.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-34
+    display_number: "34"
+    tier_ref: TIER-5
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/05-validation/VALIDATION_PROGRAM.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-35
+    display_number: "35"
+    tier_ref: TIER-5
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/05-validation/PREREG_TEMPLATE.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-36
+    display_number: "36"
+    tier_ref: TIER-5
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/05-validation/BACKTEST_PROTOCOL.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-37
+    display_number: "37"
+    tier_ref: TIER-5
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/05-validation/WALKFORWARD_SPEC.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-38
+    display_number: "38"
+    tier_ref: TIER-5
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/05-validation/GO_LIVE_GATES.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-39
+    display_number: "39"
+    tier_ref: TIER-6
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/06-engineering/ARCHITECTURE.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-40
+    display_number: "40"
+    tier_ref: TIER-6
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/06-engineering/DEPENDENCY_LAW.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-41
+    display_number: "41"
+    tier_ref: TIER-6
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/06-engineering/CONCURRENCY_MODEL.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-42
+    display_number: "42"
+    tier_ref: TIER-6
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/06-engineering/DETERMINISM_SPEC.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-42A
+    display_number: "42a"
+    tier_ref: TIER-6
+    artifact_class: SUPPLEMENTAL_DELIVERABLE
+    path: docs/06-engineering/SYSTEM_MODES.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-43
+    display_number: "43"
+    tier_ref: TIER-6
+    artifact_class: PRIMARY_DELIVERABLE
+    path: null
+    directories: [adr/]
+    document_status: drafting
+    status_source: index
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-44A
+    display_number: "44a"
+    tier_ref: TIER-6
+    artifact_class: SUPPLEMENTAL_DELIVERABLE
+    path: docs/06-engineering/INVARIANTS.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-44
+    display_number: "44"
+    tier_ref: TIER-6
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/06-engineering/TEST_STRATEGY.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-45
+    display_number: "45"
+    tier_ref: TIER-6
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/06-engineering/OBSERVABILITY_SPEC.md
+    directories: [runbooks/]
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-46
+    display_number: "46"
+    tier_ref: TIER-6
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/06-engineering/SECURITY.md
+    additional_paths: [docs/06-engineering/BACKUP_AND_DR.md]
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-47
+    display_number: "47"
+    tier_ref: TIER-6
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/06-engineering/CI_POLICY.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-48
+    display_number: "48"
+    tier_ref: TIER-6
+    artifact_class: PRIMARY_DELIVERABLE
+    path: AGENTS.md
+    document_status: drafting
+    status_source: index
+    readme_status_text: "drafting — per-package `CONTEXT.md` still planned"
+    generated: false
+    file_expected: true
+  - id: DOC-49
+    display_number: "49"
+    tier_ref: TIER-7
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/07-ux/UX_TASK_FLOWS.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-50
+    display_number: "50"
+    tier_ref: TIER-7
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/07-ux/DESIGN_SYSTEM.md
+    document_status: planned
+    status_source: index
+    readme_status_text: "**deferred — no surface**"
+    generated: false
+    file_expected: false
+  - id: DOC-51
+    display_number: "51"
+    tier_ref: TIER-7
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/07-ux/CHART_VISUAL_STANDARD.md
+    document_status: planned
+    status_source: index
+    readme_status_text: "**deferred — no surface**"
+    generated: false
+    file_expected: false
+  - id: DOC-52
+    display_number: "52"
+    tier_ref: TIER-7
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/07-ux/UX_COPY.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-53
+    display_number: "53"
+    tier_ref: TIER-7
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/07-ux/ACCESSIBILITY.md
+    document_status: planned
+    status_source: index
+    readme_status_text: "**deferred — no surface**"
+    generated: false
+    file_expected: false
+  - id: DOC-54
+    display_number: "54"
+    tier_ref: TIER-7
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/07-ux/DESIGN_HANDOFF.md
+    document_status: planned
+    status_source: index
+    readme_status_text: "**deferred — no surface**"
+    generated: false
+    file_expected: false
+  - id: DOC-55
+    display_number: "55"
+    tier_ref: TIER-8
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/08-pm/ROADMAP.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-56
+    display_number: "56"
+    tier_ref: TIER-8
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/08-pm/RISK_REGISTER.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-57
+    display_number: "57"
+    tier_ref: TIER-8
+    artifact_class: PRIMARY_DELIVERABLE
+    path: docs/08-pm/DEFINITION_OF_READY_DONE.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "drafting"
+    generated: false
+    file_expected: true
+  - id: DOC-57A
+    display_number: "57a"
+    tier_ref: TIER-8
+    artifact_class: SUPPLEMENTAL_DELIVERABLE
+    path: docs/08-pm/SPEC_GAP_ANALYSIS.md
+    document_status: drafting
+    status_source: document
+    readme_status_text: "Authored — measured against the tree"
+    generated: false
+    file_expected: true

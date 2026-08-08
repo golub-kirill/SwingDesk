@@ -25,12 +25,16 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 6 | `lint-imports` | a package importing across a layer or forbidden boundary | **exists** — 4 contracts. Caught a reversed layer order on first run |
 | 7 | no-wall-clock check | `datetime.now` / `date.today` / `time.time` in `derived_observations`, `decision_logic`, `trade_management` | **exists** — AST-parsed, not string-matched, so a mention in a docstring does not trip it |
 | 7b | `golden.py` | a component's output changing without its version and vectors changing with it | **exists** — 25 vectors, 6 components |
-| 8 | `pytest` | unit, property and golden-vector tests | **exists** — 249 tests, fully offline |
+| 8 | `pytest` | unit, property and golden-vector tests | **exists** — 270 tests, fully offline |
 | 9 | determinism replay | a stored manifest no longer reproducing its `output_hash` | **exists** — 1 case, 4 instruments covering all four decision branches |
 | 10 | traceability | a course id with no requirement row, a requirement with no test, a spec id cited by no test | to build |
 | 11 | `verify_components.py` | `implements` not injective; an `active` component missing `implements`/`verification`/`spec`; a dangling parameter reference; an `active` component with an `unset` parameter; an `implements` pointing at a symbol that does not exist; a non-Definition topic with no row | **exists** — caught two components sharing one function on its first run |
+| 12 | `verify_criteria.py` | a ratified or owner-set criterion referencing a parameter that is `unset` or absent — a committed gate that cannot fire | **exists** — written for `k.drawdown_pause`, which had been ratified against an `unset` threshold since 2026-08-02 |
+| 13 | `verify_study_summary.py` | a document stating a study count that the result files do not support | **exists** — caught six places overstating both the number of studies run and the number refuted; the census is derived from result files carrying a `prereg` id and a `verdict` |
+| 14 | `verify_counts.py` | a hard-coded parameter, component, gate, test, document or vector count that has drifted from the registries | **exists** — caught eight stale counts on its first run, including one conflating 465 catalogued components with 458 `registered` |
+| 15 | `verify_project_manifest.py` | the document index drifting from the tree: a duplicate id or display number, a path that does not exist, a status contradicting the document's own header, a row with no manifest entry, or a document in no index at all | **exists** — caught three specifications marked `planned` that were written, and two never indexed |
 
-Everything except 10 runs today via `tools/check_gates.py` — **15 gates**. Gates 2 and 3 are
+Everything except 10 runs today via `tools/check_gates.py` — **19 gates**. Gates 2 and 3 are
 stdlib-only; the rest need the project venv (`pip install -e ".[dev]"`).
 
 Gates 7b and 9 are also asserted from `pytest`, so a bare `pytest` run is not silently weaker than
@@ -55,6 +59,10 @@ Not busywork — each maps to a specific way this project could quietly go wrong
 | 3e | a document asserting something about the system that stopped being true. Every defect of this kind found by hand so far read as correct — a stale claim does not look like a bug |
 | 10 | a course requirement being dropped without anyone noticing |
 | 11 | two implementations of one component — the thing §3.8 forbids and import analysis cannot see, because both imports are perfectly legal. **Caught `M12-T0201` and `M12-T0202` both claiming `pivots:compute`**, which a linter would never question |
+| 12 | a criterion that is ratified and inert. TradAlert's R:R gate was `if is_long: return True` and passed seven audits; this tree's version was `k.drawdown_pause` ratified against an `unset` threshold. Both are valid, referenced and incapable of ever changing a verdict |
+| 13 | the evidence base looking larger, or more negative, than it is. The count that prompted this claimed *more* refuted studies than existed and was quoted in `RISK_REGISTER.md` as the project's central risk |
+| 14 | a number that was right the day it was written. Counts had been reconciled by hand three times, and each pass found what the last careful read missed — the defect class that does not look like one |
+| 15 | the map ceasing to describe the territory. An index is read as an inventory, so a document it calls `planned` is assumed absent and one it omits is assumed not to exist — both were true here, and neither is visible from inside the index |
 
 ## 3. Merge rules
 

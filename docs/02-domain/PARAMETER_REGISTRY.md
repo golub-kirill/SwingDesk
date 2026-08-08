@@ -22,7 +22,7 @@ quoted in a decision, and six months later nobody remembers it was a guess.
 
 This registry exists to make that impossible.
 
-**Current census: 96 parameters — 84 `unset`, 9 `assumed`, 2 `owner`, 1 `validated`.**
+**Current census: 96 parameters — 83 `unset`, 9 `assumed`, 3 `owner`, 1 `validated`.**
 
 The registry shipped at 74, all `unset`, and that sentence stood in this document after twelve of
 them had been set. It was caught by an audit rather than by a gate, which is the honest version of
@@ -126,7 +126,7 @@ recounted.
 | `data.*` | 6 | freshness, staleness, revision tolerance |
 | `universe.*` | 3 | the DR-003 liquidity rule: price floor, ADTV floor, history floor |
 | `account.*` · `costs.*` · `pivot.*` · `atr.*` | 7 | equity and currency; commission and slippage model; pivot left/right; ATR period |
-| **Total** | **96** | 84 `unset`, 9 `assumed`, 2 `owner`, 1 `validated` |
+| **Total** | **96** | 83 `unset`, 9 `assumed`, 3 `owner`, 1 `validated` |
 
 **Three entries are not numbers but missing rules**, and they are the largest authored work in the
 project:
