@@ -109,10 +109,12 @@ overdue, not because they are hard.
 
 ### Owner decisions
 
-1. **`k.timebox_review` has fired and is unactioned.** `registry/criteria.yml` is ratified and says:
-   trigger *"G5 reached"*, action *"set the Track A time box from measured throughput and issue this
-   file as v1.1.0"*. G5 closed 2026-08-02; the file is still v1.0.0. This is the guard against scope
-   drift that the project was built to have.
+1. **Ratify, amend or reject the Track A time box.** `k.timebox_review` fired when G5 closed on
+   2026-08-02 and is now actioned: `criteria.yml` v1.1.0 adds `k.track_a_timebox` at **120 calendar
+   days from the first scheduled daily run**, derived from measured throughput as the criterion
+   requires — G5 took **one day** against a two-month box, so the constraint is elapsed market time,
+   not build speed. The row is `proposed`; `k.timebox_review` stays `owner-set` until you ratify,
+   because drafting a value is not setting one. See `SUCCESS_AND_KILL_CRITERIA.md` §5a.
 2. ~~**Set the 15 `validation.*` parameters.**~~ **Done — `DR-005-validation-thresholds.md`
    ratified by the owner 2026-08-08.** All fifteen carry `assumed:DR-005`; four ratify what PR-002
    and PR-005 already used, eight are authored, and `max_allowable_drawdown` at **−15R** is the

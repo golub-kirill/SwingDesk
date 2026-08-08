@@ -1,9 +1,10 @@
 # SUCCESS AND KILL CRITERIA
 
-**Status: FROZEN — ratified by the owner 2026-08-02.** `registry/criteria.yml` v1.0.0.
+**Status: FROZEN — ratified by the owner 2026-08-02.** `registry/criteria.yml` v1.1.0.
 **Tier:** 0 (charter)
 
-**G0 is closed.** 18 criteria, all with values: 7 Track A, 6 Track B, 5 kill.
+**G0 is closed.** 19 criteria: 7 Track A, 6 Track B, 6 kill. Eighteen are ratified; the nineteenth —
+the Track A time box — is **drafted and awaiting ratification** (§5a).
 
 These may not be edited after seeing a result they govern. Changing one is an **amendment** — a new
 version of `criteria.yml` with the change recorded — and it voids any claim that depended on the
@@ -71,7 +72,8 @@ it continues indefinitely, which is the failure mode this document exists to pre
 
 | Scope | Trigger | Action |
 |---|---|---|
-| **project** | Track A not met within the time box | **stop building** |
+| **project** | G5 not reached within 2 months of G0 close | **stop building** |
+| **project** | Track A's run-measurable criteria not met within 120 days of the first scheduled run | **stop; re-open the data-tier decision** — §5a, proposed |
 | strategy card | after 100 trades, expectancy CI entirely below benchmark | `Rejected`; retire the card — the project continues |
 | programme | every card `Rejected`/`Retired` and no new premise clears the prereg refutation check | convert to journal + statistics only |
 | live | drawdown exceeds the allowable limit | **`Pause`, not kill** — reduce size per the risk-off ladder |
@@ -93,10 +95,46 @@ meant for the second.
 So G5 is boxed, and the Track A box is set afterwards from **measured throughput** rather than
 guessed at now (`k.timebox_review`).
 
+**That afterwards is now: §5a.**
+
 At the owner's stated capacity of ~40 h/week, 2 months is ~**350 working hours**. That is generous
 for one vertical slice, which means the real risk is not the clock — it is scope drifting into the
 ~460-component catalogue. The activation gate exists for exactly this: components may sit at
 `registered` indefinitely at no cost, and only reach `active` deliberately.
+
+## 5a. The Track A time box — proposed 2026-08-08, awaiting ratification
+
+`k.timebox_review` fired when G5 closed on 2026-08-02 and required the Track A box to be set **from
+measured throughput** and issued as v1.1.0. This is that amendment. It adds `k.track_a_timebox` and
+edits nothing: v1.0.0 stays on record exactly as ratified.
+
+**Proposed: 120 calendar days, counted from the first scheduled daily run**, covering only Track A's
+four run-measurable criteria.
+
+**What was measured.** First commit 2026-08-01; walking skeleton running end to end 2026-08-02.
+**G5 took one day against a two-month box.** So the build side is not the constraint and boxing it
+again would box the wrong thing — which is the first finding this amendment owes to §5's own
+reasoning.
+
+**What cannot be compressed.** `a.run_completes` requires 20 **consecutive** trading days — about 28
+calendar days — and *consecutive* is the operative word: one missed session restarts the window.
+Throughput cannot shorten that by a single day. 120 days allows **three full attempts** plus roughly
+five weeks to diagnose and fix between them.
+
+| Alternative | Why not |
+|---|---|
+| 60 days | two attempts. The first free-tier outage puts the box on a knife edge and converts a data gap into a kill trigger — precisely the mix-up §5 warns about |
+| 180 days | three failures already answer the question; past that the box stops discriminating and becomes a formality |
+| from the ratification date | the clock would run before the thing it measures can start. That is the mistake `k.project_timebox` made in the other direction, and it was reached in a day |
+
+**The clock has not started.** No daily run is scheduled yet, so this box is currently boxing
+nothing — which makes scheduling the run the gating action, and is a second, independent argument
+for `HANDOFF.md` §5 item 4.
+
+**Three Track A criteria sit outside the box**: process compliance core and overall, and no critical
+violations. All three require *taken trades*, whose pace is the owner's trading cadence rather than
+the project's throughput. Boxing them would put a kill criterion on the owner's discretion, which is
+not what a time box is for.
 
 ## 6. Ratification record
 
@@ -105,10 +143,11 @@ for one vertical slice, which means the real risk is not the clock — it is sco
 | 2026-08-01 | Two-track structure adopted by the owner; values drafted here for ratification |
 | 2026-08-01 | `k.project_timebox` (2 months → G5) and `k.timebox_review` set by the owner |
 | **2026-08-02** | **All remaining Track A and Track B values ratified. `criteria.yml` v1.0.0 frozen. G0 closed.** |
+| 2026-08-08 | `k.track_a_timebox` drafted from measured throughput and issued as `criteria.yml` v1.1.0 — **proposed, awaiting ratification** (§5a). `k.timebox_review` stays `owner-set` until then: drafting a value is not setting one |
 
-One value is deliberately **absent rather than unset**: the Track A time box. It is scheduled by
-`k.timebox_review` to be added at G5 from measured throughput, as v1.1.0. That is an amendment, not
-an edit — v1.0.0 stays on record.
+One value was deliberately **absent rather than unset**: the Track A time box, scheduled by
+`k.timebox_review` to be added at G5 from measured throughput as v1.1.0. It is now drafted (§5a) and
+awaiting ratification. That is an amendment, not an edit — v1.0.0 stays on record.
 
 ## 7. Standing rules
 

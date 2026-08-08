@@ -12,9 +12,22 @@
 #
 # See docs/00-charter/SUCCESS_AND_KILL_CRITERIA.md.
 
-version: 1.0.0
-date: 2026-08-02
-status: ratified          # owner ratified 2026-08-02; frozen - see rules below
+version: 1.1.0
+date: 2026-08-08
+status: ratified          # v1.0.0 owner-ratified 2026-08-02 and frozen; see amendments below
+
+# Amendments are appended, never applied in place. v1.0.0's content stays exactly as ratified;
+# a later version may ADD a criterion, and may not edit one that has seen a result it governs.
+amendments:
+  - version: 1.1.0
+    date: 2026-08-08
+    status: proposed        # k.timebox_review moves to `met` when the owner ratifies this
+    change: >-
+      Adds k.track_a_timebox - the Track A time box deliberately left absent at v1.0.0 and
+      scheduled by k.timebox_review to be set at G5 from measured throughput.
+    note: >-
+      Drafting the value is not setting it. Until the owner ratifies, the new criterion is
+      `proposed` and k.timebox_review stays `owner-set` rather than `met`.
 
 # ---------------------------------------------------------------------------
 # Track A - is the system sound?
@@ -169,6 +182,36 @@ kill:
       Convert to journal and statistics only. Keep the recording and review value, abandon signal
       generation.
     status: ratified
+
+  - id: k.track_a_timebox
+    scope: project
+    trigger: >-
+      Track A's four run-measurable criteria (a.run_completes, a.decisions_coded,
+      a.no_uncoded_failures, a.reproducible) not all met within the time box, counted from the
+      first scheduled daily run
+    value: 120 calendar days from the first scheduled daily run
+    action: >-
+      Stop and re-open the data-tier decision (D10). Three failed attempts at a 20-session window
+      is evidence the daily run cannot be made reliable on this source - not evidence to keep
+      trying on it.
+    status: proposed
+    date: 2026-08-08
+    note: >-
+      Derived from measured throughput, as k.timebox_review requires. MEASURED: first commit
+      2026-08-01, walking skeleton end to end 2026-08-02 - G5 in one day against a two-month box.
+      The build side is therefore not the constraint, and boxing it again would box the wrong
+      thing. What cannot be compressed by throughput is elapsed MARKET time: a.run_completes needs
+      20 CONSECUTIVE trading days, about 28 calendar days, and any missed session restarts the
+      window. 120 days allows three full attempts plus roughly five weeks to diagnose and fix
+      between them. 60 would allow two, so the first outage would put the box on a knife edge and
+      turn a free-tier data gap into a kill trigger - the exact failure SUCCESS_AND_KILL_CRITERIA
+      section 5 warns about. Beyond 120 the box stops discriminating: three failures is already
+      the answer. STARTS AT THE FIRST SCHEDULED DAILY RUN, not at ratification, because nothing
+      accumulates before then - the lesson from k.project_timebox, which boxed G5 and was reached
+      in a day. The clock has not started: no daily run is scheduled yet. The three
+      trade-dependent Track A criteria (process compliance core and overall, no critical
+      violations) are OUTSIDE this box - their pace is the owner's trading cadence, not the
+      project's throughput, and boxing them would time-box the owner's discretion.
 
   - id: k.drawdown_pause
     scope: live

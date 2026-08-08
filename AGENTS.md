@@ -92,7 +92,8 @@ tools/             generators, checkers, probes
 ```
 
 `registry/course_index.yml` is **generated** — never hand-edit it. `registry/criteria.yml` is
-**frozen** at v1.0.0; changing it is an amendment, not an edit.
+**frozen**; v1.1.0 appends the Track A time box without touching v1.0.0's content, which is what an
+amendment means here. Editing a ratified row is never the move.
 
 ## 5. Conventions
 

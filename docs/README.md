@@ -13,7 +13,7 @@ Frozen first. Amendments are dated records appended to the file, never edits in 
 | # | File | Freezes | Source | Status |
 |---|---|---|---|---|
 | 01 | `CHARTER.md` | Purpose, 8 non-goals, the v1 finish line, 5 standing properties | Owner | **finish line ratified 2026-08-01** |
-| 02 | `SUCCESS_AND_KILL_CRITERIA.md` | 18 criteria: 7 Track A (system), 6 Track B (edge), 5 kill. Data in `registry/criteria.yml` v1.0.0 | Owner | **frozen 2026-08-02** |
+| 02 | `SUCCESS_AND_KILL_CRITERIA.md` | 19 criteria: 7 Track A (system), 6 Track B (edge), 6 kill. Data in `registry/criteria.yml` v1.1.0 | Owner | **frozen 2026-08-02**; v1.1.0 Track A time box proposed 2026-08-08 |
 | 03 | `CONSTRAINTS.md` | Markets, timeframes, 9 owner decisions, measured data depths | `verbatim` appendix covers + owner | drafting — budget owner-pending |
 | 04 | `GLOSSARY.md` | 35 terms, verbatim | `verbatim` Appendix A + Production Rules §3.9 | drafting |
 
