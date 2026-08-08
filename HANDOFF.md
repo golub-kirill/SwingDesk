@@ -31,7 +31,7 @@ the documentation is implementable.
 | Parameters | 96 — 83 `unset`, 9 `assumed`, 3 `owner`, **1 `validated`** |
 | Studies | 4 registered · **3 reported — 2 refuted**, 1 accepted and quantifiably fragile |
 | Universe | 1,133 members · 3,687 of 13,043 measured · **28.3% coverage** |
-| Directory | 2 pulls (2026-08-03, 2026-08-05) · first observation: 7 gone, 32 new · **3 days stale — see §5.5** |
+| Directory | 3 pulls (08-03, 08-05, 08-08) · 14 departures observed · **still unscheduled — see §5.5** |
 | Costs | slippage **measured** 2026-08-05 — 25bps per side (DR-005); commission still assumed |
 | Project gates | G0, G4, G5 closed · G1, G2, G3, G6, G7 open |
 
@@ -170,10 +170,15 @@ comparable to a buy-and-hold benchmark. Both make a ratified criterion un-evalua
 
 ### Work, highest leverage first
 
-5. **Run and then schedule `tools/fetch_directory.py`. This is the only irreversible clock and it
-   is now three days stale** — last pull 2026-08-05, today 2026-08-08. `departures()` answers, but
-   it accumulates *forward only*: a symbol that left and was replaced inside a gap is invisible
-   forever. ~5 seconds a day.
+5. **Schedule `tools/fetch_directory.py`. This is the only irreversible clock and it is still
+   unscheduled** — three pulls exist because someone remembered three times, which is not a
+   mechanism. It accumulates *forward only*: a symbol that left and was replaced inside a gap is
+   invisible forever, and the gaps so far were 2 and 3 days. ~5 seconds a day.
+
+   The rate is now measurable and it is not small. **14 departures across two windows** — 7 between
+   08-03 and 08-05, 7 more between 08-05 and 08-08 — against a directory of ~13,100 names. Whatever
+   fraction of those are genuine delistings rather than ticker changes is the survivorship exposure
+   `PR-002` cannot bound and D10 makes unbuyable. Every unscheduled day discards a sample of it.
 
    ```bash
    python tools/fetch_directory.py --data C:/PycharmProjects/SwingDesk/data
