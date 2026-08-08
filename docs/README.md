@@ -1,6 +1,6 @@
 # Document set
 
-57 documents in 8 tiers. Each row states what the document **freezes** and where its content comes
+61 documents in 8 tiers. Each row states what the document **freezes** and where its content comes
 from. `verbatim` means the content is transcribed from the course without rewriting, and is checked
 by `tools/verify_transcription.py` against freshly extracted PDF text.
 
@@ -39,6 +39,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 13 | `CODES.md` | 12 skip codes with actions; 12 error codes with severity and required control | `verbatim` Appendix N, O | drafting |
 | 14 | `COMPONENT_REGISTRY_SPEC.md` | Record shape, 3 activation states, 9 validation statuses, 8 claim types, 6 unlocked checks | `verbatim` §3.7, §3.8 | drafting |
 | 15 | `ALGORITHM_SPEC.md` | 11-field record template, 7 rules, banned vocabulary, order of work | Field list `verbatim` §3.6; content authored | drafting |
+| 15a | `RULE_SPEC.md` | The Rule object: 11 mandatory parts, three-valued output, 4 effect classes, the discriminating pair. **173 registered rows carry claim type `Operational Course Rule`**; 8 decision points audited against the form | ТЗ §15, seeded from `dee8f37`; audited against the tree | drafting |
 | 16 | `PARAMETER_REGISTRY.md` | Every threshold with value, unit, provenance, status, UI-editable flag. **96 catalogued: 84 `unset`, 9 `assumed`, 2 `owner`, 1 `validated`** — data in `registry/parameters.yml` | Authored — **no course source exists** | drafting |
 | 17 | `RISK_SPEC.md` | 11 risk formulas + control clauses + the sizing ordering law | `verbatim` Appendix C, M48, M49 | drafting |
 | 18 | `STATISTICS_SPEC.md` | 11 statistics formulas, 15 M69 metrics, net-of-costs rule, 9 breakdown axes | `verbatim` Appendix D, H, M69 | drafting |
@@ -47,6 +48,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 21 | `SCREENER_SPEC.md` | 16 filters, 8 candidate-card fields, 9-step pipeline, 6 watchlist partitions | `verbatim` M32, M33 + `registry/` | drafting |
 | 22 | `REGIME_SPEC.md` | 11 regimes, classifier inputs, regime→strategy→risk matrix | `verbatim` M30/M31/Appendix L; **classifier authored** | planned |
 | 23 | `EVENT_SPEC.md` | 20 event types with per-type field schemas | `verbatim` M34 decision tables | planned |
+| 23a | `TRANSITION_SPEC.md` | The discrete-change object (ТЗ §16, renamed to end the collision with 23): one envelope, the three-part test, observed vs inferred, who may emit. **6 kinds of transition are not recorded at all**, two irrecoverably | ТЗ §16; audited against the journal and stores | drafting |
 | 24 | `CHART_SPEC.md` | Every chart to render: panels, overlays, levels, units | `verbatim` chart metadata (867 chart topics) | planned |
 
 ## Tier 3 — Data · `03-data/`, `contracts/`, `adr/`
@@ -75,6 +77,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 34 | `VALIDATION_PROGRAM.md` | The status ladder and what earns each transition; what a forward test measures that a backtest cannot; the 5 required evidence artefacts | `verbatim` M74 + M72 | drafting |
 | 35 | `PREREG_TEMPLATE.md` | 11-section pre-registration; amendment-after-data downgrades to exploratory; `inconclusive` is first-class | Required by Appendix J/K + the data-snooping prohibition; statistics authored | drafting |
 | 36 | `BACKTEST_PROTOCOL.md` | 9 stages and their mandatory records; the 4 prohibitions; **survivorship stated as unmeetable on free data** | `verbatim` Appendix J + M72 | drafting |
+| 36a | `EXECUTION_MODEL.md` | Fill timing, slippage on the fill, gap handling, the **intrabar stop-before-target policy** stated before a target exists, and the two silent exclusions from the signal ledger | ТЗ §28 + `DR-004`; measured against the engine | drafting |
 | 37 | `WALKFORWARD_SPEC.md` | 12-field window record with a **three-way** train/validation/test split; `keep/revise/retire`; the 6 perturbations | `verbatim` Appendix K + M73 | drafting |
 | 38 | `GO_LIVE_GATES.md` | Staged plans, the 5-condition size gate, drawdown as an actuator; calendar time authorises nothing | `verbatim` Appendices Q, R, S + M75 | drafting |
 
@@ -103,12 +106,13 @@ checkable gate in the course.
 | 40 | `DEPENDENCY_LAW.md` | Independence rules as 4 import-linter contracts in `pyproject.toml` | drafting |
 | 41 | `CONCURRENCY_MODEL.md` | 3 tiers, per-vendor limits, breaker, thread-safety classes, worker-count invariance | drafting |
 | 42 | `DETERMINISM_SPEC.md` | The snapshot as determinism boundary, float-associativity trap, 10-field run manifest, stated scope limits | drafting |
+| 42a | `SYSTEM_MODES.md` | RESEARCH · BACKTEST · REPLAY · PAPER · SHADOW · LIVE, discriminated by time, facts, writes and **what the output authorises**; the mode↔validation-status mapping; 4 of 6 running | drafting |
 | 43 | `adr/` | ADR-0001 market data · 0002 calendar · 0003 schema language · 0004 storage engine (all Proposed) | drafting |
 | 44a | `INVARIANTS.md` | The 9 invariants audited against the tests that enforce them: 7 by test, 1 by a function signature, 1 partial | drafting |
 | 44 | `TEST_STRATEGY.md` | 7 layers, 9 invariants as property tests, golden vectors as the immutability mechanism, 6 chaos scenarios | drafting |
 | 45 | `OBSERVABILITY_SPEC.md` + `runbooks/` | Structured-log schema, daily health report, trend signals; 5 runbooks with verbatim return conditions | drafting |
 | 46 | `SECURITY.md` + `BACKUP_AND_DR.md` | Threat model, secret rules, Telegram as a control surface; what cannot be re-fetched, restore verified by output hash | drafting |
-| 47 | `CI_POLICY.md` | 16 gates (**15 running**), what each prevents and what each has caught, what CI must never do, local equivalence | drafting |
+| 47 | `CI_POLICY.md` | 17 gates (**16 running**), what each prevents and what each has caught, what CI must never do, local equivalence | drafting |
 | 48 | `AGENTS.md` (repo root) | Trust discipline, 7 non-negotiables, how to add a verbatim doc or a parameter | drafting — per-package `CONTEXT.md` still planned |
 
 ## Tier 7 — UI/UX · `07-ux/`
@@ -137,7 +141,7 @@ second surface inventing synonyms later.
 
 | # | File | Freezes | Status |
 |---|---|---|---|
-| 55 | `ROADMAP.md` | Now / Next / Later, built on four reported studies rather than before them. Two concrete gaps remain to the ratified finish line | drafting |
+| 55 | `ROADMAP.md` | Now / Next / Later, built on the reported studies rather than before them. Two concrete gaps remain to the ratified finish line | drafting |
 | 56 | `RISK_REGISTER.md` | 8 **realised** risks with what caught each, plus 18 open. Every realised one was found by a gate or a test, none by review | drafting |
 | 57 | `DEFINITION_OF_READY_DONE.md` | Entry/exit criteria for 5 kinds of work item: component, parameter, study, document, surface | drafting |
 
@@ -166,7 +170,9 @@ Pre-registrations in `prereg/`, results in `prereg/results/`, decision records i
 | `PR-005` | Do their different populations then behave differently? | **REJECT** — every arm inside the ungated interval |
 | `PR-002` | Does a regime label carry decision-relevant information? | **ACCEPT** — and ~2% of trades missing at −2R would erase it |
 
-Three refuted hypotheses and one fragile positive. `screen.trend_definition` is closed by evidence;
+Two refuted hypotheses and one fragile positive, from three pre-registrations. A fourth analysis —
+the survivorship bound in `results/PR-002-report.md` — is **post-hoc and carries no verdict**; it is
+counted as a study run and never as a hypothesis tested. `screen.trend_definition` is closed by evidence;
 `regime.classifier_rule` is the first `validated` parameter and carries its bound in the registry
 note. Planning follows in `08-pm/ROADMAP.md`.
 

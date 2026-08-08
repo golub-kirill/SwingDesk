@@ -19,12 +19,12 @@ the documentation is implementable.
 
 | | |
 |---|---|
-| Merge gates | **15**, one command, all green |
-| Tests | **249**, fully offline |
-| Docs | 73 files across 8 tiers |
+| Merge gates | **16**, one command, all green |
+| Tests | **250**, fully offline |
+| Docs | 77 files across 8 tiers |
 | Components | 465 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 84 `unset`, 9 `assumed`, 2 `owner`, **1 `validated`** |
-| Studies | 4 reported — **3 refuted**, 1 accepted and quantifiably fragile |
+| Studies | 3 reported — **2 refuted**, 1 accepted and quantifiably fragile; plus one post-hoc bound |
 | Universe | 1,133 members · 3,687 of 13,043 measured · **28.3% coverage** |
 | Project gates | G0, G4, G5 closed · G1, G2, G3, G6, G7 open |
 
@@ -61,11 +61,46 @@ orders" line.
 
 Resolved: `docs/` is canonical (owner decision). All of that track's work is preserved verbatim in
 commit **`dee8f37`**, its genuinely new material is folded in, and the duplicates are gone.
-`docs/08-pm/SPEC_GAP_ANALYSIS.md` is the real §56 analysis: **FULL 28 · PARTIAL 16 · ABSENT 9 ·
+`docs/08-pm/SPEC_GAP_ANALYSIS.md` is the real §56 analysis: **FULL 28 · PARTIAL 20 · ABSENT 5 ·
 DEFERRED 3.**
 
 **Do not rebuild the numbered tree.** Master ТЗ §8 forbids maintaining one logic in two places, and
 for a day this repo was doing exactly that.
+
+## 4a. What happened after that (2026-08-08)
+
+The top four absent sections are written, each by auditing the tree rather than transcribing the
+seed, and each returned a defect no gate could see:
+
+- `docs/02-domain/RULE_SPEC.md` (§15) — the Rule form, and an audit of the eight decision points that
+  are rules today. Found: the backtest trigger collapsed "no lookback window" into "did not trigger"
+  and counted neither. **Fixed.**
+- `docs/05-validation/EXECUTION_MODEL.md` (§28) — fills, gaps, costs, and the intrabar
+  stop-before-target policy stated *before* a target exists. Found: `Skipped` declared five reasons
+  and incremented three (**fixed**), and the live path sizes from the last close while the backtest
+  fills at the next open plus slippage (**open** — it is `REQ-VALIDATION-002`).
+- `docs/06-engineering/SYSTEM_MODES.md` (§35) — six modes, four running. Found: `RunManifest` has no
+  `mode` field, so a journalled run cannot say whether it was real.
+- `docs/02-domain/TRANSITION_SPEC.md` (§16) — the discrete-change object, **renamed** to end the
+  collision: *event* means the market's events (`EVENT_SPEC.md`), *transition* means the system's.
+  Found: no shape records `from_state`, so a status that changed reads exactly like one that never
+  did; Appendix G's required `Candidate.status history` has no store; and the owner's approval of a
+  proposal — the one transition with a human actor — is written nowhere.
+
+Also corrected: **five documents said `4 studies, 3 refuted`.** Three pre-registrations are reported
+and two of them REJECT; the fourth "study" is the post-hoc survivorship bound inside PR-002, which
+carries no verdict. The evidence was right and every summary of it was wrong. Gate 3f
+(`tools/verify_studies.py`) now recomputes those counts from the reports, and it was mutation-checked
+against the original claim rather than trusted.
+
+**One trap worth knowing about in a worktree.** The venv's editable install points at
+`C:\PycharmProjects\SwingDesk\src` — the main checkout — so `pytest` run from a worktree exercises
+the *main* tree's source unless `PYTHONPATH` names the worktree's `src`. The documentation gates read
+files by path and are unaffected; the code gates are not. Set it before trusting a green run:
+
+```bash
+PYTHONPATH=$PWD/src python tools/check_gates.py
+```
 
 ## 5. What to do next, ranked
 
@@ -100,8 +135,19 @@ overdue, not because they are hard.
    referenced parameters are set — is cheap and would have caught `k.drawdown_pause`.
 9. **Finish universe coverage** — ~5 more `tools/refresh_universe.py` passes to 100%, then re-check
    DR-003's liquidity plateau against the full population.
-10. **Fill the ranked gaps** in `SPEC_GAP_ANALYSIS.md` §4: `RULE_SPEC.md` first (seed draft in
-    `dee8f37`), then `SYSTEM_MODES.md`, then `EXECUTION_MODEL.md`.
+10. **Fill the ranked gaps** in `SPEC_GAP_ANALYSIS.md` §4. The top four are written (§4a above);
+    five remain, and the Expectation Model (§23) is now first — the studies carry baselines and
+    nothing makes them comparable.
+
+Three cheap items fell out of §4a and are worth doing before they get expensive:
+
+11. **`mode` on `RunManifest`**, required, no default. Every journalled run written without it stays
+    without it — records are versioned, never updated.
+12. ~~**Count `POSITION_OPEN`**, and split the trigger's "no window" from its "did not trigger".~~
+    **Done 2026-08-08** — two counters, one test, no trade moved. `EXECUTION_MODEL.md` §5 records
+    what changed and the one caveat: PR-005's stored skip counts predate the counters.
+13. **The narrow `REQ-VALIDATION-001` gate** (item 8) is now specified in `RULE_SPEC.md` §9 with the
+    four checks ranked by cost. The first one is a four-line join between two registries.
 
 ## 6. Closed by evidence — do not re-open
 
@@ -136,12 +182,12 @@ docs/01-requirements BRD, user stories, NFR, surfaces, REQ registry
 docs/02-domain      the course, transcribed and specified
 docs/03-data        point-in-time, calendar, vendors, quality
 docs/04-journal     audit, checklists, journal schema, evidence records
-docs/05-validation  backtest protocol, walk-forward, prereg template, go-live gates
+docs/05-validation  backtest protocol, walk-forward, prereg template, go-live gates, execution model
 docs/06-engineering architecture, dependency law, determinism, CI policy, invariants
 docs/07-ux          task flows, controlled vocabulary
 docs/08-pm          roadmap, risk register, gap analysis, definition of done
 docs/prereg         four pre-registrations and their reports
 registry/           parameters, components, course index, checklists, criteria
 src/swingdesk/      the reference implementation — the vertical slice ТЗ §50 requires
-tools/              the 15 gates, plus network tools that never run in CI
+tools/              the 16 gates, plus network tools that never run in CI
 ```

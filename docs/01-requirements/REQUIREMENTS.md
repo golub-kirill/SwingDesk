@@ -88,7 +88,7 @@ The ТЗ's vocabulary, mapped to what runs here:
 | `inspection` | review; the weakest, used only where nothing else applies |
 | `schema_test` | Pydantic contracts in `src/swingdesk/contracts/`, gate 8 |
 | `static_validation` | gates 1, 3e, 6, 7, 11 — registries, references, layers, wall clock |
-| `unit_test` / `integration_test` | gate 8, 249 tests |
+| `unit_test` / `integration_test` | gate 8, 250 tests |
 | `replay_test` | gate 9 — a stored manifest must reproduce its `output_hash` |
 | `mutation_test` | **does not exist** — the gap `REQ-VALIDATION-001` names |
 

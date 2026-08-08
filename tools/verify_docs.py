@@ -40,11 +40,9 @@ PLANNED = {
     "DESIGN_HANDOFF.md",
     # Per-package developer context, planned alongside AGENTS.md.
     "CONTEXT.md",
-    # The top-ranked absent sections from `SPEC_GAP_ANALYSIS.md` §4. Listed so the analysis can name
-    # its own targets without dangling, and so adding one is a decision rather than a silent gap.
-    "RULE_SPEC.md",         # ТЗ §15 - the central object; seed draft preserved in dee8f37
-    "SYSTEM_MODES.md",      # ТЗ §35 - RESEARCH / BACKTEST / REPLAY / PAPER / SHADOW / LIVE
-    "EXECUTION_MODEL.md",   # ТЗ §28 - incl. the intrabar stop-and-target ambiguity policy
+    # The top three absent sections from `SPEC_GAP_ANALYSIS.md` §4 - RULE_SPEC, SYSTEM_MODES and
+    # EXECUTION_MODEL - were listed here and are now written, so they resolve on their own. The
+    # remaining six absent sections have no agreed filename yet; naming one here would invent it.
     # Broker reconciliation. `UX_TASK_FLOWS.md` §4 argues the hole is real under D1 - the broker is
     # authoritative for positions and the journal must yield - but a spec cannot be written before
     # there is a position source to reconcile against. Named here rather than deleted from
