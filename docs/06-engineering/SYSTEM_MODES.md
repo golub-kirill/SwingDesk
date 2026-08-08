@@ -61,22 +61,34 @@ Measured, not planned.
 | `REPLAY` | **yes** | `tools/replay.py`, `validation/replay.py` | the only mode with a merge gate (gate 9) |
 | `PAPER` | **no** | — | needs the scheduled run plus recording of misses and delays; see §5 |
 | `SHADOW` | **no** | — | no second version has ever run beside a first |
-| `LIVE` | **yes, unnamed** | `swingdesk scan` | see immediately below |
+| `LIVE` | **yes** | `swingdesk scan` | declared since 2026-08-08; see immediately below |
 
-**The mode is currently inferred from the argument list.** `swingdesk scan AAPL` with no `--as-of`
+**The mode used to be inferred from the argument list.** `swingdesk scan AAPL` with no `--as-of`
 takes a `SystemClock`, fetches from the vendor and writes the real journal — that is `LIVE`, and
-nothing says so. Adding `--as-of` swaps in a `FixedClock` and produces something that is neither
-`LIVE` nor `REPLAY`: a fresh fetch judged at a pinned instant, writing the real journal.
+nothing said so. `RunManifest` had no `mode` field, so a journal entry could not answer "was this a
+real run?" except by inference from `snapshot_id` and whether a fixture was injected — and inference
+is exactly what a manifest exists to remove.
 
-**Consequence, verified: `RunManifest` has no `mode` field.** Its fields are `run_id`, `started_at`,
-`code_hash`, `code_dirty`, `config_hash`, `snapshot_id`, `component_versions`, `parameters`,
-`universe_hash`, `seed`, `calendar_version`, `platform`, `output_hash`, `completed_at`. A journal
-entry therefore cannot answer "was this a real run?" except by inference from `snapshot_id` and
-whether a fixture was injected — and inference is exactly what a manifest exists to remove.
+**Fixed 2026-08-08.** `RunMode` is an enum on `contracts/run.py`, `mode` is a **required field with
+no default** on `RunManifest`, and `pipeline.run` takes it as a **required keyword-only argument** so
+a caller can neither omit it nor pass it by accident in the wrong position. Deriving it from the
+injected clock and fetcher was rejected for the obvious reason: it would be automatic, and it would
+re-create the inference this section objects to.
 
-This is cheap to fix and gets more expensive with every journalled run, because entries written
-before the field exists cannot acquire it retroactively (`AUDIT_AND_IMMUTABILITY.md` — records are
-versioned, never updated).
+| Caller | Mode |
+|---|---|
+| `swingdesk scan` | `LIVE` |
+| `swingdesk scan --as-of` | `LIVE_AS_OF` — see §7 |
+| `validation/replay.py` | `REPLAY` |
+
+**Mode is recorded and deliberately not hashed.** A replay of a `LIVE` run executes in `REPLAY` mode
+and must still reproduce that run's `output_hash`; pinning the mode would make every replay a
+mismatch by construction. It describes the run, not the decision.
+
+The journal column is nullable while the manifest field is required, and that asymmetry is the
+honest one: rows written before the column existed cannot acquire a mode, and a `NULL` meaning "this
+run predates the field" beats a backfilled guess (`AUDIT_AND_IMMUTABILITY.md` — records are
+versioned, never updated). Every row written from now on carries it.
 
 ## 4. Modes and the validation ladder are the same ladder
 
@@ -124,9 +136,10 @@ measured in `PAPER` today. Track B cannot, because there is nothing to run forwa
 
 ## 6. Mode rules
 
-1. **A mode is declared, never inferred.** It belongs on the manifest, required, with no default —
-   the same discipline as every parameter here (`PARAMETER_REGISTRY.md` §4). A run whose mode cannot
-   be determined must refuse to start rather than pick one.
+1. **A mode is declared, never inferred.** On the manifest, required, no default — the same
+   discipline as every parameter here (`PARAMETER_REGISTRY.md` §4). **Enforced since 2026-08-08**:
+   `pipeline.run` takes `mode` as a required keyword-only argument, so a run whose mode nobody chose
+   fails at the call site rather than starting under a guess.
 2. **Exactly two modes write the real journal**: `LIVE` and `PAPER`. `RESEARCH` and `BACKTEST` write
    study artefacts; `REPLAY` writes to a temporary workspace and deletes it; `SHADOW` writes only
    divergence.
@@ -166,11 +179,12 @@ Same authority, different reproducibility, and the difference is visible.
 
 ## 8. Open items
 
-- [ ] **`mode` on `RunManifest`**, required, no default. The one change everything else in this
-      document waits on, and the one that gets more expensive per journalled run.
-- [ ] **Where the mode is set.** A CLI flag is honest but forgettable; deriving it from the injected
-      clock and fetcher is automatic and re-creates the inference this document objects to. Likely a
-      required argument to `pipeline.run`, so a caller cannot omit it.
+- [x] ~~**`mode` on `RunManifest`**, required, no default~~ — **done 2026-08-08**, along with the
+      journal column and the `LIVE` / `LIVE_AS_OF` / `REPLAY` call sites. The replay fixture was
+      re-recorded and its `output_hash` is unchanged, which is the evidence that a manifest field was
+      added and no decision moved.
+- [x] ~~**Where the mode is set**~~ — a required keyword-only argument to `pipeline.run`. A CLI flag
+      alone would have been forgettable, and inference was rejected on principle.
 - [ ] **`SHADOW` has no consumer yet, and one is coming.** `REQ-VALIDATION-002` requires the backtest
       and live paths to agree on an identical bar; running both over one bar series and diffing the
       `Decision` is a shadow run by another name. That is the cheapest place to discharge the

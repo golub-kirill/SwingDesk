@@ -49,7 +49,7 @@ keeping wholesale.
 | 13 | Feature / Indicator Spec | FULL | `COMPONENT_REGISTRY_SPEC.md`, `registry/components.yml` (465), 25 golden vectors, gates 3c/7b/11 |
 | 14 | Parameter Registry | FULL | `PARAMETER_REGISTRY.md`, `registry/parameters.yml` (96), gate 1 |
 | 15 | Rule Specification | PARTIAL | `RULE_SPEC.md` (2026-08-08) freezes the form and audits the eight rules that exist. **No object carries `scope`, `evidence_status` or a declared effect class**, and no rule links to its own tests |
-| 16 | Event Specification | PARTIAL | `TRANSITION_SPEC.md` (2026-08-08) — the object, renamed to end the collision with the market-event catalogue in `EVENT_SPEC.md`. **Four shapes emit transitions and none carries `from_state`**; six kinds are not recorded at all, two of them irrecoverably |
+| 16 | Event Specification | PARTIAL | `TRANSITION_SPEC.md` (2026-08-08) — the object, renamed to end the collision with the market-event catalogue in `EVENT_SPEC.md`. `from_state` now recorded on decisions; **no common envelope across the four shapes**, and six kinds of transition are still not recorded at all, two of them irrecoverably |
 | 17 | State / State Machine | PARTIAL | `DECISION_STATE_MACHINE.md` covers candidate decisions; no instrument state machine, no hysteresis policy |
 | 18 | Market Regime | FULL | `REGIME_SPEC.md`, `derived_observations/regime.py`, **PR-002 validated** |
 | 19 | Setup / Trigger / Strategy | PARTIAL | `STRATEGY_CARD_SPEC.md`, `SCREENER_SPEC.md`; no separate Setup and Trigger objects with expiration |
@@ -68,10 +68,10 @@ keeping wholesale.
 | 32 | AI Decision Agent | DEFERRED | `CHARTER.md` §3 non-goal for v1 |
 | 33 | LLM / Model Governance | DEFERRED | follows §32 |
 | 34 | Decision Record | FULL | `JOURNAL_SCHEMA.md`, `AUDIT_AND_IMMUTABILITY.md`, `journal_evidence/journal.py` |
-| 35 | System Modes | PARTIAL | `SYSTEM_MODES.md` (2026-08-08) — six modes, four of them running. **`RunManifest` has no `mode` field**, so a run's mode is inferred from its arguments; `PAPER` and `SHADOW` do not exist |
+| 35 | System Modes | PARTIAL | `SYSTEM_MODES.md` (2026-08-08) — six modes, four running, `mode` required on `RunManifest` and on `pipeline.run` since 2026-08-08. **`PAPER` and `SHADOW` do not exist**, so two of the six are definitions without a runtime |
 | 36 | System Architecture | FULL | `ARCHITECTURE.md`, `DEPENDENCY_LAW.md`, `CONCURRENCY_MODEL.md` |
 | 37 | Non-Functional Requirements | FULL | `NFR.md` |
-| 38 | Testing Strategy | FULL | `TEST_STRATEGY.md`, `INVARIANTS.md`, 250 tests, 17 gates |
+| 38 | Testing Strategy | FULL | `TEST_STRATEGY.md`, `INVARIANTS.md`, 253 tests, 17 gates |
 | 39 | Golden Datasets | PARTIAL | `golden/` holds 25 component **vectors**; the ТЗ's 25 named end-to-end **scenarios** do not exist |
 | 40 | Observability / Audit | FULL | `OBSERVABILITY_SPEC.md`, `docs/runbooks/` |
 | 41 | Security | FULL | `SECURITY.md`, `BACKUP_AND_DR.md` |
@@ -154,7 +154,7 @@ verbatim in `dee8f37`.
 
 The requirement itself stands and is unmet: **JSON Schema should be generated from the Pydantic
 models** (`model_json_schema()`), with a `--check-only` gate like every other registry here. The
-contracts win because they are already enforced at runtime and by 250 tests, so a divergence between
+contracts win because they are already enforced at runtime and by 253 tests, so a divergence between
 them and a hand-written schema would always be the schema's fault.
 
 ## 6. What the parallel track contributed

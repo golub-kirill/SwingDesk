@@ -80,16 +80,24 @@ Four shapes, no common envelope. Measured.
 
 | Shape | Where | Stored in | Carries | Missing |
 |---|---|---|---|---|
-| `DecisionRecord` | `journal_evidence/journal.py` | `decisions` table | subject, to_state, reason_code, reason, run_id, version | `occurred_at` separate from `recorded_at`, `from_state`, producer, `basis` |
+| `DecisionRecord` | `journal_evidence/journal.py` | `decisions` table | subject, to_state, **`from_state`**, reason_code, reason, run_id, version | `occurred_at` separate from `recorded_at`, producer, `basis` |
 | `ManagementAction` | `contracts/position.py` | `management` table | subject, kind, status, reason_code, reason, old/new stop, `proposed_at`, run_id, sequence | `from_state`/`to_state` as such, producer, `supersedes` |
 | Position version | `contracts/position.py` | `positions` table | subject, version, `knowledge_time`, the full new state | the *reason* the version exists — the change is visible, its cause is not |
-| Run start / complete | `contracts/run.py` | `runs` table | run identity, pinned inputs, `output_hash`, `started_at`, `completed_at` | `mode` (`SYSTEM_MODES.md` §3) |
+| Run start / complete | `contracts/run.py` | `runs` table | run identity, **`mode`**, pinned inputs, `output_hash`, `started_at`, `completed_at` | — |
 
-**The two structural gaps this table exposes:**
+**The gaps this table exposed, and where they stand:**
 
-1. **`from_state` is nowhere.** Every shape records what a thing *became*. None records what it was.
-   A `Skip` today and a `Skip` yesterday are indistinguishable from a `Watch` that became a `Skip`,
-   and the second is the one worth reviewing.
+1. ~~**`from_state` is nowhere.**~~ **Closed for decisions, 2026-08-08.** `DecisionRecord` carries
+   `previous_decision`, read from the journal **as of the run's start** so it reports what was known
+   when the run began rather than what it just wrote. `None` means no prior decision — a first
+   sighting — and is explicitly not "unchanged".
+   Still open for the other two shapes, and cheaply: a position's previous version and a management
+   action's previous stop are both already in their stores, so the `from_state` is derivable rather
+   than lost. Only the decision's was unrecoverable.
+   **It is not part of `output_hash`**, deliberately: it describes what the run *knew*, not what it
+   *decided*. A replay against an empty journal correctly finds nothing, and the replayed
+   `output_hash` is unchanged — which is what let this land without re-opening a determinism
+   question.
 2. **`occurred_at` and `recorded_at` are one field in three of the four.** `DecisionRecord` has
    `recorded_at` only. This is the same collapse `POINT_IN_TIME_SPEC.md` refuses for market data,
    allowed for decisions because so far they coincide — a decision made in a run is recorded in that
@@ -157,6 +165,12 @@ The layer law decides this and there is no discretion in it.
 3. **Emission is idempotent.** The key is `producer + subject + occurred_at`. A replay re-emits the
    same transitions with the same keys — which is what makes a replay comparable at all — and
    emitting twice for one cause is a defect, not a duplicate to be de-duplicated downstream.
+
+   **With one honest qualification.** A field derived from stored history — `from_state` is the first
+   — is reproducible only against the same store. A replay runs against a fresh journal and correctly
+   records `None` where the original recorded a prior decision. That is not a determinism defect: the
+   two runs knew different things, and the field says what the run knew. It is why such fields stay
+   out of `output_hash`, and why a store is an input to be pinned rather than context to be assumed.
 4. **Order is `(occurred_at, recorded_at, transition_id)`**, total and stable. A transition log whose
    order depends on insertion is not reproducible, and `a.reproducible` is a ratified criterion.
 
@@ -199,7 +213,10 @@ there is: a violation cannot be committed rather than being caught after it is.
       the types honest and make "what happened to this instrument" a union of four selects. Leaning
       to one table with a typed `subject`, because the query the owner will actually ask is
       chronological and cross-type.
-- [ ] **`from_state` on every shape** (§4). Cheap now; unreconstructable for rows already written.
+- [x] ~~**`from_state` on every shape**~~ — **done for `DecisionRecord`, 2026-08-08**, which was the
+      only one where the prior state was genuinely unrecoverable. A position's previous version and a
+      management action's previous stop are already in their own stores; those two are a projection,
+      not a lost record, and can follow whenever the envelope in §3 is built.
 - [ ] **A watchlist store** — blocked on the transition graph for the nine states, which
       `DECISION_STATE_MACHINE.md` §6 has had open since 2026-08-01. The states are the course's; the
       graph is authored, and it cannot be enforced until it is written down.

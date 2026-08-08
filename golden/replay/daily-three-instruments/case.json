@@ -37,16 +37,18 @@
     "risk.max_position_value": 1000000
   },
   "manifest": {
-    "run_id": "run-20260115T210000Z-ef7cf011",
+    "run_id": "run-20260115T210000Z-46be4686",
     "started_at": "2026-01-15T21:00:00Z",
-    "code_hash": "0d5a478",
+    "mode": "replay",
+    "code_hash": "72bcf89",
     "code_dirty": true,
     "config_hash": "7fa042d431fc480f",
-    "snapshot_id": "snap-20260115T210000Z-ef7cf011",
+    "snapshot_id": "snap-20260115T210000Z-46be4686",
     "component_versions": {
       "M18-T0280-v5.0": 1
     },
     "parameters": [],
+    "universe_hash": null,
     "seed": null,
     "calendar_version": "pandas-market-calendars==5.4.0",
     "platform": "Windows python3.14.0",

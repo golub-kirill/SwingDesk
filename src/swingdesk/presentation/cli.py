@@ -10,6 +10,7 @@ from pathlib import Path
 from swingdesk.application import universe as universe_builder
 from swingdesk.application.pipeline import run
 from swingdesk.contracts.reference import Instrument
+from swingdesk.contracts.run import RunMode
 from swingdesk.journal_evidence.journal import Journal
 from swingdesk.market_data import BarStore
 from swingdesk.platform.clock import FixedClock, SystemClock
@@ -69,11 +70,15 @@ def main(argv: list[str] | None = None) -> int:
         if bool(args.tickers) == bool(args.universe):
             parser.error("pass either tickers or --universe, not both and not neither")
 
+        # The mode is declared here and travels on the manifest. `--as-of` pins the clock and still
+        # fetches fresh, so it is LIVE_AS_OF and not REPLAY however much it resembles one
+        # (SYSTEM_MODES 7): it compares against nothing.
         clock = (
             FixedClock(datetime.fromisoformat(args.as_of).replace(tzinfo=UTC))
             if args.as_of
             else SystemClock()
         )
+        mode = RunMode.LIVE_AS_OF if args.as_of else RunMode.LIVE
         registry = ParameterRegistry.load()
         instruments = [_instrument(t) for t in args.tickers]
         selection = None
@@ -97,7 +102,7 @@ def main(argv: list[str] | None = None) -> int:
                     return 3
 
             result = run(instruments, clock, registry, store, journal,
-                         lookback=args.lookback, universe=selection)
+                         mode=mode, lookback=args.lookback, universe=selection)
             print(report.render(result))
         return 0
 

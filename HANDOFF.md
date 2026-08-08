@@ -20,7 +20,7 @@ the documentation is implementable.
 | | |
 |---|---|
 | Merge gates | **17**, one command, all green |
-| Tests | **250**, fully offline |
+| Tests | **253**, fully offline |
 | Docs | 77 files across 8 tiers |
 | Components | 465 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 69 `unset`, 24 `assumed`, 2 `owner`, **1 `validated`** |
@@ -145,8 +145,11 @@ overdue, not because they are hard.
 
 Three cheap items fell out of §4a and are worth doing before they get expensive:
 
-11. **`mode` on `RunManifest`**, required, no default. Every journalled run written without it stays
-    without it — records are versioned, never updated.
+11. ~~**`mode` on `RunManifest`**, required, no default.~~ **Done 2026-08-08**, with `from_state` on
+    `DecisionRecord` alongside it. Both were the "gets permanently more expensive" kind: a run
+    journalled without a mode, or a decision written without its predecessor, can never acquire one.
+    The replay fixture was re-recorded and its `output_hash` is unchanged, which is the evidence
+    that two fields were added and no decision moved.
 12. ~~**Count `POSITION_OPEN`**, and split the trigger's "no window" from its "did not trigger".~~
     **Done 2026-08-08** — two counters, one test, no trade moved. `EXECUTION_MODEL.md` §5 records
     what changed and the one caveat: PR-005's stored skip counts predate the counters.
