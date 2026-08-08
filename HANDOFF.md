@@ -103,6 +103,27 @@ Also written: `RULE_SPEC.md` (ТЗ §15, the central object — the reconciliati
 requirements already met here**, several more strictly than the ТЗ asks), `SYSTEM_MODES.md` (§35)
 and `EXECUTION_MODEL.md` (§28, the intrabar policy written while it is still free to write).
 
+### 2026-08-08 (later) — four owner decisions, and criteria.yml v1.1.0
+
+**`criteria.yml` is amended for the first time**, from v1.0.0 to **v1.1.0**. Two changes, both owner:
+
+- **`k.timebox_review` actioned by removing the Track A time box**, not by setting one. The criterion
+  asked for an evidence-based number; the evidence argued against having one. G5 closed 2026-08-02
+  inside a two-month box, so the clock was never binding, and `SUCCESS_AND_KILL_CRITERIA.md` §5 had
+  already reasoned that boxing Track A conflates *can this be built* with *is it stable* — Track A
+  carries its own 20-trading-day clock in `a.run_completes`. **What this removes is an explicit
+  calendar guard**; what remains against scope drift is the activation gate.
+- **Track B evaluates on journalled trades only.** A backtest is evidence about a hypothesis, never
+  about a strategy card. So **no backtest can advance or reject a card**, and `k.strategy_rejected`
+  cannot fire until real trades exist. `PR-007` carries a dated amendment recording this.
+
+Also decided: **§16's collision resolves by naming the new object differently** — the market-event
+catalogue keeps `EVENT_SPEC.md`; and **§31 is specified with its five caps left `unset`**.
+
+`AI_AUTHORITY_MODEL.md` §3 was **ratified as written**, and the advisor's provider is a local Ollama
+model, which keeps `$0/month` intact. A four-case trial on a known defect scored 4/4 — see that
+document §10.
+
 ### 2026-08-05 — costs measured, the clock started, the inert gate closed
 
 **Slippage is measured.** `DR-005` supersedes DR-004's slippage component: **25bps per side**, from
@@ -140,44 +161,32 @@ for a day this repo was doing exactly that.
 
 ## 5. What to do next, ranked
 
-Four of these are decisions only the owner can make. They are listed first because they are
+Three of these are decisions only the owner can make. They are listed first because they are
 overdue, not because they are hard.
 
 ### Owner decisions
 
-1. **`k.timebox_review` has fired and is unactioned.** `registry/criteria.yml` is ratified and says:
-   trigger *"G5 reached"*, action *"set the Track A time box from measured throughput and issue this
-   file as v1.1.0"*. G5 closed 2026-08-02; the file is still v1.0.0. This is the guard against scope
-   drift that the project was built to have.
-2. **Set the remaining 14 `validation.*` parameters**, `go_live_criteria` first.
-   `max_allowable_drawdown` was set 2026-08-05 (20% of equity) and gate 12 now enforces that a
-   ratified criterion's parameters exist — so this is no longer silent, but it is still unset.
+1. **Set the remaining 14 `validation.*` parameters**, `go_live_criteria` first —
+   `GO_LIVE_GATES.md` cannot be evaluated without it. `max_allowable_drawdown` was set 2026-08-05
+   (20% of equity) and gate 12 now enforces that a ratified criterion's parameters exist.
+2. **The five portfolio caps** — `risk.max_open_risk`, `max_sector_risk`, `correlation_threshold`,
+   `max_concurrent_positions`, `max_position_value`, all `unset`. Owner decision 2026-08-08: **§31 is
+   specified with them unset**, which is the design working. They stay listed because setting them
+   is what would make `k.strategy_rejected` evaluable — see `EXPECTATION_SPEC.md` §5.
 3. **`UDR-004`: which regime ontology is canonical** — the ТЗ's eight or the course's eleven? Only
    the course list has evidence behind it (`REGIME_SPEC.md`).
 4. **Does the base strategy survive measured costs?** DR-005 makes PR-005's 3× column the operative
    one without a re-run, which settles the *direction*. Quantifying it needs `PR-007` — now
    registered and blocked on a re-fetch, since its window is 2016-08-01 → 2026-07-31 and the store
    holds two years. **Running it is the decision**; registering it cost nothing.
-5. **The §16 name collision.** `EVENT_SPEC.md` here is the *market-event catalogue*; the ТЗ's Event
-   is a formal transition object. Two things, one name — the §11 terminology failure the ТЗ warns
-   about. Rename the catalogue, or name the new object something else. **This blocks the top
-   remaining spec gap.** Recommend the latter: the catalogue is cited from several documents.
+5. **`UDR-004` and the two below are the whole owner list.** §16's naming, `k.timebox_review`,
+   Track B's scope and the AI boundary were all decided on 2026-08-08 and are now work, not
+   decisions — see §4.
 
-6. **The AI authority model needs writing.** Scope was resolved 2026-08-08 by **charter amendment
-   A-001**, the first this charter has carried: an agent is **in scope to subsume context and
-   present a global picture, and may never decide** — the final trading decision is human-only,
-   which extends D1 from *placing orders* to *deciding*. It sits **outside** the ratified v1 finish
-   line; §4 was not reopened.
-
-   A-001 carries a standing condition: **nothing is implemented before the authority model is
-   written and gated.** `COVERAGE_AUDIT.md` §5 licenses that document and only that one — model
-   governance follows it, never precedes it. `REQ-AI-001` and `REQ-AI-002` are now *applicable and
-   unmet* rather than deferred; they were written for exactly this boundary.
-
-Two more are recorded in `PR-007` §6 and want a ruling: whether Track B criteria evaluate on
-backtest trades or only journalled ones (`b.min_sample` says `measured_by: journal`, so on a literal
-reading **no backtest can ever fire `k.strategy_rejected`**), and how an expectancy CI in R is made
-comparable to a buy-and-hold benchmark. Both make a ratified criterion un-evaluable as written.
+**One question from `PR-007` §6 is still open**: how an expectancy CI in R is made comparable to a
+buy-and-hold benchmark. `EXPECTATION_SPEC.md` §5 shows the conversion needs a horizon and an exposure
+assumption — portfolio quantities — so it is blocked on the portfolio layer rather than on a ruling.
+Its companion question was settled by `criteria.yml` v1.1.0.
 
 ### Work, highest leverage first
 

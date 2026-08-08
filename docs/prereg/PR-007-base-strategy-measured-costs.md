@@ -175,4 +175,21 @@ biases this upward, and the commission half of the cost vector is still assumed.
 
 ## 10. Amendments
 
-None.
+**2026-08-08 — one of §6's two open questions is answered.** Appended, not edited: §6 stands as
+written and this records what changed after it.
+
+`criteria.yml` **v1.1.0** settles the first: **Track B evaluates on journalled trades only.** A
+backtest is evidence about a hypothesis, never about a strategy card.
+
+The consequence for this study is that it can report a verdict on its **hypothesis** and cannot
+advance or reject a **card**. That is not a weakening — it is what this pre-registration already
+said in §6, now backed by a ratified criterion rather than by a literal reading of one field.
+`k.strategy_rejected` remains unfirable until real trades exist.
+
+§6's second question — how an expectancy CI in R is made comparable to a buy-and-hold benchmark —
+is **not** answered. `EXPECTATION_SPEC.md` §5 shows the conversion needs a horizon and an exposure
+assumption, both portfolio quantities, and the portfolio layer does not exist. That criterion stays
+inert for a second, independent reason.
+
+**No data has been seen.** This study has not run, so this amendment does not downgrade it to
+exploratory (`PREREG_TEMPLATE.md` §3.3).

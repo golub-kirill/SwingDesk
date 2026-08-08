@@ -1,6 +1,6 @@
 # SUCCESS AND KILL CRITERIA
 
-**Status: FROZEN — ratified by the owner 2026-08-02.** `registry/criteria.yml` v1.0.0.
+**Status: FROZEN — ratified by the owner 2026-08-02, amended 2026-08-08.** `registry/criteria.yml` **v1.1.0**; v1.0.0 stays on record.
 **Tier:** 0 (charter)
 
 **G0 is closed.** 18 criteria, all with values: 7 Track A, 6 Track B, 5 kill.
@@ -105,10 +105,22 @@ for one vertical slice, which means the real risk is not the clock — it is sco
 | 2026-08-01 | Two-track structure adopted by the owner; values drafted here for ratification |
 | 2026-08-01 | `k.project_timebox` (2 months → G5) and `k.timebox_review` set by the owner |
 | **2026-08-02** | **All remaining Track A and Track B values ratified. `criteria.yml` v1.0.0 frozen. G0 closed.** |
+| **2026-08-08** | **`criteria.yml` v1.1.0.** `k.timebox_review` actioned by removing the Track A time box requirement; `b.min_sample` clarified to journalled trades only. Owner. |
 
-One value is deliberately **absent rather than unset**: the Track A time box. It is scheduled by
-`k.timebox_review` to be added at G5 from measured throughput, as v1.1.0. That is an amendment, not
-an edit — v1.0.0 stays on record.
+**The Track A time box will not be set.** It was deliberately absent rather than unset, scheduled by
+`k.timebox_review` to arrive at G5 from measured throughput. The measurement arrived and argued
+against having one: G5 closed 2026-08-02 inside a two-month box, so the clock was never the binding
+constraint — and §5 above had already reasoned that boxing Track A conflates *can this be built* with
+*is it stable*, since `a.run_completes` carries its own 20-trading-day clock.
+
+**What this removes, stated rather than glossed:** an explicit calendar guard on Track A. What
+remains against the scope drift §5 names is the activation gate — components sit at `registered`
+indefinitely at no cost and reach `active` only deliberately, and none is `active` today.
+
+**Track B is journalled trades only** (owner, 2026-08-08). A backtest is evidence about a hypothesis,
+never about a strategy card. The consequence is deliberate and worth stating: **no backtest can
+advance or reject a card**, so `k.strategy_rejected` cannot fire until real trades exist — and
+`PR-007` can report a verdict on its hypothesis without formally rejecting anything.
 
 ## 7. Standing rules
 

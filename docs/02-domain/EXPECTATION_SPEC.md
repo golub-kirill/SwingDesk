@@ -149,6 +149,11 @@ portfolio quantities, and `COVERAGE_AUDIT.md` records the portfolio layer as abs
 `risk.*` caps `unset`. **The comparison is therefore not merely unspecified but unavailable**, and
 `k.strategy_rejected` should be read as inert until it is.
 
+**It is now inert for two independent reasons.** `criteria.yml` v1.1.0 (2026-08-08) settles that
+Track B evaluates on **journalled trades only**, so no backtest can fire the criterion regardless of
+whether the comparison is legal. Both blockers must clear before it can ever trigger: real trades
+must exist, *and* the units must be made commensurable.
+
 ## 6. Probability has exactly three legal sources
 
 Restating `AI_AUTHORITY_MODEL.md` §5 in the domain, because the constraint is not about AI:
