@@ -20,17 +20,18 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 3c | `build_components.py --check-only` | a generated component field hand-edited; the registry going stale against the course | **exists** — 465 rows |
 | 3d | `build_checklists.py --check-only` | the checklist registry drifting from the transcription it is parsed from | **exists** — 84 items |
 | 3e | `verify_docs.py` | a document citing a spec, parameter or component id that does not exist; a status outside the ladder | **exists** — caught 4 dangling references on its first run, one of them cited by three documents |
+| 3f | `verify_studies.py` | a report with no pre-registration; the prereg index disagreeing with the report it points at; a `validated:` parameter citing a study that did not ACCEPT; a `\| Studies \|` row whose numbers do not match the reports on disk | **exists** — caught `4 studies, 3 refuted` quoted in five documents against three reports with two REJECTs |
 | 4 | `ruff` | unused imports, naive datetimes, blind excepts, import order | **exists** — 10 rule families, chosen deliberately |
 | 5 | `mypy --strict` | type errors | **exists** — clean over `src`; `tools/` is out of scope, see §7 |
 | 6 | `lint-imports` | a package importing across a layer or forbidden boundary | **exists** — 4 contracts. Caught a reversed layer order on first run |
 | 7 | no-wall-clock check | `datetime.now` / `date.today` / `time.time` in `derived_observations`, `decision_logic`, `trade_management` | **exists** — AST-parsed, not string-matched, so a mention in a docstring does not trip it |
 | 7b | `golden.py` | a component's output changing without its version and vectors changing with it | **exists** — 25 vectors, 6 components |
-| 8 | `pytest` | unit, property and golden-vector tests | **exists** — 249 tests, fully offline |
+| 8 | `pytest` | unit, property and golden-vector tests | **exists** — 250 tests, fully offline |
 | 9 | determinism replay | a stored manifest no longer reproducing its `output_hash` | **exists** — 1 case, 4 instruments covering all four decision branches |
 | 10 | traceability | a course id with no requirement row, a requirement with no test, a spec id cited by no test | to build |
 | 11 | `verify_components.py` | `implements` not injective; an `active` component missing `implements`/`verification`/`spec`; a dangling parameter reference; an `active` component with an `unset` parameter; an `implements` pointing at a symbol that does not exist; a non-Definition topic with no row | **exists** — caught two components sharing one function on its first run |
 
-Everything except 10 runs today via `tools/check_gates.py` — **15 gates**. Gates 2 and 3 are
+Everything except 10 runs today via `tools/check_gates.py` — **16 gates**. Gates 2, 3 and 3f are
 stdlib-only; the rest need the project venv (`pip install -e ".[dev]"`).
 
 Gates 7b and 9 are also asserted from `pytest`, so a bare `pytest` run is not silently weaker than
@@ -53,6 +54,7 @@ Not busywork — each maps to a specific way this project could quietly go wrong
 | 4 | a wall-clock call or an unused binding surviving review. Both are invisible in a diff and neither is caught by a test that happens to pass |
 | 5 | a declared type and the real contract drifting apart. **Caught the `Fetcher` alias describing positional arguments while every call site passed `period` by keyword** |
 | 3e | a document asserting something about the system that stopped being true. Every defect of this kind found by hand so far read as correct — a stale claim does not look like a bug |
+| 3f | the summary of the evidence drifting from the evidence. Gate 3e cannot see it, because every reference in the wrong sentence resolves; only recomputing from the reports does |
 | 10 | a course requirement being dropped without anyone noticing |
 | 11 | two implementations of one component — the thing §3.8 forbids and import analysis cannot see, because both imports are perfectly legal. **Caught `M12-T0201` and `M12-T0202` both claiming `pivots:compute`**, which a linter would never question |
 
@@ -108,6 +110,7 @@ Kept as a record, because the argument for a gate is empirical and this is the e
 | 5 | the `Fetcher` type declaring four positional arguments while every caller passed `period` by keyword |
 | 3e | **`INVARIANTS.md` cited by three documents and never written** — `TEST_STRATEGY.md` described it as "not prose to be read", `RISK_SPEC.md` and `SCREENER_SPEC.md` deferred to it. Writing it surfaced that invariant 4 is enforced by a function signature rather than a test, and that `DETERMINISM_SPEC.md` §7 claimed general shuffle-invariance coverage while testing one component |
 | 3e | `RECONCILIATION_SPEC.md`, cited by `FAIL_CLOSED_POLICY.md`'s safety row and never written |
+| 3f | **`4 studies, 3 refuted` in five documents.** Three pre-registrations are reported and two of them REJECT; the fourth "study" is the post-hoc survivorship bound, which carries no verdict at all. The evidence was right and every summary of it was wrong, in the direction of overstating how much had been tested |
 
 Two of these deserve a note. The constant-true-range fixture was the useful kind of failure — the
 gate was green, the fixture was wrong, and only trying to make the gate fail on purpose revealed it.

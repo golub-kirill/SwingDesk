@@ -68,6 +68,8 @@ def main() -> int:
                               [python, "tools/verify_transcription.py"]),
         "doc references": _run("documentation cross-references",
                                [python, "tools/verify_docs.py"]),
+        "study record": _run("study record and the counts quoted from it",
+                             [python, "tools/verify_studies.py"]),
         "course index": _run("course index shape",
                              [python, "tools/build_course_index.py", "--check-only"]),
         "frd": _run("FRD current", [python, "tools/build_frd.py", "--check-only"]),
