@@ -1,6 +1,6 @@
 # Document set
 
-63 documents in 8 tiers. Each row states what the document **freezes** and where its content comes
+64 documents in 8 tiers. Each row states what the document **freezes** and where its content comes
 from. `verbatim` means the content is transcribed from the course without rewriting, and is checked
 by `tools/verify_transcription.py` against freshly extracted PDF text.
 
@@ -114,7 +114,7 @@ checkable gate in the course.
 | 44 | `TEST_STRATEGY.md` | 7 layers, 9 invariants as property tests, golden vectors as the immutability mechanism, 6 chaos scenarios | drafting |
 | 45 | `OBSERVABILITY_SPEC.md` + `runbooks/` | Structured-log schema, daily health report, trend signals; 5 runbooks with verbatim return conditions | drafting |
 | 46 | `SECURITY.md` + `BACKUP_AND_DR.md` | Threat model, secret rules, Telegram as a control surface; what cannot be re-fetched, restore verified by output hash | drafting |
-| 47 | `CI_POLICY.md` | 18 gates (**17 running**), what each prevents and what each has caught, what CI must never do, local equivalence | drafting |
+| 47 | `CI_POLICY.md` | 19 gates (**18 running**), what each prevents and what each has caught, what CI must never do, local equivalence | drafting |
 | 48 | `AGENTS.md` (repo root) | Trust discipline, 7 non-negotiables, how to add a verbatim doc or a parameter | drafting — per-package `CONTEXT.md` still planned |
 
 ## Tier 7 — UI/UX · `07-ux/`
@@ -144,6 +144,7 @@ second surface inventing synonyms later.
 | # | File | Freezes | Status |
 |---|---|---|---|
 | 55 | `ROADMAP.md` | Now / Next / Later, built on the reported studies rather than before them. Two concrete gaps remain to the ratified finish line | drafting |
+| 55a | `COVERAGE_MATRIX.md` | Area × documented/specified/implemented/validated/runtime, counted from the registries. **Generated** by `tools/build_coverage.py`; gate 3ci fails if it is stale | generated |
 | 56 | `RISK_REGISTER.md` | 8 **realised** risks with what caught each, plus 18 open. Every realised one was found by a gate or a test, none by review | drafting |
 | 57 | `DEFINITION_OF_READY_DONE.md` | Entry/exit criteria for 5 kinds of work item: component, parameter, study, document, surface | drafting |
 

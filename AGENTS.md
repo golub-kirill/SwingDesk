@@ -19,7 +19,7 @@ and **zero numeric thresholds**. Every threshold here is authored and carries it
 ### If you were told this is a documentation-only project, read this first
 
 **`docs/` is canonical** (owner decision, 2026-08-04). So is `src/`, `tests/`, `registry/` and
-`tools/` — 17 merge gates run from `python tools/check_gates.py` and they are what keep the
+`tools/` — 18 merge gates run from `python tools/check_gates.py` and they are what keep the
 documents honest.
 
 A second effort briefly built a parallel tree at the repo root: ten numbered documents

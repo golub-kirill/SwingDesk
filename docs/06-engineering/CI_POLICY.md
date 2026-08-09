@@ -18,6 +18,7 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 3 | `build_course_index.py --check-only` | the course index no longer extracting to its known shape | **exists** |
 | 3b | `build_frd.py --check-only` | the FRD drifting from the registry it is generated from | **exists** |
 | 3c | `build_components.py --check-only` | a generated component field hand-edited; the registry going stale against the course | **exists** — 465 rows |
+| 3ci | `build_coverage.py --check-only` | the coverage matrix drifting from the registries it is counted from | **exists** — ТЗ §5, generated rather than authored |
 | 3d | `build_checklists.py --check-only` | the checklist registry drifting from the transcription it is parsed from | **exists** — 84 items |
 | 3e | `verify_docs.py` | a document citing a spec, parameter or component id that does not exist; a status outside the ladder | **exists** — caught 4 dangling references on its first run, one of them cited by three documents |
 | 3f | `verify_studies.py` | a report with no pre-registration; the prereg index disagreeing with the report it points at; a `validated:` parameter citing a study that did not ACCEPT; a `\| Studies \|` row whose numbers do not match the reports on disk | **exists** — caught `4 studies, 3 refuted` quoted in five documents against three reports with two REJECTs |
@@ -32,7 +33,7 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 10 | traceability | a course id with no requirement row, a requirement with no test, a spec id cited by no test | to build |
 | 11 | `verify_components.py` | `implements` not injective; an `active` component missing `implements`/`verification`/`spec`; a dangling parameter reference; an `active` component with an `unset` parameter; an `implements` pointing at a symbol that does not exist; a non-Definition topic with no row | **exists** — caught two components sharing one function on its first run |
 
-Everything except 10 runs today via `tools/check_gates.py` — **17 gates**. Gates 2, 3 and 3f are
+Everything except 10 runs today via `tools/check_gates.py` — **18 gates**. Gates 2, 3 and 3f are
 stdlib-only; the rest need the project venv (`pip install -e ".[dev]"`).
 
 Gates 7b and 9 are also asserted from `pytest`, so a bare `pytest` run is not silently weaker than
@@ -57,6 +58,7 @@ Not busywork — each maps to a specific way this project could quietly go wrong
 | 3e | a document asserting something about the system that stopped being true. Every defect of this kind found by hand so far read as correct — a stale claim does not look like a bug |
 | 3f | the summary of the evidence drifting from the evidence. Gate 3e cannot see it, because every reference in the wrong sentence resolves; only recomputing from the reports does |
 | 3g | a safeguard that cannot fire. A ratified criterion whose threshold is unset reads as protection and provides none, and nobody looks for a second one |
+| 3ci | a coverage claim drifting from what is actually covered. The ТЗ forbids claiming coverage without a formal basis, and a hand-maintained matrix of counts is the most rot-prone document a project can own |
 | 10 | a course requirement being dropped without anyone noticing |
 | 11 | two implementations of one component — the thing §3.8 forbids and import analysis cannot see, because both imports are perfectly legal. **Caught `M12-T0201` and `M12-T0202` both claiming `pivots:compute`**, which a linter would never question |
 

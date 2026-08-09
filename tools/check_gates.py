@@ -79,6 +79,8 @@ def main() -> int:
                                    [python, "tools/build_checklists.py", "--check-only"]),
         "components current": _run("component registry current",
                                    [python, "tools/build_components.py", "--check-only"]),
+        "coverage matrix": _run("coverage matrix current",
+                                [python, "tools/build_coverage.py", "--check-only"]),
         "component contract": _run("component registry contract",
                                    [python, "tools/verify_components.py"]),
         "ruff": _run("ruff", [python, "-m", "ruff", "check", "."]),

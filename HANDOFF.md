@@ -19,9 +19,9 @@ the documentation is implementable.
 
 | | |
 |---|---|
-| Merge gates | **17**, one command, all green |
+| Merge gates | **18**, one command, all green |
 | Tests | **253**, fully offline |
-| Docs | 79 files across 8 tiers |
+| Docs | 80 files across 8 tiers |
 | Components | 465 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 69 `unset`, 24 `assumed`, 2 `owner`, **1 `validated`** |
 | Studies | 3 reported — **2 refuted**, 1 accepted and quantifiably fragile; plus one post-hoc bound |
@@ -205,5 +205,5 @@ docs/08-pm          roadmap, risk register, gap analysis, definition of done
 docs/prereg         four pre-registrations and their reports
 registry/           parameters, components, course index, checklists, criteria
 src/swingdesk/      the reference implementation — the vertical slice ТЗ §50 requires
-tools/              the 17 gates, plus network tools that never run in CI
+tools/              the 18 gates, plus network tools that never run in CI
 ```

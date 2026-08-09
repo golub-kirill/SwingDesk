@@ -38,7 +38,7 @@ keeping wholesale.
 | 2 | Главный принцип успеха | FULL | `CHARTER.md`, `SUCCESS_AND_KILL_CRITERIA.md` (frozen v1.0.0) |
 | 3 | 25 вопросов документации | PARTIAL | `DEFINITION_OF_READY_DONE.md` answers most; no document walks all 25 |
 | 4 | Предметная область | FULL | `CONSTRAINTS.md` — markets, timeframes, D1–D10 |
-| 5 | Coverage Matrix | **ABSENT** | no matrix of area × documented/specified/implemented/validated/runtime |
+| 5 | Coverage Matrix | FULL | `COVERAGE_MATRIX.md` (2026-08-08) — **generated** from the registries by `tools/build_coverage.py`, gate 3ci. Authoring it by hand would have been the one document whose only content is counts, maintained by hand |
 | 6 | Архитектурная модель (слои) | FULL | `LIFECYCLE_AND_LAYERS.md`, `DEPENDENCY_LAW.md` — **and enforced**: 4 import contracts, gate 6 |
 | 7 | Определения сущностей | PARTIAL | `GLOSSARY.md` (35 terms), `src/swingdesk/contracts/`; the ТЗ's 22-entity table is not mapped one-to-one |
 | 8 | Канонический источник истины | PARTIAL | no ADR. **Live violation**: `schemas/*.json` and `contracts/*.py` are two hand-maintained copies |
@@ -71,7 +71,7 @@ keeping wholesale.
 | 35 | System Modes | PARTIAL | `SYSTEM_MODES.md` (2026-08-08) — six modes, four running, `mode` required on `RunManifest` and on `pipeline.run` since 2026-08-08. **`PAPER` and `SHADOW` do not exist**, so two of the six are definitions without a runtime |
 | 36 | System Architecture | FULL | `ARCHITECTURE.md`, `DEPENDENCY_LAW.md`, `CONCURRENCY_MODEL.md` |
 | 37 | Non-Functional Requirements | FULL | `NFR.md` |
-| 38 | Testing Strategy | FULL | `TEST_STRATEGY.md`, `INVARIANTS.md`, 253 tests, 17 gates |
+| 38 | Testing Strategy | FULL | `TEST_STRATEGY.md`, `INVARIANTS.md`, 253 tests, 18 gates |
 | 39 | Golden Datasets | PARTIAL | `golden/` holds 25 component **vectors**; the ТЗ's 25 named end-to-end **scenarios** do not exist |
 | 40 | Observability / Audit | FULL | `OBSERVABILITY_SPEC.md`, `docs/runbooks/` |
 | 41 | Security | FULL | `SECURITY.md`, `BACKUP_AND_DR.md` |
@@ -95,13 +95,13 @@ keeping wholesale.
 
 | Coverage | Count |
 |---|---|
-| FULL | **28** |
+| FULL | **29** |
 | PARTIAL | 22 |
-| ABSENT | **3** |
+| ABSENT | **2** |
 | DEFERRED | 3 |
 
 **Half the specification is already met.** That is the finding the parallel analysis could not
-reach, and it changes the plan: the work is filling three holes and closing twenty-two shortfalls,
+reach, and it changes the plan: the work is filling two holes and closing twenty-two shortfalls,
 not building 48 documents.
 
 **Movement since the first pass (2026-08-04 → 2026-08-08).** §15, §28, §35 and §16 — the top four of
@@ -111,23 +111,24 @@ each specifies a form that no object in the tree yet carries, and grading the do
 the discharge is how a coverage matrix starts lying. Each names its own remaining shortfall in the
 row above.
 
-## 4. The three absent sections, and why they are not simply next
+## 4. The two absent sections, and why they are not simply next
 
 What is left is not the top of a queue. These three are **blocked on something other than writing
 time**, which is why they outlasted the six that went first.
 
-1. **§5 Coverage Matrix** — the ТЗ forbids claiming coverage without formal basis. This table is its
-   nearest ancestor and covers one axis of five. The honest version is **generated, not authored**:
-   a hand-maintained coverage matrix is the most rot-prone document a project can own, and this tree
-   has already had five documents quoting a study count that was wrong. It wants a tool and a gate,
-   which is why it is named here rather than written.
-2. **§45 Drift Monitoring** and **§44 Learning Engine** — blocked on `EXPECTATION_MODEL.md` having a
+1. **§45 Drift Monitoring** and **§44 Learning Engine** — blocked on `EXPECTATION_MODEL.md` having a
    stored estimate to measure against, and then on a live record. Drift **is** the difference between
    two expectations for one cohort at two as-of dates; with zero stored expectations there is nothing
    to difference. `UX_TASK_FLOWS.md` §3 measures the post-trade phase at 0 of 6 — the same gap from
    the operator's side.
-3. **§46 Knowledge Graph** — a projection of registries that already exist. Lowest urgency, and the
+2. **§46 Knowledge Graph** — a projection of registries that already exist. Lowest urgency, and the
    one section where specifying before projecting would be pure ceremony.
+
+**§5 was one of these and is now FULL** — built as a generator rather than written, for the reason
+that kept it on this list: a hand-maintained matrix of counts is the most rot-prone document a
+project can own, and this tree had already shipped five documents quoting a study count that was
+wrong. `tools/build_coverage.py` counts every cell from the registries and gate 3ci fails if the
+committed copy drifts.
 
 ### What the written documents found
 
