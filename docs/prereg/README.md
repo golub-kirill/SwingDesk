@@ -16,6 +16,13 @@ has to happen first, not the thing that has to happen last.
 | `PR-002` | Does a regime classifier improve decisions, or only partition them? | **reported — ACCEPT** | — |
 | `PR-003` | Is √252 annualisation wrong enough to matter for this return series? | not written | a daily return series |
 | `PR-004` | Do the process-score weights change any ranking? | not written | ~100 journalled trades |
+| `PR-006` | Does measured live slippage match the modelled 5bp? | not written | a forward test — id reserved by `DR-004` |
+| `PR-007` | Is the assumed 5bp slippage an understatement of the spread this universe pays? | **registered** | — |
+
+`PR-007` is the first study of an **input** rather than a rule. Every R this project has reported —
+including all three refutations — sits on top of `DR-004`'s assumed cost model, and `PR-005`'s
+headline turns positive or negative at 1.369× that assumption. Measuring the spread does not need a
+forward test or a paid vendor; it needs the daily bars already in `data/bars.duckdb`.
 
 `PR-003` and `PR-004` are named in `DR-001` and `DR-002` as the studies that would overturn them.
 `PR-005` is required by PR-001's result: the definitions are not interchangeable, so choosing one
