@@ -109,12 +109,12 @@ overdue, not because they are hard.
 
 ### Owner decisions
 
-1. **Ratify, amend or reject the Track A time box.** `k.timebox_review` fired when G5 closed on
-   2026-08-02 and is now actioned: `criteria.yml` v1.1.0 adds `k.track_a_timebox` at **120 calendar
-   days from the first scheduled daily run**, derived from measured throughput as the criterion
-   requires — G5 took **one day** against a two-month box, so the constraint is elapsed market time,
-   not build speed. The row is `proposed`; `k.timebox_review` stays `owner-set` until you ratify,
-   because drafting a value is not setting one. See `SUCCESS_AND_KILL_CRITERIA.md` §5a.
+1. ~~**Ratify the Track A time box.**~~ **Done 2026-08-08.** `criteria.yml` v1.1.0 ratified with
+   `k.track_a_timebox`: 120 days from the first scheduled daily run, **or 180 days from ratification
+   if no run is ever scheduled**. The second clause was added at ratification because the first
+   alone could never have fired — see §5a of `SUCCESS_AND_KILL_CRITERIA.md`. `k.timebox_review` is
+   now `met`, six days after it fired.
+
 2. ~~**Set the 15 `validation.*` parameters.**~~ **Done — `DR-005-validation-thresholds.md`
    ratified by the owner 2026-08-08.** All fifteen carry `assumed:DR-005`; four ratify what PR-002
    and PR-005 already used, eight are authored, and `max_allowable_drawdown` at **−15R** is the
@@ -125,9 +125,12 @@ overdue, not because they are hard.
 
 ### Work, highest leverage first
 
-4. **Schedule `tools/fetch_directory.py`.** The only irreversible clock in the project:
-   `departures()` accumulates *forward only*, and it is the sole survivorship evidence a free tier
-   can ever produce. Every day without it is permanently lost. ~5 seconds/day.
+4. ~~**Schedule `tools/fetch_directory.py`.**~~ **Deferred by the owner 2026-08-08, with the loss
+   accepted.** Recorded rather than dropped, because the cost is real and permanent: `departures()`
+   accumulates forward only and is the sole survivorship evidence a free tier can ever produce, so
+   every unscheduled day is unrecoverable at any price. Do not re-raise it as a suggestion — it is
+   a decision. It is also what makes the 180-day clause in `k.track_a_timebox` load-bearing.
+
 5. **Measure costs instead of assuming them.** Corwin–Schultz (2012) and Abdi–Ranaldo (2017)
    estimate effective spread from daily OHLC — no new data needed. This is the highest-value study
    available, because the base-strategy verdict currently flips on an assumed 5bps.

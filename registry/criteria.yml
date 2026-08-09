@@ -21,13 +21,16 @@ status: ratified          # v1.0.0 owner-ratified 2026-08-02 and frozen; see ame
 amendments:
   - version: 1.1.0
     date: 2026-08-08
-    status: proposed        # k.timebox_review moves to `met` when the owner ratifies this
+    status: ratified        # owner ratified 2026-08-08, with the inaction clause added
     change: >-
       Adds k.track_a_timebox - the Track A time box deliberately left absent at v1.0.0 and
       scheduled by k.timebox_review to be set at G5 from measured throughput.
     note: >-
-      Drafting the value is not setting it. Until the owner ratifies, the new criterion is
-      `proposed` and k.timebox_review stays `owner-set` rather than `met`.
+      Ratified with one change to the draft. As first written the box started at "the first
+      scheduled daily run" and the owner deferred scheduling in the same session, which would have
+      made it a criterion that could never fire - the REQ-VALIDATION-001 shape, and one gate 3g
+      cannot catch because the trigger references no parameter. The second clause fixes that: a
+      kill criterion evadable by inaction is not a kill criterion.
 
 # ---------------------------------------------------------------------------
 # Track A - is the system sound?
@@ -160,11 +163,14 @@ kill:
     action: >-
       Set the Track A time box using measured throughput from the G5 build, and issue this file as
       v1.1.0 with that value added.
-    status: owner-set
+    status: met
     date: 2026-08-01
+    met_on: 2026-08-08
     note: >-
-      The Track A time box is deferred on purpose - it will be an evidence-based number. Adding it
-      is an amendment, not an edit: v1.0.0 stays on record.
+      The Track A time box was deferred on purpose - an evidence-based number rather than a guess.
+      MET 2026-08-08: k.track_a_timebox added and v1.1.0 issued. It fired when G5 closed on
+      2026-08-02 and sat unactioned for six days, which is the honest record of how long a criterion
+      can fire in a ratified file without anyone noticing. v1.0.0 stays on record.
 
   - id: k.strategy_rejected
     scope: strategy card
@@ -188,13 +194,18 @@ kill:
     trigger: >-
       Track A's four run-measurable criteria (a.run_completes, a.decisions_coded,
       a.no_uncoded_failures, a.reproducible) not all met within the time box, counted from the
-      first scheduled daily run
-    value: 120 calendar days from the first scheduled daily run
+      first scheduled daily run - or no daily run scheduled at all within 180 days of ratification
+    value: >-
+      120 calendar days from the first scheduled daily run, OR 180 calendar days from ratification
+      (2026-08-08) if no daily run has been scheduled by then
     action: >-
-      Stop and re-open the data-tier decision (D10). Three failed attempts at a 20-session window
-      is evidence the daily run cannot be made reliable on this source - not evidence to keep
-      trying on it.
-    status: proposed
+      If the box expired WITH a run scheduled: stop and re-open the data-tier decision (D10). Three
+      failed attempts at a 20-session window is evidence the daily run cannot be made reliable on
+      this source, not evidence to keep trying on it.
+      If it expired with NO run ever scheduled the finding is different and larger: the system is
+      not being operated. Restate the project as documentation-and-research only and stop
+      maintaining a live contour that nothing uses.
+    status: ratified
     date: 2026-08-08
     note: >-
       Derived from measured throughput, as k.timebox_review requires. MEASURED: first commit
@@ -208,7 +219,9 @@ kill:
       section 5 warns about. Beyond 120 the box stops discriminating: three failures is already
       the answer. STARTS AT THE FIRST SCHEDULED DAILY RUN, not at ratification, because nothing
       accumulates before then - the lesson from k.project_timebox, which boxed G5 and was reached
-      in a day. The clock has not started: no daily run is scheduled yet. The three
+      in a day. The clock has not started: no daily run is scheduled yet, and the owner deferred
+      scheduling on 2026-08-08 with the survivorship loss accepted - which is exactly why the
+      second clause exists, because the first alone would have boxed nothing. The three
       trade-dependent Track A criteria (process compliance core and overall, no critical
       violations) are OUTSIDE this box - their pace is the owner's trading cadence, not the
       project's throughput, and boxing them would time-box the owner's discretion.
