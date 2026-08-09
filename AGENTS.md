@@ -207,7 +207,7 @@ for b in $(git branch --format='%(refname:short)'); do
 done | sort -u
 ```
 
-`PR-007` was registered, implemented, run, reported, merged and pushed before anyone noticed another
+`PR-008` was registered, implemented, run, reported, merged and pushed before anyone noticed another
 branch had answered the same question a day earlier and reached the opposite conclusion. Both had
 followed the pre-registration discipline correctly. **Neither had looked sideways.**
 
@@ -243,7 +243,7 @@ Reports explain results. The explanation is what a reader carries away, and it i
 inspected thing in the document: the pre-registration disciplines the *statistic*, the gates
 discipline the *registry*, and nothing at all disciplines the sentence that says **why**.
 
-The strongest sentence in `PR-007-report.md` — the signal sits three orders of magnitude below the
+The strongest sentence in `PR-008-report.md` — the signal sits three orders of magnitude below the
 noise floor — passed sixteen gates and was false. It was never tested because it read as exposition
 rather than as a claim.
 

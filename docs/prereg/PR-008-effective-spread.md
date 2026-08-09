@@ -1,12 +1,19 @@
 # PREREG: Is the assumed 5bp slippage an understatement of the spread this universe actually pays?
 
 ```
-id:      PR-007
+id:      PR-008   (registered as PR-007; renumbered 2026-08-09)
 date:    2026-08-09
 author:  owner
-status:  registered
+status:  reported - see results/PR-008-report.md and its correction
 blocked: nothing - runs offline against data/bars.duckdb
 ```
+
+**Renumbered, and the renumbering illustrates the rule it followed.** This was registered as
+`PR-007` in commit `0097bb4`. A parallel branch had already used that id, eight days earlier, for a
+different study — unnoticed because nobody listed the branches. `RECONCILIATION_PLAN.md` D-R4
+resolves a contested id by earliest commit timestamp, so this study moved and the other kept the
+number. The git history under `PR-007` is unedited, and it is what proves this registration preceded
+its own run.
 
 `PR-006` is **not** this study. `DR-004` reserves that id for measured live slippage against
 modelled, which needs a forward test that does not exist. This study estimates a historical spread
@@ -207,5 +214,5 @@ unit under this form. The per-pair form is retained in code as a diagnostic only
 documented and pinned by a test, because deleting it would delete the evidence for preferring the
 pooled one. Nothing else changes: §1, §3, §4, §6's thresholds, §7 and §8 stand as registered.
 
-Had this gone unnoticed, PR-007 would have reported a per-side half-spread near 40bp against a 5bp
+Had this gone unnoticed, PR-008 would have reported a per-side half-spread near 40bp against a 5bp
 assumption and rejected `DR-004` with confidence, on an artefact.

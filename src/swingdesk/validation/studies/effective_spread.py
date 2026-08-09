@@ -1,4 +1,4 @@
-"""Effective bid-ask spread, estimated from daily OHLC. PR-007.
+"""Effective bid-ask spread, estimated from daily OHLC. PR-008.
 
 `DR-004` set `costs.slippage_model` to 5bp per side by assumption, and rejected a spread-derived
 value because no free source serves historical intraday bid/ask point-in-time. That is true of
@@ -160,7 +160,7 @@ def corwin_schultz(
     a question posed at 10bp round trip, the per-pair form is unusable. This one converges to the
     true spread in the same simulation (`tests/test_effective_spread.py`).
 
-    A negative pooled estimate is returned as 0.0 with the flag set. The flag is what PR-007 §6
+    A negative pooled estimate is returned as 0.0 with the flag set. The flag is what PR-008 §6
     counts, because a negative estimate means the estimator's assumptions failed on this window -
     not that trading was free.
     """

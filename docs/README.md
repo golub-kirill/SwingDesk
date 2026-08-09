@@ -149,7 +149,7 @@ second surface inventing synonyms later.
 
 | Gate | Deliverables | Exit condition |
 | 60 | `POSTMORTEM-2026-08-09.md` | Three parallel efforts, a duplicated study with the opposite answer, and a gate that passed on a lucky seed. Three root causes taken to the fifth why | drafting |
-| 61 | `RECONCILIATION_PLAN.md` | Three branches, two DR-005s, two PR-007s and three incompatible criteria.yml v1.1.0 — every collision, the rule that resolves it, and the order | owner-pending |
+| 61 | `RECONCILIATION_PLAN.md` | Three branches, two DR-005s, two PR-008s and three incompatible criteria.yml v1.1.0 — every collision, the rule that resolves it, and the order | owner-pending |
 |---|---|---|
 | ~~G0 Charter~~ | 01–04 | **CLOSED 2026-08-02** — finish line ratified, criteria frozen at v1.0.0 |
 | G1 Requirements | 05–09 | Every capability has a Gherkin acceptance criterion |

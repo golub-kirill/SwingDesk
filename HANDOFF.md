@@ -43,12 +43,12 @@ others, and one re-ran a study another had already finished and reached the oppo
 
 | Branch | Tip | Merged? | What it holds |
 |---|---|---|---|
-| `claude/swingdesk-handoff-continue-f479bd` | 2026-08-09 | **yes** | PR-007, the v7.0 delta, `AGENTS.md` §9 |
+| `claude/swingdesk-handoff-continue-f479bd` | 2026-08-09 | **yes** | PR-008, the v7.0 delta, `AGENTS.md` §9 |
 | `claude/swingdesk-handoff-continue-1feb49` | 2026-08-08 | **no**, 9 commits | `DR-005` slippage at 25bp, `criteria.yml` v1.1.0 **removing** the Track A time box, `RULE_SPEC`/`SYSTEM_MODES`/`EXECUTION_MODEL`, gates 12–15, `validation.max_allowable_drawdown` = 20% |
 | `claude/swingdesk-documentation-321418` | 2026-08-09 | **no**, 26 commits | a HANDOFF rewrite, a count audit, a phase plan — unreviewed |
 
 **`master` currently contradicts several items in row 2, and the two branches contradict each other**
-— two `DR-005`s, two `PR-007`s, three incompatible `criteria.yml` v1.1.0. The file-by-file plan is
+— two `DR-005`s, two `PR-008`s, three incompatible `criteria.yml` v1.1.0. The file-by-file plan is
 `docs/08-pm/RECONCILIATION_PLAN.md`. **Merge nothing without it.**
 
 ## 3. The uncomfortable summary
@@ -60,7 +60,7 @@ negative.**
   3× cost stress** (PR-005). Both are **net** — gross is never reported (`DR-004` consequence 1), so
   "before costs" is the one description that is wrong. Those two points put the break-even at
   **1.369× assumed costs**. Costs on `master` are still *assumed*. A parallel branch measured them
-  at **25bp per side** (`DR-005`), and PR-007's contrary claim — that they cannot be measured from
+  at **25bp per side** (`DR-005`), and PR-008's contrary claim — that they cannot be measured from
   free daily data — was **withdrawn on 2026-08-09** after a calibration-free sign test refuted it.
   The direction is settled: 5bp is too low. The level is not. So the sign of the result still sits
   inside an unvalidated number, and now also inside an unreconciled one.
@@ -132,7 +132,7 @@ overdue, not because they are hard.
    Measured 2026-08-09: **three pulls only** — 2026-08-03, 08-05, 08-08 — so it is running by hand
    at irregular 2–3 day gaps, not on a schedule. Owner decision 2026-08-09: **keep it manual for
    now**, no scheduled task.
-5. **Reconcile the cost measurement — it was done twice, with opposite answers.** PR-007 on `master`
+5. **Reconcile the cost measurement — it was done twice, with opposite answers.** PR-008 on `master`
    returned **inconclusive** on its registered decision rule (negative-estimate rate 53.2%/41.3%
    against a 25% threshold) and then explained that with a claim it has since **withdrawn**. The
    parallel branch's `DR-005` measured **25bp per side** and is right about the direction: a
@@ -160,7 +160,7 @@ overdue, not because they are hard.
 | Paid market data | Owner decision D10, taken with the survivorship cost known |
 | Tuning the current parameters | PR-005 measured the strategy flat at assumed costs and negative under stress — both net |
 | New entry filters | Same family, same evidence |
-| ~~Spread estimation from free daily data~~ | **Removed 2026-08-09 — this row was wrong.** It rested on PR-007's withdrawn explanation. The sign test shows the estimators do detect a spread; see `POSTMORTEM-2026-08-09.md` §2. Kept struck through because a "closed by evidence" row that quietly disappears is worse than one that was wrong |
+| ~~Spread estimation from free daily data~~ | **Removed 2026-08-09 — this row was wrong.** It rested on PR-008's withdrawn explanation. The sign test shows the estimators do detect a spread; see `POSTMORTEM-2026-08-09.md` §2. Kept struck through because a "closed by evidence" row that quietly disappears is worse than one that was wrong |
 | Order placement, automation, multi-user | `CHARTER.md` §3 non-goals — reopening needs a charter amendment |
 
 ## 7. The habits that matter here

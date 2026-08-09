@@ -111,7 +111,7 @@ def synthetic_ohlc(
 
     **One draw from this generator is not a property.** On a spreadless series Abdi-Ranaldo clamps to
     zero about half the time and scatters up to ~0.004 the rest of the time, so a single seed can be
-    quoted to support almost anything - which is exactly the error PR-007's report and DR-005's test
+    quoted to support almost anything - which is exactly the error PR-008's report and DR-005's test
     each made, independently, on the same estimator. Every assertion built on this generator sweeps
     seeds and asserts on the distribution.
 

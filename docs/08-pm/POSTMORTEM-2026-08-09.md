@@ -16,7 +16,7 @@ its headline finding was wrong, it was reached second, and it was published befo
 
 | # | Failure | Caught by |
 |---|---|---|
-| F1 | Re-ran a study another branch had already completed, taking the `PR-007` id it had already used | listing branches, *after* merging |
+| F1 | Re-ran a study another branch had already completed, taking the `PR-008` id it had already used | listing branches, *after* merging |
 | F2 | Merged and pushed to `master` without checking for parallel branches | the same listing, minutes later |
 | F3 | Quoted a single-seed synthetic reading (7.25bp) as if it were a property | a 40-seed sweep, run only because F1 forced a comparison |
 | F4 | Asserted the signal was "three orders of magnitude below the noise floor" — never tested | a sign test that took four minutes to write |
@@ -30,7 +30,7 @@ untouched, and every gate was green at every commit. The damage is entirely to t
 
 A parallel branch (`claude/swingdesk-handoff-continue-1feb49`, tip 2026-08-08) had already produced
 `DR-005`: slippage measured at **25bp per side**, superseding `DR-004`'s assumed 5bp, with
-Abdi-Ranaldo as the headline. `PR-007` concluded the opposite — that neither estimator can resolve
+Abdi-Ranaldo as the headline. `PR-008` concluded the opposite — that neither estimator can resolve
 the quantity — and it was **wrong**, on two calibration-free tests:
 
 | Test | Result |
@@ -41,7 +41,7 @@ the quantity — and it was **wrong**, on two calibration-free tests:
 Both efforts implemented Abdi-Ranaldo **term for term identically**. The disagreement was never in
 the code; it was in what each side did with a synthetic control, and neither side swept a seed.
 
-Two of `PR-007`'s findings survive and `DR-005` should absorb them: its own zero-spread control rests
+Two of `PR-008`'s findings survive and `DR-005` should absorb them: its own zero-spread control rests
 on one seed (19 of 40 exceed 5bp per side at its calibration, max 24.30bp — nearly its whole
 headline), and the cross-section is backwards (Abdi-Ranaldo correlates **+0.46** with volatility and
 **−0.02** with liquidity, and the most liquid third reads *wider* than the least). So the direction
@@ -51,7 +51,7 @@ is established and the level is not.
 
 ### Chain A: the duplicate
 
-1. **Why was `PR-007` a duplicate?** Because `DR-005` was not known to exist.
+1. **Why was `PR-008` a duplicate?** Because `DR-005` was not known to exist.
 2. **Why not?** Because the session read `HANDOFF.md`, `AGENTS.md`, `docs/README.md` and the working
    tree, and never ran `git branch -a`.
 3. **Why was that reading treated as sufficient?** Because `HANDOFF.md` opens with *"Everything below
@@ -81,7 +81,7 @@ is established and the level is not.
    evidence discipline at all.
 5. **Why is exposition outside the discipline?** Because this project's rules bind **pre-registered
    statistics and registry parameters** — prereg, provenance, gates — and say nothing about the
-   causal prose in a report. **The strongest sentence in `PR-007-report.md` was the least checked
+   causal prose in a report. **The strongest sentence in `PR-008-report.md` was the least checked
    thing in it**, and that is structural, not accidental.
 
 > **Root cause B — the evidence discipline covers the numbers that decide and not the prose that
@@ -109,7 +109,7 @@ is established and the level is not.
 | Every synthetic-control assertion sweeps seeds and asserts on the **median**, never one draw | F3, F5 | `tests/test_invariants.py`, `tests/conftest.py` |
 | The null check compares against the **known-biased form on the same sweep** rather than an absolute constant, so it cannot be tuned into passing by changing the grid | F5 | `test_no_estimator_manufactures_a_spread` |
 | A **clamp-rate (sign) test**, which is calibration-free and is what actually settled the dispute | F4, F6 | `test_every_estimator_clamps_far_less_often_when_a_spread_is_present` |
-| `PR-007-report.md` carries its withdrawal **in place**, struck through rather than deleted | F4 | the report |
+| `PR-008-report.md` carries its withdrawal **in place**, struck through rather than deleted | F4 | the report |
 | The generator's docstring states that one draw from it is not a property, and why | F3 | `conftest.synthetic_ohlc` |
 
 ## 5. What is still open — and these are the ones that matter
@@ -123,9 +123,9 @@ outright. **Not built yet.**
 **B. A causal claim in a report needs a test or an explicit hedge.** Root cause B has no mechanism.
 The cheapest honest version is a convention rather than a gate: a report sentence asserting *why* a
 result came out as it did either cites the check that establishes it, or is marked as conjecture.
-`PR-007`'s withdrawn paragraphs would have been marked conjecture and nothing would have been wrong.
+`PR-008`'s withdrawn paragraphs would have been marked conjecture and nothing would have been wrong.
 
-**C. Reconciling `DR-005` with `PR-007`'s correction.** Owner decision. `costs.slippage_model` is
+**C. Reconciling `DR-005` with `PR-008`'s correction.** Owner decision. `costs.slippage_model` is
 currently `assumed` at 5bp on `master` and proposed at 25bp on the other branch. The direction is
 settled; the level is not, and the cross-sectional pathology in §2 says the level should not be taken
 at face value from either effort.

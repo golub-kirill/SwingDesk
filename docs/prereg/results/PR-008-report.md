@@ -1,12 +1,19 @@
-# PR-007 RESULT: the decision rule refused, and the reason first given for it was wrong
+# PR-008 RESULT: the decision rule refused, and the reason first given for it was wrong
 
 ```
-prereg:     PR-007 (registered 2026-08-09)
+prereg:     PR-008 (registered 2026-08-09 AS PR-007; renumbered 2026-08-09)
 status:     reported, then CORRECTED 2026-08-09
 run:        2026-08-09
 verdict:    INCONCLUSIVE - section 6's negative-estimate branch, on both estimators
-data:       PR-007.json
+data:       PR-008.json
 ```
+
+> **Registered as `PR-007`, renumbered to `PR-008`.** A parallel branch had used that id for a
+> different study eight days earlier; `RECONCILIATION_PLAN.md` D-R4 gives a contested id to the
+> earliest commit timestamp, so this one moved. Registration is commit `0097bb4`, the run and report
+> `8a548da`, and **the git history still says `PR-007` throughout** — which is what proves
+> registration preceded the run. A citation of `PR-007` written before 2026-08-09 means this study;
+> one written after means the other.
 
 > **Read §"Correction" at the end before quoting anything here.** The `inconclusive` verdict stands:
 > it is what §6's registered decision rule returns on these numbers. The **explanation** this report
@@ -124,7 +131,7 @@ estimators do detect a spread here, and `DR-005` found it a day earlier.
 ratifies the assumption. `costs.slippage_model` remains `assumed`, and every R in this project still
 rests on it.
 
-**It does not say PR-005's headline is dead.** `PR-007.json` carries
+**It does not say PR-005's headline is dead.** `PR-008.json` carries
 `pr005_sensitivity.survives_under_every_split: false`, because the worst estimator's median
 (14.98bp) exceeds the 6.85bp break-even bound. **That field must not be read as a finding.** It
 compares a real threshold against a number this same report has just declared unusable. The honest
@@ -169,7 +176,7 @@ decision rather than a conclusion.** Kept in place so the reasoning that produce
   than caveated.
 - **`MINIMUM_PAIRS_PER_MONTH = 15` was fixed at run time, not at registration.** §5 said "monthly"
   without pinning the floor. It was chosen once, before the run, and not varied; it is recorded in
-  `PR-007.json` under `run_parameters`. The full-series arm makes it moot in any case.
+  `PR-008.json` under `run_parameters`. The full-series arm makes it moot in any case.
 - **A 300-instrument smoke test preceded the full run** and showed the same negative rates. The
   exploratory arm was designed after seeing it. That ordering is why the arm is labelled exploratory
   rather than reported as a second result.
@@ -177,12 +184,12 @@ decision rather than a conclusion.** Kept in place so the reasoning that produce
 ## Reproducing
 
 ```bash
-python tools/run_pr007.py --store data/bars.duckdb
+python tools/run_pr008.py --store data/bars.duckdb
 ```
 
 Offline. Reads the bar store at its own maximum `knowledge_time`, so the run reproduces as long as
 the snapshot exists. The estimators are pure and unit-tested in `tests/test_effective_spread.py`,
-including the synthetic recovery test that caught the per-pair Jensen bias recorded in PR-007 §10.
+including the synthetic recovery test that caught the per-pair Jensen bias recorded in PR-008 §10.
 
 ---
 

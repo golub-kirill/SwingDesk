@@ -240,7 +240,7 @@ def test_bar_rejects_impossible_ohlc() -> None:
 
 # --------------------------------------------------------------------- spread estimators
 #
-# An estimator that reads ordinary volatility as transaction cost is the failure PR-007 nearly
+# An estimator that reads ordinary volatility as transaction cost is the failure PR-008 nearly
 # shipped: the per-pair Corwin-Schultz form reported ~+80bp of round-trip spread on bars containing
 # none, and it passed every example test written for it because it ran, returned a plausible
 # number, and had the right units.
@@ -264,7 +264,7 @@ KNOWN_BIASED_ESTIMATORS = {
 #: The first version of this constant was set from a single draw (0.001451) and asserted on that one
 #: draw. It was wrong: across 30 seeds the same call ranges 0.000000 to 0.004240 and **8 of them
 #: exceed this tolerance**. A gate built to catch an estimator that manufactures signal was itself a
-#: single sample of a noisy quantity - the identical error PR-007's report made in prose and
+#: single sample of a noisy quantity - the identical error PR-008's report made in prose and
 #: DR-005's test made in code, all three on the same estimator.
 #:
 #: So the assertions below sweep seeds and test the distribution. Medians, measured:
@@ -370,7 +370,7 @@ def test_no_estimator_manufactures_a_spread(name: str) -> None:
 
 @pytest.mark.parametrize("name", sorted(_discovered_estimators()))
 def test_every_estimator_clamps_far_less_often_when_a_spread_is_present(name: str) -> None:
-    """The sign property, which needs no calibration at all - and is what settled DR-005 vs PR-007.
+    """The sign property, which needs no calibration at all - and is what settled DR-005 vs PR-008.
 
     An estimator floored at zero clamps when its underlying quantity comes out negative. With no
     spread present that is noise about zero, so it should clamp often; with a real spread the

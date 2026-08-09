@@ -1,4 +1,4 @@
-"""Run PR-007: is the assumed 5bp slippage an understatement of the spread this universe pays?
+"""Run PR-008: is the assumed 5bp slippage an understatement of the spread this universe pays?
 
 Orchestration only. Every number comes from `validation.studies.effective_spread`, which is pure and
 tested, and from `reference_data.universe`, which owns the eligibility rule.
@@ -11,7 +11,7 @@ The constants below are read from the pre-registration. They are NOT registry va
 deliberate: a study records what it actually ran under, rather than inheriting whatever gets
 ratified later.
 
-    python tools/run_pr007.py
+    python tools/run_pr008.py
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ RULE = universe.LiquidityRule(
     adtv_window=20, min_history=250,
 )
 
-# --- PR-007 sections 4-6, fixed at registration -----------------------------------------
+# --- PR-008 sections 4-6, fixed at registration -----------------------------------------
 ASSUMED_HALF_SPREAD_BPS = Decimal("5.0")     # DR-004, per side
 BREAK_EVEN_MULTIPLE = Decimal("1.3692")      # PR-005's two points; see the prereg section 5
 NEGATIVE_RATE_LIMIT = Decimal("0.25")        # section 6's refusal branch
@@ -166,9 +166,9 @@ def _exploratory(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(prog="run_pr007")
+    parser = argparse.ArgumentParser(prog="run_pr008")
     parser.add_argument("--store", type=Path, default=Path("data/bars.duckdb"))
-    parser.add_argument("--out", type=Path, default=Path("docs/prereg/results/PR-007.json"))
+    parser.add_argument("--out", type=Path, default=Path("docs/prereg/results/PR-008.json"))
     parser.add_argument("--limit", type=int, default=0, help="0 = every instrument")
     args = parser.parse_args()
 
@@ -294,7 +294,7 @@ def main() -> int:
         for row in per_instrument
     ])
 
-    # --- PR-007 section 6, applied -------------------------------------------------------
+    # --- PR-008 section 6, applied -------------------------------------------------------
     if len(eligible) < MINIMUM_INSTRUMENTS:
         verdict, why = "refused", f"{len(eligible)} eligible instruments < {MINIMUM_INSTRUMENTS}"
     elif cs_median is None or ar_median is None:
@@ -313,13 +313,13 @@ def main() -> int:
         verdict = "inconclusive"
         why = "the estimators fall on opposite sides of 5bp"
 
-    # --- PR-007 section 5 secondary ------------------------------------------------------
+    # --- PR-008 section 5 secondary ------------------------------------------------------
     bound_bps = ASSUMED_HALF_SPREAD_BPS * BREAK_EVEN_MULTIPLE
     worst = max(cs_median or Decimal(0), ar_median or Decimal(0))
     pr005_survives = worst < bound_bps
 
     report: dict[str, object] = {
-        "prereg": "PR-007",
+        "prereg": "PR-008",
         "knowledge_time": str(knowledge_time),
         "store": str(args.store),
         "survivorship": "absent",

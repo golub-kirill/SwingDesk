@@ -32,7 +32,7 @@ Owner decisions taken 2026-08-09 are recorded in §3 and are the basis of every 
 | Id | `1feb49` | `321418` | `master` |
 |---|---|---|---|
 | `DR-005` | `DR-005-measured-slippage.md` (2026-08-05) | `DR-005-validation-thresholds.md` | — |
-| `PR-007` | `PR-007-base-strategy-measured-costs.md` (2026-08-08) | — | `PR-007-effective-spread.md` (2026-08-09) |
+| `PR-007` | `PR-007-base-strategy-measured-costs.md` (2026-08-08) | — | was PR-007-effective-spread, now `PR-008-effective-spread.md` **(resolved, step 1)** |
 | `DR-006` | — | `DR-006-portfolio-risk-block.md` | — |
 
 ### 2.2 `registry/criteria.yml` — three incompatible v1.1.0
@@ -83,9 +83,12 @@ must be re-assigned once, at the end, rather than per-merge.
 | `DR-005` | `1feb49` measured-slippage (08-05) | `321418` validation-thresholds → **`DR-007`** |
 | `PR-007` | `1feb49` base-strategy-measured-costs (08-08) | `master` effective-spread → **`PR-008`** |
 
-`master`'s study is the one that moves. Its report, its `PR-007.json`, its correction section and
-every citation of it must be renamed together, and `docs/prereg/README.md` must record that the id
-changed and why — a citation written before today points at the wrong study otherwise.
+`master`'s study is the one that moves — the newest work pays the cost of the collision, which is the
+right way round. Its prereg, report and JSON of record were renamed together with all 47 citations,
+and `docs/prereg/README.md` records that the id changed and when: **a `PR-007` citation written
+before 2026-08-09 means the effective-spread study, one written after means the base-strategy one.**
+The git history under `PR-007` is left unedited, because the registration commit is what proves the
+hypothesis predated the run.
 
 ### What D-R5 must carry
 
@@ -106,8 +109,12 @@ That is `AGENTS.md` §10.3 applied to its own founding example.
 Each step ends green on `python tools/check_gates.py`, and no step begins before the previous is
 committed.
 
-1. **Renumber on the branches, not during the merge.** `321418`'s `DR-005` → `DR-007`; `master`'s
-   `PR-007` → `PR-008`. Renaming inside a merge conflict is how a citation silently breaks.
+1. ~~**Renumber on the branches, not during the merge.**~~ **Half done, 2026-08-09.** `master`'s
+   `PR-007` → **`PR-008`** is complete: four artifacts renamed, 47 references updated across 13
+   files, and the renumbering recorded in the prereg, the report and `docs/prereg/README.md` — the
+   git history under `PR-007` is deliberately unedited, because it is what proves registration
+   preceded the run. **`321418`'s `DR-005` → `DR-007` is still outstanding** and must be committed on
+   that branch before step 4.
 2. **Merge `1feb49`.** Smaller, already reviewed here, and it carries the cost decision. Expect
    conflicts in the eleven §2.5 documents and in `check_gates.py`/`verify_docs.py`.
 3. **Reconcile the duplicated specs** (D-R2) — `RULE_SPEC.md` and `SYSTEM_MODES.md` first, since
