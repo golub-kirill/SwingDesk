@@ -137,3 +137,111 @@ itself the pattern that made the reconciliation necessary. Dispositioned:
 | `UDR-003` | Scope of the execution and broker layer | **CLOSED.** Owner decision D1, `CHARTER.md` — the system never places orders. §29 is `DEFERRED` with its ontology slot fixed |
 | `UDR-004` | Canonical regime ontology | **OPEN, and sharper than recorded.** The ТЗ suggests eight regimes; the course names **eleven** (`REGIME_SPEC.md` §2) and they are a vocabulary, not a partition. PR-002 validated a classifier on one axis of three. The real question is whether the ТЗ list or the course list is canonical — and only the course list has evidence behind it |
 | `UDR-005` | Should the reference vertical slice come before mass documentation? | **CLOSED — it already did.** G5 closed 2026-08-02, walking skeleton green, replay a merge gate. The ТЗ's own §50 ordering was followed before the ТЗ arrived |
+
+## 9. The phase plan (owner, 2026-08-08) — proposed
+
+The owner's phasing, stated:
+
+1. **Describe everything.** No research, no implementation.
+2. **MVP** — first tries, first tests.
+3. **Maximum coverage** — coded step by step, tested, verified.
+4. **Paper trading, research, calibration.**
+
+Recorded here because a plan that is not written down is not a plan. Four adjustments follow, each
+with the evidence that prompted it, and one structural consequence the plan has to carry.
+
+### What the plan gets right, and it is not the obvious thing
+
+**Research last is normally a mistake, and here it is defensible.** Calibrating before the machinery
+is trustworthy is how a project fits noise, and this one has the evidence: three of four studies
+refuted, and the one positive is erased by a survivorship exposure that free data cannot close. The
+instinct — do not tune until the thing being tuned can be trusted — matches what PR-005 found rather
+than fighting it. §7's honest risk still stands, and this ordering does not make it worse.
+
+### A. Phase 2 already happened
+
+**G5 closed 2026-08-02.** `CHARTER.md` §4's six capabilities are all done, replay is a merge gate,
+253 tests and 18 gates run from one command. The MVP is behind us, not ahead.
+
+What *is* ahead and looks like an MVP is **activation**: 465 components are registered, 7 are
+implemented and **0 are `active`**. `COVERAGE_MATRIX.md` §3 names that gap as the number to watch —
+implemented-but-not-runtime is the population where code exists that nothing may yet rely on.
+
+*Adjustment:* call phase 2 **activation**, and its exit is the first component reaching `active` with
+its parameters valued, its verification present and its status displayed wherever its output appears.
+
+### B. "Maximum coverage" is this project's own named kill risk
+
+`k.project_timebox`'s note, ratified 2026-08-01: *the real risk is scope drift into the
+460-component catalogue rather than time.* A phase that codes all 465 components is that risk written
+out as a plan.
+
+The activation gate exists precisely so this does not happen — components sit at `registered`
+indefinitely at **no cost**, and reaching `active` is deliberate (`COMPONENT_REGISTRY_SPEC.md` §3).
+
+*Adjustment:* make coverage **demand-driven**. A component is implemented when a strategy card needs
+it, not because the catalogue has a row for it. Building 465 components for a strategy with no
+validated edge produces 465 pieces of unvalidated machinery and a much larger surface to keep honest.
+
+### C. Paper trading is not a late phase — it is how Track A closes
+
+`a.run_completes` requires **20 consecutive trading days** of the run completing. That clock cannot be
+compressed by throughput, and it **does not need a strategy**: a forward test measures misses, delays,
+alerts and journal quality — the four things `VALIDATION_PROGRAM.md` §2 says a backtest structurally
+cannot see. Three further Track A criteria need taken trades.
+
+*Adjustment:* paper runs **in parallel from the start of phase 3**, not after it. It measures the
+system, not the edge, and placing it fourth means Track A cannot close until everything else is
+built.
+
+### D. One study belongs before maximum coverage
+
+The base strategy measured **+0.028R before costs and −0.123R at 3× costs**, so the sign of the only
+result this project owns sits inside an assumed 5bps. Corwin–Schultz (2012) and Abdi–Ranaldo (2017)
+estimate effective spread from daily OHLC — **no new data, no vendor, no new fetch**.
+
+*Adjustment:* measure costs before dimensioning the machinery on top of them. It is one study and it
+is the cheapest available; everything built in phase 3 inherits whatever that number turns out to be.
+
+### The consequence the plan must carry
+
+**Scheduling the daily run was deferred on 2026-08-08, and under this phasing it lands in phase 3 or
+4.** Two things follow, and the second is structural:
+
+1. `departures()` accumulates forward only, so the survivorship record for the whole of phases 1–2
+   does not exist and cannot be reconstructed at any price.
+2. **`a.run_completes` cannot be met without a scheduled run.** If the deferral becomes permanent,
+   Track A never closes — and Track A is the entire question of whether the system is sound. The
+   ratified `k.track_a_timebox` now fires on exactly that: 180 days from 2026-08-08 with no run ever
+   scheduled, and its action is to restate the project as documentation-and-research only.
+
+That is not an argument to reverse the deferral. It is the plan's own arithmetic: **adjustment C is
+available only if the schedule exists**, and if it never does, phase 4 is unreachable and the
+project's honest end state is the one `k.track_a_timebox` already names.
+
+### Mapped onto the gates that already exist
+
+Expressed in the existing ladder rather than a second vocabulary — ТЗ §8 forbids maintaining one
+logic in two places, and this repository has already paid for that once.
+
+| Phase | Existing gate | Exit condition |
+|---|---|---|
+| 1 Describe | G1, G2, G3 | ТЗ `ABSENT` = 0; the 24 `PARTIAL` shortfalls that are prose are closed |
+| ~~2 MVP~~ | ~~G5~~ | **closed 2026-08-02** |
+| 2′ Activate | — | first component `active`, with its status displayed |
+| 3 Coverage, demand-driven | G6 | every component a live strategy card needs is `active` |
+| 3′ Paper, in parallel | — | Track A's four run-measurable criteria met |
+| 4 Research and calibration | Track B | a pre-registered study reports on forward data |
+
+### Phase 1's remaining scope, enumerated
+
+Because "describe everything" has a measurable end and it is close. `SPEC_GAP_ANALYSIS.md`:
+**FULL 29 · PARTIAL 24 · ABSENT 1.**
+
+Documentation-only work left: **§46** (knowledge graph), and the prose subset of the shortfalls —
+§3 (no document walks all 25 questions), §7 (the ТЗ's 22-entity table is not mapped one-to-one),
+§11 (`GLOSSARY.md` has no `synonyms_discouraged` / `ambiguous_terms`), §43 (no change-type taxonomy
+or rollback policy), §53 (no QA scorecard against the ТЗ's 13 counters).
+
+The remaining shortfalls are **code**, not prose — §8's generated schemas, §12's six missing time
+types, §39's end-to-end scenarios — and they belong in phase 3 regardless of how phase 1 ends.

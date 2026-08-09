@@ -102,6 +102,24 @@ files by path and are unaffected; the code gates are not. Set it before trusting
 PYTHONPATH=$PWD/src python tools/check_gates.py
 ```
 
+## 4b. The phase plan (2026-08-08)
+
+The owner set the shape of the work: **describe everything → MVP → maximum coverage, coded and
+tested step by step → paper trading, research, calibration.** It is recorded with four adjustments in
+`ROADMAP.md` §9, and the two that change what happens next are:
+
+- **The MVP is behind us, not ahead.** G5 closed 2026-08-02. What looks like an MVP from here is
+  **activation** — 465 registered, 7 implemented, **0 `active`**.
+- **"Maximum coverage" is `k.project_timebox`'s own named kill risk** — scope drift into the
+  460-component catalogue. Coverage should be demand-driven: a component is implemented when a
+  strategy card needs it.
+
+And one piece of arithmetic the plan carries: `a.run_completes` needs 20 consecutive trading days of
+the run completing, so **Track A cannot close without a scheduled run**. The schedule is deferred
+(item 4 below). If that becomes permanent, phase 4 is unreachable and `k.track_a_timebox` fires into
+"restate the project as documentation-and-research only" — which is a legitimate end state, and it
+should be reached deliberately rather than by default.
+
 ## 5. What to do next, ranked
 
 Three of these are decisions only the owner can make. They are listed first because they are
