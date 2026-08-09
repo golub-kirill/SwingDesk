@@ -21,7 +21,7 @@ the documentation is implementable.
 |---|---|
 | Merge gates | **18**, one command, all green |
 | Tests | **253**, fully offline |
-| Docs | 84 files across 8 tiers |
+| Docs | 87 files across 8 tiers |
 | Components | 465 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 63 `unset`, 30 `assumed`, 2 `owner`, **1 `validated`** |
 | Studies | 3 reported — **2 refuted**, 1 accepted and quantifiably fragile; plus one post-hoc bound |
@@ -109,7 +109,7 @@ they disagree it wins.
 
 | Phase | What it is | Exit |
 |---|---|---|
-| 1. Describe | no research, no implementation | ТЗ `ABSENT` = 0; the prose shortfalls closed |
+| ~~1. Describe~~ | **CLOSED 2026-08-08** | ТЗ `ABSENT` = **0**; §3 and §53 blocked on a missing source |
 | 2. Activate | **not "MVP"** — that closed at G5 on 2026-08-02 | first component `active`, status displayed |
 | 3. Coverage, demand-driven | built when a strategy card needs it | every component a live card needs is `active` |
 | 3′. Paper, in parallel | measures the system, not the edge | Track A's four run-measurable criteria met |

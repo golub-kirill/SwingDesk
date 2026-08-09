@@ -36,15 +36,15 @@ keeping wholesale.
 | 0 | Инструкция агенту | FULL | `AGENTS.md`, `CI_POLICY.md` |
 | 1 | Смысл проекта | FULL | `CHARTER.md` |
 | 2 | Главный принцип успеха | FULL | `CHARTER.md`, `SUCCESS_AND_KILL_CRITERIA.md` (frozen v1.0.0) |
-| 3 | 25 вопросов документации | PARTIAL | `DEFINITION_OF_READY_DONE.md` answers most; no document walks all 25 |
+| 3 | 25 вопросов документации | PARTIAL | `DEFINITION_OF_READY_DONE.md` answers most. **Blocked: the 25 questions are not in the repository** — the master ТЗ is absent and only its restatements survive (`dee8f37`) |
 | 4 | Предметная область | FULL | `CONSTRAINTS.md` — markets, timeframes, D1–D10 |
 | 5 | Coverage Matrix | FULL | `COVERAGE_MATRIX.md` (2026-08-08) — **generated** from the registries by `tools/build_coverage.py`, gate 3ci. Authoring it by hand would have been the one document whose only content is counts, maintained by hand |
 | 6 | Архитектурная модель (слои) | FULL | `LIFECYCLE_AND_LAYERS.md`, `DEPENDENCY_LAW.md` — **and enforced**: 4 import contracts, gate 6 |
-| 7 | Определения сущностей | PARTIAL | `GLOSSARY.md` (35 terms), `src/swingdesk/contracts/`; the ТЗ's 22-entity table is not mapped one-to-one |
+| 7 | Определения сущностей | PARTIAL | `ENTITY_MAP.md` (2026-08-08) maps all 24 object types — **12 built, 2 deferred by decision, 3 specified with zero instances**. Mapped against the *restatement* in `dee8f37`, because the ТЗ is not in the repository; **22 vs 24 is unresolved** |
 | 8 | Канонический источник истины | PARTIAL | no ADR. **Live violation**: `schemas/*.json` and `contracts/*.py` are two hand-maintained copies |
 | 9 | Общая модель метаданных | PARTIAL | `registry/*.yml` rows carry metadata; no unified `common_metadata` applied across object types |
 | 10 | Извлечение знаний из курса | FULL | `tools/build_course_index.py`, `registry/course_index.yml` — 1379 topics classified, gate 3 |
-| 11 | Терминология | PARTIAL | `GLOSSARY.md` — no `synonyms_discouraged` / `ambiguous_terms` fields |
+| 11 | Терминология | FULL | `GLOSSARY.md` gained both sections (2026-08-08) — 10 ambiguous terms, each a collision this tree has already hit and paid for, plus the discouraged synonyms |
 | 12 | Требования к данным, время | **PARTIAL** | `POINT_IN_TIME_SPEC.md`, `DATA_QUALITY_SPEC.md`, `CALENDAR_SPEC.md`. **2 of 8 time types** |
 | 13 | Feature / Indicator Spec | FULL | `COMPONENT_REGISTRY_SPEC.md`, `registry/components.yml` (465), 25 golden vectors, gates 3c/7b/11 |
 | 14 | Parameter Registry | FULL | `PARAMETER_REGISTRY.md`, `registry/parameters.yml` (96), gate 1 |
@@ -76,17 +76,17 @@ keeping wholesale.
 | 40 | Observability / Audit | FULL | `OBSERVABILITY_SPEC.md`, `docs/runbooks/` |
 | 41 | Security | FULL | `SECURITY.md`, `BACKUP_AND_DR.md` |
 | 42 | Operations / Incident Response | FULL | `docs/runbooks/` — five runbooks with verbatim return conditions |
-| 43 | Change Management | PARTIAL | `COMPONENT_REGISTRY_SPEC.md` §6 covers component versioning; no change-type taxonomy or rollback policy |
+| 43 | Change Management | FULL | `CHANGE_MANAGEMENT.md` (2026-08-08) — 8 change types, and the rollback finding: **the stores are append-only, so rollback is mostly supersede rather than revert** |
 | 44 | Learning Engine | PARTIAL | `DRIFT_AND_LEARNING.md` (2026-08-08) §1 — the promotion path is **M69's acceptance enum**, transcribed since 2026-08-01 and connected to nothing. **Nothing consumes it**, and the post-trade loop it needs is out of contour under D1 |
 | 45 | Drift Monitoring | PARTIAL | `DRIFT_AND_LEARNING.md` (2026-08-08) §3 — five families, **four computable today and none computed**; expectation drift needs executed fills and is structurally blocked |
-| 46 | Knowledge Graph | **ABSENT** | dependencies exist in registries; no graph projection |
+| 46 | Knowledge Graph | PARTIAL | `KNOWLEDGE_GRAPH.md` (2026-08-08) specifies the projection. **10 of 11 edge types are already gate-enforced**; specified and deliberately not built until phase 3 grows the tree |
 | 47 | Документационный комплект | FULL | `docs/README.md` — 61-document plan, different structure, same function |
 | 48 | Формат документации | FULL | `docs/README.md`; enforced by gates 2 and 3e |
 | 49 | Рабочий процесс агента | FULL | `AGENTS.md`, `tools/build_*.py` |
 | 50 | MVP / вертикальный срез | **FULL** | **G5 closed 2026-08-02** — walking skeleton green, replay is a merge gate |
 | 51 | Переходные ворота | FULL | `GO_LIVE_GATES.md`, `docs/README.md` gates G0–G7 |
 | 52 | Definition of Done | FULL | `DEFINITION_OF_READY_DONE.md` |
-| 53 | Количественные критерии QA | PARTIAL | gate 3e enforces broken-reference = 0; no single QA scorecard against the ТЗ's 13 counters |
+| 53 | Количественные критерии QA | PARTIAL | gates 3e/3f/3ci enforce reference, count and coverage integrity. **Blocked: the 13 counters are not in the repository**, same cause as §3 |
 | 54 | Запрещённые действия агента | PARTIAL | `AGENTS.md` non-negotiables cover most of the 30 |
 | 55 | Итоговая формула | FULL | `CHARTER.md` |
 | 56 | Финальная задача (gap analysis) | FULL | this document |
@@ -95,9 +95,9 @@ keeping wholesale.
 
 | Coverage | Count |
 |---|---|
-| FULL | **29** |
-| PARTIAL | 24 |
-| ABSENT | **1** |
+| FULL | **31** |
+| PARTIAL | 22 |
+| ABSENT | **0** |
 | DEFERRED | 3 |
 
 **Half the specification is already met.** That is the finding the parallel analysis could not
@@ -111,26 +111,30 @@ each specifies a form that no object in the tree yet carries, and grading the do
 the discharge is how a coverage matrix starts lying. Each names its own remaining shortfall in the
 row above.
 
-## 4. The one absent section
+## 4. Nothing is ABSENT, and two sections are blocked on a missing source
 
-**§46 Knowledge Graph** — a projection of registries that already exist. Lowest urgency, and the one
-section where specifying before projecting would be pure ceremony: the dependency edges are in
-`components.yml` and `parameters.yml` today, and what is missing is a view over them rather than a
-decision about what they mean.
+**Phase 1 closed 2026-08-08.** All 56 sections are FULL, PARTIAL or DEFERRED; the ranked list of
+absences that governed the work since 2026-08-04 is empty.
 
-**§44 and §45 were here and are now PARTIAL.** They were held back on the argument that drift needs a
-stored expectation to difference against — true, and it turned out to be the smaller half of the
-story. Writing them found that the course **already specifies the learning engine**: M69's acceptance
-enum has been transcribed in `DECISION_STATE_MACHINE.md` §4 since 2026-08-01, its `Продолжить сбор`
-state forbids exactly the retuning loop a naive drift response would build, and nothing in the tree
-consumes any of it. The blocked half is expectation drift, which needs executed fills; the other four
-drift families are computable today and none is computed.
+`§46 Knowledge Graph` was the last, and it is PARTIAL rather than FULL for a reason worth keeping:
+the projection is **specified and deliberately not built**. Ten of its eleven edge types are already
+gate-enforced, every question it would answer is answerable today by reading two YAML files, and the
+tree is small enough that this is not painful. It pays for itself in phase 3.
 
-**§5 was one of these and is now FULL** — built as a generator rather than written, for the reason
-that kept it on this list: a hand-maintained matrix of counts is the most rot-prone document a
-project can own, and this tree had already shipped five documents quoting a study count that was
-wrong. `tools/build_coverage.py` counts every cell from the registries and gate 3ci fails if the
-committed copy drifts.
+### Two sections are blocked on a source this repository does not hold
+
+**§3 (the 25 documentation questions) and §53 (the 13 QA counters) need the master ТЗ's literal
+content, and the ТЗ is not here.** Only the parallel track's restatements survive, in `dee8f37`.
+
+They are recorded as PARTIAL-blocked rather than written, because a document that walks 25 questions
+nobody can read is 25 invented questions. Owner decision 2026-08-08: write what is writable, block
+the rest.
+
+**Evidence that second-hand sourcing is the right thing to refuse here:** row 7 of this table said
+the ТЗ has a **22-entity** table; the preserved `03_Domain_Ontology.md` lists **24**. One is wrong,
+`ENTITY_MAP.md` §0 discloses the discrepancy, and neither document can resolve it. That is a small
+disagreement about a table; §3 and §53 would have been the same disagreement about content nobody
+could check.
 
 ### What the written documents found
 

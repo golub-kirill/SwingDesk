@@ -77,7 +77,7 @@ survivorship filter of our own making**, which is exactly what DR-003 exists to 
 
 | # | Item | Phase | Waits on |
 |---|---|---|---|
-| **P1** | **Close phase 1.** §46 knowledge graph, then the five prose shortfalls — §3's 25 questions, §7's entity mapping, §11's terminology fields, §43's change taxonomy, §53's QA scorecard | 1 | nothing |
+| ~~**P1**~~ | ~~**Close phase 1.**~~ **DONE 2026-08-08.** §46, §7, §11 and §43 written; **§3 and §53 blocked** — they need the master ТЗ's literal content and it is not in the repository. `ABSENT` is now 0 | 1 | — |
 | **P2** | **First `active` component.** ATR and SMA are the candidates: ATR's period is `assumed`, SMA has no parameter of its own, and both have golden vectors. What each still needs is a `verification` and a `spec` anchor | 2 | nothing — this is authoring, not code |
 | **P3** | **Measure costs.** Corwin–Schultz / Abdi–Ranaldo effective spread from daily OHLC. Pre-registered first | 4, moved ahead | a trade log is *not* needed; this is a spread estimate over bars |
 | **P4** | **Revisit the scheduling deferral.** The dated decision point adjustment C creates. Paper cannot start without it, and Track A cannot close without paper | 3′ | an owner decision, at the start of phase 3 |

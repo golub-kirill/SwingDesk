@@ -1,6 +1,6 @@
 # Document set
 
-65 documents in 8 tiers. Each row states what the document **freezes** and where its content comes
+68 documents in 8 tiers. Each row states what the document **freezes** and where its content comes
 from. `verbatim` means the content is transcribed from the course without rewriting, and is checked
 by `tools/verify_transcription.py` against freshly extracted PDF text.
 
@@ -50,6 +50,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 23 | `EVENT_SPEC.md` | 20 event types with per-type field schemas | `verbatim` M34 decision tables | planned |
 | 22a | `ALLOCATION_SPEC.md` | Ranking when candidates exceed capacity: admissibility vs preference, what binds first (open risk, not cash), the allocation record, and the alphabetical-bias trap in truncating an id-sorted list | ТЗ §31; the course's two ordering topics are **both `Untested Hypothesis`** | drafting |
 | 23a | `TRANSITION_SPEC.md` | The discrete-change object (ТЗ §16, renamed to end the collision with 23): one envelope, the three-part test, observed vs inferred, who may emit. **6 kinds of transition are not recorded at all**, two irrecoverably | ТЗ §16; audited against the journal and stores | drafting |
+| 23b | `ENTITY_MAP.md` | The specification's 24 object types against this tree: 12 built, 2 deferred by decision, 3 specified with zero instances. **Mapped against a second-hand source**, with the 22-vs-24 discrepancy disclosed | ТЗ §7 via `dee8f37` | drafting |
 | 24 | `CHART_SPEC.md` | Every chart to render: panels, overlays, levels, units | `verbatim` chart metadata (867 chart topics) | planned |
 
 ## Tier 3 — Data · `03-data/`, `contracts/`, `adr/`
@@ -115,6 +116,8 @@ checkable gate in the course.
 | 44 | `TEST_STRATEGY.md` | 7 layers, 9 invariants as property tests, golden vectors as the immutability mechanism, 6 chaos scenarios | drafting |
 | 45 | `OBSERVABILITY_SPEC.md` + `runbooks/` | Structured-log schema, daily health report, trend signals; 5 runbooks with verbatim return conditions | drafting |
 | 46 | `SECURITY.md` + `BACKUP_AND_DR.md` | Threat model, secret rules, Telegram as a control surface; what cannot be re-fetched, restore verified by output hash | drafting |
+| 46a | `CHANGE_MANAGEMENT.md` | 8 change types and what each obliges; **rollback is mostly supersede, not revert**, because the stores are append-only | drafting |
+| 46b | `KNOWLEDGE_GRAPH.md` | The projection over registries that already exist — **10 of 11 edge types are gate-enforced**. Specified, deliberately not built | drafting |
 | 47 | `CI_POLICY.md` | 19 gates (**18 running**), what each prevents and what each has caught, what CI must never do, local equivalence | drafting |
 | 48 | `AGENTS.md` (repo root) | Trust discipline, 7 non-negotiables, how to add a verbatim doc or a parameter | drafting — per-package `CONTEXT.md` still planned |
 
