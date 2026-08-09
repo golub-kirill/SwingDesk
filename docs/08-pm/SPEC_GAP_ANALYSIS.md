@@ -95,14 +95,19 @@ keeping wholesale.
 
 | Coverage | Count |
 |---|---|
-| FULL | **31** |
-| PARTIAL | 22 |
+| FULL | **30** |
+| PARTIAL | 24 |
 | ABSENT | **0** |
 | DEFERRED | 3 |
 
-**Half the specification is already met.** That is the finding the parallel analysis could not
-reach, and it changes the plan: the work is filling one hole and closing twenty-four shortfalls,
-not building 48 documents.
+**57 rows, §0 through §56.** These four numbers are **recounted from the table above by gate 3e**,
+not maintained by hand. They were maintained by hand until 2026-08-08 and had drifted to 31/22 — the
+third count in this repository to drift after the study verdicts and the gate total, which is why it
+is now checked rather than corrected.
+
+**Over half the specification is met.** That is the finding the parallel analysis could not reach,
+and it changed the plan: the work was never building 48 documents. What is left is twenty-four named
+shortfalls, each stated in its own row.
 
 **Movement since the first pass (2026-08-04 → 2026-08-08).** §15, §28, §35 and §16 — the top four of
 the nine — moved from ABSENT to PARTIAL when `RULE_SPEC.md`, `EXECUTION_MODEL.md`,

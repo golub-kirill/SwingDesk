@@ -12,6 +12,7 @@ A careful read does not catch the next one. This does:
   * a `parameter.id` cited by a document and absent from the registry
   * an `M##-T####` component id absent from the course index
   * a Status line outside the declared ladder
+  * the gap analysis's coverage summary disagreeing with a recount of its own table
 
 Stdlib plus PyYAML, so it runs wherever the other registry gates do.
 
@@ -65,6 +66,43 @@ PARAM_REF = re.compile(r"`([a-z_]+\.[a-z_0-9]+)`")
 TOPIC_REF = re.compile(r"\bM\d{1,3}-T\d{4}\b")
 STATUS_LINE = re.compile(r"\*\*Status:\*\*\s*([a-z-]+)")
 
+#: The gap analysis keeps a coverage table and a summary of it in the same document, and the summary
+#: was maintained by hand until it drifted to 31/22 against a table saying 30/24. That is the third
+#: hand-kept count in this repository to drift - after the study verdicts (gate 3f) and the gate
+#: total - so it is recounted here rather than corrected again.
+GAP = REPO / "docs" / "08-pm" / "SPEC_GAP_ANALYSIS.md"
+GAP_ROW = re.compile(r"^\|\s*(\d+)\s*\|[^|]*\|\s*\*{0,2}(FULL|PARTIAL|ABSENT|DEFERRED)\*{0,2}\s*\|",
+                     re.MULTILINE)
+GAP_SUMMARY = re.compile(r"^\|\s*(FULL|PARTIAL|ABSENT|DEFERRED)\s*\|\s*\*{0,2}(\d+)\*{0,2}\s*\|",
+                         re.MULTILINE)
+
+
+def check_gap_summary() -> list[str]:
+    """The gap analysis's summary must equal a recount of its own table."""
+    if not GAP.is_file():
+        return [f"{GAP.name} is missing"]
+    body = GAP.read_text(encoding="utf-8")
+
+    rows = GAP_ROW.findall(body)
+    counted: dict[str, int] = {}
+    for _section, coverage in rows:
+        counted[coverage] = counted.get(coverage, 0) + 1
+
+    claimed = {key: int(value) for key, value in GAP_SUMMARY.findall(body)}
+    if not claimed:
+        return [f"{GAP.name}: no summary table found to check"]
+
+    failures = [
+        f"{GAP.name}: summary says {key} {claimed.get(key, 0)}, the table has {counted.get(key, 0)}"
+        for key in sorted(set(counted) | set(claimed))
+        if counted.get(key, 0) != claimed.get(key, 0)
+    ]
+    sections = {int(section) for section, _ in rows}
+    missing = sorted(set(range(min(sections), max(sections) + 1)) - sections) if sections else []
+    if missing:
+        failures.append(f"{GAP.name}: sections {missing} have no row")
+    return failures
+
 
 def _load_yaml(path: Path):
     import yaml
@@ -112,6 +150,8 @@ def main() -> int:
             failures.append(
                 f"{rel}: status {status.group(1)!r} is outside the ladder {sorted(STATUSES)}"
             )
+
+    failures.extend(check_gap_summary())
 
     for failure in failures:
         print(f"  {failure}")

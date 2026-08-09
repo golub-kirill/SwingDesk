@@ -124,8 +124,9 @@ before anyone had a chance to trust the thing it was checking.
 
 ## 7. Open items
 
-- [ ] Choose the runner. GitHub Actions assumes a remote; a local pre-commit hook plus a script
-      suits a single-user offline-first project better, and the repo has no remote today.
+- [ ] Choose the runner. **A remote exists** (`origin`, GitHub) as of 2026-08-08, so Actions is now
+      available; a local pre-commit hook plus a script still suits a single-user offline-first
+      project better. The choice is open, the constraint that decided it is gone.
 - [ ] **Gate 10 (traceability) would pass vacuously today, which is why it is still not wired.**
       Its strongest available check is "every `active` component has a test", and there are
       **zero** `active` components — five are blocked on an unset parameter, which is the
