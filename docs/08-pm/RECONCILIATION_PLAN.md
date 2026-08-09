@@ -123,8 +123,8 @@ committed.
    figures across nine documents, including counts this session had itself introduced. D-R3 was
    applied against the branch: its "Track A time box removed" row was dropped, because the owner
    chose `321418`'s version that sets one.
-3. **Reconcile the duplicated specs** (D-R2) — `RULE_SPEC.md` and `SYSTEM_MODES.md` first, since
-   both branches touch them.
+3. ~~**Reconcile the duplicated specs** (D-R2).~~ **DONE 2026-08-09.** Both went to `321418`'s
+   version, and both kept something from `1feb49`'s. Reasoning in §6.
 4. **Merge `321418`.** Larger and unreviewed; its 26 commits need reading, not just resolving.
 5. **Amend `criteria.yml` once, to v1.1.0**, carrying `321418`'s `k.track_a_timebox` (D-R3) and
    marking `k.timebox_review` `met`. One amendment, not three.
@@ -133,6 +133,66 @@ committed.
    put break-even at 1.369× the assumed cost; at 5× the assumption the base strategy is negative,
    so the headline changes and every document quoting +0.028R must change with it.
 8. **Rebuild `HANDOFF.md` §2** from the merged tree, and re-run the branch census.
+
+## 6. Step 3: which version of each duplicated spec won, and why
+
+D-R2 requires the reasoning, not just the outcome. Both documents went to `321418`, but neither
+wholesale — each carried one thing the winning version did not have.
+
+### `RULE_SPEC.md` → `321418`, plus §0 from `1feb49`
+
+`321418`'s is the better document on three counts that are not stylistic:
+
+1. **It draws the Rule / Component boundary first** (§1) and grounds it in the course's own layer
+   split — measuring structure is `Derived Observations`, selecting on it is `Decision Logic`. It
+   then measures the population: of 465 component rows, **173 carry claim type
+   `Operational Course Rule`**. `1feb49`'s version does not draw the boundary at all.
+2. **It refuses `registry/rules.yml` explicitly** (§1.1), citing ТЗ §8 and this repository's own
+   2026-08-04 incident, and drops the seed's third id scheme with a reason. That is a design decision
+   the other version leaves open.
+3. **Its audit is per-rule and checked** (§7): eight decision points, each with its class, its
+   three-valued status, the named test that is its discriminating pair, and its gap — with "checked
+   test by test, not assumed" stated, and one row corrected mid-writing.
+
+**What `1feb49` had that `321418` did not:** a compact table naming the three failure modes the form
+exists to forbid — the constant gate, the silent `missing → value`, the decorative output. `321418`
+covers all three but scattered across §4, §6 and §9. The table is ported as **§0**, because it is the
+paragraph that tells a reader why the other four hundred lines exist.
+
+### `SYSTEM_MODES.md` → `321418`, plus §6a from `1feb49`
+
+`321418` discriminates the six modes by **what their output authorises**, which is the sharper axis:
+`REPLAY` authorises nothing, `BACKTEST` authorises nothing on its own, `LIVE` authorises an owner
+decision *and nothing else*. `1feb49` discriminates by network and determinism, which are
+consequences rather than the distinction. `321418` also records what actually runs, with entry
+points, and its mode rules are enforced — `pipeline.run` takes `mode` as a required keyword-only
+argument since 2026-08-08.
+
+**The two documents genuinely disagreed**, and this is the one case in step 3 where they did.
+`1feb49` §4 argues mode is **not** a runtime flag and that separation is structural, enforced by the
+import contracts; `321418` makes mode a declared argument. Read carelessly, one contradicts the
+other.
+
+They do not, and the resolution is now §6a: the mechanisms operate at **different scopes**. Across
+the research / backtest / live boundary separation is structural, because those are different
+packages and a crossing is a build failure. *Within* the live path, `LIVE` / `PAPER` / `SHADOW` share
+one code path and differ only in what the output authorises — so there the mode is a declared field,
+required at the call site. Both statements are true and neither survives alone.
+
+### `EXECUTION_MODEL.md` — no contest
+
+`1feb49` only; `321418` does not have it. Already on `master`, unchanged.
+
+### What the imported files still got wrong
+
+`321418`'s `SYSTEM_MODES` understated the reported-study count by one and listed one runner too few.
+Caught by `verify_study_summary` — **their own gate, applied to their own document, inside the step
+that imported it.**
+
+Worth noting how it was fixed here: the sentence above deliberately does not quote the wrong figure,
+because the gate reads a quoted count as a claim and cannot tell the difference. Rewording is the
+right answer rather than an allowlist entry — `321418`'s own commit records that they stripped
+false-positive patterns rather than exempting them, on the grounds that a noisy gate gets bypassed.
 
 ## 5. What this plan does not decide
 
