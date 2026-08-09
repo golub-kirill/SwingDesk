@@ -71,7 +71,7 @@ keeping wholesale.
 | 35 | System Modes | **ABSENT** | no RESEARCH / BACKTEST / REPLAY / PAPER / SHADOW / LIVE definition |
 | 36 | System Architecture | FULL | `ARCHITECTURE.md`, `DEPENDENCY_LAW.md`, `CONCURRENCY_MODEL.md` |
 | 37 | Non-Functional Requirements | FULL | `NFR.md` |
-| 38 | Testing Strategy | FULL | `TEST_STRATEGY.md`, `INVARIANTS.md`, 249 tests, 15 gates |
+| 38 | Testing Strategy | FULL | `TEST_STRATEGY.md`, `INVARIANTS.md`, 275 tests, 16 gates |
 | 39 | Golden Datasets | PARTIAL | `golden/` holds 25 component **vectors**; the ТЗ's 25 named end-to-end **scenarios** do not exist |
 | 40 | Observability / Audit | FULL | `OBSERVABILITY_SPEC.md`, `docs/runbooks/` |
 | 41 | Security | FULL | `SECURITY.md`, `BACKUP_AND_DR.md` |

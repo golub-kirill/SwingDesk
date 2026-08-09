@@ -30,7 +30,7 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 10 | traceability | a course id with no requirement row, a requirement with no test, a spec id cited by no test | to build |
 | 11 | `verify_components.py` | `implements` not injective; an `active` component missing `implements`/`verification`/`spec`; a dangling parameter reference; an `active` component with an `unset` parameter; an `implements` pointing at a symbol that does not exist; a non-Definition topic with no row | **exists** — caught two components sharing one function on its first run |
 
-Everything except 10 runs today via `tools/check_gates.py` — **15 gates**. Gates 2 and 3 are
+Everything except 10 runs today via `tools/check_gates.py` — **16 gates**. Gates 2 and 3 are
 stdlib-only; the rest need the project venv (`pip install -e ".[dev]"`).
 
 Gates 7b and 9 are also asserted from `pytest`, so a bare `pytest` run is not silently weaker than

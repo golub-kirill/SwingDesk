@@ -98,6 +98,7 @@ def synthetic_ohlc(
     days: int,
     proportional_spread: float,
     seed: int = 20260809,
+    steps: int = INTRADAY_STEPS,
 ) -> tuple[list[float], list[float], list[float]]:
     """Daily bars carrying a KNOWN bid-ask spread, as (highs, lows, closes).
 
@@ -106,14 +107,19 @@ def synthetic_ohlc(
     estimators model, and this generator is deliberately not written in terms of any of their
     formulas - so an estimator recovering `proportional_spread` is evidence rather than circularity.
 
-    `proportional_spread=0.0` produces a market with no spread at all, which is the input every
-    estimator must return approximately zero on (`test_no_estimator_manufactures_a_spread`).
+    `proportional_spread=0.0` produces a market with no spread at all.
+
+    **One draw from this generator is not a property.** On a spreadless series Abdi-Ranaldo clamps to
+    zero about half the time and scatters up to ~0.004 the rest of the time, so a single seed can be
+    quoted to support almost anything - which is exactly the error PR-007's report and DR-005's test
+    each made, independently, on the same estimator. Every assertion built on this generator sweeps
+    seeds and asserts on the distribution.
 
     Seeded, so it supports a determinism test.
     """
     rng = random.Random(seed)
     half = proportional_spread / 2
-    step_volatility = DAILY_VOLATILITY / math.sqrt(INTRADAY_STEPS)
+    step_volatility = DAILY_VOLATILITY / math.sqrt(steps)
 
     price = 100.0
     highs: list[float] = []
@@ -122,7 +128,7 @@ def synthetic_ohlc(
 
     for _ in range(days):
         high = low = price
-        for _ in range(INTRADAY_STEPS):
+        for _ in range(steps):
             price *= math.exp(rng.gauss(0.0, step_volatility))
             high = max(high, price)
             low = min(low, price)

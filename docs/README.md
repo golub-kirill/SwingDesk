@@ -148,6 +148,7 @@ second surface inventing synonyms later.
 ## Gates
 
 | Gate | Deliverables | Exit condition |
+| 60 | `POSTMORTEM-2026-08-09.md` | Three parallel efforts, a duplicated study with the opposite answer, and a gate that passed on a lucky seed. Three root causes taken to the fifth why | drafting |
 |---|---|---|
 | ~~G0 Charter~~ | 01–04 | **CLOSED 2026-08-02** — finish line ratified, criteria frozen at v1.0.0 |
 | G1 Requirements | 05–09 | Every capability has a Gherkin acceptance criterion |

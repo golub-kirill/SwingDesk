@@ -85,6 +85,8 @@ def main() -> int:
         "golden vectors": _run("golden vectors", [python, "tools/golden.py"]),
         "tests": _run("pytest", [python, "-m", "pytest", "tests/", "-q"]),
         "determinism replay": _run("determinism replay", [python, "tools/replay.py"]),
+        "branch census": _run("parallel worktrees declared in HANDOFF",
+                              [python, "tools/verify_branches.py"]),
     }
 
     print("\n" + "=" * 62)

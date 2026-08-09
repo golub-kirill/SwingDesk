@@ -259,19 +259,26 @@ KNOWN_BIASED_ESTIMATORS = {
     ),
 }
 
-#: What the null check tolerates, as a round-trip proportion. Set so the sound estimators clear it
-#: with headroom while the known-biased form fails by roughly 4x - measured, not guessed:
+#: What the null check tolerates, as a round-trip proportion, applied to the MEDIAN over seeds.
+#:
+#: The first version of this constant was set from a single draw (0.001451) and asserted on that one
+#: draw. It was wrong: across 30 seeds the same call ranges 0.000000 to 0.004240 and **8 of them
+#: exceed this tolerance**. A gate built to catch an estimator that manufactures signal was itself a
+#: single sample of a noisy quantity - the identical error PR-007's report made in prose and
+#: DR-005's test made in code, all three on the same estimator.
+#:
+#: So the assertions below sweep seeds and test the distribution. Medians, measured:
 #:
 #:     corwin_schultz           0.000000
-#:     abdi_ranaldo             0.001451
-#:     corwin_schultz_per_pair  0.008220   <- must fail
-#:
-#: Worth reading the middle row twice. Abdi-Ranaldo's floor on bars with NO spread is 14.5bp round
-#: trip, i.e. 7.25bp per side - larger than the 5bp per side DR-004 assumes and PR-007 set out to
-#: test. That single number is why PR-007 came back inconclusive: the estimator's noise exceeds the
-#: quantity. Passing this test means an estimator is not grossly broken; it does not mean the
-#: estimator can resolve a real spread.
+#:     abdi_ranaldo             0.000000
+#:     corwin_schultz_per_pair  ~0.008     <- must fail
 NULL_SPREAD_TOLERANCE = 0.002
+
+#: Seeds swept by every distributional assertion here. Enough that a lucky draw cannot carry a claim,
+#: few enough that the suite stays fast at SWEEP_DAYS x SWEEP_STEPS per seed.
+SWEEP_SEEDS = tuple(range(12))
+SWEEP_DAYS = 400
+SWEEP_STEPS = 400
 
 
 def _discovered_estimators() -> dict[str, object]:
@@ -313,40 +320,87 @@ def test_estimator_discovery_still_works() -> None:
     )
 
 
+def _sweep(name: str, true_spread: float) -> list[float]:
+    """One estimator's readings across SWEEP_SEEDS, in canonical seed order."""
+    from tests.conftest import synthetic_ohlc
+
+    function = _discovered_estimators()[name]
+    readings: list[float] = []
+    for seed in SWEEP_SEEDS:
+        highs, lows, closes = synthetic_ohlc(
+            SWEEP_DAYS, true_spread, seed=seed, steps=SWEEP_STEPS
+        )
+        value = function(highs, lows, closes)[0]  # type: ignore[operator]
+        assert value is not None, f"{name} declined on seed {seed}"
+        readings.append(value)
+    return readings
+
+
 @pytest.mark.parametrize("name", sorted(_discovered_estimators()))
 def test_no_estimator_manufactures_a_spread(name: str) -> None:
-    """On bars with no spread in them, every estimator must return approximately zero.
+    """On bars with no spread in them, the MEDIAN reading across seeds must be near zero.
 
-    This is the property, not an example: a transaction-cost estimator that responds to volatility
-    produces a number that looks like a measurement, carries the right units, and is wrong in the
-    direction that makes every instrument look expensive.
+    Median across a seed sweep, never one draw. On a spreadless series Abdi-Ranaldo clamps to zero
+    about half the time and scatters to ~0.004 the rest, so a single seed proves nothing in either
+    direction - which is how three separate artefacts in this repository came to rest on one.
     """
     if name in KNOWN_BIASED_ESTIMATORS:
         pytest.skip(f"{name}: {KNOWN_BIASED_ESTIMATORS[name]}")
 
-    from tests.conftest import synthetic_ohlc
+    readings = sorted(_sweep(name, 0.0))
+    median = readings[len(readings) // 2]
 
-    highs, lows, closes = synthetic_ohlc(2000, 0.0)
-    estimate = _discovered_estimators()[name](highs, lows, closes)[0]  # type: ignore[operator]
+    # Measured against the known-biased form on the SAME sweep, not against a constant. An absolute
+    # threshold here would be calibration-dependent - it moves with the intraday grid and the series
+    # length - and picking one that passes is how the first version of this gate came to assert a
+    # single lucky draw. A ratio cancels the calibration out.
+    reference = sorted(_sweep("corwin_schultz_per_pair", 0.0))
+    biased_median = reference[len(reference) // 2]
 
-    assert estimate is not None, f"{name} declined on 2000 clean sessions"
-    assert estimate < NULL_SPREAD_TOLERANCE, (
-        f"{name} reported {estimate:.6f} round-trip spread on bars containing none - "
-        f"it is measuring volatility, not cost"
+    assert median < biased_median / 2, (
+        f"{name} median {median:.6f} round-trip on bars containing NO spread, against "
+        f"{biased_median:.6f} for the known-biased per-pair form on the same sweep. "
+        f"It is measuring volatility, not cost. Readings {readings[0]:.6f}..{readings[-1]:.6f}"
+    )
+    assert median < NULL_SPREAD_TOLERANCE * 2, (
+        f"{name} median {median:.6f} exceeds even the generous absolute bound - "
+        f"the ratio test above may be passing only because the reference is also inflated"
     )
 
 
-@pytest.mark.parametrize("true_spread", [0.005, 0.010, 0.020])
+@pytest.mark.parametrize("name", sorted(_discovered_estimators()))
+def test_every_estimator_clamps_far_less_often_when_a_spread_is_present(name: str) -> None:
+    """The sign property, which needs no calibration at all - and is what settled DR-005 vs PR-007.
+
+    An estimator floored at zero clamps when its underlying quantity comes out negative. With no
+    spread present that is noise about zero, so it should clamp often; with a real spread the
+    quantity is shifted positive and clamping should become rare.
+
+    This holds whatever the intraday grid or the volatility is, which is precisely why it can decide
+    a disagreement that was entirely about calibration. On real bars the clamp rate was 19.1%
+    against 45.5% for spreadless synthetic at matched volatility.
+    """
+    if name in KNOWN_BIASED_ESTIMATORS:
+        pytest.skip(f"{name}: {KNOWN_BIASED_ESTIMATORS[name]}")
+
+    without = sum(1 for value in _sweep(name, 0.0) if value == 0.0)
+    with_spread = sum(1 for value in _sweep(name, 0.020) if value == 0.0)
+
+    assert with_spread < without or without == 0, (
+        f"{name} clamps {with_spread}/{len(SWEEP_SEEDS)} times with a 2% spread present and "
+        f"{without}/{len(SWEEP_SEEDS)} without one - it is not responding to the spread at all"
+    )
+
+
+@pytest.mark.parametrize("true_spread", [0.010, 0.020])
 def test_every_estimator_moves_with_the_real_spread(true_spread: float) -> None:
     """Returning zero always would pass the null check. This is the other half of the property."""
-    from tests.conftest import synthetic_ohlc
-
-    highs, lows, closes = synthetic_ohlc(2000, true_spread)
-    for name, function in sorted(_discovered_estimators().items()):
+    for name in sorted(_discovered_estimators()):
         if name in KNOWN_BIASED_ESTIMATORS:
             continue
-        estimate = function(highs, lows, closes)[0]  # type: ignore[operator]
-        assert estimate is not None and estimate > true_spread / 2, (
-            f"{name} reported {estimate} against a true spread of {true_spread} - "
-            f"an estimator that cannot see a 2x-of-threshold spread is not measuring one"
+        readings = sorted(_sweep(name, true_spread))
+        median = readings[len(readings) // 2]
+        assert median > true_spread / 2, (
+            f"{name} median {median:.6f} against a true spread of {true_spread} - "
+            f"an estimator that cannot see a spread this large is not measuring one"
         )

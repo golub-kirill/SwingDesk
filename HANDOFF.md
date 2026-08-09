@@ -19,9 +19,9 @@ the documentation is implementable.
 
 | | |
 |---|---|
-| Merge gates | **15**, one command, all green |
+| Merge gates | **16**, one command, all green |
 | Tests | **275**, fully offline |
-| Docs | 76 files across 8 tiers |
+| Docs | 77 files across 8 tiers |
 | Components | 465 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 84 `unset`, 9 `assumed`, 2 `owner`, **1 `validated`** |
 | Studies | 5 reported — **3 refuted**, 1 inconclusive, 1 accepted and quantifiably fragile |
@@ -34,6 +34,22 @@ python tools/check_gates.py
 
 That must stay green. A gate that is wrong gets **fixed or removed, never skipped**.
 
+### You are not the only effort. Check this before starting work.
+
+This repository's normal mode is **several worktrees at once**, and the table above measures only the
+one you are standing in. On 2026-08-09 three efforts branched from `9a07fab`, none knew about the
+others, and one re-ran a study another had already finished and reached the opposite conclusion —
+`docs/08-pm/POSTMORTEM-2026-08-09.md`, root cause A. Gate 16 now fails if a worktree is missing here.
+
+| Branch | Tip | Merged? | What it holds |
+|---|---|---|---|
+| `claude/swingdesk-handoff-continue-f479bd` | 2026-08-09 | **yes** | PR-007, the v7.0 delta, `AGENTS.md` §9 |
+| `claude/swingdesk-handoff-continue-1feb49` | 2026-08-08 | **no**, 9 commits | `DR-005` slippage at 25bp, `criteria.yml` v1.1.0 **removing** the Track A time box, `RULE_SPEC`/`SYSTEM_MODES`/`EXECUTION_MODEL`, gates 12–15, `validation.max_allowable_drawdown` = 20% |
+| `claude/swingdesk-documentation-321418` | 2026-08-09 | **no**, 26 commits | a HANDOFF rewrite, a count audit, a phase plan — unreviewed |
+
+**`master` currently contradicts several items in row 2.** Reconciling them is open work, listed in
+the postmortem §5.D. Do not merge either branch without reading it.
+
 ## 3. The uncomfortable summary
 
 **The machinery is real and honest. The strategy is not known to work, and what is known is mostly
@@ -42,8 +58,11 @@ negative.**
 - The base strategy measured **+0.028R per trade at `DR-004`'s assumed costs** and **−0.123R under
   3× cost stress** (PR-005). Both are **net** — gross is never reported (`DR-004` consequence 1), so
   "before costs" is the one description that is wrong. Those two points put the break-even at
-  **1.369× assumed costs**. Costs are *assumed*, not measured, and PR-007 established they cannot be
-  measured from free daily data — so the sign of the result sits inside an unvalidated number.
+  **1.369× assumed costs**. Costs on `master` are still *assumed*. A parallel branch measured them
+  at **25bp per side** (`DR-005`), and PR-007's contrary claim — that they cannot be measured from
+  free daily data — was **withdrawn on 2026-08-09** after a calibration-free sign test refuted it.
+  The direction is settled: 5bp is too low. The level is not. So the sign of the result still sits
+  inside an unvalidated number, and now also inside an unreconciled one.
 - The one positive finding (PR-002: breadth separates breakout outcomes) is erased by **1.6–2.3% of
   trades missing at −2R**, and Yahoo serves no delisted history, so that exposure can never be
   confirmed on the free tier.
@@ -112,13 +131,14 @@ overdue, not because they are hard.
    Measured 2026-08-09: **three pulls only** — 2026-08-03, 08-05, 08-08 — so it is running by hand
    at irregular 2–3 day gaps, not on a schedule. Owner decision 2026-08-09: **keep it manual for
    now**, no scheduled task.
-5. ~~**Measure costs instead of assuming them.**~~ **Done 2026-08-09, and it does not work.** PR-007
-   ran both estimators over 1,134 eligible instruments and 26,865 instrument-months and returned
-   **inconclusive**: more than half the estimates came out negative, and the estimators track
-   volatility rather than liquidity because a sub-basis-point spread is ~three orders of magnitude
-   below the noise floor of daily OHLC. Costs stay `assumed`. `PR-006` — real fills in a forward
-   test — is now the only route to a measured cost, and that is measured rather than assumed. See
-   `PR-007-report.md`. **Do not try a variant estimator** without explaining why the gap closes.
+5. **Reconcile the cost measurement — it was done twice, with opposite answers.** PR-007 on `master`
+   returned **inconclusive** on its registered decision rule (negative-estimate rate 53.2%/41.3%
+   against a 25% threshold) and then explained that with a claim it has since **withdrawn**. The
+   parallel branch's `DR-005` measured **25bp per side** and is right about the direction: a
+   clamp-rate sign test gives **19.1%** on real bars against **45.5%** on spreadless synthetic at
+   matched volatility, and 126 of 126 instruments read above their own floor. What neither effort
+   settled is the **level** — Abdi-Ranaldo correlates +0.46 with volatility and −0.02 with liquidity,
+   which is backwards for a spread. Read `POSTMORTEM-2026-08-09.md` §2 before touching this.
 6. **Unify the trigger before the live path gets one.** `validation/backtest/engine.py` owns
    `breakout_high` and the entry decision; `application/pipeline.py` has none. No divergence yet
    *only* because live implements no strategy — see `REQUIREMENTS.md` §3. Cheap now, expensive later.
@@ -139,7 +159,7 @@ overdue, not because they are hard.
 | Paid market data | Owner decision D10, taken with the survivorship cost known |
 | Tuning the current parameters | PR-005 measured the strategy flat at assumed costs and negative under stress — both net |
 | New entry filters | Same family, same evidence |
-| Spread estimation from free daily data | PR-007 inconclusive: both estimators negative on >50% of the sample and correlated with volatility rather than liquidity. A variant estimator is the same family |
+| ~~Spread estimation from free daily data~~ | **Removed 2026-08-09 — this row was wrong.** It rested on PR-007's withdrawn explanation. The sign test shows the estimators do detect a spread; see `POSTMORTEM-2026-08-09.md` §2. Kept struck through because a "closed by evidence" row that quietly disappears is worse than one that was wrong |
 | Order placement, automation, multi-user | `CHARTER.md` §3 non-goals — reopening needs a charter amendment |
 
 ## 7. The habits that matter here
@@ -172,5 +192,5 @@ docs/08-pm          roadmap, risk register, gap analysis, definition of done
 docs/prereg         four pre-registrations and their reports
 registry/           parameters, components, course index, checklists, criteria
 src/swingdesk/      the reference implementation — the vertical slice ТЗ §50 requires
-tools/              the 15 gates, plus network tools that never run in CI
+tools/              the 16 gates, plus network tools that never run in CI
 ```
