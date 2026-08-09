@@ -1,6 +1,6 @@
 """The trend filter: does this instrument qualify as being in an uptrend, on this bar.
 
-Course grounding: M33-T0485 `Фильтр по тренду`, Operational Course Rule, layer **Decision Logic**.
+Course grounding: M33-T0485 (the trend filter), Operational Course Rule, layer **Decision Logic**.
 The course places it here and not in Derived Observations, which is the right split - measuring the
 structure is an observation, *selecting on it* is a decision.
 

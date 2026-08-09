@@ -1,6 +1,6 @@
 """Pivots and the trend filter, with the look-ahead guard as the first thing tested.
 
-`подтверждается завершёнными барами` - confirmed by completed bars (M12-T0201). A pivot detector
+Confirmed by completed bars (M12-T0201). A pivot detector
 that marks a swing at bar T and lets a caller read it at T has used bars T+1..T+right to make a
 decision dated T. That is the single most likely way this component goes wrong, it produces an
 excellent backtest, and it passes every test that does not specifically look for it.

@@ -53,7 +53,7 @@ def test_run_is_reproducible(stores, registry) -> None:
 
 
 def test_every_candidate_leaves_with_a_decision(stores, registry) -> None:
-    """"Нет кандидатов без следующего действия" - M32/M33 operational standard."""
+    """No candidate is left without a next action - M32/M33 operational standard."""
     store, journal = stores
     us = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
     ca = _sessions(TEST_CA.exchange, date(2025, 1, 1), date(2026, 1, 14))

@@ -100,6 +100,16 @@ amendment means here. Editing a ratified row is never the move.
 - **English throughout** — docs, code, UI. The course's controlled vocabulary (`Trade`/`Watch`/
   `Skip`/`Pause`, the skip and error codes, `STAGE`/`LAYER`/`CLAIM TYPE`) is used verbatim and never
   translated.
+- **No Russian in code.** Comments, docstrings, messages and generated output are English, including
+  where they cite the course — render the meaning and cite the topic id instead. This is not only
+  style: gate 2 verifies `verbatim` blocks in `docs/` against the PDFs and **cannot see a quotation
+  in a docstring**, so Russian in code is an unverified copy of the source, which §6 rule 1 forbids
+  for exactly that reason. The course's own words belong in `docs/`, where they are checked.
+  **One exception, and it is data rather than prose:** `tools/build_course_index.py`'s
+  `TOPIC_HEADING` pattern matches the heading as it appears in the source PDFs. It is marked in
+  place. Removing its Cyrillic stops the extraction rather than tidying it.
+- The documents call the master specification the **ТЗ**; code and generated output write it in
+  Latin script. Same source, and worth knowing before someone "fixes" one of them.
 - **Comments document what and how to use it.** No `Phase N`, no ticket refs, no narrative.
 - **Test instruments are `TEST.1`, `TEST.2`** — never real tickers.
 - **Money is exact** — integer minor units or `Decimal`, never binary float.

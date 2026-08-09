@@ -1,14 +1,15 @@
 """The current market regime, as a label with a threshold that was fitted before it was applied.
 
-Course grounding: M30-T0450 `Определение текущего режима`, Definition, Derived Observations layer.
-The course defines a regime as `сочетание направления, breadth и volatility` and names no indicator,
+Course grounding: M30-T0450 (determining the current regime), Definition, Derived Observations
+layer. The course defines a regime as a combination of direction, breadth and volatility, and names
+no indicator,
 no threshold and no count of regimes. Everything numeric here is authored, and PR-002 is the study
 that would say whether any of it carries information.
 
 The topic's own standard is the constraint worth keeping visible:
 
-    "Инструмент используется как измеритель, а не как источник уверенности. Параметры фиксируются
-    версией стратегии, а добавленная ценность проверяется против простой базовой модели."
+    An instrument is used as a gauge, not as a source of confidence. Parameters are fixed by the
+    strategy version, and the added value is checked against a simple baseline model.
 
 A gauge, not a source of confidence; and the added value is checked against a simple baseline model.
 PR-002's random-partition baseline is that requirement, not an invention.

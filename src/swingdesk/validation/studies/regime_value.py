@@ -6,7 +6,7 @@ sizes.
 
 That baseline is not a refinement, it is the requirement. M30-T0450:
 
-    "добавленная ценность проверяется против простой базовой модели"
+    the added value is checked against a simple baseline model
 
 Any partition of a noisy series produces cells with different means. Comparing a regime partition
 against *nothing* finds a difference every time, which is why the comparison is against a partition

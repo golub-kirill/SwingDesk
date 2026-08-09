@@ -1,14 +1,13 @@
 """The bar-by-bar engine. One instrument, one arm, one pass.
 
-BACKTEST_PROTOCOL's `Bar-by-bar` stage: `Скрыть будущие свечи; решения только по доступным данным`
-- hide future candles, decisions only from available data.
+BACKTEST_PROTOCOL's `Bar-by-bar` stage: hide future candles, decisions only from available data.
 
 That is enforced by the loop's shape rather than by care. At index `i` the engine may read
 `bars[:i+1]` and observation values at `i`; entry happens at `bars[i+1].open`. There is no path
 through this function that reads a bar it has not reached, because the only index it ever forms is
 `i + 1` for the entry fill and the loop stops one short of the end.
 
-`Пропуски` is the other stage this file owns: skipped signals are counted with a reason, never
+The `Skips` stage is the other one this file owns: skipped signals are counted with a reason, never
 dropped. A signal discarded silently is a survivorship filter applied to the signal set.
 """
 
@@ -121,7 +120,7 @@ def run_arm(
 
         # The trigger is evaluated on every bar, including bars spent holding. A signal that could
         # not be acted on is an EXCLUSION from the trade set, and an unrecorded exclusion is a
-        # survivorship filter applied to the signal set regardless of intent (Appendix J, Пропуски).
+        # survivorship filter applied to the signal set regardless of intent (Appendix J, Skips stage).
         threshold = breakout_high(series, index, config.trigger_lookback)
         triggered = threshold is not None and bar.close > threshold
 

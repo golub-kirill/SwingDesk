@@ -8,7 +8,7 @@ It proposes and never acts. D1 forbids placing orders and D6 routes stop moves a
 through the owner's approval, so the output of this module is a `ManagementAction` at status
 `proposed` and nothing further happens without an answer.
 
-`CHECKLIST_SPEC.md` §4 - `Открытые позиции и gaps проверены первыми` - is why the pipeline calls
+`CHECKLIST_SPEC.md` §4 - open positions and gaps are checked first - is why the pipeline calls
 this before it looks at a single candidate.
 """
 

@@ -71,7 +71,7 @@ DECISIONS = frozenset({"Trade", "Watch", "Skip", "Pause"})
 class DecisionRecord:
     """One candidate's outcome. Every candidate leaves a run with one of these.
 
-    "Нет кандидатов без следующего действия" - a candidate with no decision is a defect
+    No candidate may be left without a next action - a candidate with no decision is a defect
     (M32/M33 operational standard), and a Skip without a reason code is too.
     """
 

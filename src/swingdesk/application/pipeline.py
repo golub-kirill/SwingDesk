@@ -247,7 +247,7 @@ def run(
     steps: list[str] = []
 
     # --- open positions, BEFORE any candidate -------------------------------------------
-    # CHECKLIST_SPEC 4: "Открытые позиции и gaps проверены первыми". Not a preference about tidy
+    # CHECKLIST_SPEC 4 requires open positions and gaps to be checked first. Not a preference about
     # code - a data failure must never lock the owner out of managing risk on positions already
     # open (TEST_STRATEGY 6), so this phase runs before anything that can fail on fresh data.
     if positions is not None:

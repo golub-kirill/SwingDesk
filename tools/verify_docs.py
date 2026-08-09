@@ -73,7 +73,7 @@ def _load_yaml(path: Path):
 
 
 #: Root-level documents that are permanent entry points and must be checked like any other.
-#: The numbered ТЗ-track files at root are deliberately NOT here: 31 of their 32 unresolved
+#: The numbered specification-track files at root are deliberately NOT here: 31 of their 32
 #: references are forward entries in `46_Build_Plan`'s own plan table, and all of them disappear
 #: when that material is folded into docs/. Allowlisting them would be 32 throwaway entries.
 ROOT_DOCS = ("README.md", "AGENTS.md", "HANDOFF.md")

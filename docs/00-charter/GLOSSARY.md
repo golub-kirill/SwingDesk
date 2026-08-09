@@ -117,6 +117,49 @@ silently resolved.
 **`Maximum entry`** defines the `LATE` skip code operationally: *"Последняя допустимая цена;
 выше/ниже неё сделка Late."* Note it is two-sided — above for longs, below for shorts.
 
+## Ambiguous terms
+
+Master ТЗ v1.0 §11 requires this section and `SPEC_GAP_ANALYSIS.md` recorded its absence. Every
+entry below is a collision **this tree has already hit**, not a hypothetical — each one cost a
+document, a rename or a defect, and the citation is where it was paid for.
+
+The rule: where one word means two things, the two live in **separate columns** and code never
+compares across them.
+
+| Term | Meaning A | Meaning B | Kept apart by |
+|---|---|---|---|
+| **event** | something that happened in the *market* — `EVENT_SPEC.md`, M34/M40 catalysts | something that happened in the *system* — the ТЗ's §16 object | the ТЗ's object was **renamed** to *transition* (`TRANSITION_SPEC.md` §1) |
+| **Watch · Trade · Skip** | three of the four candidate-decision states | three of the nine watchlist statuses | separate columns `decision` and `watchlist_status` (`DECISION_STATE_MACHINE.md` §3) |
+| **Late** | a watchlist status | a skip code (`CODES.md`) | as above — same words, different enums |
+| **risk** | what is at risk: `Σ position remaining risk` | position *value*: `Shares × Entry` | Appendix C's own control cell — `Не равно риску` (`RISK_SPEC.md` §2) |
+| **validated** | a parameter's provenance, `validated:PR-002` | a component's validation status, one of nine | two ladders; a decision record never produces either (`decisions/README.md` §3) |
+| **expectation** | the *definition* — a formula in `STATISTICS_SPEC.md` | an *estimate* — a number from a sample | `EXPECTATION_MODEL.md` §1, the estimate/definition split |
+| **coverage** | universe coverage — instruments measured | ТЗ coverage — FULL/PARTIAL/ABSENT | plus **survivorship coverage** (`EvidenceRecord`) and test coverage. Four meanings; always qualify |
+| **active** | a component's activation state | a position that is open | `COMPONENT_REGISTRY_SPEC.md` §3 vs `Position.is_open` |
+| **drift** | five families with different responses | — | never aggregated into one score (`DRIFT_AND_LEARNING.md` §6) |
+| **run** | the daily pipeline run | a study run, or a replay | `RunMode` on the manifest (`SYSTEM_MODES.md`) |
+
+**The one that is not a naming problem.** `unavailable` and `fail` are different **claims**, not
+different words for one thing: a gap in the *system* and a fact about the *trade*
+(`contracts/checklist.py`, `HANDOFF.md` §7). Collapsing them is the most damaging error this product
+can make, and it is listed here because it presents as a vocabulary question and is not one.
+
+## Discouraged synonyms
+
+The course bans four adjectives outright in decision logic — *smart*, *strong*, *quality*,
+*confirmed* — unless reduced to an observable rule or explicitly reserved for human review
+(`LIFECYCLE_AND_LAYERS.md` §2, layer 3). A field named for one of them must resolve to a stated rule.
+
+Project-specific, and each has a preferred term:
+
+| Do not write | Write | Why |
+|---|---|---|
+| signal | **trigger** (the event) or **setup** (the conditions) | the course separates them and "signal" collapses both |
+| filter passed | **admissible** | a filter's output is admissibility, not approval |
+| score | name the **effect class** — `SOFT_FACTOR` contribution | a bare score invites clearing a gate with it (`RULE_SPEC.md` §5) |
+| the model says | name the **component and version** | `REQ-OUTPUT-001` |
+| edge | **expectancy**, with its sample and window | "edge" has no definition and no units |
+
 ## Open items
 
 - [ ] Terms used throughout the course but absent from Appendix A and needing project definitions:

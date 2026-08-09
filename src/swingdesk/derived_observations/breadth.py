@@ -1,6 +1,7 @@
 """Market breadth: the share of a universe trading above its own moving average.
 
-Course grounding: M31-T0459 `Доля акций выше средних`, and M31-T0457 `Рыночная ширина`. Both are
+Course grounding: M31-T0459 (share of stocks above their averages) and M31-T0457 (market
+breadth). Both are
 Definitions in the Derived Observations layer, and neither supplies a period or a threshold.
 
 This is the one market-level measure this project can compute honestly on free data. Advance-decline

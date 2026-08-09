@@ -91,7 +91,7 @@ def test_a_tick_without_evidence_is_rejected_by_the_contract() -> None:
 
 
 def test_a_half_answerable_item_is_not_answered() -> None:
-    """`Данные свежие; corporate actions учтены` is two things.
+    """E03 - data is fresh and corporate actions are accounted for - is two things.
 
     Session completeness is checked; corporate actions are not. Half an answer is not an answer,
     and ticking it would claim the half that was never checked.

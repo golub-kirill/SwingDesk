@@ -1,15 +1,12 @@
 """Swing pivots: the previous high and the previous low, as structure rather than as extremes.
 
-Course grounding, M12-T0201 `Предыдущий максимум` and M12-T0202 `Предыдущий минимум`, both
-Operational Course Rule, layer Derived Observations. The definition that constrains the
-implementation:
+Course grounding, M12-T0201 (previous high) and M12-T0202 (previous low), both Operational Course
+Rule, layer Derived Observations. The definition that constrains the implementation, transcribed in
+ALGORITHM_SPEC: a level is marked as a zone or structure, is CONFIRMED BY COMPLETED BARS, and always
+carries an alternative scenario.
 
-    "Признак отмечается как зона или структура, подтверждается завершёнными барами и обязательно
-    сопровождается альтернативным сценарием."
-
-`подтверждается завершёнными барами` - confirmed by completed bars. That single clause is the whole
-design, and it is the difference between a correct pivot detector and a look-ahead bug that survives
-every unit test.
+"Confirmed by completed bars" is the whole design, and it is the difference between a correct
+pivot detector and a look-ahead bug that survives every unit test.
 
 A swing high at bar T is only knowable once `right` further bars have completed and none exceeded
 it. A detector that marks the pivot at T and lets a caller read it at T has used bars T+1..T+right to
@@ -127,7 +124,7 @@ def compute(
 ) -> ObservationSeries:
     """The most recent confirmed swing price, carried forward, emitted at the confirmation bar.
 
-    Carried forward rather than emitted once: `Предыдущий максимум` is a level that stays relevant
+    Carried forward rather than emitted once: a previous high is a level that stays relevant
     until a newer one replaces it, and a series that is empty on every bar but a handful is unusable
     as an input. Before the first confirmation the value is None - there is no previous high yet, and
     a component does not invent one (ALGORITHM_SPEC 3).
@@ -168,7 +165,7 @@ def compute_high(
     series: BarSeries, left: int, right: int,
     left_parameter: ParameterUse, right_parameter: ParameterUse,
 ) -> ObservationSeries:
-    """`Предыдущий максимум` (M12-T0201). The component's canonical entry point."""
+    """Previous high, M12-T0201. The component's canonical entry point."""
     return compute(series, left, right, left_parameter, right_parameter, highs=True)
 
 
@@ -176,7 +173,7 @@ def compute_low(
     series: BarSeries, left: int, right: int,
     left_parameter: ParameterUse, right_parameter: ParameterUse,
 ) -> ObservationSeries:
-    """`Предыдущий минимум` (M12-T0202). The component's canonical entry point.
+    """Previous low, M12-T0202. The component's canonical entry point.
 
     Swing high and swing low are one algorithm mirrored, and the course gives them separate ids -
     so they need separate symbols. The registry's `implements` field must be injective ("each

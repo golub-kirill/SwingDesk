@@ -181,7 +181,7 @@ def test_atr_emits_nothing_before_warm_up(closes: list[Decimal], period: int) ->
 def test_atr_is_deterministic(closes: list[Decimal]) -> None:
     """Identical inputs always yield an identical classification.
 
-    The course's own acceptance criterion for a detector: "Два наблюдателя дают одинаковый статус".
+    The course's own acceptance criterion for a detector: two observers give the same status.
     """
     series = _series(closes)
     first = atr.compute(series, _registry())
