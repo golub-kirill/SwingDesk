@@ -10,13 +10,23 @@ have caught it earlier.
 The session's output was not worthless — the estimators, the tests and the correction all stand. But
 its headline finding was wrong, it was reached second, and it was published before anyone checked.
 
+> **A note on ids.** The study this document calls `PR-008` was **registered as `PR-007`**; it was
+> renumbered on 2026-08-09 by `RECONCILIATION_PLAN.md` D-R4, because the other branch had used that
+> id first. F1 below says `PR-007` deliberately — that is the id the collision was *over*. Every
+> other reference here uses the study's current number.
+>
+> Renumbering it also, briefly, made this sentence wrong: a wholesale find-and-replace rewrote F1 to
+> claim the other branch had used `PR-008`, which it never did. Caught on re-reading, fixed here, and
+> worth recording as a small instance of the same class — **a mechanical edit applied to a historical
+> narrative changes what the record says happened.**
+
 ---
 
 ## 1. What happened, in order
 
 | # | Failure | Caught by |
 |---|---|---|
-| F1 | Re-ran a study another branch had already completed, taking the `PR-008` id it had already used | listing branches, *after* merging |
+| F1 | Re-ran a study another branch had already completed, taking the `PR-007` id it had already used | listing branches, *after* merging |
 | F2 | Merged and pushed to `master` without checking for parallel branches | the same listing, minutes later |
 | F3 | Quoted a single-seed synthetic reading (7.25bp) as if it were a property | a 40-seed sweep, run only because F1 forced a comparison |
 | F4 | Asserted the signal was "three orders of magnitude below the noise floor" — never tested | a sign test that took four minutes to write |
