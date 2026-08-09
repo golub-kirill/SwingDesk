@@ -73,7 +73,7 @@ guarantee, not a convention (`AUDIT_AND_IMMUTABILITY.md`) — error `HINDSIGHT`'
 an immutable pre-trade snapshot, so a system that could roll back a decision record would not have
 the control it claims.
 
-**A ratified criterion or an accepted decision record.** Both are frozen by rule. `DR-005` is
+**A ratified criterion or an accepted decision record.** Both are frozen by rule. `DR-007` is
 accepted and may not be edited; correcting a value in it takes `DR-007` naming it superseded.
 
 ### The rule

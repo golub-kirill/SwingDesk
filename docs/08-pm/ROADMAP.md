@@ -148,7 +148,7 @@ itself the pattern that made the reconciliation necessary. Dispositioned:
 | `UDR-002` | Which graph database for the Knowledge Graph projection | **OPEN, owner input needed.** Low urgency — §46 ranks last of nine absent sections, and the logical schema does not depend on the engine |
 | `UDR-003` | Scope of the execution and broker layer | **CLOSED.** Owner decision D1, `CHARTER.md` — the system never places orders. §29 is `DEFERRED` with its ontology slot fixed |
 | `UDR-004` | Canonical regime ontology | **OPEN, and sharper than recorded.** The ТЗ suggests eight regimes; the course names **eleven** (`REGIME_SPEC.md` §2) and they are a vocabulary, not a partition. PR-002 validated a classifier on one axis of three. The real question is whether the ТЗ list or the course list is canonical — and only the course list has evidence behind it |
-| `UDR-005` | Should the reference vertical slice come before mass documentation? | **CLOSED — it already did.** G5 closed 2026-08-02, walking skeleton green, replay a merge gate. The ТЗ's own §50 ordering was followed before the ТЗ arrived |
+| `UDR-007` | Should the reference vertical slice come before mass documentation? | **CLOSED — it already did.** G5 closed 2026-08-02, walking skeleton green, replay a merge gate. The ТЗ's own §50 ordering was followed before the ТЗ arrived |
 
 ## 9. The phase plan — adopted 2026-08-08
 

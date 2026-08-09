@@ -44,7 +44,7 @@ along with all fifteen `validation.*` parameters. A ratified kill criterion that
 a gate whose verdict is invariant across all inputs. It was found by hand on 2026-08-03, which is
 exactly the detection method this requirement says does not scale.
 
-**Closed 2026-08-08 by `DR-005-validation-thresholds.md`**, which proposes values for all fifteen.
+**Closed 2026-08-08 by `DR-007-validation-thresholds.md`**, which proposes values for all fifteen.
 The criterion can now evaluate. It is still *untested* — nothing exercises it, because there is no
 realised drawdown to exercise it against — and `RULE_SPEC.md` §7 keeps those two states apart on
 purpose: a gate that went from unable-to-fail to untested has improved without yet working.
@@ -54,7 +54,7 @@ the parameters its trigger references are set, and that forcing the gate's inver
 one verdict in the test corpus.
 
 **The first half landed 2026-08-08 as gate 3g** (`tools/verify_criteria.py`), in the same change that
-ratified `DR-005`. It also checks two things the requirement implies rather than states: that a
+ratified `DR-007`. It also checks two things the requirement implies rather than states: that a
 reference resolves at all, and that a criterion's `status` is on the declared ladder — the second
 because a typo there would exempt the row from the first check, which would make the gate quietly
 weaker rather than loudly wrong. All three were mutation-checked against a deliberately broken

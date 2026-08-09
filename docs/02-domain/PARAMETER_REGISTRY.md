@@ -25,7 +25,7 @@ This registry exists to make that impossible.
 **Current census: 96 parameters — 63 `unset`, 30 `assumed`, 2 `owner`, 1 `validated`.**
 
 **21 of the 30 `assumed` arrived in two blocks** — the fifteen `validation.*` thresholds set by
-`DR-005-validation-thresholds.md` (ratified 2026-08-08) and the six portfolio constraints set by
+`DR-007-validation-thresholds.md` (ratified 2026-08-08) and the six portfolio constraints set by
 `DR-006-portfolio-risk-block.md` (**proposed**). Ratified still means `assumed`: a decision record
 never produces a `validated` value, however it was approved.
 

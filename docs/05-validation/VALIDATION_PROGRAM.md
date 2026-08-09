@@ -127,8 +127,8 @@ Restated 2026-08-08; the previous version of this table predated the studies.
 | Components above `Untested` | **0** — every row is still the status the course shipped it with |
 | Studies reported | 3 (`PR-001` REJECT, `PR-005` REJECT, `PR-002` ACCEPT), plus one post-hoc survivorship bound carrying no verdict |
 | Pre-registrations written | 4 (`PR-006` registered 2026-08-08, blocked on a trade log); two more named and unwritten (`PR-001b`, `PR-003`, `PR-004`) |
-| Decision records | 6 — `DR-001` Sharpe, `DR-002` process score, `DR-003` liquidity rule, `DR-004` cost model, `DR-005` validation thresholds (ratified), `DR-006` portfolio risk (proposed) |
-| Parameters at `assumed` | 30 of 96 — 15 from `DR-005` (ratified), 6 from `DR-006` (proposed) · `validated` 1 (`regime.classifier_rule`, from PR-002) |
+| Decision records | 6 — `DR-001` Sharpe, `DR-002` process score, `DR-003` liquidity rule, `DR-004` cost model, `DR-007` validation thresholds (ratified), `DR-006` portfolio risk (proposed) |
+| Parameters at `assumed` | 30 of 96 — 15 from `DR-007` (ratified), 6 from `DR-006` (proposed) · `validated` 1 (`regime.classifier_rule`, from PR-002) |
 
 The four largest authored gaps — the regime classifier, the trend / breakout / pullback / contraction
 definitions, the Sharpe convention, and the per-strategy exit mapping — are each a parameter or rule

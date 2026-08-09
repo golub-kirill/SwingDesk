@@ -741,7 +741,7 @@ parameters:
     unit: ratio
     value: "0.50 / 0.20 / 0.30 train / validation / test"
     status: assumed
-    provenance: "assumed:DR-005"
+    provenance: "assumed:DR-007"
     named_in: [M73-T1091, M73-T1092, Appendix K]
     ui_editable: false
 
@@ -749,7 +749,7 @@ parameters:
     unit: trading days
     value: "756 train / 252 test / 252 step"
     status: assumed
-    provenance: "assumed:DR-005"
+    provenance: "assumed:DR-007"
     named_in: [M73-T1093, Appendix K]
     note: Window length, step size and fold count all unspecified.
     ui_editable: false
@@ -758,7 +758,7 @@ parameters:
     unit: trading days
     value: 21
     status: assumed
-    provenance: "assumed:DR-005"
+    provenance: "assumed:DR-007"
     named_in: [M73 robustness]
     ui_editable: false
 
@@ -766,7 +766,7 @@ parameters:
     unit: multiple
     value: 3
     status: assumed
-    provenance: "assumed:DR-005"
+    provenance: "assumed:DR-007"
     named_in: [M73-T1099, M73-T1100]
     ui_editable: false
 
@@ -774,7 +774,7 @@ parameters:
     unit: weeks
     value: 12
     status: assumed
-    provenance: "assumed:DR-005"
+    provenance: "assumed:DR-007"
     named_in: [M74-T1112]
     note: Topic exists solely to state this and states no number.
     ui_editable: false
@@ -783,7 +783,7 @@ parameters:
     unit: trades
     value: 20
     status: assumed
-    provenance: "assumed:DR-005"
+    provenance: "assumed:DR-007"
     named_in: [M74-T1113]
     ui_editable: false
 
@@ -791,7 +791,7 @@ parameters:
     unit: R or percent
     value: "-15R peak-to-trough"
     status: assumed
-    provenance: "assumed:DR-005"
+    provenance: "assumed:DR-007"
     named_in: [M75-T1122]
     ui_editable: true
 
@@ -799,7 +799,7 @@ parameters:
     unit: rule
     value: "Appendix S stage 1: 100% plan/stop/journal, no critical violations; plus every ratified Track A criterion met"
     status: assumed
-    provenance: "assumed:DR-005"
+    provenance: "assumed:DR-007"
     named_in: [M74-T1114, Appendix S]
     note: >-
       Appendix S supplies the only hard gate in the course - "100% plan/stop/journal; no critical
@@ -815,7 +815,7 @@ parameters:
     unit: trades
     value: "200 primary / 60 holdout, per arm"
     status: assumed
-    provenance: "assumed:DR-005"
+    provenance: "assumed:DR-007"
     named_in: [M72-T1074]
     note: >-
       Distinct from stats.min_sample_for_verdict, which governs reporting a statistic. This one
@@ -827,7 +827,7 @@ parameters:
     unit: years or explicit dates
     value: "2016-08-01 to present, or all available history if shorter"
     status: assumed
-    provenance: "assumed:DR-005"
+    provenance: "assumed:DR-007"
     named_in: [M72-T1072, M72-T1073]
     note: >-
       Topic 1073 requires the period to span different market regimes, which constrains the choice
@@ -838,7 +838,7 @@ parameters:
     unit: ratio
     value: "verdict invariant under one grid step either way; reported fragile if the statistic moves more than 0.5x its own magnitude"
     status: assumed
-    provenance: "assumed:DR-005"
+    provenance: "assumed:DR-007"
     named_in: [M72-T1087, M73-T1095]
     note: >-
       How far a result may move when a parameter moves to its neighbours before the result counts as
@@ -849,7 +849,7 @@ parameters:
     unit: count
     value: 10000
     status: assumed
-    provenance: "assumed:DR-005"
+    provenance: "assumed:DR-007"
     named_in: [M73-T1096, M73-T1097]
     note: Resampling method (i.i.d. or block) is an open item, not just the count.
     ui_editable: false
@@ -858,7 +858,7 @@ parameters:
     unit: fraction
     value: 0.05
     status: assumed
-    provenance: "assumed:DR-005"
+    provenance: "assumed:DR-007"
     named_in: [M73-T1101]
     ui_editable: false
 
@@ -866,7 +866,7 @@ parameters:
     unit: bars
     value: 1
     status: assumed
-    provenance: "assumed:DR-005"
+    provenance: "assumed:DR-007"
     named_in: [M73-T1102]
     ui_editable: false
 
@@ -874,7 +874,7 @@ parameters:
     unit: fraction
     value: "0.10, minimum 20 trades"
     status: assumed
-    provenance: "assumed:DR-005"
+    provenance: "assumed:DR-007"
     named_in: [Appendix J - QA stage]
     note: >-
       Appendix J requires "повторная независимая проверка части выборки" - an independent re-check of

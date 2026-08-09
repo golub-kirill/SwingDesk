@@ -197,7 +197,7 @@ written under pressure and against a live account.
       include `Ready`, which is close; the candidate-decision enum has only four and none of them
       means "admissible but no room". Resolve with the watchlist transition graph, still open in
       `DECISION_STATE_MACHINE.md` §6.
-- [ ] **The six portfolio parameters** (§2). `DR-005` set the `validation.*` family; the `risk.*`
+- [ ] **The six portfolio parameters** (§2). `DR-007` set the `validation.*` family; the `risk.*`
       portfolio block is the obvious next record, and it is larger because each value has a real
       consequence for a real account rather than for a study.
 - [ ] Whether capacity should be expressed in R or in currency at all. R is scale-free and matches

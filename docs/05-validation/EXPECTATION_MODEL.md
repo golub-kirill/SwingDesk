@@ -131,7 +131,7 @@ They are easy to conflate and they govern different refusals. Stated once, here:
 
 | Threshold | Value | Governs |
 |---|---|---|
-| `validation.backtest_min_trades` | 200 primary / 60 holdout, per arm (`DR-005`) | whether a **backtest** may produce a verdict |
+| `validation.backtest_min_trades` | 200 primary / 60 holdout, per arm (`DR-007`) | whether a **backtest** may produce a verdict |
 | `b.min_sample` | 100 closed trades, ratified | whether a **strategy card** may be judged at all |
 | `stats.min_sample_for_verdict` | **`unset`** | whether a **statistic** may be displayed with a verdict rather than as a bare count |
 
@@ -209,7 +209,7 @@ to trust it. It becomes real the day an expectation exists.
 
 - [ ] **`stats.rolling_window` is `unset`** (§6), and it is required by M69 rather than optional.
       Until it has a value no expectation can expire.
-- [ ] **`stats.min_sample_for_verdict` is `unset`** (§5). `DR-005` set fifteen `validation.*`
+- [ ] **`stats.min_sample_for_verdict` is `unset`** (§5). `DR-007` set fifteen `validation.*`
       thresholds and deliberately did not touch the `stats.*` family; this is the one that most
       obviously belongs with them, and it wants its own record.
 - [ ] **Where an expectation is stored.** The study JSONs already hold the numbers; a `registry/`
@@ -217,6 +217,6 @@ to trust it. It becomes real the day an expectation exists.
       transitions question in `TRANSITION_SPEC.md` §11 — both are asking whether this project wants
       one more table or one more projection.
 - [ ] **Whether `FORWARD_CONFIRMED` needs a second sample floor.** `validation.forward_test_min_trades`
-      is 20 (`DR-005`) and that is a *process* threshold; confirming an expectation is a statistical
+      is 20 (`DR-007`) and that is a *process* threshold; confirming an expectation is a statistical
       claim and 20 trades will not support one. Likely a separate value, and it should be set before
       a forward test starts rather than after it reports.

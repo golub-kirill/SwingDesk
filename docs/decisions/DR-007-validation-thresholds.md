@@ -1,13 +1,25 @@
-# DR-005: The validation programme's thresholds
+# DR-007: The validation programme's thresholds
 
 ```
+id:         DR-007 (ratified as DR-005; renumbered 2026-08-09)
 date:       2026-08-08
 status:     accepted — ratified by the owner 2026-08-08
 parameters: validation.* (all fifteen)
 components: none - these govern the validation programme, not a computation
 ```
 
-**Ratified as proposed, no amendment.** Provenance therefore stays `assumed:DR-005` on all fifteen
+**Renumbered from `DR-005`; nothing else changed.** A parallel branch (`claude/…-1feb49`) had used
+that id three days earlier for a different decision — measured slippage — and neither effort knew
+the other existed. The reconciliation plan on master (docs/08-pm/RECONCILIATION\_PLAN.md, decision
+D-R4) resolves a contested id by earliest commit timestamp, so `DR-005` stays with the earlier
+record and this one moves. `DR-006` was already taken here.
+
+The ratification is untouched: the values, the reasoning and the owner's acceptance on 2026-08-08
+stand exactly as they were, and the git history under `DR-005` is deliberately not rewritten. **A
+`DR-005` citation written on this branch before 2026-08-09 means these thresholds; after the
+reconciliation it means measured slippage.**
+
+**Ratified as proposed, no amendment.** Provenance therefore stays `assumed:DR-007` on all fifteen
 rather than becoming `owner` — the values were drafted here and accepted, not supplied by the owner
 (`decisions/README.md` §3 rule 5: a decision record leaves a parameter at `assumed`, never
 `validated`, however it was approved). This record is now frozen; changing any value takes a new
@@ -21,7 +33,7 @@ the thing that must not reach runtime, and `RULE_SPEC.md` §7 row 8 records it a
 tree with no discriminating pair.
 
 **This record proposes values so the programme can evaluate. It proves nothing.** Every value below
-becomes `assumed:DR-005`, which travels with any number computed from it. Setting a threshold is a
+becomes `assumed:DR-007`, which travels with any number computed from it. Setting a threshold is a
 modelling choice, not evidence — the same rule `DR-004-cost-model.md` states about costs, and the
 reason `PARAMETER_REGISTRY.md` §5 makes provenance travel adjacent to the number.
 
@@ -181,7 +193,7 @@ direction — a pause, per `criteria.yml`, never a kill.
 - **A deeper history** changes the walk-forward arithmetic in §3.1.
 - **A change to the exit model** forces `validation.embargo` to move with it (§3.2).
 - **Owner amendment.** These are proposed values; the owner may set any of them differently, and the
-  record then carries the owner's value with provenance `owner` rather than `assumed:DR-005`.
+  record then carries the owner's value with provenance `owner` rather than `assumed:DR-007`.
 
 ## 6. Consequences
 

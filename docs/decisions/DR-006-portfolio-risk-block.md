@@ -14,7 +14,7 @@ could not tell you that you had too many candidates, because it did not know wha
 This record proposes the six, and that section now carries the values and an evaluability column
 instead.
 
-**These bind a real account, and `DR-005`'s did not.** That record set thresholds governing studies;
+**These bind a real account, and `DR-007`'s did not.** That record set thresholds governing studies;
 this one sets the limits that would stop a position being taken. Scrutinise it harder.
 
 ---
@@ -58,7 +58,7 @@ cost one unit of risk, so open risk and position count are the same constraint c
 hence `risk.max_concurrent_positions` = 6 rather than an independently chosen number. Setting them
 inconsistently would let one bind while the other looked satisfied.
 
-**The link to `validation.max_allowable_drawdown` = −15R** (`DR-005`) is the part worth checking. A
+**The link to `validation.max_allowable_drawdown` = −15R** (`DR-007`) is the part worth checking. A
 single catastrophic session — everything gaps through its stop at once — costs roughly the whole open
 risk, so about 6R, and more than that when gaps overshoot (`EXECUTION_MODEL.md` §2 measured gap exits
 at 9.5% of trades, and a gap exit loses more than the planned 1R). Two and a half such days reach the

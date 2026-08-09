@@ -78,5 +78,5 @@ records the assumption as the thing PR-003 should test, rather than pretending i
 2. Non-trading sessions come from the exchange calendar, so the calendar is an input to the
    statistics layer as well as the data layer.
 3. `Sortino` and `Recovery factor` inherit the same series and the same zero-fill rule; their own
-   conventions (MAR threshold, drawdown definition) still need DR-004 and DR-005.
+   conventions (MAR threshold, drawdown definition) still need DR-004 and DR-007.
 4. Any Sharpe displayed without its convention string is a defect.

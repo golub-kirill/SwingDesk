@@ -316,7 +316,7 @@ trigger references `validation.max_allowable_drawdown`, which was `unset` along 
 `validation.*` parameters — so its verdict was invariant across every input the system could produce,
 a `HARD_GATE` that could not fail. Found by hand on 2026-08-03.
 
-`DR-005-validation-thresholds.md` proposes values for all fifteen (2026-08-08), which makes the
+`DR-007-validation-thresholds.md` proposes values for all fifteen (2026-08-08), which makes the
 criterion able to evaluate. **It still has no discriminating pair**, because nothing exercises it —
 there is no realised drawdown to test against, and the threshold itself is the weakest value in that
 record. The gate went from unable to fail to untested, which is progress and is not the same as

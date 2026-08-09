@@ -106,7 +106,7 @@ demand.
 ## 6. Open — the owner's, not mine
 
 1. **`DR-006` is proposed and unratified.** Six `risk.*` portfolio constraints, all `assumed:DR-006`.
-   Unlike `DR-005` these bind a real account. Two of the six (sector, correlation) are **set and
+   Unlike `DR-007` these bind a real account. Two of the six (sector, correlation) are **set and
    cannot be evaluated** — no sector source, nothing computes a correlation matrix — and §3 of that
    record says they must report `unavailable` rather than fail closed into a blanket refusal.
    `risk.per_trade_pct` is deliberately **not** set: Appendix C reserves it to the owner.
@@ -196,6 +196,6 @@ places, and for a day this repo was doing exactly that.
 **2026-08-08.** Phase 1 closed. Six specification sections written (§15 rules, §16 transitions, §23
 expectation, §28 execution, §31 allocation, §35 modes, §44/§45 drift and learning, §46 knowledge
 graph, §7 entities, §11 terminology, §43 change management, §5 coverage matrix — generated). Four
-gates added. `DR-005` ratified, `DR-006` proposed, `criteria.yml` amended to v1.1.0 and ratified.
+gates added. `DR-007` ratified, `DR-006` proposed, `criteria.yml` amended to v1.1.0 and ratified.
 `mode` and `from_state` landed. The master specification itself is **not in this repository**, which
 is why §3 and §53 are blocked rather than written — see `ENTITY_MAP.md` §0 for what that cost.

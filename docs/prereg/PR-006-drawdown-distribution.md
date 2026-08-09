@@ -12,12 +12,12 @@ blocked: no trade log exists - see section 4
 
 - **searched:** `docs/prereg/` for any prior drawdown study — none; `registry/course_index.yml` for
   drawdown topics (M69's `Максимальная просадка`, M49-T765 the size-reduction ladder, M93's risk
-  system); `docs/decisions/` for a prior threshold — `DR-005` §3.7 sets −15R and explicitly names
+  system); `docs/decisions/` for a prior threshold — `DR-007` §3.7 sets −15R and explicitly names
   this study as the thing that should replace it.
 - **not a re-run of anything.** PR-001, PR-005 and PR-002 all measure *selection* — which
   instruments a rule picks and how they then behave. This measures the **sequence** property of one
   trade set, which none of them touched.
-- **relationship to `DR-005`:** that record chose −15R from an argument, disclosed the argument as
+- **relationship to `DR-007`:** that record chose −15R from an argument, disclosed the argument as
   its weakest, and named the measurement that would replace it. This is that measurement. A study
   registered to check a number the same project already published is the case the refutation-family
   check exists to permit rather than to block.
@@ -25,7 +25,7 @@ blocked: no trade log exists - see section 4
 ## 1. Question
 
 `validation.max_allowable_drawdown` triggers the ratified kill criterion `k.drawdown_pause`. It is
-set to −15R with provenance `assumed:DR-005`. **Is that threshold outside the range a zero-edge
+set to −15R with provenance `assumed:DR-007`. **Is that threshold outside the range a zero-edge
 strategy produces from ordinary sequence luck, or inside it?**
 
 A threshold inside the ordinary range fires on noise and will be disabled by whoever it annoys. A
@@ -50,7 +50,7 @@ Registered before the data is drawn:
 |---|---|
 | The realised max drawdown falls **inside** the central 90% of the permutation distribution | expected |
 | The distribution's **95th percentile** is the defensible threshold | the deliverable |
-| That percentile is **larger in magnitude than −10R** | expected, and it is the reason −10R was rejected in `DR-005` §3.7 |
+| That percentile is **larger in magnitude than −10R** | expected, and it is the reason −10R was rejected in `DR-007` §3.7 |
 | Whether it is larger or smaller than **−15R** | **no prediction registered** — this is the number the study exists to produce, and predicting it would be the data-snooping the protocol forbids |
 
 ## 4. Data — and the reason this cannot run yet
@@ -98,7 +98,7 @@ not be buried in a footnote of a study about something else.
 3. Build the realised equity curve in R, in trade order, and record its maximum peak-to-trough
    decline.
 4. **Permute the trade order 10,000 times** with a recorded seed, rebuilding the curve each time and
-   recording each maximum drawdown. `validation.monte_carlo_runs` = 10,000 (`DR-005`), and
+   recording each maximum drawdown. `validation.monte_carlo_runs` = 10,000 (`DR-007`), and
    `validation/studies/trend_performance.py` already contains a seeded permutation harness to
    extend.
 5. Report the distribution: 50th, 80th, 90th, 95th and 99th percentiles, plus where the realised
@@ -120,7 +120,7 @@ choice of percentile after seeing the numbers. The 95th is registered here as th
 | Reproduction fails (§4) | **INCONCLUSIVE** | report the reproduction failure; no threshold is set from this study |
 
 In the ACCEPT case a **superseding decision record** sets `validation.max_allowable_drawdown` from
-the measured percentile, citing this study. `DR-005` is frozen and may not be edited
+the measured percentile, citing this study. `DR-007` is frozen and may not be edited
 (`decisions/README.md` §3 rule 2); the new record names it as superseded for that one parameter.
 
 Whether the resulting parameter may carry provenance `validated:PR-006` is settled here in advance:
@@ -137,7 +137,7 @@ detectable.
 ## 8. Sample
 
 The ungated arm's 2,629 primary-period trades, as reported by PR-005. `validation.backtest_min_trades`
-is 200 primary / 60 holdout per arm (`DR-005`), which this clears by an order of magnitude. If the
+is 200 primary / 60 holdout per arm (`DR-007`), which this clears by an order of magnitude. If the
 reproduction yields materially fewer trades, §4's mismatch rule applies before any sample question.
 
 ## 9. What would refute this
