@@ -77,8 +77,8 @@ keeping wholesale.
 | 41 | Security | FULL | `SECURITY.md`, `BACKUP_AND_DR.md` |
 | 42 | Operations / Incident Response | FULL | `docs/runbooks/` — five runbooks with verbatim return conditions |
 | 43 | Change Management | PARTIAL | `COMPONENT_REGISTRY_SPEC.md` §6 covers component versioning; no change-type taxonomy or rollback policy |
-| 44 | Learning Engine | **ABSENT** | offline-learning promotion path undefined |
-| 45 | Drift Monitoring | **ABSENT** | nothing monitors feature, regime, slippage or expectation drift |
+| 44 | Learning Engine | PARTIAL | `DRIFT_AND_LEARNING.md` (2026-08-08) §1 — the promotion path is **M69's acceptance enum**, transcribed since 2026-08-01 and connected to nothing. **Nothing consumes it**, and the post-trade loop it needs is out of contour under D1 |
+| 45 | Drift Monitoring | PARTIAL | `DRIFT_AND_LEARNING.md` (2026-08-08) §3 — five families, **four computable today and none computed**; expectation drift needs executed fills and is structurally blocked |
 | 46 | Knowledge Graph | **ABSENT** | dependencies exist in registries; no graph projection |
 | 47 | Документационный комплект | FULL | `docs/README.md` — 61-document plan, different structure, same function |
 | 48 | Формат документации | FULL | `docs/README.md`; enforced by gates 2 and 3e |
@@ -96,12 +96,12 @@ keeping wholesale.
 | Coverage | Count |
 |---|---|
 | FULL | **29** |
-| PARTIAL | 22 |
-| ABSENT | **2** |
+| PARTIAL | 24 |
+| ABSENT | **1** |
 | DEFERRED | 3 |
 
 **Half the specification is already met.** That is the finding the parallel analysis could not
-reach, and it changes the plan: the work is filling two holes and closing twenty-two shortfalls,
+reach, and it changes the plan: the work is filling one hole and closing twenty-four shortfalls,
 not building 48 documents.
 
 **Movement since the first pass (2026-08-04 → 2026-08-08).** §15, §28, §35 and §16 — the top four of
@@ -111,18 +111,20 @@ each specifies a form that no object in the tree yet carries, and grading the do
 the discharge is how a coverage matrix starts lying. Each names its own remaining shortfall in the
 row above.
 
-## 4. The two absent sections, and why they are not simply next
+## 4. The one absent section
 
-What is left is not the top of a queue. These three are **blocked on something other than writing
-time**, which is why they outlasted the six that went first.
+**§46 Knowledge Graph** — a projection of registries that already exist. Lowest urgency, and the one
+section where specifying before projecting would be pure ceremony: the dependency edges are in
+`components.yml` and `parameters.yml` today, and what is missing is a view over them rather than a
+decision about what they mean.
 
-1. **§45 Drift Monitoring** and **§44 Learning Engine** — blocked on `EXPECTATION_MODEL.md` having a
-   stored estimate to measure against, and then on a live record. Drift **is** the difference between
-   two expectations for one cohort at two as-of dates; with zero stored expectations there is nothing
-   to difference. `UX_TASK_FLOWS.md` §3 measures the post-trade phase at 0 of 6 — the same gap from
-   the operator's side.
-2. **§46 Knowledge Graph** — a projection of registries that already exist. Lowest urgency, and the
-   one section where specifying before projecting would be pure ceremony.
+**§44 and §45 were here and are now PARTIAL.** They were held back on the argument that drift needs a
+stored expectation to difference against — true, and it turned out to be the smaller half of the
+story. Writing them found that the course **already specifies the learning engine**: M69's acceptance
+enum has been transcribed in `DECISION_STATE_MACHINE.md` §4 since 2026-08-01, its `Продолжить сбор`
+state forbids exactly the retuning loop a naive drift response would build, and nothing in the tree
+consumes any of it. The blocked half is expectation drift, which needs executed fills; the other four
+drift families are computable today and none is computed.
 
 **§5 was one of these and is now FULL** — built as a generator rather than written, for the reason
 that kept it on this list: a hand-maintained matrix of counts is the most rot-prone document a

@@ -1,6 +1,6 @@
 # Document set
 
-64 documents in 8 tiers. Each row states what the document **freezes** and where its content comes
+65 documents in 8 tiers. Each row states what the document **freezes** and where its content comes
 from. `verbatim` means the content is transcribed from the course without rewriting, and is checked
 by `tools/verify_transcription.py` against freshly extracted PDF text.
 
@@ -81,6 +81,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 36a | `EXECUTION_MODEL.md` | Fill timing, slippage on the fill, gap handling, the **intrabar stop-before-target policy** stated before a target exists, and the two silent exclusions from the signal ledger | ТЗ §28 + `DR-004`; measured against the engine | drafting |
 | 36b | `EXPECTATION_MODEL.md` | The estimate/definition split, the cohort key (the course's own mandatory GROUP BY), three sample floors and what each governs, the usability ladder. **An expectation may never size, gate or override** | ТЗ §23; audited against the studies | drafting |
 | 37 | `WALKFORWARD_SPEC.md` | 12-field window record with a **three-way** train/validation/test split; `keep/revise/retire`; the 6 perturbations | `verbatim` Appendix K + M73 | drafting |
+| 37a | `DRIFT_AND_LEARNING.md` | ТЗ §44+§45 in one document, because drift without a response is a dashboard. **The course already specifies the learning engine** — M69's four acceptance states — and forbids the retuning loop. 5 drift families, 4 computable and 0 computed | ТЗ §44/§45; M69 acceptance enum | drafting |
 | 38 | `GO_LIVE_GATES.md` | Staged plans, the 5-condition size gate, drawdown as an actuator; calendar time authorises nothing | `verbatim` Appendices Q, R, S + M75 | drafting |
 
 Two working directories serve this tier and are not numbered documents:
