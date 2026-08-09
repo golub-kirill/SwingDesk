@@ -114,50 +114,54 @@ parameters:
 
   - id: risk.max_position_value
     unit: currency
-    value: null
-    status: unset
-    provenance: null
+    value: 2500
+    note: >-
+      25% of account.equity, computed at the current value of 10000. Stored as currency because sizing reads it as one; it must be recomputed if equity changes, which is why DR-006 section 7 wants a percentage-based parameter instead.
+    status: assumed
+    provenance: "assumed:DR-006"
     named_in: [Appendix C, M49-T762]
     ui_editable: true
 
   - id: risk.liquidity_cap_order_to_adtv_pct
     unit: percent
-    value: null
-    status: unset
-    provenance: null
+    value: 1.0
+    status: assumed
+    provenance: "assumed:DR-006"
     named_in: [Appendix C, M49-T760]
     ui_editable: true
 
   - id: risk.max_open_risk
     unit: R
-    value: null
-    status: unset
-    provenance: null
+    value: 6
+    status: assumed
+    provenance: "assumed:DR-006"
     named_in: [M51-T780, M93-T1326]
     ui_editable: true
 
   - id: risk.max_sector_risk
     unit: R
-    value: null
-    status: unset
-    provenance: null
+    value: 2
+    status: assumed
+    provenance: "assumed:DR-006"
     named_in: [M51-T782, M93-T1327]
     ui_editable: true
 
   - id: risk.correlation_threshold
     unit: correlation coefficient
-    value: null
-    status: unset
-    provenance: null
+    value: 0.70
+    note: >-
+      Threshold on the correlation of daily returns over a 60-session lookback. The lookback is authored with the threshold and needs a registry entry of its own - see DR-006 section 7.
+    status: assumed
+    provenance: "assumed:DR-006"
     named_in: [M49-T761, M51-T781]
     note: The size adjustment applied above the threshold is also unspecified.
     ui_editable: true
 
   - id: risk.max_concurrent_positions
     unit: count
-    value: null
-    status: unset
-    provenance: null
+    value: 6
+    status: assumed
+    provenance: "assumed:DR-006"
     named_in: [M49-T764]
     ui_editable: true
 
@@ -735,51 +739,51 @@ parameters:
   # ---- validation gates (docs/05-validation/, not yet written) ----
   - id: validation.is_oos_split
     unit: ratio
-    value: null
-    status: unset
-    provenance: null
+    value: "0.50 / 0.20 / 0.30 train / validation / test"
+    status: assumed
+    provenance: "assumed:DR-007"
     named_in: [M73-T1091, M73-T1092, Appendix K]
     ui_editable: false
 
   - id: validation.walkforward_window
     unit: trading days
-    value: null
-    status: unset
-    provenance: null
+    value: "756 train / 252 test / 252 step"
+    status: assumed
+    provenance: "assumed:DR-007"
     named_in: [M73-T1093, Appendix K]
     note: Window length, step size and fold count all unspecified.
     ui_editable: false
 
   - id: validation.embargo
     unit: trading days
-    value: null
-    status: unset
-    provenance: null
+    value: 21
+    status: assumed
+    provenance: "assumed:DR-007"
     named_in: [M73 robustness]
     ui_editable: false
 
   - id: validation.stress_cost_multiplier
     unit: multiple
-    value: null
-    status: unset
-    provenance: null
+    value: 3
+    status: assumed
+    provenance: "assumed:DR-007"
     named_in: [M73-T1099, M73-T1100]
     ui_editable: false
 
   - id: validation.forward_test_min_duration
     unit: weeks
-    value: null
-    status: unset
-    provenance: null
+    value: 12
+    status: assumed
+    provenance: "assumed:DR-007"
     named_in: [M74-T1112]
     note: Topic exists solely to state this and states no number.
     ui_editable: false
 
   - id: validation.forward_test_min_trades
     unit: trades
-    value: null
-    status: unset
-    provenance: null
+    value: 20
+    status: assumed
+    provenance: "assumed:DR-007"
     named_in: [M74-T1113]
     ui_editable: false
 
@@ -800,9 +804,9 @@ parameters:
 
   - id: validation.go_live_criteria
     unit: rule
-    value: null
-    status: unset
-    provenance: null
+    value: "Appendix S stage 1: 100% plan/stop/journal, no critical violations; plus every ratified Track A criterion met"
+    status: assumed
+    provenance: "assumed:DR-007"
     named_in: [M74-T1114, Appendix S]
     note: >-
       Appendix S supplies the only hard gate in the course - "100% plan/stop/journal; no critical
@@ -816,9 +820,9 @@ parameters:
 
   - id: validation.backtest_min_trades
     unit: trades
-    value: null
-    status: unset
-    provenance: null
+    value: "200 primary / 60 holdout, per arm"
+    status: assumed
+    provenance: "assumed:DR-007"
     named_in: [M72-T1074]
     note: >-
       Distinct from stats.min_sample_for_verdict, which governs reporting a statistic. This one
@@ -828,9 +832,9 @@ parameters:
 
   - id: validation.backtest_period
     unit: years or explicit dates
-    value: null
-    status: unset
-    provenance: null
+    value: "2016-08-01 to present, or all available history if shorter"
+    status: assumed
+    provenance: "assumed:DR-007"
     named_in: [M72-T1072, M72-T1073]
     note: >-
       Topic 1073 requires the period to span different market regimes, which constrains the choice
@@ -839,9 +843,9 @@ parameters:
 
   - id: validation.parameter_stability_tolerance
     unit: ratio
-    value: null
-    status: unset
-    provenance: null
+    value: "verdict invariant under one grid step either way; reported fragile if the statistic moves more than 0.5x its own magnitude"
+    status: assumed
+    provenance: "assumed:DR-007"
     named_in: [M72-T1087, M73-T1095]
     note: >-
       How far a result may move when a parameter moves to its neighbours before the result counts as
@@ -850,34 +854,34 @@ parameters:
 
   - id: validation.monte_carlo_runs
     unit: count
-    value: null
-    status: unset
-    provenance: null
+    value: 10000
+    status: assumed
+    provenance: "assumed:DR-007"
     named_in: [M73-T1096, M73-T1097]
     note: Resampling method (i.i.d. or block) is an open item, not just the count.
     ui_editable: false
 
   - id: validation.missed_trade_rate
     unit: fraction
-    value: null
-    status: unset
-    provenance: null
+    value: 0.05
+    status: assumed
+    provenance: "assumed:DR-007"
     named_in: [M73-T1101]
     ui_editable: false
 
   - id: validation.execution_delay
     unit: bars
-    value: null
-    status: unset
-    provenance: null
+    value: 1
+    status: assumed
+    provenance: "assumed:DR-007"
     named_in: [M73-T1102]
     ui_editable: false
 
   - id: validation.qa_recheck_fraction
     unit: fraction
-    value: null
-    status: unset
-    provenance: null
+    value: "0.10, minimum 20 trades"
+    status: assumed
+    provenance: "assumed:DR-007"
     named_in: [Appendix J - QA stage]
     note: >-
       Appendix J requires "повторная независимая проверка части выборки" - an independent re-check of

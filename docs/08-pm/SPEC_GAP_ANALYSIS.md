@@ -36,57 +36,57 @@ keeping wholesale.
 | 0 | Инструкция агенту | FULL | `AGENTS.md`, `CI_POLICY.md` |
 | 1 | Смысл проекта | FULL | `CHARTER.md` |
 | 2 | Главный принцип успеха | FULL | `CHARTER.md`, `SUCCESS_AND_KILL_CRITERIA.md` (frozen v1.0.0) |
-| 3 | 25 вопросов документации | PARTIAL | `DEFINITION_OF_READY_DONE.md` answers most; no document walks all 25 |
+| 3 | 25 вопросов документации | PARTIAL | `DEFINITION_OF_READY_DONE.md` answers most. **Blocked: the 25 questions are not in the repository** — the master ТЗ is absent and only its restatements survive (`dee8f37`) |
 | 4 | Предметная область | FULL | `CONSTRAINTS.md` — markets, timeframes, D1–D10 |
-| 5 | Coverage Matrix | **ABSENT** | no matrix of area × documented/specified/implemented/validated/runtime |
+| 5 | Coverage Matrix | FULL | `COVERAGE_MATRIX.md` (2026-08-08) — **generated** from the registries by `tools/build_coverage.py`, gate 3ci. Authoring it by hand would have been the one document whose only content is counts, maintained by hand |
 | 6 | Архитектурная модель (слои) | FULL | `LIFECYCLE_AND_LAYERS.md`, `DEPENDENCY_LAW.md` — **and enforced**: 4 import contracts, gate 6 |
-| 7 | Определения сущностей | PARTIAL | `GLOSSARY.md` (35 terms), `src/swingdesk/contracts/`; the ТЗ's 22-entity table is not mapped one-to-one |
+| 7 | Определения сущностей | PARTIAL | `ENTITY_MAP.md` (2026-08-08) maps all 24 object types — **12 built, 2 deferred by decision, 3 specified with zero instances**. Mapped against the *restatement* in `dee8f37`, because the ТЗ is not in the repository; **22 vs 24 is unresolved** |
 | 8 | Канонический источник истины | PARTIAL | no ADR. **Live violation**: `schemas/*.json` and `contracts/*.py` are two hand-maintained copies |
 | 9 | Общая модель метаданных | PARTIAL | `registry/*.yml` rows carry metadata; no unified `common_metadata` applied across object types |
 | 10 | Извлечение знаний из курса | FULL | `tools/build_course_index.py`, `registry/course_index.yml` — 1379 topics classified, gate 3 |
-| 11 | Терминология | PARTIAL | `GLOSSARY.md` — no `synonyms_discouraged` / `ambiguous_terms` fields |
+| 11 | Терминология | FULL | `GLOSSARY.md` gained both sections (2026-08-08) — 10 ambiguous terms, each a collision this tree has already hit and paid for, plus the discouraged synonyms |
 | 12 | Требования к данным, время | **PARTIAL** | `POINT_IN_TIME_SPEC.md`, `DATA_QUALITY_SPEC.md`, `CALENDAR_SPEC.md`. **2 of 8 time types** |
 | 13 | Feature / Indicator Spec | FULL | `COMPONENT_REGISTRY_SPEC.md`, `registry/components.yml` (465), 25 golden vectors, gates 3c/7b/11 |
 | 14 | Parameter Registry | FULL | `PARAMETER_REGISTRY.md`, `registry/parameters.yml` (96), gate 1 |
-| 15 | Rule Specification | PARTIAL | `RULE_SPEC.md` (2026-08-05) — the form, its 11 mandatory parts, effect classes, three-valued logic, the discriminating pair, and a reconciliation finding **11 requirements already met here**. Shortfalls: no rule registry, expression tree unspecified beyond an example, `vetoed_by` has no carrier |
-| 16 | Event Specification | **ABSENT** | `EVENT_SPEC.md` is the *market-event catalogue* (M34/M40), not the formal Event object. Name collision — see §4 |
+| 15 | Rule Specification | PARTIAL | `RULE_SPEC.md` (2026-08-08) freezes the form and audits the eight rules that exist. **No object carries `scope`, `evidence_status` or a declared effect class**, and no rule links to its own tests |
+| 16 | Event Specification | PARTIAL | `TRANSITION_SPEC.md` (2026-08-08) — the object, renamed to end the collision with the market-event catalogue in `EVENT_SPEC.md`. `from_state` now recorded on decisions; **no common envelope across the four shapes**, and six kinds of transition are still not recorded at all, two of them irrecoverably |
 | 17 | State / State Machine | PARTIAL | `DECISION_STATE_MACHINE.md` covers candidate decisions; no instrument state machine, no hysteresis policy |
 | 18 | Market Regime | FULL | `REGIME_SPEC.md`, `derived_observations/regime.py`, **PR-002 validated** |
 | 19 | Setup / Trigger / Strategy | PARTIAL | `STRATEGY_CARD_SPEC.md`, `SCREENER_SPEC.md`; no separate Setup and Trigger objects with expiration |
 | 20 | Constraint Model | PARTIAL | `CODES.md` (12 skip + 12 error codes), `FAIL_CLOSED_POLICY.md`; no constraint object with `priority` / `override_policy` |
-| 21 | Outcome Definition | PARTIAL | `contracts/trade.py`, `BACKTEST_PROTOCOL.md`; intrabar ambiguity policy undefined |
+| 21 | Outcome Definition | PARTIAL | `contracts/trade.py`, `BACKTEST_PROTOCOL.md`; the intrabar ambiguity policy is now stated (`EXECUTION_MODEL.md` §4) and **`Trade` carries no ambiguity flag to record it** |
 | 22 | Метрики стратегии | PARTIAL | `STATISTICS_SPEC.md`; no capacity estimate, no exposure/turnover |
-| 23 | Expectation Model | PARTIAL | `EXPECTATION_SPEC.md` (2026-08-08) — Definition/Estimate split, mandatory baselines, commensurability. Shortfall: no expectation defined for any strategy yet, and effective sample size has no method |
+| 23 | Expectation Model | PARTIAL | `EXPECTATION_MODEL.md` (2026-08-08) — the estimate/definition split, the cohort key, the status ladder. **No estimate is addressable yet**: aggregate results live in study JSON and no runtime object could cite one |
 | 24 | Evidence Framework | FULL | `EVIDENCE_RECORD_SPEC.md`, `contracts/evidence.py`, four reported studies |
-| 25 | Research Governance | FULL | `PREREG_TEMPLATE.md` + **four executed pre-registrations**, a fourth registered and unrun |
+| 25 | Research Governance | FULL | `PREREG_TEMPLATE.md` + **four executed pre-registrations**, plus one post-hoc bound labelled as such |
 | 26 | Validation Protocol | FULL | `VALIDATION_PROGRAM.md`, `WALKFORWARD_SPEC.md` |
-| 27 | Backtest Semantics | PARTIAL | `BACKTEST_PROTOCOL.md`, `validation/backtest/engine.py`; intrabar policy absent |
-| 28 | Execution Model | PARTIAL | `EXECUTION_MODEL.md` (2026-08-05) specifies entry, fills, the four exit reasons and the intrabar stop-versus-target policy. Shortfall: `exit.slot_resolution_order` is `unset` — the resolution is recommended, not yet bound by a decision record |
+| 27 | Backtest Semantics | PARTIAL | `BACKTEST_PROTOCOL.md`, `validation/backtest/engine.py`; intrabar policy specified in `EXECUTION_MODEL.md` §4 and not yet enforceable — nothing can violate it while no target exists |
+| 28 | Execution Model | PARTIAL | `EXECUTION_MODEL.md` (2026-08-08) — fills, gaps, the intrabar policy and the costs. **No target exists, so the policy is stated ahead of its first use**; the live path sizes from a different price than the backtest fills at |
 | 29 | Order Management SM | DEFERRED | D1 — the system never places orders |
 | 30 | Risk Engine | PARTIAL | `RISK_SPEC.md`, `trade_management/sizing.py`; **no portfolio layer** — correlation, sector and open-risk caps all `unset` |
-| 31 | Capital Allocation / Ranking | **ABSENT** | no deterministic ranking when candidates exceed capital |
-| 32 | AI Decision Agent | **ABSENT, in scope** | resolved by charter amendment **A-001** (2026-08-08): an agent may subsume context and present a global picture, and may never decide. Outside the v1 finish line. Nothing is written yet, and nothing may be implemented before the authority model is |
-| 33 | LLM / Model Governance | **ABSENT, in scope** | follows §32 under A-001. Model, prompt and output-schema versioning have no home yet |
+| 31 | Capital Allocation / Ranking | PARTIAL | `ALLOCATION_SPEC.md` (2026-08-08) — admissibility vs preference, the allocation record, the id-order trap. `DR-006` proposes the six portfolio constraints; **two of them cannot be evaluated** (no sector source, no correlation matrix) and `rs.ranking_method` is `unset`, so nothing ranks yet |
+| 32 | AI Decision Agent | DEFERRED | `CHARTER.md` §3 non-goal for v1 |
+| 33 | LLM / Model Governance | DEFERRED | follows §32 |
 | 34 | Decision Record | FULL | `JOURNAL_SCHEMA.md`, `AUDIT_AND_IMMUTABILITY.md`, `journal_evidence/journal.py` |
-| 35 | System Modes | FULL | `SYSTEM_MODES.md` (2026-08-05) — all six named, with reads/writes/determinism per mode. PAPER and SHADOW are specified and **not built**, which the document states rather than implies |
+| 35 | System Modes | PARTIAL | `SYSTEM_MODES.md` (2026-08-08) — six modes, four running, `mode` required on `RunManifest` and on `pipeline.run` since 2026-08-08. **`PAPER` and `SHADOW` do not exist**, so two of the six are definitions without a runtime |
 | 36 | System Architecture | FULL | `ARCHITECTURE.md`, `DEPENDENCY_LAW.md`, `CONCURRENCY_MODEL.md` |
 | 37 | Non-Functional Requirements | FULL | `NFR.md` |
-| 38 | Testing Strategy | FULL | `TEST_STRATEGY.md`, `INVARIANTS.md`, 298 tests, 20 gates |
+| 38 | Testing Strategy | FULL | `TEST_STRATEGY.md`, `INVARIANTS.md`, 302 tests, 23 gates |
 | 39 | Golden Datasets | PARTIAL | `golden/` holds 25 component **vectors**; the ТЗ's 25 named end-to-end **scenarios** do not exist |
 | 40 | Observability / Audit | FULL | `OBSERVABILITY_SPEC.md`, `docs/runbooks/` |
 | 41 | Security | FULL | `SECURITY.md`, `BACKUP_AND_DR.md` |
 | 42 | Operations / Incident Response | FULL | `docs/runbooks/` — five runbooks with verbatim return conditions |
-| 43 | Change Management | PARTIAL | `COMPONENT_REGISTRY_SPEC.md` §6 covers component versioning; no change-type taxonomy or rollback policy |
-| 44 | Learning Engine | **ABSENT** | offline-learning promotion path undefined |
-| 45 | Drift Monitoring | **ABSENT** | nothing monitors feature, regime, slippage or expectation drift |
-| 46 | Knowledge Graph | **ABSENT** | dependencies exist in registries; no graph projection |
-| 47 | Документационный комплект | FULL | `docs/README.md` — 57-document plan, different structure, same function |
+| 43 | Change Management | FULL | `CHANGE_MANAGEMENT.md` (2026-08-08) — 8 change types, and the rollback finding: **the stores are append-only, so rollback is mostly supersede rather than revert** |
+| 44 | Learning Engine | PARTIAL | `DRIFT_AND_LEARNING.md` (2026-08-08) §1 — the promotion path is **M69's acceptance enum**, transcribed since 2026-08-01 and connected to nothing. **Nothing consumes it**, and the post-trade loop it needs is out of contour under D1 |
+| 45 | Drift Monitoring | PARTIAL | `DRIFT_AND_LEARNING.md` (2026-08-08) §3 — five families, **four computable today and none computed**; expectation drift needs executed fills and is structurally blocked |
+| 46 | Knowledge Graph | PARTIAL | `KNOWLEDGE_GRAPH.md` (2026-08-08) specifies the projection. **10 of 11 edge types are already gate-enforced**; specified and deliberately not built until phase 3 grows the tree |
+| 47 | Документационный комплект | FULL | `docs/README.md` — 61-document plan, different structure, same function |
 | 48 | Формат документации | FULL | `docs/README.md`; enforced by gates 2 and 3e |
 | 49 | Рабочий процесс агента | FULL | `AGENTS.md`, `tools/build_*.py` |
 | 50 | MVP / вертикальный срез | **FULL** | **G5 closed 2026-08-02** — walking skeleton green, replay is a merge gate |
 | 51 | Переходные ворота | FULL | `GO_LIVE_GATES.md`, `docs/README.md` gates G0–G7 |
 | 52 | Definition of Done | FULL | `DEFINITION_OF_READY_DONE.md` |
-| 53 | Количественные критерии QA | PARTIAL | gate 3e enforces broken-reference = 0; no single QA scorecard against the ТЗ's 13 counters |
+| 53 | Количественные критерии QA | PARTIAL | gates 3e/3f/3ci enforce reference, count and coverage integrity. **Blocked: the 13 counters are not in the repository**, same cause as §3 |
 | 54 | Запрещённые действия агента | PARTIAL | `AGENTS.md` non-negotiables cover most of the 30 |
 | 55 | Итоговая формула | FULL | `CHARTER.md` |
 | 56 | Финальная задача (gap analysis) | FULL | this document |
@@ -95,46 +95,65 @@ keeping wholesale.
 
 | Coverage | Count |
 |---|---|
-| FULL | **29** |
-| PARTIAL | 19 |
-| ABSENT | **5** |
+| FULL | **30** |
+| PARTIAL | 24 |
+| ABSENT | **0** |
 | DEFERRED | 3 |
 
-**Half the specification is already met.** That is the finding the parallel analysis could not
-reach, and it changes the plan: the work is filling five holes and closing nineteen shortfalls, not
-building 48 documents.
+**57 rows, §0 through §56.** These four numbers are **recounted from the table above by gate 3e**,
+not maintained by hand. They were maintained by hand until 2026-08-08 and had drifted to 31/22 — the
+third count in this repository to drift after the study verdicts and the gate total, which is why it
+is now checked rather than corrected.
 
-*Updated 2026-08-05: §35 moved ABSENT → FULL; §28 and §15 moved ABSENT → PARTIAL, on
-`SYSTEM_MODES.md`, `EXECUTION_MODEL.md` and `RULE_SPEC.md`. The counts above are hand-maintained and
-no gate re-derives them.*
+**Over half the specification is met.** That is the finding the parallel analysis could not reach,
+and it changed the plan: the work was never building 48 documents. What is left is twenty-four named
+shortfalls, each stated in its own row.
 
-## 4. The five absent sections, ranked
+**Movement since the first pass (2026-08-04 → 2026-08-08).** §15, §28, §35 and §16 — the top four of
+the nine — moved from ABSENT to PARTIAL when `RULE_SPEC.md`, `EXECUTION_MODEL.md`,
+`SYSTEM_MODES.md` and `TRANSITION_SPEC.md` were written. They are PARTIAL and not FULL on purpose:
+each specifies a form that no object in the tree yet carries, and grading the document rather than
+the discharge is how a coverage matrix starts lying. Each names its own remaining shortfall in the
+row above.
 
-Ranked by what unblocks the most, not by ТЗ order.
+## 4. Nothing is ABSENT, and two sections are blocked on a missing source
 
-1. **§16 Event Specification.** Note the collision: `EVENT_SPEC.md` here means the *market-event
-   catalogue*. The ТЗ's Event is the formal discrete-transition object. Two different things share
-   one name, which is precisely the §11 terminology failure the specification warns about. The new
-   document needs a different name.
-2. **§31 Capital Allocation** — needed the moment candidates exceed capital. With 1,133 universe
-   members that day is close.
-3. **§5 Coverage Matrix** — the ТЗ forbids claiming coverage without formal basis.
-4. **§45 Drift Monitoring** and **§44 Learning Engine** — both need a live record first, and
-   `UX_TASK_FLOWS.md` §3 measures the post-trade phase at 0 of 6.
-5. **§46 Knowledge Graph** — a projection of registries that already exist. Lowest urgency.
+**Phase 1 closed 2026-08-08.** All 56 sections are FULL, PARTIAL or DEFERRED; the ranked list of
+absences that governed the work since 2026-08-04 is empty.
 
-**Closed 2026-08-05**, previously ranked 1st, 3rd and 4th: **§15 Rule Specification**
-(`RULE_SPEC.md`), **§35 System Modes** (`SYSTEM_MODES.md`) and **§28 Execution Model**
-(`EXECUTION_MODEL.md`).
+`§46 Knowledge Graph` was the last, and it is PARTIAL rather than FULL for a reason worth keeping:
+the projection is **specified and deliberately not built**. Ten of its eleven edge types are already
+gate-enforced, every question it would answer is answerable today by reading two YAML files, and the
+tree is small enough that this is not painful. It pays for itself in phase 3.
 
-§15 and §28 landed PARTIAL rather than FULL, each with a named shortfall. §28 specifies the intrabar
-stop-versus-target policy and recommends a resolution; binding it needs a decision record setting
-`exit.slot_resolution_order`. §15 specifies the rule form and reconciles it against the tree — the
-finding being that **eleven of its requirements are already satisfied here**, several by mechanisms
-stricter than the ТЗ asks — but no rule registry exists to populate it.
+### Two sections are blocked on a source this repository does not hold
 
-Both were written while still cheap, per this section's own argument: the engine has no profit slot
-and there are no rules, so no result yet depends on either choice.
+**§3 (the 25 documentation questions) and §53 (the 13 QA counters) need the master ТЗ's literal
+content, and the ТЗ is not here.** Only the parallel track's restatements survive, in `dee8f37`.
+
+They are recorded as PARTIAL-blocked rather than written, because a document that walks 25 questions
+nobody can read is 25 invented questions. Owner decision 2026-08-08: write what is writable, block
+the rest.
+
+**Evidence that second-hand sourcing is the right thing to refuse here:** row 7 of this table said
+the ТЗ has a **22-entity** table; the preserved `03_Domain_Ontology.md` lists **24**. One is wrong,
+`ENTITY_MAP.md` §0 discloses the discrepancy, and neither document can resolve it. That is a small
+disagreement about a table; §3 and §53 would have been the same disagreement about content nobody
+could check.
+
+### What the written documents found
+
+Each was written by auditing the tree rather than by transcribing the seed, and each returned a
+defect that no gate could see:
+
+| Document | Found |
+|---|---|
+| `RULE_SPEC.md` | the backtest trigger collapsed "no lookback window" into "did not trigger" and counted neither — the first `lookback` bars of every instrument left the signal denominator silently. **Fixed 2026-08-08** |
+| `EXECUTION_MODEL.md` | `Skipped` declared five reasons and incremented three; `POSITION_OPEN` removed signals from the denominator without recording how many. **Fixed 2026-08-08.** Still open: the live path sizes from the last close while the backtest fills at the next open plus slippage |
+| `SYSTEM_MODES.md` | `RunManifest` has no `mode` field, so a journalled run cannot say whether it was real |
+| `EXPECTATION_MODEL.md` | this tree carries provenance for the numbers a human chose and none for the numbers it measured. `REQ-OUTPUT-001` requires an "estimate version, cohort key, or model reference" and all three name parts of an object that does not exist |
+| `ALLOCATION_SPEC.md` | the course's only two statements about how to order candidates are **both labelled `Untested Hypothesis` by the course itself**, so adopting either is a pre-registration rather than a transcription |
+| `TRANSITION_SPEC.md` | nothing records `from_state`, so a status that changed is indistinguishable from one that was always there. Appendix G requires `Candidate.status history` and there is no watchlist store to hold it; the owner's approval of a proposal — the only transition with a human actor — is written nowhere |
 
 ## 5. The two shortfalls that are defects rather than gaps
 
@@ -153,7 +172,7 @@ verbatim in `dee8f37`.
 
 The requirement itself stands and is unmet: **JSON Schema should be generated from the Pydantic
 models** (`model_json_schema()`), with a `--check-only` gate like every other registry here. The
-contracts win because they are already enforced at runtime and by 298 tests, so a divergence between
+contracts win because they are already enforced at runtime and by 302 tests, so a divergence between
 them and a hand-written schema would always be the schema's fault.
 
 ## 6. What the parallel track contributed

@@ -119,14 +119,16 @@ status as a survivorship-biased backtest. See `PREREG_TEMPLATE.md`.
 
 Honest, and short:
 
+Restated 2026-08-08; the previous version of this table predated the studies.
+
 | | |
 |---|---|
-| Components at `active` | 1 (ATR) |
-| Components above `Untested` | **0** |
-| Studies run | 0 |
-| Pre-registrations written | 2 (`PR-001`, `PR-002` — registered, both blocked on the harness) |
-| Decision records | 2 (`DR-001` Sharpe convention, `DR-002` process score) |
-| Parameters at `assumed` | 4 of 93 |
+| Components implemented | 7 · 6 with golden vectors · **0 at `active`** — five blocked by an `unset` parameter |
+| Components above `Untested` | **0** — every row is still the status the course shipped it with |
+| Studies reported | 3 (`PR-001` REJECT, `PR-005` REJECT, `PR-002` ACCEPT), plus one post-hoc survivorship bound carrying no verdict |
+| Pre-registrations written | 4 (`PR-006` registered 2026-08-08, blocked on a trade log); two more named and unwritten (`PR-001b`, `PR-003`, `PR-004`) |
+| Decision records | 6 — `DR-001` Sharpe, `DR-002` process score, `DR-003` liquidity rule, `DR-004` cost model, `DR-007` validation thresholds (ratified), `DR-006` portfolio risk (proposed) |
+| Parameters at `assumed` | 30 of 96 — 15 from `DR-007` (ratified), 6 from `DR-006` (proposed) · `validated` 1 (`regime.classifier_rule`, from PR-002) |
 
 The four largest authored gaps — the regime classifier, the trend / breakout / pullback / contraction
 definitions, the Sharpe convention, and the per-strategy exit mapping — are each a parameter or rule
@@ -136,8 +138,10 @@ is not a gap in the documentation, it is the documentation working.
 
 ## 7. Open items
 
-- [ ] Order of the first four studies. The regime classifier gates the regime breakdown that
-      `WALKFORWARD_SPEC.md` §2 requires, which argues for it first.
+- [x] ~~Order of the first studies~~ — **settled by running them.** The trend definitions went first
+      (PR-001, then PR-005 on its result), the regime classifier third (PR-002). The argument for
+      putting the classifier first still holds for the *next* strategy study, since the regime
+      breakdown `WALKFORWARD_SPEC.md` §2 requires depends on it.
 - [x] ~~Whether a component may advance while survivorship remains unmet~~ — **yes, with a mandatory
       disclosure** (owner, 2026-08-02). Enforced as a required field on `EvidenceRecord`; the nine
       statuses stay exactly as the course defines them, and the qualification rides on the record

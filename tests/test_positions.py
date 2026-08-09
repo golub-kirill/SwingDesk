@@ -20,6 +20,7 @@ from swingdesk.contracts.position import (
     ManagementAction,
     Position,
 )
+from swingdesk.contracts.run import RunMode
 from swingdesk.journal_evidence.journal import Journal
 from swingdesk.journal_evidence.positions import PositionStore
 from swingdesk.market_data import BarStore
@@ -220,7 +221,7 @@ def test_open_positions_are_evaluated_before_candidates(wired, registry) -> None
     sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
     positions.record(_position())
 
-    result = run([TEST_US, TEST_CA], FixedClock(AS_OF), registry, bars, journal,
+    result = run([TEST_US, TEST_CA], FixedClock(AS_OF), registry, bars, journal, mode=RunMode.LIVE_AS_OF,
                  fetcher=fixture_fetcher({TEST_US.id: sessions}), positions=positions)
 
     assert result.steps == ("positions", "candidates")
@@ -233,7 +234,7 @@ def test_a_position_with_no_bars_is_paused_not_skipped(wired, registry) -> None:
     bars, journal, positions = wired
     positions.record(_position(instrument_id="TEST.NOBARS"))
 
-    result = run([], FixedClock(AS_OF), registry, bars, journal,
+    result = run([], FixedClock(AS_OF), registry, bars, journal, mode=RunMode.LIVE_AS_OF,
                  fetcher=fixture_fetcher({}), positions=positions)
 
     outcome = result.positions[0]
@@ -248,7 +249,7 @@ def test_the_run_proposes_and_never_applies(wired, registry) -> None:
     sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
     positions.record(_position())
 
-    run([TEST_US], FixedClock(AS_OF), registry, bars, journal,
+    run([TEST_US], FixedClock(AS_OF), registry, bars, journal, mode=RunMode.LIVE_AS_OF,
         fetcher=fixture_fetcher({TEST_US.id: sessions}), positions=positions)
 
     assert [p.version for p in positions.history("POS-1")] == [1], "no new version was written"
@@ -261,7 +262,7 @@ def test_a_run_without_a_position_store_still_works(wired, registry) -> None:
     """The store is optional so the walking skeleton keeps running while N2 lands."""
     bars, journal, _ = wired
     sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
-    result = run([TEST_US], FixedClock(AS_OF), registry, bars, journal,
+    result = run([TEST_US], FixedClock(AS_OF), registry, bars, journal, mode=RunMode.LIVE_AS_OF,
                  fetcher=fixture_fetcher({TEST_US.id: sessions}))
     assert result.steps == ("candidates",)
     assert result.positions == []

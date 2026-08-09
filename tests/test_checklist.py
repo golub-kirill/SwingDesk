@@ -91,7 +91,7 @@ def test_a_tick_without_evidence_is_rejected_by_the_contract() -> None:
 
 
 def test_a_half_answerable_item_is_not_answered() -> None:
-    """`Данные свежие; corporate actions учтены` is two things.
+    """E03 - data is fresh and corporate actions are accounted for - is two things.
 
     Session completeness is checked; corporate actions are not. Half an answer is not an answer,
     and ticking it would claim the half that was never checked.
@@ -226,6 +226,7 @@ def test_the_run_generates_a_checklist_for_every_decided_candidate(tmp_path, reg
     from tests.conftest import TEST_CA, fixture_fetcher
 
     from swingdesk.application.pipeline import run
+    from swingdesk.contracts.run import RunMode
     from swingdesk.journal_evidence.journal import Journal
     from swingdesk.market_data import BarStore
     from swingdesk.platform.clock import FixedClock
@@ -238,6 +239,7 @@ def test_the_run_generates_a_checklist_for_every_decided_candidate(tmp_path, reg
         Journal(tmp_path / "journal.duckdb") as journal,
     ):
         result = run([TEST_US, TEST_CA], FixedClock(AS_OF), registry, bars, journal,
+                     mode=RunMode.LIVE_AS_OF,
                      fetcher=fixture_fetcher({TEST_US.id: sessions}))
 
     assert len(result.outcomes) == 2

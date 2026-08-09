@@ -6,7 +6,7 @@ Trade Management topics, and `EXIT_MODEL_SPEC.md` owns the four-slot model. It s
 stops being a backtest detail. The backtest imports it from here; there is one implementation, not
 two (Production Rules 3.8).
 
-Appendix J's `Выход` stage: `Все rules без discretionary hindsight` - every exit follows a rule, and
+Appendix J's Exit stage: all rules, without discretionary hindsight - every exit follows a rule, and
 the thing being excluded is named as discretionary hindsight.
 
 This implements two of the course's four exit slots (`EXIT_MODEL_SPEC.md`): protective and time.

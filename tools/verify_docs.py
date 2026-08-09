@@ -12,6 +12,7 @@ A careful read does not catch the next one. This does:
   * a `parameter.id` cited by a document and absent from the registry
   * an `M##-T####` component id absent from the course index
   * a Status line outside the declared ladder
+  * the gap analysis's coverage summary disagreeing with a recount of its own table
 
 Stdlib plus PyYAML, so it runs wherever the other registry gates do.
 
@@ -44,12 +45,9 @@ PLANNED = {
     "DESIGN_HANDOFF.md",
     # Per-package developer context, planned alongside AGENTS.md.
     "CONTEXT.md",
-    # The top-ranked absent sections from `SPEC_GAP_ANALYSIS.md` §4. Listed so the analysis can name
-    # its own targets without dangling, and so adding one is a decision rather than a silent gap.
-    # Master ТЗ §53 step 4: the coverage matrix that must exist before any NEW document is
-    # justified (§49). Named here so HANDOFF.md can point the next session at it by name without
-    # the reference dangling - which is the whole purpose of this list.
-    "COVERAGE_AUDIT.md",
+    # RULE_SPEC, SYSTEM_MODES, EXECUTION_MODEL and COVERAGE_AUDIT were all listed here and are all
+    # now written, so they resolve on their own. The remaining absent sections have no agreed
+    # filename yet; naming one here would invent it.
     # Broker reconciliation. `UX_TASK_FLOWS.md` §4 argues the hole is real under D1 - the broker is
     # authoritative for positions and the journal must yield - but a spec cannot be written before
     # there is a position source to reconcile against. Named here rather than deleted from
@@ -57,32 +55,17 @@ PLANNED = {
     "RECONCILIATION_SPEC.md",
 }
 
-#: Documents that EXIST, on another branch, unmerged. A third state this gate did not model:
+#: Documents that EXIST on another branch, unmerged. A third state this gate did not model:
 #: `PLANNED` means nobody has written it, and these are written and waiting.
 #:
-#: Folding them into PLANNED would be a lie in the direction that matters - it would report work as
-#: outstanding when it is done. `RECONCILIATION_PLAN.md` has to name them in order to plan the merge
-#: at all, and a plan that cannot cite its own subject is not a plan.
+#: **EMPTY as of 2026-08-09, and that is the mechanism finishing.** Both branches landed, so every
+#: entry resolved on its own and was removed. The set stays because the situation recurs - this
+#: repository normally runs several worktrees - and because a non-empty set is the honest way to say
+#: "written, not here yet" without reporting finished work as outstanding.
 #:
-#: **Every entry here should disappear when its branch merges.** One still listed after a merge means
-#: the merge dropped a file, which is exactly the failure a three-way reconciliation invites.
-ON_OTHER_BRANCHES = {
-    # claude/swingdesk-handoff-continue-1feb49
-    "DR-005-measured-slippage.md",
-    "PR-007-base-strategy-measured-costs.md",
-    "EXPECTATION_SPEC.md",
-    "AI_AUTHORITY_MODEL.md",
-    "COVERAGE_AUDIT.md",
-    # claude/swingdesk-documentation-321418
-    # Renamed from DR-005 on 2026-08-09 by RECONCILIATION_PLAN D-R4. This entry moving is the
-    # mechanism working: the set tracks what is really on the branch, so a rename there fails here.
-    "DR-007-validation-thresholds.md",
-    "DR-006-portfolio-risk-block.md",
-    "ALLOCATION_SPEC.md",
-    "TRANSITION_SPEC.md",
-    "EXPECTATION_MODEL.md",
-    "DRIFT_AND_LEARNING.md",
-}
+#: An entry still listed after its branch merges means the merge dropped a file.
+ON_OTHER_BRANCHES: set[str] = set()
+
 
 #: Prefixes that identify a registry parameter rather than an ordinary dotted phrase in prose.
 PARAMETER_NAMESPACES = (
@@ -99,6 +82,43 @@ PARAM_REF = re.compile(r"`([a-z_]+\.[a-z_0-9]+)`")
 TOPIC_REF = re.compile(r"\bM\d{1,3}-T\d{4}\b")
 STATUS_LINE = re.compile(r"\*\*Status:\*\*\s*([a-z-]+)")
 
+#: The gap analysis keeps a coverage table and a summary of it in the same document, and the summary
+#: was maintained by hand until it drifted to 31/22 against a table saying 30/24. That is the third
+#: hand-kept count in this repository to drift - after the study verdicts (gate 3f) and the gate
+#: total - so it is recounted here rather than corrected again.
+GAP = REPO / "docs" / "08-pm" / "SPEC_GAP_ANALYSIS.md"
+GAP_ROW = re.compile(r"^\|\s*(\d+)\s*\|[^|]*\|\s*\*{0,2}(FULL|PARTIAL|ABSENT|DEFERRED)\*{0,2}\s*\|",
+                     re.MULTILINE)
+GAP_SUMMARY = re.compile(r"^\|\s*(FULL|PARTIAL|ABSENT|DEFERRED)\s*\|\s*\*{0,2}(\d+)\*{0,2}\s*\|",
+                         re.MULTILINE)
+
+
+def check_gap_summary() -> list[str]:
+    """The gap analysis's summary must equal a recount of its own table."""
+    if not GAP.is_file():
+        return [f"{GAP.name} is missing"]
+    body = GAP.read_text(encoding="utf-8")
+
+    rows = GAP_ROW.findall(body)
+    counted: dict[str, int] = {}
+    for _section, coverage in rows:
+        counted[coverage] = counted.get(coverage, 0) + 1
+
+    claimed = {key: int(value) for key, value in GAP_SUMMARY.findall(body)}
+    if not claimed:
+        return [f"{GAP.name}: no summary table found to check"]
+
+    failures = [
+        f"{GAP.name}: summary says {key} {claimed.get(key, 0)}, the table has {counted.get(key, 0)}"
+        for key in sorted(set(counted) | set(claimed))
+        if counted.get(key, 0) != claimed.get(key, 0)
+    ]
+    sections = {int(section) for section, _ in rows}
+    missing = sorted(set(range(min(sections), max(sections) + 1)) - sections) if sections else []
+    if missing:
+        failures.append(f"{GAP.name}: sections {missing} have no row")
+    return failures
+
 
 def _load_yaml(path: Path):
     import yaml
@@ -107,7 +127,7 @@ def _load_yaml(path: Path):
 
 
 #: Root-level documents that are permanent entry points and must be checked like any other.
-#: The numbered ТЗ-track files at root are deliberately NOT here: 31 of their 32 unresolved
+#: The numbered specification-track files at root are deliberately NOT here: 31 of their 32
 #: references are forward entries in `46_Build_Plan`'s own plan table, and all of them disappear
 #: when that material is folded into docs/. Allowlisting them would be 32 throwaway entries.
 ROOT_DOCS = ("README.md", "AGENTS.md", "HANDOFF.md")
@@ -176,6 +196,7 @@ def main() -> int:
             )
 
     failures.extend(_unindexed_decisions())
+    failures.extend(check_gap_summary())
 
     for failure in failures:
         print(f"  {failure}")

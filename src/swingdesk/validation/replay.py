@@ -30,7 +30,7 @@ from typing import Any
 from swingdesk.application.pipeline import Fetcher, run
 from swingdesk.contracts.market import Bar, BarSeries, Interval, Series
 from swingdesk.contracts.reference import Exchange, Instrument
-from swingdesk.contracts.run import RunManifest
+from swingdesk.contracts.run import RunManifest, RunMode
 from swingdesk.journal_evidence.journal import Journal
 from swingdesk.market_data import BarStore, VendorUnavailable
 from swingdesk.platform.clock import FixedClock
@@ -214,6 +214,10 @@ def replay(case: ReplayCase, workspace: Path | None = None) -> ReplayResult:
                 _registry_for(case.parameters),
                 store,
                 journal,
+                # A replay of a LIVE run runs in REPLAY mode and must still reproduce that run's
+                # output_hash. So mode is recorded and NOT hashed: it describes the run, not the
+                # decision, and pinning it would make every replay a mismatch by construction.
+                mode=RunMode.REPLAY,
                 lookback=case.lookback,
                 fetcher=_fetcher(case),
             )

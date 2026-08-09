@@ -50,6 +50,16 @@ CREATE TABLE IF NOT EXISTS decisions (
 -- Added after `runs` shipped. Written as a migration rather than folded into the CREATE above,
 -- because an existing journal is append-only: its rows must survive the schema growing.
 ALTER TABLE runs ADD COLUMN IF NOT EXISTS universe_hash VARCHAR;
+
+-- Mode (SYSTEM_MODES). Nullable in the table and REQUIRED on the manifest, deliberately: rows
+-- written before the column existed cannot acquire one, and a NULL that says "this run predates
+-- the field" is honest where a backfilled guess would not be. Every row written from now on has it.
+ALTER TABLE runs ADD COLUMN IF NOT EXISTS mode VARCHAR;
+
+-- from_state (TRANSITION_SPEC 4). What this instrument's decision WAS when the run began. Null
+-- means the run had no prior decision for it - a first sighting, or a journal that does not go back
+-- that far - and is not the same as "unchanged".
+ALTER TABLE decisions ADD COLUMN IF NOT EXISTS previous_decision VARCHAR;
 """
 
 #: The four states of the candidate-decision enum (DECISION_STATE_MACHINE 1). A decision outside
@@ -61,7 +71,7 @@ DECISIONS = frozenset({"Trade", "Watch", "Skip", "Pause"})
 class DecisionRecord:
     """One candidate's outcome. Every candidate leaves a run with one of these.
 
-    "Нет кандидатов без следующего действия" - a candidate with no decision is a defect
+    No candidate may be left without a next action - a candidate with no decision is a defect
     (M32/M33 operational standard), and a Skip without a reason code is too.
     """
 
@@ -70,6 +80,16 @@ class DecisionRecord:
     reason_code: str | None = None
     reason: str | None = None
     parameter_id: str | None = None
+    previous_decision: str | None = None
+    """What this instrument's decision was when the run began (TRANSITION_SPEC 4).
+
+    Every other field records what the candidate BECAME. Without this one, a `Skip` that was a
+    `Watch` yesterday reads exactly like a `Skip` that has been a `Skip` all week, and the first is
+    the one worth reviewing.
+
+    `None` means the journal held no earlier decision for this instrument as of the run's start -
+    a first sighting, or a journal that does not reach back that far. It does not mean unchanged.
+    """
 
     def __post_init__(self) -> None:
         if self.decision not in DECISIONS:
@@ -102,8 +122,8 @@ class Journal:
             """
             INSERT INTO runs (run_id, started_at, completed_at, code_hash, code_dirty,
                               config_hash, snapshot_id, calendar_version, platform, seed,
-                              parameters_json, components_json, output_hash, universe_hash)
-            VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)
+                              parameters_json, components_json, output_hash, universe_hash, mode)
+            VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
             """,
             [
                 manifest.run_id, manifest.started_at, manifest.code_hash, manifest.code_dirty,
@@ -111,7 +131,7 @@ class Journal:
                 manifest.platform, manifest.seed,
                 json.dumps([p.model_dump() for p in manifest.parameters], sort_keys=True),
                 json.dumps(manifest.component_versions, sort_keys=True),
-                manifest.universe_hash,
+                manifest.universe_hash, manifest.mode.value,
             ],
         )
 
@@ -143,23 +163,50 @@ class Journal:
         self._connection.executemany(
             """
             INSERT INTO decisions
-                (run_id, recorded_at, instrument_id, decision, reason_code, reason, parameter_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+                (run_id, recorded_at, instrument_id, decision, reason_code, reason, parameter_id,
+                 previous_decision)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             [
                 (run_id, recorded_at, d.instrument_id, d.decision, d.reason_code, d.reason,
-                 d.parameter_id)
+                 d.parameter_id, d.previous_decision)
                 for d in decisions
             ],
         )
 
     def decisions_for(self, run_id: str) -> list[DecisionRecord]:
         rows = self._connection.execute(
-            "SELECT instrument_id, decision, reason_code, reason, parameter_id "
+            "SELECT instrument_id, decision, reason_code, reason, parameter_id, previous_decision "
             "FROM decisions WHERE run_id = ? ORDER BY instrument_id",
             [run_id],
         ).fetchall()
         return [DecisionRecord(*row) for row in rows]
+
+    def latest_decisions(
+        self, instrument_ids: list[str], as_of: datetime
+    ) -> dict[str, str]:
+        """The most recent decision per instrument, as of a knowledge time.
+
+        Read at the START of a run, before it writes anything, so it answers "what did this
+        instrument's decision say when we began" rather than "what does it say now" - the same
+        as-of discipline the bar store uses, applied to decisions.
+
+        Absent instruments are simply missing from the result: a first sighting has no previous
+        state, and inventing one would make `from_state` a lie in exactly the case a reviewer cares
+        about least and trusts most.
+        """
+        if not instrument_ids:
+            return {}
+        placeholders = ", ".join("?" for _ in instrument_ids)
+        rows = self._connection.execute(
+            f"""
+            SELECT instrument_id, decision FROM decisions
+            WHERE instrument_id IN ({placeholders}) AND recorded_at < ?
+            QUALIFY ROW_NUMBER() OVER (PARTITION BY instrument_id ORDER BY recorded_at DESC) = 1
+            """,
+            [*instrument_ids, as_of],
+        ).fetchall()
+        return {instrument_id: decision for instrument_id, decision in rows}
 
     def uncoded_refusals(self, run_id: str) -> int:
         """Skips with no reason code. Track A `a.no_uncoded_failures` requires this to be zero."""

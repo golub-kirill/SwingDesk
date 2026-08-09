@@ -24,7 +24,7 @@ justified deviation, **MAY** is an option.
 |---|---|---|
 | `REQ-DATA-001` | The event calendar MUST be a point-in-time dataset with the same bitemporal semantics as market data. **No event date may appear as a literal in executable code.** Every record carries `source_id`, `known_from`, `checksum`. | **partially met** — no date literals in `src/` (verified); no event calendar exists at all (`EVENT_SPEC.md` §4) |
 | `REQ-DATA-002` | A missing or stale critical input MUST NOT silently become zero or a neutral value. It MUST produce `UNKNOWN`; on a live path a critical `UNKNOWN` MUST produce `NO_TRADE`. | **met** — components refuse rather than default (`INVARIANTS.md` #9); ATR emits `None` before warm-up |
-| `REQ-VALIDATION-001` | Every gate, veto or eligibility filter MUST have a pair of inputs producing different verdicts. An object whose verdict is invariant across all inputs MUST NOT reach runtime. | **partially met** — gate 12 enforces that a committed criterion's inputs are set; no mutation testing. See §2 |
+| `REQ-VALIDATION-001` | Every gate, veto or eligibility filter MUST have a pair of inputs producing different verdicts. An object whose verdict is invariant across all inputs MUST NOT reach runtime. | **partially met** — gate 3g enforces the narrow half for criteria (2026-08-08); no mutation testing. See §2 |
 | `REQ-VALIDATION-002` | For an identical bar and an identical versioned config, the backtest path and the live path MUST produce an identical `Decision`. Divergence MUST fail the build. | **NOT met, and structurally so** — see §3 |
 | `REQ-OUTPUT-001` | Every numeric value in a decision output MUST carry its source identifier — estimate version, cohort key, or model reference. A value without provenance MUST NOT be displayed. | **largely met** — `ParameterUse` travels with every computed value; the report marks `assumed` inputs adjacent to the number |
 | `REQ-EVIDENCE-001` | Assigning a validation stage MUST reference a validation run that actually executed in an automated pipeline. An implemented-but-uncalled validation function MUST NOT justify a stage. | **met in practice, unchecked** — `regime.classifier_rule` is `validated:PR-002` and PR-002 has a report with real figures; nothing enforces the link |
@@ -32,7 +32,7 @@ justified deviation, **MAY** is an option.
 | `REQ-AI-001` | AI output MUST NOT bypass an independent risk engine, and a risk veto MUST NOT be overridable by the agent. | **NOT met, and now applicable** — charter amendment **A-001** puts an AI agent in scope as a context layer that may never decide. This requirement was written for that boundary; no agent exists to satisfy it |
 | `REQ-AI-002` | An AI agent MUST NOT generate numeric quantities (win rate, probability, expectancy, score, stop, target, position size, weights, slippage, edge) from text. These MUST come from deterministic engines or a validated expectation estimate. | **NOT met, and now applicable** — as above |
 
-## 2. `REQ-VALIDATION-001` — the inert-gate requirement, and one this tree already has
+## 2. `REQ-VALIDATION-001` — the inert-gate requirement, and the one this tree had
 
 The rationale is worth quoting because it is not hypothetical: in TradAlert an R:R gate was
 `if is_long: return True` and **passed seven audits**, because it is a valid function with valid
@@ -44,16 +44,25 @@ along with all fifteen `validation.*` parameters. A ratified kill criterion that
 a gate whose verdict is invariant across all inputs. It was found by hand on 2026-08-03, which is
 exactly the detection method this requirement says does not scale.
 
-**Closed on 2026-08-05, in two halves.** The owner set `validation.max_allowable_drawdown` to 20% of
-equity, and `tools/verify_criteria.py` (gate 12) now fails the build if any ratified or owner-set
-criterion references a parameter that is `unset` or absent. The instance is fixed and the class is
-gated.
+**Closed 2026-08-08 by `DR-007-validation-thresholds.md`**, which proposes values for all fifteen.
+The criterion can now evaluate. It is still *untested* — nothing exercises it, because there is no
+realised drawdown to exercise it against — and `RULE_SPEC.md` §7 keeps those two states apart on
+purpose: a gate that went from unable-to-fail to untested has improved without yet working.
 
-The half that remains is the one this requirement names first: **that forcing a gate's inverse
-changes at least one verdict in the test corpus.** Gate 12 checks that a criterion's inputs exist,
-not that its logic discriminates — an `if is_long: return True` with every parameter set would pass
-it. That is mutation testing, it does not exist here, and the requirement stays *partially* met so
-the distinction cannot quietly erode.
+The check is mechanical and belongs in CI: for every ratified criterion and every veto, assert that
+the parameters its trigger references are set, and that forcing the gate's inverse changes at least
+one verdict in the test corpus.
+
+**The first half landed 2026-08-08 as gate 3g** (`tools/verify_criteria.py`), in the same change that
+ratified `DR-007`. It also checks two things the requirement implies rather than states: that a
+reference resolves at all, and that a criterion's `status` is on the declared ladder — the second
+because a typo there would exempt the row from the first check, which would make the gate quietly
+weaker rather than loudly wrong. All three were mutation-checked against a deliberately broken
+registry before the gate was trusted.
+
+**The second half — mutation testing — still does not exist**, and it needs a corpus of evaluated
+criteria before it can. Nothing evaluates these yet, so a mutation gate here would have nothing to
+flip.
 
 ## 3. `REQ-VALIDATION-002` — backtest and live are two code paths today
 
@@ -94,17 +103,15 @@ The ТЗ's vocabulary, mapped to what runs here:
 |---|---|
 | `inspection` | review; the weakest, used only where nothing else applies |
 | `schema_test` | Pydantic contracts in `src/swingdesk/contracts/`, gate 8 |
-| `static_validation` | gates 1, 3e, 6, 7, 11, 12 — registries, references, layers, wall clock, criteria |
-| `unit_test` / `integration_test` | gate 8, 298 tests |
+| `static_validation` | gates 1, 3e, 3f, 3g, 6, 7, 11 — registries, references, criteria, layers, wall clock |
+| `unit_test` / `integration_test` | gate 8, 302 tests |
 | `replay_test` | gate 9 — a stored manifest must reproduce its `output_hash` |
 | `mutation_test` | **does not exist** — the gap `REQ-VALIDATION-001` names. Gate 12 closes the input half of it, not the verdict half |
 
 ## 6. Open items
 
-- [x] `REQ-VALIDATION-001` needs a gate. The narrow version — every ratified criterion's referenced
-      parameters are set — shipped 2026-08-05 as gate 12 and caught `k.drawdown_pause` by
-      construction. **The mutation half is still open**, and it is the half the requirement leads
-      with.
+- [x] ~~`REQ-VALIDATION-001` needs a gate~~ — **narrow version landed 2026-08-08, gate 3g.** The
+      mutation half remains, and remains blocked on a corpus of evaluated criteria.
 - [ ] `REQ-VALIDATION-002` needs the trigger to exist once rather than twice, **before** the live
       path gets one.
 - [ ] `REQ-EVIDENCE-001` is met by practice and not by a check. Gate 11 already verifies that an

@@ -234,6 +234,26 @@ def test_no_second_entry_while_a_position_is_open() -> None:
     config = _config(exits=ExitPolicy(atr_stop_multiple=Decimal(5), max_holding_bars=99))
     result = run_arm(series, [True] * len(rows), _atr(series, "2"), config)
     assert len(result.trades) == 1
+    assert result.skipped[Skipped.POSITION_OPEN] >= 1, (
+        "a signal that could not be acted on is an exclusion from the trade set. Uncounted, it "
+        "makes the strategy look more selective than it is"
+    )
+
+
+def test_a_bar_with_no_lookback_window_is_not_a_rejected_signal() -> None:
+    """UNKNOWN is not FALSE, in the one place the engine could quietly conflate them.
+
+    The first `trigger_lookback` bars have no window to compare against, so the trigger has nothing
+    to answer with. Counting them as bars the rule declined would shrink the denominator of every
+    rate this arm reports, silently and by a fixed amount per instrument.
+    """
+    rows = _flat(3) + [("100", "110", "100", "110")] + _flat(4)
+    series = _series(rows)
+    result = run_arm(series, [True] * len(rows), _atr(series, "2"), _config(trigger_lookback=3))
+
+    assert result.unevaluable_bars == 3, "one per bar before the window is full"
+    assert result.signals == 1
+    assert Skipped.POSITION_OPEN not in result.skipped
 
 
 def test_misaligned_inputs_raise_rather_than_silently_shift() -> None:

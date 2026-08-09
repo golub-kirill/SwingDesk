@@ -1,6 +1,6 @@
 """A simulated trade, and the record it leaves.
 
-Appendix J's `Результат` stage requires net R, MFE, MAE and holding period; its `Риск` stage
+Appendix J's Result stage requires net R, MFE, MAE and holding period; its Risk stage
 requires entry, stop, shares, slippage and gap handling. This record carries all of them, and it
 carries the exit reason as an enum rather than a string so an exit cannot be recorded as having
 happened for a reason nobody defined.

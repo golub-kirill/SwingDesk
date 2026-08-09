@@ -77,9 +77,14 @@ five are blocked from activating because a parameter they need is `unset`:
 | `M33-T0485` trend filter | `screen.trend_definition` — closed by evidence (PR-001, PR-005) |
 
 That is the fail-closed design working rather than a backlog. A component whose threshold is missing
-must refuse, and `active` is the state that asserts it will not have to. ATR and SMA could activate
-today — ATR's period is `assumed`, SMA has no parameter of its own — and are held at `specified`
-only until `verification` and `spec` anchors are written for them.
+must refuse, and `active` is the state that asserts it will not have to.
+
+**ATR and SMA can activate today, and nothing is missing.** Verified 2026-08-08: both carry
+`implements`, `verification: golden vectors` and a `spec` anchor, and neither has an unset parameter —
+ATR's period is `assumed`, SMA has none of its own. Gate 11 would accept `active` for either. They
+are held at `specified` because activation is a **decision** (`ROADMAP.md` §9, phase 2), not because
+an artefact is outstanding. An earlier version of this paragraph said the anchors were still to be
+written; they were written and the sentence was not.
 
 **`Untested` is a permitted status for an `active` component.** The course is explicit that
 validation statuses are not grades:

@@ -1,9 +1,10 @@
 # SUCCESS AND KILL CRITERIA
 
-**Status: FROZEN — ratified by the owner 2026-08-02, amended 2026-08-08.** `registry/criteria.yml` **v1.1.0**; v1.0.0 stays on record.
+**Status: FROZEN — ratified by the owner 2026-08-02.** `registry/criteria.yml` v1.1.0.
 **Tier:** 0 (charter)
 
-**G0 is closed.** 18 criteria, all with values: 7 Track A, 6 Track B, 5 kill.
+**G0 is closed.** 19 criteria: 7 Track A, 6 Track B, 6 kill. **All nineteen ratified** — the Track A
+time box was added and ratified 2026-08-08 (§5a).
 
 These may not be edited after seeing a result they govern. Changing one is an **amendment** — a new
 version of `criteria.yml` with the change recorded — and it voids any claim that depended on the
@@ -71,7 +72,8 @@ it continues indefinitely, which is the failure mode this document exists to pre
 
 | Scope | Trigger | Action |
 |---|---|---|
-| **project** | Track A not met within the time box | **stop building** |
+| **project** | G5 not reached within 2 months of G0 close | **stop building** |
+| **project** | Track A's run-measurable criteria not met within 120 days of the first scheduled run — or no run scheduled within 180 days of ratification | **stop; re-open the data tier**, or restate the project as documentation-only — §5a |
 | strategy card | after 100 trades, expectancy CI entirely below benchmark | `Rejected`; retire the card — the project continues |
 | programme | every card `Rejected`/`Retired` and no new premise clears the prereg refutation check | convert to journal + statistics only |
 | live | drawdown exceeds the allowable limit | **`Pause`, not kill** — reduce size per the risk-off ladder |
@@ -93,10 +95,68 @@ meant for the second.
 So G5 is boxed, and the Track A box is set afterwards from **measured throughput** rather than
 guessed at now (`k.timebox_review`).
 
+**That afterwards is now: §5a.**
+
 At the owner's stated capacity of ~40 h/week, 2 months is ~**350 working hours**. That is generous
 for one vertical slice, which means the real risk is not the clock — it is scope drifting into the
 ~460-component catalogue. The activation gate exists for exactly this: components may sit at
 `registered` indefinitely at no cost, and only reach `active` deliberately.
+
+## 5a. The Track A time box — ratified 2026-08-08
+
+`k.timebox_review` fired when G5 closed on 2026-08-02 and required the Track A box to be set **from
+measured throughput** and issued as v1.1.0. This is that amendment. It adds `k.track_a_timebox` and
+edits nothing: v1.0.0 stays on record exactly as ratified.
+
+**Ratified: 120 calendar days from the first scheduled daily run — or 180 calendar days from
+ratification if no run is ever scheduled** — covering only Track A's four run-measurable criteria.
+
+**What was measured.** First commit 2026-08-01; walking skeleton running end to end 2026-08-02.
+**G5 took one day against a two-month box.** So the build side is not the constraint and boxing it
+again would box the wrong thing — which is the first finding this amendment owes to §5's own
+reasoning.
+
+**What cannot be compressed.** `a.run_completes` requires 20 **consecutive** trading days — about 28
+calendar days — and *consecutive* is the operative word: one missed session restarts the window.
+Throughput cannot shorten that by a single day. 120 days allows **three full attempts** plus roughly
+five weeks to diagnose and fix between them.
+
+| Alternative | Why not |
+|---|---|
+| 60 days | two attempts. The first free-tier outage puts the box on a knife edge and converts a data gap into a kill trigger — precisely the mix-up §5 warns about |
+| 180 days | three failures already answer the question; past that the box stops discriminating and becomes a formality |
+| from the ratification date | the clock would run before the thing it measures can start. That is the mistake `k.project_timebox` made in the other direction, and it was reached in a day |
+
+### The second clause, and why the first one alone was a defect
+
+The draft had one clause: 120 days from the first scheduled daily run. On the same day it was
+drafted, the owner **deferred scheduling that run** with the survivorship loss accepted. Those two
+decisions together produce a criterion that can never fire.
+
+That is the `REQ-VALIDATION-001` shape — a gate whose verdict is invariant across every input — and
+gate 3g cannot catch this one, because the trigger references no parameter. It would have been the
+second inert criterion in a ratified file, drafted by the process that exists to prevent the first.
+
+So the ratified version has a second clause: **180 days from ratification if no run is ever
+scheduled.** A kill criterion that can be evaded by inaction is not a kill criterion, and the two
+expiries mean different things:
+
+| Expired with | Finding | Action |
+|---|---|---|
+| a run scheduled | the daily run cannot be made reliable on this data source | stop; re-open D10, the data-tier decision |
+| **no run ever scheduled** | the system is not being operated at all | restate the project as documentation-and-research only, and stop maintaining a live contour nothing uses |
+
+The second row is the uncomfortable one and it is the reason the clause is worth having. Deferring
+the schedule is a legitimate owner decision — it was taken deliberately, with the cost known. What
+it must not do is quietly become permanent while a kill criterion sits in a ratified file looking
+like protection.
+
+**The 180-day clock is running from 2026-08-08.** The 120-day clock has not started.
+
+**Three Track A criteria sit outside the box**: process compliance core and overall, and no critical
+violations. All three require *taken trades*, whose pace is the owner's trading cadence rather than
+the project's throughput. Boxing them would put a kill criterion on the owner's discretion, which is
+not what a time box is for.
 
 ## 6. Ratification record
 
@@ -105,22 +165,12 @@ for one vertical slice, which means the real risk is not the clock — it is sco
 | 2026-08-01 | Two-track structure adopted by the owner; values drafted here for ratification |
 | 2026-08-01 | `k.project_timebox` (2 months → G5) and `k.timebox_review` set by the owner |
 | **2026-08-02** | **All remaining Track A and Track B values ratified. `criteria.yml` v1.0.0 frozen. G0 closed.** |
-| **2026-08-08** | **`criteria.yml` v1.1.0.** `k.timebox_review` actioned by removing the Track A time box requirement; `b.min_sample` clarified to journalled trades only. Owner. |
+| **2026-08-08** | **`k.track_a_timebox` ratified** and issued as `criteria.yml` v1.1.0, with an inaction clause added to the draft (§5a). `k.timebox_review` fired at G5 on 2026-08-02, sat unactioned for six days, and is now `met` |
+| 2026-08-08 | Owner deferred scheduling the daily run, survivorship loss accepted. Recorded here because it is what makes §5a's second clause load-bearing rather than decorative |
 
-**The Track A time box will not be set.** It was deliberately absent rather than unset, scheduled by
-`k.timebox_review` to arrive at G5 from measured throughput. The measurement arrived and argued
-against having one: G5 closed 2026-08-02 inside a two-month box, so the clock was never the binding
-constraint — and §5 above had already reasoned that boxing Track A conflates *can this be built* with
-*is it stable*, since `a.run_completes` carries its own 20-trading-day clock.
-
-**What this removes, stated rather than glossed:** an explicit calendar guard on Track A. What
-remains against the scope drift §5 names is the activation gate — components sit at `registered`
-indefinitely at no cost and reach `active` only deliberately, and none is `active` today.
-
-**Track B is journalled trades only** (owner, 2026-08-08). A backtest is evidence about a hypothesis,
-never about a strategy card. The consequence is deliberate and worth stating: **no backtest can
-advance or reject a card**, so `k.strategy_rejected` cannot fire until real trades exist — and
-`PR-007` can report a verdict on its hypothesis without formally rejecting anything.
+One value was deliberately **absent rather than unset**: the Track A time box, scheduled by
+`k.timebox_review` to be added at G5 from measured throughput as v1.1.0. It is now set and ratified
+(§5a). That was an amendment, not an edit — v1.0.0 stays on record.
 
 ## 7. Standing rules
 

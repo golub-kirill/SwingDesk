@@ -19,7 +19,7 @@ and **zero numeric thresholds**. Every threshold here is authored and carries it
 ### If you were told this is a documentation-only project, read this first
 
 **`docs/` is canonical** (owner decision, 2026-08-04). So is `src/`, `tests/`, `registry/` and
-`tools/` — 20 merge gates run from `python tools/check_gates.py` and they are what keep the
+`tools/` — 23 merge gates run from `python tools/check_gates.py` and they are what keep the
 documents honest.
 
 A second effort briefly built a parallel tree at the repo root: ten numbered documents
@@ -35,8 +35,8 @@ applied the way its own §56 asks — as a gap analysis against what exists — 
 forbids maintaining one logic in two places, and for a while this repo was doing exactly that.
 
 **Before writing any new specification, check whether `docs/` already holds it.** Four studies are
-reported — two refuted, one inconclusive, one accepted and fragile — and a fifth is registered.
-Re-deriving them is not neutral; it risks contradicting evidence that already exists.
+reported and two of their hypotheses are refuted — re-deriving them is not neutral, it risks
+contradicting evidence that already exists.
 
 ## 1. Trust discipline — the rule that matters most
 
@@ -93,13 +93,24 @@ tools/             generators, checkers, probes
 ```
 
 `registry/course_index.yml` is **generated** — never hand-edit it. `registry/criteria.yml` is
-**frozen** at v1.0.0; changing it is an amendment, not an edit.
+**frozen**; v1.1.0 appends the Track A time box without touching v1.0.0's content, which is what an
+amendment means here. Editing a ratified row is never the move.
 
 ## 5. Conventions
 
 - **English throughout** — docs, code, UI. The course's controlled vocabulary (`Trade`/`Watch`/
   `Skip`/`Pause`, the skip and error codes, `STAGE`/`LAYER`/`CLAIM TYPE`) is used verbatim and never
   translated.
+- **No Russian in code.** Comments, docstrings, messages and generated output are English, including
+  where they cite the course — render the meaning and cite the topic id instead. This is not only
+  style: gate 2 verifies `verbatim` blocks in `docs/` against the PDFs and **cannot see a quotation
+  in a docstring**, so Russian in code is an unverified copy of the source, which §6 rule 1 forbids
+  for exactly that reason. The course's own words belong in `docs/`, where they are checked.
+  **One exception, and it is data rather than prose:** `tools/build_course_index.py`'s
+  `TOPIC_HEADING` pattern matches the heading as it appears in the source PDFs. It is marked in
+  place. Removing its Cyrillic stops the extraction rather than tidying it.
+- The documents call the master specification the **ТЗ**; code and generated output write it in
+  Latin script. Same source, and worth knowing before someone "fixes" one of them.
 - **Comments document what and how to use it.** No `Phase N`, no ticket refs, no narrative.
 - **Test instruments are `TEST.1`, `TEST.2`** — never real tickers.
 - **Money is exact** — integer minor units or `Decimal`, never binary float.

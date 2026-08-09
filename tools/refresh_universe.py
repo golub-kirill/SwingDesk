@@ -5,8 +5,8 @@
 against the 45-minute daily budget in `NFR.md`. Fetching everything the rule admits, every day, does
 not fit and never will on a free tier.
 
-So the work is tiered, which is also the cadence the course itself uses (Appendix T: `До недели`
-sets up the week, `До сессии` runs it):
+So the work is tiered, which is also the cadence the course itself uses - Appendix T's weekly pass
+sets up the week and the pre-session pass runs it:
 
   * this tool, run periodically, widens coverage - the universe converges on the rule's answer
   * `swingdesk scan --universe`, run daily, reads what is already stored and never blocks on a fetch

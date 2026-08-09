@@ -40,6 +40,9 @@ EXPECTED_CLAIMS = {
 }
 EXPECTED_VALIDATION = {"Not Applicable": 1209, "Untested": 170}
 
+#: DATA, not prose. This pattern matches the heading as it appears in the Russian source PDFs, so
+#: the Cyrillic is functional and is the one exception to the no-Russian-in-code rule (AGENTS 5).
+#: Removing it does not tidy anything - it stops the course index extracting at all.
 TOPIC_HEADING = re.compile(r"ТЕМА\s+(\d+)\s+ИЗ\s+\d+[^\n]*\n(.+)")
 
 

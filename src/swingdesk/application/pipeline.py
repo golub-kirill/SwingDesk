@@ -16,7 +16,7 @@ import json
 import platform as platform_info
 import subprocess
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -31,7 +31,7 @@ from swingdesk.contracts.market import Interval, Series
 from swingdesk.contracts.observation import ObservationSeries
 from swingdesk.contracts.position import ActionKind, ManagementAction, Position
 from swingdesk.contracts.reference import Instrument
-from swingdesk.contracts.run import RunManifest
+from swingdesk.contracts.run import RunManifest, RunMode
 from swingdesk.derived_observations import atr
 from swingdesk.journal_evidence.journal import DecisionRecord, Journal
 from swingdesk.journal_evidence.positions import PositionStore
@@ -191,6 +191,8 @@ def run(
     registry: ParameterRegistry,
     store: BarStore,
     journal: Journal,
+    *,
+    mode: RunMode,
     lookback: str = "1y",
     fetcher: Fetcher | None = None,
     positions: PositionStore | None = None,
@@ -198,6 +200,11 @@ def run(
     universe: UniverseSelection | None = None,
 ) -> RunResult:
     """One pass of the daily pipeline.
+
+    `mode` is required and keyword-only, so a caller cannot omit it and cannot pass it by accident
+    in the wrong position. Deriving it from the injected clock and fetcher would be automatic and
+    would re-create exactly the inference `SYSTEM_MODES.md` §3 objects to: today `swingdesk scan`
+    with no `--as-of` IS the live path, and nothing said so.
 
     `fetcher` is injected so the suite can run offline against recorded fixtures. CI must never
     touch the network: a suite that fetches is neither deterministic nor available offline, and it
@@ -222,6 +229,7 @@ def run(
     manifest = RunManifest(
         run_id=run_id,
         started_at=started,
+        mode=mode,
         code_hash=_git("rev-parse", "--short", "HEAD"),
         code_dirty=bool(_git("status", "--porcelain")),
         config_hash=_config_hash(registry),
@@ -239,7 +247,7 @@ def run(
     steps: list[str] = []
 
     # --- open positions, BEFORE any candidate -------------------------------------------
-    # CHECKLIST_SPEC 4: "Открытые позиции и gaps проверены первыми". Not a preference about tidy
+    # CHECKLIST_SPEC 4 requires open positions and gaps to be checked first. Not a preference about
     # code - a data failure must never lock the owner out of managing risk on positions already
     # open (TEST_STRATEGY 6), so this phase runs before anything that can fail on fresh data.
     if positions is not None:
@@ -344,6 +352,17 @@ def run(
 
         outcome.decision = DecisionRecord(instrument.id, "Watch", None,
                                           "sized; awaiting a trigger")
+
+    # from_state (TRANSITION_SPEC 4). Read as of the run's START, so it reports what the journal
+    # said before this run touched it. Every other field on the record says what the candidate
+    # BECAME; without this one a Skip that was a Watch yesterday reads like a Skip that has been a
+    # Skip all week. Not part of output_hash - it describes what the run knew, not what it decided,
+    # and a replay against an empty journal correctly finds nothing.
+    previously = journal.latest_decisions([o.instrument.id for o in result.outcomes], started)
+    for outcome in result.outcomes:
+        was = previously.get(outcome.instrument.id)
+        if outcome.decision is not None and was is not None:
+            outcome.decision = replace(outcome.decision, previous_decision=was)
 
     # The pre-trade checklist is generated for every candidate that reached a decision - including
     # a Skip, because a skipped candidate's checklist is what makes the skip reviewable.

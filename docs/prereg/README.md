@@ -16,27 +16,32 @@ has to happen first, not the thing that has to happen last.
 | `PR-002` | Does a regime classifier improve decisions, or only partition them? | **reported — ACCEPT** | — |
 | `PR-003` | Is √252 annualisation wrong enough to matter for this return series? | not written | a daily return series |
 | `PR-004` | Do the process-score weights change any ranking? | not written | ~100 journalled trades |
-| `PR-006` | Does measured live slippage match the modelled figure? | not written | a forward test — id reserved by `DR-004` |
+| `PR-006` | Does measured live slippage match the modelled figure? | not written | a forward test — id reserved by `DR-004`, 2026-08-02 |
 | `PR-007` | Does the base strategy have positive expectancy net of **measured** costs? | **registered** | a re-fetch — the window is 10 years, the store holds 2 |
 | `PR-008` | Is the assumed 5bp slippage an understatement of the spread this universe pays? | **reported — INCONCLUSIVE**, then corrected | — |
+| `PR-009` | Is a −15R drawdown limit distinguishable from ordinary sequence luck? | **registered** | a trade log — none exists |
 
-**`PR-008` was registered as `PR-007`, and `PR-007` and `PR-008` are the same question asked twice.**
-Two branches wrote a study under that id without knowing about each other: `PR-007` asks whether the
-strategy survives measured costs, `PR-008` whether the assumed cost was too low. Neither knew the
-other existed. `RECONCILIATION_PLAN.md` D-R4 awards a contested id to the earliest commit timestamp,
-so the 2026-08-08 study kept `PR-007` and the 2026-08-09 one moved to `PR-008`. **A `PR-007` citation
-written before 2026-08-09 means the effective-spread study; written after, it means the base-strategy
-one.** Both files carry the note, and the git history is unedited because the registration commit is
-what proves each hypothesis predated its own run.
+**Three ids collided on 2026-08-09 and four studies moved.** Three efforts registered studies without
+seeing each other. `RECONCILIATION_PLAN.md` D-R4 awards a contested id to the earliest commit
+timestamp, so:
 
-`PR-008` was the first study of an **input** rather than a rule. Its registered decision rule
-returned **inconclusive** — both estimators produced negative estimates on more than half the
-sample, against a 25% threshold fixed before the run — and that verdict stands. **The explanation it
-first gave was wrong and is withdrawn:** a calibration-free sign test shows the real bars do carry a
-spread the estimator detects (19.1% clamped against 45.5% for spreadless synthetic at matched
-volatility), which is what `DR-005` had already concluded. See `results/PR-008-report.md`
-§"Correction", and `POSTMORTEM-2026-08-09.md` for how two efforts reached opposite answers from
-identical arithmetic.
+- `PR-007` stayed with the base-strategy study (2026-08-08); the effective-spread study became
+  `PR-008`. Both ask about costs, from opposite directions.
+- `PR-006` stayed **reserved** for live slippage — `DR-004` claimed it on 2026-08-02, before any file
+  existed — so the drawdown study became `PR-009`.
+
+That second one is the case this index predicted two paragraphs down and asked someone to fix "if a
+third one appears". A third appeared. **A `PR-006` or `PR-007` citation written before 2026-08-09
+may mean a different study than the same string written after.** Git history is unedited throughout,
+because a registration commit is what proves a hypothesis predated its run.
+
+**`PR-009` is blocked on something the project did not know it lacked.** No reported study here
+persisted a trade log, and `BACKTEST_PROTOCOL.md` §3 lists one as the third of the five artefacts the
+course requires for a strategy claim. The results are honest; their supporting detail is not
+reconstructible. So its step 1 is to reproduce PR-005 under its recorded constants and persist the
+log — and if the reproduction does not match the reported aggregates, that mismatch is the result,
+reported as `inconclusive` rather than buried.
+
 
 `PR-003` and `PR-004` are named in `DR-001` and `DR-002` as the studies that would overturn them.
 `PR-006` is named in `DR-004` and `PR-007` in `DR-005`, the same way. `PR-005` is required by

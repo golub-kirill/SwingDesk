@@ -5,7 +5,7 @@ provenance. An unset parameter makes its component refuse - it does not fall bac
 because there is no default field, deliberately (PARAMETER_REGISTRY 4).
 
 The module gate states it plainly: missing or incomplete required data means
-Research/Watch/Skip/Pause, "а не догадку" - not a guess.
+Research/Watch/Skip/Pause - and not a guess.
 """
 
 from __future__ import annotations

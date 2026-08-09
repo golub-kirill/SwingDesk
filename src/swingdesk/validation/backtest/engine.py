@@ -1,14 +1,13 @@
 """The bar-by-bar engine. One instrument, one arm, one pass.
 
-BACKTEST_PROTOCOL's `Bar-by-bar` stage: `Скрыть будущие свечи; решения только по доступным данным`
-- hide future candles, decisions only from available data.
+BACKTEST_PROTOCOL's `Bar-by-bar` stage: hide future candles, decisions only from available data.
 
 That is enforced by the loop's shape rather than by care. At index `i` the engine may read
 `bars[:i+1]` and observation values at `i`; entry happens at `bars[i+1].open`. There is no path
 through this function that reads a bar it has not reached, because the only index it ever forms is
 `i + 1` for the entry fill and the loop stops one short of the end.
 
-`Пропуски` is the other stage this file owns: skipped signals are counted with a reason, never
+The `Skips` stage is the other one this file owns: skipped signals are counted with a reason, never
 dropped. A signal discarded silently is a survivorship filter applied to the signal set.
 """
 
@@ -28,7 +27,13 @@ from swingdesk.validation.backtest.costs import CostModel
 
 
 class Skipped(StrEnum):
-    """Why a triggered signal produced no trade. Counted, never discarded."""
+    """Why a triggered signal produced no trade. Counted, never discarded.
+
+    `NO_NEXT_BAR` is reserved and structurally unreachable: the loop stops one bar short of the end,
+    so a signal on the final bar is never generated rather than generated and refused. Kept in the
+    enum because the reason is real and the loop shape is what makes it moot - if the loop ever runs
+    to the last bar, this is the counter it owes.
+    """
 
     NO_ATR = "no_atr"                    # ATR had not warmed up at the signal bar
     NO_NEXT_BAR = "no_next_bar"          # signal on the last bar; nothing to enter on
@@ -54,12 +59,19 @@ class BacktestConfig:
 
 @dataclass
 class ArmResult:
-    """One arm's trades, plus what it refused to trade and why."""
+    """One arm's trades, plus what it refused to trade and why.
+
+    `unevaluable_bars` is deliberately not a `Skipped` reason. Those count SIGNALS that produced no
+    trade; this counts BARS on which the trigger could not be evaluated at all, for want of a
+    lookback window. Folding the two together would report an unanswerable bar as a rejected signal,
+    which is the UNKNOWN-becomes-FALSE collapse `RULE_SPEC.md` §4 forbids.
+    """
 
     arm: str
     trades: list[Trade] = field(default_factory=list)
     skipped: Counter[str] = field(default_factory=Counter)
     signals: int = 0
+    unevaluable_bars: int = 0
 
     @property
     def net_r_values(self) -> list[Decimal]:
@@ -69,6 +81,7 @@ class ArmResult:
         self.trades.extend(other.trades)
         self.skipped.update(other.skipped)
         self.signals += other.signals
+        self.unevaluable_bars += other.unevaluable_bars
 
 
 def breakout_high(series: BarSeries, index: int, lookback: int) -> Decimal | None:
@@ -105,8 +118,19 @@ def run_arm(
     for index in range(len(bars) - 1):
         bar = bars[index]
 
+        # The trigger is evaluated on every bar, including bars spent holding. A signal that could
+        # not be acted on is an EXCLUSION from the trade set, and an unrecorded exclusion is a
+        # survivorship filter applied to the signal set regardless of intent (Appendix J, Skips stage).
+        threshold = breakout_high(series, index, config.trigger_lookback)
+        triggered = threshold is not None and bar.close > threshold
+
         # --- manage an open position first (CHECKLIST_SPEC 4: open positions before candidates)
         if position is not None:
+            if triggered and gate[index] is True:
+                # It would have been a signal. One position per instrument is a real constraint,
+                # and a strategy that fires often while already positioned looks more selective
+                # than it is unless this is counted.
+                result.skipped[Skipped.POSITION_OPEN] += 1
             held = index - position["entry_index"]
             decision = config.exits.evaluate(bar, position["stop"], held)
 
@@ -121,8 +145,13 @@ def run_arm(
             continue
 
         # --- look for a new signal
-        threshold = breakout_high(series, index, config.trigger_lookback)
-        if threshold is None or bar.close <= threshold:
+        if threshold is None:
+            # No lookback window yet. NOT a rejection - the rule had nothing to answer with, and
+            # collapsing it into "did not trigger" removes these bars from the denominator without
+            # saying so. The first `trigger_lookback` bars of every instrument land here.
+            result.unevaluable_bars += 1
+            continue
+        if not triggered:
             continue
         if gate[index] is not True:
             continue

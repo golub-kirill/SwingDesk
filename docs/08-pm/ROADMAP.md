@@ -2,7 +2,7 @@
 
 **Status:** drafting · **Tier:** 8 (project management) · **Content:** authored
 
-**Written 2026-08-02, after four studies rather than before them.** A roadmap drafted at G0 would
+**Written 2026-08-02, after the studies rather than before them.** A roadmap drafted at G0 would
 have planned a trend-filter programme that the evidence has since closed. This one is built on what
 was measured.
 
@@ -16,11 +16,11 @@ The finish line it serves is `CHARTER.md` §4, ratified 2026-08-01 and unchanged
 |---|---|
 | Gates closed | G0 charter · G4 architecture · **G5 walking skeleton** |
 | Gates open | G1 requirements · G2 transcription · G3 data · G6 catalogue · G7 surfaces |
-| Merge gates running | 14, from one command |
-| Tests | 260 |
+| Merge gates running | 18, from one command |
+| Tests | 253 |
 | Components implemented | 7 · 6 with golden vectors (25) · **0 `active`** — five blocked by an unset parameter, which is the fail-closed design working |
-| Parameters | 96 — 83 `unset`, 9 `assumed`, 3 `owner`, **1 `validated`** |
-| Studies | 5 registered, 4 reported — **2 refuted, 1 accepted and quantifiably fragile** |
+| Parameters | 96 — 63 `unset`, 29 `assumed`, 3 `owner`, **1 `validated`** |
+| Studies | 4 pre-registered, 4 reported — **2 refuted, 1 accepted and quantifiably fragile**; plus one post-hoc bound carrying no verdict. `PR-006` registered and blocked on a trade log |
 
 **The one-line summary:** the machinery is real and honest; almost nothing about the strategy is
 known, and what is known is mostly negative.
@@ -75,9 +75,21 @@ The consequence is carried in the data rather than in a footnote: until coverage
 answer. **A partial universe is honest; a partial universe presented as the rule's answer would be a
 survivorship filter of our own making**, which is exactly what DR-003 exists to avoid.
 
-| # | Item | Waits on |
-|---|---|---|
-| X6 | **Universe coverage** — run the refresh passes until `is_partial` is False, then re-check DR-003's plateau against the full population rather than a 115-symbol sample | nothing; it is elapsed time and fetch budget, not code |
+| # | Item | Phase | Waits on |
+|---|---|---|---|
+| ~~**P1**~~ | ~~**Close phase 1.**~~ **DONE 2026-08-08.** §46, §7, §11 and §43 written; **§3 and §53 blocked** — they need the master ТЗ's literal content and it is not in the repository. `ABSENT` is now 0 | 1 | — |
+| **P2** | **First `active` component.** ATR and SMA are the candidates: ATR's period is `assumed`, SMA has no parameter of its own, and both have golden vectors. What each still needs is a `verification` and a `spec` anchor | 2 | nothing — this is authoring, not code |
+| **P3** | **Measure costs.** Corwin–Schultz / Abdi–Ranaldo effective spread from daily OHLC. Pre-registered first | 4, moved ahead | a trade log is *not* needed; this is a spread estimate over bars |
+| **P4** | **Revisit the scheduling deferral.** The dated decision point adjustment C creates. Paper cannot start without it, and Track A cannot close without paper | 3′ | an owner decision, at the start of phase 3 |
+| **P5** | **First strategy card**, which is what makes coverage demand-driven rather than exhaustive. Until one exists there is no demand to serve | 3 | `STRATEGY_CARD_SPEC.md` is written; the card itself is not |
+| X6 | **Universe coverage** — refresh passes until `is_partial` is False, then re-check DR-003's plateau against the full population rather than a 115-symbol sample | 3 | elapsed time and fetch budget, not code |
+
+**P3 is the only research that moves ahead of its phase**, and §9 D records why: the sign of the only
+result this project owns sits inside an assumed 5bps, so everything built in phase 3 inherits it.
+
+**P5 is the load-bearing one for phase 3.** Demand-driven coverage has no meaning without a card to
+create the demand, so the first card is not one item among several — it is the thing that decides
+which of the 465 components get built at all.
 
 ## 5. Later
 
@@ -138,4 +150,129 @@ itself the pattern that made the reconciliation necessary. Dispositioned:
 | `UDR-002` | Which graph database for the Knowledge Graph projection | **OPEN, owner input needed.** Low urgency — §46 ranks last of nine absent sections, and the logical schema does not depend on the engine |
 | `UDR-003` | Scope of the execution and broker layer | **CLOSED.** Owner decision D1, `CHARTER.md` — the system never places orders. §29 is `DEFERRED` with its ontology slot fixed |
 | `UDR-004` | Canonical regime ontology | **OPEN, and sharper than recorded.** The ТЗ suggests eight regimes; the course names **eleven** (`REGIME_SPEC.md` §2) and they are a vocabulary, not a partition. PR-002 validated a classifier on one axis of three. The real question is whether the ТЗ list or the course list is canonical — and only the course list has evidence behind it |
-| `UDR-005` | Should the reference vertical slice come before mass documentation? | **CLOSED — it already did.** G5 closed 2026-08-02, walking skeleton green, replay a merge gate. The ТЗ's own §50 ordering was followed before the ТЗ arrived |
+| `UDR-007` | Should the reference vertical slice come before mass documentation? | **CLOSED — it already did.** G5 closed 2026-08-02, walking skeleton green, replay a merge gate. The ТЗ's own §50 ordering was followed before the ТЗ arrived |
+
+## 9. The phase plan — adopted 2026-08-08
+
+**This section governs §3, §4 and §5.** Where they disagree with it, it wins.
+
+The owner set the shape on 2026-08-08 — describe everything, then MVP, then maximum coverage coded
+step by step, then paper trading and research — and adopted four adjustments to it the same day. The
+adopted plan is therefore:
+
+| Phase | What it is | Exit |
+|---|---|---|
+| **1. Describe** | no research, no implementation | ТЗ `ABSENT` = 0; the prose shortfalls closed |
+| **2. Activate** | *(not "MVP" — that closed at G5 on 2026-08-02)* | first component `active`, status displayed |
+| **3. Coverage, demand-driven** | a component is built when a strategy card needs it | every component a live card needs is `active` |
+| **3′. Paper, in parallel** | measures the system, not the edge | Track A's four run-measurable criteria met |
+| **4. Research and calibration** | costs measured first | a pre-registered study reports on forward data |
+
+The four adjustments are recorded below with the evidence that prompted each, because the reasoning
+is what makes the plan re-decidable later. One of them (C) creates a dated decision point rather than
+settling a question, and that is stated where it arises.
+
+### What the plan gets right, and it is not the obvious thing
+
+**Research last is normally a mistake, and here it is defensible.** Calibrating before the machinery
+is trustworthy is how a project fits noise, and this one has the evidence: three of four studies
+refuted, and the one positive is erased by a survivorship exposure that free data cannot close. The
+instinct — do not tune until the thing being tuned can be trusted — matches what PR-005 found rather
+than fighting it. §7's honest risk still stands, and this ordering does not make it worse.
+
+### A. Phase 2 already happened
+
+**G5 closed 2026-08-02.** `CHARTER.md` §4's six capabilities are all done, replay is a merge gate,
+302 tests and 23 gates run from one command. The MVP is behind us, not ahead.
+
+What *is* ahead and looks like an MVP is **activation**: 465 components are registered, 7 are
+implemented and **0 are `active`**. `COVERAGE_MATRIX.md` §3 names that gap as the number to watch —
+implemented-but-not-runtime is the population where code exists that nothing may yet rely on.
+
+**Adopted.** Phase 2 is **activation**. Its exit is the first component reaching `active` with its
+parameters valued, its verification present and its status displayed wherever its output appears.
+
+### B. "Maximum coverage" is this project's own named kill risk
+
+`k.project_timebox`'s note, ratified 2026-08-01: *the real risk is scope drift into the
+460-component catalogue rather than time.* A phase that codes all 465 components is that risk written
+out as a plan.
+
+The activation gate exists precisely so this does not happen — components sit at `registered`
+indefinitely at **no cost**, and reaching `active` is deliberate (`COMPONENT_REGISTRY_SPEC.md` §3).
+
+**Adopted.** Coverage is **demand-driven**: a component is implemented when a strategy card needs it,
+not because the catalogue has a row for it. Building 465 components for a strategy with no validated
+edge produces 465 pieces of unvalidated machinery and a much larger surface to keep honest.
+
+The practical test, so this does not erode: **before implementing a component, name the strategy card
+that consumes it.** If there is none, it stays `registered` — which costs nothing and is what the
+activation gate is for.
+
+### C. Paper trading is not a late phase — it is how Track A closes
+
+`a.run_completes` requires **20 consecutive trading days** of the run completing. That clock cannot be
+compressed by throughput, and it **does not need a strategy**: a forward test measures misses, delays,
+alerts and journal quality — the four things `VALIDATION_PROGRAM.md` §2 says a backtest structurally
+cannot see. Three further Track A criteria need taken trades.
+
+**Adopted, and it creates a decision point rather than settling one.** Paper runs in parallel from
+the start of phase 3.
+
+It cannot run without a scheduled daily run, and scheduling is deferred (below). So adopting C means:
+**at the start of phase 3, the scheduling deferral is revisited.** Either it is reversed and paper
+begins, or it stands and Track A remains unreachable — but the choice is made on a date the plan
+names, rather than by drift.
+
+### D. One of four reported studies belongs before maximum coverage
+
+The base strategy measured **+0.028R before costs and −0.123R at 3× costs**, so the sign of the only
+result this project owns sits inside an assumed 5bps. Corwin–Schultz (2012) and Abdi–Ranaldo (2017)
+estimate effective spread from daily OHLC — **no new data, no vendor, no new fetch**.
+
+**Adopted.** Costs are measured before the machinery is dimensioned on top of them. This is the one
+piece of research that moves ahead of phase 3 rather than waiting for phase 4 — it is a single study,
+it needs no new data, and everything built in phase 3 inherits whatever the number turns out to be.
+
+### The consequence the plan must carry
+
+**Scheduling the daily run was deferred on 2026-08-08, and under this phasing it lands in phase 3 or
+4.** Two things follow, and the second is structural:
+
+1. `departures()` accumulates forward only, so the survivorship record for the whole of phases 1–2
+   does not exist and cannot be reconstructed at any price.
+2. **`a.run_completes` cannot be met without a scheduled run.** If the deferral becomes permanent,
+   Track A never closes — and Track A is the entire question of whether the system is sound. The
+   ratified `k.track_a_timebox` now fires on exactly that: 180 days from 2026-08-08 with no run ever
+   scheduled, and its action is to restate the project as documentation-and-research only.
+
+That is not an argument to reverse the deferral. It is the plan's own arithmetic: **adjustment C is
+available only if the schedule exists**, and if it never does, phase 4 is unreachable and the
+project's honest end state is the one `k.track_a_timebox` already names.
+
+### Mapped onto the gates that already exist
+
+Expressed in the existing ladder rather than a second vocabulary — ТЗ §8 forbids maintaining one
+logic in two places, and this repository has already paid for that once.
+
+| Phase | Existing gate | Exit condition |
+|---|---|---|
+| 1 Describe | G1, G2, G3 | ТЗ `ABSENT` = 0; the 24 `PARTIAL` shortfalls that are prose are closed |
+| ~~2 MVP~~ | ~~G5~~ | **closed 2026-08-02** |
+| 2′ Activate | — | first component `active`, with its status displayed |
+| 3 Coverage, demand-driven | G6 | every component a live strategy card needs is `active` |
+| 3′ Paper, in parallel | — | Track A's four run-measurable criteria met |
+| 4 Research and calibration | Track B | a pre-registered study reports on forward data |
+
+### Phase 1's remaining scope, enumerated
+
+Because "describe everything" has a measurable end and it is close. `SPEC_GAP_ANALYSIS.md`:
+**FULL 29 · PARTIAL 24 · ABSENT 1.**
+
+Documentation-only work left: **§46** (knowledge graph), and the prose subset of the shortfalls —
+§3 (no document walks all 25 questions), §7 (the ТЗ's 22-entity table is not mapped one-to-one),
+§11 (`GLOSSARY.md` has no `synonyms_discouraged` / `ambiguous_terms`), §43 (no change-type taxonomy
+or rollback policy), §53 (no QA scorecard against the ТЗ's 13 counters).
+
+The remaining shortfalls are **code**, not prose — §8's generated schemas, §12's six missing time
+types, §39's end-to-end scenarios — and they belong in phase 3 regardless of how phase 1 ends.

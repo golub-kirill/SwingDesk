@@ -88,6 +88,19 @@ is expected to be superseded when a study says so. Different lifetimes, differen
 | `DR-003` | A-tier liquidity rule | `universe.min_price`, `universe.min_adtv_20d`, `universe.min_bar_history` | proposed |
 | `DR-004` | Cost model | `costs.commission_model`, `costs.slippage_model` | proposed — slippage superseded by `DR-005` |
 | `DR-005` | Slippage measured from daily OHLC | `costs.slippage_model` | proposed |
+| `DR-006` | Portfolio risk block | six `risk.*` constraints | **proposed — binds a real account** |
+| `DR-007` | Validation programme thresholds | fourteen of fifteen `validation.*` | **accepted — ratified 2026-08-08** |
+
+`DR-007` is the largest of these by a distance: fifteen parameters at once, four of them ratifying
+what a reported study already used and eight genuinely authored. It exists because a ratified kill
+criterion referenced a parameter nobody had set, which made it a gate that could not fail.
+
+**One of its fifteen did not survive the 2026-08-09 reconciliation.** `DR-007` §3.7 authored
+`validation.max_allowable_drawdown` as −15R and called it the weakest of the set; the owner had
+already set the same parameter directly to 20% of equity on 2026-08-05, on a branch `DR-007` could
+not see. An `owner` value outranks an `assumed:DR-007` one on this registry's own provenance ladder,
+so the owner's stands and §3.7 is superseded. Nothing else in the record changes.
+
 
 Measurements backing a decision live in `measurements/`, committed alongside the record. A threshold
 whose evidence cannot be re-read is a threshold that will be re-argued from memory.

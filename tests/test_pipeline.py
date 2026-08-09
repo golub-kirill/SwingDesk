@@ -9,18 +9,20 @@ neither fetch nor depend on the current date (CI_POLICY 4).
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 
 import pytest
 from tests.conftest import TEST_CA, TEST_US, fixture_fetcher, series_for
 
 from swingdesk.application.pipeline import run
 from swingdesk.contracts.market import Interval, Series
+from swingdesk.contracts.run import RunMode
 from swingdesk.journal_evidence.journal import Journal
 from swingdesk.market_data import YAHOO, BarStore, check
 from swingdesk.platform.clock import FixedClock
 from swingdesk.reference_data import calendar as cal
 
+MODE = RunMode.LIVE_AS_OF
 AS_OF = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
 
 
@@ -41,8 +43,8 @@ def test_run_is_reproducible(stores, registry) -> None:
     sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
     fetcher = fixture_fetcher({TEST_US.id: sessions})
 
-    first = run([TEST_US], FixedClock(AS_OF), registry, store, journal, fetcher=fetcher)
-    second = run([TEST_US], FixedClock(AS_OF), registry, store, journal, fetcher=fetcher)
+    first = run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher)
+    second = run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher)
 
     assert first.manifest.output_hash == second.manifest.output_hash
     assert first.manifest.output_hash is not None
@@ -51,13 +53,13 @@ def test_run_is_reproducible(stores, registry) -> None:
 
 
 def test_every_candidate_leaves_with_a_decision(stores, registry) -> None:
-    """"Нет кандидатов без следующего действия" - M32/M33 operational standard."""
+    """No candidate is left without a next action - M32/M33 operational standard."""
     store, journal = stores
     us = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
     ca = _sessions(TEST_CA.exchange, date(2025, 1, 1), date(2026, 1, 14))
     fetcher = fixture_fetcher({TEST_US.id: us, TEST_CA.id: ca})
 
-    result = run([TEST_US, TEST_CA], FixedClock(AS_OF), registry, store, journal, fetcher=fetcher)
+    result = run([TEST_US, TEST_CA], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher)
 
     assert len(result.decisions) == 2
     assert all(d.decision in {"Trade", "Watch", "Skip", "Pause"} for d in result.decisions)
@@ -68,7 +70,7 @@ def test_every_candidate_leaves_with_a_decision(stores, registry) -> None:
 def test_missing_vendor_data_skips_with_a_code(stores, registry) -> None:
     """Fetch failure degrades to a coded refusal, never an exception escaping the run."""
     store, journal = stores
-    result = run([TEST_US], FixedClock(AS_OF), registry, store, journal,
+    result = run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE,
                  fetcher=fixture_fetcher({}))
     assert result.decisions[0].decision == "Skip"
     assert result.decisions[0].reason_code == "DATA"
@@ -84,10 +86,10 @@ def test_revision_deltas_not_snapshots(stores, registry) -> None:
     sessions = _sessions(TEST_US.exchange, date(2025, 6, 1), date(2026, 1, 14))
     fetcher = fixture_fetcher({TEST_US.id: sessions})
 
-    run([TEST_US], FixedClock(AS_OF), registry, store, journal, fetcher=fetcher)
+    run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher)
     after_first = store.revision_count(TEST_US.id)
-    run([TEST_US], FixedClock(AS_OF), registry, store, journal, fetcher=fetcher)
-    run([TEST_US], FixedClock(AS_OF), registry, store, journal, fetcher=fetcher)
+    run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher)
+    run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher)
 
     assert store.revision_count(TEST_US.id) == after_first
     assert after_first == len(sessions)
@@ -187,7 +189,7 @@ def test_a_universe_supplies_the_candidates(stores, registry) -> None:
     sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
     selection = _universe_selection([TEST_US])
 
-    result = run([], FixedClock(AS_OF), registry, store, journal,
+    result = run([], FixedClock(AS_OF), registry, store, journal, mode=MODE,
                  fetcher=fixture_fetcher({TEST_US.id: sessions}), universe=selection)
 
     assert [o.instrument.id for o in result.outcomes] == [TEST_US.id]
@@ -201,9 +203,9 @@ def test_the_universe_is_pinned_in_the_manifest(stores, registry) -> None:
     sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
     fetcher = fixture_fetcher({TEST_US.id: sessions, TEST_CA.id: sessions})
 
-    one = run([], FixedClock(AS_OF), registry, store, journal, fetcher=fetcher,
+    one = run([], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher,
               universe=_universe_selection([TEST_US]))
-    two = run([], FixedClock(AS_OF), registry, store, journal, fetcher=fetcher,
+    two = run([], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher,
               universe=_universe_selection([TEST_US, TEST_CA]))
 
     assert one.manifest.universe_hash is not None
@@ -214,7 +216,7 @@ def test_a_run_without_a_universe_pins_nothing(stores, registry) -> None:
     """None means "explicit instrument list", and must not be confused with an empty universe."""
     store, journal = stores
     sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
-    result = run([TEST_US], FixedClock(AS_OF), registry, store, journal,
+    result = run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE,
                  fetcher=fixture_fetcher({TEST_US.id: sessions}))
     assert result.manifest.universe_hash is None
     assert result.universe is None
@@ -238,7 +240,72 @@ def test_the_universe_hash_moves_when_the_rule_moves(stores, registry) -> None:
                            adtv_window=20, min_history=250),
     )
 
-    one = run([], FixedClock(AS_OF), registry, store, journal, fetcher=fetcher, universe=loose)
-    two = run([], FixedClock(AS_OF), registry, store, journal, fetcher=fetcher, universe=strict)
+    one = run([], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher, universe=loose)
+    two = run([], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher, universe=strict)
 
     assert one.manifest.universe_hash != two.manifest.universe_hash
+
+
+# --------------------------------------------------------------- mode and from_state
+
+
+def test_the_mode_is_recorded_and_cannot_be_omitted(stores, registry) -> None:
+    """A journalled run must be able to answer "was this real?" without inference.
+
+    `mode` is keyword-only and has no default, so the failure is a TypeError at the call site rather
+    than a manifest that quietly claims a mode nobody chose. Deriving it from the injected clock and
+    fetcher would be automatic and would re-create the inference SYSTEM_MODES 3 objects to.
+    """
+    store, journal = stores
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    fetcher = fixture_fetcher({TEST_US.id: sessions})
+
+    result = run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher)
+    assert result.manifest.mode is RunMode.LIVE_AS_OF
+
+    with pytest.raises(TypeError, match="mode"):
+        run([TEST_US], FixedClock(AS_OF), registry, store, journal, fetcher=fetcher)  # type: ignore[call-arg]
+
+
+def test_a_decision_records_what_it_was_before(stores, registry) -> None:
+    """from_state, TRANSITION_SPEC 4.
+
+    The first run has no previous decision and says so with None - a first sighting is not
+    "unchanged". The second run carries the first run's decision, which is what makes a Watch that
+    became a Skip distinguishable from a Skip that has been a Skip all week.
+    """
+    store, journal = stores
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    fetcher = fixture_fetcher({TEST_US.id: sessions})
+
+    first = run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher)
+    assert first.decisions[0].previous_decision is None
+
+    later = AS_OF + timedelta(days=1)
+    second = run([TEST_US], FixedClock(later), registry, store, journal, mode=MODE, fetcher=fetcher)
+
+    assert second.decisions[0].previous_decision == first.decisions[0].decision
+    # And it survives the round trip, which is the point of recording it at all.
+    stored = journal.decisions_for(second.manifest.run_id)
+    assert stored[0].previous_decision == first.decisions[0].decision
+
+
+def test_from_state_is_read_as_of_the_run_start_not_as_of_now(stores, registry) -> None:
+    """A run reports what the journal said when it BEGAN.
+
+    Read after its own decisions were written, the query would return this run's own verdict as its
+    predecessor - a record that says every instrument's decision is unchanged from itself.
+    """
+    store, journal = stores
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    fetcher = fixture_fetcher({TEST_US.id: sessions})
+
+    run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher)
+    result = run([TEST_US], FixedClock(AS_OF + timedelta(days=1)), registry, store, journal,
+                 mode=MODE, fetcher=fetcher)
+
+    decision = result.decisions[0]
+    assert decision.previous_decision is not None
+    assert journal.latest_decisions([TEST_US.id], AS_OF) == {}, (
+        "as of the FIRST run's start the journal held nothing for this instrument"
+    )

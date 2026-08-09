@@ -1,6 +1,6 @@
 """A generated checklist, and the four things an item can be.
 
-The course's checklists are gated forms: `Каждый чек-лист сохраняет Дата / время, Версия, Владелец`
+The course's checklists are gated forms: every checklist stores date/time, version and owner,
 and exactly one terminal state from the worksheet set (`DECISION_STATE_MACHINE.md` §5).
 
 The four states matter more than the count. A machine item whose evidence does not exist yet is

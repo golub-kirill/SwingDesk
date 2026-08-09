@@ -7,8 +7,7 @@ conflict with `master`; **they conflict with each other.** Two independent `DR-0
 independent `PR-007` studies, three incompatible `criteria.yml` v1.1.0 amendments, and four
 specification documents written twice.
 
-**Approved 2026-08-09. Steps 1 and 2 are done; 3 to 8 are not.** `master` now carries two of the
-three branches. `claude/…-321418` is untouched and unreviewed.
+**Approved 2026-08-09. Steps 1–5 are done; 6–8 remain.** All three branches are merged into `master`.
 
 Owner decisions taken 2026-08-09 are recorded in §3 and are the basis of every call below.
 
@@ -19,8 +18,8 @@ Owner decisions taken 2026-08-09 are recorded in §3 and are the basis of every 
 | Branch | Tip | Commits vs master | Size | State |
 |---|---|---|---|---|
 | `claude/swingdesk-handoff-continue-f479bd` | 2026-08-09 11:22 | — | 14 files | **merged into `master`** |
-| `claude/swingdesk-handoff-continue-1feb49` | 2026-08-08 16:07 | 9 | 38 files, +43,424 | open |
-| `claude/swingdesk-documentation-321418` | 2026-08-09 09:06 | 26 | 63 files, +4,181 | open, unreviewed |
+| `claude/swingdesk-handoff-continue-1feb49` | 2026-08-08 16:07 | 9 | 38 files, +43,424 | **merged, step 2** |
+| `claude/swingdesk-documentation-321418` | 2026-08-09 09:06 | 26 | 63 files, +4,181 | **merged, step 4** |
 
 `1feb49`'s line count is dominated by one committed evidence file
 (`docs/decisions/measurements/spread-sample.json`, ~39k lines).
@@ -46,7 +45,8 @@ Owner decisions taken 2026-08-09 are recorded in §3 and are the basis of every 
 ### 2.3 Documents written twice, independently
 
 `RULE_SPEC.md` · `SYSTEM_MODES.md` — on both branches.
-`EXECUTION_MODEL.md` · `EXPECTATION_SPEC.md` — `1feb49` only.
+`EXPECTATION_SPEC.md` — `1feb49` only. **`EXECUTION_MODEL.md` was on BOTH, at different paths —
+this line was wrong; see §7.**
 `ALLOCATION_SPEC.md` · `TRANSITION_SPEC.md` · `EXPECTATION_MODEL.md` · `DRIFT_AND_LEARNING.md` ·
 `AI_AUTHORITY_MODEL.md` · `COVERAGE_AUDIT.md` — one branch each.
 
@@ -125,9 +125,14 @@ committed.
    chose `321418`'s version that sets one.
 3. ~~**Reconcile the duplicated specs** (D-R2).~~ **DONE 2026-08-09.** Both went to `321418`'s
    version, and both kept something from `1feb49`'s. Reasoning in §6.
-4. **Merge `321418`.** Larger and unreviewed; its 26 commits need reading, not just resolving.
-5. **Amend `criteria.yml` once, to v1.1.0**, carrying `321418`'s `k.track_a_timebox` (D-R3) and
-   marking `k.timebox_review` `met`. One amendment, not three.
+4. ~~**Merge `321418`.**~~ **DONE 2026-08-09.** 19 conflicts. Its code was reviewed rather than
+   waved through: `RunMode`, the required `mode` argument, `from_state` read as of the run start,
+   and the engine's `unevaluable_bars` counter kept out of `Skipped` so an unanswerable bar is not
+   reported as a rejected signal. **Three collisions §2 did not predict** — see §7.
+5. ~~**Amend `criteria.yml` once, to v1.1.0**.~~ **DONE** — it arrived with step 4 by taking
+   `321418`'s file per D-R3. `k.track_a_timebox` is ratified at *120 calendar days from the first
+   scheduled daily run, or 180 from ratification if none is scheduled*, and `k.timebox_review` is
+   `met`. One amendment, not three.
 6. **Re-assign gate numbers** across the union, and reconcile `check_gates.py` into one registry.
 7. **Recompute every R at 25bp** (D-R5), and re-check `PR-005`'s reported figures. Its two points
    put break-even at 1.369× the assumed cost; at 5× the assumption the base strategy is negative,
@@ -194,6 +199,34 @@ because the gate reads a quoted count as a claim and cannot tell the difference.
 right answer rather than an allowlist entry — `321418`'s own commit records that they stripped
 false-positive patterns rather than exempting them, on the grounds that a noisy gate gets bypassed.
 
+## 7. Three collisions §2 did not predict
+
+**§2 was measured and still incomplete.** All three surfaced during step 4, and all three were found
+by a gate rather than by reading.
+
+1. **`PR-006` was claimed twice.** `DR-004` reserved it for live slippage on 2026-08-02, before any
+   file existed; `321418` later wrote a drawdown study under it. D-R4 applies — earliest commit
+   keeps the id — so the drawdown study became **`PR-009`**. `docs/prereg/README.md` had predicted
+   exactly this and asked someone to fix it "if a third one appears". A third appeared.
+
+2. **`EXECUTION_MODEL.md` existed twice, at different paths.** `1feb49` put it in `02-domain`,
+   `321418` in `05-validation`. Git saw no conflict because the paths differ, and §2.3 recorded it as
+   "`1feb49` only" because it was checked at one path on both branches. **A same-name check is not a
+   same-document check.** Resolved to `321418`'s (it carries the exclusions audit and the finding
+   that the live path has a different execution model), with `1feb49`'s profit-slot section ported as
+   §8a. Caught by `verify_project_manifest`.
+
+3. **`validation.max_allowable_drawdown` was set twice, differently.** The owner set it directly to
+   20% of equity on 2026-08-05; `DR-007` §3.7 authored −15R on 2026-08-08 without seeing that. No
+   §3 rule covers it, so the registry's own provenance ladder does: **`owner` outranks
+   `assumed:DR-007`**, the owner's value stands, and `DR-007` §3.7 is superseded — which `DR-007`
+   itself half-anticipated by calling that value the weakest of its fifteen. **This one is worth
+   overturning if the owner disagrees**, because it is the only step-4 call that changes a live
+   threshold rather than a label.
+
+Also merged: the README carried duplicate rows for both duplicated specs, `321418`'s and `1feb49`'s,
+because only one of each pair was in a git conflict. The superseded pair was removed.
+
 ## 5. What this plan does not decide
 
 - **`UDR-004`, the regime ontology.** Now three candidates: the ТЗ's eight, the course v5.0's
@@ -202,6 +235,9 @@ false-positive patterns rather than exempting them, on the grounds that a noisy 
 - **Which of `321418`'s 26 commits are sound.** Step 4 is a review, and this plan does not
   pre-approve its content.
 - **Whether `EDGE` replaces both estimators.** That is a new pre-registration, after the merge.
+- **`EXPECTATION_SPEC.md` against `EXPECTATION_MODEL.md`.** Both landed, from different branches,
+  both claiming ТЗ §23 — one at tier 2, one at tier 5. Not a filename collision, so no gate objects,
+  and not covered by D-R2 either. **Left for a step 3b** rather than resolved in passing.
 
 ## 6. The risk this plan is carrying
 

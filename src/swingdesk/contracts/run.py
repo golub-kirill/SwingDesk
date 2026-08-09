@@ -10,19 +10,47 @@ Config is recorded as a hash, never as values - config can contain credentials (
 from __future__ import annotations
 
 from datetime import datetime
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from swingdesk.contracts.observation import ParameterUse
 
 
+class RunMode(StrEnum):
+    """Which mode produced this run (`SYSTEM_MODES.md`).
+
+    Declared, never inferred. The mode decides what a run's output may authorise - a RESEARCH figure
+    quoted as though it came from PAPER is a claim a backtest structurally cannot make - and a run
+    whose mode has to be reconstructed from its arguments cannot answer that afterwards.
+
+    `LIVE` and `LIVE_AS_OF` differ only in whether the clock was pinned. Same authority, different
+    reproducibility, and the difference is worth seeing: `--as-of` fetches fresh and compares against
+    nothing, so it is not a determinism check however much it resembles one.
+    """
+
+    RESEARCH = "research"
+    BACKTEST = "backtest"
+    REPLAY = "replay"
+    PAPER = "paper"
+    SHADOW = "shadow"
+    LIVE = "live"
+    LIVE_AS_OF = "live_as_of"
+
+
 class RunManifest(BaseModel):
-    """The ten fields of DETERMINISM_SPEC 5, plus the run's own outcome."""
+    """The ten fields of DETERMINISM_SPEC 5, plus the mode and the run's own outcome."""
 
     model_config = ConfigDict(frozen=True)
 
     run_id: str
     started_at: datetime = Field(description="Identity, not an input. Never read by domain code.")
+
+    mode: RunMode = Field(
+        description="Required, no default. A run that cannot say which mode it was is a journal "
+                    "entry that cannot answer 'was this real?', and entries written before this "
+                    "field existed can never acquire it (SYSTEM_MODES 3).",
+    )
 
     code_hash: str
     code_dirty: bool = Field(
