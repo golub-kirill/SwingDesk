@@ -31,7 +31,7 @@ Owner decisions taken 2026-08-09 are recorded in §3 and are the basis of every 
 
 | Id | `1feb49` | `321418` | `master` |
 |---|---|---|---|
-| `DR-005` | `DR-005-measured-slippage.md` (2026-08-05) | `DR-005-validation-thresholds.md` | — |
+| `DR-005` | `DR-005-measured-slippage.md` (2026-08-05) | was DR-005-validation-thresholds, now `DR-007-validation-thresholds.md` **(resolved, step 1)** | — |
 | `PR-007` | `PR-007-base-strategy-measured-costs.md` (2026-08-08) | — | was PR-007-effective-spread, now `PR-008-effective-spread.md` **(resolved, step 1)** |
 | `DR-006` | — | `DR-006-portfolio-risk-block.md` | — |
 
@@ -109,12 +109,13 @@ That is `AGENTS.md` §10.3 applied to its own founding example.
 Each step ends green on `python tools/check_gates.py`, and no step begins before the previous is
 committed.
 
-1. ~~**Renumber on the branches, not during the merge.**~~ **Half done, 2026-08-09.** `master`'s
+1. ~~**Renumber on the branches, not during the merge.**~~ **DONE 2026-08-09.** `master`'s
    `PR-007` → **`PR-008`** is complete: four artifacts renamed, 47 references updated across 13
    files, and the renumbering recorded in the prereg, the report and `docs/prereg/README.md` — the
    git history under `PR-007` is deliberately unedited, because it is what proves registration
-   preceded the run. **`321418`'s `DR-005` → `DR-007` is still outstanding** and must be committed on
-   that branch before step 4.
+   preceded the run. **`321418`'s `DR-005` → `DR-007` is done too** (commit `515708c`): 46 references across 16
+   files, including fifteen `assumed:DR-005` provenance strings in `registry/parameters.yml`. All 20
+   gates on that branch stay green. **Step 1 complete.**
 2. **Merge `1feb49`.** Smaller, already reviewed here, and it carries the cost decision. Expect
    conflicts in the eleven §2.5 documents and in `check_gates.py`/`verify_docs.py`.
 3. **Reconcile the duplicated specs** (D-R2) — `RULE_SPEC.md` and `SYSTEM_MODES.md` first, since

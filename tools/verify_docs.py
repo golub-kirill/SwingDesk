@@ -69,7 +69,9 @@ ON_OTHER_BRANCHES = {
     "AI_AUTHORITY_MODEL.md",
     "COVERAGE_AUDIT.md",
     # claude/swingdesk-documentation-321418
-    "DR-005-validation-thresholds.md",
+    # Renamed from DR-005 on 2026-08-09 by RECONCILIATION_PLAN D-R4. This entry moving is the
+    # mechanism working: the set tracks what is really on the branch, so a rename there fails here.
+    "DR-007-validation-thresholds.md",
     "DR-006-portfolio-risk-block.md",
     "ALLOCATION_SPEC.md",
     "TRANSITION_SPEC.md",
