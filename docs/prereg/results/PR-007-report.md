@@ -78,6 +78,13 @@ It reports a median of **21.9%** of the mean daily range as spread. On the ten m
 the store the same estimator returns 33–75bp per side, against true effective spreads under 1bp —
 that is, it scores mega-caps *wider* than the universe median, which is backwards.
 
+There is a cleaner way to say the same thing, and it needs no market data at all. Run Abdi-Ranaldo
+over 2,000 sessions of synthetic bars built with **no spread in them** and it returns **0.00145**
+round trip — **7.25bp per side.** That is the estimator's own noise floor, and it is *larger than the
+5bp per side `DR-004` assumes and this study set out to test.* The instrument cannot resolve the
+quantity, and that is measurable on the bench before any real bar is involved. It is pinned in
+`tests/test_invariants.py`.
+
 The reading is simple. Both estimators infer the spread from second-order differences in quantities
 of order 240bp — the mean daily range here is 2.4% of price. The spread they are being asked to
 find is under 1bp on the liquid end. **The signal is roughly three orders of magnitude below the

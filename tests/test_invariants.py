@@ -236,3 +236,117 @@ def test_bar_rejects_impossible_ohlc() -> None:
             volume=1,
             knowledge_time=datetime(2026, 1, 2, tzinfo=UTC),
         )
+
+
+# --------------------------------------------------------------------- spread estimators
+#
+# An estimator that reads ordinary volatility as transaction cost is the failure PR-007 nearly
+# shipped: the per-pair Corwin-Schultz form reported ~+80bp of round-trip spread on bars containing
+# none, and it passed every example test written for it because it ran, returned a plausible
+# number, and had the right units.
+#
+# The guard is discovery-based rather than a list. Any new estimator added to the module is covered
+# the moment it exists, without anyone remembering to write this test for it - which is the whole
+# difference between a gate and a habit.
+
+#: Estimators exempt from the null check, each with the reason. Adding a name here is a visible
+#: decision someone made, not a silent omission - the same discipline pyproject uses for untyped
+#: imports and ignored lint rules.
+KNOWN_BIASED_ESTIMATORS = {
+    "corwin_schultz_per_pair": (
+        "documented Jensen bias, retained only as a diagnostic. Its magnitude is pinned by "
+        "test_the_per_pair_form_is_biased_and_stays_biased, so it is measured rather than ignored."
+    ),
+}
+
+#: What the null check tolerates, as a round-trip proportion. Set so the sound estimators clear it
+#: with headroom while the known-biased form fails by roughly 4x - measured, not guessed:
+#:
+#:     corwin_schultz           0.000000
+#:     abdi_ranaldo             0.001451
+#:     corwin_schultz_per_pair  0.008220   <- must fail
+#:
+#: Worth reading the middle row twice. Abdi-Ranaldo's floor on bars with NO spread is 14.5bp round
+#: trip, i.e. 7.25bp per side - larger than the 5bp per side DR-004 assumes and PR-007 set out to
+#: test. That single number is why PR-007 came back inconclusive: the estimator's noise exceeds the
+#: quantity. Passing this test means an estimator is not grossly broken; it does not mean the
+#: estimator can resolve a real spread.
+NULL_SPREAD_TOLERANCE = 0.002
+
+
+def _discovered_estimators() -> dict[str, object]:
+    """Every public spread estimator in the module, found by signature rather than by name.
+
+    An estimator takes (highs, lows, closes) and returns an optional estimate as the first element
+    of its tuple. `beta_gamma` shares the parameters but returns per-pair inputs, and is excluded by
+    the return annotation - which is also how a genuinely new estimator gets picked up.
+    """
+    import inspect
+
+    from swingdesk.validation.studies import effective_spread
+
+    found: dict[str, object] = {}
+    for name, function in inspect.getmembers(effective_spread, inspect.isfunction):
+        if name.startswith("_") or function.__module__ != effective_spread.__name__:
+            continue
+        signature = inspect.signature(function)
+        if list(signature.parameters)[:3] != ["highs", "lows", "closes"]:
+            continue
+        if "float | None" not in str(signature.return_annotation):
+            continue
+        found[name] = function
+    return found
+
+
+def test_estimator_discovery_still_works() -> None:
+    """The guard below is worthless if discovery silently finds nothing.
+
+    A rename or a signature change that breaks discovery must fail here, loudly, rather than turn
+    `test_no_estimator_manufactures_a_spread` into a no-op that keeps passing.
+    """
+    discovered = _discovered_estimators()
+    assert "corwin_schultz" in discovered
+    assert "abdi_ranaldo" in discovered
+    assert "beta_gamma" not in discovered, "beta_gamma returns pair inputs, not an estimate"
+    assert set(KNOWN_BIASED_ESTIMATORS) <= set(discovered), (
+        "an exemption names an estimator that no longer exists - delete the exemption"
+    )
+
+
+@pytest.mark.parametrize("name", sorted(_discovered_estimators()))
+def test_no_estimator_manufactures_a_spread(name: str) -> None:
+    """On bars with no spread in them, every estimator must return approximately zero.
+
+    This is the property, not an example: a transaction-cost estimator that responds to volatility
+    produces a number that looks like a measurement, carries the right units, and is wrong in the
+    direction that makes every instrument look expensive.
+    """
+    if name in KNOWN_BIASED_ESTIMATORS:
+        pytest.skip(f"{name}: {KNOWN_BIASED_ESTIMATORS[name]}")
+
+    from tests.conftest import synthetic_ohlc
+
+    highs, lows, closes = synthetic_ohlc(2000, 0.0)
+    estimate = _discovered_estimators()[name](highs, lows, closes)[0]  # type: ignore[operator]
+
+    assert estimate is not None, f"{name} declined on 2000 clean sessions"
+    assert estimate < NULL_SPREAD_TOLERANCE, (
+        f"{name} reported {estimate:.6f} round-trip spread on bars containing none - "
+        f"it is measuring volatility, not cost"
+    )
+
+
+@pytest.mark.parametrize("true_spread", [0.005, 0.010, 0.020])
+def test_every_estimator_moves_with_the_real_spread(true_spread: float) -> None:
+    """Returning zero always would pass the null check. This is the other half of the property."""
+    from tests.conftest import synthetic_ohlc
+
+    highs, lows, closes = synthetic_ohlc(2000, true_spread)
+    for name, function in sorted(_discovered_estimators().items()):
+        if name in KNOWN_BIASED_ESTIMATORS:
+            continue
+        estimate = function(highs, lows, closes)[0]  # type: ignore[operator]
+        assert estimate is not None and estimate > true_spread / 2, (
+            f"{name} reported {estimate} against a true spread of {true_spread} - "
+            f"an estimator that cannot see a 2x-of-threshold spread is not measuring one"
+        )

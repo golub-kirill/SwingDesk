@@ -109,9 +109,10 @@ Recording these stops them being re-proposed.
 The v1 finish line is a machinery target and needs no profitable strategy — that was the point of
 ratifying it that way. Everything in §2, §3 and §4 lands it.
 
-Track B is different. Four studies produced one fragile positive, on a base strategy measured as
-flat before costs and negative after stress. Nothing in this roadmap fixes that, because a roadmap
-cannot. `SUCCESS_AND_KILL_CRITERIA.md` `k.programme_exhausted` exists for the case where the
+Track B is different. Five studies produced one fragile positive, on a base strategy measured as
+flat at assumed costs and negative after stress — both figures net, because gross is never reported
+(`DR-004` consequence 1). PR-007 then found that those assumed costs cannot be measured from free
+daily data at all. Nothing in this roadmap fixes that, because a roadmap cannot. `SUCCESS_AND_KILL_CRITERIA.md` `k.programme_exhausted` exists for the case where the
 validation programme runs out of hypotheses without one surviving, and that outcome is live.
 
 Stating it here means the project can reach v1, report honestly that it has no validated edge, and

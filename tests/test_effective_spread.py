@@ -12,54 +12,18 @@ Everything else guards an edge a clean 2,000-day simulation never reaches.
 
 from __future__ import annotations
 
-import math
-import random
 from decimal import Decimal
 
 import pytest
+from tests.conftest import synthetic_ohlc as _simulate
 
 from swingdesk.validation.studies import effective_spread as spread
 
-SEED = 20260809
-
-#: Intraday steps per session. The estimators assume a continuously observed diffusion, so a coarse
-#: path under-samples the one-day range more than the two-day range and biases CS downward. At 1,000
-#: the artefact is small; the tolerances below were set from the measured behaviour at this density,
-#: not guessed. Real sessions carry far more prints than this.
-INTRADAY_STEPS = 1000
-DAILY_VOLATILITY = 0.02
-
-
-def _simulate(
-    days: int, proportional_spread: float, seed: int = SEED
-) -> tuple[list[float], list[float], list[float]]:
-    """Days of bars carrying a known spread, built the way the estimators assume.
-
-    An efficient price walks intraday; the observed high and low are the true extremes widened by
-    the half-spread; the close lands on the bid or the ask. That is the microstructure both papers
-    model, and the simulation is deliberately not written in terms of either formula - so agreement
-    is evidence rather than circularity.
-    """
-    rng = random.Random(seed)
-    half = proportional_spread / 2
-    step_volatility = DAILY_VOLATILITY / math.sqrt(INTRADAY_STEPS)
-
-    price = 100.0
-    highs: list[float] = []
-    lows: list[float] = []
-    closes: list[float] = []
-
-    for _ in range(days):
-        high = low = price
-        for _ in range(INTRADAY_STEPS):
-            price *= math.exp(rng.gauss(0.0, step_volatility))
-            high = max(high, price)
-            low = min(low, price)
-        highs.append(high * (1 + half))
-        lows.append(low * (1 - half))
-        closes.append(price * (1 + half if rng.random() < 0.5 else 1 - half))
-
-    return highs, lows, closes
+#: Round-trip proportion an estimator may report on spreadless bars. Same value as
+#: `test_invariants.NULL_SPREAD_TOLERANCE`, which applies the check to every estimator the module
+#: exposes; this file keeps the named version because it reads better at the point of failure.
+#: Measured, not guessed - see that constant's table.
+NULL_TOLERANCE = 0.002
 
 
 @pytest.mark.parametrize("true_spread", [0.005, 0.010, 0.020])
@@ -95,9 +59,8 @@ def test_a_zero_spread_market_does_not_manufacture_one() -> None:
     ar, _, _ = spread.abdi_ranaldo(highs, lows, closes)
 
     assert cs is not None and ar is not None
-    # An order of magnitude below the smallest spread the recovery test resolves.
-    assert cs < 0.0015, f"CS invented {cs} from a spreadless market"
-    assert ar < 0.0015, f"AR invented {ar} from a spreadless market"
+    assert cs < NULL_TOLERANCE, f"CS invented {cs} from a spreadless market"
+    assert ar < NULL_TOLERANCE, f"AR invented {ar} from a spreadless market"
 
 
 def test_the_per_pair_form_is_biased_and_stays_biased() -> None:

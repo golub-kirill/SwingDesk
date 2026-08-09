@@ -39,9 +39,11 @@ That must stay green. A gate that is wrong gets **fixed or removed, never skippe
 **The machinery is real and honest. The strategy is not known to work, and what is known is mostly
 negative.**
 
-- The base strategy measured **+0.028R per trade before costs** and **−0.123R under 3× cost stress**
-  (PR-005). Costs are *assumed*, not measured — so the sign of the result sits inside an
-  unvalidated number.
+- The base strategy measured **+0.028R per trade at `DR-004`'s assumed costs** and **−0.123R under
+  3× cost stress** (PR-005). Both are **net** — gross is never reported (`DR-004` consequence 1), so
+  "before costs" is the one description that is wrong. Those two points put the break-even at
+  **1.369× assumed costs**. Costs are *assumed*, not measured, and PR-007 established they cannot be
+  measured from free daily data — so the sign of the result sits inside an unvalidated number.
 - The one positive finding (PR-002: breadth separates breakout outcomes) is erased by **1.6–2.3% of
   trades missing at −2R**, and Yahoo serves no delisted history, so that exposure can never be
   confirmed on the free tier.
@@ -135,7 +137,7 @@ overdue, not because they are hard.
 |---|---|
 | Trend-definition family | PR-001 (definitions select different instruments) and PR-005 (those populations then behave the same) both refuted. `screen.trend_definition` stays `unset` |
 | Paid market data | Owner decision D10, taken with the survivorship cost known |
-| Tuning the current parameters | PR-005 measured the strategy flat before costs and negative under stress |
+| Tuning the current parameters | PR-005 measured the strategy flat at assumed costs and negative under stress — both net |
 | New entry filters | Same family, same evidence |
 | Spread estimation from free daily data | PR-007 inconclusive: both estimators negative on >50% of the sample and correlated with volatility rather than liquidity. A variant estimator is the same family |
 | Order placement, automation, multi-user | `CHARTER.md` §3 non-goals — reopening needs a charter amendment |

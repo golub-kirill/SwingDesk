@@ -8,6 +8,8 @@ the fixture rather than in a known-issues list (TEST_STRATEGY 4).
 
 from __future__ import annotations
 
+import math
+import random
 from datetime import UTC, date, datetime
 from decimal import Decimal
 
@@ -83,6 +85,52 @@ def series_for(instrument: Instrument, sessions: list[date]) -> BarSeries:
         knowledge_time=KNOWLEDGE_TIME,
         bars=make_bars(instrument, sessions),
     )
+
+
+#: Intraday steps per session in `synthetic_ohlc`. The spread estimators assume a continuously
+#: observed diffusion, so a coarse path under-samples the one-day range more than the two-day range
+#: and biases them. At 1,000 the artefact is small. Real sessions carry far more prints.
+INTRADAY_STEPS = 1000
+DAILY_VOLATILITY = 0.02
+
+
+def synthetic_ohlc(
+    days: int,
+    proportional_spread: float,
+    seed: int = 20260809,
+) -> tuple[list[float], list[float], list[float]]:
+    """Daily bars carrying a KNOWN bid-ask spread, as (highs, lows, closes).
+
+    An efficient price walks intraday; the observed high and low are the true extremes widened by
+    the half-spread; the close lands on the bid or the ask. That is the microstructure the spread
+    estimators model, and this generator is deliberately not written in terms of any of their
+    formulas - so an estimator recovering `proportional_spread` is evidence rather than circularity.
+
+    `proportional_spread=0.0` produces a market with no spread at all, which is the input every
+    estimator must return approximately zero on (`test_no_estimator_manufactures_a_spread`).
+
+    Seeded, so it supports a determinism test.
+    """
+    rng = random.Random(seed)
+    half = proportional_spread / 2
+    step_volatility = DAILY_VOLATILITY / math.sqrt(INTRADAY_STEPS)
+
+    price = 100.0
+    highs: list[float] = []
+    lows: list[float] = []
+    closes: list[float] = []
+
+    for _ in range(days):
+        high = low = price
+        for _ in range(INTRADAY_STEPS):
+            price *= math.exp(rng.gauss(0.0, step_volatility))
+            high = max(high, price)
+            low = min(low, price)
+        highs.append(high * (1 + half))
+        lows.append(low * (1 - half))
+        closes.append(price * (1 + half if rng.random() < 0.5 else 1 - half))
+
+    return highs, lows, closes
 
 
 def fixture_fetcher(sessions_by_instrument: dict[str, list[date]]):
