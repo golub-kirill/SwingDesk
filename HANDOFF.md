@@ -21,7 +21,7 @@ the documentation is implementable.
 |---|---|
 | Merge gates | **15**, one command, all green |
 | Tests | **249**, fully offline |
-| Docs | 73 files across 8 tiers |
+| Docs | 74 files across 8 tiers |
 | Components | 465 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 84 `unset`, 9 `assumed`, 2 `owner`, **1 `validated`** |
 | Studies | 4 reported — **3 refuted**, 1 accepted and quantifiably fragile |
@@ -51,7 +51,26 @@ negative.**
 Do not write anything that implies more confidence than that. `UX_COPY.md` §3 carries the standing
 warning verbatim.
 
-## 4. What just happened (2026-08-04)
+## 4. What just happened
+
+### 2026-08-09 — a rebuilt course appeared, and is deliberately not used
+
+`Swing_Trading_Course_Canada_USA_v7.0_2026-08-08` exists on disk beside the indexed course. Owner
+ruling the next day: **v7.0 is still young, work is ongoing** — `v5.0`/`v4.0` stays canonical and
+`registry/course_index.yml` is unchanged. Nothing in the tree reads v7.0.
+
+It is not a re-render. Same 1,379 topics with identical ids, but **79% have a different claim type**
+and **83% a different validation status**; `Definition` collapses 916 → 70 and `Inference`
+disappears. Body text is rewritten, so the 393 `verbatim` quotes would all need re-transcribing, and
+v7.0 carries formulas where the indexed course carries none — which makes `AGENTS.md`'s "zero
+numeric thresholds" premise a statement about v5.0/v4.0 specifically.
+
+Measured in full in `COURSE_V7_DELTA.md`, including the two findings that will matter most: PR-002's
+second amendment quotes a sentence v7.0 does not contain, and v7.0 names a **third** regime list
+(seven) against the two `UDR-004` is choosing between. **Do not adopt v7.0 piecemeal** — §4 of that
+document is the order the steps have to happen in.
+
+### 2026-08-04 — two parallel documentation efforts, reconciled
 
 Two efforts had been writing into this repo without knowing about each other. A second track built
 ten numbered documents at root to master-ТЗ v1.0 §47 — Russian, "documentation only" — having never

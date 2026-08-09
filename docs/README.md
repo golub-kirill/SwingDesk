@@ -140,6 +140,8 @@ second surface inventing synonyms later.
 | 55 | `ROADMAP.md` | Now / Next / Later, built on four reported studies rather than before them. Two concrete gaps remain to the ratified finish line | drafting |
 | 56 | `RISK_REGISTER.md` | 8 **realised** risks with what caught each, plus 18 open. Every realised one was found by a gate or a test, none by review | drafting |
 | 57 | `DEFINITION_OF_READY_DONE.md` | Entry/exit criteria for 5 kinds of work item: component, parameter, study, document, surface | drafting |
+| 58 | `SPEC_GAP_ANALYSIS.md` | Master ТЗ v1.0 §56 against the tree that exists: FULL 28 · PARTIAL 16 · ABSENT 9 · DEFERRED 3 | drafting |
+| 59 | `COURSE_V7_DELTA.md` | The 2026-08-08 course rebuild, measured and **not adopted**. Same 1,379 topics, 79% reclassified, `verbatim` quotes do not survive | owner-pending |
 
 ---
 
