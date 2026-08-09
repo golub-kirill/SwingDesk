@@ -2,10 +2,17 @@
 
 ```
 date:       2026-08-02
-status:     proposed
+status:     proposed - slippage component superseded by DR-005 on 2026-08-05
 parameters: costs.commission_model, costs.slippage_model
 components: none - swingdesk.validation.backtest.costs implements it; this sets its inputs
 ```
+
+> **The 5bps slippage figure below is no longer current.** `DR-005` measured it from daily OHLC and
+> replaced it with **25bps per side**. Everything else here stands, including the commission model,
+> the 3× stress regime, and the reasoning for charging slippage to the fill rather than deducting it
+> afterwards. This record is left otherwise unedited: it is what was decided on 2026-08-02 and why,
+> and the fact that its own "what would overturn this" section named the wrong replacement route is
+> part of what it has to say.
 
 M72-T1081 (`Комиссии`) and M72-T1082 (`Проскальзывание`) both exist as topics and neither contains a
 number. PR-002 names setting them as a precondition, and for a reason worth quoting:

@@ -167,6 +167,20 @@ class BarStore:
         ).fetchall()
         return {row[0]: row[1] for row in rows}
 
+    def latest_knowledge_time(self) -> datetime | None:
+        """The most recent instant this store learned anything, or None when it holds nothing.
+
+        The natural as-of for a measurement taken over stored data. Reading at the wall clock would
+        pin a result to an instant that is not in the data, so two runs over an unchanged store
+        would differ for no reason a reader could see; reading here makes the as-of a function of
+        the store itself, and a re-run reproducible.
+        """
+        row = self._connection.execute("SELECT MAX(knowledge_time) FROM bars").fetchone()
+        if row is None or row[0] is None:
+            return None
+        latest: datetime = row[0]
+        return latest
+
     def revision_count(self, instrument_id: str | None = None) -> int:
         """Total stored rows. A spike between runs means a vendor re-adjusted history."""
         if instrument_id is None:

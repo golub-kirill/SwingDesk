@@ -16,28 +16,39 @@ has to happen first, not the thing that has to happen last.
 | `PR-002` | Does a regime classifier improve decisions, or only partition them? | **reported — ACCEPT** | — |
 | `PR-003` | Is √252 annualisation wrong enough to matter for this return series? | not written | a daily return series |
 | `PR-004` | Do the process-score weights change any ranking? | not written | ~100 journalled trades |
-| `PR-006` | Does measured live slippage match the modelled 5bp? | not written | a forward test — id reserved by `DR-004` |
-| `PR-007` | Does the base strategy survive measured rather than assumed costs? | registered on `claude/…-1feb49`, **unmerged** | the reconciliation |
+| `PR-006` | Does measured live slippage match the modelled figure? | not written | a forward test — id reserved by `DR-004` |
+| `PR-007` | Does the base strategy have positive expectancy net of **measured** costs? | **registered** | a re-fetch — the window is 10 years, the store holds 2 |
 | `PR-008` | Is the assumed 5bp slippage an understatement of the spread this universe pays? | **reported — INCONCLUSIVE**, then corrected | — |
 
-**`PR-008` was registered as `PR-007`.** Two branches used that id for different studies without
-knowing about each other. `RECONCILIATION_PLAN.md` D-R4 awards a contested id to the earliest commit
-timestamp, so the `1feb49` study (2026-08-08) keeps it and this one (2026-08-09) moved. **A `PR-007`
-citation written before 2026-08-09 means the effective-spread study; written after, it means the
-base-strategy one.** Both files carry the note and the git history is unedited.
+**`PR-008` was registered as `PR-007`, and `PR-007` and `PR-008` are the same question asked twice.**
+Two branches wrote a study under that id without knowing about each other: `PR-007` asks whether the
+strategy survives measured costs, `PR-008` whether the assumed cost was too low. Neither knew the
+other existed. `RECONCILIATION_PLAN.md` D-R4 awards a contested id to the earliest commit timestamp,
+so the 2026-08-08 study kept `PR-007` and the 2026-08-09 one moved to `PR-008`. **A `PR-007` citation
+written before 2026-08-09 means the effective-spread study; written after, it means the base-strategy
+one.** Both files carry the note, and the git history is unedited because the registration commit is
+what proves each hypothesis predated its own run.
 
 `PR-008` was the first study of an **input** rather than a rule. Its registered decision rule
 returned **inconclusive** — both estimators produced negative estimates on more than half the
 sample, against a 25% threshold fixed before the run — and that verdict stands. **The explanation it
 first gave was wrong and is withdrawn:** a calibration-free sign test shows the real bars do carry a
 spread the estimator detects (19.1% clamped against 45.5% for spreadless synthetic at matched
-volatility). Costs on `master` remain `assumed`; `DR-005` on the unmerged branch measures them at
-25bp per side and is right about the direction. See `results/PR-008-report.md` §"Correction".
+volatility), which is what `DR-005` had already concluded. See `results/PR-008-report.md`
+§"Correction", and `POSTMORTEM-2026-08-09.md` for how two efforts reached opposite answers from
+identical arithmetic.
 
 `PR-003` and `PR-004` are named in `DR-001` and `DR-002` as the studies that would overturn them.
-`PR-005` is required by PR-001's result: the definitions are not interchangeable, so choosing one
-needs evidence about what its population does, not just that it differs. They are listed here
-unwritten so the debt is visible rather than implied.
+`PR-006` is named in `DR-004` and `PR-007` in `DR-005`, the same way. `PR-005` is required by
+PR-001's result: the definitions are not interchangeable, so choosing one needs evidence about what
+its population does, not just that it differs. They are listed here unwritten so the debt is visible
+rather than implied.
+
+**`PR-006` was reserved on 2026-08-02 and went unlisted here until 2026-08-05.** Reserving an id in
+a decision record and not recording it in the index is how the debt stops being visible, which is
+the one thing this table exists to prevent. Nothing catches it: `verify_docs.py` fails on a decision
+record whose *file* is missing from the decisions index, but an id reserved **by reference only**,
+with no file behind it, leaves nothing for a gate to find. Worth fixing if a third one appears.
 
 Results live in `results/`, one JSON of record plus a written report.
 

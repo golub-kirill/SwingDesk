@@ -86,6 +86,8 @@ is expected to be superseded when a study says so. Different lifetimes, differen
 | `DR-001` | Sharpe ratio convention | `stats.sharpe_convention` | proposed |
 | `DR-002` | Process score scale | `stats.process_score_scale`, `stats.quality_grade_scale` | proposed |
 | `DR-003` | A-tier liquidity rule | `universe.min_price`, `universe.min_adtv_20d`, `universe.min_bar_history` | proposed |
+| `DR-004` | Cost model | `costs.commission_model`, `costs.slippage_model` | proposed — slippage superseded by `DR-005` |
+| `DR-005` | Slippage measured from daily OHLC | `costs.slippage_model` | proposed |
 
 Measurements backing a decision live in `measurements/`, committed alongside the record. A threshold
 whose evidence cannot be re-read is a threshold that will be re-argued from memory.

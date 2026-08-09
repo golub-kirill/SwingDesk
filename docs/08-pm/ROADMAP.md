@@ -17,10 +17,10 @@ The finish line it serves is `CHARTER.md` §4, ratified 2026-08-01 and unchanged
 | Gates closed | G0 charter · G4 architecture · **G5 walking skeleton** |
 | Gates open | G1 requirements · G2 transcription · G3 data · G6 catalogue · G7 surfaces |
 | Merge gates running | 14, from one command |
-| Tests | 249 |
+| Tests | 260 |
 | Components implemented | 7 · 6 with golden vectors (25) · **0 `active`** — five blocked by an unset parameter, which is the fail-closed design working |
-| Parameters | 96 — 84 `unset`, 9 `assumed`, 2 `owner`, **1 `validated`** |
-| Studies | 4 registered, 4 reported — **3 refuted, 1 accepted and quantifiably fragile** |
+| Parameters | 96 — 83 `unset`, 9 `assumed`, 3 `owner`, **1 `validated`** |
+| Studies | 5 registered, 4 reported — **2 refuted, 1 accepted and quantifiably fragile** |
 
 **The one-line summary:** the machinery is real and honest; almost nothing about the strategy is
 known, and what is known is mostly negative.
@@ -109,10 +109,11 @@ Recording these stops them being re-proposed.
 The v1 finish line is a machinery target and needs no profitable strategy — that was the point of
 ratifying it that way. Everything in §2, §3 and §4 lands it.
 
-Track B is different. Five studies produced one fragile positive, on a base strategy measured as
-flat at assumed costs and negative after stress — both figures net, because gross is never reported
-(`DR-004` consequence 1). PR-008 then found that those assumed costs cannot be measured from free
-daily data at all. Nothing in this roadmap fixes that, because a roadmap cannot. `SUCCESS_AND_KILL_CRITERIA.md` `k.programme_exhausted` exists for the case where the
+Track B is different. Four reported studies produced one fragile positive, on a base strategy
+measured as flat at 1x costs and negative under stress — both figures net, because gross is never
+reported (`DR-004` consequence 1). `DR-005` then measured slippage at 25bp per side against the
+assumed 5, which makes the negative column the operative one. Nothing in this roadmap fixes that,
+because a roadmap cannot. `SUCCESS_AND_KILL_CRITERIA.md` `k.programme_exhausted` exists for the case where the
 validation programme runs out of hypotheses without one surviving, and that outcome is live.
 
 Stating it here means the project can reach v1, report honestly that it has no validated edge, and

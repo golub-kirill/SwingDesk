@@ -47,7 +47,7 @@ aesthetic.
 
 | ID | Risk | Rating | Control |
 |---|---|---|---|
-| E-1 | **The strategy has no edge.** PR-005 measured the base trigger at +0.028R ungated and −0.123R under cost stress; three of four studies refuted their hypothesis | **high / this is the project's central risk** | None available — this is what the validation programme is *for*. `k.programme_exhausted` is the named kill criterion, and reaching it is a legitimate outcome |
+| E-1 | **The strategy has no edge.** PR-005 measured the base trigger at +0.028R ungated and −0.123R under cost stress; two of four reported studies refuted their hypothesis | **high / this is the project's central risk** | None available — this is what the validation programme is *for*. `k.programme_exhausted` is the named kill criterion, and reaching it is a legitimate outcome |
 | E-2 | **Parameter invention** — a guessed number acquiring the authority of a measurement | **was high, now controlled** | Every parameter carries provenance; `unset` yields a coded refusal, never a default; `assumed` requires a citation; only pre-registered evidence reaches `validated`; a cited `DR-NNN` must resolve to a real file |
 | E-3 | **Cross-study data snooping** — testing variants of a refuted idea until one passes | **medium** | `PREREG_TEMPLATE` §0 requires a refutation-*family* check, not an exact-lever check. Weak: it depends on the author searching honestly |
 | E-4 | **Clustered trades inflate significance.** Dozens of instruments fire on the same session; a trade-level permutation understates the null | **realised in PR-002** | Date-block permutation added post-hoc, and it discriminates — one variant passed the weak null and failed the strong one. **Not yet part of any registered decision rule** |
@@ -58,7 +58,7 @@ aesthetic.
 
 | ID | Risk | Rating | Control |
 |---|---|---|---|
-| B-1 | **Solo project, no second reviewer.** Every finding above was caught by a machine because there is nobody else to catch it | **certain / structural** | 9 merge gates from one command; gates that are themselves tested for the ability to fail |
+| B-1 | **Solo project, no second reviewer.** Every finding above was caught by a machine because there is nobody else to catch it | **certain / structural** | 20 merge gates from one command. **Gates 13 and 15 are tested for the ability to fail** (`tests/test_gates.py`, 10 cases against fixture trees); the other seventeen are not, and this row said otherwise until 2026-08-05 |
 | B-2 | **Component activation drifts from its definition.** `breadth` and `regime` were used by a reported study with no golden vectors — `specified`, not `active`, while `regime.classifier_rule` was already `validated` | **realised, closed 2026-08-02** | Vectors added for both, then gate 11 made activation mechanical: `registry/components.yml` is the authority and a test pins the declared components to it in both directions. Counting does not scale to 465 rows; the gate does. It found a second instance immediately — two components sharing one function |
 | B-3 | **Documentation drifts from code.** 25 documents, several already found stale | **medium** | Gates 2, 3 and 3b cover transcription, the course index and the FRD. Nothing covers authored prose |
 | B-4 | **Scope creep into the course's 1379 topics.** ~460 are computable and 7 are built | **medium** | The v1 finish line requires *no* particular component to exist. Catalogue growth is G6, deliberately after the machinery |

@@ -7,8 +7,8 @@ conflict with `master`; **they conflict with each other.** Two independent `DR-0
 independent `PR-007` studies, three incompatible `criteria.yml` v1.1.0 amendments, and four
 specification documents written twice.
 
-**Nothing is merged yet, deliberately.** `master` has one of the three branches in it and the other
-two are untouched. This document is the plan; executing it is a separate, approved step.
+**Approved 2026-08-09. Steps 1 and 2 are done; 3 to 8 are not.** `master` now carries two of the
+three branches. `claude/…-321418` is untouched and unreviewed.
 
 Owner decisions taken 2026-08-09 are recorded in §3 and are the basis of every call below.
 
@@ -116,8 +116,13 @@ committed.
    preceded the run. **`321418`'s `DR-005` → `DR-007` is done too** (commit `515708c`): 46 references across 16
    files, including fifteen `assumed:DR-005` provenance strings in `registry/parameters.yml`. All 20
    gates on that branch stay green. **Step 1 complete.**
-2. **Merge `1feb49`.** Smaller, already reviewed here, and it carries the cost decision. Expect
-   conflicts in the eleven §2.5 documents and in `check_gates.py`/`verify_docs.py`.
+2. ~~**Merge `1feb49`.**~~ **DONE 2026-08-09.** Seven conflicts, all resolved by §3 rather than by
+   merge order: `AGENTS.md`, `HANDOFF.md`, `CI_POLICY.md`, `ROADMAP.md`, `SPEC_GAP_ANALYSIS.md`,
+   `docs/README.md`, `docs/prereg/README.md`. `check_gates.py` and `verify_docs.py` auto-merged
+   correctly — both sides' gates survived, 20 in total. Its four new gates then caught 30 stale
+   figures across nine documents, including counts this session had itself introduced. D-R3 was
+   applied against the branch: its "Track A time box removed" row was dropped, because the owner
+   chose `321418`'s version that sets one.
 3. **Reconcile the duplicated specs** (D-R2) — `RULE_SPEC.md` and `SYSTEM_MODES.md` first, since
    both branches touch them.
 4. **Merge `321418`.** Larger and unreviewed; its 26 commits need reading, not just resolving.

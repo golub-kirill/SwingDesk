@@ -12,9 +12,31 @@
 #
 # See docs/00-charter/SUCCESS_AND_KILL_CRITERIA.md.
 
-version: 1.0.0
-date: 2026-08-02
-status: ratified          # owner ratified 2026-08-02; frozen - see rules below
+version: 1.1.0
+date: 2026-08-08
+status: ratified          # owner ratified 2026-08-02; amended 2026-08-08 - see amendments below
+
+# Amendments. Appended, never edits in place. v1.0.0 stays on record.
+amendments:
+  - version: 1.1.0
+    date: 2026-08-08
+    decided_by: owner
+    changes:
+      - >-
+        k.timebox_review actioned by REMOVING the Track A time box requirement rather than setting
+        a value. Track A already contains its own clock - a.run_completes requires 20 consecutive
+        trading days - and SUCCESS_AND_KILL_CRITERIA 5 already argued that boxing Track A
+        conflates "can this be built" with "is it stable", so a schedule miss on the first would
+        trip a criterion meant for the second. G5 closed 2026-08-02 inside a 2-month box, which is
+        the measured throughput the criterion asked for, and it says the clock was never the
+        binding constraint. What this REMOVES is an explicit calendar guard on Track A. What
+        remains against scope drift is the activation gate, where components sit at registered
+        indefinitely at no cost and reach active only deliberately.
+      - >-
+        b.min_sample clarified. Track B evaluates on JOURNALLED trades only; a backtest is
+        evidence about a hypothesis, never about a strategy card. This was implicit in the
+        measured_by field and is now explicit, because on the literal reading no backtest could
+        ever satisfy it, and PR-007 could have run, rejected, and formally changed nothing.
 
 # ---------------------------------------------------------------------------
 # Track A - is the system sound?
@@ -78,11 +100,14 @@ track_b:
   - id: b.min_sample
     criterion: Minimum closed trades before any verdict on a strategy card
     value: 100
-    measured_by: journal, per strategy and version
+    measured_by: journal, per strategy and version - JOURNALLED trades only, never backtest
     status: ratified
     note: >-
       The course's own figure (Appendix S, "План первых 100 реальных сделок"). Below roughly this
       the expectancy CI is too wide to act on, because the right tail dominates the mean.
+      Owner decision 2026-08-08: a backtest is evidence about a hypothesis, never about a card.
+      Consequence, stated plainly: no backtest can advance or reject a strategy card, so
+      k.strategy_rejected cannot fire until real trades exist.
 
   - id: b.expectancy
     criterion: Expectancy positive, net of all costs, bootstrap CI excluding zero
@@ -145,13 +170,16 @@ kill:
     trigger: G5 reached, or the G5 time box expires
     value: at G5
     action: >-
-      Set the Track A time box using measured throughput from the G5 build, and issue this file as
-      v1.1.0 with that value added.
-    status: owner-set
+      ACTIONED 2026-08-08 as v1.1.0. The Track A time box is not set and is not required - see
+      amendments. Track A keeps its own 20-trading-day clock in a.run_completes.
+    status: met
     date: 2026-08-01
+    actioned: 2026-08-08
     note: >-
-      The Track A time box is deferred on purpose - it will be an evidence-based number. Adding it
-      is an amendment, not an edit: v1.0.0 stays on record.
+      Originally deferred so the box would be an evidence-based number. The evidence arrived and
+      argued against having one: G5 closed 2026-08-02 inside a 2-month box, and Track A's own
+      clock already measures stability. Recorded rather than quietly dropped - this criterion
+      fired on 2026-08-02 and went six days unactioned, which is itself the thing it guards.
 
   - id: k.strategy_rejected
     scope: strategy card

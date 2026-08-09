@@ -19,7 +19,7 @@ and **zero numeric thresholds**. Every threshold here is authored and carries it
 ### If you were told this is a documentation-only project, read this first
 
 **`docs/` is canonical** (owner decision, 2026-08-04). So is `src/`, `tests/`, `registry/` and
-`tools/` — 16 merge gates run from `python tools/check_gates.py` and they are what keep the
+`tools/` — 20 merge gates run from `python tools/check_gates.py` and they are what keep the
 documents honest.
 
 A second effort briefly built a parallel tree at the repo root: ten numbered documents
@@ -34,9 +34,9 @@ applied the way its own §56 asks — as a gap analysis against what exists — 
 `docs/08-pm/SPEC_GAP_ANALYSIS.md`. Do not rebuild the numbered tree; §8 of that same specification
 forbids maintaining one logic in two places, and for a while this repo was doing exactly that.
 
-**Before writing any new specification, check whether `docs/` already holds it.** Five studies are
-reported: three refuted, one inconclusive, one accepted and fragile — re-deriving them is not
-neutral, it risks contradicting evidence that already exists.
+**Before writing any new specification, check whether `docs/` already holds it.** Four studies are
+reported — two refuted, one inconclusive, one accepted and fragile — and a fifth is registered.
+Re-deriving them is not neutral; it risks contradicting evidence that already exists.
 
 ## 1. Trust discipline — the rule that matters most
 
