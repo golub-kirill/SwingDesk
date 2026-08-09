@@ -56,7 +56,7 @@ keeping wholesale.
 | 20 | Constraint Model | PARTIAL | `CODES.md` (12 skip + 12 error codes), `FAIL_CLOSED_POLICY.md`; no constraint object with `priority` / `override_policy` |
 | 21 | Outcome Definition | PARTIAL | `contracts/trade.py`, `BACKTEST_PROTOCOL.md`; the intrabar ambiguity policy is now stated (`EXECUTION_MODEL.md` §4) and **`Trade` carries no ambiguity flag to record it** |
 | 22 | Метрики стратегии | PARTIAL | `STATISTICS_SPEC.md`; no capacity estimate, no exposure/turnover |
-| 23 | Expectation Model | **ABSENT** | the studies carry baselines; no Expectation object, no estimate/definition split |
+| 23 | Expectation Model | PARTIAL | `EXPECTATION_MODEL.md` (2026-08-08) — the estimate/definition split, the cohort key, the status ladder. **No estimate is addressable yet**: aggregate results live in study JSON and no runtime object could cite one |
 | 24 | Evidence Framework | FULL | `EVIDENCE_RECORD_SPEC.md`, `contracts/evidence.py`, three reported studies |
 | 25 | Research Governance | FULL | `PREREG_TEMPLATE.md` + **three executed pre-registrations**, plus one post-hoc bound labelled as such |
 | 26 | Validation Protocol | FULL | `VALIDATION_PROGRAM.md`, `WALKFORWARD_SPEC.md` |
@@ -64,7 +64,7 @@ keeping wholesale.
 | 28 | Execution Model | PARTIAL | `EXECUTION_MODEL.md` (2026-08-08) — fills, gaps, the intrabar policy and the costs. **No target exists, so the policy is stated ahead of its first use**; the live path sizes from a different price than the backtest fills at |
 | 29 | Order Management SM | DEFERRED | D1 — the system never places orders |
 | 30 | Risk Engine | PARTIAL | `RISK_SPEC.md`, `trade_management/sizing.py`; **no portfolio layer** — correlation, sector and open-risk caps all `unset` |
-| 31 | Capital Allocation / Ranking | **ABSENT** | no deterministic ranking when candidates exceed capital |
+| 31 | Capital Allocation / Ranking | PARTIAL | `ALLOCATION_SPEC.md` (2026-08-08) — admissibility vs preference, the allocation record, the id-order trap. **All six portfolio constraints are `unset`**, so allocation refuses rather than runs |
 | 32 | AI Decision Agent | DEFERRED | `CHARTER.md` §3 non-goal for v1 |
 | 33 | LLM / Model Governance | DEFERRED | follows §32 |
 | 34 | Decision Record | FULL | `JOURNAL_SCHEMA.md`, `AUDIT_AND_IMMUTABILITY.md`, `journal_evidence/journal.py` |
@@ -96,13 +96,13 @@ keeping wholesale.
 | Coverage | Count |
 |---|---|
 | FULL | **28** |
-| PARTIAL | 20 |
-| ABSENT | **5** |
+| PARTIAL | 22 |
+| ABSENT | **3** |
 | DEFERRED | 3 |
 
 **Half the specification is already met.** That is the finding the parallel analysis could not
-reach, and it changes the plan: the work is filling five holes and closing twenty shortfalls, not
-building 48 documents.
+reach, and it changes the plan: the work is filling three holes and closing twenty-two shortfalls,
+not building 48 documents.
 
 **Movement since the first pass (2026-08-04 → 2026-08-08).** §15, §28, §35 and §16 — the top four of
 the nine — moved from ABSENT to PARTIAL when `RULE_SPEC.md`, `EXECUTION_MODEL.md`,
@@ -111,21 +111,25 @@ each specifies a form that no object in the tree yet carries, and grading the do
 the discharge is how a coverage matrix starts lying. Each names its own remaining shortfall in the
 row above.
 
-## 4. The five absent sections, ranked
+## 4. The three absent sections, and why they are not simply next
 
-Ranked by what unblocks the most, not by ТЗ order.
+What is left is not the top of a queue. These three are **blocked on something other than writing
+time**, which is why they outlasted the six that went first.
 
-1. **§23 Expectation Model** — the studies have baselines; the object that would make them
-   comparable does not exist.
-2. **§31 Capital Allocation** — needed the moment candidates exceed capital. With 1,133 universe
-   members that day is close.
-3. **§5 Coverage Matrix** — the ТЗ forbids claiming coverage without formal basis. This table is its
-   nearest ancestor and covers one axis of five.
-4. **§45 Drift Monitoring** and **§44 Learning Engine** — both need a live record first, and
-   `UX_TASK_FLOWS.md` §3 measures the post-trade phase at 0 of 6.
-5. **§46 Knowledge Graph** — a projection of registries that already exist. Lowest urgency.
+1. **§5 Coverage Matrix** — the ТЗ forbids claiming coverage without formal basis. This table is its
+   nearest ancestor and covers one axis of five. The honest version is **generated, not authored**:
+   a hand-maintained coverage matrix is the most rot-prone document a project can own, and this tree
+   has already had five documents quoting a study count that was wrong. It wants a tool and a gate,
+   which is why it is named here rather than written.
+2. **§45 Drift Monitoring** and **§44 Learning Engine** — blocked on `EXPECTATION_MODEL.md` having a
+   stored estimate to measure against, and then on a live record. Drift **is** the difference between
+   two expectations for one cohort at two as-of dates; with zero stored expectations there is nothing
+   to difference. `UX_TASK_FLOWS.md` §3 measures the post-trade phase at 0 of 6 — the same gap from
+   the operator's side.
+3. **§46 Knowledge Graph** — a projection of registries that already exist. Lowest urgency, and the
+   one section where specifying before projecting would be pure ceremony.
 
-### What the three written documents found
+### What the written documents found
 
 Each was written by auditing the tree rather than by transcribing the seed, and each returned a
 defect that no gate could see:
@@ -135,6 +139,8 @@ defect that no gate could see:
 | `RULE_SPEC.md` | the backtest trigger collapsed "no lookback window" into "did not trigger" and counted neither — the first `lookback` bars of every instrument left the signal denominator silently. **Fixed 2026-08-08** |
 | `EXECUTION_MODEL.md` | `Skipped` declared five reasons and incremented three; `POSITION_OPEN` removed signals from the denominator without recording how many. **Fixed 2026-08-08.** Still open: the live path sizes from the last close while the backtest fills at the next open plus slippage |
 | `SYSTEM_MODES.md` | `RunManifest` has no `mode` field, so a journalled run cannot say whether it was real |
+| `EXPECTATION_MODEL.md` | this tree carries provenance for the numbers a human chose and none for the numbers it measured. `REQ-OUTPUT-001` requires an "estimate version, cohort key, or model reference" and all three name parts of an object that does not exist |
+| `ALLOCATION_SPEC.md` | the course's only two statements about how to order candidates are **both labelled `Untested Hypothesis` by the course itself**, so adopting either is a pre-registration rather than a transcription |
 | `TRANSITION_SPEC.md` | nothing records `from_state`, so a status that changed is indistinguishable from one that was always there. Appendix G requires `Candidate.status history` and there is no watchlist store to hold it; the owner's approval of a proposal — the only transition with a human actor — is written nowhere |
 
 ## 5. The two shortfalls that are defects rather than gaps

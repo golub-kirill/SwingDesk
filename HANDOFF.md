@@ -21,7 +21,7 @@ the documentation is implementable.
 |---|---|
 | Merge gates | **17**, one command, all green |
 | Tests | **253**, fully offline |
-| Docs | 77 files across 8 tiers |
+| Docs | 79 files across 8 tiers |
 | Components | 465 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 69 `unset`, 24 `assumed`, 2 `owner`, **1 `validated`** |
 | Studies | 3 reported — **2 refuted**, 1 accepted and quantifiably fragile; plus one post-hoc bound |
@@ -141,9 +141,10 @@ overdue, not because they are hard.
    a corpus of evaluated criteria, because nothing evaluates these yet.
 9. **Finish universe coverage** — ~5 more `tools/refresh_universe.py` passes to 100%, then re-check
    DR-003's liquidity plateau against the full population.
-10. **Fill the ranked gaps** in `SPEC_GAP_ANALYSIS.md` §4. The top four are written (§4a above);
-    five remain, and the Expectation Model (§23) is now first — the studies carry baselines and
-    nothing makes them comparable.
+10. **Fill the ranked gaps** in `SPEC_GAP_ANALYSIS.md` §4. **Six of the nine are written.** The three
+    left are blocked on something other than writing time: §5 Coverage Matrix wants to be generated
+    rather than authored, §44/§45 need a stored expectation to difference against, and §46 is a
+    projection of registries that already exist. §4 says so in each case.
 
 Three cheap items fell out of §4a and are worth doing before they get expensive:
 

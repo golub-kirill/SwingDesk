@@ -1,6 +1,6 @@
 # Document set
 
-61 documents in 8 tiers. Each row states what the document **freezes** and where its content comes
+63 documents in 8 tiers. Each row states what the document **freezes** and where its content comes
 from. `verbatim` means the content is transcribed from the course without rewriting, and is checked
 by `tools/verify_transcription.py` against freshly extracted PDF text.
 
@@ -48,6 +48,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 21 | `SCREENER_SPEC.md` | 16 filters, 8 candidate-card fields, 9-step pipeline, 6 watchlist partitions | `verbatim` M32, M33 + `registry/` | drafting |
 | 22 | `REGIME_SPEC.md` | 11 regimes, classifier inputs, regime→strategy→risk matrix | `verbatim` M30/M31/Appendix L; **classifier authored** | planned |
 | 23 | `EVENT_SPEC.md` | 20 event types with per-type field schemas | `verbatim` M34 decision tables | planned |
+| 22a | `ALLOCATION_SPEC.md` | Ranking when candidates exceed capacity: admissibility vs preference, what binds first (open risk, not cash), the allocation record, and the alphabetical-bias trap in truncating an id-sorted list | ТЗ §31; the course's two ordering topics are **both `Untested Hypothesis`** | drafting |
 | 23a | `TRANSITION_SPEC.md` | The discrete-change object (ТЗ §16, renamed to end the collision with 23): one envelope, the three-part test, observed vs inferred, who may emit. **6 kinds of transition are not recorded at all**, two irrecoverably | ТЗ §16; audited against the journal and stores | drafting |
 | 24 | `CHART_SPEC.md` | Every chart to render: panels, overlays, levels, units | `verbatim` chart metadata (867 chart topics) | planned |
 
@@ -78,6 +79,7 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 35 | `PREREG_TEMPLATE.md` | 11-section pre-registration; amendment-after-data downgrades to exploratory; `inconclusive` is first-class | Required by Appendix J/K + the data-snooping prohibition; statistics authored | drafting |
 | 36 | `BACKTEST_PROTOCOL.md` | 9 stages and their mandatory records; the 4 prohibitions; **survivorship stated as unmeetable on free data** | `verbatim` Appendix J + M72 | drafting |
 | 36a | `EXECUTION_MODEL.md` | Fill timing, slippage on the fill, gap handling, the **intrabar stop-before-target policy** stated before a target exists, and the two silent exclusions from the signal ledger | ТЗ §28 + `DR-004`; measured against the engine | drafting |
+| 36b | `EXPECTATION_MODEL.md` | The estimate/definition split, the cohort key (the course's own mandatory GROUP BY), three sample floors and what each governs, the usability ladder. **An expectation may never size, gate or override** | ТЗ §23; audited against the studies | drafting |
 | 37 | `WALKFORWARD_SPEC.md` | 12-field window record with a **three-way** train/validation/test split; `keep/revise/retire`; the 6 perturbations | `verbatim` Appendix K + M73 | drafting |
 | 38 | `GO_LIVE_GATES.md` | Staged plans, the 5-condition size gate, drawdown as an actuator; calendar time authorises nothing | `verbatim` Appendices Q, R, S + M75 | drafting |
 
