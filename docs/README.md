@@ -109,7 +109,7 @@ checkable gate in the course.
 | 45 | `OBSERVABILITY_SPEC.md` + `runbooks/` | Structured-log schema, daily health report, trend signals; 5 runbooks with verbatim return conditions | drafting |
 | 46 | `SECURITY.md` + `BACKUP_AND_DR.md` | Threat model, secret rules, Telegram as a control surface; what cannot be re-fetched, restore verified by output hash | drafting |
 | 47 | `CI_POLICY.md` | 16 gates (**15 running**), what each prevents and what each has caught, what CI must never do, local equivalence | drafting |
-| 48 | `AGENTS.md` (repo root) | Trust discipline, 7 non-negotiables, how to add a verbatim doc or a parameter | drafting — per-package `CONTEXT.md` still planned |
+| 48 | `AGENTS.md` (repo root) | Trust discipline, 7 non-negotiables, how to add a verbatim doc or a parameter, and how to navigate the code graph | drafting — per-package `CONTEXT.md` still planned |
 
 ## Tier 7 — UI/UX · `07-ux/`
 

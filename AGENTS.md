@@ -34,9 +34,9 @@ applied the way its own §56 asks — as a gap analysis against what exists — 
 `docs/08-pm/SPEC_GAP_ANALYSIS.md`. Do not rebuild the numbered tree; §8 of that same specification
 forbids maintaining one logic in two places, and for a while this repo was doing exactly that.
 
-**Before writing any new specification, check whether `docs/` already holds it.** Four studies are
-reported and three of their hypotheses are refuted — re-deriving them is not neutral, it risks
-contradicting evidence that already exists.
+**Before writing any new specification, check whether `docs/` already holds it.** Five studies are
+reported: three refuted, one inconclusive, one accepted and fragile — re-deriving them is not
+neutral, it risks contradicting evidence that already exists.
 
 ## 1. Trust discipline — the rule that matters most
 
@@ -46,7 +46,8 @@ checking.** Verify before asserting.
 - A `verbatim` block is only trustworthy because a script re-extracts the PDF and diffs it. When
   you change one, **run the checker** — it has already caught two real transcription errors and two
   undeclared sources.
-- A docstring saying something is wired is not evidence that it is. Grep.
+- A docstring saying something is wired is not evidence that it is. Check the graph (§9), then open
+  the file. The graph tells you where to look; the file is what is true.
 - Silence is usually a feature deciding not to act. Before "restoring" anything, establish that it
   ever worked: check git history, then the data, then the logs — in that order.
 
@@ -134,3 +135,45 @@ fact, not an oversight. Then it needs a pre-registration, not a guess.
 Four things are authored and load-bearing, so treat proposals near them with care: the regime
 classifier, the definitions of trend / breakout / pullback / contraction, the Sharpe convention, and
 the per-strategy exit mapping. The course names all of them and quantifies none.
+
+## 9. Finding things in the code
+
+The repository is indexed into a code knowledge graph, exposed through the `codebase-memory` MCP
+tools. Use it **first** for structural questions; it answers in hundreds of tokens what a grep sweep
+answers in tens of thousands, and it knows about call edges that no text search can see.
+
+```
+list_projects                    is this tree indexed? the project is `swingdesk`
+index_repository(repo_path=...)  if it is not, or after a merge changes src/
+search_graph(query="...")        find a function, class or test by meaning or pattern
+trace_path(function_name=...)    callers and callees, to a given depth
+get_code_snippet(qualified_name) exact source for one symbol
+get_architecture(aspects=[...])  packages, layers, entry points, clusters
+detect_changes()                 map an uncommitted diff onto affected symbols
+```
+
+**What it is good for, and what it is not.**
+
+| Use the graph | Use Grep / Glob / Read |
+|---|---|
+| who calls this, what does this call | anything in `docs/`, `registry/`, YAML, Markdown |
+| where is the function that does X | verbatim blocks, prose, provenance notes |
+| dead code, fan-in, fan-out | the actual contents of a file you are about to edit |
+| impact of a change before making it | anything you are going to assert as fact |
+
+**§1 still applies to the graph itself.** It is an index built at a point in time, not a source of
+truth: it can be stale, and it does not know that `criteria.yml` is frozen or that a parameter is
+`unset`. Treat a graph result as a pointer to a file, and read the file before asserting anything
+about it. A null result is only evidence once a positive control shows the query works.
+
+**Three local rules.**
+
+1. **Never pass `persistence: true`.** It writes `.codebase-memory/graph.db.zst` into the working
+   tree, and that path is not in `.gitignore` — it would dirty a clean repository. Add the ignore
+   line first if the index is ever to be shared.
+2. **Do not create an ADR through `manage_adr`.** The indexer offers it; this project already has
+   `docs/adr/` and `docs/decisions/`, both append-only and canonical. A second decision store is
+   exactly the one-logic-in-two-places failure that master ТЗ §8 forbids and that cost this
+   repository a day on 2026-08-04.
+3. **Re-index after a merge that touches `src/` or `tools/`.** ~13.5k lines index in seconds. An
+   index that silently describes the previous branch is worse than no index.
