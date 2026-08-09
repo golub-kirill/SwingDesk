@@ -20,7 +20,7 @@ the documentation is implementable.
 | | |
 |---|---|
 | Merge gates | **15**, one command, all green |
-| Tests | **249**, fully offline |
+| Tests | **275**, fully offline |
 | Docs | 76 files across 8 tiers |
 | Components | 465 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 84 `unset`, 9 `assumed`, 2 `owner`, **1 `validated`** |
