@@ -16,6 +16,14 @@ has to happen first, not the thing that has to happen last.
 | `PR-002` | Does a regime classifier improve decisions, or only partition them? | **reported — ACCEPT** | — |
 | `PR-003` | Is √252 annualisation wrong enough to matter for this return series? | not written | a daily return series |
 | `PR-004` | Do the process-score weights change any ranking? | not written | ~100 journalled trades |
+| `PR-006` | Is a −15R drawdown limit distinguishable from ordinary sequence luck? | **registered** | a trade log — none exists |
+
+**`PR-006` is blocked on something the project did not know it lacked.** No reported study here
+persisted a trade log, and `BACKTEST_PROTOCOL.md` §3 lists one as the third of the five artefacts the
+course requires for a strategy claim. The results are honest; their supporting detail is not
+reconstructible. So PR-006's step 1 is to reproduce PR-005 under its recorded constants and persist
+the log — and if the reproduction does not match the reported aggregates, that mismatch is the
+result, reported as `inconclusive` rather than buried.
 
 `PR-003` and `PR-004` are named in `DR-001` and `DR-002` as the studies that would overturn them.
 `PR-005` is required by PR-001's result: the definitions are not interchangeable, so choosing one

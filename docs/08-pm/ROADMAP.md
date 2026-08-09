@@ -20,7 +20,7 @@ The finish line it serves is `CHARTER.md` §4, ratified 2026-08-01 and unchanged
 | Tests | 253 |
 | Components implemented | 7 · 6 with golden vectors (25) · **0 `active`** — five blocked by an unset parameter, which is the fail-closed design working |
 | Parameters | 96 — 63 `unset`, 30 `assumed`, 2 `owner`, **1 `validated`** |
-| Studies | 3 pre-registered, 3 reported — **2 refuted, 1 accepted and quantifiably fragile**; plus one post-hoc bound carrying no verdict |
+| Studies | 4 pre-registered, 3 reported — **2 refuted, 1 accepted and quantifiably fragile**; plus one post-hoc bound carrying no verdict. `PR-006` registered and blocked on a trade log |
 
 **The one-line summary:** the machinery is real and honest; almost nothing about the strategy is
 known, and what is known is mostly negative.
