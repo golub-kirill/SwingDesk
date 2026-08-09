@@ -114,7 +114,9 @@ parameters:
 
   - id: risk.max_position_value
     unit: currency
-    value: "25% of account.equity - 2500 at the current value"
+    value: 2500
+    note: >-
+      25% of account.equity, computed at the current value of 10000. Stored as currency because sizing reads it as one; it must be recomputed if equity changes, which is why DR-006 section 7 wants a percentage-based parameter instead.
     status: assumed
     provenance: "assumed:DR-006"
     named_in: [Appendix C, M49-T762]
@@ -130,7 +132,7 @@ parameters:
 
   - id: risk.max_open_risk
     unit: R
-    value: "6R (multiples of per-trade risk)"
+    value: 6
     status: assumed
     provenance: "assumed:DR-006"
     named_in: [M51-T780, M93-T1326]
@@ -138,7 +140,7 @@ parameters:
 
   - id: risk.max_sector_risk
     unit: R
-    value: "2R (multiples of per-trade risk)"
+    value: 2
     status: assumed
     provenance: "assumed:DR-006"
     named_in: [M51-T782, M93-T1327]
@@ -146,7 +148,9 @@ parameters:
 
   - id: risk.correlation_threshold
     unit: correlation coefficient
-    value: "0.70 over 60 sessions of daily returns"
+    value: 0.70
+    note: >-
+      Threshold on the correlation of daily returns over a 60-session lookback. The lookback is authored with the threshold and needs a registry entry of its own - see DR-006 section 7.
     status: assumed
     provenance: "assumed:DR-006"
     named_in: [M49-T761, M51-T781]

@@ -64,7 +64,7 @@ keeping wholesale.
 | 28 | Execution Model | PARTIAL | `EXECUTION_MODEL.md` (2026-08-08) — fills, gaps, the intrabar policy and the costs. **No target exists, so the policy is stated ahead of its first use**; the live path sizes from a different price than the backtest fills at |
 | 29 | Order Management SM | DEFERRED | D1 — the system never places orders |
 | 30 | Risk Engine | PARTIAL | `RISK_SPEC.md`, `trade_management/sizing.py`; **no portfolio layer** — correlation, sector and open-risk caps all `unset` |
-| 31 | Capital Allocation / Ranking | PARTIAL | `ALLOCATION_SPEC.md` (2026-08-08) — admissibility vs preference, the allocation record, the id-order trap. **All six portfolio constraints are `unset`**, so allocation refuses rather than runs |
+| 31 | Capital Allocation / Ranking | PARTIAL | `ALLOCATION_SPEC.md` (2026-08-08) — admissibility vs preference, the allocation record, the id-order trap. `DR-006` proposes the six portfolio constraints; **two of them cannot be evaluated** (no sector source, no correlation matrix) and `rs.ranking_method` is `unset`, so nothing ranks yet |
 | 32 | AI Decision Agent | DEFERRED | `CHARTER.md` §3 non-goal for v1 |
 | 33 | LLM / Model Governance | DEFERRED | follows §32 |
 | 34 | Decision Record | FULL | `JOURNAL_SCHEMA.md`, `AUDIT_AND_IMMUTABILITY.md`, `journal_evidence/journal.py` |

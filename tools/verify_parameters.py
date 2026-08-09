@@ -18,6 +18,13 @@ Checks:
   5. A provenance citing a decision record (`assumed:DR-NNN`) resolves to a file in docs/decisions/.
      A citation nobody can follow is not a citation, and a DR id is the easiest thing in this
      registry to mistype or to leave pointing at a document that was never written.
+  6. A parameter that CODE READS AS A NUMBER holds a number. Prose values are legitimate and
+     deliberate here - `regime.classifier_rule` and `costs.commission_model` describe rules rather
+     than quantities - so the rule is not "values are numeric". It is that the ones `decimal_value`
+     is called on must parse, because there the failure is an uncaught InvalidOperation in the
+     decision path rather than a coded refusal. Found the hard way: DR-006 set
+     `risk.max_position_value` to "25% of account.equity - 2500 at the current value", which reads
+     correctly and would have raised inside `size_long` the moment `risk.per_trade_pct` was set.
 
 Usage:
     python tools/verify_parameters.py [--registry PATH]
@@ -28,6 +35,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -38,10 +46,24 @@ VALID_STATUS = ("unset", "assumed", "owner", "validated")
 ID_PATTERN = re.compile(r"^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$")
 DECISION_REF = re.compile(r"\b(DR-\d{3})\b")
 DECISIONS_DIR = REPO / "docs" / "decisions"
+SRC = REPO / "src"
+
+#: Parameter ids passed to `ParameterRegistry.decimal_value`, scraped from the source rather than
+#: listed here - a hand-kept list would drift the first time a call site moved.
+NUMERIC_CALL = re.compile(r'decimal_value\(\s*"([a-z][a-z0-9_.]*)"')
 
 
 def decision_record_exists(reference: str) -> bool:
     return any(DECISIONS_DIR.glob(f"{reference}-*.md"))
+
+
+def numerically_read_ids() -> set[str]:
+    """Every parameter id the code asks for as a Decimal."""
+    return {
+        match
+        for path in SRC.rglob("*.py")
+        for match in NUMERIC_CALL.findall(path.read_text(encoding="utf-8"))
+    }
 
 
 def load_entries(path: Path) -> list[dict]:
@@ -115,6 +137,21 @@ def check(entries: list[dict]) -> list[str]:
 
         if not entry["named_in"]:
             failures.append(f"{label}: named_in is empty - cite the course topic or mark as authored")
+
+    # 6. Values that code reads as numbers must be numbers.
+    numeric = numerically_read_ids()
+    for entry in entries:
+        value = entry.get("value")
+        if entry.get("id") not in numeric or value is None:
+            continue
+        try:
+            Decimal(str(value))
+        except InvalidOperation:
+            failures.append(
+                f"{entry['id']}: read by decimal_value() and its value {str(value)[:40]!r} is not a "
+                f"number. Put the unit in `unit:` - a prose value here raises inside the decision "
+                f"path instead of returning a coded refusal."
+            )
 
     return failures
 

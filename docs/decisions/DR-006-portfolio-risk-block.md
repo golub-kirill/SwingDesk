@@ -9,9 +9,10 @@ parameters: risk.max_open_risk, risk.max_concurrent_positions, risk.max_sector_r
 components: none - swingdesk.trade_management.sizing and the allocation path read these
 ```
 
-`ALLOCATION_SPEC.md` §2 names six constraints and reports all six `unset`, which means the system
-cannot tell you that you have too many candidates because it does not know what "too many" is. This
-record proposes the six.
+`ALLOCATION_SPEC.md` §2 named six constraints and reported all six `unset` — which meant the system
+could not tell you that you had too many candidates, because it did not know what "too many" was.
+This record proposes the six, and that section now carries the values and an evaluability column
+instead.
 
 **These bind a real account, and `DR-005`'s did not.** That record set thresholds governing studies;
 this one sets the limits that would stop a position being taken. Scrutinise it harder.
@@ -30,9 +31,12 @@ Two consequences worth stating plainly:
 1. **Ratifying this record does not enable sizing.** `size_long` refuses while `risk.per_trade_pct`
    and `risk.costs_allowance` have no values, so the pipeline still returns a coded refusal after
    this lands. Nothing here moves the system closer to taking a position.
-2. **So every value below is expressed in R**, the per-trade risk unit, rather than in dollars or in
-   percent of equity. That makes them scale-free: they hold whatever risk percent the owner
-   eventually chooses, and they do not silently change meaning when equity does.
+2. **So every value that expresses a RISK limit is in R**, the per-trade risk unit, rather than in
+   dollars or in percent of equity. Those are scale-free: they hold whatever risk percent the owner
+   eventually chooses. The two that are not risk limits — `max_position_value` in currency and the
+   liquidity cap in percent — measure position *size* against the account and the market rather
+   than risk against the book, so R would be the wrong unit for them. §7 records the one place that
+   distinction still bites.
 
 ## Decision
 
@@ -42,7 +46,7 @@ Two consequences worth stating plainly:
 | `risk.max_concurrent_positions` | **6** | positions |
 | `risk.max_sector_risk` | **2R** | multiples of per-trade risk |
 | `risk.correlation_threshold` | **0.70** over 60 sessions of daily returns | correlation |
-| `risk.max_position_value` | **25% of equity** — 2,500 at the current `account.equity` | currency |
+| `risk.max_position_value` | **2,500** — 25% of `account.equity` at its current value | currency |
 | `risk.liquidity_cap_order_to_adtv_pct` | **1.0%** of 20-day ADTV | percent |
 
 ## 1. Why 6R, and how it ties to a number already ratified
@@ -77,8 +81,8 @@ defensible. 60 sessions is a quarter — long enough to be stable, short enough 
 change. Both halves of that are authored; the course names the concept in `M49-T761` and quantifies
 nothing.
 
-**`risk.max_position_value` = 25% of equity.** The cap Appendix C requires after the share count is
-computed (*`Ограничить max position value/liquidity`*). At four positions of maximum size the account
+**`risk.max_position_value` = 2,500, being 25% of equity.** The cap Appendix C requires after the
+share count is computed (*`Ограничить max position value/liquidity`*). At four positions of maximum size the account
 is fully invested, which is a floor on diversification independent of the risk calculation — and
 `Не равно риску` in the same table is the reminder that position value and risk are different columns
 and must not be conflated.
@@ -116,7 +120,7 @@ was never able to perform, and conflating those two produces a system that canno
 
 | Alternative | Why not |
 |---|---|
-| Express the caps in dollars or percent of equity | they would change meaning the day equity or risk% changes, and `risk.per_trade_pct` is deliberately not set here. R is scale-free |
+| Express the *risk* caps in dollars or percent of equity | they would change meaning the day equity or risk% changes, and `risk.per_trade_pct` is deliberately not set here. R is scale-free. `max_position_value` is currency anyway because `size_long` compares it to a position value — §7 |
 | Set `risk.per_trade_pct` too, so sizing works end to end | the course explicitly reserves it to the owner (§0). Drafting it would be the one place this project overrode a stated course rule for convenience |
 | A single "max portfolio heat" number with the rest derived | hides which constraint bound. The journal has to record *which* limit refused a candidate, and `CODES.md`'s `RISK` code is one code for six different causes already |
 | 10R open risk | a single gap-down session could reach the −15R pause on its own, making the kill criterion a report of one day's luck |
@@ -146,3 +150,18 @@ was never able to perform, and conflating those two produces a system that canno
 4. **`risk.*` still has ten unset entries** after this record — the loss limits, the ladders, the
    discipline thresholds and the short-side allowance. Those are behavioural and personal in a way
    these six are not, and they belong in a record the owner drafts rather than ratifies.
+
+## 7. Open items
+
+- [ ] **`risk.max_position_value` should be a percentage, not a currency amount.** It is stored as
+      2,500 because `size_long` reads it as a number and compares it to a position value, so a
+      percentage there would not work without changing the sizing code. The consequence is that it
+      silently means something different the day `account.equity` changes. A percentage parameter
+      plus one line in `sizing.py` fixes it; both are out of scope for a record about limits.
+- [ ] **The correlation lookback needs its own registry entry.** `risk.correlation_threshold` is
+      0.70 and the 60-session window it is measured over lives in a note. Two numbers in one
+      parameter is the shape this registry exists to prevent, and it stayed that way here only
+      because nothing computes a correlation yet.
+- [ ] **`risk.max_sector_risk` and `risk.correlation_threshold` are set and unevaluable** (§3).
+      Whether a set-but-uncheckable parameter should be visible as such in the daily report is a
+      display decision nobody has taken.

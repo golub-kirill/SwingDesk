@@ -37,19 +37,31 @@ therefore consumes **R**, not a fixed slice of the account.
 
 So "candidates exceed capital" almost never means the cash ran out. It means one of these did:
 
-| Constraint | Parameter | Status |
-|---|---|---|
-| total open risk across positions | `risk.max_open_risk` | `unset` |
-| risk concentrated in one sector or theme | `risk.max_sector_risk` | `unset` |
-| duplicate economic exposure | `risk.correlation_threshold` | `unset` |
-| how many positions can be managed at once | `risk.max_concurrent_positions` | `unset` |
-| one position's share of the account | `risk.max_position_value` | `unset` |
-| order size against liquidity | `risk.liquidity_cap_order_to_adtv_pct` | `unset` |
+| Constraint | Parameter | Value | Evaluable? |
+|---|---|---|---|
+| total open risk across positions | `risk.max_open_risk` | 6R | yes |
+| how many positions can be managed at once | `risk.max_concurrent_positions` | 6 | yes |
+| one position's share of the account | `risk.max_position_value` | 2500 | yes |
+| order size against liquidity | `risk.liquidity_cap_order_to_adtv_pct` | 1.0% | yes |
+| risk concentrated in one sector or theme | `risk.max_sector_risk` | 2R | **no** — no sector source |
+| duplicate economic exposure | `risk.correlation_threshold` | 0.70 | **no** — nothing computes a correlation matrix |
 
-**All six are unset, so allocation cannot run today, and that is the design working.** A component
-whose threshold is missing refuses (`PARAMETER_REGISTRY.md` §4). The consequence is precise and worth
-naming: the system currently cannot tell you that you have too many candidates, because it does not
-know what "too many" is.
+**All six were `unset` when this document was written.** `DR-006-portfolio-risk-block.md` proposed
+values for them on 2026-08-08 (`assumed:DR-006`, awaiting ratification), and that record's §3 carries
+the evaluability column above.
+
+Two things follow, and they are different:
+
+- **Four are now computable**, so the capacity arithmetic this document specifies has inputs.
+- **Two are set and cannot be checked.** Those must report `unavailable` — not pass, and *not* fail
+  closed into a blanket refusal. A sector check that refused every candidate for want of sector data
+  would halt the system while looking like risk discipline. Fail-closed governs a decision made on
+  *degraded* data; it does not govern a check the system was never able to perform, and conflating
+  those is the error `HANDOFF.md` §7 calls the most damaging this product can make.
+
+None of this enables trading. `risk.per_trade_pct` stays `unset` by course instruction
+(`RISK_SPEC.md` §4 — *`Риск % задаётся личным планом`*), so `size_long` still returns a coded
+refusal and the allocation path has nothing to allocate.
 
 `CODES.md` already reserves the outcome — `RISK`: *open/sector/currency/event limit exceeded*, action
 *Skip or choose better candidate*. The skip code for a candidate that lost the allocation exists;
