@@ -21,10 +21,10 @@ the documentation is implementable.
 |---|---|
 | Merge gates | **15**, one command, all green |
 | Tests | **249**, fully offline |
-| Docs | 74 files across 8 tiers |
+| Docs | 76 files across 8 tiers |
 | Components | 465 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 84 `unset`, 9 `assumed`, 2 `owner`, **1 `validated`** |
-| Studies | 4 reported — **3 refuted**, 1 accepted and quantifiably fragile |
+| Studies | 5 reported — **3 refuted**, 1 inconclusive, 1 accepted and quantifiably fragile |
 | Universe | 1,133 members · 3,687 of 13,043 measured · **28.3% coverage** |
 | Project gates | G0, G4, G5 closed · G1, G2, G3, G6, G7 open |
 
@@ -104,12 +104,19 @@ overdue, not because they are hard.
 
 ### Work, highest leverage first
 
-4. **Schedule `tools/fetch_directory.py`.** The only irreversible clock in the project:
+4. **Run `tools/fetch_directory.py`, by hand, often.** The only irreversible clock in the project:
    `departures()` accumulates *forward only*, and it is the sole survivorship evidence a free tier
    can ever produce. Every day without it is permanently lost. ~5 seconds/day.
-5. **Measure costs instead of assuming them.** Corwin–Schultz (2012) and Abdi–Ranaldo (2017)
-   estimate effective spread from daily OHLC — no new data needed. This is the highest-value study
-   available, because the base-strategy verdict currently flips on an assumed 5bps.
+   Measured 2026-08-09: **three pulls only** — 2026-08-03, 08-05, 08-08 — so it is running by hand
+   at irregular 2–3 day gaps, not on a schedule. Owner decision 2026-08-09: **keep it manual for
+   now**, no scheduled task.
+5. ~~**Measure costs instead of assuming them.**~~ **Done 2026-08-09, and it does not work.** PR-007
+   ran both estimators over 1,134 eligible instruments and 26,865 instrument-months and returned
+   **inconclusive**: more than half the estimates came out negative, and the estimators track
+   volatility rather than liquidity because a sub-basis-point spread is ~three orders of magnitude
+   below the noise floor of daily OHLC. Costs stay `assumed`. `PR-006` — real fills in a forward
+   test — is now the only route to a measured cost, and that is measured rather than assumed. See
+   `PR-007-report.md`. **Do not try a variant estimator** without explaining why the gap closes.
 6. **Unify the trigger before the live path gets one.** `validation/backtest/engine.py` owns
    `breakout_high` and the entry decision; `application/pipeline.py` has none. No divergence yet
    *only* because live implements no strategy — see `REQUIREMENTS.md` §3. Cheap now, expensive later.
@@ -130,6 +137,7 @@ overdue, not because they are hard.
 | Paid market data | Owner decision D10, taken with the survivorship cost known |
 | Tuning the current parameters | PR-005 measured the strategy flat before costs and negative under stress |
 | New entry filters | Same family, same evidence |
+| Spread estimation from free daily data | PR-007 inconclusive: both estimators negative on >50% of the sample and correlated with volatility rather than liquidity. A variant estimator is the same family |
 | Order placement, automation, multi-user | `CHARTER.md` §3 non-goals — reopening needs a charter amendment |
 
 ## 7. The habits that matter here
