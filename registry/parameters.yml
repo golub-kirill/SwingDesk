@@ -114,50 +114,50 @@ parameters:
 
   - id: risk.max_position_value
     unit: currency
-    value: null
-    status: unset
-    provenance: null
+    value: "25% of account.equity - 2500 at the current value"
+    status: assumed
+    provenance: "assumed:DR-006"
     named_in: [Appendix C, M49-T762]
     ui_editable: true
 
   - id: risk.liquidity_cap_order_to_adtv_pct
     unit: percent
-    value: null
-    status: unset
-    provenance: null
+    value: 1.0
+    status: assumed
+    provenance: "assumed:DR-006"
     named_in: [Appendix C, M49-T760]
     ui_editable: true
 
   - id: risk.max_open_risk
     unit: R
-    value: null
-    status: unset
-    provenance: null
+    value: "6R (multiples of per-trade risk)"
+    status: assumed
+    provenance: "assumed:DR-006"
     named_in: [M51-T780, M93-T1326]
     ui_editable: true
 
   - id: risk.max_sector_risk
     unit: R
-    value: null
-    status: unset
-    provenance: null
+    value: "2R (multiples of per-trade risk)"
+    status: assumed
+    provenance: "assumed:DR-006"
     named_in: [M51-T782, M93-T1327]
     ui_editable: true
 
   - id: risk.correlation_threshold
     unit: correlation coefficient
-    value: null
-    status: unset
-    provenance: null
+    value: "0.70 over 60 sessions of daily returns"
+    status: assumed
+    provenance: "assumed:DR-006"
     named_in: [M49-T761, M51-T781]
     note: The size adjustment applied above the threshold is also unspecified.
     ui_editable: true
 
   - id: risk.max_concurrent_positions
     unit: count
-    value: null
-    status: unset
-    provenance: null
+    value: 6
+    status: assumed
+    provenance: "assumed:DR-006"
     named_in: [M49-T764]
     ui_editable: true
 

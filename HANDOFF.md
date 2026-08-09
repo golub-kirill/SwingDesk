@@ -23,7 +23,7 @@ the documentation is implementable.
 | Tests | **253**, fully offline |
 | Docs | 80 files across 8 tiers |
 | Components | 465 registered · 7 `specified` · **0 `active`** |
-| Parameters | 96 — 69 `unset`, 24 `assumed`, 2 `owner`, **1 `validated`** |
+| Parameters | 96 — 63 `unset`, 30 `assumed`, 2 `owner`, **1 `validated`** |
 | Studies | 3 reported — **2 refuted**, 1 accepted and quantifiably fragile; plus one post-hoc bound |
 | Universe | 1,133 members · 3,687 of 13,043 measured · **28.3% coverage** |
 | Project gates | G0, G4, G5 closed · G1, G2, G3, G6, G7 open |
