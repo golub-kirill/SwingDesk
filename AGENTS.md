@@ -177,3 +177,77 @@ about it. A null result is only evidence once a positive control shows the query
    repository a day on 2026-08-04.
 3. **Re-index after a merge that touches `src/` or `tools/`.** ~13.5k lines index in seconds. An
    index that silently describes the previous branch is worse than no index.
+
+## 10. Four rules added 2026-08-09, each paid for
+
+Three efforts branched from one commit, none knew about the others, and two of them measured the
+same quantity and reported opposite answers. `docs/08-pm/POSTMORTEM-2026-08-09.md` takes it to root
+causes. These four rules are what came out of it. Every one is cheap; every one would have prevented
+a specific, expensive thing that actually happened.
+
+### 10.1 You are probably not the only effort. Check.
+
+```bash
+git worktree list && git branch -a
+```
+
+Run it **before starting** and again **before merging**. `HANDOFF.md` §2 carries the census and
+gate 16 fails if a worktree is missing from it — but the gate was written after the accident, so
+confirm it ran rather than assuming it did.
+
+`HANDOFF.md` says it is measured from the tree, and it is. That is exactly the trap: a sibling
+worktree is not in the tree, so an accurate document can be silently incomplete about the one thing
+most likely to waste your session.
+
+### 10.2 Before a study, search the other branches for the same question
+
+```bash
+for b in $(git branch --format='%(refname:short)'); do
+  git ls-tree -r --name-only "$b" -- docs/prereg docs/decisions
+done | sort -u
+```
+
+`PR-007` was registered, implemented, run, reported, merged and pushed before anyone noticed another
+branch had answered the same question a day earlier and reached the opposite conclusion. Both had
+followed the pre-registration discipline correctly. **Neither had looked sideways.**
+
+The refutation-family check in `PREREG_TEMPLATE.md` §0 asks whether this lever has already been
+refuted *here*. Read "here" as the repository, not the worktree.
+
+### 10.3 Search the outside world before authoring anything
+
+The course supplies no numeric thresholds, so this project authors them — and it is easy to slide
+from *authoring a threshold* into *reinventing a method*. Before implementing an estimator, a
+statistic, or a correction: look for published work and for an open-source implementation. GitHub,
+CRAN, PyPI, SSRN, the journals.
+
+**The case that bought this rule.** Two efforts independently implemented Corwin-Schultz (2012) and
+Abdi-Ranaldo (2017) from the papers, disagreed about the result, and spent a session resolving it.
+The literature already contained the answer to the disagreement — the documented bias of these
+estimators *is* dependence on realised volatility, and their cross-sectional correlation with the
+true spread falls from ~70% in small caps to ~18% in large caps, which is precisely the pathology
+both efforts rediscovered by hand. And `EDGE` (Ardia, Guidotti & Kroencke, *JFE* 2024) is a newer
+OHLC estimator built to fix exactly those biases, with a tested open-source implementation
+(`pip install bidask`, github.com/eguidotti/bidask).
+
+**What external work is and is not.** It is a source of *method*, *calibration* and *known
+limitations*, and it must be cited where it lands — an authored import, marked as one, the way
+`PREREG_TEMPLATE.md` §6 already requires for multiple-testing corrections. It is **not** evidence
+about this system's parameters. A published estimate does not make a parameter `validated` here;
+only a pre-registered study against this universe does. Borrowing a method is cheap and correct;
+borrowing a conclusion is not.
+
+### 10.4 A causal claim in a report cites a check, or is marked conjecture
+
+Reports explain results. The explanation is what a reader carries away, and it is the least
+inspected thing in the document: the pre-registration disciplines the *statistic*, the gates
+discipline the *registry*, and nothing at all disciplines the sentence that says **why**.
+
+The strongest sentence in `PR-007-report.md` — the signal sits three orders of magnitude below the
+noise floor — passed sixteen gates and was false. It was never tested because it read as exposition
+rather than as a claim.
+
+So: a sentence in a report asserting *why* a result came out as it did either **names the check that
+establishes it**, or is **marked as conjecture**. No gate enforces this; a gate that parsed English
+for causal claims would be noise, and a marker that can be applied vacuously is worse than a
+convention someone actually follows. It costs one clause and it would have caught the withdrawal.

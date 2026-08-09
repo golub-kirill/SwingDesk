@@ -21,7 +21,7 @@ the documentation is implementable.
 |---|---|
 | Merge gates | **16**, one command, all green |
 | Tests | **275**, fully offline |
-| Docs | 77 files across 8 tiers |
+| Docs | 78 files across 8 tiers |
 | Components | 465 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 84 `unset`, 9 `assumed`, 2 `owner`, **1 `validated`** |
 | Studies | 5 reported — **3 refuted**, 1 inconclusive, 1 accepted and quantifiably fragile |
@@ -47,8 +47,9 @@ others, and one re-ran a study another had already finished and reached the oppo
 | `claude/swingdesk-handoff-continue-1feb49` | 2026-08-08 | **no**, 9 commits | `DR-005` slippage at 25bp, `criteria.yml` v1.1.0 **removing** the Track A time box, `RULE_SPEC`/`SYSTEM_MODES`/`EXECUTION_MODEL`, gates 12–15, `validation.max_allowable_drawdown` = 20% |
 | `claude/swingdesk-documentation-321418` | 2026-08-09 | **no**, 26 commits | a HANDOFF rewrite, a count audit, a phase plan — unreviewed |
 
-**`master` currently contradicts several items in row 2.** Reconciling them is open work, listed in
-the postmortem §5.D. Do not merge either branch without reading it.
+**`master` currently contradicts several items in row 2, and the two branches contradict each other**
+— two `DR-005`s, two `PR-007`s, three incompatible `criteria.yml` v1.1.0. The file-by-file plan is
+`docs/08-pm/RECONCILIATION_PLAN.md`. **Merge nothing without it.**
 
 ## 3. The uncomfortable summary
 

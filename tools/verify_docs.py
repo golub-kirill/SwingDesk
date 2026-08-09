@@ -52,6 +52,31 @@ PLANNED = {
     "RECONCILIATION_SPEC.md",
 }
 
+#: Documents that EXIST, on another branch, unmerged. A third state this gate did not model:
+#: `PLANNED` means nobody has written it, and these are written and waiting.
+#:
+#: Folding them into PLANNED would be a lie in the direction that matters - it would report work as
+#: outstanding when it is done. `RECONCILIATION_PLAN.md` has to name them in order to plan the merge
+#: at all, and a plan that cannot cite its own subject is not a plan.
+#:
+#: **Every entry here should disappear when its branch merges.** One still listed after a merge means
+#: the merge dropped a file, which is exactly the failure a three-way reconciliation invites.
+ON_OTHER_BRANCHES = {
+    # claude/swingdesk-handoff-continue-1feb49
+    "DR-005-measured-slippage.md",
+    "PR-007-base-strategy-measured-costs.md",
+    "EXPECTATION_SPEC.md",
+    "AI_AUTHORITY_MODEL.md",
+    "COVERAGE_AUDIT.md",
+    # claude/swingdesk-documentation-321418
+    "DR-005-validation-thresholds.md",
+    "DR-006-portfolio-risk-block.md",
+    "ALLOCATION_SPEC.md",
+    "TRANSITION_SPEC.md",
+    "EXPECTATION_MODEL.md",
+    "DRIFT_AND_LEARNING.md",
+}
+
 #: Prefixes that identify a registry parameter rather than an ordinary dotted phrase in prose.
 PARAMETER_NAMESPACES = (
     "account.", "atr.", "costs.", "data.", "exit.", "pivot.", "regime.", "risk.",
@@ -84,7 +109,12 @@ ROOT_DOCS = ("README.md", "AGENTS.md", "HANDOFF.md")
 def main() -> int:
     markdown = sorted(DOCS.rglob("*.md")) + [REPO / name for name in ROOT_DOCS]
     # Documents that exist anywhere in the tree, plus the repo-root ones docs legitimately cite.
-    known_docs = {p.name for p in markdown} | {p.name for p in REPO.glob("*.md")} | PLANNED
+    known_docs = (
+        {p.name for p in markdown}
+        | {p.name for p in REPO.glob("*.md")}
+        | PLANNED
+        | ON_OTHER_BRANCHES
+    )
 
     parameters = {e["id"] for e in _load_yaml(REPO / "registry" / "parameters.yml")["parameters"]}
     topics = {
