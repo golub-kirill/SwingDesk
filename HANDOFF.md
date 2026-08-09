@@ -102,28 +102,54 @@ files by path and are unaffected; the code gates are not. Set it before trusting
 PYTHONPATH=$PWD/src python tools/check_gates.py
 ```
 
-## 4b. The phase plan (2026-08-08)
+## 4b. The phase plan — adopted 2026-08-08
 
-The owner set the shape of the work: **describe everything → MVP → maximum coverage, coded and
-tested step by step → paper trading, research, calibration.** It is recorded with four adjustments in
-`ROADMAP.md` §9, and the two that change what happens next are:
+**Read `ROADMAP.md` §9 before planning anything.** It governs the roadmap's Now/Next/Later, and where
+they disagree it wins.
 
-- **The MVP is behind us, not ahead.** G5 closed 2026-08-02. What looks like an MVP from here is
-  **activation** — 465 registered, 7 implemented, **0 `active`**.
-- **"Maximum coverage" is `k.project_timebox`'s own named kill risk** — scope drift into the
-  460-component catalogue. Coverage should be demand-driven: a component is implemented when a
-  strategy card needs it.
+| Phase | What it is | Exit |
+|---|---|---|
+| 1. Describe | no research, no implementation | ТЗ `ABSENT` = 0; the prose shortfalls closed |
+| 2. Activate | **not "MVP"** — that closed at G5 on 2026-08-02 | first component `active`, status displayed |
+| 3. Coverage, demand-driven | built when a strategy card needs it | every component a live card needs is `active` |
+| 3′. Paper, in parallel | measures the system, not the edge | Track A's four run-measurable criteria met |
+| 4. Research and calibration | costs measured first, ahead of phase 3 | a pre-registered study reports on forward data |
 
-And one piece of arithmetic the plan carries: `a.run_completes` needs 20 consecutive trading days of
-the run completing, so **Track A cannot close without a scheduled run**. The schedule is deferred
-(item 4 below). If that becomes permanent, phase 4 is unreachable and `k.track_a_timebox` fires into
-"restate the project as documentation-and-research only" — which is a legitimate end state, and it
-should be reached deliberately rather than by default.
+Four adjustments were adopted with it, and two change what happens next:
+
+- **The MVP is behind us.** What looks like one from here is **activation** — 465 registered, 7
+  implemented, **0 `active`**.
+- **Coverage is demand-driven.** "Maximum coverage" is `k.project_timebox`'s own named kill risk —
+  scope drift into the 460-component catalogue. The test before implementing a component: **name the
+  strategy card that consumes it.** If there is none, it stays `registered`, which costs nothing.
+
+And one dated decision the plan creates rather than settles: **at the start of phase 3 the scheduling
+deferral is revisited** (item 4 below). `a.run_completes` needs 20 consecutive trading days of the run
+completing, so Track A cannot close without a scheduled run and phase 4 is unreachable without Track
+A. Either it is reversed then, or `k.track_a_timebox` fires at 180 days into *restate the project as
+documentation-and-research only* — a legitimate end state, reached deliberately rather than by
+default.
 
 ## 5. What to do next, ranked
 
-Three of these are decisions only the owner can make. They are listed first because they are
-overdue, not because they are hard.
+**The ranking below predates §4b's phase plan and is kept for its detail, not for its order.** Where
+the two disagree, the phases win. The mapping:
+
+| Phase | Items here |
+|---|---|
+| 1 — describe | 3 (`UDR-004`), 10 (the remaining gaps) |
+| 2 — activate | *not in this list* — see `ROADMAP.md` §4 **P2**, the first `active` component |
+| 3 — coverage, demand-driven | 6 (unify the trigger), 7 (wire the regime classifier), 8 (the mutation gate), 9 (universe coverage) |
+| 3′ — paper | 4, as the dated decision point: revisit the scheduling deferral |
+| 4 — research, moved ahead | 5 (measure costs) |
+
+Two of these change character under the plan. **6 and 7 are no longer "cheap now, expensive later"
+items to be done opportunistically** — they are phase 3 work, and under demand-driven coverage they
+happen when the first strategy card needs them. **5 moves ahead of its phase** for the reason in
+`ROADMAP.md` §9 D: everything built in phase 3 inherits the cost number.
+
+Three of the items below are decisions only the owner can make. They are listed first because they
+are overdue, not because they are hard.
 
 ### Owner decisions
 

@@ -75,9 +75,21 @@ The consequence is carried in the data rather than in a footnote: until coverage
 answer. **A partial universe is honest; a partial universe presented as the rule's answer would be a
 survivorship filter of our own making**, which is exactly what DR-003 exists to avoid.
 
-| # | Item | Waits on |
-|---|---|---|
-| X6 | **Universe coverage** — run the refresh passes until `is_partial` is False, then re-check DR-003's plateau against the full population rather than a 115-symbol sample | nothing; it is elapsed time and fetch budget, not code |
+| # | Item | Phase | Waits on |
+|---|---|---|---|
+| **P1** | **Close phase 1.** §46 knowledge graph, then the five prose shortfalls — §3's 25 questions, §7's entity mapping, §11's terminology fields, §43's change taxonomy, §53's QA scorecard | 1 | nothing |
+| **P2** | **First `active` component.** ATR and SMA are the candidates: ATR's period is `assumed`, SMA has no parameter of its own, and both have golden vectors. What each still needs is a `verification` and a `spec` anchor | 2 | nothing — this is authoring, not code |
+| **P3** | **Measure costs.** Corwin–Schultz / Abdi–Ranaldo effective spread from daily OHLC. Pre-registered first | 4, moved ahead | a trade log is *not* needed; this is a spread estimate over bars |
+| **P4** | **Revisit the scheduling deferral.** The dated decision point adjustment C creates. Paper cannot start without it, and Track A cannot close without paper | 3′ | an owner decision, at the start of phase 3 |
+| **P5** | **First strategy card**, which is what makes coverage demand-driven rather than exhaustive. Until one exists there is no demand to serve | 3 | `STRATEGY_CARD_SPEC.md` is written; the card itself is not |
+| X6 | **Universe coverage** — refresh passes until `is_partial` is False, then re-check DR-003's plateau against the full population rather than a 115-symbol sample | 3 | elapsed time and fetch budget, not code |
+
+**P3 is the only research that moves ahead of its phase**, and §9 D records why: the sign of the only
+result this project owns sits inside an assumed 5bps, so everything built in phase 3 inherits it.
+
+**P5 is the load-bearing one for phase 3.** Demand-driven coverage has no meaning without a card to
+create the demand, so the first card is not one item among several — it is the thing that decides
+which of the 465 components get built at all.
 
 ## 5. Later
 
@@ -138,17 +150,25 @@ itself the pattern that made the reconciliation necessary. Dispositioned:
 | `UDR-004` | Canonical regime ontology | **OPEN, and sharper than recorded.** The ТЗ suggests eight regimes; the course names **eleven** (`REGIME_SPEC.md` §2) and they are a vocabulary, not a partition. PR-002 validated a classifier on one axis of three. The real question is whether the ТЗ list or the course list is canonical — and only the course list has evidence behind it |
 | `UDR-005` | Should the reference vertical slice come before mass documentation? | **CLOSED — it already did.** G5 closed 2026-08-02, walking skeleton green, replay a merge gate. The ТЗ's own §50 ordering was followed before the ТЗ arrived |
 
-## 9. The phase plan (owner, 2026-08-08) — proposed
+## 9. The phase plan — adopted 2026-08-08
 
-The owner's phasing, stated:
+**This section governs §3, §4 and §5.** Where they disagree with it, it wins.
 
-1. **Describe everything.** No research, no implementation.
-2. **MVP** — first tries, first tests.
-3. **Maximum coverage** — coded step by step, tested, verified.
-4. **Paper trading, research, calibration.**
+The owner set the shape on 2026-08-08 — describe everything, then MVP, then maximum coverage coded
+step by step, then paper trading and research — and adopted four adjustments to it the same day. The
+adopted plan is therefore:
 
-Recorded here because a plan that is not written down is not a plan. Four adjustments follow, each
-with the evidence that prompted it, and one structural consequence the plan has to carry.
+| Phase | What it is | Exit |
+|---|---|---|
+| **1. Describe** | no research, no implementation | ТЗ `ABSENT` = 0; the prose shortfalls closed |
+| **2. Activate** | *(not "MVP" — that closed at G5 on 2026-08-02)* | first component `active`, status displayed |
+| **3. Coverage, demand-driven** | a component is built when a strategy card needs it | every component a live card needs is `active` |
+| **3′. Paper, in parallel** | measures the system, not the edge | Track A's four run-measurable criteria met |
+| **4. Research and calibration** | costs measured first | a pre-registered study reports on forward data |
+
+The four adjustments are recorded below with the evidence that prompted each, because the reasoning
+is what makes the plan re-decidable later. One of them (C) creates a dated decision point rather than
+settling a question, and that is stated where it arises.
 
 ### What the plan gets right, and it is not the obvious thing
 
@@ -167,8 +187,8 @@ What *is* ahead and looks like an MVP is **activation**: 465 components are regi
 implemented and **0 are `active`**. `COVERAGE_MATRIX.md` §3 names that gap as the number to watch —
 implemented-but-not-runtime is the population where code exists that nothing may yet rely on.
 
-*Adjustment:* call phase 2 **activation**, and its exit is the first component reaching `active` with
-its parameters valued, its verification present and its status displayed wherever its output appears.
+**Adopted.** Phase 2 is **activation**. Its exit is the first component reaching `active` with its
+parameters valued, its verification present and its status displayed wherever its output appears.
 
 ### B. "Maximum coverage" is this project's own named kill risk
 
@@ -179,9 +199,13 @@ out as a plan.
 The activation gate exists precisely so this does not happen — components sit at `registered`
 indefinitely at **no cost**, and reaching `active` is deliberate (`COMPONENT_REGISTRY_SPEC.md` §3).
 
-*Adjustment:* make coverage **demand-driven**. A component is implemented when a strategy card needs
-it, not because the catalogue has a row for it. Building 465 components for a strategy with no
-validated edge produces 465 pieces of unvalidated machinery and a much larger surface to keep honest.
+**Adopted.** Coverage is **demand-driven**: a component is implemented when a strategy card needs it,
+not because the catalogue has a row for it. Building 465 components for a strategy with no validated
+edge produces 465 pieces of unvalidated machinery and a much larger surface to keep honest.
+
+The practical test, so this does not erode: **before implementing a component, name the strategy card
+that consumes it.** If there is none, it stays `registered` — which costs nothing and is what the
+activation gate is for.
 
 ### C. Paper trading is not a late phase — it is how Track A closes
 
@@ -190,9 +214,13 @@ compressed by throughput, and it **does not need a strategy**: a forward test me
 alerts and journal quality — the four things `VALIDATION_PROGRAM.md` §2 says a backtest structurally
 cannot see. Three further Track A criteria need taken trades.
 
-*Adjustment:* paper runs **in parallel from the start of phase 3**, not after it. It measures the
-system, not the edge, and placing it fourth means Track A cannot close until everything else is
-built.
+**Adopted, and it creates a decision point rather than settling one.** Paper runs in parallel from
+the start of phase 3.
+
+It cannot run without a scheduled daily run, and scheduling is deferred (below). So adopting C means:
+**at the start of phase 3, the scheduling deferral is revisited.** Either it is reversed and paper
+begins, or it stands and Track A remains unreachable — but the choice is made on a date the plan
+names, rather than by drift.
 
 ### D. One study belongs before maximum coverage
 
@@ -200,8 +228,9 @@ The base strategy measured **+0.028R before costs and −0.123R at 3× costs**, 
 result this project owns sits inside an assumed 5bps. Corwin–Schultz (2012) and Abdi–Ranaldo (2017)
 estimate effective spread from daily OHLC — **no new data, no vendor, no new fetch**.
 
-*Adjustment:* measure costs before dimensioning the machinery on top of them. It is one study and it
-is the cheapest available; everything built in phase 3 inherits whatever that number turns out to be.
+**Adopted.** Costs are measured before the machinery is dimensioned on top of them. This is the one
+piece of research that moves ahead of phase 3 rather than waiting for phase 4 — it is a single study,
+it needs no new data, and everything built in phase 3 inherits whatever the number turns out to be.
 
 ### The consequence the plan must carry
 
