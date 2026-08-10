@@ -1,0 +1,13 @@
+{
+  "prereg": "PR-010",
+  "knowledge_time": "2026-08-03 22:17:23.260468-05:00",
+  "instruments": 1134,
+  "refused": 0,
+  "negative_sign": 214,
+  "calibrated_floor_bps_per_side": "41.87",
+  "median_bps_per_side": "25.6504",
+  "p25": "16.8069",
+  "p75": "39.1725",
+  "p95": "87.0018",
+  "verdict": "reject"
+}

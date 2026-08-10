@@ -34,7 +34,7 @@ applied the way its own §56 asks — as a gap analysis against what exists — 
 `docs/08-pm/SPEC_GAP_ANALYSIS.md`. Do not rebuild the numbered tree; §8 of that same specification
 forbids maintaining one logic in two places, and for a while this repo was doing exactly that.
 
-**Before writing any new specification, check whether `docs/` already holds it.** Four studies are
+**Before writing any new specification, check whether `docs/` already holds it.** Five studies are
 reported and two of their hypotheses are refuted — re-deriving them is not neutral, it risks
 contradicting evidence that already exists.
 

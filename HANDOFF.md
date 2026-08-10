@@ -26,11 +26,11 @@ documentation is implementable.
 |---|---|
 | Merge gates | **22**, one command, all green |
 | Tests | **302**, fully offline |
-| Docs | 97 files, Tier 0–8 · indexed by `registry/project_manifest.yml` |
+| Docs | 98 files, Tier 0–8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 63 `unset`, 29 `assumed`, 3 `owner`, **1 `validated`** |
 | Golden vectors | 25 across 6 components |
-| Studies | 7 registered · **4 reported — 2 refuted**, 1 inconclusive, 1 accepted and quantifiably fragile |
+| Studies | 7 registered · **5 reported — 3 refuted**, 1 inconclusive, 1 accepted and quantifiably fragile |
 | Directory | 3 pulls (08-03, 08-05, 08-08) · 14 departures observed · **unscheduled** |
 | Costs | slippage **measured** — 25bps per side (`DR-005`); commission still assumed |
 | Criteria | `criteria.yml` **v1.1.0** — `k.track_a_timebox` ratified, `k.timebox_review` `met`; v1.0.0 on record |
@@ -79,8 +79,12 @@ negative.**
   the estimators cannot resolve the spread — and that explanation was **withdrawn on 2026-08-09**
   after a calibration-free sign test refuted it. But neither effort settled the magnitude:
   Abdi-Ranaldo correlates **+0.46** with volatility and **−0.02** with liquidity, which is backwards
-  for a spread, and the published literature documents exactly that bias. Treat 25bp as
-  "materially more than 5", not as a measurement of 25. `POSTMORTEM-2026-08-09.md` §2.
+  for a spread, and the published literature documents exactly that bias. **`PR-010` closed this
+  on 2026-08-09**: EDGE — the 2024 estimator built to fix both, and the only one that reads the
+  open — reports 25.65bp against its own zero-spread floor of **41.87bp** at this universe's
+  measured volatility. Two estimators agree to 0.21bp *inside their shared noise*. **The level is
+  not obtainable from daily OHLC**; `PR-006`, real fills, is the only route left. Treat 25bp as
+  "materially more than 5", never as a measurement of 25.
 - The one positive finding (PR-002: breadth separates breakout outcomes) is erased by **1.6–2.3% of
   trades missing at −2R**, and Yahoo serves no delisted history, so that exposure can never be
   confirmed on the free tier.
@@ -185,7 +189,7 @@ demand.
   documentation gates read files by path and are unaffected; the code gates are not. Always run gates
   with `PYTHONPATH=$PWD/src`.
 - **Hand-maintained counts drift, every time.** Four have now been caught: the study verdicts
-  (`4 studies, 2 refuted` in five documents), the gate total, the specification coverage summary
+  (`5 studies, 3 refuted` in five documents), the gate total, the specification coverage summary
   (31/22 against a table saying 30/24), and a component-activation claim in
   `COMPONENT_REGISTRY_SPEC.md`. Each read as correct. **None was reachable by review** — only
   recomputation caught them, which is why gates 3f, 3g, 3ci and the gap-summary check in 3e exist.

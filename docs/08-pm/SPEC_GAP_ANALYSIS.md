@@ -57,8 +57,8 @@ keeping wholesale.
 | 21 | Outcome Definition | PARTIAL | `contracts/trade.py`, `BACKTEST_PROTOCOL.md`; the intrabar ambiguity policy is now stated (`EXECUTION_MODEL.md` §4) and **`Trade` carries no ambiguity flag to record it** |
 | 22 | Метрики стратегии | PARTIAL | `STATISTICS_SPEC.md`; no capacity estimate, no exposure/turnover |
 | 23 | Expectation Model | PARTIAL | `EXPECTATION_MODEL.md` (2026-08-08) — the estimate/definition split, the cohort key, the status ladder. **No estimate is addressable yet**: aggregate results live in study JSON and no runtime object could cite one |
-| 24 | Evidence Framework | FULL | `EVIDENCE_RECORD_SPEC.md`, `contracts/evidence.py`, four reported studies |
-| 25 | Research Governance | FULL | `PREREG_TEMPLATE.md` + **four executed pre-registrations**, plus one post-hoc bound labelled as such |
+| 24 | Evidence Framework | FULL | `EVIDENCE_RECORD_SPEC.md`, `contracts/evidence.py`, five reported studies |
+| 25 | Research Governance | FULL | `PREREG_TEMPLATE.md` + **five executed pre-registrations**, plus one post-hoc bound labelled as such |
 | 26 | Validation Protocol | FULL | `VALIDATION_PROGRAM.md`, `WALKFORWARD_SPEC.md` |
 | 27 | Backtest Semantics | PARTIAL | `BACKTEST_PROTOCOL.md`, `validation/backtest/engine.py`; intrabar policy specified in `EXECUTION_MODEL.md` §4 and not yet enforceable — nothing can violate it while no target exists |
 | 28 | Execution Model | PARTIAL | `EXECUTION_MODEL.md` (2026-08-08) — fills, gaps, the intrabar policy and the costs. **No target exists, so the policy is stated ahead of its first use**; the live path sizes from a different price than the backtest fills at |

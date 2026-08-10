@@ -20,9 +20,9 @@ has to happen first, not the thing that has to happen last.
 | `PR-007` | Does the base strategy have positive expectancy net of **measured** costs? | **registered** | a re-fetch — the window is 10 years, the store holds 2 |
 | `PR-008` | Is the assumed 5bp slippage an understatement of the spread this universe pays? | **reported — INCONCLUSIVE**, then corrected | — |
 | `PR-009` | Is a −15R drawdown limit distinguishable from ordinary sequence luck? | **registered** | a trade log — none exists |
-| `PR-010` | Does EDGE resolve the spread level Corwin-Schultz and Abdi-Ranaldo could not? | **registered** | — |
+| `PR-010` | Does EDGE resolve the spread level Corwin-Schultz and Abdi-Ranaldo could not? | **reported — REJECT** | — |
 
-**Three ids collided on 2026-08-09 and four studies moved.** Three efforts registered studies without
+**Three ids collided on 2026-08-09 and five studies moved.** Three efforts registered studies without
 seeing each other. `RECONCILIATION_PLAN.md` D-R4 awards a contested id to the earliest commit
 timestamp, so:
 
@@ -56,6 +56,13 @@ the one thing this table exists to prevent. Nothing catches it: `verify_docs.py`
 record whose *file* is missing from the decisions index, but an id reserved **by reference only**,
 with no file behind it, leaves nothing for a gate to find. Worth fixing if a third one appears.
 
+**The spread level is closed by evidence.** Three estimators — Corwin-Schultz (2012),
+Abdi-Ranaldo (2017) and EDGE (2024, built to fix both) — cannot resolve it on this universe.
+`PR-010` reports a median of 25.65bp per side against its own zero-spread floor of 41.87bp, and
+Abdi-Ranaldo's 25.44bp sits under a 33.85bp floor. The two agree to 0.21bp *inside their shared
+noise*, which is what common bias looks like. `PR-006` — real fills — is the only route left, and
+that is now measured rather than assumed.
+
 Results live in `results/`, one JSON of record plus a written report.
 
 **PR-002 is the first hypothesis this project has failed to refute.** Breadth separates breakout
@@ -64,7 +71,7 @@ survivorship confound could produce the same result with no real effect present.
 `results/PR-002-report.md` before using `regime.classifier_rule`.
 
 **The trend-definition family is closed.** PR-001 found the definitions select different
-instruments; PR-005 found those different instruments then do the same thing. Two refuted
+instruments; PR-005 found those different instruments then do the same thing. Three refuted
 hypotheses, both pre-registered, and `screen.trend_definition` stays `unset` as a result. See
 `results/PR-001-report.md` and `results/PR-005-report.md`.
 
