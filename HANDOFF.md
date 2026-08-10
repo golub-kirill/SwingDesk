@@ -1,7 +1,7 @@
 # HANDOFF — start here in a fresh session
 
 Written 2026-08-04; rewritten 2026-08-08; **brought current 2026-08-09**, after a session that
-reconciled three parallel branches into `master` and reported two studies. Read this, then
+reconciled three parallel branches into `master` and updated the study record. Read this, then
 `AGENTS.md` — especially **§10, four rules that were paid for on 2026-08-09** — then
 `docs/README.md`.
 

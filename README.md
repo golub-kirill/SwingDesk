@@ -17,9 +17,10 @@ a single command:
 python tools/check_gates.py
 ```
 
-Nine gates today: parameter provenance, verbatim transcription, course index shape, FRD currency,
-import contracts, no wall clock in domain code, golden vectors, the test suite, and a determinism
-replay. See `docs/06-engineering/CI_POLICY.md`, including a record of what each one has caught.
+The current inventory covers provenance, transcription, generated registries, document and study
+consistency, architecture, static analysis, golden vectors, tests, determinism and the parallel
+worktree census. See `docs/06-engineering/CI_POLICY.md` for the derived inventory and a record of
+what each gate has caught.
 
 ## Source of truth
 

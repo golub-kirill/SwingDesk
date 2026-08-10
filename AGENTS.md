@@ -19,7 +19,7 @@ and **zero numeric thresholds**. Every threshold here is authored and carries it
 ### If you were told this is a documentation-only project, read this first
 
 **`docs/` is canonical** (owner decision, 2026-08-04). So is `src/`, `tests/`, `registry/` and
-`tools/` — 22 merge gates run from `python tools/check_gates.py` and they are what keep the
+`tools/` — the merge gates run from `python tools/check_gates.py` and they are what keep the
 documents honest.
 
 A second effort briefly built a parallel tree at the repo root: ten numbered documents
@@ -34,9 +34,9 @@ applied the way its own §56 asks — as a gap analysis against what exists — 
 `docs/08-pm/SPEC_GAP_ANALYSIS.md`. Do not rebuild the numbered tree; §8 of that same specification
 forbids maintaining one logic in two places, and for a while this repo was doing exactly that.
 
-**Before writing any new specification, check whether `docs/` already holds it.** Five studies are
-reported and two of their hypotheses are refuted — re-deriving them is not neutral, it risks
-contradicting evidence that already exists.
+**Before writing any new specification, check whether `docs/` already holds it.** Reported studies
+include refuted hypotheses — derive the current census with `python tools/verify_study_summary.py`.
+Re-deriving them is not neutral; it risks contradicting evidence that already exists.
 
 ## 1. Trust discipline — the rule that matters most
 
@@ -262,3 +262,24 @@ So: a sentence in a report asserting *why* a result came out as it did either **
 establishes it**, or is **marked as conjecture**. No gate enforces this; a gate that parsed English
 for causal claims would be noise, and a marker that can be applied vacuously is worse than a
 convention someone actually follows. It costs one clause and it would have caught the withdrawal.
+
+## 11. Before removing or retiring anything
+
+`docs/06-engineering/CHANGE_MANAGEMENT.md` §5 is canonical. The operational rules are:
+
+1. **`stalled` and `unused` never authorise deletion.** Stalled is a work state. Unused means only
+   that named checks found no use; it creates a candidate.
+2. **Never delete a protected record.** Accepted decisions and ADRs, ratified criteria,
+   pre-registrations, reports, journal entries and evidence are corrected forward by superseding,
+   amending or visibly withdrawing them.
+3. **Consolidate ordinary documents only with a migration.** Move every unique obligation, update
+   references, `registry/project_manifest.yml` and `docs/README.md` in the same change, and name the
+   commit preserving the former state.
+4. **Treat source, tests and tools as review-required.** For `src/` and `tools/`, check the code graph
+   first, then the files, dynamic entry points, configuration, schedulers, tests and git history. A
+   report-linked runner or fixture is evidence-bound even with no runtime caller.
+5. **Generated derivatives may be removed.** Verify they reproduce from canonical source and are
+   ignored if they should not be tracked.
+6. **Record and verify the exact removal.** Put the rationale and checks in the commit or pull
+   request, then run the complete gate suite. `safe to delete` is that one reviewed decision, not a
+   permanent label.
