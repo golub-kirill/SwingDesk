@@ -306,3 +306,90 @@ def weighted_mean(pairs: list[tuple[Decimal, Decimal]]) -> Decimal | None:
     if total <= 0:
         return None
     return sum((value * weight for value, weight in pairs), Decimal(0)) / total
+
+
+def edge(
+    opens: list[float], highs: list[float], lows: list[float], closes: list[float]
+) -> tuple[float | None, int, bool]:
+    """EDGE - Ardia, Guidotti & Kroencke, *Journal of Financial Economics* 161 (2024), 103916.
+
+    Returns (spread, observations_used, was_negative).
+
+    **Why this exists.** `corwin_schultz` and `abdi_ranaldo` are the 2012 and 2017 estimators, and
+    their documented failure mode is the one PR-008 measured by hand: the estimate tracks realised
+    volatility, and its cross-sectional correlation with the true spread collapses as liquidity
+    rises. EDGE is built to fix exactly that, and it uses the **open** - the one OHLC field neither
+    of the others touches, and one this project has stored all along.
+
+    **Transcribed from the reference implementation, not reinvented** (`github.com/eguidotti/bidask`,
+    `python/bidask/edge.py`), which is what `AGENTS.md` §10.3 asks for. It is not imported: adding a
+    numpy-backed dependency for one research tool would put a package in the lock file that `src/`
+    never touches, and the other two estimators here are hand-written for the same reason. The
+    formula below is the paper's; the arithmetic is ours and is tested against a known spread.
+
+    The reference guards every step with NaN handling. This one does not need to: `Bar` rejects a
+    non-positive or inconsistent OHLC at the contract boundary, so a series that reaches here has
+    none. Missing sessions are absent rows, never NaN rows.
+
+    `tau` marks the periods that actually traded - where the high differs from the low, or the low
+    from the previous close. A frozen or limit-locked session carries no spread information and is
+    excluded rather than averaged in as a zero.
+    """
+    count = len(opens)
+    if not (count == len(highs) == len(lows) == len(closes)):
+        raise ValueError("open, high, low and close must have the same length")
+    if count < 3:
+        return None, 0, False
+    if min(min(opens), min(highs), min(lows), min(closes)) <= 0:
+        return None, 0, False
+
+    log_o = [math.log(value) for value in opens]
+    log_h = [math.log(value) for value in highs]
+    log_l = [math.log(value) for value in lows]
+    log_c = [math.log(value) for value in closes]
+    mid = [(high + low) / 2 for high, low in zip(log_h, log_l, strict=True)]
+
+    n = count - 1
+    # `_prev` is the reference implementation's 1-suffix: the previous session's value.
+    o, h, low = log_o[1:], log_h[1:], log_l[1:]
+    high_prev, low_prev, c1, m1 = log_h[:-1], log_l[:-1], log_c[:-1], mid[:-1]
+    m = mid[1:]
+
+    r1 = [m[i] - o[i] for i in range(n)]
+    r2 = [o[i] - m1[i] for i in range(n)]
+    r3 = [m[i] - c1[i] for i in range(n)]
+    r4 = [c1[i] - m1[i] for i in range(n)]
+    r5 = [o[i] - c1[i] for i in range(n)]
+
+    tau = [1.0 if (h[i] != low[i] or low[i] != c1[i]) else 0.0 for i in range(n)]
+    po1 = [tau[i] * (1.0 if o[i] != h[i] else 0.0) for i in range(n)]
+    po2 = [tau[i] * (1.0 if o[i] != low[i] else 0.0) for i in range(n)]
+    pc1 = [tau[i] * (1.0 if c1[i] != high_prev[i] else 0.0) for i in range(n)]
+    pc2 = [tau[i] * (1.0 if c1[i] != low_prev[i] else 0.0) for i in range(n)]
+
+    def mean(values: list[float]) -> float:
+        return sum(values) / len(values)
+
+    pt = mean(tau)
+    po = mean(po1) + mean(po2)
+    pc = mean(pc1) + mean(pc2)
+    if sum(tau) < 2 or po == 0 or pc == 0 or pt == 0:
+        return None, 0, False
+
+    mean_r1, mean_r3, mean_r5 = mean(r1), mean(r3), mean(r5)
+    d1 = [r1[i] - mean_r1 / pt * tau[i] for i in range(n)]
+    d3 = [r3[i] - mean_r3 / pt * tau[i] for i in range(n)]
+    d5 = [r5[i] - mean_r5 / pt * tau[i] for i in range(n)]
+
+    x1 = [-4.0 / po * d1[i] * r2[i] + -4.0 / pc * d3[i] * r4[i] for i in range(n)]
+    x2 = [-4.0 / po * d1[i] * r5[i] + -4.0 / pc * d5[i] * r4[i] for i in range(n)]
+
+    e1, e2 = mean(x1), mean(x2)
+    v1 = mean([value * value for value in x1]) - e1 * e1
+    v2 = mean([value * value for value in x2]) - e2 * e2
+    total = v1 + v2
+
+    squared = (v2 * e1 + v1 * e2) / total if total > 0 else (e1 + e2) / 2
+    # The reference roots the ABSOLUTE value rather than clamping, so a negative estimate becomes a
+    # small positive one. The sign is returned separately instead of being thrown away.
+    return math.sqrt(abs(squared)), n, squared < 0

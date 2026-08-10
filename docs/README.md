@@ -192,7 +192,7 @@ Pre-registrations in `prereg/`, results in `prereg/results/`, decision records i
 | `PR-005` | Do their different populations then behave differently? | **REJECT** — every arm inside the ungated interval |
 | `PR-002` | Does a regime label carry decision-relevant information? | **ACCEPT** — and ~2% of trades missing at −2R would erase it |
 
-Two refuted hypotheses and one fragile positive, from six pre-registrations. A fourth analysis —
+Two refuted hypotheses and one fragile positive, from seven pre-registrations. A fourth analysis —
 the survivorship bound in `results/PR-002-report.md` — is **post-hoc and carries no verdict**; it is
 counted as a study run and never as a hypothesis tested. `screen.trend_definition` is closed by evidence;
 `regime.classifier_rule` is the first `validated` parameter and carries its bound in the registry

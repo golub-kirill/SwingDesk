@@ -151,3 +151,48 @@ def fixture_fetcher(sessions_by_instrument: dict[str, list[date]]):
         return series_for(instrument, sessions)
 
     return _fetch
+
+
+def synthetic_ohlcv(
+    days: int,
+    proportional_spread: float,
+    seed: int = 20260809,
+    steps: int = INTRADAY_STEPS,
+) -> tuple[list[float], list[float], list[float], list[float]]:
+    """As `synthetic_ohlc`, but emitting a genuine OPEN as well: (opens, highs, lows, closes).
+
+    EDGE reads the open, and it is the one field the 2012 and 2017 estimators ignore. That makes a
+    faked open silently fatal rather than merely inaccurate: setting it to the previous close makes
+    `o - c1` identically zero, which zeroes one of EDGE's two estimating equations and returns a
+    spread of zero for every input. That is what happened on the first attempt here, and it looked
+    exactly like a broken estimator rather than a broken fixture.
+
+    So the open is what it is in a real session: the first trade of the day, at the bid or the ask,
+    on an efficient price that has moved overnight.
+    """
+    rng = random.Random(seed)
+    half = proportional_spread / 2
+    step_volatility = DAILY_VOLATILITY / math.sqrt(steps)
+
+    price = 100.0
+    opens: list[float] = []
+    highs: list[float] = []
+    lows: list[float] = []
+    closes: list[float] = []
+
+    def on_a_side(efficient: float) -> float:
+        return efficient * (1 + half if rng.random() < 0.5 else 1 - half)
+
+    for _ in range(days):
+        price *= math.exp(rng.gauss(0.0, step_volatility * math.sqrt(steps) / 3))  # overnight
+        opens.append(on_a_side(price))
+        high = low = price
+        for _ in range(steps):
+            price *= math.exp(rng.gauss(0.0, step_volatility))
+            high = max(high, price)
+            low = min(low, price)
+        highs.append(high * (1 + half))
+        lows.append(low * (1 - half))
+        closes.append(on_a_side(price))
+
+    return opens, highs, lows, closes

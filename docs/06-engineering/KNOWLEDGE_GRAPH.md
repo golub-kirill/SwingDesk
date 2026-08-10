@@ -26,7 +26,7 @@ exist:
 | Checklist item | `E##` and siblings | `registry/checklists.yml` | 84 |
 | Document | filename | `docs/` | 87 |
 | Decision record | `DR-NNN` | `docs/decisions/` | 6 |
-| Study | `PR-NNN` | `docs/prereg/` | 6 registered, 4 reported |
+| Study | `PR-NNN` | `docs/prereg/` | 7 registered, 4 reported |
 | Golden vector | path | `golden/` | 25 |
 | Test | `file::name` | `tests/` | 253 |
 

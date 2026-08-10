@@ -20,6 +20,7 @@ has to happen first, not the thing that has to happen last.
 | `PR-007` | Does the base strategy have positive expectancy net of **measured** costs? | **registered** | a re-fetch — the window is 10 years, the store holds 2 |
 | `PR-008` | Is the assumed 5bp slippage an understatement of the spread this universe pays? | **reported — INCONCLUSIVE**, then corrected | — |
 | `PR-009` | Is a −15R drawdown limit distinguishable from ordinary sequence luck? | **registered** | a trade log — none exists |
+| `PR-010` | Does EDGE resolve the spread level Corwin-Schultz and Abdi-Ranaldo could not? | **registered** | — |
 
 **Three ids collided on 2026-08-09 and four studies moved.** Three efforts registered studies without
 seeing each other. `RECONCILIATION_PLAN.md` D-R4 awards a contested id to the earliest commit
