@@ -1,8 +1,13 @@
 # HANDOFF — start here in a fresh session
 
-Written 2026-08-04; rewritten **2026-08-08** at the end of a session that ran 08-05 → 08-08. Read
-this, then `AGENTS.md`, then `docs/README.md`. Everything below is measured from the tree, not
-remembered — and where a gate derives a number, the gate is named.
+Written 2026-08-04; rewritten 2026-08-08; **brought current 2026-08-09**, after a session that
+reconciled three parallel branches into `master` and reported two studies. Read this, then
+`AGENTS.md` — especially **§10, four rules that were paid for on 2026-08-09** — then
+`docs/README.md`.
+
+Everything below is measured from the tree, not remembered, and where a gate derives a number the
+gate is named. **Twenty-two gates now derive most of them**, so a figure here that disagrees with
+`python tools/check_gates.py` is this document being wrong, not the gate.
 
 **Everything is committed and pushed.** `master` carries the 2026-08-09 reconciliation — all three
 parallel branches merged — on `github.com/golub-kirill/SwingDesk` (public).
@@ -31,7 +36,9 @@ documentation is implementable.
 | Parameters | 96 — 63 `unset`, 29 `assumed`, 3 `owner`, **1 `validated`** |
 | Golden vectors | 25 across 6 components |
 | Studies | 7 registered · **5 reported — 3 refuted**, 1 inconclusive, 1 accepted and quantifiably fragile |
-| Directory | 3 pulls (08-03, 08-05, 08-08) · 14 departures observed · **unscheduled** |
+| Daily run | **SCHEDULED 2026-08-09** — Windows Task Scheduler, `SwingDesk daily run`, weekdays 18:30 local, wrapper `tools/daily_run.cmd`, log `data/daily_run.log` |
+| Track A clock | `a.run_completes` needs **20 consecutive** trading days · **counter at 0**, first scheduled run 2026-08-10 |
+| Directory | 3 pulls (08-03, 08-05, 08-08) · 14 departures observed · **still manual, by owner decision** |
 | Costs | slippage **measured** — 25bps per side (`DR-005`); commission still assumed |
 | Criteria | `criteria.yml` **v1.1.0** — `k.track_a_timebox` ratified, `k.timebox_review` `met`; v1.0.0 on record |
 | ТЗ coverage | FULL 29 · PARTIAL 19 · ABSENT 5 · DEFERRED 3 (`SPEC_GAP_ANALYSIS.md`) |
@@ -120,14 +127,31 @@ Two adopted adjustments change what happens next:
   scope drift into the 460-component catalogue. The test before implementing anything: **name the
   strategy card that consumes it.** No card → it stays `registered`, which costs nothing.
 
-And one **dated decision the plan creates rather than settles**: at the start of phase 3 the
-scheduling deferral is revisited (§6 item 2). `a.run_completes` needs 20 consecutive trading days of
-the run completing, so **Track A cannot close without a scheduled run**, and phase 4 is unreachable
-without Track A. Either the deferral is reversed then, or `k.track_a_timebox` fires at 180 days from
-2026-08-08 into *restate the project as documentation-and-research only* — a legitimate end state,
-reached deliberately rather than by default.
+~~And one **dated decision the plan creates rather than settles**: at the start of phase 3 the
+scheduling deferral is revisited.~~ **Settled early, 2026-08-09: the deferral is reversed and the
+daily run is scheduled.** `a.run_completes` needs 20 consecutive trading days and Track A cannot
+close without a scheduled run, so phase 3′ now runs *in parallel with* phase 2 rather than after it.
 
-## 5. Next: phase 2, and it is smaller than it looks
+`k.track_a_timebox`'s 180-day branch — *restate the project as documentation-and-research only* — is
+consequently **no longer the likely path**. Its 120-day-from-first-scheduled-run branch is now the
+live one, and it starts 2026-08-10.
+
+## 5. Next: the Track A clock is running, and phase 2 in parallel
+
+**The daily run is scheduled and the 20-day counter starts 2026-08-10.** Nothing needs doing to keep
+it going; what needs doing is *watching it*, because `a.run_completes` counts **consecutive** days
+and a silent failure resets the counter without announcing itself:
+
+```bash
+schtasks /Query /TN "SwingDesk daily run" /FO LIST     # Last Result, Next Run Time
+tail -40 data/daily_run.log                            # what it actually did
+```
+
+Exit 0 is a completed run. **Exit 2 is a refusal, which is a real outcome and not a failure** —
+today every decision comes back `Skip [RISK]` because `risk.per_trade_pct` is `unset`, and that is
+the system working. A crash is exit 3 or a missing log entry, and that is what resets the counter.
+
+### Phase 2, and it is smaller than it looks
 
 **Verified 2026-08-08: ATR and SMA already satisfy every requirement gate 11 imposes for `active`.**
 Both carry `implements`, `verification: golden vectors` and a `spec` anchor, and neither has an unset
@@ -157,22 +181,27 @@ demand.
    cannot be evaluated** — no sector source, nothing computes a correlation matrix — and §3 of that
    record says they must report `unavailable` rather than fail closed into a blanket refusal.
    `risk.per_trade_pct` is deliberately **not** set: Appendix C reserves it to the owner.
-2. **The daily-run schedule stays deferred** (owner, 2026-08-08, loss accepted). `departures()`
-   accumulates forward only and is the sole survivorship evidence a free tier can produce, so every
-   unscheduled day is unrecoverable at any price. **Do not re-raise this as a suggestion — it is a
-   decision.** It is what makes the 180-day clause in `k.track_a_timebox` load-bearing.
+2. ~~**The daily-run schedule stays deferred.**~~ **Reversed 2026-08-09 — the run is scheduled.**
+   What remains deferred is the **directory pull**, and it is the one that matters most:
+   `departures()` accumulates forward only and is the sole survivorship evidence a free tier can
+   produce, so every unpulled day is unrecoverable at any price. It is **one commented-out line** in
+   `tools/daily_run.cmd`, on the same schedule, costing about five seconds. Left commented because
+   the owner's 2026-08-09 decision was *keep it manual*; uncommenting it is a decision to reverse,
+   not an oversight to fix.
 3. **`UDR-004`: which regime ontology is canonical** — the specification's eight or the course's
    eleven? Only the course list has evidence behind it (`REGIME_SPEC.md`).
-4. **`PR-006` is registered and blocked.** Its step 1 is to persist a trade log by reproducing PR-005
-   under its recorded seed — **no reported study in this project has a trade log**, and Appendix J
-   lists one among the five artefacts a strategy claim requires. If the reproduction does not match
-   PR-005's aggregates, that mismatch *is* the result.
+4. **`PR-009` is registered and blocked** — it was `PR-006` until the 2026-08-09 reconciliation moved
+   it (`docs/prereg/README.md` explains which id means what, and when). Its step 1 is to persist a
+   trade log by reproducing PR-005 under its recorded seed — **no reported study in this project has
+   a trade log**, and Appendix J lists one among the five artefacts a strategy claim requires. If the
+   reproduction does not match PR-005's aggregates, that mismatch *is* the result.
 
 ## 7. Closed by evidence — do not re-open
 
 | | Why |
 |---|---|
 | Trend-definition family | PR-001 (definitions select different instruments) and PR-005 (those populations then behave the same) both refuted. `screen.trend_definition` stays `unset` |
+| **The spread LEVEL from daily OHLC** | Three estimators — Corwin-Schultz 2012, Abdi-Ranaldo 2017, EDGE 2024 — cannot resolve it here. `PR-010` reports 25.65bp per side against its own 41.87bp zero-spread floor at this universe's measured volatility; Abdi-Ranaldo's 25.44bp sits under a 33.85bp floor. They agree to 0.21bp **inside their shared noise**, and neither declines with liquidity. `PR-006` — real fills — is the only route left. **A fourth estimator is the same family** |
 | Paid market data | Owner decision D10, taken with the survivorship cost known |
 | Tuning the current parameters | PR-005 measured the strategy flat at assumed costs and negative under stress — both net |
 | New entry filters | Same family, same evidence |

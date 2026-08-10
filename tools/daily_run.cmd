@@ -1,0 +1,47 @@
+@echo off
+REM ---------------------------------------------------------------------------
+REM The scheduled daily run. Registered with Windows Task Scheduler as
+REM "SwingDesk daily run" - see docs/runbooks/ and HANDOFF section 5.
+REM
+REM Why a wrapper and not schtasks calling python directly: the task needs a
+REM working directory, a UTF-8 console, and a log. A scheduled command whose
+REM output goes nowhere fails silently, and `a.run_completes` counts CONSECUTIVE
+REM days - so a silent failure does not just lose a day, it resets the counter
+REM and nobody finds out for three weeks.
+REM
+REM Exit code is preserved so the Task Scheduler's own Last Result column is
+REM meaningful. 0 = the run completed. 2 = it refused, which is a real outcome
+REM and not a crash (FAIL_CLOSED_POLICY).
+REM ---------------------------------------------------------------------------
+
+setlocal
+set REPO=%~dp0..
+set PY=%REPO%\.venv\Scripts\python.exe
+set LOG=%REPO%\data\daily_run.log
+
+if not exist "%PY%" (
+  echo [%DATE% %TIME%] FATAL: no interpreter at %PY% >> "%LOG%"
+  exit /b 3
+)
+
+REM Rotate at ~20MB. A full-universe run writes ~650KB, so this is about a month
+REM of history - enough to diagnose a failure, bounded enough to leave alone.
+for %%F in ("%LOG%") do if %%~zF GTR 20000000 move /Y "%LOG%" "%LOG%.1" >nul 2>&1
+
+echo. >> "%LOG%"
+echo ===== [%DATE% %TIME%] daily run starting >> "%LOG%"
+
+pushd "%REPO%"
+"%PY%" -X utf8 -m swingdesk.presentation.cli scan --universe --data "%REPO%\data" >> "%LOG%" 2>&1
+set RC=%ERRORLEVEL%
+popd
+
+echo ===== [%DATE% %TIME%] daily run finished, exit %RC% >> "%LOG%"
+
+REM The directory pull is the project's only irreversible clock: departures()
+REM accumulates forward only and a gap is lost permanently. It is NOT run here,
+REM by owner decision 2026-08-09 (keep it manual). Uncomment to reverse that -
+REM it costs about five seconds and it is the same schedule.
+REM "%PY%" "%REPO%\tools\fetch_directory.py" --data "%REPO%\data" >> "%LOG%" 2>&1
+
+exit /b %RC%
