@@ -54,7 +54,6 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 18 | `STATISTICS_SPEC.md` | 11 statistics formulas, 15 M69 metrics, net-of-costs rule, 9 breakdown axes | `verbatim` Appendix D, H, M69 | drafting |
 | 19 | `STRATEGY_CARD_SPEC.md` | The strategy definition record + the three condition kinds (required / confirming / prohibiting) | `verbatim` Appendix I (21 fields) + M71 (17) + §3.6 | drafting |
 | 20 | `EXIT_MODEL_SPEC.md` | 4-slot exit model (protective/profit/contextual/time + quantity + order) over 92 M52–M58 topics | `verbatim` M52–M58 + `registry/` | drafting |
-| 20c | `EXPECTATION_SPEC.md` | ТЗ §22–23. The Definition/Estimate split, mandatory baselines, effective sample size, and the **commensurability rule** a ratified kill criterion turns out to need | Authored — reconciled against the four reported studies | drafting |
 | 21 | `SCREENER_SPEC.md` | 16 filters, 8 candidate-card fields, 9-step pipeline, 6 watchlist partitions | `verbatim` M32, M33 + `registry/` | drafting |
 | 22 | `REGIME_SPEC.md` | 11 regimes, classifier inputs, regime→strategy→risk matrix | `verbatim` M30/M31/Appendix L; **classifier authored** | planned |
 | 23 | `EVENT_SPEC.md` | 20 event types with per-type field schemas | `verbatim` M34 decision tables | planned |

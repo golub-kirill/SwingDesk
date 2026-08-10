@@ -26,7 +26,7 @@ documentation is implementable.
 |---|---|
 | Merge gates | **22**, one command, all green |
 | Tests | **302**, fully offline |
-| Docs | 97 files, Tier 0–8 · indexed by `registry/project_manifest.yml` |
+| Docs | 96 files, Tier 0–8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 63 `unset`, 29 `assumed`, 3 `owner`, **1 `validated`** |
 | Golden vectors | 25 across 6 components |
@@ -53,9 +53,10 @@ others, and one re-ran a study another had already finished and reached the oppo
 
 | Branch | Tip | Merged? | What it holds |
 |---|---|---|---|
-| `claude/swingdesk-handoff-continue-f479bd` | 2026-08-09 | **yes** | PR-008, the v7.0 delta, `AGENTS.md` §9 |
-| `claude/swingdesk-handoff-continue-1feb49` | 2026-08-08 | **yes**, merged 2026-08-09 | `DR-005` slippage at 25bp, `RULE_SPEC`/`SYSTEM_MODES`/`EXECUTION_MODEL`, four gates, `validation.max_allowable_drawdown` = 20% |
+| `claude/swingdesk-handoff-continue-f479bd` | 2026-08-09 | **yes** | PR-008, the v7.0 delta, `AGENTS.md` §9–§10 |
+| `claude/swingdesk-handoff-continue-1feb49` | 2026-08-08 | **yes**, merged 2026-08-09 | `DR-005` slippage at 25bp, `EXECUTION_MODEL`, four gates, `validation.max_allowable_drawdown` = 20% |
 | `claude/swingdesk-documentation-321418` | 2026-08-09 | **yes**, merged 2026-08-09 | `DR-006`, `DR-007`, ALLOCATION/TRANSITION/ENTITY_MAP/EXPECTATION_MODEL/DRIFT_AND_LEARNING/CHANGE_MANAGEMENT/KNOWLEDGE_GRAPH, five gates, `criteria.yml` v1.1.0 |
+| `claude/skills-llm-council-setup-1e1d65` | 2026-08-09 | at `master`'s tip | **a fourth effort, started mid-reconciliation.** No unique commits yet. It appeared while the merge was running and gate 16 failed within the minute — which is the whole point of the gate |
 
 **All three branches are merged and `RECONCILIATION_PLAN.md` is fully executed** — steps 1–8, of
 which the last three were gate renumbering, recomputing the base strategy at measured costs, and
@@ -84,7 +85,7 @@ negative.**
   trades missing at −2R**, and Yahoo serves no delisted history, so that exposure can never be
   confirmed on the free tier.
 - **There is no legal source of probability in this system today.** No expectation estimate exists,
-  no calibrated model exists (`EXPECTATION_SPEC.md` §6). Any probability displayed would be
+  no calibrated model exists (`EXPECTATION_MODEL.md` §9c). Any probability displayed would be
   manufactured.
 - **Two ratified criteria are inert.** `k.strategy_rejected` cannot fire — Track B evaluates on
   journalled trades only, and its benchmark comparison is not commensurable. See §5.

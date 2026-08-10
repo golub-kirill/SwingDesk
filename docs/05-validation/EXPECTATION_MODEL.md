@@ -205,6 +205,73 @@ The fourth row is the one to wire first *and* the one that proves nothing today.
 why `CI_POLICY.md` §7 leaves gate 10 unwired: a green check that asserts nothing teaches the operator
 to trust it. It becomes real the day an expectation exists.
 
+> **Merged 2026-08-09.** EXPECTATION_SPEC covered the same ТЗ §23 from another branch, written
+> without sight of this one. Both made the same Definition/Estimate split; §9a–§9c below are what it
+> had and this did not — the mandatory baseline, the commensurability rule a ratified kill criterion
+> turns out to need, and the three legal sources of probability. `RECONCILIATION_PLAN.md` §6 records
+> why this document was the base: seven documents cite it, three cited the other.
+
+## 9a. A baseline is mandatory
+
+**Without a baseline, no estimate may claim that anything adds edge.** An estimate with no baseline
+is a description of a sample, not evidence about a strategy.
+
+The permitted baselines, in rough order of strength:
+
+| Baseline | Answers |
+|---|---|
+| the same strategy without factor X | does this factor contribute anything? |
+| matched cohort | is the effect the instruments, or the rule? |
+| random eligible entry | does the selection beat drawing from the same universe? |
+| eligible-universe return | does trading beat holding what was eligible? |
+| previous strategy version | is this change an improvement? |
+| simpler deterministic benchmark | is the complexity earning its place? |
+
+This tree already does it, without having named the object. PR-005's `NONE` arm — the trigger with no
+trend gate — is a *strategy without factor X* baseline, and its pre-registration says why: comparing
+four filters only to each other can rank them without establishing that any beats not filtering at
+all. PR-002 compared against random partitions of the same trades. **Both chose correctly and
+neither recorded which kind of baseline it was**, which is what this section fixes.
+
+## 9b. Commensurability — the rule that makes a comparison legal
+
+An estimate and its baseline must be expressed in the **same unit, over the same horizon, on the
+same population, under the same cost model.** A comparison violating any of the four is void.
+
+This is not pedantry. `registry/criteria.yml` ratifies `k.strategy_rejected`, whose trigger is *"the
+expectancy CI lies entirely below the benchmark"* — and `b.benchmark_relative` defines the benchmark
+as buy-and-hold on the same universe. **Mean R per trade and a buy-and-hold return are not
+commensurable.** R has no horizon; buy-and-hold has nothing else. `PR-007` §6 records the same
+problem from the study side.
+
+So a ratified kill criterion cannot currently be evaluated, and the fix belongs here:
+
+> **Where a Definition names a baseline in different units from its outcome measure, the Definition
+> must state the conversion, or the pair is not a legal comparison.**
+
+For a per-trade R expectancy against a buy-and-hold return, the conversion requires a horizon and an
+exposure assumption — how many such trades over what period, at what fraction of capital. Those are
+portfolio quantities, and `COVERAGE_AUDIT.md` records the portfolio layer as absent with all five
+`risk.*` caps `unset`. **The comparison is therefore not merely unspecified but unavailable**, and
+`k.strategy_rejected` should be read as inert until it is.
+
+**It is now inert for two independent reasons.** `criteria.yml` v1.1.0 (2026-08-08) settles that
+Track B evaluates on **journalled trades only**, so no backtest can fire the criterion regardless of
+whether the comparison is legal. Both blockers must clear before it can ever trigger: real trades
+must exist, *and* the units must be made commensurable.
+
+## 9c. Probability has exactly three legal sources
+
+Restating `AI_AUTHORITY_MODEL.md` §5 in the domain, because the constraint is not about AI:
+
+A probability may come only from **a validated expectation estimate, a calibrated statistical model,
+or a matched historical cohort.** Nothing else may be rendered as one — not a setup score, not a
+component's confidence, not a count of satisfied conditions, and not a model's own stated certainty.
+
+**This system currently has no legal source of probability.** One parameter is `validated`, no
+expectation estimate exists, and no calibrated model exists. Any probability displayed today would be
+manufactured, and the honest output is a refusal.
+
 ## 10. Open items
 
 - [ ] **`stats.rolling_window` is `unset`** (§6), and it is required by M69 rather than optional.

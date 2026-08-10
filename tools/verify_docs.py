@@ -14,6 +14,13 @@ A careful read does not catch the next one. This does:
   * a Status line outside the declared ladder
   * the gap analysis's coverage summary disagreeing with a recount of its own table
 
+**Known limit: it cannot tell a historical name from a live citation.** A renamed, superseded or
+merged-away document mentioned in backticks reads exactly like a reference to a missing file, and
+that has now happened three times in one day - a struck-through filename, a renamed study, and a
+merged specification. The fix each time was to write the dead name in plain text, which is correct:
+it is no longer a reference. Adding an exemption list instead would be a list of names nobody may
+ever cite again, which is worse than a false positive that takes one edit to clear.
+
 Stdlib plus PyYAML, so it runs wherever the other registry gates do.
 
     python tools/verify_docs.py

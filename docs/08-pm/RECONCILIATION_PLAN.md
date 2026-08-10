@@ -45,8 +45,8 @@ Owner decisions taken 2026-08-09 are recorded in §3 and are the basis of every 
 ### 2.3 Documents written twice, independently
 
 `RULE_SPEC.md` · `SYSTEM_MODES.md` — on both branches.
-`EXPECTATION_SPEC.md` — `1feb49` only. **`EXECUTION_MODEL.md` was on BOTH, at different paths —
-this line was wrong; see §7.**
+EXPECTATION_SPEC — `1feb49` only, **merged into `EXPECTATION_MODEL.md` at step 3b**.
+**`EXECUTION_MODEL.md` was on BOTH, at different paths — this line was wrong; see §7.**
 `ALLOCATION_SPEC.md` · `TRANSITION_SPEC.md` · `EXPECTATION_MODEL.md` · `DRIFT_AND_LEARNING.md` ·
 `AI_AUTHORITY_MODEL.md` · `COVERAGE_AUDIT.md` — one branch each.
 
@@ -249,9 +249,11 @@ because only one of each pair was in a git conflict. The superseded pair was rem
 - **Which of `321418`'s 26 commits are sound.** Step 4 is a review, and this plan does not
   pre-approve its content.
 - **Whether `EDGE` replaces both estimators.** That is a new pre-registration, after the merge.
-- **`EXPECTATION_SPEC.md` against `EXPECTATION_MODEL.md`.** Both landed, from different branches,
-  both claiming ТЗ §23 — one at tier 2, one at tier 5. Not a filename collision, so no gate objects,
-  and not covered by D-R2 either. **Left for a step 3b** rather than resolved in passing.
+- ~~EXPECTATION_SPEC against `EXPECTATION_MODEL.md`.~~ **Resolved 2026-08-09 as step 3b.**
+  `EXPECTATION_MODEL.md` was the base — seven documents cite it against three — and the other's
+  three load-bearing sections were ported as §9a–§9c: the mandatory baseline, the commensurability
+  rule `k.strategy_rejected` turns out to need, and the three legal sources of probability. They
+  were complements more than duplicates, which is why the merged document is longer than either.
 
 ## 6. The risk this plan is carrying
 

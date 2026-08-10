@@ -187,7 +187,7 @@ said in §6, now backed by a ratified criterion rather than by a literal reading
 `k.strategy_rejected` remains unfirable until real trades exist.
 
 §6's second question — how an expectancy CI in R is made comparable to a buy-and-hold benchmark —
-is **not** answered. `EXPECTATION_SPEC.md` §5 shows the conversion needs a horizon and an exposure
+is **not** answered. `EXPECTATION_MODEL.md` §9b shows the conversion needs a horizon and an exposure
 assumption, both portfolio quantities, and the portfolio layer does not exist. That criterion stays
 inert for a second, independent reason.
 
