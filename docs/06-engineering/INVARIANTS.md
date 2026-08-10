@@ -4,7 +4,7 @@
 
 `TEST_STRATEGY.md` §2 names nine invariants and says each one is a property test rather than prose.
 `RISK_SPEC.md` and `SCREENER_SPEC.md` both defer to this file. It did not exist until 2026-08-03 —
-three documents cited an authority that was never written, and gate 12 now catches that class of
+three documents cited an authority that was never written, and gate 3e now catches that class of
 reference.
 
 This is the audit those citations implied: **for each invariant, the test that enforces it, or the

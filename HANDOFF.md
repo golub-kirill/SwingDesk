@@ -4,9 +4,8 @@ Written 2026-08-04; rewritten **2026-08-08** at the end of a session that ran 08
 this, then `AGENTS.md`, then `docs/README.md`. Everything below is measured from the tree, not
 remembered — and where a gate derives a number, the gate is named.
 
-**Everything is committed and pushed.** `master` carries the 2026-08-09 reconciliation; one branch remains unmerged.
-remote `github.com/golub-kirill/SwingDesk` (public). `master` is the default branch and sits at the
-state before this session; nothing has been merged.
+**Everything is committed and pushed.** `master` carries the 2026-08-09 reconciliation — all three
+parallel branches merged — on `github.com/golub-kirill/SwingDesk` (public).
 
 ---
 
@@ -25,14 +24,13 @@ documentation is implementable.
 
 | | |
 |---|---|
-| Merge gates | **23**, one command, all green |
+| Merge gates | **22**, one command, all green |
 | Tests | **302**, fully offline |
 | Docs | 97 files, Tier 0–8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 63 `unset`, 29 `assumed`, 3 `owner`, **1 `validated`** |
 | Golden vectors | 25 across 6 components |
 | Studies | 6 registered · **4 reported — 2 refuted**, 1 inconclusive, 1 accepted and quantifiably fragile |
-| Universe | 1,133 members · 3,687 of 13,043 measured · **28.3% coverage** |
 | Directory | 3 pulls (08-03, 08-05, 08-08) · 14 departures observed · **unscheduled** |
 | Costs | slippage **measured** — 25bps per side (`DR-005`); commission still assumed |
 | Criteria | `criteria.yml` **v1.1.0** — `k.track_a_timebox` ratified, `k.timebox_review` `met`; v1.0.0 on record |
@@ -59,22 +57,23 @@ others, and one re-ran a study another had already finished and reached the oppo
 | `claude/swingdesk-handoff-continue-1feb49` | 2026-08-08 | **yes**, merged 2026-08-09 | `DR-005` slippage at 25bp, `RULE_SPEC`/`SYSTEM_MODES`/`EXECUTION_MODEL`, four gates, `validation.max_allowable_drawdown` = 20% |
 | `claude/swingdesk-documentation-321418` | 2026-08-09 | **yes**, merged 2026-08-09 | `DR-006`, `DR-007`, ALLOCATION/TRANSITION/ENTITY_MAP/EXPECTATION_MODEL/DRIFT_AND_LEARNING/CHANGE_MANAGEMENT/KNOWLEDGE_GRAPH, five gates, `criteria.yml` v1.1.0 |
 
-**All three branches are merged.** `RECONCILIATION_PLAN.md` steps 1–5 are done; 6–8 remain — gate
-renumbering, recomputing every R at the measured cost, and rebuilding this table from the merged
-tree. `criteria.yml` is **v1.1.0** with `k.track_a_timebox` ratified and `k.timebox_review` `met`.
-— two `DR-005`s, two `PR-008`s, three incompatible `criteria.yml` v1.1.0. The file-by-file plan is
-`docs/08-pm/RECONCILIATION_PLAN.md`. **Merge nothing without it.**
+**All three branches are merged and `RECONCILIATION_PLAN.md` is fully executed** — steps 1–8, of
+which the last three were gate renumbering, recomputing the base strategy at measured costs, and
+rebuilding this table from the merged tree. `criteria.yml` is **v1.1.0** with `k.track_a_timebox` ratified and `k.timebox_review` `met`.
 
 ## 3. The uncomfortable summary
 
 **The machinery is real and honest. The strategy is not known to work, and what is known is mostly
 negative.**
 
-- The base strategy measured **+0.028R per trade** at 1× costs and **−0.123R under 3× cost stress**
-  (PR-005). Both are **net** — gross is never reported (`DR-004` consequence 1), so "before costs" is
-  the one description that is wrong. **The second number is the operative one:** `DR-005` measures
-  slippage at ~**25bps per side** against DR-004's assumed 5, and the two PR-005 points put
-  break-even at only **1.369×** the assumption. The 1× column was never the applicable one.
+- **The base strategy is negative at measured costs, across the whole admissible universe.** PR-005
+  reported **+0.028R** at 1× and **−0.123R** at 3×; both are net, because gross is never reported
+  (`DR-004` consequence 1), so "before costs" is the one description that is wrong. Those two points
+  give gross 0.1036R, cost 0.0757R and break-even at **1.369×** the assumption — and `DR-005`
+  measures slippage at **25bp per side** against the assumed 5. Recomputed 2026-08-09
+  (`DR-005`, *Consequence for PR-005*): **−0.073R at the $5 universe floor, −0.224R at $50.**
+  Break-even would need an average traded price of **$1.02**; `universe.min_price` is **$5.00**.
+  **No price an eligible instrument can have makes it positive.** The 1× column was never applicable.
 - **The direction is settled and the level is not.** `PR-008` reached the opposite conclusion — that
   the estimators cannot resolve the spread — and that explanation was **withdrawn on 2026-08-09**
   after a calibration-free sign test refuted it. But neither effort settled the magnitude:
@@ -220,7 +219,7 @@ docs/decisions       DR-001..DR-006 — choices that are not hypotheses
 docs/prereg          PR-001/002/005/006 and their reports
 registry/            parameters, components, course index, checklists, criteria
 src/swingdesk/       the reference implementation — the vertical slice the specification requires
-tools/               the 23 gates, plus network tools that never run in CI
+tools/               the 22 gates, plus network tools that never run in CI
 ```
 
 ## 10. History, condensed

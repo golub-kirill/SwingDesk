@@ -120,3 +120,45 @@ about twenty minutes of local compute over the full population — needs no new 
    supports rather than undermines — but the figures in it were charged at the old value and say so.
 4. `HANDOFF.md` §3 needs its cost sentence corrected: costs are no longer assumed, and the
    uncomfortable summary gets *more* uncomfortable rather than less.
+
+---
+
+## Consequence for PR-005, computed 2026-08-09
+
+`RECONCILIATION_PLAN.md` step 7. **This is arithmetic on PR-005's two reported points, not a re-run.**
+PR-005 did not persist a trade log — `PR-009` exists to fix exactly that — so the trades cannot be
+re-costed individually. What can be done is exact, and it is enough.
+
+PR-005 reported the ungated base arm at **+0.02795R** at 1× costs and **−0.12344R** at 3×. Mean R is
+linear in the cost multiplier, so those two points determine both terms:
+
+```
+cost per trade at 1x   C  = (R₁ − R₃)/2 = 0.075695 R
+gross per trade        G  = R₁ + C      = 0.103642 R
+break-even multiple    k* = G/C         = 1.3692
+```
+
+This record raises slippage 5bp → 25bp, a **5× multiple on that component only**; commission is
+unchanged. Writing `s` for slippage's share of total cost, the result reaches zero when
+`1 + (m−1)s = k*`, so at m=5 it needs **s ≤ 9.23%**.
+
+Under `DR-004`'s own model — commission `2 × $0.005` per share, slippage `2 × 5bp × P` — the
+slippage share is `P / (10 + P)`. Solving for 9.23% gives an average traded price of **$1.02**, and
+`universe.min_price` is **$5.00**.
+
+| Average price | Slippage share of cost | Mean R at 25bp |
+|---|---|---|
+| $5 (the universe floor) | 33.3% | **−0.0730** |
+| $20 | 66.7% | **−0.1739** |
+| $50 | 83.3% | **−0.2244** |
+| $200 | 95.2% | **−0.2604** |
+
+**The base strategy is negative at measured costs across the entire admissible universe.** Not
+marginally, and not only at the stressed end — the most favourable admissible case, a $5 instrument,
+still loses 0.073R per trade. No price a `DR-003`-eligible instrument can have makes it positive.
+
+**What this does not establish.** The 25bp is `assumed`, not `validated`, and its cross-sectional
+behaviour is wrong for a spread (`POSTMORTEM-2026-08-09.md` §2). A lower true slippage would move
+these figures — but the break-even needs slippage under **6.85bp per side**, which is barely above
+`DR-004`'s original assumption and far below every aggregate this record measured. **The sign is
+robust to the level being wrong; only the magnitude is not.**

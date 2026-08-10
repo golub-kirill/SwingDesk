@@ -1,4 +1,4 @@
-"""Gate 12: a committed criterion must be able to fire.
+"""Gate 3g: a committed criterion must be able to fire.
 
 `REQ-VALIDATION-001` in its narrow form. The requirement's own rationale is not hypothetical - in
 TradAlert an R:R gate was `if is_long: return True` and passed seven audits, because it is a valid

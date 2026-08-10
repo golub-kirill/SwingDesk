@@ -1,4 +1,4 @@
-"""Gate 12: documentation cross-references resolve, and status values are from the ladder.
+"""Gate 3e: documentation cross-references resolve, and status values are from the ladder.
 
 Every defect this gate catches has the same shape - a claim that reads as correct and is stale. Two
 surfaced by hand on 2026-08-03: `DR-003` described the share-class exclusion accurately and framed

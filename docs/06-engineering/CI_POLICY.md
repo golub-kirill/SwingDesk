@@ -37,7 +37,7 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 14 | `verify_counts.py` | a hard-coded parameter, component, gate, test, document or vector count that has drifted from the registries | **exists** — caught eight stale counts on its first run, including one conflating 465 catalogued components with 458 `registered` |
 | 15 | `verify_project_manifest.py` | the document index drifting from the tree: a duplicate id or display number, a path that does not exist, a status contradicting the document's own header, a row with no manifest entry, or a document in no index at all | **exists** — caught three specifications marked `planned` that were written, and two never indexed |
 
-Everything except 10 runs today via `tools/check_gates.py` — **23 gates**. Gates 2, 3 and 3f are
+Everything except 10 runs today via `tools/check_gates.py` — **22 gates**. Gates 2, 3 and 3f are
 stdlib-only; the rest need the project venv (`pip install -e ".[dev]"`).
 
 Gates 7b and 9 are also asserted from `pytest`, so a bare `pytest` run is not silently weaker than

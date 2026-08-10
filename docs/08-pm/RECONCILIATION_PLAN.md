@@ -7,7 +7,7 @@ conflict with `master`; **they conflict with each other.** Two independent `DR-0
 independent `PR-007` studies, three incompatible `criteria.yml` v1.1.0 amendments, and four
 specification documents written twice.
 
-**Approved 2026-08-09. Steps 1–5 are done; 6–8 remain.** All three branches are merged into `master`.
+**Approved and fully executed 2026-08-09. All eight steps are done.** All three branches are merged into `master`.
 
 Owner decisions taken 2026-08-09 are recorded in §3 and are the basis of every call below.
 
@@ -133,11 +133,25 @@ committed.
    `321418`'s file per D-R3. `k.track_a_timebox` is ratified at *120 calendar days from the first
    scheduled daily run, or 180 from ratification if none is scheduled*, and `k.timebox_review` is
    `met`. One amendment, not three.
-6. **Re-assign gate numbers** across the union, and reconcile `check_gates.py` into one registry.
-7. **Recompute every R at 25bp** (D-R5), and re-check `PR-005`'s reported figures. Its two points
-   put break-even at 1.369× the assumed cost; at 5× the assumption the base strategy is negative,
-   so the headline changes and every document quoting +0.028R must change with it.
-8. **Rebuild `HANDOFF.md` §2** from the merged tree, and re-run the branch census.
+6. ~~**Re-assign gate numbers**, reconcile `check_gates.py` into one registry.~~ **DONE 2026-08-09.**
+   No renumbering was needed and none was done — the numbers did not collide, the **runs** did.
+   `verify_criteria.py` was registered twice under two labels, so 23 entries were really 22 gates.
+   Worse, **three things claimed "Gate 12"**: `verify_docs.py`'s docstring, `verify_criteria.py`'s
+   docstring, and a `CI_POLICY` row — and the two prose citations of "gate 12" meant *different*
+   gates. Resolved to `3e` (doc references, 14 citations) and `3g` (criteria, 7 citations). Every
+   runner entry now carries its gate number, so the runner and the policy share one identifier
+   instead of matching by prose.
+7. ~~**Recompute every R at 25bp** (D-R5).~~ **DONE 2026-08-09**, recorded in `DR-005`,
+   *Consequence for PR-005*. It is arithmetic on PR-005's two reported points, **not a re-run** —
+   no trade log was persisted, which is what `PR-009` exists to fix. Raising slippage 5bp → 25bp is
+   5× on that component alone, and the result reaches zero only if slippage is under **9.23%** of
+   total cost, which under `DR-004`'s own model means an average traded price of **$1.02** against a
+   `universe.min_price` of **$5.00**. **Negative everywhere admissible**: −0.073R at the floor,
+   −0.224R at $50. The sign survives the level being wrong; only the magnitude does not.
+8. ~~**Rebuild `HANDOFF.md` §2**, re-run the branch census.~~ **DONE 2026-08-09.** The merge had
+   left visible damage the gates could not see: a truncated opening sentence with two orphaned lines
+   behind it, a fragment stranded under the branch table, and the universe row present twice. All
+   three were prose, all three read as plausible, and none is the kind of thing a count gate checks.
 
 ## 6. Step 3: which version of each duplicated spec won, and why
 

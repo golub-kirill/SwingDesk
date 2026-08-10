@@ -106,7 +106,7 @@ The ТЗ's vocabulary, mapped to what runs here:
 | `static_validation` | gates 1, 3e, 3f, 3g, 6, 7, 11 — registries, references, criteria, layers, wall clock |
 | `unit_test` / `integration_test` | gate 8, 302 tests |
 | `replay_test` | gate 9 — a stored manifest must reproduce its `output_hash` |
-| `mutation_test` | **does not exist** — the gap `REQ-VALIDATION-001` names. Gate 12 closes the input half of it, not the verdict half |
+| `mutation_test` | **does not exist** — the gap `REQ-VALIDATION-001` names. Gate 3g closes the input half of it, not the verdict half |
 
 ## 6. Open items
 
