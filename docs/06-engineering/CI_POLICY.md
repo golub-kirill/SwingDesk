@@ -156,9 +156,23 @@ before anyone had a chance to trust the thing it was checking.
 
 ## 7. Open items
 
-- [ ] Choose the runner. **A remote exists** (`origin`, GitHub) as of 2026-08-08, so Actions is now
-      available; a local pre-commit hook plus a script still suits a single-user offline-first
-      project better. The choice is open, the constraint that decided it is gone.
+- [x] ~~Choose the runner.~~ **DONE 2026-08-10 — GitHub Actions, `.github/workflows/gates.yml`.**
+      The argument for staying local was that a single-user offline-first project is well served by
+      a script; what settled it against was that the gates then only ever attest to the developer's
+      machine. `master` carried **zero commit statuses**, so "all green" described a habit, not the
+      published commit — and the first run proved the point by finding a gate-16 crash that cannot
+      occur in a working tree, because `git branch --merged master` needs a local `master` and a
+      runner checkout has none.
+
+      **`master` is protected as of 2026-08-10**: required check `gates`, `enforce_admins` on, no
+      review requirement — there is no second reviewer to require (`RISK_REGISTER.md` B-1) — and
+      force-pushes and deletions refused.
+
+      **The workflow consequence, stated plainly:** a new merge commit onto `master` has no check
+      yet and will be refused until one reports. Fast-forwarding `master` to a commit that is
+      already green passes; so does a pull request, where the check runs on the merge result. This
+      binds the owner too, which is the point of `enforce_admins` in a project whose founding
+      premise is that the failures happen upstream of the code.
 - [ ] **Gate 10 (traceability) would pass vacuously today, which is why it is still not wired.**
       Its strongest available check is "every `active` component has a test", and there are
       **zero** `active` components — five are blocked on an unset parameter, which is the
