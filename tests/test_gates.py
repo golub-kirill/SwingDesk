@@ -163,3 +163,44 @@ def test_study_gate_passes_an_accurate_census(tmp_path: Path) -> None:
                        verdicts=("reject", "accept"))
     code, out = run_gate("verify_study_summary.py", root)
     assert code == 0, out
+
+
+# --------------------------------------------------------------------------- preflight
+
+
+def _preflight_tree(tmp_path: Path, *dependencies: str) -> Path:
+    """A tree whose pyproject declares exactly `dependencies`."""
+    (tmp_path / "pyproject.toml").write_text(
+        "[project]\nname = 'fixture'\nversion = '0'\ndependencies = [\n"
+        + "".join(f'    "{item}",\n' for item in dependencies)
+        + "]\n",
+        encoding="utf-8",
+    )
+    return tmp_path
+
+
+def test_preflight_catches_a_declared_dependency_that_is_not_installed(tmp_path: Path) -> None:
+    """The 2026-08-10 defect in miniature: declared, absent, and only noticed at the first fetch."""
+    code, out = run_gate("preflight.py", _preflight_tree(tmp_path, "swingdesk-not-a-real-dist>=1"))
+    assert code == 3, out
+    assert "swingdesk-not-a-real-dist" in out
+    assert "run was NOT attempted" in out
+
+
+def test_preflight_passes_when_every_declared_dependency_is_present(tmp_path: Path) -> None:
+    """pytest is running, so it is installed - a positive control for the check itself."""
+    code, out = run_gate("preflight.py", _preflight_tree(tmp_path, "pytest>=8"))
+    assert code == 0, out
+
+
+def test_preflight_reads_the_version_specifier_off_the_name(tmp_path: Path) -> None:
+    """`yfinance>=1` must resolve to `yfinance`, not to the whole requirement string."""
+    code, out = run_gate("preflight.py", _preflight_tree(tmp_path, "pytest>=8,<99; python_version>'3'"))
+    assert code == 0, out
+
+
+def test_preflight_refuses_a_pyproject_declaring_nothing(tmp_path: Path) -> None:
+    """An empty dependency list is a malformed environment, not a clean bill of health."""
+    code, out = run_gate("preflight.py", _preflight_tree(tmp_path))
+    assert code == 3, out
+    assert "no runtime dependencies" in out

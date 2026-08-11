@@ -28,7 +28,7 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 6 | `lint-imports` | a package importing across a layer or forbidden boundary | **exists** — 4 contracts. Caught a reversed layer order on first run |
 | 7 | no-wall-clock check | `datetime.now` / `date.today` / `time.time` in `derived_observations`, `decision_logic`, `trade_management` | **exists** — AST-parsed, not string-matched, so a mention in a docstring does not trip it |
 | 7b | `golden.py` | a component's output changing without its version and vectors changing with it | **exists** — 25 vectors, 6 components |
-| 8 | `pytest` | unit, property and golden-vector tests | **exists** — 302 tests, fully offline |
+| 8 | `pytest` | unit, property and golden-vector tests | **exists** — 306 tests, fully offline |
 | 9 | determinism replay | a stored manifest no longer reproducing its `output_hash` | **exists** — 1 case, 4 instruments covering all four decision branches |
 | 10 | traceability | a course id with no requirement row, a requirement with no test, a spec id cited by no test | to build |
 | 11 | `verify_components.py` | `implements` not injective; an `active` component missing `implements`/`verification`/`spec`; a dangling parameter reference; an `active` component with an `unset` parameter; an `implements` pointing at a symbol that does not exist; a non-Definition topic with no row | **exists** — caught two components sharing one function on its first run |
@@ -140,10 +140,21 @@ before anyone had a chance to trust the thing it was checking.
       **zero** `active` components — five are blocked on an unset parameter, which is the
       fail-closed design working. A green gate that asserts nothing trains the operator to
       trust it. It lands with the first `active` component.
-- [ ] **`mypy --strict` covers `src` only.** `tools/` carried 53 further errors, mostly
-      `type-arg` and `no-any-return` in study runners. Two sites are worth a look rather than a
-      blanket annotation pass: `run_pr002.py:209` calls `min(key=...)` over a key that can
-      return `None`, and `run_pr005.py:267` builds a `Decimal` from an `object`. Neither
-      affected a reported result — checked, not assumed — because the runs completed.
+- [ ] **`mypy --strict` covers `src` only.** `tools/` carries **100 errors in 21 of 28 files**
+      (measured 2026-08-10), mostly `type-arg` and `no-any-return` in study runners. Two sites are
+      worth a look rather than a blanket annotation pass: `run_pr002.py:209` calls `min(key=...)`
+      over a key that can return `None`, and `run_pr005.py:267` builds a `Decimal` from an
+      `object`. Neither affected a reported result — checked, not assumed — because the runs
+      completed.
+
+      **This row said 53 from 2026-08-02 until 2026-08-10, and so did `pyproject.toml`.** Nothing
+      recomputes it: gate 5 runs over `src`, so the number describing what the gate does *not*
+      cover is the one figure in the policy no gate can check. It is the fifth hand-maintained
+      count to drift here (HANDOFF §8) and the first that no gate can be pointed at without
+      bringing `tools/` into scope — which is the open item itself. Re-measure before quoting:
+
+      ```bash
+      python -m mypy --strict tools/
+      ```
 - [ ] Runtime budget. Gates 1–3 take about a minute (dominated by re-extracting 116 PDFs). If that
       becomes friction, cache extraction by file hash rather than weakening the check.

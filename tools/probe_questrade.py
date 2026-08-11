@@ -8,7 +8,8 @@ It was not adopted because three facts could not be obtained without an account:
   2. the actual rate limits
   3. whether delisted symbols are available (survivorship)
 
-Run this yourself. It never writes the token anywhere and prints no secrets.
+Run this yourself. It never writes the token anywhere. It DOES print one secret, deliberately -
+see SECURITY below, because the refresh token is single-use and losing it costs you the account.
 
 SECURITY
   - The token is read from the environment, never from a file or an argument (arguments show up in

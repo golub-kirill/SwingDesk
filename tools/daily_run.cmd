@@ -24,6 +24,19 @@ if not exist "%PY%" (
   exit /b 3
 )
 
+REM Preflight. An interpreter that exists is not an environment that works: on
+REM 2026-08-10 `yfinance` was imported by the default fetcher and declared in no
+REM dependency list, so a clean install succeeded and only broke at the first
+REM fetch - inside this run. Checking here turns a lost day of the Track A clock
+REM into a log line at 18:30. Exit 3, same as a missing interpreter: the run is
+REM not attempted, and that is deliberately NOT a refusal (2), which is a real
+REM outcome. Stdlib only, so it still reports on a broken environment.
+"%PY%" -X utf8 "%REPO%\tools\preflight.py" >> "%LOG%" 2>&1
+if errorlevel 1 (
+  echo [%DATE% %TIME%] FATAL: preflight failed, run not attempted >> "%LOG%"
+  exit /b 3
+)
+
 REM Rotate at 50MB. MEASURED: a full-universe run writes ~2.4MB and takes ~5
 REM minutes, so this holds about a month. The first estimate here said 650KB,
 REM taken from a --limit 5 test run - a limited run is not a small version of a

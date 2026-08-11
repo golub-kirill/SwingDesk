@@ -37,8 +37,25 @@ def _git(*args: str) -> str:
 
 
 def worktree_branches() -> list[tuple[str, str]]:
-    """(branch, tip sha) for every worktree except the main one, in listing order."""
+    """(branch, tip sha) for every worktree except the main one, in listing order.
+
+    The main working tree is always `git worktree list`'s FIRST entry, which is how it is
+    identified here.
+
+    **This used to skip whichever tree the gate was running in, not the main one** (fixed
+    2026-08-10). The two coincide only when the gate runs from the main checkout, so the gate
+    returned different verdicts on one commit depending on where it was invoked: from a worktree it
+    exempted the running effort and counted the main checkout as a sibling - whose branch is
+    `master`, a string that appears in `HANDOFF.md` many times over, so it could never fail. On
+    664e84a it was green from `swingdesk-documentation-321418` and red from the main checkout.
+
+    A gate that exempts the effort running it is exempting the one effort a fresh session is
+    guaranteed not to know about yet, which inverts what `POSTMORTEM-2026-08-09.md` root cause A
+    asks for. Declaring your own worktree in `HANDOFF.md` section 2 before your gates go green is
+    the discipline, and it costs one table row.
+    """
     entries: list[tuple[str, str]] = []
+    records: list[tuple[str, str, str]] = []
     path = head = branch = ""
     for line in _git("worktree", "list", "--porcelain").splitlines():
         if line.startswith("worktree "):
@@ -48,11 +65,14 @@ def worktree_branches() -> list[tuple[str, str]]:
         elif line.startswith("branch "):
             branch = line.removeprefix("branch ").strip().removeprefix("refs/heads/")
         elif not line.strip():
-            if path and branch and Path(path).resolve() != REPO.resolve():
-                entries.append((branch, head[:7]))
+            if path and branch:
+                records.append((path, branch, head[:7]))
             path = head = branch = ""
-    if path and branch and Path(path).resolve() != REPO.resolve():
-        entries.append((branch, head[:7]))
+    if path and branch:
+        records.append((path, branch, head[:7]))
+
+    for _path, branch_name, sha in records[1:]:  # [0] is the main working tree
+        entries.append((branch_name, sha))
     return entries
 
 
@@ -76,6 +96,20 @@ def main() -> int:
 
     for failure in failures:
         print(f"  {failure}")
+
+    # The census is printed even when the gate is green, because the check is only that each branch
+    # is NAMED - a row can still describe a tip or a merge state that has since moved. On 2026-08-10
+    # HANDOFF said the council worktree sat "at master's tip"; it was six commits behind.
+    #
+    # Asserting the tip SHA against the document was considered and REJECTED: a branch tip moves
+    # with every commit, so the gate would demand a HANDOFF edit per commit and be bypassed within a
+    # day. Printing ground truth next to the claim costs nothing and leaves the comparison to a
+    # reader, which is the right split for prose that no parser should be interpreting.
+    merged = set(_git("branch", "--merged", "master", "--format=%(refname:short)").split())
+    for branch, sha in branches:
+        state = "merged" if branch in merged else "NOT merged"
+        print(f"  {branch}  tip {sha}  {state} into master")
+
     print(f"\nworktrees: {len(branches)} parallel, {len(failures)} undeclared")
     if failures:
         print("\nAdd them to HANDOFF.md section 2 with tip date and one line on what they hold.")

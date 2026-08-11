@@ -15,7 +15,27 @@ dependencies = [
     "pyyaml>=6",
     # Bitemporal store and journal (ADR-0004). Embedded, columnar, single file.
     "duckdb>=1",
+    # The v1 bar source (ADR-0001), and the pipeline's DEFAULT fetcher - `pipeline.run` falls back
+    # to `vendor_yahoo.fetch` when no fetcher is injected, which is what the scheduled run uses.
+    # `vendor_yahoo.fetch` imports it inside the function body, deliberately, so the package
+    # imports and the whole gate suite runs with no network and no vendor installed. That laziness
+    # is why this line was missing until 2026-08-10: a clean install SUCCEEDED and failed later, at
+    # the first fetch - inside the 18:30 scheduled run, which is the one place a failure costs a
+    # day of `a.run_completes`. Not an optional extra for the same reason.
+    "yfinance>=1",
 ]
+
+[project.scripts]
+# `swingdesk scan` is written as a real command in SYSTEM_MODES, UX_TASK_FLOWS, ALLOCATION_SPEC and
+# ROADMAP 4 (which marks it done). Until 2026-08-10 it was not one: there was no entry point, and
+# the only way to run it was `python -m swingdesk.presentation.cli scan`. What made this hard to
+# see is that `argparse` is constructed with `prog="swingdesk"`, so --help printed a command name
+# that could not be typed. Declared here so the documented name and the runnable name are the same.
+#
+# `tools/daily_run.cmd` deliberately keeps calling `-m swingdesk.presentation.cli`: it runs the
+# venv interpreter by absolute path, and a module invocation cannot resolve to a stale console
+# script left over from an earlier install.
+swingdesk = "swingdesk.presentation.cli:main"
 
 [project.optional-dependencies]
 # Everything the merge gates need. Declared here rather than only in requirements-lock.txt, because
@@ -42,10 +62,15 @@ testpaths = ["tests"]
 
 [tool.mypy]
 strict = true
-# The shipped package only. `tools/` was in scope before mypy was ever run and carried 53
-# further errors, all in research runners and gate scripts. Narrowing is recorded rather than
-# quietly done: a gate covering src cleanly is worth more than one covering everything and
-# failing, and CI_POLICY 7 tracks the rest as an open item with the two suspicious sites named.
+# The shipped package only. `tools/` was in scope before mypy was ever run and carried further
+# errors, all in research runners and gate scripts. Narrowing is recorded rather than quietly
+# done: a gate covering src cleanly is worth more than one covering everything and failing, and
+# CI_POLICY 7 tracks the rest as an open item with the two suspicious sites named.
+#
+# MEASURED 2026-08-10: `mypy --strict tools/` reports 100 errors in 21 of 28 files. The figure
+# recorded here and in CI_POLICY 7 said 53, and had drifted unnoticed because nothing recomputes
+# it - gate 5 runs over `src` only, so the number describing what the gate does NOT cover is the
+# one number in this file no gate can check. Re-measure it when quoting it.
 files = ["src"]
 
 # Third-party packages that ship no type information. Listed one by one rather than with a global
@@ -101,9 +126,13 @@ ignore = [
 
 # `ANN` (missing annotations) is deliberately NOT selected. Turning it on produced 129 findings,
 # almost all in tests, where the annotation adds nothing a reader did not already know from the
-# fixture. `mypy --strict` already requires annotations on everything it checks (src and tools),
-# which is where they carry weight. Two overlapping gates disagreeing about scope is how a gate
-# starts getting bypassed.
+# fixture. `mypy --strict` already requires annotations on everything it checks - `src`, per
+# [tool.mypy] above - which is where they carry weight. Two overlapping gates disagreeing about
+# scope is how a gate starts getting bypassed.
+#
+# This comment read "(src and tools)" until 2026-08-10, contradicting `files = ["src"]` forty
+# lines up in the same file. The rationale for leaving ANN off rested on coverage that the same
+# file disproved. `tools/` is covered by neither gate; that is the open item, not this one.
 
 [tool.ruff.lint.per-file-ignores]
 # Research tools bootstrap sys.path before importing swingdesk, so their imports cannot come first.

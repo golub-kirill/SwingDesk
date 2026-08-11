@@ -30,7 +30,7 @@ documentation is implementable.
 | | |
 |---|---|
 | Merge gates | **22**, one command, all green |
-| Tests | **302**, fully offline |
+| Tests | **306**, fully offline |
 | Docs | 98 files, Tier 0–8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 63 `unset`, 29 `assumed`, 3 `owner`, **1 `validated`** |
@@ -63,9 +63,25 @@ others, and one re-ran a study another had already finished and reached the oppo
 | `claude/swingdesk-handoff-continue-f479bd` | 2026-08-09 | **yes** | PR-008, the v7.0 delta, `AGENTS.md` §9–§10 |
 | `claude/swingdesk-handoff-continue-1feb49` | 2026-08-08 | **yes**, merged 2026-08-09 | `DR-005` slippage at 25bp, `EXECUTION_MODEL`, four gates, `validation.max_allowable_drawdown` = 20% |
 | `claude/swingdesk-documentation-321418` | 2026-08-09 | **yes**, merged 2026-08-09 | `DR-006`, `DR-007`, ALLOCATION/TRANSITION/ENTITY_MAP/EXPECTATION_MODEL/DRIFT_AND_LEARNING/CHANGE_MANAGEMENT/KNOWLEDGE_GRAPH, five gates, `criteria.yml` v1.1.0 |
-| `claude/skills-llm-council-setup-1e1d65` | 2026-08-09 | at `master`'s tip | **a fourth effort, started mid-reconciliation.** No unique commits yet. It appeared while the merge was running and gate 16 failed within the minute — which is the whole point of the gate |
+| `claude/skills-llm-council-setup-1e1d65` | `63b089d` | no unique commits | **a fourth effort, started mid-reconciliation.** It appeared while the merge was running and gate 16 failed within the minute — which is the whole point of the gate. This row said *"at `master`'s tip"* until 2026-08-10; it is six commits behind and has been since `5a79f00` |
+| `claude/swingdesk-handoff-review-e8d9f4` | `664e84a` | **yes** — branched from `master`'s tip | **the fifth effort, 2026-08-10.** Handoff verification, an audit of two external reviews, and the P0/P1 fixes that came out of it |
 
-**All three branches are merged and `RECONCILIATION_PLAN.md` is fully executed** — steps 1–8, of
+**Two things this table stopped being able to tell you, both fixed 2026-08-10.**
+
+The **directory names no longer match the branches checked out in them** — `git worktree list` is the
+truth, not the folder name. This directory, `swingdesk-documentation-321418`, currently holds
+`claude/swingdesk-handoff-review-e8d9f4`; the one named `…-continue-1feb49` holds the council branch.
+Reading a path and inferring a branch is now wrong.
+
+And **gate 16 was excluding the tree it ran in rather than the main checkout**, so it returned
+different verdicts on one commit depending on where you invoked it: green from a worktree, red from
+the main checkout. Because it counted the main checkout as a sibling, and that branch is `master` —
+a string this file contains many times over — the case it exempted could never fail. It was
+exempting the running effort, which is the one effort a fresh session is guaranteed not to know
+about. Run it anywhere now and it answers the same, and it prints each tip and merge state so a
+stale row like the council one above is visible without being parsed.
+
+**All three reconciled branches are merged and `RECONCILIATION_PLAN.md` is fully executed** — steps 1–8, of
 which the last three were gate renumbering, recomputing the base strategy at measured costs, and
 rebuilding this table from the merged tree. `criteria.yml` is **v1.1.0** with `k.track_a_timebox` ratified and `k.timebox_review` `met`.
 
@@ -163,6 +179,46 @@ triggering it: exit 0 in ~5 minutes.
 the task runs only while the user is logged on. Running otherwise needs stored credentials, which is
 not something to hand to a tool. If the machine is commonly logged out at 18:30, that is the next
 thing that will break the chain, and the fix is yours to make in Task Scheduler.
+
+**How bad that is depends on `StartWhenAvailable`, and nobody here has tested it.** The expectation
+is that a logon-mode miss is *late*, not *lost* — the trigger is missed at 18:30, and the task runs
+at the next logon instead. If that holds, a logged-out evening costs a late run rather than a day of
+`a.run_completes`, and the exposure is much smaller than the paragraph above implies. **Marked
+conjecture** under `AGENTS.md` §10.4: it is Windows behaviour nobody has exercised on this machine,
+and the settings state alone does not establish it. The check that would settle it is one evening —
+log out before 18:30, log back in, and read `Last Run Time` against the trigger time:
+
+```powershell
+Get-ScheduledTaskInfo -TaskName "SwingDesk daily run" | Select LastRunTime, LastTaskResult, NextRunTime
+```
+
+Until someone runs it, treat a logged-out 18:30 as an unknown rather than as safe. **Verified
+2026-08-10** by direct query, and these are facts rather than conjecture: `Enabled True`,
+`DisallowStartIfOnBatteries False`, `StopIfGoingOnBatteries False`, `StartWhenAvailable True`,
+`LastTaskResult 0`.
+
+**A dependency fault can no longer eat a day silently.** `tools/daily_run.cmd` now runs
+`tools/preflight.py` before the pipeline: it reads the runtime dependencies out of `pyproject.toml`
+and exits 3 if any is missing from the interpreter's environment, so the log says which one at
+18:30 instead of the run dying at the first fetch. It exists because `yfinance` was imported by the
+default fetcher and declared in no dependency list — a clean install *succeeded* and was only wrong
+once the network was touched. Stdlib only and it reads nothing from `swingdesk`, because it has to
+work in exactly the broken environment it reports on. Four tests in `tests/test_gates.py` hold it to
+the same standard as the gates: it has been seen red.
+
+**Merging the 2026-08-10 packaging fixes requires one command, and nothing works until it is run.**
+`pyproject.toml` now declares `yfinance` and a `swingdesk` console script; neither exists in an
+environment installed before that. The venv is shared — `.venv` lives in the main checkout and every
+worktree borrows it (§8) — so this must be run **from the main checkout**, never from a worktree,
+where an editable install would silently repoint the shared environment at that worktree's `src`
+and take the scheduled run with it:
+
+```bash
+cd C:/PycharmProjects/SwingDesk && .venv/Scripts/python.exe -m pip install -e ".[dev]"
+```
+
+That one command creates the `swingdesk` command, and refreshes install metadata that had gone
+stale enough to omit `duckdb` — a declared dependency since 2026-08-02.
 
 ### Phase 2, and it is smaller than it looks
 

@@ -183,7 +183,7 @@ than fighting it. §7's honest risk still stands, and this ordering does not mak
 ### A. Phase 2 already happened
 
 **G5 closed 2026-08-02.** `CHARTER.md` §4's six capabilities are all done, replay is a merge gate,
-302 tests and 22 gates run from one command. The MVP is behind us, not ahead.
+306 tests and 22 gates run from one command. The MVP is behind us, not ahead.
 
 What *is* ahead and looks like an MVP is **activation**: 465 components are registered, 7 are
 implemented and **0 are `active`**. `COVERAGE_MATRIX.md` §3 names that gap as the number to watch —
