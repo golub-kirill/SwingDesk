@@ -24,9 +24,11 @@ if not exist "%PY%" (
   exit /b 3
 )
 
-REM Rotate at ~20MB. A full-universe run writes ~650KB, so this is about a month
-REM of history - enough to diagnose a failure, bounded enough to leave alone.
-for %%F in ("%LOG%") do if %%~zF GTR 20000000 move /Y "%LOG%" "%LOG%.1" >nul 2>&1
+REM Rotate at 50MB. MEASURED: a full-universe run writes ~2.4MB and takes ~5
+REM minutes, so this holds about a month. The first estimate here said 650KB,
+REM taken from a --limit 5 test run - a limited run is not a small version of a
+REM full one, it is a different thing.
+for %%F in ("%LOG%") do if %%~zF GTR 50000000 move /Y "%LOG%" "%LOG%.1" >nul 2>&1
 
 echo. >> "%LOG%"
 echo ===== [%DATE% %TIME%] daily run starting >> "%LOG%"

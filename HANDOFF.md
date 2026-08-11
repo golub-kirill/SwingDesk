@@ -36,8 +36,8 @@ documentation is implementable.
 | Parameters | 96 — 63 `unset`, 29 `assumed`, 3 `owner`, **1 `validated`** |
 | Golden vectors | 25 across 6 components |
 | Studies | 7 registered · **5 reported — 3 refuted**, 1 inconclusive, 1 accepted and quantifiably fragile |
-| Daily run | **SCHEDULED 2026-08-09** — Windows Task Scheduler, `SwingDesk daily run`, weekdays 18:30 local, wrapper `tools/daily_run.cmd`, log `data/daily_run.log` |
-| Track A clock | `a.run_completes` needs **20 consecutive** trading days · **counter at 0**, first scheduled run 2026-08-10 |
+| Daily run | **SCHEDULED 2026-08-09** — Windows Task Scheduler, `SwingDesk daily run`, weekdays 18:30 local, wrapper `tools/daily_run.cmd`, log `data/daily_run.log`. ~5 min, ~2.4MB of log per run |
+| Track A clock | `a.run_completes` needs **20 consecutive** trading days · **counter at 0**. First scheduled run 2026-08-10 **failed on battery** (§5) and was re-run by hand at 20:46; treat the clock as starting with the first clean scheduled run |
 | Directory | 3 pulls (08-03, 08-05, 08-08) · 14 departures observed · **still manual, by owner decision** |
 | Costs | slippage **measured** — 25bps per side (`DR-005`); commission still assumed |
 | Criteria | `criteria.yml` **v1.1.0** — `k.track_a_timebox` ratified, `k.timebox_review` `met`; v1.0.0 on record |
@@ -150,6 +150,19 @@ tail -40 data/daily_run.log                            # what it actually did
 Exit 0 is a completed run. **Exit 2 is a refusal, which is a real outcome and not a failure** —
 today every decision comes back `Skip [RISK]` because `risk.per_trade_pct` is `unset`, and that is
 the system working. A crash is exit 3 or a missing log entry, and that is what resets the counter.
+
+**The first scheduled run failed, and it is worth knowing how.** 2026-08-10 18:30 fired and returned
+`0x800710E0` — *refused* — because the task was created with Windows' default
+`No Start On Batteries`. Nothing crashed, nothing was logged, and the wrapper never ran: from the
+log alone the day simply did not exist. Fixed the same evening with
+`AllowStartIfOnBatteries`, `DontStopIfGoingOnBatteries` and **`StartWhenAvailable`**, the last so a
+run missed to sleep or shutdown catches up instead of silently breaking a 20-day chain. Verified by
+triggering it: exit 0 in ~5 minutes.
+
+**One limitation remains and cannot be fixed without a password.** `Logon Mode: Interactive only` —
+the task runs only while the user is logged on. Running otherwise needs stored credentials, which is
+not something to hand to a tool. If the machine is commonly logged out at 18:30, that is the next
+thing that will break the chain, and the fix is yours to make in Task Scheduler.
 
 ### Phase 2, and it is smaller than it looks
 
