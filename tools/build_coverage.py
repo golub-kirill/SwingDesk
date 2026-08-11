@@ -196,7 +196,18 @@ def render(rows: list[dict], parameters: list[dict]) -> str:
         "",
         "## 3. How to read the runtime column",
         "",
-        "**It is zero, and that is the design rather than a gap.** A component reaches `active` only "
+        # Derived, not asserted. This sentence read "It is zero, and that is the design rather than
+        # a gap" from a hardcoded string, and stayed zero in the generated document after the first
+        # component was activated on 2026-08-10 - a hand-maintained claim inside a generated file,
+        # which drifts exactly like a hand-maintained count and is harder to spot for sitting in a
+        # file everyone treats as derived.
+        (
+            "**It is zero, and that is the design rather than a gap.** "
+            if totals["runtime"] == 0 else
+            f"**{totals['runtime']} of {totals['implemented']} implemented components are "
+            f"`active`.** A low number here is the design rather than a gap. "
+        )
+        + "A component reaches `active` only "
         "when its parameters have values, its verification exists and `implements` points at real "
         "code (`COMPONENT_REGISTRY_SPEC.md` §3). Components blocked by an `unset` parameter refuse "
         "rather than defaulting, which is the fail-closed rule working as specified.",

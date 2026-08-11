@@ -1034,7 +1034,7 @@ components:
     stage: Context
     claim_type: Derived Observation
     validation: Not Applicable
-    activation: specified
+    activation: active
     implements: "swingdesk.derived_observations.atr:compute"
     parameters: [atr.period]
     consumers: []

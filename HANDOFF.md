@@ -31,9 +31,9 @@ documentation is implementable.
 |---|---|
 | Merge gates | **24**, one command, all green · **CI since 2026-08-10** (`gates`, windows-latest); 22 run there, 2 report `UNAVAILABLE` because the course PDFs are not in the repo |
 | `master` | **protected** since 2026-08-10 — required check `gates`, admins included, no force-push. A new merge commit is refused until its check reports; fast-forward a green commit, or use a PR |
-| Tests | **321**, fully offline |
+| Tests | **324**, fully offline |
 | Docs | 98 files, Tier 0–8 · indexed by `registry/project_manifest.yml` |
-| Components | 465 catalogued · 458 registered · 7 `specified` · **0 `active`** |
+| Components | 465 catalogued · 458 registered · 6 `specified` · **1 `active`** — ATR (`M18-T0280-v5.0`), activated 2026-08-10, the first ever |
 | Parameters | 96 — 63 `unset`, 29 `assumed`, 3 `owner`, **1 `validated`** |
 | Golden vectors | 25 across 6 components |
 | Studies | 7 registered · **5 reported — 3 refuted**, 1 inconclusive, 1 accepted and quantifiably fragile |
@@ -139,7 +139,7 @@ disagree, it wins.
 Two adopted adjustments change what happens next:
 
 - **The MVP is behind us.** What looks like one from here is **activation** — 465 registered, 7
-  implemented, 0 `active`.
+  implemented, 1 `active` since 2026-08-10.
 - **Coverage is demand-driven.** "Maximum coverage" is `k.project_timebox`'s own named kill risk:
   scope drift into the 460-component catalogue. The test before implementing anything: **name the
   strategy card that consumes it.** No card → it stays `registered`, which costs nothing.
