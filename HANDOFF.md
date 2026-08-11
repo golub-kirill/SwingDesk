@@ -30,7 +30,7 @@ documentation is implementable.
 | | |
 |---|---|
 | Merge gates | **24**, one command, all green |
-| Tests | **320**, fully offline |
+| Tests | **321**, fully offline |
 | Docs | 98 files, Tier 0–8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 63 `unset`, 29 `assumed`, 3 `owner`, **1 `validated`** |

@@ -359,3 +359,35 @@ def test_lock_round_trips(tmp_path: Path) -> None:
             capture_output=True, text=True, cwd=REPO,
         )
         assert result.returncode == 0, result.stderr
+
+
+# --------------------------------------------------------------------------- branch census
+
+
+def test_branch_census_survives_a_clone_with_no_master_ref(tmp_path: Path) -> None:
+    """A GitHub checkout creates only the branch being built, and `--merged master` exits 128.
+
+    This crashed the gate on CI's first run. It cannot reproduce on a developer machine, where
+    `master` always exists, so the regression test builds the condition explicitly.
+    """
+    repo = tmp_path / "clone"
+    repo.mkdir()
+    (repo / "tools").mkdir()
+    (repo / "HANDOFF.md").write_text("no worktrees here\n", encoding="utf-8")
+    (repo / "tools" / "verify_branches.py").write_text(
+        (TOOLS / "verify_branches.py").read_text(encoding="utf-8"), encoding="utf-8"
+    )
+    for args in (["init", "-b", "feature-only"], ["add", "-A"],
+                 ["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-m", "only branch"]):
+        subprocess.run(["git", "-C", str(repo), *args], capture_output=True, check=True)
+
+    assert "master" not in subprocess.run(
+        ["git", "-C", str(repo), "branch"], capture_output=True, text=True, check=True
+    ).stdout
+
+    result = subprocess.run(
+        [sys.executable, str(repo / "tools" / "verify_branches.py")],
+        capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stderr
+    assert "Traceback" not in result.stderr

@@ -76,6 +76,33 @@ def worktree_branches() -> list[tuple[str, str]]:
     return entries
 
 
+def merged_branches() -> set[str] | None:
+    """Branches merged into master, or None when no `master` ref resolves here.
+
+    A GitHub Actions checkout creates only the branch being built, so `git branch --merged master`
+    exits 128 on the runner even with full history fetched. That crashed this gate on CI's first
+    run - and only CI could have caught it, because on any developer machine `master` is simply
+    always there.
+
+    Merge state is *commentary* here: the gate's actual question is whether each worktree is named
+    in HANDOFF, which needs no master ref at all. So a missing ref degrades the annotation and must
+    never fail the check. `unavailable` is not `fail` (HANDOFF section 8) applies to a gate's own
+    inputs too.
+    """
+    for ref in ("master", "origin/master"):
+        try:
+            return set(_git("branch", "--merged", ref, "--format=%(refname:short)").split())
+        except subprocess.CalledProcessError:
+            continue
+    return None
+
+
+def _merge_state(branch: str, merged: set[str] | None, *, suffix: str = "") -> str:
+    if merged is None:
+        return "merge state unknown - no master ref in this clone"
+    return ("merged" if branch in merged else "NOT merged") + suffix
+
+
 def main() -> int:
     if not HANDOFF.exists():
         print("HANDOFF.md is missing; it is the declared entry point", file=sys.stderr)
@@ -84,11 +111,12 @@ def main() -> int:
     body = HANDOFF.read_text(encoding="utf-8")
     branches = worktree_branches()
 
+    merged = merged_branches()
+
     failures: list[str] = []
     for branch, sha in branches:
         if branch not in body:
-            merged = _git("branch", "--merged", "master", "--format=%(refname:short)").split()
-            state = "merged into master" if branch in merged else "NOT merged into master"
+            state = _merge_state(branch, merged, suffix=" into master")
             failures.append(
                 f"worktree branch {branch!r} ({sha}, {state}) is not named in HANDOFF.md. "
                 f"A fresh session reading HANDOFF would not know it exists."
@@ -105,10 +133,8 @@ def main() -> int:
     # with every commit, so the gate would demand a HANDOFF edit per commit and be bypassed within a
     # day. Printing ground truth next to the claim costs nothing and leaves the comparison to a
     # reader, which is the right split for prose that no parser should be interpreting.
-    merged = set(_git("branch", "--merged", "master", "--format=%(refname:short)").split())
     for branch, sha in branches:
-        state = "merged" if branch in merged else "NOT merged"
-        print(f"  {branch}  tip {sha}  {state} into master")
+        print(f"  {branch}  tip {sha}  {_merge_state(branch, merged, suffix=' into master')}")
 
     print(f"\nworktrees: {len(branches)} parallel, {len(failures)} undeclared")
     if failures:
