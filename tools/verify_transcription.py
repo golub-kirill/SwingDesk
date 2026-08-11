@@ -229,6 +229,15 @@ def main() -> int:
     parser.add_argument("--docs", type=Path, default=REPO / "docs")
     args = parser.parse_args()
 
+    if not args.course_root.is_dir() and not any(d.is_dir() for d in EXTRA_SOURCE_DIRS):
+        # Same reasoning as build_course_index: the sources are the owner's 116 PDFs and are not
+        # in the repository, so this gate cannot run in CI. UNAVAILABLE (4), not PASS and not
+        # FAIL. Checked against EXTRA_SOURCE_DIRS too, because a source resolvable from either
+        # location means the gate CAN run and any failure below is then a real one.
+        print(f"course root absent: {args.course_root}", file=sys.stderr)
+        print("UNAVAILABLE: the course PDFs are not in this environment", file=sys.stderr)
+        return 4
+
     failures: list[str] = []
     total_checked = total_skipped = documents = 0
 

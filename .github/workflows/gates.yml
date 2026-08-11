@@ -1,0 +1,73 @@
+# The merge gates, executed off this machine.
+#
+# Until 2026-08-10 all 22 gates ran only on the owner's laptop, by hand. `master` carried zero
+# commit statuses and no branch protection, so "22 gates, all green" was a claim about a habit
+# rather than about the published commit - the exact shape of defect the gates themselves exist to
+# catch, one level up (CI_POLICY 3).
+#
+# This calls `tools/check_gates.py` rather than listing gates itself. A CI definition that
+# enumerates its own gates is a second copy of the inventory, and master TZ section 8 forbids one
+# logic in two places: the copy drifts, and the drift is invisible until a gate silently stops
+# running.
+#
+# Two of the 22 cannot run here and are reported UNAVAILABLE, not PASS: gates 2 and 3 re-extract the
+# owner's 116 course PDFs, which are the requirements source and are not in the repository. The
+# runner prints which gates did not run and never claims "all gates pass" when any did not. Treat a
+# green run here as 20 of 22.
+
+name: gates
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  # A superseded push has nothing to tell anyone; cancel it rather than pay for it.
+  group: gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    # windows-latest, not ubuntu. This is a Windows-first single-user system - the scheduled run is
+    # a .cmd wrapper driven by Task Scheduler - and CI whose platform differs from the only machine
+    # that matters would test a configuration nobody runs.
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Gate 16 reads `git worktree list` and `git branch --merged master`. With the default
+          # shallow single-branch clone there is no local `master` to compare against on a branch
+          # build, so the merge state it prints would be wrong rather than absent.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          # Matches the interpreter the owner's venv runs (3.14.0) rather than floating: a gate
+          # suite that passes here on a different minor than the daily run uses is evidence about
+          # the wrong environment.
+          python-version: "3.14"
+
+      - name: Install
+        # From the lock, so a CI failure means this commit changed something rather than a
+        # dependency having shipped a release overnight. `--no-deps` on the package itself keeps
+        # the pins authoritative: without it pip is free to re-resolve and quietly unpin.
+        # Gate 18 is what keeps the lock honest against pyproject.
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-lock.txt
+          python -m pip install -e . --no-deps
+
+      - name: Preflight
+        # The same check the scheduled run makes, for the same reason: prove the environment before
+        # blaming the code. It reads the dependency list out of pyproject.toml.
+        run: python tools/preflight.py
+
+      - name: Gates
+        run: python tools/check_gates.py

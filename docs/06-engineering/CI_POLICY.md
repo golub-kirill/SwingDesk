@@ -28,16 +28,40 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 6 | `lint-imports` | a package importing across a layer or forbidden boundary | **exists** — 4 contracts. Caught a reversed layer order on first run |
 | 7 | no-wall-clock check | `datetime.now` / `date.today` / `time.time` in `derived_observations`, `decision_logic`, `trade_management` | **exists** — AST-parsed, not string-matched, so a mention in a docstring does not trip it |
 | 7b | `golden.py` | a component's output changing without its version and vectors changing with it | **exists** — 25 vectors, 6 components |
-| 8 | `pytest` | unit, property and golden-vector tests | **exists** — 306 tests, fully offline |
+| 8 | `pytest` | unit, property and golden-vector tests | **exists** — fully offline |
 | 9 | determinism replay | a stored manifest no longer reproducing its `output_hash` | **exists** — 1 case, 4 instruments covering all four decision branches |
 | 10 | traceability | a course id with no requirement row, a requirement with no test, a spec id cited by no test | to build |
 | 11 | `verify_components.py` | `implements` not injective; an `active` component missing `implements`/`verification`/`spec`; a dangling parameter reference; an `active` component with an `unset` parameter; an `implements` pointing at a symbol that does not exist; a non-Definition topic with no row | **exists** — caught two components sharing one function on its first run |
 | 12 | `verify_criteria.py` | a ratified or owner-set criterion referencing a parameter that is `unset` or absent — a committed gate that cannot fire | **exists** — written for `k.drawdown_pause`, which had been ratified against an `unset` threshold since 2026-08-02 |
 | 13 | `verify_study_summary.py` | a document stating a study count that the result files do not support | **exists** — caught six places overstating both the number of studies run and the number refuted; the census is derived from result files carrying a `prereg` id and a `verdict` |
 | 14 | `verify_counts.py` | a hard-coded parameter, component, gate, test, document or vector count that has drifted from the registries | **exists** — caught eight stale counts on its first run, including one conflating 465 catalogued components with 458 `registered` |
+| 17 | `verify_dependencies.py` | a third-party module imported anywhere in `src/` that no declared dependency provides — at any nesting depth, so a function-level import is caught | **exists** — written after `yfinance` survived the whole gate suite undeclared; caught `pandas` on its first run |
+| 18 | `build_lock.py --check-only` | `requirements-lock.txt` drifting from what the declarations resolve to | **exists** — the file it replaced held 8 entries against 56 installed, and was referenced by nothing |
+| 16 | `verify_branches.py` | a parallel worktree missing from `HANDOFF.md` §2 | **exists** — and until 2026-08-10 it excluded the tree it ran in rather than the main checkout, so it answered differently depending on where it was invoked |
 | 15 | `verify_project_manifest.py` | the document index drifting from the tree: a duplicate id or display number, a path that does not exist, a status contradicting the document's own header, a row with no manifest entry, or a document in no index at all | **exists** — caught three specifications marked `planned` that were written, and two never indexed |
 
-Everything except 10 runs today via `tools/check_gates.py` — **22 gates**. Gates 2, 3 and 3f are
+### Three states, not two
+
+A gate reports `PASS`, `FAIL`, or **`UNAVAILABLE`** — the last meaning its subject is not present
+in this environment. Gates 2 and 3 re-extract the owner's 116 course PDFs, which are the
+requirements source and are not in the repository, so those two cannot run in GitHub Actions. The
+choice was a permanently red CI, a `--skip` flag, or naming the state.
+
+The vocabulary is the project's own: `HANDOFF.md` §8, *a gap in the system and a fact about the
+trade are different claims, and collapsing them is the most damaging error this product can make*.
+An unavailable gate has **not** passed. The runner counts it separately and never prints
+*all gates pass* when one did not run.
+
+Two things stop it becoming a skip flag under another name. Only gates named in
+`check_gates.py`'s `MAY_BE_UNAVAILABLE` may report it — any other gate exiting 4 is a `FAIL` —
+and the owner's machine has the PDFs, so locally every gate still runs. CI is the weaker
+environment and says so, rather than CI and local quietly diverging.
+
+### Inventory
+
+Everything except 10 runs today via `tools/check_gates.py` — the table above is the inventory,
+and the count belongs to `HANDOFF.md` §2 rather than to a second hand-maintained sentence here.
+Gates 2, 3 and 3f are
 stdlib-only; the rest need the project venv (`pip install -e ".[dev]"`).
 
 Gates 7b and 9 are also asserted from `pytest`, so a bare `pytest` run is not silently weaker than

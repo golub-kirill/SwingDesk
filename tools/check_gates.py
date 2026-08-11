@@ -4,6 +4,23 @@ One command, and the CI definition calls this same script - if a local run and C
 local run stops being trusted and the feedback loop lengthens to a push.
 
 A gate that is wrong gets fixed or removed, never skipped. There is deliberately no --skip flag.
+
+**Three states, not two** (added 2026-08-10, when CI was first wired). Gates 2 and 3 read the
+owner's 116 course PDFs, which are not in the repository and cannot be: they are the requirements
+source, not an artefact. Those two gates therefore cannot run in GitHub Actions, and the choice was
+between a permanently red CI, a --skip flag, or naming the state honestly.
+
+`UNAVAILABLE` is the state, and the vocabulary is the project's own: HANDOFF section 8, "a gap in
+the *system* and a fact about the *trade* are different claims, and collapsing them is the most
+damaging error this product can make". A gate whose subject is absent has not passed. It is
+reported separately, it is counted separately, and the summary never says "all gates pass" when one
+did not run.
+
+Two things keep it from becoming a skip flag by another name. Only the gates in
+`MAY_BE_UNAVAILABLE` are allowed the state - any other gate exiting 4 is a FAIL, because the only
+legitimate cause is the course source, and a gate inventing a reason not to run is the failure this
+guard exists for. And the owner's machine has the PDFs, so locally all 22 still run: CI is the
+weaker environment and says so, rather than CI and local quietly diverging.
 """
 
 from __future__ import annotations
@@ -20,16 +37,31 @@ REPO = Path(__file__).resolve().parents[1]
 PURE_PACKAGES = ("derived_observations", "decision_logic", "trade_management")
 FORBIDDEN_CALLS = {("datetime", "now"), ("datetime", "utcnow"), ("date", "today"), ("time", "time")}
 
+PASS, FAIL, UNAVAILABLE = "PASS", "FAIL", "UNAVAILABLE"
 
-def _run(name: str, argv: list[str]) -> bool:
+#: Exit code a gate uses to say "my subject is not present in this environment".
+UNAVAILABLE_EXIT = 4
+
+#: The only gates permitted to report UNAVAILABLE, and the sole legitimate reason: both read the
+#: 116 course PDFs, which are the requirements source and are not in the repository. Any other gate
+#: exiting 4 is a FAIL - see the module docstring.
+MAY_BE_UNAVAILABLE = frozenset({"2 transcription", "3 course index"})
+
+
+def _run(name: str, argv: list[str], key: str = "") -> str:
     print(f"\n=== {name}")
     result = subprocess.run(argv, cwd=REPO)
-    ok = result.returncode == 0
-    print(f"--- {name}: {'PASS' if ok else 'FAIL'}")
-    return ok
+    if result.returncode == 0:
+        status = PASS
+    elif result.returncode == UNAVAILABLE_EXIT and key in MAY_BE_UNAVAILABLE:
+        status = UNAVAILABLE
+    else:
+        status = FAIL
+    print(f"--- {name}: {status}")
+    return status
 
 
-def check_no_wall_clock() -> bool:
+def check_no_wall_clock() -> str:
     """Grep the pure packages for wall-clock calls.
 
     Parsed rather than string-matched, so a mention in a docstring or a comment does not trip it -
@@ -53,10 +85,9 @@ def check_no_wall_clock() -> bool:
                     )
     for offender in offenders:
         print(f"  {offender}")
-    ok = not offenders
-    print(f"--- no wall clock: {'PASS' if ok else 'FAIL'} "
-          f"({len(PURE_PACKAGES)} packages checked)")
-    return ok
+    status = FAIL if offenders else PASS
+    print(f"--- no wall clock: {status} ({len(PURE_PACKAGES)} packages checked)")
+    return status
 
 
 def main() -> int:
@@ -65,13 +96,14 @@ def main() -> int:
         "1 parameters": _run("parameter registry contract",
                            [python, "tools/verify_parameters.py"]),
         "2 transcription": _run("verbatim transcription + enums",
-                              [python, "tools/verify_transcription.py"]),
+                              [python, "tools/verify_transcription.py"], "2 transcription"),
         "3e doc references": _run("documentation cross-references",
                                [python, "tools/verify_docs.py"]),
         "3f study record": _run("study record and the counts quoted from it",
                              [python, "tools/verify_studies.py"]),
         "3 course index": _run("course index shape",
-                             [python, "tools/build_course_index.py", "--check-only"]),
+                             [python, "tools/build_course_index.py", "--check-only"],
+                             "3 course index"),
         "3b frd": _run("FRD current", [python, "tools/build_frd.py", "--check-only"]),
         "3c checklists current": _run("checklist registry current",
                                    [python, "tools/build_checklists.py", "--check-only"]),
@@ -99,16 +131,33 @@ def main() -> int:
         "9 determinism replay": _run("determinism replay", [python, "tools/replay.py"]),
         "16 branch census": _run("parallel worktrees declared in HANDOFF",
                               [python, "tools/verify_branches.py"]),
+        "17 declared dependencies": _run("every third-party import in src is declared",
+                                      [python, "tools/verify_dependencies.py"]),
+        "18 lock current": _run("requirements lock matches the declarations",
+                             [python, "tools/build_lock.py", "--check-only"]),
     }
 
     print("\n" + "=" * 62)
-    for name, ok in results.items():
-        print(f"  {'PASS' if ok else 'FAIL'}  {name}")
-    failed = [name for name, ok in results.items() if not ok]
+    for name, status in results.items():
+        print(f"  {status:11s}  {name}")
+    failed = [name for name, status in results.items() if status == FAIL]
+    unavailable = [name for name, status in results.items() if status == UNAVAILABLE]
     print("=" * 62)
+
     if failed:
         print(f"{len(failed)} gate(s) failed: {', '.join(failed)}")
         return 1
+
+    if unavailable:
+        # Never "all gates pass". The count that matters to a reader is how many actually ran, and
+        # a summary that hides a gate which did not run is the thing this state exists to prevent.
+        ran = len(results) - len(unavailable)
+        print(f"{ran} of {len(results)} gates pass; "
+              f"{len(unavailable)} could not run here: {', '.join(unavailable)}")
+        print("The course PDFs are not in this environment. Run on the owner's machine for all "
+              f"{len(results)}.")
+        return 0
+
     print("all gates pass")
     return 0
 

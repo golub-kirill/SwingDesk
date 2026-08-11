@@ -153,6 +153,15 @@ def main() -> int:
     )
     args = parser.parse_args()
 
+    if not args.course_root.is_dir():
+        # The 116 source PDFs are the owner's course material and are not in the repository, so
+        # this gate cannot run anywhere else - CI included. UNAVAILABLE (4), never PASS: a gate
+        # that goes green because its subject is absent is the vacuous-gate failure CI_POLICY 7
+        # names for gate 10. `check_gates.py` reports it as a gate that did not run.
+        print(f"course root absent: {args.course_root}", file=sys.stderr)
+        print("UNAVAILABLE: the course PDFs are not in this environment", file=sys.stderr)
+        return 4
+
     if not (args.course_root / "VERIFICATION_MANIFEST.json").is_file():
         print(f"course manifest not found under {args.course_root}", file=sys.stderr)
         return 2

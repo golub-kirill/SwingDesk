@@ -9,6 +9,13 @@ dependencies = [
     # Authoritative exchange calendar (ADR-0002) - NYSE and TSX differ on 30 sessions
     # over ~2.9 years, and the difference is not derivable from bar data.
     "pandas-market-calendars>=4",
+    # `reference_data/calendar.py` imports pandas directly - the calendar is a DataFrame at the
+    # boundary. It resolved anyway because pandas-market-calendars requires `pandas>=1.1`, so this
+    # worked on every machine while being undeclared: the same defect as yfinance, one layer down,
+    # and it would break the day that transitive requirement changed. Found by gate 17 on its
+    # first run. The floor is >=2 rather than the inherited >=1.1 because nothing here has been
+    # run against pandas 1.x; 3.0.5 is what the owner's environment resolves today.
+    "pandas>=2",
     # The registries are YAML; tools/verify_parameters.py reads them.
     # tools/build_course_index.py and tools/verify_transcription.py stay stdlib-only so the
     # transcription checks run without an environment.

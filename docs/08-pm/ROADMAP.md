@@ -16,11 +16,13 @@ The finish line it serves is `CHARTER.md` §4, ratified 2026-08-01 and unchanged
 |---|---|
 | Gates closed | G0 charter · G4 architecture · **G5 walking skeleton** |
 | Gates open | G1 requirements · G2 transcription · G3 data · G6 catalogue · G7 surfaces |
-| Merge gates running | 18, from one command |
-| Tests | 253 |
-| Components implemented | 7 · 6 with golden vectors (25) · **0 `active`** — five blocked by an unset parameter, which is the fail-closed design working |
-| Parameters | 96 — 63 `unset`, 29 `assumed`, 3 `owner`, **1 `validated`** |
-| Studies | 4 pre-registered, 5 reported — **3 refuted, 1 accepted and quantifiably fragile**; plus one post-hoc bound carrying no verdict. `PR-006` registered and blocked on a trade log |
+
+**Measured counts live in `HANDOFF.md` §2 and nowhere else.** This table used to repeat them, and by
+2026-08-10 every one had gone stale — the merge-gate and test rows were each low by a wide margin,
+and the study row under-counted too. It was a second dashboard maintained by hand, which is the
+one-logic-in-two-places failure master ТЗ §8 forbids, and gate 14 caught almost none of it because
+the phrasings here did not match the ones it scans for. Project gate status above is this document's
+own subject and stays. Removed 2026-08-10; `git log -p` has the figures if anyone needs them.
 
 **The one-line summary:** the machinery is real and honest; almost nothing about the strategy is
 known, and what is known is mostly negative.
@@ -183,7 +185,7 @@ than fighting it. §7's honest risk still stands, and this ordering does not mak
 ### A. Phase 2 already happened
 
 **G5 closed 2026-08-02.** `CHARTER.md` §4's six capabilities are all done, replay is a merge gate,
-306 tests and 22 gates run from one command. The MVP is behind us, not ahead.
+The tests and the merge gates run from one command. The MVP is behind us, not ahead.
 
 What *is* ahead and looks like an MVP is **activation**: 465 components are registered, 7 are
 implemented and **0 are `active`**. `COVERAGE_MATRIX.md` §3 names that gap as the number to watch —

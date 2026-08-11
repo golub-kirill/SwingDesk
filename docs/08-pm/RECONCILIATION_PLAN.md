@@ -135,7 +135,8 @@ committed.
    `met`. One amendment, not three.
 6. ~~**Re-assign gate numbers**, reconcile `check_gates.py` into one registry.~~ **DONE 2026-08-09.**
    No renumbering was needed and none was done — the numbers did not collide, the **runs** did.
-   `verify_criteria.py` was registered twice under two labels, so 23 entries were really 22 gates.
+   `verify_criteria.py` was registered twice under two labels, so 23 runner entries were really 22
+   distinct gates *as the tree stood that day* — a historical figure, not a live count.
    Worse, **three things claimed "Gate 12"**: `verify_docs.py`'s docstring, `verify_criteria.py`'s
    docstring, and a `CI_POLICY` row — and the two prose citations of "gate 12" meant *different*
    gates. Resolved to `3e` (doc references, 14 citations) and `3g` (criteria, 7 citations). Every

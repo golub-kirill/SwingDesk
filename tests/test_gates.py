@@ -26,6 +26,7 @@ import pytest
 
 REPO = Path(__file__).resolve().parents[1]
 TOOLS = REPO / "tools"
+sys.path.insert(0, str(TOOLS))
 
 
 def run_gate(tool: str, root: Path) -> tuple[int, str]:
@@ -204,3 +205,157 @@ def test_preflight_refuses_a_pyproject_declaring_nothing(tmp_path: Path) -> None
     code, out = run_gate("preflight.py", _preflight_tree(tmp_path))
     assert code == 3, out
     assert "no runtime dependencies" in out
+
+
+# --------------------------------------------------------------------------- unavailable gates
+
+
+def _exiting_with(tmp_path: Path, code: int) -> list[str]:
+    """A command that does nothing but exit with `code`."""
+    script = tmp_path / "exits.py"
+    script.write_text(f"raise SystemExit({code})\n", encoding="utf-8")
+    return [sys.executable, str(script)]
+
+
+def test_course_index_reports_unavailable_rather_than_failing(tmp_path: Path) -> None:
+    """The 116 PDFs are not in the repository, so CI must be able to tell absent from broken."""
+    result = subprocess.run(
+        [sys.executable, str(TOOLS / "build_course_index.py"), "--check-only",
+         "--course-root", str(tmp_path / "no-such-course")],
+        capture_output=True, text=True,
+    )
+    assert result.returncode == 4
+    assert "UNAVAILABLE" in result.stderr
+
+
+def test_runner_maps_exit_4_to_unavailable_for_a_permitted_gate(tmp_path: Path) -> None:
+    import check_gates
+
+    status = check_gates._run("fixture", _exiting_with(tmp_path, 4), "3 course index")
+    assert status == check_gates.UNAVAILABLE
+
+
+def test_runner_treats_exit_4_from_any_other_gate_as_a_failure(tmp_path: Path) -> None:
+    """Otherwise UNAVAILABLE becomes the --skip flag this runner deliberately does not have."""
+    import check_gates
+
+    status = check_gates._run("fixture", _exiting_with(tmp_path, 4), "8 tests")
+    assert status == check_gates.FAIL
+
+
+def test_runner_treats_an_unkeyed_gate_exiting_4_as_a_failure(tmp_path: Path) -> None:
+    """A gate wired without its allowlist key must not inherit the exemption by accident."""
+    import check_gates
+
+    assert check_gates._run("fixture", _exiting_with(tmp_path, 4)) == check_gates.FAIL
+
+
+def test_every_permitted_gate_name_is_a_real_gate() -> None:
+    """`MAY_BE_UNAVAILABLE` naming a gate that no longer exists would exempt nothing, silently."""
+    import check_gates
+
+    source = (TOOLS / "check_gates.py").read_text(encoding="utf-8")
+    for name in check_gates.MAY_BE_UNAVAILABLE:
+        assert f'"{name}": _run(' in source, name
+
+
+# --------------------------------------------------------------------------- declared dependencies
+
+
+def _dependency_tree(tmp_path: Path, source: str, *dependencies: str) -> Path:
+    """A tree with one src module and a pyproject declaring `dependencies`."""
+    (tmp_path / "pyproject.toml").write_text(
+        "[project]\nname = 'fixture'\nversion = '0'\ndependencies = [\n"
+        + "".join(f'    "{item}",\n' for item in dependencies)
+        + "]\n",
+        encoding="utf-8",
+    )
+    package = tmp_path / "src" / "swingdesk"
+    package.mkdir(parents=True)
+    (package / "mod.py").write_text(source, encoding="utf-8")
+    return tmp_path
+
+
+def test_dependency_gate_catches_an_undeclared_module_level_import(tmp_path: Path) -> None:
+    code, out = run_gate("verify_dependencies.py",
+                         _dependency_tree(tmp_path, "import yfinance\n"))
+    assert code == 1
+    assert "yfinance" in out
+
+
+def test_dependency_gate_catches_an_import_nested_inside_a_function(tmp_path: Path) -> None:
+    """The yfinance defect exactly: a function-level import no smoke test would reach."""
+    source = "def fetch():\n    import yfinance as yf\n    return yf\n"
+    code, out = run_gate("verify_dependencies.py", _dependency_tree(tmp_path, source))
+    assert code == 1
+    assert "yfinance" in out
+    assert ":2:" in out
+
+
+def test_dependency_gate_accepts_a_declared_import(tmp_path: Path) -> None:
+    code, out = run_gate("verify_dependencies.py",
+                         _dependency_tree(tmp_path, "import pytest\n", "pytest>=8"))
+    assert code == 0, out
+
+
+def test_dependency_gate_maps_a_distribution_to_its_import_name(tmp_path: Path) -> None:
+    """`pyyaml` provides `yaml`; comparing the two strings directly would fail a correct tree."""
+    code, out = run_gate("verify_dependencies.py",
+                         _dependency_tree(tmp_path, "import yaml\n", "pyyaml>=6"))
+    assert code == 0, out
+
+
+def test_dependency_gate_ignores_stdlib_and_relative_imports(tmp_path: Path) -> None:
+    source = "import json\nimport sys\nfrom . import sibling\nfrom swingdesk.x import y\n"
+    code, out = run_gate("verify_dependencies.py", _dependency_tree(tmp_path, source))
+    assert code == 0, out
+
+
+def test_dependency_gate_ignores_type_checking_only_imports(tmp_path: Path) -> None:
+    """Those never execute, so a missing distribution behind one cannot break a run."""
+    source = "from typing import TYPE_CHECKING\nif TYPE_CHECKING:\n    import yfinance\n"
+    code, out = run_gate("verify_dependencies.py", _dependency_tree(tmp_path, source))
+    assert code == 0, out
+
+
+# --------------------------------------------------------------------------- lock currency
+
+
+def test_lock_gate_catches_a_stale_lock(tmp_path: Path) -> None:
+    """A dependency added to pyproject and never locked is the drift this gate exists for."""
+    lock = tmp_path / "lock.txt"
+    result = subprocess.run(
+        [sys.executable, str(TOOLS / "build_lock.py"), "--out", str(lock)],
+        capture_output=True, text=True, cwd=REPO,
+    )
+    assert result.returncode == 0, result.stderr
+    lock.write_text(lock.read_text(encoding="utf-8").replace("pytest==", "pytest==0.0.0+stale"),
+                    encoding="utf-8")
+
+    result = subprocess.run(
+        [sys.executable, str(TOOLS / "build_lock.py"), "--check-only", "--out", str(lock)],
+        capture_output=True, text=True, cwd=REPO,
+    )
+    assert result.returncode == 1
+    assert "version moved" in result.stderr
+
+
+def test_lock_gate_catches_a_missing_lock(tmp_path: Path) -> None:
+    result = subprocess.run(
+        [sys.executable, str(TOOLS / "build_lock.py"), "--check-only",
+         "--out", str(tmp_path / "absent.txt")],
+        capture_output=True, text=True, cwd=REPO,
+    )
+    assert result.returncode == 1
+    assert "missing" in result.stderr
+
+
+def test_lock_round_trips(tmp_path: Path) -> None:
+    """Generate then check must agree, or the gate is red the moment it is wired."""
+    lock = tmp_path / "lock.txt"
+    for args in (["--out", str(lock)], ["--check-only", "--out", str(lock)]):
+        result = subprocess.run(
+            [sys.executable, str(TOOLS / "build_lock.py"), *args],
+            capture_output=True, text=True, cwd=REPO,
+        )
+        assert result.returncode == 0, result.stderr

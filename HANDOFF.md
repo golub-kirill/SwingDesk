@@ -29,8 +29,8 @@ documentation is implementable.
 
 | | |
 |---|---|
-| Merge gates | **22**, one command, all green |
-| Tests | **306**, fully offline |
+| Merge gates | **24**, one command, all green |
+| Tests | **320**, fully offline |
 | Docs | 98 files, Tier 0–8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 7 `specified` · **0 `active`** |
 | Parameters | 96 — 63 `unset`, 29 `assumed`, 3 `owner`, **1 `validated`** |
@@ -322,7 +322,7 @@ docs/decisions       DR-001..DR-006 — choices that are not hypotheses
 docs/prereg          PR-001/002/005/006 and their reports
 registry/            parameters, components, course index, checklists, criteria
 src/swingdesk/       the reference implementation — the vertical slice the specification requires
-tools/               the 22 gates, plus network tools that never run in CI
+tools/               the merge gates, plus network tools that never run in CI
 ```
 
 ## 10. History, condensed
