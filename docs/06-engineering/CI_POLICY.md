@@ -27,7 +27,7 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 5 | `mypy --strict` | type errors | **exists** — clean over `src`; `tools/` is out of scope, see §7 |
 | 6 | `lint-imports` | a package importing across a layer or forbidden boundary | **exists** — 4 contracts. Caught a reversed layer order on first run |
 | 7 | no-wall-clock check | `datetime.now` / `date.today` / `time.time` in `derived_observations`, `decision_logic`, `trade_management` | **exists** — AST-parsed, not string-matched, so a mention in a docstring does not trip it |
-| 7b | `golden.py` | a component's output changing without its version and vectors changing with it | **exists** — 25 vectors, 6 components |
+| 7b | `golden.py` | a component's output changing without its version and vectors changing with it | **exists** — count in `HANDOFF.md` §2 |
 | 8 | `pytest` | unit, property and golden-vector tests | **exists** — fully offline |
 | 9 | determinism replay | a stored manifest no longer reproducing its `output_hash` | **exists** — 1 case, 4 instruments covering all four decision branches |
 | 10 | traceability | a course id with no requirement row, a requirement with no test, a spec id cited by no test | to build |

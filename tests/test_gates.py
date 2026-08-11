@@ -391,3 +391,52 @@ def test_branch_census_survives_a_clone_with_no_master_ref(tmp_path: Path) -> No
     )
     assert result.returncode == 0, result.stderr
     assert "Traceback" not in result.stderr
+
+
+# --------------------------------------------------------------------------- count ownership
+
+
+def _counts_tree(tmp_path: Path, doc: str, body: str) -> Path:
+    """The smallest tree `verify_counts.py` can measure: two registries and a golden directory."""
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "registry").mkdir()
+    (tmp_path / "registry" / "parameters.yml").write_text(
+        "parameters:\n  - id: a.b\n    status: unset\n", encoding="utf-8")
+    (tmp_path / "registry" / "components.yml").write_text(
+        "components:\n  - component: X-1\n    activation: registered\n", encoding="utf-8")
+    (tmp_path / "golden" / "components" / "one").mkdir(parents=True)
+    (tmp_path / "tools").mkdir()
+    # `_gate_count` parses the first all-string-keyed dict literal it finds, so the stub needs one.
+    (tmp_path / "tools" / "check_gates.py").write_text(
+        '"""stub"""\nresults = {"1 a": True, "2 b": True}\n', encoding="utf-8")
+    for name in ("README.md", "AGENTS.md", "HANDOFF.md"):  # ROOT_DOCS; the gate reads all three
+        (tmp_path / name).write_text("# stub\n", encoding="utf-8")
+    (tmp_path / doc).parent.mkdir(parents=True, exist_ok=True)
+    (tmp_path / doc).write_text(body, encoding="utf-8")
+    return tmp_path
+
+
+def test_ownership_rule_rejects_a_measured_count_outside_handoff(tmp_path: Path) -> None:
+    """Correct today is how every previous drift looked on the day it was written."""
+    # The count is CORRECT - the fixture holds exactly one `unset` parameter. It fails on
+    # ownership alone, which is the whole point of the rule.
+    root = _counts_tree(tmp_path, "docs/NOTES.md", "The registry carries 1 `unset` parameter.\n")
+    code, out = run_gate("verify_counts.py", root)
+    assert code == 1
+    assert "HANDOFF.md section 2" in out
+    assert "docs/NOTES.md" in out
+
+
+def test_ownership_rule_allows_a_historical_line(tmp_path: Path) -> None:
+    """`DONE <date>` and strikethrough are records, and rewriting them would falsify history."""
+    root = _counts_tree(tmp_path, "docs/NOTES.md", "DONE 2026-08-03, 14 gates in that tree.\n")
+    (root / "HANDOFF.md").write_text("# H\n\n## 2. State\n", encoding="utf-8")
+    code, out = run_gate("verify_counts.py", root)
+    assert code == 0, out
+
+
+def test_ownership_rule_allows_the_owner_section(tmp_path: Path) -> None:
+    root = _counts_tree(tmp_path, "docs/NOTES.md", "no counts here\n")
+    (root / "HANDOFF.md").write_text("# H\n\n## 2. State\n\n| Tests | **0** |\n", encoding="utf-8")
+    code, out = run_gate("verify_counts.py", root)
+    assert code == 0, out

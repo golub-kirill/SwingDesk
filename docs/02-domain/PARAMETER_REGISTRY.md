@@ -22,9 +22,11 @@ quoted in a decision, and six months later nobody remembers it was a guess.
 
 This registry exists to make that impossible.
 
-**Current census: 96 parameters — 63 `unset`, 29 `assumed`, 3 `owner`, 1 `validated`.**
+**The census lives in `HANDOFF.md` §2**, derived by `python tools/verify_counts.py`. It is not
+repeated here: the same figures were carried by six documents and drifted five times, and one
+owner is the fix (gate 14).
 
-**20 of the 29 `assumed` arrived in two blocks** — the fifteen `validation.*` thresholds set by
+**Most of the `assumed` values arrived in two blocks** — the fifteen `validation.*` thresholds set by
 `DR-007-validation-thresholds.md` (ratified 2026-08-08) and the six portfolio constraints set by
 `DR-006-portfolio-risk-block.md` (**proposed**). Ratified still means `assumed`: a decision record
 never produces a `validated` value, however it was approved.
@@ -135,7 +137,7 @@ recounted.
 | `data.*` | 6 | freshness, staleness, revision tolerance |
 | `universe.*` | 3 | the DR-003 liquidity rule: price floor, ADTV floor, history floor |
 | `account.*` · `costs.*` · `pivot.*` · `atr.*` | 7 | equity and currency; commission and slippage model; pivot left/right; ATR period |
-| **Total** | **96** | 63 `unset`, 29 `assumed`, 3 `owner`, 1 `validated` |
+| **Total** | see `HANDOFF.md` §2 | by status, likewise |
 
 **Three entries are not numbers but missing rules**, and they are the largest authored work in the
 project:

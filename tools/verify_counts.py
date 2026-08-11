@@ -126,6 +126,27 @@ HISTORICAL = re.compile(r"~~|\b(DONE|CLOSED|REACHED)\s+20\d\d-\d\d-\d\d")
 #: Statements that legitimately use one of these numbers for something else. Each is a decision.
 ALLOWED: set[tuple[str, str]] = set()
 
+#: The single owner of a measured count, and the section of it that owns them (owner decision,
+#: 2026-08-10). Every other document names the source instead of the number.
+#:
+#: The rule exists because correctness was never the problem. These counts have been *correct* in
+#: five documents and wrong in a sixth, repeatedly - the drift is a property of keeping six copies,
+#: not of anyone being careless. ROADMAP section 1 was a second dashboard that reached "18 merge
+#: gates" and "253 tests" against a tree carrying 24 and 320, and most of it was invisible to this
+#: gate because the phrasings did not match the ones above. Deleting the copies removes the failure
+#: mode; scanning them harder does not.
+OWNER = "HANDOFF.md"
+OWNER_SECTION = "## 2."
+
+#: Generated documents. Their numbers are recomputed from the registries on every build and cannot
+#: drift, so the ownership rule does not apply - `--check-only` is already their gate.
+GENERATED = frozenset({"docs/08-pm/COVERAGE_MATRIX.md", "docs/01-requirements/FRD.md"})
+
+OWNERSHIP_HINT = (
+    "measured counts live in HANDOFF.md section 2. Name the source instead of the number, or mark "
+    "the line historical (strike it through, or write DONE/CLOSED/REACHED with a date)"
+)
+
 
 def main() -> int:
     counts = measure()
@@ -134,9 +155,26 @@ def main() -> int:
     failures: list[str] = []
     for path in markdown:
         rel = path.relative_to(REPO).as_posix()
+        section = ""
         for line in path.read_text(encoding="utf-8").splitlines():
+            if line.startswith("## "):
+                section = line
             if HISTORICAL.search(line):
                 continue
+
+            # Ownership is checked before value: a measured count in the wrong document is a defect
+            # even when it is right today, because being right today is exactly how every previous
+            # drift looked on the day it was written.
+            if not (rel in GENERATED or (rel == OWNER and section.startswith(OWNER_SECTION))):
+                for pattern, key, guard in CHECKS:
+                    if key not in counts or (guard and guard not in line.lower()):
+                        continue
+                    for match in re.finditer(pattern, line, re.IGNORECASE):
+                        phrase = re.sub(r"\s+", " ", match.group(0)).strip().replace("`", "")
+                        if (rel, phrase) not in ALLOWED:
+                            failures.append(f"{rel}: {phrase!r} - {OWNERSHIP_HINT}")
+                continue
+
             for pattern, key, guard in CHECKS:
                 if key not in counts:
                     continue

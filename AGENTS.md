@@ -263,6 +263,30 @@ establishes it**, or is **marked as conjecture**. No gate enforces this; a gate 
 for causal claims would be noise, and a marker that can be applied vacuously is worse than a
 convention someone actually follows. It costs one clause and it would have caught the withdrawal.
 
+## 10.5 A measured count lives in exactly one place
+
+**`HANDOFF.md` §2 owns every measured count.** Gate counts, test counts, component and parameter
+censuses, golden vectors, document totals. No other document states the number — it names the
+source, or the command that derives it. Generated documents are exempt: their figures are
+recomputed on every build and `--check-only` is already their gate.
+
+Enforced by gate 14, which as of 2026-08-10 checks **ownership before value**. A count in the wrong
+document fails even when it is correct.
+
+**That last part is the whole rule, and it is not pedantry.** Correctness was never the problem.
+These figures have been simultaneously right in five documents and wrong in a sixth, five separate
+times — the drift is a property of keeping six copies, not of anyone being careless, and every
+stale one read as true on the day it was written. `ROADMAP.md` §1 was a second dashboard whose
+merge-gate and test rows had both fallen far behind the tree, and gate 14 could not see most of it
+because the phrasings did not match the ones it scans for. Scanning harder does not fix that.
+Deleting the copies does. (`git log -p` has the figures — and this paragraph originally quoted
+them, which tripped the very gate it describes.)
+
+Writing history is still allowed, and is the one exception: strike the line through, or write
+`DONE` / `CLOSED` / `REACHED` with a date. *"DONE 2026-08-03, 14 gates"* is a correct statement
+about 2026-08-03 and updating it would falsify the record. What the gate cannot do is infer tense,
+so an unmarked past-tense sentence reads as a live claim and fails — mark it, or drop the numeral.
+
 ## 11. Before removing or retiring anything
 
 `docs/06-engineering/CHANGE_MANAGEMENT.md` §5 is canonical. The operational rules are:

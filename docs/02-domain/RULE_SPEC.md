@@ -240,7 +240,7 @@ valid references. Prose review cannot catch that class of defect; only an execut
 
 ### 6.2 The mechanism exists, and is not yet pointed at rules
 
-`golden/components/` holds **25 vectors across 6 components**, each a JSON case with its inputs, its
+`golden/components/` holds the vectors (`HANDOFF.md` §2 for the count), each a JSON case with its inputs, its
 pinned parameters, the expected output series, and a `derivation` field stating why that output is
 correct. `tools/golden.py` runs them as a merge gate. `M18-T0280-v5.0/warm_up_refusal.json` is
 already a missing-data case in exactly the form §2 row 11 requires — it asserts that a
