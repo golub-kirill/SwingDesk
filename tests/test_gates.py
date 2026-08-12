@@ -39,6 +39,68 @@ def run_gate(tool: str, root: Path) -> tuple[int, str]:
     return result.returncode, result.stdout + result.stderr
 
 
+# --------------------------------------------------------------------------- gate 20: decisions
+
+
+def _decisions_tree(tmp_path: Path, header: str, *, marker_file: str = "",
+                    marker_body: str = "") -> Path:
+    (tmp_path / "docs" / "decisions").mkdir(parents=True)
+    (tmp_path / "docs" / "decisions" / "DR-001-fixture.md").write_text(
+        f"# DR-001: fixture\n\n```\n{header}\n```\n\nBody.\n", encoding="utf-8"
+    )
+    if marker_file:
+        target = tmp_path / marker_file
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(marker_body, encoding="utf-8")
+    return tmp_path
+
+
+def test_decision_gate_catches_an_accepted_record_with_no_implementation_field(
+        tmp_path: Path) -> None:
+    root = _decisions_tree(tmp_path, "date: 2026-08-01\nstatus: accepted\nparameters: none")
+    code, out = run_gate("verify_decisions.py", root)
+    assert code == 1
+    assert "implemented_by" in out
+
+
+def test_decision_gate_catches_an_absent_marker(tmp_path: Path) -> None:
+    root = _decisions_tree(
+        tmp_path,
+        "date: 2026-08-01\nstatus: accepted\n"
+        "implemented_by: tools/run.cmd :: fetch_directory.py",
+        marker_file="tools/run.cmd", marker_body="echo nothing\n",
+    )
+    code, out = run_gate("verify_decisions.py", root)
+    assert code == 1
+    assert "fetch_directory.py" in out
+
+
+def test_decision_gate_accepts_a_present_marker(tmp_path: Path) -> None:
+    root = _decisions_tree(
+        tmp_path,
+        "date: 2026-08-01\nstatus: accepted\n"
+        "implemented_by: tools/run.cmd :: fetch_directory.py",
+        marker_file="tools/run.cmd",
+        marker_body="python tools/fetch_directory.py --scheduled\n",
+    )
+    code, out = run_gate("verify_decisions.py", root)
+    assert code == 0, out
+
+
+def test_decision_gate_accepts_an_explicit_none(tmp_path: Path) -> None:
+    """A convention decision changes no code. Saying so out loud is the point."""
+    root = _decisions_tree(tmp_path, "date: 2026-08-01\nstatus: accepted\nimplementation: none")
+    code, out = run_gate("verify_decisions.py", root)
+    assert code == 0, out
+
+
+def test_decision_gate_ignores_a_proposal(tmp_path: Path) -> None:
+    """Only accepted records promise anything. A proposal is still a question."""
+    root = _decisions_tree(tmp_path, "date: 2026-08-01\nstatus: proposed\nparameters: none")
+    code, out = run_gate("verify_decisions.py", root)
+    assert code == 0, out
+
+
 # --------------------------------------------------------------------------- fixtures
 
 

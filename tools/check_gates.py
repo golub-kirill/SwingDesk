@@ -137,6 +137,8 @@ def main() -> int:
                              [python, "tools/build_lock.py", "--check-only"]),
         "19 secret hygiene": _run("no tracked secrets, no false ignore claims",
                                [python, "tools/verify_secrets.py"]),
+        "20 decisions implemented": _run("accepted decisions declare what proves them",
+                                      [python, "tools/verify_decisions.py"]),
     }
 
     print("\n" + "=" * 62)

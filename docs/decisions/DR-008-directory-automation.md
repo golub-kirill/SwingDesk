@@ -7,6 +7,7 @@ parameters: none — these are operational network limits, not trading parameter
 components: none — the collector records reference data and changes no decision component
 evidence:   measurements/directory-file-sizes-2026-08-10.json
 supersedes: owner operating choice 2026-08-09 to keep the directory pull manual
+implemented_by: tools/daily_run.cmd :: fetch_directory.py
 ```
 
 ## Decision
