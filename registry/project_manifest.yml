@@ -836,3 +836,13 @@ documents:
   readme_status_text: owner-pending
   generated: false
   file_expected: true
+- id: DOC-64
+  display_number: '64'
+  tier_ref: TIER-8
+  artifact_class: SUPPLEMENTAL_DELIVERABLE
+  path: docs/superpowers/plans/2026-08-11-evidence-foundation.md
+  document_status: owner-pending
+  status_source: document
+  readme_status_text: owner-pending
+  generated: false
+  file_expected: true

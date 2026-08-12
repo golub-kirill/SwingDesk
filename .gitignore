@@ -36,3 +36,7 @@ dist/
 
 # local run data
 data/
+
+# DR-008: local, per-machine collector switch. The decision calls it an ignored file;
+# it was not ignored until 2026-08-11, so creating it would have dirtied the tree.
+.swingdesk-local.json

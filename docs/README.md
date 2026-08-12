@@ -167,6 +167,7 @@ second surface inventing synonyms later.
 | 61 | `POSTMORTEM-2026-08-09.md` | Three parallel efforts, a duplicated study with the opposite answer, and a gate that passed on a lucky seed. Three root causes taken to the fifth why | drafting |
 | 62 | `RECONCILIATION_PLAN.md` | Three branches, two `DR-005`s, two `PR-007`s and three incompatible `criteria.yml` v1.1.0 — every collision, the rule that resolves it, and the order | owner-pending |
 | 63 | `superpowers/plans/2026-08-10-directory-automation.md` | TDD implementation sequence for bounded, local, auditable directory automation | owner-pending |
+| 64 | `superpowers/plans/2026-08-11-evidence-foundation.md` | Four gates and a collector: stop losing survivorship evidence, and close the holes that let a ratified decision ship unimplemented | owner-pending |
 
 ---
 
