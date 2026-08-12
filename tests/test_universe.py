@@ -60,6 +60,56 @@ def test_other_listed_uses_the_act_symbol_and_maps_venues() -> None:
     assert not entries["TEST5"].is_eligible, "unknown venue has no known calendar"
 
 
+@pytest.mark.parametrize(
+    ("parser", "body", "expected_symbol"),
+    [
+        (
+            universe.parse_nasdaq_listed,
+            "Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot Size|ETF|NextShares\n"
+            "TEST.1|Clean NASDAQ fixture|Q|N|N|100|N|N\n"
+            "File Creation Time: 0812202618:30|||||||\n",
+            "TEST.1",
+        ),
+        (
+            universe.parse_other_listed,
+            "ACT Symbol|Security Name|Exchange|CQS Symbol|ETF|Round Lot Size|Test Issue|NASDAQ Symbol\n"
+            "TEST.2|Clean other-listed fixture|N|TEST.2|N|100|N|TEST.2\n"
+            "File Creation Time: 0812202618:30|||||||\n",
+            "TEST.2",
+        ),
+    ],
+)
+def test_directory_parsers_accept_clean_rows_and_exempt_the_trailer(
+    parser, body: str, expected_symbol: str
+) -> None:
+    assert [entry.symbol for entry in parser(body)] == [expected_symbol]
+
+
+@pytest.mark.parametrize(
+    ("parser", "body"),
+    [
+        (
+            universe.parse_nasdaq_listed,
+            "Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot Size|ETF|NextShares\n"
+            "TEST.1|Clean NASDAQ fixture|Q|N|N|100|N|N\n"
+            "BROKEN|only|three\n"
+            "File Creation Time: 0812202618:30|||||||\n",
+        ),
+        (
+            universe.parse_other_listed,
+            "ACT Symbol|Security Name|Exchange|CQS Symbol|ETF|Round Lot Size|Test Issue|NASDAQ Symbol\n"
+            "TEST.2|Clean other-listed fixture|N|TEST.2|N|100|N|TEST.2\n"
+            "BROKEN|only|three\n"
+            "File Creation Time: 0812202618:30|||||||\n",
+        ),
+    ],
+)
+def test_directory_parsers_refuse_files_with_malformed_rows(parser, body: str) -> None:
+    """A dropped row is indistinguishable from a delisting, and delistings are the evidence."""
+    with pytest.raises(ValueError, match="1 malformed row"):
+        parser(body)
+
+
 def test_instrument_records_the_venue_separately_from_the_calendar() -> None:
     """NASDAQ and NYSE share a session calendar - measured, not assumed - and are still different
     venues. Flattening one into the other would make the record assert something unmeasured."""
