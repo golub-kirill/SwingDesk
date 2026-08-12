@@ -39,6 +39,48 @@ def run_gate(tool: str, root: Path) -> tuple[int, str]:
     return result.returncode, result.stdout + result.stderr
 
 
+# -------------------------------------------------------------------- gate 21: worktree clean
+
+
+def _git_init(root: Path) -> None:
+    for args in (
+        ["init", "-b", "main"],
+        ["-c", "user.email=t@t", "-c", "user.name=t", "commit", "--allow-empty", "-m", "base"],
+    ):
+        subprocess.run(["git", "-C", str(root), *args], capture_output=True, check=True)
+
+
+def test_worktree_gate_reports_untracked_governed_files(tmp_path: Path) -> None:
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "orphan.md").write_text("finished, uncommitted\n", encoding="utf-8")
+    _git_init(tmp_path)
+    code, out = run_gate("verify_worktree_clean.py", tmp_path)
+    assert code == 0, "advisory only - it must never fail the build"
+    assert "docs/orphan.md" in out
+
+
+def test_worktree_gate_is_quiet_on_a_clean_tree(tmp_path: Path) -> None:
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "kept.md").write_text("committed\n", encoding="utf-8")
+    for args in (
+        ["init", "-b", "main"],
+        ["add", "-A"],
+        ["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-m", "base"],
+    ):
+        subprocess.run(["git", "-C", str(tmp_path), *args], capture_output=True, check=True)
+    code, out = run_gate("verify_worktree_clean.py", tmp_path)
+    assert code == 0
+    assert "0 stray" in out
+
+
+def test_worktree_gate_ignores_ungoverned_paths(tmp_path: Path) -> None:
+    (tmp_path / "scratch.txt").write_text("not governed\n", encoding="utf-8")
+    _git_init(tmp_path)
+    code, out = run_gate("verify_worktree_clean.py", tmp_path)
+    assert code == 0
+    assert "0 stray" in out
+
+
 # --------------------------------------------------------------------------- gate 20: decisions
 
 

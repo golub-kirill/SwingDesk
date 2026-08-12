@@ -139,6 +139,8 @@ def main() -> int:
                                [python, "tools/verify_secrets.py"]),
         "20 decisions implemented": _run("accepted decisions declare what proves them",
                                       [python, "tools/verify_decisions.py"]),
+        "21 worktree clean": _run("no finished work left uncommitted (advisory)",
+                               [python, "tools/verify_worktree_clean.py"]),
     }
 
     print("\n" + "=" * 62)
