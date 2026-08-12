@@ -13,8 +13,10 @@ Two checks, deliberately narrow so the gate is never noisy enough to bypass:
 
   1. No TRACKED file has a secret-shaped name. Tracked, not present - the filesystem may hold
      `.env`; the index may not.
-  2. Any document asserting a backticked path is "ignored" or "local" must satisfy
-     `git check-ignore`. Anchored to backticks so "whitespace is ignored" cannot trip it.
+  2. Any explicit claim in tracked Markdown that a backticked path is ignored or is a local file,
+     path, config or switch must satisfy `git check-ignore`. The path may appear before or after
+     the claim, with ordinary punctuation between a file noun and the path. Requiring a backticked
+     path and direct file-oriented syntax keeps prose such as "whitespace is ignored" out of scope.
 
 Stdlib only.
 
@@ -41,9 +43,22 @@ SECRET_PATTERNS: tuple[str, ...] = (
     r"_rsa$",
 )
 
-#: A document asserting a path is ignored or local. A backticked path is required.
-IGNORE_CLAIM = re.compile(r"\b(?:ignored|local)\b[^`\n]{0,40}`([^`\n]+)`", re.IGNORECASE)
-IGNORE_CLAIM_NOUN = re.compile(r"\b(?:file|path|config(?:uration)?|switch)\b", re.IGNORECASE)
+CLAIM_NOUN = r"(?:file|path|config(?:uration)?|switch)"
+
+#: Explicit claims in either direction. A backticked path and direct file syntax are required.
+IGNORE_CLAIMS: tuple[re.Pattern[str], ...] = (
+    re.compile(
+        rf"\b(?:ignored|local)(?:\s+(?:ignored|local))?\s+{CLAIM_NOUN}\b"
+        rf"\s*[,;:]?\s*\(?\s*`(?P<path>[^`\n]+)`",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        rf"`(?P<path>[^`\n]+)`\s+"
+        rf"(?:is|remains|must\s+(?:be|remain))\s+(?:an?\s+|the\s+)?"
+        rf"(?:ignored(?:\s+{CLAIM_NOUN})?|local\s+{CLAIM_NOUN})\b",
+        re.IGNORECASE,
+    ),
+)
 
 
 def _git(root: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -61,24 +76,24 @@ def tracked_secrets(root: Path) -> list[str]:
 
 def broken_ignore_claims(root: Path) -> list[str]:
     failures: list[str] = []
-    for doc in sorted(root.rglob("*.md")):
-        relative = doc.relative_to(root)
-        if any(part.startswith(".") for part in relative.parts):
+    listing = _git(root, "ls-files", "*.md")
+    if listing.returncode != 0:
+        return failures
+    for relative_path in listing.stdout.splitlines():
+        doc = root / relative_path
+        if not doc.is_file():
             continue
         for number, line in enumerate(doc.read_text(encoding="utf-8").splitlines(), 1):
-            for match in IGNORE_CLAIM.finditer(line):
-                candidate = match.group(1).strip()
-                claim = match.group(0)
-                if (not IGNORE_CLAIM_NOUN.search(claim)
-                        or any(mark in claim for mark in ",;:()")):
-                    continue  # A nearby word, not an assertion that this path is local or ignored.
-                if " " in candidate or ("/" not in candidate and "." not in candidate):
-                    continue  # Backticked prose, not a path.
-                if _git(root, "check-ignore", "-q", candidate).returncode != 0:
-                    failures.append(
-                        f"{doc.relative_to(root).as_posix()}:{number}: claims {candidate!r} is "
-                        "ignored, but `git check-ignore` says it is not"
-                    )
+            for pattern in IGNORE_CLAIMS:
+                for match in pattern.finditer(line):
+                    candidate = match.group("path").strip()
+                    if " " in candidate or ("/" not in candidate and "." not in candidate):
+                        continue  # Backticked prose, not a path.
+                    if _git(root, "check-ignore", "-q", candidate).returncode != 0:
+                        failures.append(
+                            f"{doc.relative_to(root).as_posix()}:{number}: claims {candidate!r} is "
+                            "ignored, but `git check-ignore` says it is not"
+                        )
     return failures
 
 

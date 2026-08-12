@@ -64,6 +64,36 @@ def test_secret_gate_catches_a_false_ignore_claim(tmp_path: Path) -> None:
     assert ".swingdesk-local.json" in out
 
 
+@pytest.mark.parametrize(
+    "claim",
+    [
+        "`.swingdesk-local.json` is ignored.\n",
+        "`.swingdesk-local.json` is the local config.\n",
+    ],
+)
+def test_secret_gate_catches_a_path_before_the_ignore_claim(tmp_path: Path, claim: str) -> None:
+    root = _secrets_tree(tmp_path, "docs/build/\n", claim)
+    code, out = run_gate("verify_secrets.py", root)
+    assert code == 1
+    assert ".swingdesk-local.json" in out
+
+
+@pytest.mark.parametrize(
+    "claim",
+    [
+        "The local config: `.swingdesk-local.json`.\n",
+        "The ignored file, `.swingdesk-local.json`, stays off Git.\n",
+        "The local config; `.swingdesk-local.json`.\n",
+        "The ignored file (`.swingdesk-local.json`) is machine-specific.\n",
+    ],
+)
+def test_secret_gate_catches_an_ignore_claim_with_punctuation(tmp_path: Path, claim: str) -> None:
+    root = _secrets_tree(tmp_path, "docs/build/\n", claim)
+    code, out = run_gate("verify_secrets.py", root)
+    assert code == 1
+    assert ".swingdesk-local.json" in out
+
+
 def test_secret_gate_accepts_a_true_ignore_claim(tmp_path: Path) -> None:
     root = _secrets_tree(tmp_path, ".swingdesk-local.json\n",
                          "The collector reads the ignored local file `.swingdesk-local.json`.\n")
