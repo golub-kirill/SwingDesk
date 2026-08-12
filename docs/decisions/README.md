@@ -90,6 +90,7 @@ is expected to be superseded when a study says so. Different lifetimes, differen
 | `DR-005` | Slippage measured from daily OHLC | `costs.slippage_model` | proposed |
 | `DR-006` | Portfolio risk block | six `risk.*` constraints | **proposed — binds a real account** |
 | `DR-007` | Validation programme thresholds | fourteen of fifteen `validation.*` | **accepted — ratified 2026-08-08** |
+| `DR-008` | Daily US directory collection under local control | operational policy; no trading parameter | **accepted — ratified 2026-08-10** |
 
 `DR-007` is the largest of these by a distance: fifteen parameters at once, four of them ratifying
 what a reported study already used and eight genuinely authored. It exists because a ratified kill

@@ -1,6 +1,6 @@
 # Document set
 
-68 documents in 8 tiers. Each row states what the document **freezes** and where its content comes
+The numbered documents below span Tiers 0–8. Each row states what the document **freezes** and where its content comes
 from. `verbatim` means the content is transcribed from the course without rewriting, and is checked
 by `tools/verify_transcription.py` against freshly extracted PDF text.
 
@@ -166,6 +166,7 @@ second surface inventing synonyms later.
 | 60 | `COURSE_V7_DELTA.md` | The 2026-08-08 course rebuild, measured and **not adopted**. Same 1,379 topics, 79% reclassified, `verbatim` quotes do not survive | owner-pending |
 | 61 | `POSTMORTEM-2026-08-09.md` | Three parallel efforts, a duplicated study with the opposite answer, and a gate that passed on a lucky seed. Three root causes taken to the fifth why | drafting |
 | 62 | `RECONCILIATION_PLAN.md` | Three branches, two `DR-005`s, two `PR-007`s and three incompatible `criteria.yml` v1.1.0 — every collision, the rule that resolves it, and the order | owner-pending |
+| 63 | `superpowers/plans/2026-08-10-directory-automation.md` | TDD implementation sequence for bounded, local, auditable directory automation | owner-pending |
 
 ---
 

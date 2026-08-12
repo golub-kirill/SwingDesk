@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "observed_on": "2026-08-10",
+  "method": "HEAD",
+  "sources": [
+    {
+      "url": "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
+      "content_length": 346612,
+      "last_modified": "Tue, 11 Aug 2026 01:31:22 GMT"
+    },
+    {
+      "url": "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt",
+      "content_length": 534704,
+      "last_modified": "Tue, 11 Aug 2026 01:31:22 GMT"
+    }
+  ]
+}
