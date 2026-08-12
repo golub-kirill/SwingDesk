@@ -42,6 +42,52 @@ def run_gate(tool: str, root: Path) -> tuple[int, str]:
 # --------------------------------------------------------------------------- fixtures
 
 
+def _secrets_tree(tmp_path: Path, gitignore: str, doc: str = "") -> Path:
+    (tmp_path / "docs").mkdir()
+    (tmp_path / ".gitignore").write_text(gitignore, encoding="utf-8")
+    if doc:
+        (tmp_path / "docs" / "NOTES.md").write_text(doc, encoding="utf-8")
+    for args in (["init", "-b", "main"], ["add", "-A"],
+                 ["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-m", "fixture"]):
+        subprocess.run(["git", "-C", str(tmp_path), *args], capture_output=True, check=True)
+    return tmp_path
+
+
+# ------------------------------------------------------------------------- gate 19: secrets
+
+
+def test_secret_gate_catches_a_false_ignore_claim(tmp_path: Path) -> None:
+    root = _secrets_tree(tmp_path, "docs/build/\n",
+                         "The collector reads the ignored local file `.swingdesk-local.json`.\n")
+    code, out = run_gate("verify_secrets.py", root)
+    assert code == 1
+    assert ".swingdesk-local.json" in out
+
+
+def test_secret_gate_accepts_a_true_ignore_claim(tmp_path: Path) -> None:
+    root = _secrets_tree(tmp_path, ".swingdesk-local.json\n",
+                         "The collector reads the ignored local file `.swingdesk-local.json`.\n")
+    code, out = run_gate("verify_secrets.py", root)
+    assert code == 0, out
+
+
+def test_secret_gate_catches_a_tracked_secret_shaped_file(tmp_path: Path) -> None:
+    root = _secrets_tree(tmp_path, "docs/build/\n")
+    (root / ".env").write_text("BROKER_TOKEN=abc\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(root), "add", "-f", ".env"], capture_output=True, check=True)
+    code, out = run_gate("verify_secrets.py", root)
+    assert code == 1
+    assert ".env" in out
+
+
+def test_secret_gate_does_not_flag_ordinary_prose(tmp_path: Path) -> None:
+    """A noisy gate gets bypassed. 'ignored' in prose must not trip it."""
+    root = _secrets_tree(tmp_path, "docs/build/\n",
+                         "Whitespace is ignored by the parser, and the header is ignored too.\n")
+    code, out = run_gate("verify_secrets.py", root)
+    assert code == 0, out
+
+
 def _manifest_tree(tmp_path: Path, *, status: str = "drafting", number: str = "01") -> Path:
     """The smallest tree `verify_project_manifest.py` will accept: one tier, one document."""
     (tmp_path / "docs" / "00-charter").mkdir(parents=True)

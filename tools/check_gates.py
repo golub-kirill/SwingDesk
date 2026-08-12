@@ -135,6 +135,8 @@ def main() -> int:
                                       [python, "tools/verify_dependencies.py"]),
         "18 lock current": _run("requirements lock matches the declarations",
                              [python, "tools/build_lock.py", "--check-only"]),
+        "19 secret hygiene": _run("no tracked secrets, no false ignore claims",
+                               [python, "tools/verify_secrets.py"]),
     }
 
     print("\n" + "=" * 62)

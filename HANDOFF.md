@@ -34,9 +34,9 @@ documentation is implementable.
 
 | | |
 |---|---|
-| Merge gates | **24**, one command, all green · **CI since 2026-08-10** (`gates`, windows-latest); 22 run there, 2 report `UNAVAILABLE` because the course PDFs are not in the repo |
+| Merge gates | **25**, one command, all green · **CI since 2026-08-10** (`gates`, windows-latest); 23 run there, 2 report `UNAVAILABLE` because the course PDFs are not in the repo |
 | `master` | **protected** since 2026-08-10 — required check `gates`, admins included, no force-push. A new merge commit is refused until its check reports; fast-forward a green commit, or use a PR |
-| Tests | **338**, fully offline |
+| Tests | **342**, fully offline |
 | Docs | 101 files, Tier 0–8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 6 `specified` · **1 `active`** — ATR (`M18-T0280-v5.0`), activated 2026-08-10, the first ever |
 | Parameters | 96 — 61 `unset`, 30 `assumed`, 4 `owner`, **1 `validated`** · `risk.per_trade_pct` and `risk.costs_allowance` set 2026-08-11, so sizing no longer refuses |
@@ -161,8 +161,8 @@ live one, and it starts 2026-08-10.
 ## 5. Next — the plan of record is a document now
 
 **`docs/08-pm/plans/2026-08-11-evidence-foundation.md`** carries the next block task by task:
-gate 21 (secret hygiene, and a document claiming a path is ignored must be telling the truth), gate
-19 (an accepted decision names what proves it happened), gate 20 (uncommitted work, advisory),
+gate 19 (secret hygiene, and a document claiming a path is ignored must be telling the truth), gate
+20 (an accepted decision names what proves it happened), gate 21 (uncommitted work, advisory),
 `DR-008` amended to what will actually run, the sidecar wired, and the first trade log this project
 has ever had. Work beyond that block — EDGAR delisting backfill, the exit card, the parked breadth
 card, vector memory, and nine smaller debts — is deferred there with entry criteria rather than
