@@ -1,16 +1,21 @@
 # HANDOFF — start here in a fresh session
 
-Written 2026-08-04; rewritten 2026-08-08; **brought current 2026-08-09**, after a session that
-reconciled three parallel branches into `master` and updated the study record. Read this, then
-`AGENTS.md` — especially **§10, four rules that were paid for on 2026-08-09** — then
-`docs/README.md`.
+Written 2026-08-04; **brought current 2026-08-11**, after a session that set the two parameters
+sizing was blocked on, put the gates on CI, protected `master`, activated the first component, and
+found that a ratified decision had never been built. Read this, then `AGENTS.md` — especially §10,
+rules that were each paid for — then `docs/README.md`.
 
-Everything below is measured from the tree, not remembered, and where a gate derives a number the
-gate is named. **Twenty-two gates now derive most of them**, so a figure here that disagrees with
-`python tools/check_gates.py` is this document being wrong, not the gate.
+Everything below is measured from the tree, not remembered. **§2 is the only place a measured count
+lives** (`AGENTS.md` §10.5); a figure here that disagrees with `python tools/check_gates.py` is this
+document being wrong, not the gate.
 
-**Everything is committed and pushed.** `master` carries the 2026-08-09 reconciliation — all three
-parallel branches merged — on `github.com/golub-kirill/SwingDesk` (public).
+That rule has one hole worth knowing: gate 14 matches digits, so a count spelled in words is
+invisible to it. This paragraph replaced *"Twenty-two gates"*, which had been wrong since the gate
+count reached 24 and no gate could see it.
+
+**Everything is committed and pushed** on `github.com/golub-kirill/SwingDesk` (public). `master` is
+protected and requires the `gates` check, so it only ever advances to a commit CI has already
+passed.
 
 ---
 
