@@ -8,6 +8,7 @@ project cannot afford to add to the one it already cannot escape.
 
 from __future__ import annotations
 
+import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -65,6 +66,103 @@ def test_the_committed_example_has_automation_off(tmp_path: Path) -> None:
 
     example = P(__file__).resolve().parents[1] / ".swingdesk-local.example.json"
     assert json.loads(example.read_text(encoding="utf-8"))["directory_pull_enabled"] is False
+
+
+def test_scheduled_mode_reports_a_disabled_config_without_downloading(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+) -> None:
+    import fetch_directory
+
+    monkeypatch.setattr(fetch_directory, "REPO", tmp_path)
+    monkeypatch.setattr(sys, "argv", ["fetch_directory", "--scheduled"])
+    monkeypatch.setattr(fetch_directory, "_download", lambda _url: pytest.fail("downloaded"))
+
+    assert fetch_directory.main() == 0
+    assert capsys.readouterr().out == (
+        "directory pull disabled - no .swingdesk-local.json with directory_pull_enabled: true\n"
+    )
+
+
+def test_scheduled_mode_reports_a_closed_nyse_without_downloading(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+) -> None:
+    import fetch_directory
+
+    (tmp_path / ".swingdesk-local.json").write_text(
+        '{"directory_pull_enabled": true}', encoding="utf-8"
+    )
+    monkeypatch.setattr(fetch_directory, "REPO", tmp_path)
+    monkeypatch.setattr(sys, "argv", ["fetch_directory", "--scheduled"])
+    monkeypatch.setattr(fetch_directory.cal, "is_open", lambda _exchange, _date: False)
+    monkeypatch.setattr(fetch_directory, "_download", lambda _url: pytest.fail("downloaded"))
+
+    assert fetch_directory.main() == 0
+    assert capsys.readouterr().out == "not an NYSE session - nothing to collect\n"
+
+
+def test_scheduled_mode_refuses_an_unreadable_config(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str],
+) -> None:
+    import fetch_directory
+
+    (tmp_path / ".swingdesk-local.json").write_text(
+        '{"directory_pull_enabled": true}', encoding="utf-8"
+    )
+    monkeypatch.setattr(fetch_directory, "REPO", tmp_path)
+    monkeypatch.setattr(sys, "argv", ["fetch_directory", "--scheduled"])
+    monkeypatch.setattr(
+        fetch_directory.Path,
+        "read_text",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(OSError("not readable")),
+    )
+    monkeypatch.setattr(fetch_directory, "_download", lambda _url: pytest.fail("downloaded"))
+
+    assert fetch_directory.main() == 0
+    assert capsys.readouterr().out == (
+        "directory pull disabled - no .swingdesk-local.json with directory_pull_enabled: true\n"
+    )
+
+
+class _DownloadResponse:
+    def __init__(self, headers: dict[str, str], body: bytes) -> None:
+        self.headers = headers
+        self.body = body
+        self.read_limit: int | None = None
+
+    def __enter__(self) -> _DownloadResponse:
+        return self
+
+    def __exit__(self, *_args: object) -> None:
+        return None
+
+    def read(self, limit: int) -> bytes:
+        self.read_limit = limit
+        return self.body
+
+
+def test_download_refuses_an_excessive_declared_size(monkeypatch: pytest.MonkeyPatch) -> None:
+    import fetch_directory
+
+    response = _DownloadResponse(
+        {"Content-Length": str(fetch_directory.MAX_RESPONSE_BYTES + 1)}, b""
+    )
+    monkeypatch.setattr(fetch_directory.urllib.request, "urlopen", lambda *_args, **_kwargs: response)
+
+    with pytest.raises(ValueError, match=r"declared .* exceeds the cap"):
+        fetch_directory._download("https://example.test/directory")
+    assert response.read_limit is None
+
+
+def test_download_refuses_a_body_over_the_cap(monkeypatch: pytest.MonkeyPatch) -> None:
+    import fetch_directory
+
+    response = _DownloadResponse({}, b"x" * (fetch_directory.MAX_RESPONSE_BYTES + 1))
+    monkeypatch.setattr(fetch_directory.urllib.request, "urlopen", lambda *_args, **_kwargs: response)
+
+    with pytest.raises(ValueError, match=r"body exceeds the .* byte cap"):
+        fetch_directory._download("https://example.test/directory")
+    assert response.read_limit == fetch_directory.MAX_RESPONSE_BYTES + 1
+
 
 MONDAY = datetime(2026, 1, 12, 21, 0, tzinfo=UTC)
 FRIDAY = MONDAY + timedelta(days=4)

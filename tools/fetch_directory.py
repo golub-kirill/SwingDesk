@@ -46,13 +46,13 @@ REPO = Path(__file__).resolve().parents[1]
 
 
 def collection_enabled(root: Path) -> bool:
-    """True only for an explicit boolean true. Missing, false, malformed or non-boolean refuse."""
+    """True only for an explicit boolean true; missing, unreadable, malformed, or false refuse."""
     config = root / LOCAL_CONFIG
     if not config.is_file():
         return False
     try:
         loaded = json.loads(config.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, UnicodeDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
         return False
     value = loaded.get("directory_pull_enabled") if isinstance(loaded, dict) else None
     return value is True
