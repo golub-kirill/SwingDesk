@@ -88,18 +88,18 @@ parameters:
   # ---- sizing and risk (docs/02-domain/RISK_SPEC.md §4) ----
   - id: risk.per_trade_pct
     unit: percent of equity
-    value: null
-    status: unset
-    provenance: null
+    value: 1.0
+    status: owner
+    provenance: owner
     named_in: [Appendix C, M93-T1324]
     note: 'Course states explicitly: "Риск % задаётся личным планом."'
     ui_editable: true
 
   - id: risk.costs_allowance
     unit: currency per share
-    value: null
-    status: unset
-    provenance: null
+    value: 0.25
+    status: assumed
+    provenance: assumed:DR-009
     named_in: [Appendix C]
     note: Composition of commission, spread and slippage is also unspecified.
     ui_editable: true
