@@ -153,99 +153,63 @@ close without a scheduled run, so phase 3′ now runs *in parallel with* phase 2
 consequently **no longer the likely path**. Its 120-day-from-first-scheduled-run branch is now the
 live one, and it starts 2026-08-10.
 
-## 5. Next: the Track A clock is running, and phase 2 in parallel
+## 5. Next — the plan of record is a document now
 
-**The daily run is scheduled and the 20-day counter starts 2026-08-10.** Nothing needs doing to keep
-it going; what needs doing is *watching it*, because `a.run_completes` counts **consecutive** days
-and a silent failure resets the counter without announcing itself:
+**`docs/08-pm/plans/2026-08-11-evidence-foundation.md`** carries the next block task by task:
+gate 21 (secret hygiene, and a document claiming a path is ignored must be telling the truth), gate
+19 (an accepted decision names what proves it happened), gate 20 (uncommitted work, advisory),
+`DR-008` amended to what will actually run, the sidecar wired, and the first trade log this project
+has ever had. Work beyond that block — EDGAR delisting backfill, the exit card, the parked breadth
+card, vector memory, and nine smaller debts — is deferred there with entry criteria rather than
+dates.
+
+**A five-advisor council reviewed the strategy question on 2026-08-11 and returned fewer cards than
+it was asked for.** Its verdict: build **no** strategy card first. Persist the trade log, then fund
+exactly one card — **exits** — because `PR-007` fixes the stop at 2.0 × ATR(14) with no trailing, so
+exits have never been varied and cannot be the refuted entry family re-parameterised. **Breadth is
+parked, not killed**: `PR-002`'s own survivorship bound puts it on its kill line at the observed
+1.6–2.3% missing rate, and it is revivable only as a portfolio participation gate — never a
+per-signal entry filter, which is closed by evidence (§7).
+
+### The clock, and the freeze that protects it
+
+`a.run_completes` counts **consecutive** trading days, and a silent failure resets it without
+announcing itself:
 
 ```bash
 schtasks /Query /TN "SwingDesk daily run" /FO LIST     # Last Result, Next Run Time
 tail -40 data/daily_run.log                            # what it actually did
 ```
 
-Exit 0 is a completed run. **Exit 2 is a refusal, which is a real outcome and not a failure** —
-today every decision comes back `Skip [RISK]` because `risk.per_trade_pct` is `unset`, and that is
-the system working. A crash is exit 3 or a missing log entry, and that is what resets the counter.
+Exit 0 is a completed run. **Exit 2 is a refusal, which is a real outcome and not a failure.** A
+crash is exit 3 or a missing log entry, and that is what resets the counter. `tools/preflight.py`
+runs before the pipeline and exits 3 naming any missing dependency, so an environment fault costs a
+log line at 18:30 instead of a day.
 
-**The first scheduled run failed, and it is worth knowing how.** 2026-08-10 18:30 fired and returned
-`0x800710E0` — *refused* — because the task was created with Windows' default
-`No Start On Batteries`. Nothing crashed, nothing was logged, and the wrapper never ran: from the
-log alone the day simply did not exist. Fixed the same evening with
-`AllowStartIfOnBatteries`, `DontStopIfGoingOnBatteries` and **`StartWhenAvailable`**, the last so a
-run missed to sleep or shutdown catches up instead of silently breaking a 20-day chain. Verified by
-triggering it: exit 0 in ~5 minutes.
+**Owner rule, 2026-08-11: nothing lands that changes the daily-run code path until the counter has
+five clean days.** Frozen: `tools/daily_run.cmd`, `application/pipeline.py`,
+`trade_management/sizing.py`. Registries, documents, decision records and new `tools/` scripts are
+all safe. The plan's Task 5 is the one validated exception and carries its proof inline.
 
-**One limitation remains and cannot be fixed without a password.** `Logon Mode: Interactive only` —
-the task runs only while the user is logged on. Running otherwise needs stored credentials, which is
-not something to hand to a tool. If the machine is commonly logged out at 18:30, that is the next
-thing that will break the chain, and the fix is yours to make in Task Scheduler.
+### Two live risks
 
-**How bad that is depends on `StartWhenAvailable`, and nobody here has tested it.** The expectation
-is that a logon-mode miss is *late*, not *lost* — the trigger is missed at 18:30, and the task runs
-at the next logon instead. If that holds, a logged-out evening costs a late run rather than a day of
-`a.run_completes`, and the exposure is much smaller than the paragraph above implies. **Marked
-conjecture** under `AGENTS.md` §10.4: it is Windows behaviour nobody has exercised on this machine,
-and the settings state alone does not establish it. The check that would settle it is one evening —
-log out before 18:30, log back in, and read `Last Run Time` against the trigger time:
+**`Logon Mode: Interactive only`** — the task runs only while the user is logged on, and changing
+that needs stored credentials. Whether `StartWhenAvailable` makes a logged-out 18:30 *late* rather
+than *lost* is **untested here and marked conjecture** (`AGENTS.md` §10.4). One evening settles it:
+log out before 18:30, log back in, and read `Last Run Time` against the trigger time.
 
-```powershell
-Get-ScheduledTaskInfo -TaskName "SwingDesk daily run" | Select LastRunTime, LastTaskResult, NextRunTime
-```
-
-Until someone runs it, treat a logged-out 18:30 as an unknown rather than as safe. **Verified
-2026-08-10** by direct query, and these are facts rather than conjecture: `Enabled True`,
-`DisallowStartIfOnBatteries False`, `StopIfGoingOnBatteries False`, `StartWhenAvailable True`,
-`LastTaskResult 0`.
-
-**A dependency fault can no longer eat a day silently.** `tools/daily_run.cmd` now runs
-`tools/preflight.py` before the pipeline: it reads the runtime dependencies out of `pyproject.toml`
-and exits 3 if any is missing from the interpreter's environment, so the log says which one at
-18:30 instead of the run dying at the first fetch. It exists because `yfinance` was imported by the
-default fetcher and declared in no dependency list — a clean install *succeeded* and was only wrong
-once the network was touched. Stdlib only and it reads nothing from `swingdesk`, because it has to
-work in exactly the broken environment it reports on. Four tests in `tests/test_gates.py` hold it to
-the same standard as the gates: it has been seen red.
-
-**Merging the 2026-08-10 packaging fixes requires one command, and nothing works until it is run.**
-`pyproject.toml` now declares `yfinance` and a `swingdesk` console script; neither exists in an
-environment installed before that. The venv is shared — `.venv` lives in the main checkout and every
-worktree borrows it (§8) — so this must be run **from the main checkout**, never from a worktree,
-where an editable install would silently repoint the shared environment at that worktree's `src`
-and take the scheduled run with it:
-
-```bash
-cd C:/PycharmProjects/SwingDesk && .venv/Scripts/python.exe -m pip install -e ".[dev]"
-```
-
-That one command creates the `swingdesk` command, and refreshes install metadata that had gone
-stale enough to omit `duckdb` — a declared dependency since 2026-08-02.
-
-### Phase 2, and it is smaller than it looks
-
-**Verified 2026-08-08: ATR and SMA already satisfy every requirement gate 11 imposes for `active`.**
-Both carry `implements`, `verification: golden vectors` and a `spec` anchor, and neither has an unset
-parameter — ATR's period is `assumed`, SMA has none of its own. `presentation/report.py` already
-prints `validation` beside every observation.
-
-So the mechanical change is two fields in `registry/components.yml`. What is *not* mechanical, and is
-the actual work:
-
-1. **Decide that `active` is warranted**, per `COMPONENT_REGISTRY_SPEC.md` §3. `active` asserts the
-   component will not have to refuse — nothing more, and specifically not that it is any good.
-   `Untested` is a permitted status for an `active` component; hiding it is not.
-2. **Check the display obligation end to end.** The status must appear wherever the output appears,
-   not only in the one report path that happens to print it.
-3. **Watch what flips.** `COVERAGE_MATRIX.md`'s runtime column moves off zero for the first time, and
-   gate 10 (traceability) stops passing vacuously — `CI_POLICY.md` §7 says it is unwired precisely
-   because there are zero `active` components. Activating one is what makes that gate real.
-
-`ROADMAP.md` §4 carries the rest of the ordered work as **P1–P5**; **P5, the first strategy card, is
-load-bearing for phase 3** because demand-driven coverage has no meaning without a card to create the
-demand.
+**The directory pull still does not run, and it is the most time-sensitive item in the project.**
+`DR-008` was ratified 2026-08-10 and its collector was never built — `tools/fetch_directory.py` has
+none of the gating, calendar eligibility, response cap or audit the record specifies, and the
+wrapper line is still commented out. **2026-08-10's departures are lost permanently.** 2026-08-11
+was captured by hand (six departures). Every further day is unrecoverable at any price.
 
 ## 6. Open — the owner's, not mine
 
+0. **`DR-009` is proposed and unratified.** It records that the owner's broker charges no
+   commission and 1.5% on CAD↔USD conversion, excludes US-from-CAD as arithmetic rather than
+   preference, and sets `risk.costs_allowance`. `DR-004`'s commission model does not describe
+   the account this system prepares decisions for.
 1. **`DR-006` is proposed and unratified.** Six `risk.*` portfolio constraints, all `assumed:DR-006`.
    Unlike `DR-007` these bind a real account. Two of the six (sector, correlation) are **set and
    cannot be evaluated** — no sector source, nothing computes a correlation matrix — and §3 of that

@@ -830,7 +830,7 @@ documents:
   display_number: '63'
   tier_ref: TIER-8
   artifact_class: SUPPLEMENTAL_DELIVERABLE
-  path: docs/superpowers/plans/2026-08-10-directory-automation.md
+  path: docs/08-pm/plans/2026-08-10-directory-automation.md
   document_status: owner-pending
   status_source: document
   readme_status_text: owner-pending
@@ -840,7 +840,7 @@ documents:
   display_number: '64'
   tier_ref: TIER-8
   artifact_class: SUPPLEMENTAL_DELIVERABLE
-  path: docs/superpowers/plans/2026-08-11-evidence-foundation.md
+  path: docs/08-pm/plans/2026-08-11-evidence-foundation.md
   document_status: owner-pending
   status_source: document
   readme_status_text: owner-pending

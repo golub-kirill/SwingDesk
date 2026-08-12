@@ -86,11 +86,18 @@ docs/03-data       point-in-time, calendar, vendors, quality
 docs/04-journal    schema, audit, checklists
 docs/05-validation backtest, walk-forward, prereg
 docs/06-engineering architecture, determinism, CI, tests
+docs/08-pm/plans   implementation plans - Tier 8, because a plan is a PM artefact
 docs/adr           decisions, append-only
 registry/          course_index.yml · parameters.yml · criteria.yml
 src/swingdesk/     nine bounded contexts
 tools/             generators, checkers, probes
 ```
+
+**Documents go in a tier, never in a directory named after the tool that made them.** The
+`writing-plans` skill defaults to `docs/superpowers/plans/`; that path was followed once, on
+2026-08-11, and produced a top-level directory named after a skill plugin holding 12% of all
+documentation. Plans are Tier 8. A tool's default is not this repository's structure - check
+§4 before creating a directory, the same way §1 says to check before asserting.
 
 `registry/course_index.yml` is **generated** — never hand-edit it. `registry/criteria.yml` is
 **frozen**; v1.1.0 appends the Track A time box without touching v1.0.0's content, which is what an

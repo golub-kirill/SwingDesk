@@ -110,7 +110,7 @@ with the scan's saved return code.
 
 **Files:**
 
-- Create: `docs/superpowers/plans/2026-08-10-directory-automation.md`
+- Create: `docs/08-pm/plans/2026-08-10-directory-automation.md`
 - Create: `docs/decisions/DR-008-directory-automation.md`
 - Create: `docs/decisions/measurements/directory-file-sizes-2026-08-10.json`
 - Modify: `docs/README.md`
@@ -144,7 +144,7 @@ Expected: both commands exit 0; the new plan is indexed and the document census 
 - [ ] **Step 3: Commit the approved plan as its own baseline**
 
 ```powershell
-git add docs/superpowers/plans/2026-08-10-directory-automation.md docs/decisions/DR-008-directory-automation.md docs/decisions/measurements/directory-file-sizes-2026-08-10.json docs/decisions/README.md docs/README.md registry/project_manifest.yml HANDOFF.md
+git add docs/08-pm/plans/2026-08-10-directory-automation.md docs/decisions/DR-008-directory-automation.md docs/decisions/measurements/directory-file-sizes-2026-08-10.json docs/decisions/README.md docs/README.md registry/project_manifest.yml HANDOFF.md
 git commit -m "docs: plan guarded directory automation"
 ```
 
