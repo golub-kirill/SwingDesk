@@ -15,6 +15,7 @@ Network tool. Never imported by anything in src/, never run in CI (CI_POLICY 4).
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import urllib.request
 from datetime import UTC, datetime
@@ -22,26 +23,71 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from swingdesk.contracts.reference import Exchange
+from swingdesk.reference_data import calendar as cal
 from swingdesk.reference_data import universe
 from swingdesk.reference_data.directory import DirectoryStore
 
 SOURCE = "nasdaqtrader.com/SymDir"
+USER_AGENT = "swingdesk/0.0"
 FILES = {
     "nasdaqlisted.txt": "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
     "otherlisted.txt": "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt",
 }
 
+#: Response cap (DR-008). Applied to Content-Length AND to bytes actually read, so a server that
+#: omits or misstates the header cannot bypass it.
+MAX_RESPONSE_BYTES = 2 * 1024 * 1024
+
+#: Per-machine switch. Ignored by git, never committed, and absent means OFF - the same
+#: fail-closed rule the parameter registry uses. There is deliberately no committed default.
+LOCAL_CONFIG = ".swingdesk-local.json"
+REPO = Path(__file__).resolve().parents[1]
+
+
+def collection_enabled(root: Path) -> bool:
+    """True only for an explicit boolean true. Missing, false, malformed or non-boolean refuse."""
+    config = root / LOCAL_CONFIG
+    if not config.is_file():
+        return False
+    try:
+        loaded = json.loads(config.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return False
+    value = loaded.get("directory_pull_enabled") if isinstance(loaded, dict) else None
+    return value is True
+
 
 def _download(url: str) -> str:
-    request = urllib.request.Request(url, headers={"User-Agent": "swingdesk/0.0"})
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(request, timeout=30) as response:
-        return response.read().decode("utf-8", "replace")
+        declared = response.headers.get("Content-Length")
+        if declared is not None and int(declared) > MAX_RESPONSE_BYTES:
+            raise ValueError(f"{url}: declared {declared} bytes exceeds the cap")
+        body = response.read(MAX_RESPONSE_BYTES + 1)
+    if len(body) > MAX_RESPONSE_BYTES:
+        raise ValueError(f"{url}: body exceeds the {MAX_RESPONSE_BYTES} byte cap")
+    return body.decode("utf-8")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(prog="fetch_directory")
     parser.add_argument("--data", type=Path, default=Path("data"))
+    parser.add_argument(
+        "--scheduled",
+        action="store_true",
+        help="honour the local switch and the exchange calendar; the manual form ignores both, "
+             "because a human asked for it",
+    )
     args = parser.parse_args()
+
+    if args.scheduled:
+        if not collection_enabled(REPO):
+            print(f"directory pull disabled - no {LOCAL_CONFIG} with directory_pull_enabled: true")
+            return 0
+        if not cal.is_open(Exchange.NYSE, datetime.now(UTC).date()):
+            print("not an NYSE session - nothing to collect")
+            return 0
 
     entries = [
         *universe.parse_nasdaq_listed(_download(FILES["nasdaqlisted.txt"])),

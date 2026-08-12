@@ -9,11 +9,62 @@ project cannot afford to add to the one it already cannot escape.
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 
 import pytest
 
 from swingdesk.reference_data.directory import DirectoryStore
 from swingdesk.reference_data.universe import DirectoryEntry
+
+
+def test_collection_is_disabled_without_the_local_file(tmp_path: Path) -> None:
+    from fetch_directory import collection_enabled
+
+    assert collection_enabled(tmp_path) is False
+
+
+def test_collection_is_disabled_when_the_flag_is_false(tmp_path: Path) -> None:
+    from fetch_directory import collection_enabled
+
+    (tmp_path / ".swingdesk-local.json").write_text(
+        '{"directory_pull_enabled": false}', encoding="utf-8"
+    )
+    assert collection_enabled(tmp_path) is False
+
+
+def test_collection_is_enabled_only_by_an_explicit_true(tmp_path: Path) -> None:
+    from fetch_directory import collection_enabled
+
+    (tmp_path / ".swingdesk-local.json").write_text(
+        '{"directory_pull_enabled": true}', encoding="utf-8"
+    )
+    assert collection_enabled(tmp_path) is True
+
+
+def test_malformed_json_refuses_rather_than_defaulting(tmp_path: Path) -> None:
+    """Unset is not default (AGENTS.md 3). A broken switch refuses."""
+    from fetch_directory import collection_enabled
+
+    (tmp_path / ".swingdesk-local.json").write_text("{not json", encoding="utf-8")
+    assert collection_enabled(tmp_path) is False
+
+
+def test_a_non_boolean_value_refuses(tmp_path: Path) -> None:
+    from fetch_directory import collection_enabled
+
+    (tmp_path / ".swingdesk-local.json").write_text(
+        '{"directory_pull_enabled": "yes"}', encoding="utf-8"
+    )
+    assert collection_enabled(tmp_path) is False
+
+
+def test_the_committed_example_has_automation_off(tmp_path: Path) -> None:
+    """The example is committed; the real file is ignored. It must never enable anything."""
+    import json
+    from pathlib import Path as P
+
+    example = P(__file__).resolve().parents[1] / ".swingdesk-local.example.json"
+    assert json.loads(example.read_text(encoding="utf-8"))["directory_pull_enabled"] is False
 
 MONDAY = datetime(2026, 1, 12, 21, 0, tzinfo=UTC)
 FRIDAY = MONDAY + timedelta(days=4)
