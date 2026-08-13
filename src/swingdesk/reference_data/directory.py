@@ -13,12 +13,20 @@ certainly been delisted or renamed, and `departures()` is the **only free eviden
 ever collect about survivorship** (`DATA_QUALITY_SPEC.md`) - Yahoo serves no delisted history, so
 what is not recorded going forward is unrecoverable.
 
-Two limits, stated because they bound every result computed from this store:
+Three limits, stated because they bound every result computed from this store:
 
   1. **It accumulates, it cannot reconstruct.** The vendor publishes a current file, not an archive.
      Before the first pull there is no answer, and there never will be one.
   2. **A departure is not a delisting.** Ticker changes, venue moves and symbol reuse all look the
      same from here. The record says what was observed, not what happened.
+  3. **A pull cannot be attributed to a trading session.** A pull stores `knowledge_time` - when
+     *this machine* fetched - and nothing about which session the vendor's file described. Deriving
+     one from the other is an inference, and `DR-008` consequence 3 forbids it: existing pulls
+     "cannot be relabelled with source-session dates they never stored". A `gaps()` built on that
+     inference was written and withdrawn on 2026-08-12; it reported two genuinely observed sessions
+     as gaps and one unobserved session as covered, because an evening pull crosses UTC midnight.
+     Answering "which sessions were observed" needs the vendor's own `File Creation Time` stored
+     per pull, which `DR-008` specifies and nothing has yet built.
 
 Fetching lives in `tools/fetch_directory.py`, so nothing in the layer graph reaches the network to
 answer a question about eligibility (CI_POLICY 4).
@@ -27,13 +35,11 @@ answer a question about eligibility (CI_POLICY 4).
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import UTC, date, datetime
+from datetime import datetime
 from pathlib import Path
 
 import duckdb
 
-from swingdesk.contracts.reference import Exchange
-from swingdesk.reference_data import calendar as cal
 from swingdesk.reference_data.universe import DirectoryEntry
 
 _SCHEMA = """
@@ -115,22 +121,6 @@ class DirectoryStore:
                 "SELECT knowledge_time, source, rows FROM directory_pulls ORDER BY knowledge_time"
             ).fetchall()
         )
-
-    def gaps(self, start: date, end: date) -> tuple[date, ...]:
-        """NYSE sessions in `[start, end]` with no recorded pull.
-
-        A missed session is permanent: the vendor publishes only a current snapshot, so its
-        departure evidence cannot be recreated. Reporting the gap as data prevents research from
-        assuming continuous coverage where none exists.
-        """
-        observed = {
-            pull.astimezone(UTC).date()
-            for (pull,) in self._connection.execute(
-                "SELECT DISTINCT knowledge_time FROM directory_pulls"
-            ).fetchall()
-        }
-        session_dates = {session.session_date for session in cal.sessions(Exchange.NYSE, start, end)}
-        return tuple(sorted(session_dates - observed))
 
     def latest_pull(self, knowledge_time: datetime) -> datetime | None:
         """The most recent pull at or before `knowledge_time`, or None if nothing was known yet."""

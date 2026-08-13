@@ -9,7 +9,7 @@ project cannot afford to add to the one it already cannot escape.
 from __future__ import annotations
 
 import sys
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -228,27 +228,6 @@ def test_an_empty_pull_is_refused(store) -> None:
     """
     with pytest.raises(ValueError, match="empty directory pull"):
         store.record([], MONDAY, "fixture")
-
-
-# ------------------------------------------------------------------ coverage
-
-def test_gaps_reports_unobserved_trading_sessions(store) -> None:
-    """A missed NYSE session is evidence lost, not an implicit assumption."""
-    store.record([_entry("TEST.1")], datetime(2026, 8, 11, 3, 0, tzinfo=UTC), "fixture")
-
-    holes = store.gaps(date(2026, 8, 10), date(2026, 8, 11))
-
-    assert date(2026, 8, 10) in holes
-    assert date(2026, 8, 11) not in holes
-
-
-def test_gaps_does_not_count_weekends(store) -> None:
-    store.record([_entry("TEST.1")], datetime(2026, 8, 11, 3, 0, tzinfo=UTC), "fixture")
-
-    holes = store.gaps(date(2026, 8, 8), date(2026, 8, 11))
-
-    assert date(2026, 8, 8) not in holes
-    assert date(2026, 8, 9) not in holes
 
 
 # ------------------------------------------------------------------ eligibility
