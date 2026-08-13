@@ -33,17 +33,20 @@
     "atr.period": 14,
     "account.equity": 10000,
     "risk.per_trade_pct": "1.0",
-    "risk.costs_allowance": "0.02",
+    "risk.costs_bp_usd": "50",
+    "risk.costs_floor_usd": "0.02",
+    "risk.costs_bp_cad": "50",
+    "risk.costs_floor_cad": "0.02",
     "risk.max_position_value": 1000000
   },
   "manifest": {
-    "run_id": "run-20260115T210000Z-46be4686",
+    "run_id": "run-20260115T210000Z-e69f4a10",
     "started_at": "2026-01-15T21:00:00Z",
     "mode": "replay",
-    "code_hash": "72bcf89",
+    "code_hash": "219ebdd",
     "code_dirty": true,
-    "config_hash": "7fa042d431fc480f",
-    "snapshot_id": "snap-20260115T210000Z-46be4686",
+    "config_hash": "22f385636c5d71c5",
+    "snapshot_id": "snap-20260115T210000Z-e69f4a10",
     "component_versions": {
       "M18-T0280-v5.0": 1
     },
@@ -55,5 +58,5 @@
     "output_hash": "16761d5789d838bb",
     "completed_at": "2026-01-15T21:00:00Z"
   },
-  "inputs_digest": "8d8eda94f0b5d4f6"
+  "inputs_digest": "e60ac1ca44350196"
 }
