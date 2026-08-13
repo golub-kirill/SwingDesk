@@ -110,6 +110,36 @@ def test_directory_parsers_refuse_files_with_malformed_rows(parser, body: str) -
         parser(body)
 
 
+@pytest.mark.parametrize(
+    ("parser", "body", "expected_symbol"),
+    [
+        (
+            universe.parse_nasdaq_listed,
+            "Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot Size|ETF|NextShares\r\n"
+            "TEST.1|Clean NASDAQ fixture|Q|N|N|100|N|N\r\n"
+            "File Creation Time: 0812202618:30|||||||\r\n"
+            "\r\n",
+            "TEST.1",
+        ),
+        (
+            universe.parse_other_listed,
+            "ACT Symbol|Security Name|Exchange|CQS Symbol|ETF|Round Lot Size|Test Issue|NASDAQ Symbol\r\n"
+            "TEST.2|Clean other-listed fixture|N|TEST.2|N|100|N|TEST.2\r\n"
+            "File Creation Time: 0812202618:30|||||||\r\n"
+            "\r\n",
+            "TEST.2",
+        ),
+    ],
+)
+def test_directory_parsers_tolerate_crlf_and_a_trailing_blank_line(
+    parser, body: str, expected_symbol: str
+) -> None:
+    """The live feed is CRLF (measured 2026-08-12). A blank line carries no fields, so it cannot be
+    a symbol row that went missing - refusing the whole file over one would stop collection for a
+    cosmetic change, which is the failure Phase A exists to prevent."""
+    assert [entry.symbol for entry in parser(body)] == [expected_symbol]
+
+
 def test_instrument_records_the_venue_separately_from_the_calendar() -> None:
     """NASDAQ and NYSE share a session calendar - measured, not assumed - and are still different
     venues. Flattening one into the other would make the record assert something unmeasured."""

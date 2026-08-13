@@ -65,6 +65,8 @@ def parse_nasdaq_listed(text: str) -> tuple[DirectoryEntry, ...]:
     entries: list[DirectoryEntry] = []
     malformed = 0
     for line in text.splitlines()[1:]:
+        if not line.strip():
+            continue  # carries no fields, so it cannot be a symbol row that went missing
         parts = line.split("|")
         if parts[0].startswith("File Creation Time"):
             continue
@@ -99,6 +101,8 @@ def parse_other_listed(text: str) -> tuple[DirectoryEntry, ...]:
     entries: list[DirectoryEntry] = []
     malformed = 0
     for line in text.splitlines()[1:]:
+        if not line.strip():
+            continue  # carries no fields, so it cannot be a symbol row that went missing
         parts = line.split("|")
         if parts[0].startswith("File Creation Time"):
             continue

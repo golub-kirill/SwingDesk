@@ -1177,3 +1177,17 @@ vendor's own `File Creation Time` trailer as a validated `source_session_date` �
 snapshot is a baseline and creates no historical claim, so the six legacy pulls stay unattributed
 permanently. Every further day of collection adds another unattributable pull, which is the cost of
 deferring it.
+
+## Amendment 2026-08-12 — Task 6 addendum, blank lines
+
+Task 6's strict parser was validated against the live vendor feed on 2026-08-12, after the fact:
+both files parse clean (`nasdaqlisted.txt` 346,817 bytes → 5,588 entries; `otherlisted.txt` 535,636
+bytes → 7,547 entries; strict UTF-8, CRLF, one `File Creation Time` trailer each, no short rows).
+The 13,135 total matches the rows the 18:30 run recorded, so strict parsing changes nothing on the
+real file. Both are far under the 2 MiB cap, which is the measurement `DR-008`'s "what would
+overturn this" asks for.
+
+One narrowing was added anyway: a line that is blank after stripping is skipped rather than counted
+malformed. It carries no fields, so it cannot be a symbol row that went missing, and Task 6's own
+"what would make this wrong" is that a legitimate short row stops collection entirely. A test covers
+CRLF endings with a trailing blank line for both feeds.
