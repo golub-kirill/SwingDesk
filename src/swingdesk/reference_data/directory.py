@@ -27,11 +27,13 @@ answer a question about eligibility (CI_POLICY 4).
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 
 import duckdb
 
+from swingdesk.contracts.reference import Exchange
+from swingdesk.reference_data import calendar as cal
 from swingdesk.reference_data.universe import DirectoryEntry
 
 _SCHEMA = """
@@ -113,6 +115,22 @@ class DirectoryStore:
                 "SELECT knowledge_time, source, rows FROM directory_pulls ORDER BY knowledge_time"
             ).fetchall()
         )
+
+    def gaps(self, start: date, end: date) -> tuple[date, ...]:
+        """NYSE sessions in `[start, end]` with no recorded pull.
+
+        A missed session is permanent: the vendor publishes only a current snapshot, so its
+        departure evidence cannot be recreated. Reporting the gap as data prevents research from
+        assuming continuous coverage where none exists.
+        """
+        observed = {
+            pull.astimezone(UTC).date()
+            for (pull,) in self._connection.execute(
+                "SELECT DISTINCT knowledge_time FROM directory_pulls"
+            ).fetchall()
+        }
+        session_dates = {session.session_date for session in cal.sessions(Exchange.NYSE, start, end)}
+        return tuple(sorted(session_dates - observed))
 
     def latest_pull(self, knowledge_time: datetime) -> datetime | None:
         """The most recent pull at or before `knowledge_time`, or None if nothing was known yet."""
