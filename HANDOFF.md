@@ -47,7 +47,7 @@ documentation is implementable.
 | Directory | **6 pulls**, knowledge times 08-03 to 08-12 · **24 cumulative consecutive-pull departures** · automated collector live since 2026-08-12 · **which NYSE sessions were observed is unanswerable** — a pull stores only when *this machine* fetched, and `DR-008` c3 forbids relabelling it with a session date it never stored. Needs the vendor `File Creation Time` stored per pull |
 | Costs | slippage **measured** — 25bps per side (`DR-005`); commission still assumed |
 | Criteria | `criteria.yml` **v1.1.0** — `k.track_a_timebox` ratified, `k.timebox_review` `met`; v1.0.0 on record |
-| ТЗ coverage | FULL 29 · PARTIAL 19 · ABSENT 5 · DEFERRED 3 (`SPEC_GAP_ANALYSIS.md`) |
+| ТЗ coverage | FULL 30 · PARTIAL 24 · ABSENT 0 · DEFERRED 3 — gate-3e-verified, recounted from `SPEC_GAP_ANALYSIS.md` §3, not hand-kept |
 | Project gates | G0, G4, G5 closed · G1, G2, G3, G6, G7 open |
 | Universe | 1,133 members · 3,687 of 13,043 measured · **28.3%** — last measured 2026-08-03, not re-checked since |
 
