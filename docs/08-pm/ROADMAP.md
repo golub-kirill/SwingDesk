@@ -259,7 +259,7 @@ logic in two places, and this repository has already paid for that once.
 
 | Phase | Existing gate | Exit condition |
 |---|---|---|
-| 1 Describe | G1, G2, G3 | **CLOSED 2026-08-08.** ТЗ `ABSENT` = 0 was the exit bar; the current tally is `SPEC_GAP_ANALYSIS.md` §3, gate-3e-verified, not repeated here |
+| ~~1 Describe~~ | G1, G2, G3 | **CLOSED 2026-08-08.** ТЗ `ABSENT` = 0 was the exit bar; the current tally is `SPEC_GAP_ANALYSIS.md` §3, gate-3e-verified, not repeated here. The gates stay open — a closed phase is not a closed gate (§1) |
 | ~~2 MVP~~ | ~~G5~~ | **closed 2026-08-02** |
 | 2′ Activate | — | first component `active`, with its status displayed |
 | 3 Coverage, demand-driven | G6 | every component a live strategy card needs is `active` |
