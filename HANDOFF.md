@@ -36,7 +36,7 @@ documentation is implementable.
 |---|---|
 | Merge gates | **27**, one command, all green · **CI since 2026-08-10** (`gates`, windows-latest); 25 run there, 2 report `UNAVAILABLE` because the course PDFs are not in the repo |
 | `master` | **protected** since 2026-08-10 — required check `gates`, admins included, no force-push. A new merge commit is refused until its check reports; fast-forward a green commit, or use a PR |
-| Tests | **367**, fully offline |
+| Tests | **371**, fully offline |
 | Docs | 103 files, Tier 0–8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 6 `specified` · **1 `active`** — ATR (`M18-T0280-v5.0`), activated 2026-08-10, the first ever |
 | Parameters | 100 — 62 `unset`, 33 `assumed`, 4 `owner`, **1 `validated`** · `risk.per_trade_pct` set 2026-08-11; `risk.costs_allowance` retired 2026-08-13, split into `risk.costs_bp_{usd,cad}` and `risk.costs_floor_{usd,cad}` (`DR-010`), so sizing is now price-aware and currency-aware rather than one flat number |
@@ -211,10 +211,13 @@ was captured by hand (six departures). Every further day is unrecoverable at any
 
 ## 6. Open — the owner's, not mine
 
-0. **`DR-009` is proposed and unratified.** It records that the owner's broker charges no
-   commission and 1.5% on CAD↔USD conversion, excludes US-from-CAD as arithmetic rather than
-   preference, and sets `risk.costs_allowance`. `DR-004`'s commission model does not describe
-   the account this system prepares decisions for.
+0. ~~`DR-009` is proposed and unratified.~~ **Narrowed 2026-08-13, its parameter moved.** `DR-009`
+   stays as written and proposed — the broker fee schedule, the exclusion of US-from-CAD as
+   arithmetic rather than preference — but no longer sets a parameter. `risk.costs_allowance`
+   (the number DR-009 derived) is retired; **`DR-010`, accepted**, replaces it with a price-aware,
+   currency-aware pair (`risk.costs_bp_{usd,cad}`, `risk.costs_floor_{usd,cad}`) and lifts
+   `sizing.py`'s freeze deliberately for that one edit. `DR-004`'s commission model still does not
+   describe the account this system prepares decisions for — DR-010 does not touch that half.
 1. **`DR-006` is proposed and unratified.** Six `risk.*` portfolio constraints, all `assumed:DR-006`.
    Unlike `DR-007` these bind a real account. Two of the six (sector, correlation) are **set and
    cannot be evaluated** — no sector source, nothing computes a correlation matrix — and §3 of that
