@@ -620,3 +620,119 @@ def test_ownership_rule_allows_the_owner_section(tmp_path: Path) -> None:
     (root / "HANDOFF.md").write_text("# H\n\n## 2. State\n\n| Tests | **0** |\n", encoding="utf-8")
     code, out = run_gate("verify_counts.py", root)
     assert code == 0, out
+
+
+# ------------------------------------------------------------- gate 23: track A streak
+
+#: A real, verified NYSE trading week (Mon-Fri, no holiday) - the calendar itself is not
+#: fixture-mockable, so tests use dates independently confirmed to be sessions.
+_MON, _TUE, _WED, _THU, _FRI = (
+    "08/10/2026", "08/11/2026", "08/12/2026", "08/13/2026", "08/14/2026",
+)
+
+
+def _log_line(date_str: str, event: str) -> str:
+    return f"===== [Day {date_str} 18:30:01.00] daily run {event} \n"
+
+
+def _run_streak_gate(root: Path, now: str) -> tuple[int, str]:
+    result = subprocess.run(
+        [sys.executable, str(TOOLS / "track_a_streak.py")],
+        capture_output=True, text=True,
+        env={**os.environ, "SWINGDESK_ROOT": str(root), "SWINGDESK_NOW": now},
+    )
+    return result.returncode, result.stdout + result.stderr
+
+
+def _streak_tree(tmp_path: Path, log_text: str) -> Path:
+    (tmp_path / "data").mkdir()
+    (tmp_path / "data" / "daily_run.log").write_text(log_text, encoding="utf-8")
+    return tmp_path
+
+
+def test_track_a_gate_reports_a_clean_streak(tmp_path: Path) -> None:
+    log = "".join(
+        _log_line(d, e)
+        for day in (_TUE, _WED, _THU)
+        for d, e in ((day, "starting"), (day, "finished, exit 0"))
+    )
+    root = _streak_tree(tmp_path, log)
+    code, out = _run_streak_gate(root, "2026-08-13T22:00:00")
+    assert code == 0
+    assert "track A streak: 3/20" in out
+    assert "2026-08-11 to 2026-08-13" in out
+
+
+def test_track_a_gate_excludes_an_out_of_window_entry(tmp_path: Path) -> None:
+    """The calibration case: a run starting 20:41 - 131 minutes past the 18:30 schedule - does not
+    count as the scheduled attempt, even though it exited 0."""
+    log = (
+        f"===== [Day {_MON} 20:41:19.00] daily run starting \n"
+        f"===== [Day {_MON} 20:46:30.00] daily run finished, exit 0 \n"
+        + "".join(
+            _log_line(d, e)
+            for day in (_TUE, _WED)
+            for d, e in ((day, "starting"), (day, "finished, exit 0"))
+        )
+    )
+    root = _streak_tree(tmp_path, log)
+    code, out = _run_streak_gate(root, "2026-08-12T22:00:00")
+    assert code == 0
+    assert "track A streak: 2/20" in out
+    assert "2026-08-11 to 2026-08-12" in out
+    assert "most recent break: 2026-08-10 (no qualifying scheduled-window entry)" in out
+
+
+def test_track_a_gate_counts_exit_2_as_clean(tmp_path: Path) -> None:
+    """`HANDOFF.md` §5: exit 2 is a refusal, a real outcome, not a failure."""
+    log = _log_line(_TUE, "starting") + _log_line(_TUE, "finished, exit 2")
+    root = _streak_tree(tmp_path, log)
+    code, out = _run_streak_gate(root, "2026-08-11T22:00:00")
+    assert code == 0
+    assert "track A streak: 1/20" in out
+
+
+def test_track_a_gate_treats_exit_3_as_a_break(tmp_path: Path) -> None:
+    """`HANDOFF.md` §5: exit 3 resets the counter, even though it is a coded outcome (empty
+    universe) rather than a literal crash - the ratified reading is followed as given."""
+    log = _log_line(_TUE, "starting") + _log_line(_TUE, "finished, exit 3")
+    root = _streak_tree(tmp_path, log)
+    code, out = _run_streak_gate(root, "2026-08-11T22:00:00")
+    assert code == 0
+    assert "track A streak: 0" in out
+    assert "most recent break: 2026-08-11 (exit 3)" in out
+
+
+def test_track_a_gate_is_advisory_even_with_a_broken_streak(tmp_path: Path) -> None:
+    log = _log_line(_TUE, "starting") + _log_line(_TUE, "finished, exit 1")
+    root = _streak_tree(tmp_path, log)
+    code, _out = _run_streak_gate(root, "2026-08-11T22:00:00")
+    assert code == 0, "advisory only - it must never fail the build"
+
+
+def test_track_a_gate_reports_a_missing_run_as_a_break(tmp_path: Path) -> None:
+    """A `starting` line with no matching `finished` - the crash case - reads the same as no entry
+    at all: no evidence the run completed."""
+    log = _log_line(_TUE, "starting")
+    root = _streak_tree(tmp_path, log)
+    code, out = _run_streak_gate(root, "2026-08-11T22:00:00")
+    assert code == 0
+    assert "track A streak: 0" in out
+
+
+def test_track_a_gate_handles_a_missing_log(tmp_path: Path) -> None:
+    tmp_path.joinpath("data").mkdir()
+    code, out = _run_streak_gate(tmp_path, "2026-08-13T22:00:00")
+    assert code == 0
+    assert "no data/daily_run.log yet" in out
+
+
+def test_track_a_gate_excludes_todays_session_while_its_window_is_still_open(tmp_path: Path) -> None:
+    """A run in progress must not read as a break - "now" sits inside the schedule window, so
+    today is not yet evaluable."""
+    log = _log_line(_TUE, "starting") + _log_line(_TUE, "finished, exit 0")
+    root = _streak_tree(tmp_path, log)
+    code, out = _run_streak_gate(root, "2026-08-12T18:45:00")  # inside the 30-minute tolerance
+    assert code == 0
+    assert "track A streak: 1/20" in out
+    assert "2026-08-11 to 2026-08-11" in out

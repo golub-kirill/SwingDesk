@@ -34,16 +34,16 @@ documentation is implementable.
 
 | | |
 |---|---|
-| Merge gates | **27**, one command, all green · **CI since 2026-08-10** (`gates`, windows-latest); 25 run there, 2 report `UNAVAILABLE` because the course PDFs are not in the repo |
+| Merge gates | **28**, one command, all green · **CI since 2026-08-10** (`gates`, windows-latest); 26 run there, 2 report `UNAVAILABLE` because the course PDFs are not in the repo |
 | `master` | **protected** since 2026-08-10 — required check `gates`, admins included, no force-push. A new merge commit is refused until its check reports; fast-forward a green commit, or use a PR |
-| Tests | **383**, fully offline |
+| Tests | **391**, fully offline |
 | Docs | 103 files, Tier 0–8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 6 `specified` · **1 `active`** — ATR (`M18-T0280-v5.0`), activated 2026-08-10, the first ever |
 | Parameters | 100 — 62 `unset`, 33 `assumed`, 4 `owner`, **1 `validated`** · `risk.per_trade_pct` set 2026-08-11; `risk.costs_allowance` retired 2026-08-13, split into `risk.costs_bp_{usd,cad}` and `risk.costs_floor_{usd,cad}` (`DR-010`), so sizing is now price-aware and currency-aware rather than one flat number |
 | Golden vectors | 25 across 6 components |
 | Studies | 7 registered · **5 reported — 3 refuted**, 1 inconclusive, 1 accepted and quantifiably fragile |
 | Daily run | **SCHEDULED 2026-08-09** — Windows Task Scheduler, `SwingDesk daily run`, weekdays 18:30 local, wrapper `tools/daily_run.cmd`, log `data/daily_run.log`. ~5 min, ~2.4MB of log per run |
-| Track A clock | `a.run_completes` needs **20 consecutive** trading days · **counter at 0**. First scheduled run 2026-08-10 **failed on battery** (§5) and was re-run by hand at 20:46; treat the clock as starting with the first clean scheduled run |
+| Track A clock | `a.run_completes` needs **20 consecutive** trading days · **counter at 3** (08-11 to 08-13), computed by `tools/track_a_streak.py` (gate 23, advisory) from `data/daily_run.log`, not hand-kept. First scheduled run 2026-08-10 **failed on battery** (§5) — no log entry near 18:30, so it does not count — and the streak starts at the first clean scheduled run, 2026-08-11 |
 | Directory | **9 pulls**, knowledge times 08-03 to 08-13 · **35 cumulative consecutive-pull departures** · automated collector live since 2026-08-12 · `source_session_date` landed 2026-08-13 (`tools/fetch_directory.py`, `DirectoryStore.record`) — the trailer's timezone (America/New_York) is now empirically confirmed against the response's own `Last-Modified` header, cross-checked on every pull, not assumed · **1 pull confirmed** (2026-08-13); the 8 before it predate the field or lack a preserved trailer and stay permanently unattributed (`DR-008` c3) |
 | Costs | slippage **measured** — 25bps per side (`DR-005`); commission still assumed |
 | Criteria | `criteria.yml` **v1.1.0** — `k.track_a_timebox` ratified, `k.timebox_review` `met`; v1.0.0 on record |

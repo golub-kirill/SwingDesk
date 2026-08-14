@@ -141,6 +141,8 @@ def main() -> int:
                                       [python, "tools/verify_decisions.py"]),
         "21 worktree clean": _run("no finished work left uncommitted (advisory)",
                                [python, "tools/verify_worktree_clean.py"]),
+        "23 track A streak": _run("the a.run_completes streak, computed not hand-kept (advisory)",
+                               [python, "tools/track_a_streak.py"]),
     }
 
     print("\n" + "=" * 62)
