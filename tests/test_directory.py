@@ -9,7 +9,7 @@ project cannot afford to add to the one it already cannot escape.
 from __future__ import annotations
 
 import sys
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -164,6 +164,77 @@ def test_download_refuses_a_body_over_the_cap(monkeypatch: pytest.MonkeyPatch) -
     assert response.read_limit == fetch_directory.MAX_RESPONSE_BYTES + 1
 
 
+# ---------------------------------------------------------- session-date corroboration
+
+def test_trailer_time_parses_the_vendor_format() -> None:
+    import fetch_directory
+
+    result = fetch_directory._trailer_time("File Creation Time: 0813202621:31|||||||")
+    assert result == datetime(2026, 8, 13, 21, 31, tzinfo=fetch_directory._TRAILER_ZONE)
+
+
+def test_trailer_time_is_none_without_a_trailer() -> None:
+    import fetch_directory
+
+    assert fetch_directory._trailer_time("Symbol|Name\nAAPL|Apple\n") is None
+
+
+def test_trailer_time_is_none_for_an_impossible_date() -> None:
+    """13 as a month, 40 as a day - the regex matches digits, not calendar validity."""
+    import fetch_directory
+
+    assert fetch_directory._trailer_time("File Creation Time: 1340202621:31|||||||") is None
+
+
+def test_corroborated_session_date_accepts_agreement_within_tolerance() -> None:
+    """The confirmed case: trailer as ET, Last-Modified 44 seconds later - the real observation
+    that established the trailer's timezone (2026-08-13)."""
+    import fetch_directory
+
+    result = fetch_directory._corroborated_session_date(
+        "File Creation Time: 0813202621:31|||||||",
+        "Fri, 14 Aug 2026 01:31:44 GMT",
+    )
+    assert result == date(2026, 8, 13)
+
+
+def test_corroborated_session_date_refuses_the_utc_interpretation() -> None:
+    """If the trailer were (wrongly) read as UTC instead of America/New_York, Last-Modified would
+    be 4 hours off - well outside tolerance. This is the mechanism that would have caught the
+    majority guess in this project's own design review, had it shipped."""
+    import fetch_directory
+
+    result = fetch_directory._corroborated_session_date(
+        "File Creation Time: 0813202621:31|||||||",
+        "Thu, 13 Aug 2026 21:31:44 GMT",  # what Last-Modified would read if trailer were UTC
+    )
+    assert result is None
+
+
+def test_corroborated_session_date_refuses_a_missing_last_modified_header() -> None:
+    import fetch_directory
+
+    assert fetch_directory._corroborated_session_date(
+        "File Creation Time: 0813202621:31|||||||", None
+    ) is None
+
+
+def test_corroborated_session_date_refuses_a_missing_trailer() -> None:
+    import fetch_directory
+
+    assert fetch_directory._corroborated_session_date(
+        "Symbol|Name\nAAPL|Apple\n", "Fri, 14 Aug 2026 01:31:44 GMT"
+    ) is None
+
+
+def test_corroborated_session_date_refuses_an_unparseable_header() -> None:
+    import fetch_directory
+
+    assert fetch_directory._corroborated_session_date(
+        "File Creation Time: 0813202621:31|||||||", "not a date"
+    ) is None
+
+
 MONDAY = datetime(2026, 1, 12, 21, 0, tzinfo=UTC)
 FRIDAY = MONDAY + timedelta(days=4)
 
@@ -218,7 +289,45 @@ def test_recording_the_same_instant_twice_replaces_rather_than_merges(store) -> 
     store.record([_entry("TEST3")], MONDAY, "fixture")
 
     assert [e.symbol for e in store.as_of(MONDAY)] == ["TEST3"]
-    assert store.pulls() == ((MONDAY, "fixture", 1),)
+    assert store.pulls() == ((MONDAY, "fixture", 1, None),)
+
+
+SESSION = date(2026, 8, 13)
+
+
+def test_source_session_date_is_stored_when_given(store) -> None:
+    stored = store.record([_entry("TEST1")], MONDAY, "fixture", SESSION)
+    assert stored == SESSION
+    assert store.pulls() == ((MONDAY, "fixture", 1, SESSION),)
+
+
+def test_a_strictly_later_session_date_is_accepted(store) -> None:
+    store.record([_entry("TEST1")], MONDAY, "fixture", SESSION)
+    later = store.record([_entry("TEST1")], FRIDAY, "fixture", SESSION + timedelta(days=1))
+    assert later == SESSION + timedelta(days=1)
+
+
+def test_a_non_increasing_session_date_is_rejected_but_the_pull_is_still_recorded(store) -> None:
+    """The stale-file symptom: a repeat or earlier date most likely means the vendor's file did not
+    regenerate, not a legitimate second observation of an earlier session. Fails closed on the
+    CLAIM - the rows are still there, only the date is dropped."""
+    store.record([_entry("TEST1")], MONDAY, "fixture", SESSION)
+
+    same_date = store.record([_entry("TEST1")], FRIDAY, "fixture", SESSION)
+    assert same_date is None
+    assert [e.symbol for e in store.as_of(FRIDAY)] == ["TEST1"]  # rows recorded regardless
+
+    earlier_date = store.record(
+        [_entry("TEST1")], FRIDAY + timedelta(days=1), "fixture", SESSION - timedelta(days=1)
+    )
+    assert earlier_date is None
+
+
+def test_a_none_session_date_is_stored_as_none(store) -> None:
+    """The ordinary unattributed case - no claim was ever made, so nothing to reject."""
+    stored = store.record([_entry("TEST1")], MONDAY, "fixture")
+    assert stored is None
+    assert store.pulls() == ((MONDAY, "fixture", 1, None),)
 
 
 def test_an_empty_pull_is_refused(store) -> None:
