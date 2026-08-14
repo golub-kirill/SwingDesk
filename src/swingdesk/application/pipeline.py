@@ -341,7 +341,7 @@ def run(
         # 4. Risk. Stop derived from the observation, then size. Stop before size, always.
         entry = stored.bars[-1].close
         stop = entry - latest.value
-        sized = size_long(entry, stop, registry)
+        sized = size_long(entry, stop, instrument.currency, registry)
         outcome.risk = sized
 
         if isinstance(sized, Refusal):

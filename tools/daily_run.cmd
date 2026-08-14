@@ -53,10 +53,9 @@ popd
 
 echo ===== [%DATE% %TIME%] daily run finished, exit %RC% >> "%LOG%"
 
-REM The directory pull is the project's only irreversible clock: departures()
-REM accumulates forward only and a gap is lost permanently. It is NOT run here,
-REM by owner decision 2026-08-09 (keep it manual). Uncomment to reverse that -
-REM it costs about five seconds and it is the same schedule.
-REM "%PY%" "%REPO%\tools\fetch_directory.py" --data "%REPO%\data" >> "%LOG%" 2>&1
+REM Sidecar (DR-008). Placed AFTER `set RC=%ERRORLEVEL%` and before `exit /b %RC%`, so no outcome
+REM here can change the run's exit code or the Track A counter. --scheduled honours the local
+REM switch and the NYSE calendar; both refuse loudly into this same log.
+"%PY%" -X utf8 "%REPO%\tools\fetch_directory.py" --scheduled --data "%REPO%\data" >> "%LOG%" 2>&1
 
 exit /b %RC%

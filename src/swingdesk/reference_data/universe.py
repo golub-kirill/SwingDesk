@@ -63,9 +63,15 @@ class DirectoryEntry:
 def parse_nasdaq_listed(text: str) -> tuple[DirectoryEntry, ...]:
     """Parse `nasdaqlisted.txt`: pipe-delimited, with a trailing file-creation line."""
     entries: list[DirectoryEntry] = []
+    malformed = 0
     for line in text.splitlines()[1:]:
+        if not line.strip():
+            continue  # carries no fields, so it cannot be a symbol row that went missing
         parts = line.split("|")
-        if len(parts) < 8 or parts[0].startswith("File Creation Time"):
+        if parts[0].startswith("File Creation Time"):
+            continue
+        if len(parts) < 8:
+            malformed += 1
             continue
         entries.append(
             DirectoryEntry(
@@ -75,6 +81,12 @@ def parse_nasdaq_listed(text: str) -> tuple[DirectoryEntry, ...]:
                 is_etf=parts[6].strip() == "Y",
                 is_test_issue=parts[3].strip() == "Y",
             )
+        )
+    if malformed:
+        raise ValueError(
+            f"{malformed} malformed row(s) in the directory feed. Refusing the file rather than "
+            "skipping them: a dropped row is indistinguishable from a departure, and departures "
+            "are this project's only survivorship evidence."
         )
     return tuple(entries)
 
@@ -87,9 +99,15 @@ def parse_other_listed(text: str) -> tuple[DirectoryEntry, ...]:
     that fetch empty.
     """
     entries: list[DirectoryEntry] = []
+    malformed = 0
     for line in text.splitlines()[1:]:
+        if not line.strip():
+            continue  # carries no fields, so it cannot be a symbol row that went missing
         parts = line.split("|")
-        if len(parts) < 8 or parts[0].startswith("File Creation Time"):
+        if parts[0].startswith("File Creation Time"):
+            continue
+        if len(parts) < 8:
+            malformed += 1
             continue
         entries.append(
             DirectoryEntry(
@@ -99,6 +117,12 @@ def parse_other_listed(text: str) -> tuple[DirectoryEntry, ...]:
                 is_etf=parts[4].strip() == "Y",
                 is_test_issue=parts[6].strip() == "Y",
             )
+        )
+    if malformed:
+        raise ValueError(
+            f"{malformed} malformed row(s) in the directory feed. Refusing the file rather than "
+            "skipping them: a dropped row is indistinguishable from a departure, and departures "
+            "are this project's only survivorship evidence."
         )
     return tuple(entries)
 

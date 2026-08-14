@@ -6,6 +6,7 @@ date:       2026-08-08
 status:     accepted — ratified by the owner 2026-08-08
 parameters: validation.* (all fifteen)
 components: none - these govern the validation programme, not a computation
+implemented_by: registry/parameters.yml :: assumed:DR-007
 ```
 
 **Renumbered from `DR-005`; nothing else changed.** A parallel branch (`claude/…-1feb49`) had used

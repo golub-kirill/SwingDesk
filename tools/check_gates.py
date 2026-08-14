@@ -135,6 +135,14 @@ def main() -> int:
                                       [python, "tools/verify_dependencies.py"]),
         "18 lock current": _run("requirements lock matches the declarations",
                              [python, "tools/build_lock.py", "--check-only"]),
+        "19 secret hygiene": _run("no tracked secrets, no false ignore claims",
+                               [python, "tools/verify_secrets.py"]),
+        "20 decisions implemented": _run("accepted decisions declare what proves them",
+                                      [python, "tools/verify_decisions.py"]),
+        "21 worktree clean": _run("no finished work left uncommitted (advisory)",
+                               [python, "tools/verify_worktree_clean.py"]),
+        "23 track A streak": _run("the a.run_completes streak, computed not hand-kept (advisory)",
+                               [python, "tools/track_a_streak.py"]),
     }
 
     print("\n" + "=" * 62)

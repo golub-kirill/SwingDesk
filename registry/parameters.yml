@@ -97,11 +97,68 @@ parameters:
 
   - id: risk.costs_allowance
     unit: currency per share
+    value: null
+    status: unset
+    provenance: null
+    named_in: [Appendix C]
+    note: >-
+      RETIRED 2026-08-13, superseded by risk.costs_bp_usd / risk.costs_bp_cad /
+      risk.costs_floor_usd / risk.costs_floor_cad (DR-010). A single flat number could not be both
+      price-aware and currency-aware at once; DR-010 splits it into two terms per currency rather
+      than widen this one. Left in place, unset, so the id stays findable from DR-009 and prior
+      history rather than vanishing.
+    ui_editable: false
+
+  - id: risk.costs_bp_usd
+    unit: basis points of entry price, round trip
+    value: 50
+    status: assumed
+    provenance: assumed:DR-010
+    named_in: [Appendix C]
+    note: >-
+      Carries DR-005's measured slippage forward honestly: read as "materially more than 5bp",
+      not as a precise 25 - 50bp round trip is DR-009's own $50-reference derivation (0.25/$50),
+      restated as a rate rather than a single dollar figure. Composition of commission, spread and
+      slippage remains unspecified.
+    ui_editable: true
+
+  - id: risk.costs_bp_cad
+    unit: basis points of entry price, round trip
+    value: 50
+    status: assumed
+    provenance: assumed:DR-010
+    named_in: [Appendix C]
+    note: >-
+      Same rate as risk.costs_bp_usd - DR-009 structures A (TSX/CAD) and C (US/USD) both measured
+      ~50bp round trip with no cross-currency conversion leg. Not yet reachable in the live
+      universe (US-only until Canada is unblocked); set now so sizing does not silently merge
+      currencies the day it is.
+    ui_editable: true
+
+  - id: risk.costs_floor_usd
+    unit: currency per share
     value: 0.25
     status: assumed
-    provenance: assumed:DR-009
+    provenance: assumed:DR-010
     named_in: [Appendix C]
-    note: Composition of commission, spread and slippage is also unspecified.
+    note: >-
+      The conservative constant DR-009 set, carried forward unchanged as a floor rather than
+      revalued - cheap instruments are priced exactly as before. Exists because a pure
+      basis-points term understates cost where spread behaves like a fixed minimum rather than a
+      fraction of price, and understating cost is the unsafe direction (smaller costs -> more
+      shares).
+    ui_editable: true
+
+  - id: risk.costs_floor_cad
+    unit: currency per share
+    value: 0.25
+    status: assumed
+    provenance: assumed:DR-010
+    named_in: [Appendix C]
+    note: >-
+      Same value as risk.costs_floor_usd - no currency-specific floor has been measured yet, so
+      the same conservative constant is carried in each currency's own units rather than shared
+      as one cross-currency number (AGENTS.md 3: USA and Canada are never merged).
     ui_editable: true
 
   - id: risk.short_squeeze_gap_allowance

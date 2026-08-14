@@ -13,12 +13,24 @@ certainly been delisted or renamed, and `departures()` is the **only free eviden
 ever collect about survivorship** (`DATA_QUALITY_SPEC.md`) - Yahoo serves no delisted history, so
 what is not recorded going forward is unrecoverable.
 
-Two limits, stated because they bound every result computed from this store:
+Three limits, stated because they bound every result computed from this store:
 
   1. **It accumulates, it cannot reconstruct.** The vendor publishes a current file, not an archive.
      Before the first pull there is no answer, and there never will be one.
   2. **A departure is not a delisting.** Ticker changes, venue moves and symbol reuse all look the
      same from here. The record says what was observed, not what happened.
+  3. **A pull is attributed to a session only when the vendor's own claim is corroborated.**
+     `knowledge_time` - when *this machine* fetched - was never a safe stand-in for which session
+     the vendor's file described; a `gaps()` built on that inference was written and withdrawn on
+     2026-08-12, misattributing evening pulls that cross UTC midnight. `source_session_date`
+     replaces it: `tools/fetch_directory.py` parses the vendor's `File Creation Time` trailer,
+     confirmed 2026-08-13 to be America/New_York local time (empirically, against the same
+     response's `Last-Modified` header - not assumed), and stores a date only when the two agree
+     within tolerance on every file, every pull. Disagreement, a missing header, or a
+     not-strictly-increasing date against prior pulls all refuse the CLAIM - the rows are still
+     recorded (`AGENTS.md`: fail closed on the claim, not the data). The six pulls made before this
+     existed have no trailer preserved (`DR-008` forbids archiving raw responses) and stay
+     permanently `NULL` - `DR-008` consequence 3 forbids backfilling a date they never stored.
 
 Fetching lives in `tools/fetch_directory.py`, so nothing in the layer graph reaches the network to
 answer a question about eligibility (CI_POLICY 4).
@@ -27,7 +39,7 @@ answer a question about eligibility (CI_POLICY 4).
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 import duckdb
@@ -46,10 +58,19 @@ CREATE TABLE IF NOT EXISTS directory (
 );
 
 CREATE TABLE IF NOT EXISTS directory_pulls (
-    knowledge_time  TIMESTAMPTZ PRIMARY KEY,
-    source          VARCHAR     NOT NULL,
-    rows            INTEGER     NOT NULL
+    knowledge_time      TIMESTAMPTZ PRIMARY KEY,
+    source              VARCHAR     NOT NULL,
+    rows                INTEGER     NOT NULL,
+    source_session_date DATE
 );
+"""
+
+#: Added after `directory_pulls` already shipped without it - existing production databases need
+#: this run once, and DuckDB's `CREATE TABLE IF NOT EXISTS` above does not alter an existing table.
+#: `IF NOT EXISTS` makes it safe to run on every connect, including a fresh database that already
+#: has the column from `_SCHEMA`.
+_MIGRATION = """
+ALTER TABLE directory_pulls ADD COLUMN IF NOT EXISTS source_session_date DATE;
 """
 
 
@@ -61,6 +82,7 @@ class DirectoryStore:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._connection = duckdb.connect(str(self.path))
         self._connection.execute(_SCHEMA)
+        self._connection.execute(_MIGRATION)
 
     def close(self) -> None:
         self._connection.close()
@@ -78,11 +100,20 @@ class DirectoryStore:
         entries: Iterable[DirectoryEntry],
         knowledge_time: datetime,
         source: str,
-    ) -> int:
-        """Store one complete pull.
+        source_session_date: date | None = None,
+    ) -> date | None:
+        """Store one complete pull. Returns the session date actually stored.
 
         Replaces any pull already recorded at the same instant, so re-running a fetch is idempotent
         rather than half-merging two downloads into one snapshot that never existed.
+
+        `source_session_date` is the caller's already-corroborated claim (`tools/fetch_directory.py`
+        derives and cross-checks it; this method does not re-derive it). The one check made here is
+        monotonicity: it must be strictly greater than every session date already stored, or it is
+        dropped to `None` rather than accepted. A repeat or earlier date most likely means the
+        vendor's file did not regenerate between two pulls - a stale-file symptom this project has
+        already observed - not a second, legitimate observation of an earlier session. This fails
+        closed on the CLAIM: the rows are still recorded either way.
         """
         rows = [
             (knowledge_time, e.symbol, e.name, e.venue, e.is_etf, e.is_test_issue)
@@ -94,23 +125,33 @@ class DirectoryStore:
                 "indistinguishable from every symbol being delisted at once"
             )
 
+        if source_session_date is not None:
+            row = self._connection.execute(
+                "SELECT MAX(source_session_date) FROM directory_pulls "
+                "WHERE source_session_date IS NOT NULL"
+            ).fetchone()
+            latest = row[0] if row else None
+            if latest is not None and source_session_date <= latest:
+                source_session_date = None
+
         self._connection.execute("DELETE FROM directory WHERE knowledge_time = ?", [knowledge_time])
         self._connection.executemany(
             "INSERT OR REPLACE INTO directory VALUES (?, ?, ?, ?, ?, ?)", rows
         )
         self._connection.execute(
-            "INSERT OR REPLACE INTO directory_pulls VALUES (?, ?, ?)",
-            [knowledge_time, source, len(rows)],
+            "INSERT OR REPLACE INTO directory_pulls VALUES (?, ?, ?, ?)",
+            [knowledge_time, source, len(rows), source_session_date],
         )
-        return len(rows)
+        return source_session_date
 
     # ------------------------------------------------------------------ reads
 
-    def pulls(self) -> tuple[tuple[datetime, str, int], ...]:
-        """Every recorded pull, oldest first: (knowledge_time, source, rows)."""
+    def pulls(self) -> tuple[tuple[datetime, str, int, date | None], ...]:
+        """Every recorded pull, oldest first: (knowledge_time, source, rows, source_session_date)."""
         return tuple(
             self._connection.execute(
-                "SELECT knowledge_time, source, rows FROM directory_pulls ORDER BY knowledge_time"
+                "SELECT knowledge_time, source, rows, source_session_date "
+                "FROM directory_pulls ORDER BY knowledge_time"
             ).fetchall()
         )
 

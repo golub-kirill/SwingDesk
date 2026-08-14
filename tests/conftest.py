@@ -34,7 +34,10 @@ def registry() -> ParameterRegistry:
         "atr.period": 14,
         "account.equity": 10000,
         "risk.per_trade_pct": "1.0",
-        "risk.costs_allowance": "0.02",
+        "risk.costs_bp_usd": "50",
+        "risk.costs_floor_usd": "0.02",
+        "risk.costs_bp_cad": "50",
+        "risk.costs_floor_cad": "0.02",
         "risk.max_position_value": 1_000_000,
     }
     return ParameterRegistry(

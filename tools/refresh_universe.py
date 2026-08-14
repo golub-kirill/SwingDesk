@@ -17,14 +17,23 @@ of what the rule admits**, `UniverseSelection.is_partial` is True, and every rep
 Oldest-first, because the alternative - refreshing whatever is most convenient - would quietly bias
 the universe toward the symbols this tool happens to reach first.
 
+**`--symbols-from` is a different mode, not a variant of the budget queue.** A study reproduction
+(`PR-007`) needs the EXACT sample a prior study admitted - not the current eligibility rule's
+answer, which has moved since. Re-filtering by today's eligibility would silently change the sample
+being reproduced. So this mode resolves a fixed symbol list against the directory *by identity*,
+reports what no longer resolves (a real finding - PR-007 section 0 anticipates this exact case), and
+fetches only what remains. It never falls back to the budget queue.
+
 Network tool. Never imported by anything in src/, never run in CI (CI_POLICY 4).
 
     python tools/refresh_universe.py --budget 500
+    python tools/refresh_universe.py --symbols-from docs/prereg/results/PR-005.json --period 10y
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import time
 from datetime import UTC, date, datetime
@@ -33,20 +42,47 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from swingdesk.contracts.market import Interval
+from swingdesk.contracts.reference import Instrument
 from swingdesk.market_data import BarStore, VendorUnavailable, vendor_yahoo
 from swingdesk.reference_data import universe
 from swingdesk.reference_data.directory import DirectoryStore
+
+
+def _fixed_queue(
+    symbols_from: Path, directory: DirectoryStore, as_of: datetime
+) -> list[Instrument]:
+    """Resolve a study's fixed symbol list against the directory by identity.
+
+    Reads any JSON document exposing an `instruments` list of bare symbols - the shape
+    `docs/prereg/results/*.json` already uses. Unresolved symbols are reported and skipped rather
+    than silently dropped: a delisted instrument missing from the reproduction is itself evidence
+    (PR-007 section 0 names this case in advance).
+    """
+    wanted = json.loads(symbols_from.read_text(encoding="utf-8"))["instruments"]
+    by_symbol = {e.symbol: e for e in directory.as_of(as_of)}
+
+    resolved = [universe.to_instrument(by_symbol[s]) for s in wanted if s in by_symbol]
+    missing = [s for s in wanted if s not in by_symbol]
+
+    print(f"fixed sample: {len(wanted)} requested, {len(resolved)} resolved, "
+          f"{len(missing)} missing from the current directory")
+    if missing:
+        print(f"  missing: {', '.join(missing)}")
+    return resolved
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(prog="refresh_universe")
     parser.add_argument("--data", type=Path, default=Path("data"))
     parser.add_argument("--budget", type=int, default=500,
-                        help="how many symbols to fetch this pass")
+                        help="how many symbols to fetch this pass (ignored with --symbols-from)")
     parser.add_argument("--period", default="2y",
                         help="fetch window; must exceed universe.min_bar_history (250 bars)")
     parser.add_argument("--pause", type=float, default=0.0,
                         help="seconds between fetches, if the vendor starts throttling")
+    parser.add_argument("--symbols-from", type=Path, default=None,
+                         help="JSON file with an 'instruments' list; fetch exactly these symbols "
+                              "instead of budget-queuing eligible ones (PR-007 reproduction)")
     args = parser.parse_args()
 
     as_of = datetime.now(UTC)
@@ -55,24 +91,31 @@ def main() -> int:
         DirectoryStore(args.data / "directory.duckdb") as directory,
         BarStore(args.data / "bars.duckdb") as store,
     ):
-        entries = directory.as_of(as_of, eligible_only=True)
-        if not entries:
-            print("directory is empty - run tools/fetch_directory.py first")
-            return 1
+        fixed_mode = args.symbols_from is not None
+        if fixed_mode:
+            queue = _fixed_queue(args.symbols_from, directory, as_of)
+            if not queue:
+                print("nothing resolved - directory is empty or none of the sample survives")
+                return 1
+        else:
+            entries = directory.as_of(as_of, eligible_only=True)
+            if not entries:
+                print("directory is empty - run tools/fetch_directory.py first")
+                return 1
 
-        stored = set(store.instrument_ids(as_of))
-        instruments = [universe.to_instrument(e) for e in entries]
+            stored = set(store.instrument_ids(as_of))
+            instruments = [universe.to_instrument(e) for e in entries]
 
-        # Never-fetched first, then the stalest. A symbol with no bars can never enter the universe,
-        # so widening coverage buys more than re-reading what is already there.
-        last_seen = store.last_sessions(as_of)
-        never = [i for i in instruments if i.id not in stored]
-        known = [i for i in instruments if i.id in stored]
-        known.sort(key=lambda i: last_seen.get(i.id, date(1970, 1, 1)))
-        queue = (never + known)[: args.budget]
+            # Never-fetched first, then the stalest. A symbol with no bars can never enter the
+            # universe, so widening coverage buys more than re-reading what is already there.
+            last_seen = store.last_sessions(as_of)
+            never = [i for i in instruments if i.id not in stored]
+            known = [i for i in instruments if i.id in stored]
+            known.sort(key=lambda i: last_seen.get(i.id, date(1970, 1, 1)))
+            queue = (never + known)[: args.budget]
 
-        print(f"eligible {len(entries)} · stored {len(stored)} · "
-              f"never fetched {len(never)} · this pass {len(queue)}")
+            print(f"eligible {len(entries)} · stored {len(stored)} · "
+                  f"never fetched {len(never)} · this pass {len(queue)}")
 
         fetched = failed = 0
         for index, instrument in enumerate(queue, start=1):
@@ -90,12 +133,16 @@ def main() -> int:
             if index % 100 == 0:
                 print(f"  [{index}/{len(queue)}] fetched={fetched} failed={failed}")
 
-        covered = len(set(store.instrument_ids(as_of)) & {i.id for i in instruments})
         print(f"\nfetched {fetched}, failed {failed}")
-        print(f"coverage now {covered}/{len(entries)} eligible ({covered / len(entries):.1%})")
-        if covered < len(entries):
-            remaining = -(-(len(entries) - covered) // max(args.budget, 1))
-            print(f"{remaining} more pass(es) at this budget to cover the directory")
+        if fixed_mode:
+            covered = len(set(store.instrument_ids(as_of)) & {i.id for i in queue})
+            print(f"coverage of the resolved sample: {covered}/{len(queue)}")
+        else:
+            covered = len(set(store.instrument_ids(as_of)) & {i.id for i in instruments})
+            print(f"coverage now {covered}/{len(entries)} eligible ({covered / len(entries):.1%})")
+            if covered < len(entries):
+                remaining = -(-(len(entries) - covered) // max(args.budget, 1))
+                print(f"{remaining} more pass(es) at this budget to cover the directory")
     return 0
 
 

@@ -34,20 +34,20 @@ documentation is implementable.
 
 | | |
 |---|---|
-| Merge gates | **24**, one command, all green · **CI since 2026-08-10** (`gates`, windows-latest); 22 run there, 2 report `UNAVAILABLE` because the course PDFs are not in the repo |
+| Merge gates | **28**, one command, all green · **CI since 2026-08-10** (`gates`, windows-latest); 26 run there, 2 report `UNAVAILABLE` because the course PDFs are not in the repo |
 | `master` | **protected** since 2026-08-10 — required check `gates`, admins included, no force-push. A new merge commit is refused until its check reports; fast-forward a green commit, or use a PR |
-| Tests | **327**, fully offline |
-| Docs | 101 files, Tier 0–8 · indexed by `registry/project_manifest.yml` |
+| Tests | **391**, fully offline |
+| Docs | 103 files, Tier 0–8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 6 `specified` · **1 `active`** — ATR (`M18-T0280-v5.0`), activated 2026-08-10, the first ever |
-| Parameters | 96 — 61 `unset`, 30 `assumed`, 4 `owner`, **1 `validated`** · `risk.per_trade_pct` and `risk.costs_allowance` set 2026-08-11, so sizing no longer refuses |
+| Parameters | 100 — 62 `unset`, 33 `assumed`, 4 `owner`, **1 `validated`** · `risk.per_trade_pct` set 2026-08-11; `risk.costs_allowance` retired 2026-08-13, split into `risk.costs_bp_{usd,cad}` and `risk.costs_floor_{usd,cad}` (`DR-010`), so sizing is now price-aware and currency-aware rather than one flat number |
 | Golden vectors | 25 across 6 components |
 | Studies | 7 registered · **5 reported — 3 refuted**, 1 inconclusive, 1 accepted and quantifiably fragile |
 | Daily run | **SCHEDULED 2026-08-09** — Windows Task Scheduler, `SwingDesk daily run`, weekdays 18:30 local, wrapper `tools/daily_run.cmd`, log `data/daily_run.log`. ~5 min, ~2.4MB of log per run |
-| Track A clock | `a.run_completes` needs **20 consecutive** trading days · **counter at 0**. First scheduled run 2026-08-10 **failed on battery** (§5) and was re-run by hand at 20:46; treat the clock as starting with the first clean scheduled run |
-| Directory | 3 pulls (08-03, 08-05, 08-08) · 14 departures observed · **still manual, by owner decision** |
+| Track A clock | `a.run_completes` needs **20 consecutive** trading days · **counter at 3** (08-11 to 08-13), computed by `tools/track_a_streak.py` (gate 23, advisory) from `data/daily_run.log`, not hand-kept. First scheduled run 2026-08-10 **failed on battery** (§5) — no log entry near 18:30, so it does not count — and the streak starts at the first clean scheduled run, 2026-08-11 |
+| Directory | **9 pulls**, knowledge times 08-03 to 08-13 · **35 cumulative consecutive-pull departures** · automated collector live since 2026-08-12 · `source_session_date` landed 2026-08-13 (`tools/fetch_directory.py`, `DirectoryStore.record`) — the trailer's timezone (America/New_York) is now empirically confirmed against the response's own `Last-Modified` header, cross-checked on every pull, not assumed · **1 pull confirmed** (2026-08-13); the 8 before it predate the field or lack a preserved trailer and stay permanently unattributed (`DR-008` c3) |
 | Costs | slippage **measured** — 25bps per side (`DR-005`); commission still assumed |
 | Criteria | `criteria.yml` **v1.1.0** — `k.track_a_timebox` ratified, `k.timebox_review` `met`; v1.0.0 on record |
-| ТЗ coverage | FULL 29 · PARTIAL 19 · ABSENT 5 · DEFERRED 3 (`SPEC_GAP_ANALYSIS.md`) |
+| ТЗ coverage | FULL 30 · PARTIAL 24 · ABSENT 0 · DEFERRED 3 — gate-3e-verified, recounted from `SPEC_GAP_ANALYSIS.md` §3, not hand-kept |
 | Project gates | G0, G4, G5 closed · G1, G2, G3, G6, G7 open |
 | Universe | 1,133 members · 3,687 of 13,043 measured · **28.3%** — last measured 2026-08-03, not re-checked since |
 
@@ -71,6 +71,7 @@ others, and one re-ran a study another had already finished and reached the oppo
 | `claude/swingdesk-documentation-321418` | 2026-08-09 | **yes**, merged 2026-08-09 | `DR-006`, `DR-007`, ALLOCATION/TRANSITION/ENTITY_MAP/EXPECTATION_MODEL/DRIFT_AND_LEARNING/CHANGE_MANAGEMENT/KNOWLEDGE_GRAPH, five gates, `criteria.yml` v1.1.0 |
 | `claude/skills-llm-council-setup-1e1d65` | `63b089d` | no unique commits | **a fourth effort, started mid-reconciliation.** It appeared while the merge was running and gate 16 failed within the minute — which is the whole point of the gate. This row said *"at `master`'s tip"* until 2026-08-10; it is six commits behind and has been since `5a79f00` |
 | `claude/swingdesk-handoff-review-e8d9f4` | `664e84a` | **yes** — branched from `master`'s tip | **the fifth effort, 2026-08-10.** Handoff verification, an audit of two external reviews, and the P0/P1 fixes that came out of it |
+| `claude/indicators-candidate-stages-6403ce` | `f39daf5` | no unique commits | **a sixth effort, first seen 2026-08-14** in the worktree that previously held `…-review-e8d9f4` — the directory names still do not track the branches checked out in them. Tip is `f39daf5`, master's own commit at the start of this session's work; nothing beyond it yet |
 
 **Two things this table stopped being able to tell you, both fixed 2026-08-10.**
 
@@ -161,8 +162,8 @@ live one, and it starts 2026-08-10.
 ## 5. Next — the plan of record is a document now
 
 **`docs/08-pm/plans/2026-08-11-evidence-foundation.md`** carries the next block task by task:
-gate 21 (secret hygiene, and a document claiming a path is ignored must be telling the truth), gate
-19 (an accepted decision names what proves it happened), gate 20 (uncommitted work, advisory),
+gate 19 (secret hygiene, and a document claiming a path is ignored must be telling the truth), gate
+20 (an accepted decision names what proves it happened), gate 21 (uncommitted work, advisory),
 `DR-008` amended to what will actually run, the sidecar wired, and the first trade log this project
 has ever had. Work beyond that block — EDGAR delisting backfill, the exit card, the parked breadth
 card, vector memory, and nine smaller debts — is deferred there with entry criteria rather than
@@ -211,10 +212,13 @@ was captured by hand (six departures). Every further day is unrecoverable at any
 
 ## 6. Open — the owner's, not mine
 
-0. **`DR-009` is proposed and unratified.** It records that the owner's broker charges no
-   commission and 1.5% on CAD↔USD conversion, excludes US-from-CAD as arithmetic rather than
-   preference, and sets `risk.costs_allowance`. `DR-004`'s commission model does not describe
-   the account this system prepares decisions for.
+0. ~~`DR-009` is proposed and unratified.~~ **Narrowed 2026-08-13, its parameter moved.** `DR-009`
+   stays as written and proposed — the broker fee schedule, the exclusion of US-from-CAD as
+   arithmetic rather than preference — but no longer sets a parameter. `risk.costs_allowance`
+   (the number DR-009 derived) is retired; **`DR-010`, accepted**, replaces it with a price-aware,
+   currency-aware pair (`risk.costs_bp_{usd,cad}`, `risk.costs_floor_{usd,cad}`) and lifts
+   `sizing.py`'s freeze deliberately for that one edit. `DR-004`'s commission model still does not
+   describe the account this system prepares decisions for — DR-010 does not touch that half.
 1. **`DR-006` is proposed and unratified.** Six `risk.*` portfolio constraints, all `assumed:DR-006`.
    Unlike `DR-007` these bind a real account. Two of the six (sector, correlation) are **set and
    cannot be evaluated** — no sector source, nothing computes a correlation matrix — and §3 of that

@@ -18,7 +18,12 @@ data/
 
 # secrets
 .env
+.env.*
 *.key
+*.pem
+credentials*
+secrets.*
+*_rsa
 serviceAccount*.json
 firebase-adminsdk*.json
 

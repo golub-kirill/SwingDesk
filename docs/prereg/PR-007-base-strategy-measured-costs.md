@@ -193,3 +193,22 @@ inert for a second, independent reason.
 
 **No data has been seen.** This study has not run, so this amendment does not downgrade it to
 exploratory (`PREREG_TEMPLATE.md` §3.3).
+
+**2026-08-13 — the header's `blocked:` field is out of date.** Appended, not edited: the header
+stands as written, since it is a true record of the state at registration.
+
+The re-fetch ran: `tools/refresh_universe.py --symbols-from docs/prereg/results/PR-005.json
+--period max`. All 68 of PR-005's instruments resolved against the current directory and fetched —
+0 missing, 0 failed. `--period max` rather than a relative window, deliberately: a first attempt at
+`--period 10y` undershot the declared 2016-08-01 start by two weeks, because a relative period is
+anchored to the fetch date, not the study's window. `max` pulls each instrument's full available
+history instead, closing that gap.
+
+56 of the 68 cover the full declared window (2016-08-01 → 2026-07-31). The other 12 have no bars
+before their actual listing date — genuinely absent, not a fetch limit — earliest FTXL (2016-09-21),
+latest KNG (2018-03-27). Each still carries 2,000+ bars inside the declared window, well above the
+250-bar warm-up `universe.min_bar_history` requires, so none needs excluding on history alone; §5's
+methodology determines per-instrument eligibility the same way it would have for PR-005.
+
+**No aggregate, trade, or outcome was read.** This records that the blocker named in the header is
+cleared, nothing about §1's question. Still `registered`; still not run.
