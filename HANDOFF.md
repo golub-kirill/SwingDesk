@@ -36,7 +36,7 @@ documentation is implementable.
 |---|---|
 | Merge gates | **28**, one command, all green · **CI since 2026-08-10** (`gates`, windows-latest); 26 run there, 2 report `UNAVAILABLE` because the course PDFs are not in the repo |
 | `master` | **protected** since 2026-08-10 — required check `gates`, admins included, no force-push. A new merge commit is refused until its check reports; fast-forward a green commit, or use a PR |
-| Tests | **391**, fully offline |
+| Tests | **400**, fully offline |
 | Docs | 103 files, Tier 0–8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 6 `specified` · **1 `active`** — ATR (`M18-T0280-v5.0`), activated 2026-08-10, the first ever |
 | Parameters | 100 — 62 `unset`, 33 `assumed`, 4 `owner`, **1 `validated`** · `risk.per_trade_pct` set 2026-08-11; `risk.costs_allowance` retired 2026-08-13, split into `risk.costs_bp_{usd,cad}` and `risk.costs_floor_{usd,cad}` (`DR-010`), so sizing is now price-aware and currency-aware rather than one flat number |
@@ -71,7 +71,7 @@ others, and one re-ran a study another had already finished and reached the oppo
 | `claude/swingdesk-documentation-321418` | 2026-08-09 | **yes**, merged 2026-08-09 | `DR-006`, `DR-007`, ALLOCATION/TRANSITION/ENTITY_MAP/EXPECTATION_MODEL/DRIFT_AND_LEARNING/CHANGE_MANAGEMENT/KNOWLEDGE_GRAPH, five gates, `criteria.yml` v1.1.0 |
 | `claude/skills-llm-council-setup-1e1d65` | `63b089d` | no unique commits | **a fourth effort, started mid-reconciliation.** It appeared while the merge was running and gate 16 failed within the minute — which is the whole point of the gate. This row said *"at `master`'s tip"* until 2026-08-10; it is six commits behind and has been since `5a79f00` |
 | `claude/swingdesk-handoff-review-e8d9f4` | `664e84a` | **yes** — branched from `master`'s tip | **the fifth effort, 2026-08-10.** Handoff verification, an audit of two external reviews, and the P0/P1 fixes that came out of it |
-| `claude/indicators-candidate-stages-6403ce` | `f39daf5` | no unique commits | **a sixth effort, first seen 2026-08-14** in the worktree that previously held `…-review-e8d9f4` — the directory names still do not track the branches checked out in them. Tip is `f39daf5`, master's own commit at the start of this session's work; nothing beyond it yet |
+| `claude/indicators-candidate-stages-6403ce` | `0db6339` | **no** — open as PR #2 | **the sixth effort.** `f39daf5` was already merged before this row first existed; this session then added `presentation/funnel.py` (US-022, the refusal funnel) and its tests on top, pushed as `0db6339`, PR opened against `master`. `report.py` is not wired to it yet — held for the Track A freeze (§5). This merge commit reconciles the PR against `evidence-foundation`'s landing (PR #1) |
 
 **Two things this table stopped being able to tell you, both fixed 2026-08-10.**
 
