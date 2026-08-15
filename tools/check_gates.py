@@ -17,10 +17,17 @@ reported separately, it is counted separately, and the summary never says "all g
 did not run.
 
 Two things keep it from becoming a skip flag by another name. Only the gates in
-`MAY_BE_UNAVAILABLE` are allowed the state - any other gate exiting 4 is a FAIL, because the only
-legitimate cause is the course source, and a gate inventing a reason not to run is the failure this
-guard exists for. And the owner's machine has the PDFs, so locally all 22 still run: CI is the
-weaker environment and says so, rather than CI and local quietly diverging.
+`MAY_BE_UNAVAILABLE` are allowed the state - any other gate exiting 4 is a FAIL, because a gate
+inventing a reason not to run is the failure this guard exists for. And the owner's machine has
+everything, so locally every gate still runs: the weaker environment is the one that says so,
+rather than the two quietly diverging.
+
+**A second legitimate cause was added 2026-08-15: `data/`.** The local DuckDB stores and the
+scheduler log are gitignored operational state - they cannot be in the repository for the same
+reason the PDFs cannot, and they exist only in the main checkout. Gates 23 and 24 read them.
+Gate 23 previously returned 0 from a worktree while printing "nothing scheduled has run", so a
+hand-kept counter in `HANDOFF.md` sat wrong for days with every gate green. That is what the third
+state is for, and extending it here is the alternative to a gate that lies quietly.
 """
 
 from __future__ import annotations
@@ -42,10 +49,13 @@ PASS, FAIL, UNAVAILABLE = "PASS", "FAIL", "UNAVAILABLE"
 #: Exit code a gate uses to say "my subject is not present in this environment".
 UNAVAILABLE_EXIT = 4
 
-#: The only gates permitted to report UNAVAILABLE, and the sole legitimate reason: both read the
-#: 116 course PDFs, which are the requirements source and are not in the repository. Any other gate
+#: The only gates permitted to report UNAVAILABLE, and the two legitimate reasons. Gates 2 and 3
+#: read the 116 course PDFs, the requirements source, which are not in the repository. Gates 23 and
+#: 24 read `data/`, gitignored operational state present only in the main checkout. Any other gate
 #: exiting 4 is a FAIL - see the module docstring.
-MAY_BE_UNAVAILABLE = frozenset({"2 transcription", "3 course index"})
+MAY_BE_UNAVAILABLE = frozenset({
+    "2 transcription", "3 course index", "23 track A streak", "24 state block",
+})
 
 
 def _run(name: str, argv: list[str], key: str = "") -> str:
@@ -142,7 +152,9 @@ def main() -> int:
         "21 worktree clean": _run("no finished work left uncommitted (advisory)",
                                [python, "tools/verify_worktree_clean.py"]),
         "23 track A streak": _run("the a.run_completes streak, computed not hand-kept (advisory)",
-                               [python, "tools/track_a_streak.py"]),
+                               [python, "tools/track_a_streak.py"], "23 track A streak"),
+        "24 state block": _run("HANDOFF section 2 is generated, not typed",
+                            [python, "tools/build_state.py", "--check-only"], "24 state block"),
     }
 
     print("\n" + "=" * 62)
@@ -162,8 +174,11 @@ def main() -> int:
         ran = len(results) - len(unavailable)
         print(f"{ran} of {len(results)} gates pass; "
               f"{len(unavailable)} could not run here: {', '.join(unavailable)}")
-        print("The course PDFs are not in this environment. Run on the owner's machine for all "
-              f"{len(results)}.")
+        # Naming the cause generically, because there are now two and the message used to assert
+        # the wrong one. A summary that misreports why a gate did not run is the same defect class
+        # as a gate that does not report it at all.
+        print("Their subjects are absent from this environment - the course PDFs, or `data/` in a "
+              f"worktree. Run on the owner's main checkout for all {len(results)}.")
         return 0
 
     print("all gates pass")

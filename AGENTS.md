@@ -294,6 +294,59 @@ Writing history is still allowed, and is the one exception: strike the line thro
 about 2026-08-03 and updating it would falsify the record. What the gate cannot do is infer tense,
 so an unmarked past-tense sentence reads as a live claim and fails — mark it, or drop the numeral.
 
+## 10.6 And that one place is generated, not typed
+
+**§10.5 removed the copies. It did not make the survivor true.** A measured fact that a tool can
+derive is derived by that tool and written by that tool. Hand-typing a number into its owning
+document is still drift — and it is now *harder* to catch, because §10.5 deleted the second copy
+that used to disagree with it.
+
+**What paid for this rule, 2026-08-15.** `HANDOFF.md` §2's Track A row read *"counter at 3"* while
+`tools/track_a_streak.py` computed **4** — and the row itself said *"computed by
+`tools/track_a_streak.py` (gate 23, advisory) … not hand-kept."* It was hand-kept. The same table's
+directory row read *9 pulls, 1 confirmed*; `directory.duckdb` held **10 and 2**. Both numbers sat in
+the single owner §10.5 established, both were wrong, and nothing in the tree contradicted them.
+**Concentrating a fact makes it findable, not true.**
+
+So:
+
+1. **If a fact can be derived, a tool derives it and `--check-only` gates it.** This is not a new
+   pattern — `build_frd.py`, `build_components.py`, `build_checklists.py`, `build_coverage.py` and
+   `build_lock.py` all work this way, and none of them has ever gone stale. The documents that go
+   stale are exactly the ones a person types.
+2. **A gate that cannot measure says so, and does not exit 0 as though it had.** Gate 23 reads
+   `data/daily_run.log`, which exists only in the main checkout; from a worktree it prints
+   *"nothing scheduled has run"* and exits 0, so a hand-kept counter is never contradicted. This is
+   the same shape as gate 16's *"green from a worktree, red from the main checkout"* bug, already
+   documented in `HANDOFF.md` §2 as fixed. A gate answering differently depending on where it runs
+   is worse than no gate: it manufactures confidence.
+3. **A number a gate did not measure is not quotable.** `UNAVAILABLE` is a real answer. Reporting a
+   false negative as a measurement is the failure this whole section exists to stop.
+4. **Introducing a derived fact means extending the deriving tool in the same change.** A fact whose
+   derivation is "someone will remember" is a fact that will be wrong within the week.
+
+**A merge-time checklist of files to update is explicitly rejected.** It was considered and it is the
+disease wearing the cure's clothes: naming the files does not make them true, and it is the same
+hand-reconciliation that §10.5 records failing five separate times. Generate, or gate, or leave the
+fact where it was measured and link to it.
+
+## 10.7 Open work lives in `TODO.md`, and `HANDOFF.md` is memory
+
+**`TODO.md` at the repository root is the only open-work list.** Every open, pending, picked or
+blocked item goes there. No document keeps a parallel list, and a task that is not in `TODO.md` is
+not tracked. It carries provenance marks — verified this session, or carried from a prior audit —
+because an unverified item that reads as verified is how a fixed problem gets worked twice.
+
+**`TODO.md` holds work items and never measured counts.** Where an item needs a number it names the
+command that derives it. A to-do list that restates a census is the next stale copy, and §10.5 and
+§10.6 apply to it exactly as they apply to everything else.
+
+**`HANDOFF.md` is session-to-session memory and nothing else**: what changed since the last session,
+what is in flight, what is frozen, and where to look. It is not the plan (`docs/08-pm/plans/`), not
+the analysis, not the task list (`TODO.md`), not the habit guide (this file), and not the project
+history (`git log`). Anything in it that a fresh session would not need in its first ten minutes
+belongs somewhere else, and §10.6 governs every number that remains.
+
 ## 11. Before removing or retiring anything
 
 `docs/06-engineering/CHANGE_MANAGEMENT.md` §5 is canonical. The operational rules are:
@@ -314,3 +367,41 @@ so an unmarked past-tense sentence reads as a live claim and fails — mark it, 
 6. **Record and verify the exact removal.** Put the rationale and checks in the commit or pull
    request, then run the complete gate suite. `safe to delete` is that one reviewed decision, not a
    permanent label.
+
+## 12. Traps that have cost real time, and the habits that catch them
+
+Migrated from `HANDOFF.md` §8 on 2026-08-15 — §10.7 makes this file the habit guide and HANDOFF
+session memory, and these are habits.
+
+**Two traps that have cost real time:**
+
+- **The worktree venv points at the main checkout.** `pytest` run from a worktree exercises
+  `C:\PycharmProjects\SwingDesk\src`, not the worktree's, unless `PYTHONPATH` says otherwise. The
+  documentation gates read files by path and are unaffected; the code gates are not. Always run gates
+  with `PYTHONPATH=$PWD/src`.
+- **`data/` is not in your worktree either, and that is the same trap wearing a different hat.** The
+  DuckDB stores and the scheduler log live only in the main checkout. Gates 23 and 24 read them and
+  report `UNAVAILABLE` rather than passing blind; point them at the real stores with
+  `SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data` when you need the runtime figures.
+- **Hand-maintained counts drift, every time.** Six have now been caught: the study verdicts
+  (`5 studies, 3 refuted` in five documents), the gate total, the specification coverage summary
+  (31/22 against a table saying 30/24), a component-activation claim in
+  `COMPONENT_REGISTRY_SPEC.md`, and — 2026-08-15, after §10.5 had supposedly closed this — the Track
+  A streak and the directory pull census, both inside their own single owner. Each read as correct.
+  **None was reachable by review** — only recomputation caught them, which is why gates 3f, 3g, 3ci,
+  the gap-summary check in 3e, and now gate 24 exist.
+
+**The habits:**
+
+- **Verify before asserting.** When you find a stale claim, **add a gate rather than fixing the
+  instance.** That rule has produced five gates and every one has since caught something.
+- **`unavailable` is not `fail`, and it is not `pass` either.** A gap in the *system* and a fact
+  about the *trade* are different claims. Collapsing them is the most damaging error this product can
+  make — and a gate that cannot see its subject makes the same error about itself (§10.6).
+- **An `UNSET` parameter is the design working**, not a backlog item. Components refuse rather than
+  default.
+- **Never hand-edit** a `verbatim` block or a generated file. Gates 2, 3b–3ci and 24 exist to catch it.
+- **No Russian in code** (§5) — one marked exception, the course-index heading pattern, which is data
+  rather than prose. Course quotations live in `docs/`, where gate 2 checks them.
+- **Rollback is mostly supersede, not revert.** The stores are append-only; `CHANGE_MANAGEMENT.md`
+  §3 says what can be undone and what can only be corrected forward.
