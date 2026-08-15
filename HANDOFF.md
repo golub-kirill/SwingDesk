@@ -36,7 +36,7 @@ documentation is implementable.
 |---|---|
 | Merge gates | **24**, one command, all green · **CI since 2026-08-10** (`gates`, windows-latest); 22 run there, 2 report `UNAVAILABLE` because the course PDFs are not in the repo |
 | `master` | **protected** since 2026-08-10 — required check `gates`, admins included, no force-push. A new merge commit is refused until its check reports; fast-forward a green commit, or use a PR |
-| Tests | **327**, fully offline |
+| Tests | **336**, fully offline |
 | Docs | 101 files, Tier 0–8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 6 `specified` · **1 `active`** — ATR (`M18-T0280-v5.0`), activated 2026-08-10, the first ever |
 | Parameters | 96 — 61 `unset`, 30 `assumed`, 4 `owner`, **1 `validated`** · `risk.per_trade_pct` and `risk.costs_allowance` set 2026-08-11, so sizing no longer refuses |
@@ -71,6 +71,7 @@ others, and one re-ran a study another had already finished and reached the oppo
 | `claude/swingdesk-documentation-321418` | 2026-08-09 | **yes**, merged 2026-08-09 | `DR-006`, `DR-007`, ALLOCATION/TRANSITION/ENTITY_MAP/EXPECTATION_MODEL/DRIFT_AND_LEARNING/CHANGE_MANAGEMENT/KNOWLEDGE_GRAPH, five gates, `criteria.yml` v1.1.0 |
 | `claude/skills-llm-council-setup-1e1d65` | `63b089d` | no unique commits | **a fourth effort, started mid-reconciliation.** It appeared while the merge was running and gate 16 failed within the minute — which is the whole point of the gate. This row said *"at `master`'s tip"* until 2026-08-10; it is six commits behind and has been since `5a79f00` |
 | `claude/swingdesk-handoff-review-e8d9f4` | `664e84a` | **yes** — branched from `master`'s tip | **the fifth effort, 2026-08-10.** Handoff verification, an audit of two external reviews, and the P0/P1 fixes that came out of it |
+| `claude/indicators-candidate-stages-6403ce` | `f39daf5` | **yes**, already merged before this row was added | **the sixth effort, 2026-08-13.** This directory's occupant per `git worktree list`, not `swingdesk-documentation-321418` as an earlier row's name implies. Tip was merged; this session then added uncommitted work on top — `presentation/funnel.py`, US-022 — not yet pushed |
 
 **Two things this table stopped being able to tell you, both fixed 2026-08-10.**
 

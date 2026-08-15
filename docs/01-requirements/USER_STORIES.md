@@ -3,7 +3,9 @@
 **Status:** drafting · **Tier:** 1 (requirements) · **Content:** authored, structured by the course's own playbooks
 
 Stories are grouped by the four playbooks the course actually prescribes. Each has an ID that a test
-must cite (`tools` traceability check, `DEPENDENCY_LAW.md` §4) and Gherkin acceptance criteria.
+should cite. The check that would enforce it is `CI_POLICY.md` gate 10 (traceability), which is
+honestly marked **to build** — it is not wired yet, so citing an ID today is a convention, not a
+gate. See the open items below for how few IDs are cited today and the command that measures it.
 
 `Given/When/Then` here is not decoration — a story is not done until its scenarios exist as
 executable tests.
@@ -117,6 +119,36 @@ Then items the system can verify are pre-filled with the evidence that satisfied
 And items requiring judgment are presented as bounded choices
 And the checklist cannot reach Complete while a required item is unanswered
 ```
+
+### US-022 · The run says why nothing matched
+> As the owner, I want the run to report its funnel and what moved since the last run, so that I can
+> tell a quiet day from a broken one without reading every candidate block.
+
+```gherkin
+Given a completed run with a universe attached
+When the funnel is computed
+Then eligible, measured, admitted and evaluated counts are shown in that order
+And Trade, Watch, Skip and Pause counts sum to the evaluated count together with any unaccounted
+    candidate
+
+Given at least one Skip decision
+When the funnel is rendered
+Then each skip code is broken out with its count
+And a Skip that names a parameter (an unset required value) is shown separately from a Skip with
+    the same code that does not (a fact about the account or the market, not the system)
+
+Given a candidate whose decision differs from its previous_decision
+When the funnel is computed
+Then it is counted as changed
+And a candidate with no previous_decision is counted as a first sighting, never as changed
+
+Given a run with no candidates at all
+When the funnel is rendered
+Then it still prints a funnel block stating zero, not silence
+```
+*Nothing here is a new measurement — every count is read from `RunResult` /
+`UniverseSelection`, the same objects the per-instrument blocks already print
+(`swingdesk.presentation.funnel`).*
 
 ## B. Position management (M59–M62, Appendix T)
 
@@ -254,7 +286,7 @@ And a parameter with provenance assumed is marked as assumed adjacent to the num
 
 ## Coverage note
 
-These 21 stories cover Track A of `criteria.yml` completely. Track B needs no stories — it is
+These stories cover Track A of `criteria.yml` completely. Track B needs no stories — it is
 evidence about a strategy, not behaviour of the system.
 
 Deliberately absent: any story about placing orders, and any story about a strategy being
@@ -262,6 +294,11 @@ profitable. Both are non-goals (`CHARTER.md` §3).
 
 ## Open items
 
+- [ ] **Gate 10 (traceability) is unbuilt**, so story-id citation is a convention today, not an
+      enforced link. Very few ids are cited anywhere in the tree yet:
+      `grep -rn "US-0[0-9][0-9]" --include="*.py" src/` — measure it fresh rather than trusting a
+      number written here, since this document is not where a measured count is allowed to live
+      (`AGENTS.md` §10.5).
 - [ ] Stories for the web admin surface and push notifications, once `PRODUCT_SURFACES.md` fixes
       what each owns. The CLI stories above are surface-agnostic on purpose.
 - [ ] US-004's regime classifier has no rule yet (`regime.classifier_rule`, unset). The story is
