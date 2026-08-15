@@ -676,6 +676,16 @@ documents:
   readme_status_text: drafting
   generated: false
   file_expected: true
+- id: DOC-66
+  display_number: '66'
+  tier_ref: TIER-8
+  artifact_class: PRIMARY_DELIVERABLE
+  path: docs/08-pm/EVIDENCE_SUMMARY.md
+  document_status: drafting
+  status_source: document
+  readme_status_text: drafting
+  generated: false
+  file_expected: true
 - id: DOC-57
   display_number: '57'
   tier_ref: TIER-8

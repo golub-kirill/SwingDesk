@@ -46,7 +46,7 @@ saying they had not — see `AGENTS.md` §10.6 for the two numbers that paid for
 |---|---|
 | Merge gates | **29**, one command: `python tools/check_gates.py` |
 | Tests | **403**, fully offline |
-| Docs | 103 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
+| Docs | 104 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 6 `specified` · **1 `active`** |
 | Parameters | 100 - 62 `unset`, 33 `assumed`, 4 `owner`, **1 `validated`** |
 | Golden vectors | 25 vectors across 6 components |
@@ -130,36 +130,20 @@ rebuilding this table from the merged tree. `criteria.yml` is **v1.1.0** with `k
 ## 3. The uncomfortable summary
 
 **The machinery is real and honest. The strategy is not known to work, and what is known is mostly
-negative.**
+negative.** The standing account of what the reported studies support moved to
+[`docs/08-pm/EVIDENCE_SUMMARY.md`](docs/08-pm/EVIDENCE_SUMMARY.md) on 2026-08-15 — it outlives any
+one session, and `AGENTS.md` §10.7 keeps this file to what does not.
 
-- **The base strategy is negative at measured costs, across the whole admissible universe.** PR-005
-  reported **+0.028R** at 1× and **−0.123R** at 3×; both are net, because gross is never reported
-  (`DR-004` consequence 1), so "before costs" is the one description that is wrong. Those two points
-  give gross 0.1036R, cost 0.0757R and break-even at **1.369×** the assumption — and `DR-005`
-  measures slippage at **25bp per side** against the assumed 5. Recomputed 2026-08-09
-  (`DR-005`, *Consequence for PR-005*): **−0.073R at the $5 universe floor, −0.224R at $50.**
-  Break-even would need an average traded price of **$1.02**; `universe.min_price` is **$5.00**.
-  **No price an eligible instrument can have makes it positive.** The 1× column was never applicable.
-- **The direction is settled and the level is not.** `PR-008` reached the opposite conclusion — that
-  the estimators cannot resolve the spread — and that explanation was **withdrawn on 2026-08-09**
-  after a calibration-free sign test refuted it. But neither effort settled the magnitude:
-  Abdi-Ranaldo correlates **+0.46** with volatility and **−0.02** with liquidity, which is backwards
-  for a spread, and the published literature documents exactly that bias. **`PR-010` closed this
-  on 2026-08-09**: EDGE — the 2024 estimator built to fix both, and the only one that reads the
-  open — reports 25.65bp against its own zero-spread floor of **41.87bp** at this universe's
-  measured volatility. Two estimators agree to 0.21bp *inside their shared noise*. **The level is
-  not obtainable from daily OHLC**; `PR-006`, real fills, is the only route left. Treat 25bp as
-  "materially more than 5", never as a measurement of 25.
-- The one positive finding (PR-002: breadth separates breakout outcomes) is erased by **1.6–2.3% of
-  trades missing at −2R**, and Yahoo serves no delisted history, so that exposure can never be
-  confirmed on the free tier.
-- **There is no legal source of probability in this system today.** No expectation estimate exists,
-  no calibrated model exists (`EXPECTATION_MODEL.md` §9c). Any probability displayed would be
-  manufactured.
-- **Two ratified criteria are inert.** `k.strategy_rejected` cannot fire — Track B evaluates on
-  journalled trades only, and its benchmark comparison is not commensurable. See §5.
-- `CHARTER.md` §4's v1 finish line is a **machinery** target and was reached 2026-08-02. Reaching v1
-  and reporting no validated edge is a **success** against the ratified criteria, not a failure.
+Four things a fresh session must not get wrong, each argued there:
+
+- the base strategy is **negative at measured costs** across the whole admissible universe, and no
+  price an eligible instrument can have makes it positive;
+- the spread **level is not obtainable from daily OHLC** — treat 25bp as "materially more than 5",
+  never as a measurement of 25;
+- the one positive finding (`PR-002`) is **erased by 1.6–2.3% of trades missing at −2R**, which the
+  free tier can never rule out;
+- **there is no legal source of probability in this system today.** Any probability displayed would
+  be manufactured.
 
 Do not write anything implying more confidence than that. `UX_COPY.md` §3 carries the standing
 warning verbatim.
