@@ -1136,3 +1136,58 @@ git commit -m "the first trade log this project has ever had, and it reproduces 
 **Type consistency.** `collection_enabled(root: Path) -> bool` identical in Task 1 Steps 1 and 4. `parse_header` used only in Task 4. `gaps(start, end) -> tuple[date, ...]` matches its test. `run_gate(tool, root)` matches the existing helper. The CSV header in Task 8's test matches its Produces block.
 
 **Length.** 2,249 lines across two plans became one. The reduction is ceremony and duplication, not substance: every task retained carries its own tests, its own code, and a stated reason it could be wrong.
+
+---
+
+## Amendment 2026-08-12 — Task 7 is withdrawn
+
+Task 7 above is left as written, because it is the record of what was planned. It was implemented in
+`c435799`, found defective in review, and is withdrawn here rather than corrected. This section is
+the correction; the task text is not edited (`AGENTS.md` §3, records are immutable).
+
+**What was wrong.** Task 7 Step 3 maps each pull's UTC capture date to an NYSE session date. An
+evening pull crosses UTC midnight, so the mapping is wrong for exactly the pulls this project makes
+— the collector runs at 18:30 local, after the close. Measured against the live store on
+2026-08-12:
+
+| pull (local) | session `gaps()` inferred | session actually observed |
+|---|---|---|
+| `2026-08-05T20:30:46-05:00` | 08-06 | **08-05** |
+| `2026-08-11T22:28:51-05:00` | 08-12 | **08-11** |
+
+So the shipped `gaps()` reported two genuinely observed sessions (08-05, 08-11) as holes, and
+counted one unobserved session (08-06) as covered. The `HANDOFF.md` Directory row transcribed that
+output faithfully and was therefore wrong on three counts.
+
+**Why a timezone fix was rejected.** Converting to `America/New_York` gets those two rows right and
+is still forbidden. `DR-008` consequence 3: existing pulls "cannot be relabelled with source-session
+dates they never stored". Deriving a session from a capture instant is an inference either way; a
+better-calibrated inference is still one the decision rules out, and it would fail differently for a
+pre-open or mid-session pull rather than not at all.
+
+**What was done instead.** `DirectoryStore.gaps()` and its two tests are removed. The store's module
+docstring gains a third stated limit recording that session attribution is unavailable and why, so
+the method is not re-added from the same reasoning. The `HANDOFF.md` Directory row states the pull
+count and knowledge-time span, and says plainly that which sessions were observed is unanswerable.
+
+**Entry criterion for revisiting.** `gaps()` becomes soundly buildable once a pull stores the
+vendor's own `File Creation Time` trailer as a validated `source_session_date` — which `DR-008`
+§30–40 already specifies and which nothing has yet built. That work belongs with the rest of
+`DR-008`'s deferred machinery in the table above. Under `DR-008` §63 the first session-aware
+snapshot is a baseline and creates no historical claim, so the six legacy pulls stay unattributed
+permanently. Every further day of collection adds another unattributable pull, which is the cost of
+deferring it.
+
+## Amendment 2026-08-12 — Task 6 addendum, blank lines
+
+Task 6's strict parser was validated against the live vendor feed on 2026-08-12, after the fact:
+both files parse clean (`nasdaqlisted.txt` 346,817 bytes → 5,588 entries; `otherlisted.txt` 535,636
+bytes → 7,547 entries; strict UTF-8, CRLF, one `File Creation Time` trailer each, no short rows).
+The 13,135 total matches the rows the 18:30 run recorded, so strict parsing changes nothing on the
+real file. Both are far under the 2 MiB cap, which is the measurement `DR-008`'s "what would
+overturn this" asks for.
+
+One narrowing was added anyway: a line that is blank after stripping is skipped rather than counted
+malformed. It carries no fields, so it cannot be a symbol row that went missing, and Task 6's own
+"what would make this wrong" is that a legitimate short row stops collection entirely. A test covers
+CRLF endings with a trailing blank line for both feeds.

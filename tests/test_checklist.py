@@ -29,7 +29,7 @@ def _risk() -> RiskSnapshot:
 
     return RiskSnapshot(
         equity=Decimal(10000), risk_pct=Decimal("1.0"), allowed_risk=Decimal(100),
-        entry=Decimal(100), stop=Decimal(96), costs_allowance=Decimal("0.02"),
+        entry=Decimal(100), stop=Decimal(96), costs_per_share=Decimal("0.02"),
         risk_per_share=Decimal("4.02"), shares=24, position_value=Decimal(2400),
         planned_risk=Decimal("96.48"),
         parameters=(ParameterUse(id="risk.per_trade_pct", value="1.0",

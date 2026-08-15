@@ -17,7 +17,7 @@ has to happen first, not the thing that has to happen last.
 | `PR-003` | Is √252 annualisation wrong enough to matter for this return series? | not written | a daily return series |
 | `PR-004` | Do the process-score weights change any ranking? | not written | ~100 journalled trades |
 | `PR-006` | Does measured live slippage match the modelled figure? | not written | a forward test — id reserved by `DR-004`, 2026-08-02 |
-| `PR-007` | Does the base strategy have positive expectancy net of **measured** costs? | **registered** | a re-fetch — the window is 10 years, the store holds 2 |
+| `PR-007` | Does the base strategy have positive expectancy net of **measured** costs? | **registered** | — (re-fetch done 2026-08-13, all 68 instruments; see its own §10) |
 | `PR-008` | Is the assumed 5bp slippage an understatement of the spread this universe pays? | **reported — INCONCLUSIVE**, then corrected | — |
 | `PR-009` | Is a −15R drawdown limit distinguishable from ordinary sequence luck? | **registered** | a trade log — none exists |
 | `PR-010` | Does EDGE resolve the spread level Corwin-Schultz and Abdi-Ranaldo could not? | **reported — REJECT** | — |

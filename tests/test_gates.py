@@ -39,7 +39,187 @@ def run_gate(tool: str, root: Path) -> tuple[int, str]:
     return result.returncode, result.stdout + result.stderr
 
 
+# -------------------------------------------------------------------- gate 21: worktree clean
+
+
+def _git_init(root: Path) -> None:
+    for args in (
+        ["init", "-b", "main"],
+        ["-c", "user.email=t@t", "-c", "user.name=t", "commit", "--allow-empty", "-m", "base"],
+    ):
+        subprocess.run(["git", "-C", str(root), *args], capture_output=True, check=True)
+
+
+def test_worktree_gate_reports_untracked_governed_files(tmp_path: Path) -> None:
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "orphan.md").write_text("finished, uncommitted\n", encoding="utf-8")
+    _git_init(tmp_path)
+    code, out = run_gate("verify_worktree_clean.py", tmp_path)
+    assert code == 0, "advisory only - it must never fail the build"
+    assert "docs/orphan.md" in out
+
+
+def test_worktree_gate_is_quiet_on_a_clean_tree(tmp_path: Path) -> None:
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "kept.md").write_text("committed\n", encoding="utf-8")
+    for args in (
+        ["init", "-b", "main"],
+        ["add", "-A"],
+        ["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-m", "base"],
+    ):
+        subprocess.run(["git", "-C", str(tmp_path), *args], capture_output=True, check=True)
+    code, out = run_gate("verify_worktree_clean.py", tmp_path)
+    assert code == 0
+    assert "0 stray" in out
+
+
+def test_worktree_gate_ignores_ungoverned_paths(tmp_path: Path) -> None:
+    (tmp_path / "scratch.txt").write_text("not governed\n", encoding="utf-8")
+    _git_init(tmp_path)
+    code, out = run_gate("verify_worktree_clean.py", tmp_path)
+    assert code == 0
+    assert "0 stray" in out
+
+
+# --------------------------------------------------------------------------- gate 20: decisions
+
+
+def _decisions_tree(tmp_path: Path, header: str, *, marker_file: str = "",
+                    marker_body: str = "") -> Path:
+    (tmp_path / "docs" / "decisions").mkdir(parents=True)
+    (tmp_path / "docs" / "decisions" / "DR-001-fixture.md").write_text(
+        f"# DR-001: fixture\n\n```\n{header}\n```\n\nBody.\n", encoding="utf-8"
+    )
+    if marker_file:
+        target = tmp_path / marker_file
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(marker_body, encoding="utf-8")
+    return tmp_path
+
+
+def test_decision_gate_catches_an_accepted_record_with_no_implementation_field(
+        tmp_path: Path) -> None:
+    root = _decisions_tree(tmp_path, "date: 2026-08-01\nstatus: accepted\nparameters: none")
+    code, out = run_gate("verify_decisions.py", root)
+    assert code == 1
+    assert "implemented_by" in out
+
+
+def test_decision_gate_catches_an_absent_marker(tmp_path: Path) -> None:
+    root = _decisions_tree(
+        tmp_path,
+        "date: 2026-08-01\nstatus: accepted\n"
+        "implemented_by: tools/run.cmd :: fetch_directory.py",
+        marker_file="tools/run.cmd", marker_body="echo nothing\n",
+    )
+    code, out = run_gate("verify_decisions.py", root)
+    assert code == 1
+    assert "fetch_directory.py" in out
+
+
+def test_decision_gate_accepts_a_present_marker(tmp_path: Path) -> None:
+    root = _decisions_tree(
+        tmp_path,
+        "date: 2026-08-01\nstatus: accepted\n"
+        "implemented_by: tools/run.cmd :: fetch_directory.py",
+        marker_file="tools/run.cmd",
+        marker_body="python tools/fetch_directory.py --scheduled\n",
+    )
+    code, out = run_gate("verify_decisions.py", root)
+    assert code == 0, out
+
+
+def test_decision_gate_accepts_an_explicit_none(tmp_path: Path) -> None:
+    """A convention decision changes no code. Saying so out loud is the point."""
+    root = _decisions_tree(tmp_path, "date: 2026-08-01\nstatus: accepted\nimplementation: none")
+    code, out = run_gate("verify_decisions.py", root)
+    assert code == 0, out
+
+
+def test_decision_gate_ignores_a_proposal(tmp_path: Path) -> None:
+    """Only accepted records promise anything. A proposal is still a question."""
+    root = _decisions_tree(tmp_path, "date: 2026-08-01\nstatus: proposed\nparameters: none")
+    code, out = run_gate("verify_decisions.py", root)
+    assert code == 0, out
+
+
 # --------------------------------------------------------------------------- fixtures
+
+
+def _secrets_tree(tmp_path: Path, gitignore: str, doc: str = "") -> Path:
+    (tmp_path / "docs").mkdir()
+    (tmp_path / ".gitignore").write_text(gitignore, encoding="utf-8")
+    if doc:
+        (tmp_path / "docs" / "NOTES.md").write_text(doc, encoding="utf-8")
+    for args in (["init", "-b", "main"], ["add", "-A"],
+                 ["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-m", "fixture"]):
+        subprocess.run(["git", "-C", str(tmp_path), *args], capture_output=True, check=True)
+    return tmp_path
+
+
+# ------------------------------------------------------------------------- gate 19: secrets
+
+
+def test_secret_gate_catches_a_false_ignore_claim(tmp_path: Path) -> None:
+    root = _secrets_tree(tmp_path, "docs/build/\n",
+                         "The collector reads the ignored local file `.swingdesk-local.json`.\n")
+    code, out = run_gate("verify_secrets.py", root)
+    assert code == 1
+    assert ".swingdesk-local.json" in out
+
+
+@pytest.mark.parametrize(
+    "claim",
+    [
+        "`.swingdesk-local.json` is ignored.\n",
+        "`.swingdesk-local.json` is the local config.\n",
+    ],
+)
+def test_secret_gate_catches_a_path_before_the_ignore_claim(tmp_path: Path, claim: str) -> None:
+    root = _secrets_tree(tmp_path, "docs/build/\n", claim)
+    code, out = run_gate("verify_secrets.py", root)
+    assert code == 1
+    assert ".swingdesk-local.json" in out
+
+
+@pytest.mark.parametrize(
+    "claim",
+    [
+        "The local config: `.swingdesk-local.json`.\n",
+        "The ignored file, `.swingdesk-local.json`, stays off Git.\n",
+        "The local config; `.swingdesk-local.json`.\n",
+        "The ignored file (`.swingdesk-local.json`) is machine-specific.\n",
+    ],
+)
+def test_secret_gate_catches_an_ignore_claim_with_punctuation(tmp_path: Path, claim: str) -> None:
+    root = _secrets_tree(tmp_path, "docs/build/\n", claim)
+    code, out = run_gate("verify_secrets.py", root)
+    assert code == 1
+    assert ".swingdesk-local.json" in out
+
+
+def test_secret_gate_accepts_a_true_ignore_claim(tmp_path: Path) -> None:
+    root = _secrets_tree(tmp_path, ".swingdesk-local.json\n",
+                         "The collector reads the ignored local file `.swingdesk-local.json`.\n")
+    code, out = run_gate("verify_secrets.py", root)
+    assert code == 0, out
+
+
+def test_secret_gate_catches_a_tracked_secret_shaped_file(tmp_path: Path) -> None:
+    root = _secrets_tree(tmp_path, "docs/build/\n")
+    (root / ".env").write_text("BROKER_TOKEN=abc\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(root), "add", "-f", ".env"], capture_output=True, check=True)
+    code, out = run_gate("verify_secrets.py", root)
+    assert code == 1
+    assert ".env" in out
+
+
+def test_secret_gate_does_not_flag_ordinary_prose(tmp_path: Path) -> None:
+    """A noisy gate gets bypassed. 'ignored' in prose must not trip it."""
+    root = _secrets_tree(tmp_path, "docs/build/\n",
+                         "Whitespace is ignored by the parser, and the header is ignored too.\n")
+    code, out = run_gate("verify_secrets.py", root)
+    assert code == 0, out
 
 
 def _manifest_tree(tmp_path: Path, *, status: str = "drafting", number: str = "01") -> Path:
@@ -440,3 +620,119 @@ def test_ownership_rule_allows_the_owner_section(tmp_path: Path) -> None:
     (root / "HANDOFF.md").write_text("# H\n\n## 2. State\n\n| Tests | **0** |\n", encoding="utf-8")
     code, out = run_gate("verify_counts.py", root)
     assert code == 0, out
+
+
+# ------------------------------------------------------------- gate 23: track A streak
+
+#: A real, verified NYSE trading week (Mon-Fri, no holiday) - the calendar itself is not
+#: fixture-mockable, so tests use dates independently confirmed to be sessions.
+_MON, _TUE, _WED, _THU, _FRI = (
+    "08/10/2026", "08/11/2026", "08/12/2026", "08/13/2026", "08/14/2026",
+)
+
+
+def _log_line(date_str: str, event: str) -> str:
+    return f"===== [Day {date_str} 18:30:01.00] daily run {event} \n"
+
+
+def _run_streak_gate(root: Path, now: str) -> tuple[int, str]:
+    result = subprocess.run(
+        [sys.executable, str(TOOLS / "track_a_streak.py")],
+        capture_output=True, text=True,
+        env={**os.environ, "SWINGDESK_ROOT": str(root), "SWINGDESK_NOW": now},
+    )
+    return result.returncode, result.stdout + result.stderr
+
+
+def _streak_tree(tmp_path: Path, log_text: str) -> Path:
+    (tmp_path / "data").mkdir()
+    (tmp_path / "data" / "daily_run.log").write_text(log_text, encoding="utf-8")
+    return tmp_path
+
+
+def test_track_a_gate_reports_a_clean_streak(tmp_path: Path) -> None:
+    log = "".join(
+        _log_line(d, e)
+        for day in (_TUE, _WED, _THU)
+        for d, e in ((day, "starting"), (day, "finished, exit 0"))
+    )
+    root = _streak_tree(tmp_path, log)
+    code, out = _run_streak_gate(root, "2026-08-13T22:00:00")
+    assert code == 0
+    assert "track A streak: 3/20" in out
+    assert "2026-08-11 to 2026-08-13" in out
+
+
+def test_track_a_gate_excludes_an_out_of_window_entry(tmp_path: Path) -> None:
+    """The calibration case: a run starting 20:41 - 131 minutes past the 18:30 schedule - does not
+    count as the scheduled attempt, even though it exited 0."""
+    log = (
+        f"===== [Day {_MON} 20:41:19.00] daily run starting \n"
+        f"===== [Day {_MON} 20:46:30.00] daily run finished, exit 0 \n"
+        + "".join(
+            _log_line(d, e)
+            for day in (_TUE, _WED)
+            for d, e in ((day, "starting"), (day, "finished, exit 0"))
+        )
+    )
+    root = _streak_tree(tmp_path, log)
+    code, out = _run_streak_gate(root, "2026-08-12T22:00:00")
+    assert code == 0
+    assert "track A streak: 2/20" in out
+    assert "2026-08-11 to 2026-08-12" in out
+    assert "most recent break: 2026-08-10 (no qualifying scheduled-window entry)" in out
+
+
+def test_track_a_gate_counts_exit_2_as_clean(tmp_path: Path) -> None:
+    """`HANDOFF.md` §5: exit 2 is a refusal, a real outcome, not a failure."""
+    log = _log_line(_TUE, "starting") + _log_line(_TUE, "finished, exit 2")
+    root = _streak_tree(tmp_path, log)
+    code, out = _run_streak_gate(root, "2026-08-11T22:00:00")
+    assert code == 0
+    assert "track A streak: 1/20" in out
+
+
+def test_track_a_gate_treats_exit_3_as_a_break(tmp_path: Path) -> None:
+    """`HANDOFF.md` §5: exit 3 resets the counter, even though it is a coded outcome (empty
+    universe) rather than a literal crash - the ratified reading is followed as given."""
+    log = _log_line(_TUE, "starting") + _log_line(_TUE, "finished, exit 3")
+    root = _streak_tree(tmp_path, log)
+    code, out = _run_streak_gate(root, "2026-08-11T22:00:00")
+    assert code == 0
+    assert "track A streak: 0" in out
+    assert "most recent break: 2026-08-11 (exit 3)" in out
+
+
+def test_track_a_gate_is_advisory_even_with_a_broken_streak(tmp_path: Path) -> None:
+    log = _log_line(_TUE, "starting") + _log_line(_TUE, "finished, exit 1")
+    root = _streak_tree(tmp_path, log)
+    code, _out = _run_streak_gate(root, "2026-08-11T22:00:00")
+    assert code == 0, "advisory only - it must never fail the build"
+
+
+def test_track_a_gate_reports_a_missing_run_as_a_break(tmp_path: Path) -> None:
+    """A `starting` line with no matching `finished` - the crash case - reads the same as no entry
+    at all: no evidence the run completed."""
+    log = _log_line(_TUE, "starting")
+    root = _streak_tree(tmp_path, log)
+    code, out = _run_streak_gate(root, "2026-08-11T22:00:00")
+    assert code == 0
+    assert "track A streak: 0" in out
+
+
+def test_track_a_gate_handles_a_missing_log(tmp_path: Path) -> None:
+    tmp_path.joinpath("data").mkdir()
+    code, out = _run_streak_gate(tmp_path, "2026-08-13T22:00:00")
+    assert code == 0
+    assert "no data/daily_run.log yet" in out
+
+
+def test_track_a_gate_excludes_todays_session_while_its_window_is_still_open(tmp_path: Path) -> None:
+    """A run in progress must not read as a break - "now" sits inside the schedule window, so
+    today is not yet evaluable."""
+    log = _log_line(_TUE, "starting") + _log_line(_TUE, "finished, exit 0")
+    root = _streak_tree(tmp_path, log)
+    code, out = _run_streak_gate(root, "2026-08-12T18:45:00")  # inside the 30-minute tolerance
+    assert code == 0
+    assert "track A streak: 1/20" in out
+    assert "2026-08-11 to 2026-08-11" in out

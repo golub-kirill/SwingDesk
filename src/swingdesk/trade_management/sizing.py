@@ -6,7 +6,7 @@ and quantify none, so the formulas here are transcribed and every input is a reg
 The ordering is not reorderable (RISK_SPEC 3):
 
     1. invalidation                    -> stop
-    2. stop + costs allowance          -> risk per share
+    2. stop + costs per share          -> risk per share
     3. equity x risk %                 -> allowed risk $
     4. floor(allowed risk / per share) -> shares
     5. position-value and liquidity caps
@@ -15,6 +15,11 @@ The ordering is not reorderable (RISK_SPEC 3):
 Narrowing the stop to obtain a larger position reverses 1 and 4. The course names that as a
 prohibited move, and it is why the stop is an *input* here rather than something this function
 chooses.
+
+Costs (step 2) are price-aware and currency-aware (DR-010, 2026-08-13). The single flat
+`risk.costs_allowance` DR-009 set is retired: it charged the same amount per share regardless of
+price or currency, which understated cost on expensive instruments and merged two currencies into
+one number - both closed here, not carried forward as debt.
 """
 
 from __future__ import annotations
@@ -43,6 +48,12 @@ class Refusal:
         return f"{self.code}: {self.reason}{suffix}"
 
 
+#: Currencies this system prices costs in. `account.base_currency` is USD; CAD arrives from
+#: `.TO`-suffixed instruments (`reference_data.universe`). Any other currency has no parameter to
+#: read and refuses (`AGENTS.md` 3: "USA and Canada are never merged").
+_SUPPORTED_CURRENCIES = ("USD", "CAD")
+
+
 @dataclass(frozen=True, slots=True)
 class RiskSnapshot:
     """The Risk Snapshot entity of Appendix G, as computed.
@@ -57,7 +68,7 @@ class RiskSnapshot:
     allowed_risk: Decimal
     entry: Decimal
     stop: Decimal
-    costs_allowance: Decimal
+    costs_per_share: Decimal
     risk_per_share: Decimal
     shares: int
     position_value: Decimal
@@ -69,15 +80,51 @@ class RiskSnapshot:
         return any(parameter.is_assumed for parameter in self.parameters)
 
 
+def _costs_per_share(
+    entry: Decimal, currency: str, registry: ParameterRegistry
+) -> tuple[Decimal, ParameterUse, ParameterUse] | Refusal:
+    """Round-trip cost per share: `max(floor, bp/10000 * entry)`, both terms per-currency (DR-010).
+
+    Neither term alone is honest at every price. A flat floor undercharges an expensive instrument
+    (DR-009's own confession: a quarter of the true cost at $200); a pure proportional term
+    undercharges a cheap one, because spread behaves like a fixed minimum rather than a fraction of
+    price - understating cost is the unsafe direction, since `risk_per_share = entry - stop + costs`
+    means a smaller `costs` silently produces MORE shares. The floor is carried forward from the
+    single constant DR-009 set (0.25, itself derived from 50bp at a $50 reference), so cheap
+    instruments are priced exactly as before rather than newly guessed at.
+    """
+    if currency not in _SUPPORTED_CURRENCIES:
+        return Refusal(
+            "RISK",
+            f"no cost parameters for currency {currency!r}; supported: {_SUPPORTED_CURRENCIES}",
+        )
+    suffix = currency.lower()
+    try:
+        bp, bp_use = registry.decimal_value(f"risk.costs_bp_{suffix}")
+        floor, floor_use = registry.decimal_value(f"risk.costs_floor_{suffix}")
+    except ParameterUnset as unset:
+        return Refusal(
+            "RISK",
+            "a required risk parameter has no value; the system refuses rather than assuming one",
+            parameter_id=unset.parameter_id,
+        )
+    proportional = (bp / Decimal(10_000) * entry).quantize(Decimal("0.0001"))
+    return max(floor, proportional), bp_use, floor_use
+
+
 def size_long(
     entry: Decimal,
     stop: Decimal,
+    currency: str,
     registry: ParameterRegistry,
 ) -> RiskSnapshot | Refusal:
     """Size a long, or refuse with a code.
 
     Returns a Refusal rather than raising, because a refusal is an expected outcome that belongs in
     the candidate's record - not an exception to be caught somewhere and turned into a log line.
+
+    `currency` selects which cost parameters apply (DR-010) - there is deliberately no default
+    currency, because guessing one is exactly the silent-oversizing risk the split exists to close.
     """
     # Step 1-2. Stop first. A stop at or above entry is not an invalidation level for a long.
     if stop >= entry:
@@ -89,13 +136,17 @@ def size_long(
     try:
         equity, equity_use = registry.decimal_value("account.equity")
         risk_pct, risk_use = registry.decimal_value("risk.per_trade_pct")
-        costs, costs_use = registry.decimal_value("risk.costs_allowance")
     except ParameterUnset as unset:
         return Refusal(
             "RISK",
             "a required risk parameter has no value; the system refuses rather than assuming one",
             parameter_id=unset.parameter_id,
         )
+
+    costs_result = _costs_per_share(entry, currency, registry)
+    if isinstance(costs_result, Refusal):
+        return costs_result
+    costs, bp_use, floor_use = costs_result
 
     risk_per_share = entry - stop + costs
     if risk_per_share <= 0:
@@ -133,12 +184,12 @@ def size_long(
         allowed_risk=allowed_risk,
         entry=entry,
         stop=stop,
-        costs_allowance=costs,
+        costs_per_share=costs,
         risk_per_share=risk_per_share,
         shares=shares,
         position_value=position_value,
         planned_risk=(Decimal(shares) * risk_per_share).quantize(Decimal("0.01")),
-        parameters=(equity_use, risk_use, costs_use, value_use),
+        parameters=(equity_use, risk_use, bp_use, floor_use, value_use),
     )
 
 

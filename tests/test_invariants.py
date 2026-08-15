@@ -28,7 +28,10 @@ def _registry(**overrides: object) -> ParameterRegistry:
         "atr.period": 14,
         "account.equity": 10000,
         "risk.per_trade_pct": "1.0",
-        "risk.costs_allowance": "0.02",
+        "risk.costs_bp_usd": "50",
+        "risk.costs_floor_usd": "0.02",
+        "risk.costs_bp_cad": "50",
+        "risk.costs_floor_cad": "0.02",
         "risk.max_position_value": 1_000_000,
     }
     base.update(overrides)
@@ -88,7 +91,7 @@ def _series(closes: list[Decimal], instrument: str = "TEST.1") -> BarSeries:
 @settings(max_examples=200, deadline=None)
 def test_shares_never_round_up(entry: Decimal, distance: Decimal) -> None:
     """Appendix C rounds down. Rounding up would breach the risk budget by up to one share."""
-    result = size_long(entry, entry - distance, _registry())
+    result = size_long(entry, entry - distance, "USD", _registry())
     if isinstance(result, Refusal):
         return
     assert Decimal(result.shares) * result.risk_per_share <= result.allowed_risk
@@ -101,7 +104,7 @@ def test_shares_never_round_up(entry: Decimal, distance: Decimal) -> None:
 @settings(max_examples=200, deadline=None)
 def test_planned_risk_never_exceeds_allowed(entry: Decimal, distance: Decimal) -> None:
     """The whole point of sizing: the position cannot risk more than the budget permits."""
-    result = size_long(entry, entry - distance, _registry())
+    result = size_long(entry, entry - distance, "USD", _registry())
     if isinstance(result, Refusal):
         return
     assert result.planned_risk <= result.allowed_risk
@@ -115,7 +118,7 @@ def test_planned_risk_never_exceeds_allowed(entry: Decimal, distance: Decimal) -
 def test_stop_at_or_above_entry_always_refuses(entry: Decimal, stop: Decimal) -> None:
     """A long whose stop is not below entry has no invalidation level. Never sized, always STOP."""
     assume(stop >= entry)
-    result = size_long(entry, stop, _registry())
+    result = size_long(entry, stop, "USD", _registry())
     assert isinstance(result, Refusal)
     assert result.code == "STOP"
 
@@ -129,17 +132,69 @@ def test_r_denominator_is_the_planned_risk(net: Decimal) -> None:
     the current stop, R stops being comparable across trades and every statistic built on it
     quietly changes meaning.
     """
-    sized = size_long(Decimal("100.00"), Decimal("95.00"), _registry())
+    sized = size_long(Decimal("100.00"), Decimal("95.00"), "USD", _registry())
     assert not isinstance(sized, Refusal)
     assert r_multiple(net, sized) * sized.planned_risk == pytest.approx(net)
 
 
 def test_unset_parameter_refuses_and_names_itself() -> None:
     """An unset threshold produces a coded refusal naming the parameter, never a default."""
-    result = size_long(Decimal("100"), Decimal("95"), _registry(**{"risk.per_trade_pct": None}))
+    result = size_long(
+        Decimal("100"), Decimal("95"), "USD", _registry(**{"risk.per_trade_pct": None})
+    )
     assert isinstance(result, Refusal)
     assert result.code == "RISK"
     assert result.parameter_id == "risk.per_trade_pct"
+
+
+# ----------------------------------------------------------- costs (DR-010)
+
+def test_costs_use_the_floor_below_the_crossover_price() -> None:
+    """At 50bp and a $0.02 floor, the crossover is $4 - below it the floor governs, unchanged from
+    a flat constant's behaviour at that end of the range."""
+    sized = size_long(Decimal("2.00"), Decimal("1.00"), "USD", _registry())
+    assert not isinstance(sized, Refusal)
+    assert sized.costs_per_share == Decimal("0.02")  # floor, not 50bp * 2.00 = 0.01
+
+
+def test_costs_scale_with_price_above_the_crossover() -> None:
+    """Above the crossover the proportional term governs - the fix DR-009 confessed it needed."""
+    sized = size_long(Decimal("200.00"), Decimal("190.00"), "USD", _registry())
+    assert not isinstance(sized, Refusal)
+    assert sized.costs_per_share == Decimal("1.0000")  # 50bp * 200.00, not the flat floor
+
+
+def test_understating_costs_is_impossible_by_construction() -> None:
+    """max(floor, proportional) can never charge less than either term alone would - the unsafe
+    direction (smaller costs -> more shares) is closed at the formula, not by a price band."""
+    for entry in (Decimal("1"), Decimal("50"), Decimal("500"), Decimal("9999")):
+        sized = size_long(entry, entry - Decimal("1"), "USD", _registry())
+        if isinstance(sized, Refusal):
+            continue
+        floor = Decimal("0.02")
+        proportional = (Decimal(50) / Decimal(10_000) * entry).quantize(Decimal("0.0001"))
+        assert sized.costs_per_share >= floor
+        assert sized.costs_per_share >= proportional
+
+
+def test_an_unsupported_currency_refuses_rather_than_guesses() -> None:
+    """Unset is not default. A currency with no cost parameters refuses; it does not fall back to
+    USD or to any other currency's numbers."""
+    result = size_long(Decimal("100"), Decimal("95"), "EUR", _registry())
+    assert isinstance(result, Refusal)
+    assert result.code == "RISK"
+    assert "EUR" in result.reason
+
+
+def test_cad_and_usd_can_be_priced_independently() -> None:
+    """The two currencies read different parameters - proven by making them disagree, not just by
+    both defaulting to the same fixture value."""
+    registry = _registry(**{"risk.costs_bp_cad": "200", "risk.costs_floor_cad": "0.02"})
+    usd = size_long(Decimal("200.00"), Decimal("190.00"), "USD", registry)
+    cad = size_long(Decimal("200.00"), Decimal("190.00"), "CAD", registry)
+    assert not isinstance(usd, Refusal)
+    assert not isinstance(cad, Refusal)
+    assert usd.costs_per_share != cad.costs_per_share
 
 
 # ------------------------------------------------------------------------ ATR

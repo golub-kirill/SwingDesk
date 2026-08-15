@@ -259,22 +259,23 @@ logic in two places, and this repository has already paid for that once.
 
 | Phase | Existing gate | Exit condition |
 |---|---|---|
-| 1 Describe | G1, G2, G3 | ТЗ `ABSENT` = 0; the 24 `PARTIAL` shortfalls that are prose are closed |
+| ~~1 Describe~~ | G1, G2, G3 | **CLOSED 2026-08-08.** ТЗ `ABSENT` = 0 was the exit bar; the current tally is `SPEC_GAP_ANALYSIS.md` §3, gate-3e-verified, not repeated here. The gates stay open — a closed phase is not a closed gate (§1) |
 | ~~2 MVP~~ | ~~G5~~ | **closed 2026-08-02** |
 | 2′ Activate | — | first component `active`, with its status displayed |
 | 3 Coverage, demand-driven | G6 | every component a live strategy card needs is `active` |
 | 3′ Paper, in parallel | — | Track A's four run-measurable criteria met |
 | 4 Research and calibration | Track B | a pre-registered study reports on forward data |
 
-### Phase 1's remaining scope, enumerated
+### Phase 1 closed 2026-08-08 — this section is history, not a live count
 
-Because "describe everything" has a measurable end and it is close. `SPEC_GAP_ANALYSIS.md`:
-**FULL 29 · PARTIAL 24 · ABSENT 1.**
+This subsection used to enumerate what was left and repeat `SPEC_GAP_ANALYSIS.md`'s own tally
+alongside it — a second dashboard maintained by hand, the same one-logic-in-two-places failure
+`ROADMAP.md` §1 already paid for once. It had drifted: "ABSENT 1" here, while the gate-verified
+count has read `ABSENT 0` since the day this described. Removed 2026-08-13; `git log -p` has the
+original enumeration if anyone needs it.
 
-Documentation-only work left: **§46** (knowledge graph), and the prose subset of the shortfalls —
-§3 (no document walks all 25 questions), §7 (the ТЗ's 22-entity table is not mapped one-to-one),
-§11 (`GLOSSARY.md` has no `synonyms_discouraged` / `ambiguous_terms`), §43 (no change-type taxonomy
-or rollback policy), §53 (no QA scorecard against the ТЗ's 13 counters).
-
-The remaining shortfalls are **code**, not prose — §8's generated schemas, §12's six missing time
-types, §39's end-to-end scenarios — and they belong in phase 3 regardless of how phase 1 ends.
+**What is still true, stated once rather than duplicated:** `SPEC_GAP_ANALYSIS.md` §3 carries the
+gate-3e-verified tally; §4 covers what closed as prose and why `§46` (knowledge graph) and `§3`/`§53`
+stay `PARTIAL` by design rather than by neglect. The remaining `PARTIAL` rows that are code, not
+prose, belong in phase 3 regardless of how phase 1 ended — that allocation does not change, only the
+count naming it does.

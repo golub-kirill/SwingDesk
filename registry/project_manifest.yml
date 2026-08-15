@@ -836,3 +836,13 @@ documents:
   readme_status_text: owner-pending
   generated: false
   file_expected: true
+- id: DOC-65
+  display_number: '65'
+  tier_ref: TIER-8
+  artifact_class: SUPPLEMENTAL_DELIVERABLE
+  path: docs/08-pm/plans/2026-08-12-complex-code-audit.md
+  document_status: owner-pending
+  status_source: document
+  readme_status_text: owner-pending
+  generated: false
+  file_expected: true

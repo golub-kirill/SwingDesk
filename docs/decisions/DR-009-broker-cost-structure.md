@@ -85,3 +85,23 @@ under `DR-005` used DR-004's commission model. Removing a $0.01-per-share commis
 result in the strategy's favour, and re-running it here — as an unregistered analysis, in the record
 that also chose the parameter — is exactly the shape of a result nobody should trust. It needs a
 pre-registration or it needs to stay unquantified. It stays unquantified.
+
+## 5. Correction, 2026-08-13 — narrowed to the account-structure decision
+
+This record is not edited above; the original text stands as what was decided 2026-08-11. This
+section corrects forward rather than rewriting (`AGENTS.md` §3: records are immutable).
+
+**Section 2's parameter is superseded.** `risk.costs_allowance = 0.25` is retired.
+[`DR-010`](DR-010-price-aware-cost-model.md) replaces it with `risk.costs_bp_usd`,
+`risk.costs_bp_cad`, `risk.costs_floor_usd` and `risk.costs_floor_cad` — the price-aware,
+currency-aware split that section 3, above, already named as the honest fix and deferred. Nothing
+in section 3's diagnosis was wrong; it is paid down, not retracted.
+
+**What this record still is:** the account-structure decision. The fee schedule (§0), the exclusion
+of structure B (§1), and the choice of structures A and C remain this record's content and are
+unchanged by the correction. `DR-010` cites and relies on that content; it does not restate it.
+
+**Why the "25bp" framing in §1 and §2 should be read cautiously.** It states DR-005's measured
+figure as a precise per-side number. §4 of this same record already qualifies it correctly —
+*"materially more than 5,"* not a measurement of exactly 25 — and that qualification is the one to
+trust where the two disagree.
