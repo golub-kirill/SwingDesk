@@ -46,7 +46,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | | |
 |---|---|
 | Merge gates | **30**, one command: `python tools/check_gates.py` |
-| Tests | **419**, fully offline |
+| Tests | **424**, fully offline |
 | Docs | 104 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 6 `specified` · **1 `active`** |
 | Parameters | 100 - 62 `unset`, 34 `assumed`, 4 `owner`, **0 `validated`** |
@@ -186,6 +186,25 @@ log line at 18:30 instead of a day.
 five clean days.** Frozen: `tools/daily_run.cmd`, `application/pipeline.py`,
 `trade_management/sizing.py`. Registries, documents, decision records and new `tools/` scripts are
 all safe. The plan's Task 5 is the one validated exception and carries its proof inline.
+
+**Amendment, 2026-08-16, council-reviewed (5 advisors + peer review, unanimous on both points):** a
+merge to a frozen file that changes decision output resets the counter to zero, effective the merge
+date — not the next scheduled run, which would just reopen the question every cycle. Cosmetic
+changes (logging, comments) do not. First trigger: PR #9 (FX refusal, cost-inclusive R denominator,
+one exit policy read from the registry, `output_hash` widened to cover trade terms and open
+positions, a held position's vendor-ticker lookup) — the 4 days banked 08-11→08-14 ran under a
+pipeline with five now-fixed correctness defects, and splicing them onto a corrected system's streak
+would report confidence in a system that only existed for one day.
+
+**The council's sharper finding, which the restart alone does not fix:** with `exit.atr_stop_multiple`
+/ `exit.max_holding_period` still unset post-merge, every candidate Skips and every position Pauses —
+and `CLEAN_EXIT_CODES = (0, 2)` counts a coded refusal the same as a run that actually evaluated
+something. Most of the days between the restart and DR-006's ratification will be an idle system
+reporting "nothing happened" as clean. `tools/track_a_streak.py` now prints a separate, additional
+line — idle-day count within the streak, sourced from `journal.duckdb` — so this is visible rather
+than silently counted. **It does not change what `a.run_completes` measures**, which stays exactly
+its ratified text (the run completes and produces a report); it makes the gap between that text and
+what people read into the number visible instead of quiet.
 
 ### Two live risks
 

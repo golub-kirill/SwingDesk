@@ -50,7 +50,17 @@ So a checkout with no log now returns `UNAVAILABLE` (exit 4), not 0. A LOW strea
 being behind on the clock is a fact about the schedule, not about today's change - but a streak this
 gate could not measure is not reported as one it did (`AGENTS.md` §10.6).
 
-Stdlib only.
+**The idle-day line, added 2026-08-16, council-reviewed.** `CLEAN_EXIT_CODES = (0, 2)` is correct
+and unchanged: a coded refusal is a real, non-crash outcome, and `a.run_completes`'s ratified text
+only ever claimed the run completes and produces a report. What it does not claim, and what people
+read into the number anyway, is that the run did anything - and once `exit.atr_stop_multiple` /
+`exit.max_holding_period` merge unset, every candidate Skips and every position Pauses for the
+identical reason, and every one of those days still counts as clean. `idle_days()` answers that
+separately, from `data/journal.duckdb` rather than the log (which has no decision-level detail): of
+the streak's counted sessions, how many had a run where nothing distinguished one candidate's
+outcome from another's. It changes nothing about the count above it - only makes the gap visible.
+
+Reads `data/journal.duckdb` in addition to the log, so no longer stdlib-only.
 
     python tools/track_a_streak.py
 """
@@ -61,12 +71,13 @@ import os
 import re
 import sys
 from dataclasses import dataclass
-from datetime import date, datetime, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from swingdesk.contracts.reference import Exchange
+from swingdesk.journal_evidence.journal import DecisionRecord, Journal
 from swingdesk.reference_data import calendar as cal
 
 _ROOT_OVERRIDE = os.environ.get("SWINGDESK_ROOT")
@@ -86,6 +97,7 @@ DATA = Path(
     else REPO / "data"
 )
 LOG = DATA / "daily_run.log"
+JOURNAL = DATA / "journal.duckdb"
 
 #: This machine's own local zone, read once. `DTZ` is a deliberate repo-wide rule with no
 #: exemption for `tools/` ("every stored time is tz-aware") - this module compares wall-clock
@@ -263,6 +275,79 @@ def measure(as_of: datetime | None = None) -> Reading | None:
     )
 
 
+def _idle(decisions: list[DecisionRecord]) -> bool:
+    """True when nothing on this run distinguished one candidate from another.
+
+    Every decision carries the identical `(decision, reason_code, parameter_id)` - the shape a run
+    takes when every candidate is refused for the same unset parameter, or the run evaluated
+    nothing at all. An empty run counts as idle too: no decisions is not a weaker form of variety.
+
+    Council finding, 2026-08-16: `CLEAN_EXIT_CODES` counts a run like this the same as a run that
+    actually sized and proposed something, because a coded refusal (exit 2) is a legitimate,
+    non-crash outcome and correctly so - Skip is a first-class decision, not a lesser one. This
+    function does not relitigate that; it answers a different question the exit code cannot: did
+    the run see more than one shape of outcome, or was every candidate turned away identically.
+    """
+    if not decisions:
+        return True
+    first = (decisions[0].decision, decisions[0].reason_code, decisions[0].parameter_id)
+    return all((d.decision, d.reason_code, d.parameter_id) == first for d in decisions)
+
+
+@dataclass(frozen=True, slots=True)
+class IdleReading:
+    """How much of the current streak had no substance, alongside how much could even be checked."""
+
+    idle: int
+    examined: int
+    unmatched: int
+
+
+def idle_days(reading: Reading, journal_path: Path = JOURNAL) -> IdleReading | None:
+    """Of the streak's counted sessions, how many were idle. `None` when there is nothing to check.
+
+    A SEPARATE measurement from `measure()`, deliberately - it does not change what
+    `a.run_completes` counts as clean, which stays exactly its ratified text ("the daily run
+    completes and produces a report"). This answers the question people actually read into that
+    number and the exit code alone cannot: how many of the counted days had a run that evaluated
+    anything, versus one that skipped every candidate for the identical reason.
+
+    Matches a session date to its run the way the log does - the documented 18:30 local trigger
+    +- `TOLERANCE` - but against `runs.started_at` in the Journal, because the log carries no
+    decision-level detail (this module's own docstring: "distinct from the Journal").
+    `unmatched` counts streak sessions with no run found in that window: not assumed clean, not
+    assumed idle - genuinely unmeasured, the same three-state discipline `measure()` itself uses.
+    """
+    if reading.start is None or reading.end is None or not journal_path.is_file():
+        return None
+
+    window_start = datetime.combine(reading.start, time.min, tzinfo=LOCAL_ZONE).astimezone(UTC)
+    window_end = datetime.combine(reading.end, time.max, tzinfo=LOCAL_ZONE).astimezone(UTC)
+    sessions = {
+        s.session_date
+        for s in cal.sessions(Exchange.NYSE, reading.start, reading.end)
+    }
+
+    with Journal(journal_path) as journal:
+        runs = journal.runs_starting_between(window_start, window_end)
+        matched: set[date] = set()
+        idle = 0
+        for run_id, started_at in runs:
+            local_start = started_at.astimezone(LOCAL_ZONE)
+            if not _within_schedule(local_start.time()):
+                continue
+            session_date = local_start.date()
+            # Only the scheduled attempt counts for a date, same rule the log follows - a manual
+            # re-run later the same day is not what the streak is measuring.
+            if session_date not in sessions or session_date in matched:
+                continue
+            matched.add(session_date)
+            if _idle(journal.decisions_for(run_id)):
+                idle += 1
+
+    return IdleReading(idle=idle, examined=len(matched), unmatched=len(sessions) - len(matched))
+
+
 def main() -> int:
     reading = measure()
     if reading is None:
@@ -280,6 +365,17 @@ def main() -> int:
         print(f"  most recent break: {reading.broke_at} ({reading.break_reason})")
     if reading.count >= TARGET_STREAK:
         print(f"  a.run_completes is MET as of {reading.start}")
+
+    # Advisory, additional to the count above - never changes it (2026-08-16, council-reviewed).
+    idle = idle_days(reading)
+    if idle is None:
+        print("  idle-day check: UNAVAILABLE - no data/journal.duckdb in this checkout.")
+    elif idle.examined:
+        print(
+            f"  {idle.idle}/{idle.examined} counted day(s) were idle (every candidate refused "
+            f"identically)"
+            + (f", {idle.unmatched} unmatched" if idle.unmatched else "")
+        )
     return 0
 
 

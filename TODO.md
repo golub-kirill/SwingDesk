@@ -25,6 +25,23 @@ open-tasks audit, not independently re-checked.
 
 ## 1. Blocking now
 
+- [x] **`[v]` Track A restart rule + idle-day diagnostic — landed 2026-08-16, council-reviewed (5
+      advisors + peer review, unanimous on both original questions).** A merge to a frozen file that
+      changes decision output resets `a.run_completes` to zero from the merge date. Written into
+      `HANDOFF.md` §5. The council's sharper catch: the restart alone doesn't fix what the counter
+      proves — `CLEAN_EXIT_CODES = (0, 2)` counts a day where every candidate Skips identically
+      (exit params unset) the same as a day that evaluated something, so most days between PR #9
+      landing and DR-006 ratifying will read "clean" while idle. `tools/track_a_streak.py` now
+      prints a second, additional line from `journal.duckdb` — how many counted days were idle —
+      without touching what `a.run_completes` itself measures. 5 new tests
+      (`tests/test_gates.py`), each confirmed to fail against a broken `_idle()`.
+- [x] **`[v]` New research suspended — 2026-08-16, same council, unanimous.** No new
+      pre-registrations, UDR-004 paused, PR-001/PR-002 re-registration paused. **Not suspended:**
+      DR-006 ratification (unblocking, not research — but must land on evaluated values, not a
+      rubber stamp, or it repeats the pattern one level up) and PR-005 (a hard blocker on the exit
+      card, not a study). Resume research once one real end-to-end cycle — proposal → owner sees it
+      → position opened → managed → approved → applied → filled — has actually run. See §6b for the
+      gap analysis that prompted this and the build order now underway.
 - [x] **`[v]` Gate 16 was RED — fixed 2026-08-15.** Both undeclared worktrees are now named in
       `HANDOFF.md` §2. `python tools/verify_branches.py` exits 0.
 - [x] **`[v]` `HANDOFF.md` §2's stale rows — fixed at the mechanism, 2026-08-15.** §2 is now
@@ -219,6 +236,37 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       i.e. a system fault rather than market judgment. That parameter was set 2026-08-11. Any
       statistic over the decision history must segment these out first.
 - [ ] **Tests cover the safe branch of the risky code, three times over.** See §8.
+
+## 6b. The operational chain — what a full cycle needs
+
+Traced end to end 2026-08-16, not just the pipeline internals: `daily_run.cmd` → `cli.py scan` →
+`report.py`. **BUILT and gated** (30/30 gates, 435 tests): candidate screening, sizing, exit-policy
+computation, checklist generation, report rendering, journal evidence, replay/determinism. **NOT
+built or wired**, despite the pure logic mostly existing and being unit-tested in isolation — this
+is the gap the council's suspend-research call (§1) is about, and the build order it recommended:
+
+- [ ] **1. `PositionStore.record()` has no caller anywhere outside tests.** No CLI command or tool
+      gets a manually-executed position into the system at all. **First task — nothing else here
+      matters until a position can get in by any means.**
+- [ ] **2. `cli.py scan` never opens a `PositionStore` or passes `positions=` into `run()`.**
+      Confirmed: zero occurrences of "position" in `cli.py`. Appendix T's "positions run first" is
+      proven only in tests, never in the scheduled job. **Second task.** Changes the daily-run path
+      — behind the freeze, but registries/CLI-only changes may be safe; check before landing.
+- [ ] **3. No delivery channel.** The report is printed to stdout, redirected into a log file by
+      `daily_run.cmd`. No push, no notification — the owner has to remember to open a log file.
+- [ ] **4. No approval channel.** US-010 requires: proposal sent → response recorded (choice,
+      reason, timestamp) → nothing applied without that record. None of this exists — no channel, no
+      store method to record a response, `ManagementAction.status` is only ever set by test code.
+- [ ] **5. `manage.apply_approved()` is correct and unit-tested, and called from nowhere but
+      tests.** No code path takes an approved action and writes the resulting position version back
+      to the store.
+- [ ] **6. US-011 (fills recorded, open risk recomputed across the book) has zero implementation,**
+      not even a stub.
+
+**An idea from the council's peer review, not yet scoped:** route items 1 and 4-6 through a path that
+can carry shadow/paper positions, so the chain can prove itself closes end-to-end without waiting on
+the owner's real capital — resolves the "necessary but not sufficient" ceiling multiple advisors
+named (closing the loop still depends on the owner actually trading, which is outside code).
 
 ## 7. The documents' own open questions
 
