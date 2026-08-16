@@ -36,6 +36,9 @@ def _position(**kwargs) -> Position:
         position_id="POS-1", version=1, instrument_id=TEST_US.id,
         opened_on=date(2025, 12, 1), entry_price=Decimal(100), shares=50,
         initial_stop=Decimal(96), current_stop=Decimal(96),
+        # Cost-inclusive R denominator (2026-08-16). 0.25 is DR-010's USD floor, so this fixture
+        # risks 4.25/share rather than 4.00 - the gap that used to make every reported R read high.
+        initial_costs_per_share=Decimal("0.25"),
         knowledge_time=datetime(2025, 12, 1, tzinfo=UTC),
     )
     base.update(kwargs)
@@ -47,12 +50,36 @@ def _position(**kwargs) -> Position:
 def test_r_denominator_survives_a_stop_move() -> None:
     """RISK_SPEC 2: R is what was risked when the decision was made, not what is at risk now."""
     position = _position()
-    assert position.initial_risk_per_share == Decimal(4)
-    assert position.r_at(Decimal(106)) == Decimal("1.5")
+    # entry 100 - stop 96 + costs 0.25
+    assert position.initial_risk_per_share == Decimal("4.25")
 
     moved = position.model_copy(update={"current_stop": Decimal(102), "version": 2})
-    assert moved.initial_risk_per_share == Decimal(4), "unchanged by the stop move"
-    assert moved.r_at(Decimal(106)) == Decimal("1.5"), "a +1.5R trade stays +1.5R"
+    assert moved.initial_risk_per_share == Decimal("4.25"), "unchanged by the stop move"
+    assert moved.r_at(Decimal(106)) == position.r_at(Decimal(106)), "R is unmoved by the stop"
+
+
+def test_the_r_denominator_includes_costs() -> None:
+    """`sizing.size_long` freezes `planned_risk` from `entry - stop + costs`, so that is what
+    `RISK_SPEC.md` §2 means by the denominator.
+
+    Until 2026-08-16 `Position` returned `entry - stop`, so the R a position reported and the R its
+    own sizing planned were two different numbers - and the difference ran one way. At a 6% cost
+    fraction a trade that made 0.94R reported as 1.00R, always flattering, on the one statistic the
+    entire validation programme is denominated in.
+    """
+    priced = _position(initial_costs_per_share=Decimal("0.25"))
+    free = _position(initial_costs_per_share=Decimal(0))
+
+    assert priced.initial_risk_per_share > free.initial_risk_per_share
+    assert free.initial_risk_per_share == Decimal(4), "costs of zero recover the old arithmetic"
+    # The same exit is worth LESS R once the costs of getting there are in the denominator.
+    assert priced.r_at(Decimal(106)) < free.r_at(Decimal(106))
+
+
+def test_costs_cannot_be_negative() -> None:
+    """A negative cost would shrink the denominator and inflate every R computed from it."""
+    with pytest.raises(ValidationError):
+        _position(initial_costs_per_share=Decimal("-0.01"))
 
 
 def test_open_risk_is_recomputed_and_may_go_negative() -> None:

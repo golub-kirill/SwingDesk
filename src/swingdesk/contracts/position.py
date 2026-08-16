@@ -67,6 +67,12 @@ class Position(BaseModel):
     initial_stop: Decimal = Field(gt=0, description="The stop at entry. Never changes.")
     current_stop: Decimal = Field(gt=0, description="The stop now. May only move up for a long.")
 
+    initial_costs_per_share: Decimal = Field(
+        ge=0,
+        description="Round-trip costs per share as charged at entry (DR-010). Part of the R "
+                    "denominator, and frozen with it.",
+    )
+
     strategy: str = Field(default="unspecified")
     strategy_version: int = Field(default=1)
 
@@ -94,8 +100,19 @@ class Position(BaseModel):
 
     @property
     def initial_risk_per_share(self) -> Decimal:
-        """The R denominator. Fixed at entry, forever."""
-        return self.entry_price - self.initial_stop
+        """The R denominator. Fixed at entry, forever.
+
+        COSTS INCLUDED, and they were not until 2026-08-16. `sizing.size_long` computes
+        `risk_per_share = entry - stop + costs` and freezes `planned_risk` from it, so that is what
+        `RISK_SPEC.md` §2 means by the denominator. This property returned `entry - stop`, a
+        different and always smaller quantity - so the R a position reported and the R its own
+        sizing planned were two numbers, and every `r_at()` read high by the cost fraction.
+
+        The error is small per share and one-directional: a trade that actually made 0.9R reported
+        as 1.0R at a 10% cost fraction, always in the flattering direction, on the one statistic the
+        whole validation programme is denominated in.
+        """
+        return self.entry_price - self.initial_stop + self.initial_costs_per_share
 
     @property
     def initial_risk(self) -> Decimal:

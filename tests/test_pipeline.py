@@ -10,6 +10,7 @@ neither fetch nor depend on the current date (CI_POLICY 4).
 from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta
+from decimal import Decimal
 
 import pytest
 from tests.conftest import TEST_CA, TEST_US, fixture_fetcher, series_for
@@ -309,3 +310,60 @@ def test_from_state_is_read_as_of_the_run_start_not_as_of_now(stores, registry) 
     assert journal.latest_decisions([TEST_US.id], AS_OF) == {}, (
         "as of the FIRST run's start the journal held nothing for this instrument"
     )
+
+
+# ------------------------------------------- the exit policy, added 2026-08-16
+
+
+def test_an_unset_exit_policy_refuses_rather_than_defaulting(stores, registry) -> None:
+    """`exit.atr_stop_multiple` and `exit.max_holding_period` are UNSET in the real registry, and
+    the pipeline used to paper over that with a literal `ExitPolicy(Decimal("2.0"), 20)` in two
+    places - while the candidate path sized against `entry - 1x ATR`, a third distance that matched
+    neither.
+
+    "Unset is not default" is a non-negotiable, and this was the one place in the decision path that
+    broke it. With the parameters unset every candidate now Skips with a coded refusal naming the
+    parameter, which is the same shape the 4,486 `risk.per_trade_pct` refusals took.
+    """
+    from swingdesk.platform.parameters import ParameterRegistry
+
+    entries = {
+        key: dict(entry) for key, entry in registry._entries.items()
+    }
+    for key in ("exit.atr_stop_multiple", "exit.max_holding_period"):
+        entries[key] = {**entries[key], "value": None, "provenance": None, "status": "unset"}
+    unset = ParameterRegistry(entries)
+
+    store, journal = stores
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    result = run([TEST_US], FixedClock(AS_OF), unset, store, journal, mode=MODE,
+                 fetcher=fixture_fetcher({TEST_US.id: sessions}))
+
+    decision = result.decisions[0]
+    assert decision.decision == "Skip"
+    assert decision.reason_code == "RISK"
+    assert decision.parameter_id in {"exit.atr_stop_multiple", "exit.max_holding_period"}
+    # And the run still completed with every candidate coded - a.decisions_coded is unaffected.
+    assert journal.uncoded_refusals(result.manifest.run_id) == 0
+
+
+def test_the_sizing_stop_is_the_policy_stop(stores, registry) -> None:
+    """One exit semantics for the whole run.
+
+    The candidate path sized against `entry - 1x ATR` while management and the checklist used
+    `2x ATR`, so the distance a candidate was sized on was not the distance it would be stopped at -
+    and every position was sized about twice as large as its own exit rule implied.
+    """
+    from swingdesk.trade_management.exits import ExitPolicy
+
+    store, journal = stores
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    policy = ExitPolicy(Decimal("2.0"), 20)
+    result = run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE,
+                 fetcher=fixture_fetcher({TEST_US.id: sessions}), exits=policy)
+
+    risk = result.outcomes[0].risk
+    atr_value = result.outcomes[0].observations.observations[-1].value
+    assert risk is not None and atr_value is not None
+    assert risk.stop == policy.stop_for(risk.entry, atr_value)
+    assert risk.stop != risk.entry - atr_value, "1x ATR is the old, unrelated distance"

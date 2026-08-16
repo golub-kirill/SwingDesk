@@ -195,20 +195,35 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ### Correctness findings from the 2026-08-15 review — all `[v]`
 
-- [ ] **Live path silently defaults the exit policy.** `pipeline.py`:289 and :369 both use
+- [x] **`[v]` Live path silently defaulted the exit policy — fixed 2026-08-16.** `_exit_policy()`
+      reads `exit.atr_stop_multiple` and `exit.max_holding_period` and REFUSES when unset (they are).
+      Candidates Skip with the parameter named; open positions PAUSE rather than being managed on an
+      invented stop. Old behaviour `pipeline.py`:289 and :369 both use
       `exits or ExitPolicy(Decimal("2.0"), 20)` — a hard-coded constant with no registry read and no
       provenance, while `exit.atr_stop_multiple` and `exit.max_holding_period` are both `unset`.
       This is a no-silent-default violation sitting in the production path. **Frozen file — queue
       behind the freeze.**
-- [ ] **Sizing stop and exit policy disagree.** `pipeline.py`:343 sizes against `close − 1×ATR`;
+- [x] **`[v]` Sizing stop and exit policy disagreed — fixed 2026-08-16.** One policy for the whole
+      run: the candidate path now sizes with `policy.stop_for()`, the same distance management and
+      the checklist use. Old behaviour `pipeline.py`:343 sizes against `close − 1×ATR`;
       the exit policy everywhere else is `2×ATR`. No shared strategy card reconciles them.
       **Frozen file.**
-- [ ] **CAD is sized against USD with no FX.** `size_long` treats CAD as supported, so a `.TO`
+- [x] **`[v]` CAD is sized against USD with no FX — fixed 2026-08-16 (PR #9).** `size_long` treats CAD as supported, so a `.TO`
       candidate's `risk_per_share` and `position_value` (CAD) are compared against `account.equity`
       (USD) and `risk.max_position_value` with no conversion and no rate recorded. It does not
       refuse — it mis-sizes. **Frozen file.**
-- [ ] **`Position.initial_risk_per_share` excludes costs** (`entry − stop`) while `size_long`
+- [x] **`[v]` `Position.initial_risk_per_share` excluded costs — fixed 2026-08-16.** Now
+      `entry - stop + costs`, with `initial_costs_per_share` stored at entry and frozen with the
+      denominator. No migration needed: `positions.duckdb` has never been written, so there were no
+      legacy rows. Old behaviour (`entry − stop`) while `size_long`
       includes them (`entry − stop + costs`). Two different R denominators.
+- [ ] **`[v]` `output_hash` does not cover the numbers that determine the trade.** Found 2026-08-16
+      by changing every stop from 1×ATR to 2×ATR and watching the hash NOT move. It covers
+      `instrument`, `bars`, `decision`, `code` and `atr` — not `stop`, `shares`, `entry` or
+      `planned_risk`. So gate 9 and `a.reproducible` ("reproduces the control run byte-identically")
+      are blind to a change that halves position size. Deliberately not bundled into the exit-policy
+      fix: it changes every stored replay baseline and deserves its own reasoning.
+
 - [ ] **`Instrument.id` is derived from the ticker** in `cli.py`:30 and `pipeline.py`:108, which the
       contract explicitly forbids ("Never derived from the ticker alone"). Blocks any historical
       edge claim; does not block Track-A-only PAPER.
