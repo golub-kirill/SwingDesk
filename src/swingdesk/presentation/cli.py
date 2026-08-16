@@ -62,6 +62,8 @@ def main(argv: list[str] | None = None) -> int:
     scan.add_argument("--lookback", default="1y")
     scan.add_argument("--as-of", default=None,
                       help="ISO instant; pins the clock so the run is reproducible")
+    scan.add_argument("--report-dir", type=Path, default=None,
+                      help="where the run's report file is written; defaults to <data>/reports")
 
     args = parser.parse_args(argv)
 
@@ -118,7 +120,22 @@ def main(argv: list[str] | None = None) -> int:
             result = run(instruments, clock, registry, store, journal,
                          mode=mode, lookback=args.lookback, universe=selection,
                          positions=positions)
+
+            # Persist BEFORE printing, so the durable artifact exists even if writing to the
+            # console then fails - the log has swallowed enough already.
+            written: Path | None = None
+            try:
+                written = report.write(result, args.report_dir or args.data / "reports")
+            except OSError as unwritable:
+                # Not fatal, and not silent. The report WAS produced - it is on stdout below - so
+                # the run did what `a.run_completes` measures, and resetting a 20-day counter over
+                # a disk error would be a worse outcome than the error. But a delivery channel that
+                # fails quietly is the exact defect this whole change is closing, so it is loud.
+                print(f"report NOT persisted  {unwritable}", file=sys.stderr)
+
             print(report.render(result))
+            if written is not None:
+                print(f"\nreport written  {written}")
         return 0
 
     return 1

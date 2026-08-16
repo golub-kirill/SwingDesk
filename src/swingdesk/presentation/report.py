@@ -8,6 +8,8 @@ provenance, and a validation status (CHARTER 4, the ratified v1 finish line). A 
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from swingdesk.application.pipeline import InstrumentOutcome, RunResult
 from swingdesk.application.universe import UniverseSelection
 from swingdesk.presentation.funnel import funnel
@@ -272,3 +274,30 @@ def render(result: RunResult) -> str:
         _RULE,
     ]
     return "\n".join(lines)
+
+
+def write(result: RunResult, directory: Path) -> Path:
+    """Persist the report as one file per run, and return where it went.
+
+    `US-001` requires that "a dated report is produced" and `PRODUCT_SURFACES` 3.1 lists dated
+    reports among the CLI's outputs. Until 2026-08-16 neither happened. `render()` returned a
+    string, `cli.py` printed it, and `daily_run.cmd` redirected stdout into `data/daily_run.log` -
+    an append-only file that interleaves the preflight, the run and the directory sidecar, and
+    rotates at 50MB. A report the owner has to go find inside that is not a delivered report, and
+    everything older than the rotation is gone for good. `ROADMAP.md` recorded this row as **done**
+    on the strength of the run rendering something.
+
+    **The filename is the run_id and nothing else.** It already carries the run's start instant
+    (`run-YYYYMMDDTHHMMSSZ-<unique>`), so it sorts chronologically and traces straight to the
+    journal's `runs` row. Formatting a date separately would put a second copy of a fact the
+    manifest already owns into a filename, and `AGENTS.md` 10.5 is about exactly that drift.
+
+    **Plain text, and that is the honest half of the requirement.** `PRODUCT_SURFACES` 3.1 says
+    "HTML/PDF" and this is not that. Adding an HTML path now means rendering one run through two
+    independent code paths - the defect this project keeps finding under other names - so HTML
+    waits for one renderer with two backends, and until then this claims text and only text.
+    """
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / f"{result.manifest.run_id}.txt"
+    path.write_text(render(result), encoding="utf-8")
+    return path
