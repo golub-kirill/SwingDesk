@@ -131,12 +131,22 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **So the original `ACCEPT` rested on one of three registered robustness checks** — a defect
       independent of the country condition, and not fixed by the 2026-08-16 correction. Needs a new
       run, which means a new pre-registration: the runner cannot reproduce the 2026-08-02 sample.
-- [ ] **`[v]` Nothing binds a runner to its own pre-registration.** All five council reviewers
-      converged on this independently as the root cause. Gates 13/14 check that *documents* agree
-      with the result files; nothing checks that a *verdict* was derived using the branches and
-      perturbations its prereg registered. PR-002 failed both — wrong branch, 1 of 3 perturbations —
-      and every gate stayed green. The regression test added on 2026-08-16 pins PR-002 specifically;
-      a class-level conformance gate is the general fix and does not exist.
+- [x] **`[v]` Nothing bound a runner to its own pre-registration — gate 25, 2026-08-16.**
+      All five council reviewers converged on this independently as the root cause. Gates 13/14
+      check that *documents* agree with the result files; nothing checked that a *verdict* was
+      derived using the branches and perturbations its prereg registered. PR-002 failed both — wrong
+      branch, 1 of 3 perturbations — and every gate stayed green.
+      `tools/verify_prereg_conformance.py` refuses an affirmative verdict over a declared scope
+      shortfall (PR-002's exact shape) or with registered perturbations unrun, and requires every
+      reported study to state its scope. **It does not parse prose** — a prereg is written for a
+      human, and a gate that guesses at English gets bypassed; the obligation is inverted so the
+      *result* declares what the prereg constrains. Five tests, each proven to fail on its condition.
+      It found a real gap on first run: `PR-010.json` stated no scope at all.
+- [ ] **`[v]` No study declares which registered perturbations it ran.** Gate 25 reports this on
+      every run rather than failing (failing would make it red on arrival and bypassed). All five
+      reported studies are in this state, so condition 3 is unenforceable for every result currently
+      on record. Backfilling means reading each runner and asserting what it did — real work, and
+      not something to guess at.
 
 ## 6. Code & gates
 

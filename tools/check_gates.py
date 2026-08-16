@@ -127,6 +127,8 @@ def main() -> int:
                                    [python, "tools/verify_criteria.py"]),
         "13 study summary": _run("stated study counts match the record",
                               [python, "tools/verify_study_summary.py"]),
+        "25 prereg conformance": _run("a reported verdict conforms to its pre-registration",
+                                   [python, "tools/verify_prereg_conformance.py"]),
         "14 counts current": _run("hard-coded counts match the registries",
                                [python, "tools/verify_counts.py"]),
         "15 project manifest": _run("document index matches the tree",
