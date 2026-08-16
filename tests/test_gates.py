@@ -788,9 +788,34 @@ def test_worktree_rows_reflect_git_worktree_list() -> None:
     if not rows:
         pytest.skip("no sibling worktrees visible from this checkout")
     rendered = state.render_worktrees(rows)
-    for branch, sha in worktree_branches():
+    for branch, _sha in worktree_branches():
         assert branch in rendered, f"{branch!r} is checked out but missing from the generated block"
-        assert sha in rendered, f"{branch!r}'s tip {sha!r} is missing from the generated block"
+
+
+def test_the_census_records_nothing_that_moves_when_you_commit() -> None:
+    """A worktree lists its OWN branch, so any fact about that branch which changes on commit leaves
+    the census stale against itself the instant it is written - gate 24 red on every commit, forever.
+
+    Tips move every commit. Merge state moves on the first commit (the branch stops equalling
+    `master`) and again whenever a sibling merges. Both were tried here; both did exactly that. Only
+    the branch NAME is stable, and it changes precisely when a worktree is added or removed - the
+    event gate 16 exists to catch.
+    """
+    state = _build_state()
+    from verify_branches import worktree_branches
+
+    rows = state.worktree_rows()
+    if not rows:
+        pytest.skip("no sibling worktrees visible from this checkout")
+    rendered = state.render_worktrees(rows)
+    for _branch, sha in worktree_branches():
+        assert sha not in rendered, (
+            f"tip {sha!r} is in the census; it is stale one commit from now"
+        )
+    for volatile in ("merged into", "NOT merged"):
+        assert volatile not in rendered, (
+            f"{volatile!r} is in the census; merge state moves without this file being edited"
+        )
 
 
 def test_a_checkout_with_no_sibling_worktrees_leaves_the_block_alone(tmp_path: Path) -> None:
