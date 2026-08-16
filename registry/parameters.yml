@@ -611,14 +611,28 @@ parameters:
   - id: regime.classifier_rule
     unit: rule
     value: "BREADTH_MEDIAN: share of universe above its own 200d SMA, split at the train-window median (0.647)"
-    status: validated
-    provenance: "validated:PR-002"
+    status: assumed
+    provenance: "assumed:PR-002"
     note: >-
-      FIRST VALIDATED PARAMETER. PR-002 (reported 2026-08-02) fitted thresholds on train, selected
-      the variant on validation by STABILITY rather than by outcome, and measured separation on the
-      test window only: BREADTH_LOW +0.2299R vs BREADTH_HIGH -0.1304R over 1183 trades, percentile
-      100 against the registered null and 100 against a stricter date-block null added post-hoc.
-      Holds under 3x cost stress.
+      DOWNGRADED 2026-08-16 from a `validated:` provenance citing PR-002 (the literal token is not
+      written here: gate 3f scans this file for it and would read a historical mention as a live
+      declaration). This was the project's only validated parameter
+      and it should never have been one: PR-002 section 6 permits accept only where the effect holds
+      in BOTH countries independently, and its third amendment - written before any data was seen -
+      records that Canada cannot be enumerated and that a single-market result belongs in the
+      inconclusive branch. The runner implemented section 6 percentile thresholds with no country
+      condition and emitted accept anyway. PR-002's verdict is corrected to INCONCLUSIVE and this
+      parameter carries assumed:PR-002 - the value came from a real study that did not clear the
+      validation bar, which is what assumed means. THE PROJECT NOW HAS ZERO VALIDATED PARAMETERS
+      and that is the honest count. See the Correction section of docs/prereg/results/PR-002-report.md.
+      THE MEASUREMENTS ARE UNCHANGED and are not in dispute. PR-002 (reported 2026-08-02) fitted
+      thresholds on train, selected the variant on validation by STABILITY rather than by outcome,
+      and measured separation on the test window only: BREADTH_LOW +0.2299R vs BREADTH_HIGH -0.1304R
+      over 1183 trades, percentile 100 against the registered null and 100 against a stricter
+      date-block null added post-hoc. Holds under 3x cost stress. What changed is the label, not the
+      numbers. Note also that only one of section 5's three registered perturbations was run (cost
+      stress; threshold +/-20 percent and the 1-bar execution delay were not), so the robustness of
+      even the single-market finding is weaker than the figures alone suggest - TODO.md section 5.
       READ THE BOUND BEFORE USING THIS. Survivorship is absent, low-breadth periods are drawdowns,
       and the instruments that failed during those drawdowns are missing from the sample - a
       mechanism that would produce this exact result with no real effect present. Quantified
@@ -627,8 +641,9 @@ parameters:
       loss, not a -1R trade, so those are the relevant rows - and over a three-year window
       containing a drawdown that share is likely rather than far-fetched. Spread proportionally
       across both cells it would take 34.9%, but delisting is not proportional.
-      The verdict stands under the rule fixed before the run. The result is FRAGILE at a plausible
-      magnitude. What survives confidently is only the weaker claim that breadth is not obviously
+      The verdict does NOT stand under the rule fixed before the run - that is what the 2026-08-16
+      correction found. The result is also FRAGILE at a plausible magnitude on the survivorship
+      bound above. What survives confidently is only the weaker claim that breadth is not obviously
       irrelevant. Owner decision D10 (2026-08-02) reaffirmed the free tier knowing this, so the
       direction will not be confirmed.
       A regime is a gauge, not a source of confidence (M30-T0450); ACTING on it is M30-T0451, a

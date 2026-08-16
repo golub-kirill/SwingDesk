@@ -359,8 +359,8 @@
       }
     }
   },
-  "verdict": "accept",
-  "verdict_reason": "separates on test at 1x and 3x",
+  "verdict": "inconclusive",
+  "verdict_reason": "separates on test at 1x and 3x; but PR-002 section 6 permits accept only in BOTH countries independently and this run covers one (US) - a single-market finding, not generalised",
   "single_market": true,
   "post_hoc_block_permutation": {
     "note": "NOT part of the registered decision rule. The registered null permutes individual trades and assumes them exchangeable; they are clustered by session. This null permutes the date-to-label map instead and is strictly harder to beat.",
@@ -374,5 +374,14 @@
       "baseline_p95": "0.2363728475168275337475226140",
       "separates": true
     }
+  },
+  "verdict_original": "accept",
+  "verdict_correction": {
+    "date": "2026-08-16",
+    "what": "verdict accept -> inconclusive",
+    "why": "Section 6 permits accept only where the effect holds in BOTH countries independently, and sends a result significant in one country only to the inconclusive branch. The third amendment (2026-08-02, before any data was seen) records that Canada is unavailable and that the requirement is not quietly dropped. The runner implemented section 6 percentile thresholds with no country condition and emitted accept on a US-only sample.",
+    "measurements_unchanged": true,
+    "note": "Every figure in this file is exactly what the 2026-08-02 run produced and is unchanged. Only the verdict label is corrected. This file was NOT regenerated: run_pr002.py fetches the current symbol directory and current Yahoo history, so re-running would sample a different universe over a different window and would replace a reported result rather than reproduce it. tools/run_pr002.py now encodes the country condition so the defect cannot recur.",
+    "perturbations_incomplete": "Separately and not fixed here: section 5 registers three perturbations - threshold +/-20 percent, 1-bar execution delay, and cost stress. Only cost stress (1x/3x) was run. Tracked in TODO.md section 5."
   }
 }

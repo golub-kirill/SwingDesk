@@ -143,9 +143,12 @@ recounted.
 project:
 
 - `regime.classifier_rule` — the course names 11 regimes and the inputs (direction, ATR, ADX,
-  participation) but **no rule produces the label**. This entry is now `validated:PR-002` and is
-  the project's only one; it covers **one axis of three** (breadth), and its registry note carries
-  the bound that ~2% of trades missing at −2R would erase the finding.
+  participation) but **no rule produces the label**. This entry is `assumed:PR-002`; it was
+  `validated:PR-002` and the project's only validated parameter until 2026-08-16, when PR-002's
+  verdict was corrected to `INCONCLUSIVE` (§6 required both countries; the runner never encoded that
+  condition). **There are now zero validated parameters.** It covers **one axis of three**
+  (breadth), and its registry note carries the bound that ~2% of trades missing at −2R would erase
+  the finding.
 
   An earlier draft of this bullet said the course also defines "a matrix of what each regime
   permits" and that the strategy-selection matrix depended on this parameter. **`REGIME_SPEC.md`

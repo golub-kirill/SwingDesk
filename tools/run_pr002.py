@@ -343,9 +343,31 @@ def main() -> int:
     else:
         verdict, why = "inconclusive", "between the 80th and 95th percentiles"
 
+    # --- PR-002 section 6's COUNTRY condition, which this runner used to omit ----------------
+    # §6 permits `accept` only where the effect holds "in BOTH countries independently", and sends
+    # a result "significant in one country only" to the inconclusive branch. The third amendment
+    # (2026-08-02, written before any data was seen) records that Canada is unavailable and that
+    # the two-country requirement is "NOT quietly dropped".
+    #
+    # The branches above implement the percentile thresholds and nothing else, so on 2026-08-02
+    # this runner emitted `accept` on a US-only sample - recording `single_market` beside it as a
+    # field, which no reader and no gate treats as part of the verdict. The prereg had already
+    # decided this case; the code simply never encoded it. Corrected 2026-08-16.
+    #
+    # NOT retroactive: `docs/prereg/results/PR-002.json` is the record of what ran on 2026-08-02
+    # and is corrected in place (PR-008's precedent), never regenerated. This runner fetches the
+    # CURRENT directory and CURRENT Yahoo history, so a re-run samples a different universe over a
+    # different window - it would replace a reported result with an unreported one, not reproduce it.
+    countries = report.get("country")
+    single_market = not isinstance(countries, list) or len(countries) < 2
+    if single_market and verdict == "accept":
+        verdict = "inconclusive"
+        why = (f"{why}; but §6 permits accept only in BOTH countries independently and this run "
+               f"covers one ({countries!r}) - a single-market finding, not generalised")
+
     report["verdict"] = verdict
     report["verdict_reason"] = why
-    report["single_market"] = True
+    report["single_market"] = single_market
     report["post_hoc_block_permutation"] = {
         "note": "NOT part of the registered decision rule. The registered null permutes individual "
                 "trades and assumes them exchangeable; they are clustered by session. This null "
