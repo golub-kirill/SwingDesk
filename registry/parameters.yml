@@ -33,6 +33,25 @@ parameters:
       separately from asset return.
     ui_editable: false
 
+  - id: account.fx_rate_cad
+    unit: base currency (USD) per CAD
+    value: null
+    status: unset
+    provenance: null
+    named_in: [Appendix C - "FX-adjusted P&L", Appendix A - CAD/USD exposure]
+    note: >-
+      Rate converting a CAD-denominated risk or position value into account.base_currency.
+      UNSET DELIBERATELY, and sizing refuses a CAD instrument while it stays unset. Until
+      2026-08-16 sizing read account.equity (USD) as the numerator and divided it by a
+      risk-per-share denominated in the INSTRUMENT's currency, so a .TO candidate was sized as
+      though CAD were USD - an oversizing error of whatever the rate happens to be, silently, with
+      no refusal and no record. Refusing is the fail-closed design working (AGENTS.md 3), not a
+      gap: a rate is a measured market fact with an as-of, and guessing one to unblock a trade is
+      exactly the substitution this registry exists to prevent.
+      Setting it is an owner decision and needs a source and an as-of date, because a stale FX rate
+      mis-sizes every Canadian position by the drift since it was recorded.
+    ui_editable: true
+
   # ---- universe (A-tier by liquidity rule, owner decision 2026-08-01) ----
   - id: universe.min_price
     unit: USD

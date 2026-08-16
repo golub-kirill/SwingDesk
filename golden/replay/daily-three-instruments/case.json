@@ -32,6 +32,8 @@
   "parameters": {
     "atr.period": 14,
     "account.equity": 10000,
+    "account.base_currency": "USD",
+    "account.fx_rate_cad": null,
     "risk.per_trade_pct": "1.0",
     "risk.costs_bp_usd": "50",
     "risk.costs_floor_usd": "0.02",
@@ -40,13 +42,13 @@
     "risk.max_position_value": 1000000
   },
   "manifest": {
-    "run_id": "run-20260115T210000Z-e69f4a10",
+    "run_id": "run-20260115T210000Z-727381a7",
     "started_at": "2026-01-15T21:00:00Z",
     "mode": "replay",
-    "code_hash": "219ebdd",
+    "code_hash": "01a483d",
     "code_dirty": true,
-    "config_hash": "22f385636c5d71c5",
-    "snapshot_id": "snap-20260115T210000Z-e69f4a10",
+    "config_hash": "574b5ff8b9328fdc",
+    "snapshot_id": "snap-20260115T210000Z-727381a7",
     "component_versions": {
       "M18-T0280-v5.0": 1
     },
@@ -55,8 +57,8 @@
     "seed": null,
     "calendar_version": "pandas-market-calendars==5.4.0",
     "platform": "Windows python3.14.0",
-    "output_hash": "16761d5789d838bb",
+    "output_hash": "78732401bd216ae2",
     "completed_at": "2026-01-15T21:00:00Z"
   },
-  "inputs_digest": "e60ac1ca44350196"
+  "inputs_digest": "4335567449e6caf4"
 }

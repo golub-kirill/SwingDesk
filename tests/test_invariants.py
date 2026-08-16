@@ -27,6 +27,12 @@ def _registry(**overrides: object) -> ParameterRegistry:
     base = {
         "atr.period": 14,
         "account.equity": 10000,
+        "account.base_currency": "USD",
+        # UNSET by default, matching the real registry: sizing a CAD instrument against a USD
+        # account refuses until an owner sets a rate. Until 2026-08-16 this fixture had neither
+        # key, because sizing never read them - it treated the instrument's currency as the
+        # account's and the tests could not have caught it.
+        "account.fx_rate_cad": None,
         "risk.per_trade_pct": "1.0",
         "risk.costs_bp_usd": "50",
         "risk.costs_floor_usd": "0.02",
@@ -188,13 +194,69 @@ def test_an_unsupported_currency_refuses_rather_than_guesses() -> None:
 
 def test_cad_and_usd_can_be_priced_independently() -> None:
     """The two currencies read different parameters - proven by making them disagree, not just by
-    both defaulting to the same fixture value."""
-    registry = _registry(**{"risk.costs_bp_cad": "200", "risk.costs_floor_cad": "0.02"})
+    both defaulting to the same fixture value.
+
+    Needs an FX rate now. Until 2026-08-16 this test passed WITHOUT one, and that is exactly why the
+    currency defect survived review: it proved the two currencies read different COST parameters,
+    which reads as currency safety, while the sizing division silently mixed a USD budget with a CAD
+    denominator one function below. A test can be true and still reassure about the wrong thing.
+    """
+    registry = _registry(**{
+        "risk.costs_bp_cad": "200", "risk.costs_floor_cad": "0.02", "account.fx_rate_cad": "0.75",
+    })
     usd = size_long(Decimal("200.00"), Decimal("190.00"), "USD", registry)
     cad = size_long(Decimal("200.00"), Decimal("190.00"), "CAD", registry)
     assert not isinstance(usd, Refusal)
     assert not isinstance(cad, Refusal)
     assert usd.costs_per_share != cad.costs_per_share
+
+
+# --------------------------------------------------------------- FX, added 2026-08-16
+
+
+def test_a_foreign_currency_refuses_without_a_rate() -> None:
+    """The defect itself. `account.equity` is USD; a `.TO` instrument's risk-per-share is CAD.
+    Dividing one by the other sized every Canadian candidate by an unrecorded factor - no refusal,
+    no flag, wrong by exactly the rate."""
+    result = size_long(Decimal("100"), Decimal("96"), "CAD", _registry())
+    assert isinstance(result, Refusal)
+    assert result.code == "RISK"
+    assert result.parameter_id == "account.fx_rate_cad"
+
+
+def test_a_base_currency_instrument_needs_no_rate() -> None:
+    """The common case must not be made to depend on a rate nobody needs."""
+    result = size_long(Decimal("100"), Decimal("96"), "USD", _registry())
+    assert not isinstance(result, Refusal)
+    assert not any(p.id.startswith("account.fx_rate") for p in result.parameters)
+
+
+def test_the_fx_rate_converts_the_budget_not_just_unblocks_it() -> None:
+    """A rate that only unblocked the refusal would leave the original mis-sizing in place.
+
+    At 0.75 USD per CAD a 100 USD budget is 133.33 CAD, so a CAD instrument must be sized on the
+    LARGER local budget - more shares than the same numbers priced as USD, not the same.
+    """
+    registry = _registry(**{
+        "account.fx_rate_cad": "0.75", "risk.costs_bp_cad": "50", "risk.costs_floor_cad": "0.02",
+    })
+    usd = size_long(Decimal("100"), Decimal("96"), "USD", registry)
+    cad = size_long(Decimal("100"), Decimal("96"), "CAD", registry)
+    assert not isinstance(usd, Refusal)
+    assert not isinstance(cad, Refusal)
+    assert cad.shares > usd.shares, (
+        "a CAD budget converted at 0.75 buys MORE shares than the same figure read as USD; "
+        "equal share counts mean the rate was accepted and then ignored"
+    )
+    # And the rate travels with the number it produced (CHARTER 4).
+    assert any(p.id == "account.fx_rate_cad" for p in cad.parameters)
+
+
+def test_a_nonpositive_fx_rate_refuses() -> None:
+    result = size_long(Decimal("100"), Decimal("96"), "CAD",
+                       _registry(**{"account.fx_rate_cad": "0"}))
+    assert isinstance(result, Refusal)
+    assert result.parameter_id == "account.fx_rate_cad"
 
 
 # ------------------------------------------------------------------------ ATR

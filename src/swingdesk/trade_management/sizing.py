@@ -112,6 +112,53 @@ def _costs_per_share(
     return max(floor, proportional), bp_use, floor_use
 
 
+def _to_base_currency(
+    currency: str, registry: ParameterRegistry
+) -> tuple[Decimal, tuple[ParameterUse, ...]] | Refusal:
+    """Base-currency units per one unit of `currency`, and the parameters that produced it.
+
+    Returns exactly `1` with no FX parameter recorded when the instrument is already denominated in
+    `account.base_currency` - the common case, and one that must not be made to depend on a rate
+    nobody needs.
+
+    Otherwise a rate is REQUIRED and its absence is a refusal naming the parameter. That is the
+    fail-closed rule applied to the one input this function used to supply for itself: before
+    2026-08-16 it never read `account.base_currency` at all, so a CAD instrument was sized against a
+    USD equity as though the two were the same unit. Nothing refused, nothing was flagged, and the
+    error was exactly the size of the rate.
+
+    A rate is a measured market fact and carries an as-of. Defaulting one to unblock a trade is the
+    substitution `AGENTS.md` 3 forbids, so `account.fx_rate_<ccy>` starts `unset` and stays that way
+    until an owner sets it with a source.
+    """
+    base_use = registry.use("account.base_currency")
+    base = str(base_use.value).upper()
+    if currency.upper() == base:
+        return Decimal(1), ()
+
+    parameter_id = f"account.fx_rate_{currency.lower()}"
+    if parameter_id not in registry:
+        return Refusal(
+            "RISK",
+            f"no FX rate parameter exists for {currency} against base {base}; sizing across "
+            f"currencies without one would size the position by an unrecorded factor",
+        )
+    try:
+        rate, rate_use = registry.decimal_value(parameter_id)
+    except ParameterUnset as unset:
+        return Refusal(
+            "RISK",
+            f"instrument is {currency} and the account is {base}; sizing across currencies "
+            f"requires an FX rate and none is set. Refusing rather than treating {currency} as "
+            f"{base}",
+            parameter_id=unset.parameter_id,
+        )
+    if rate <= 0:
+        return Refusal("RISK", f"{parameter_id} is {rate}; a rate must be positive",
+                       parameter_id=parameter_id)
+    return rate, (base_use, rate_use)
+
+
 def size_long(
     entry: Decimal,
     stop: Decimal,
@@ -143,6 +190,21 @@ def size_long(
             parameter_id=unset.parameter_id,
         )
 
+    # Step 2b. The account and the instrument may not be in the same currency, and until 2026-08-16
+    # this function assumed they were. `account.equity` is denominated in `account.base_currency`;
+    # `entry`, `stop` and `costs` are denominated in the INSTRUMENT's currency. Dividing an allowed
+    # risk in USD by a risk-per-share in CAD sizes a `.TO` candidate as though CAD were USD - an
+    # oversizing error of whatever the rate happens to be, with no refusal and nothing on the record
+    # saying a conversion was skipped.
+    #
+    # `_costs_per_share` reads per-currency cost parameters and so LOOKED currency-aware, which is
+    # what made this survive review: the costs were right and the denominator they fed was measured
+    # in a currency the numerator never shared.
+    fx_result = _to_base_currency(currency, registry)
+    if isinstance(fx_result, Refusal):
+        return fx_result
+    base_per_local, fx_uses = fx_result
+
     costs_result = _costs_per_share(entry, currency, registry)
     if isinstance(costs_result, Refusal):
         return costs_result
@@ -153,12 +215,19 @@ def size_long(
         return Refusal("STOP", f"risk per share {risk_per_share} is not positive after costs")
 
     # Step 3-4. Allowed risk, then shares, rounded DOWN. Always down (Appendix C).
+    #
+    # `allowed_risk` is in the account's base currency and `risk_per_share` is in the instrument's,
+    # so the budget is converted INTO the instrument's currency before the division. Converting the
+    # budget rather than the per-share risk keeps `allowed_risk` reported in the units the owner set
+    # it in - the number on the report should be the number in the registry.
     allowed_risk = (equity * risk_pct / Decimal(100)).quantize(Decimal("0.01"))
-    shares = int((allowed_risk / risk_per_share).to_integral_value(rounding=ROUND_DOWN))
+    allowed_risk_local = (allowed_risk / base_per_local).quantize(Decimal("0.01"))
+    shares = int((allowed_risk_local / risk_per_share).to_integral_value(rounding=ROUND_DOWN))
     if shares <= 0:
         return Refusal(
             "RISK",
-            f"allowed risk {allowed_risk} buys 0 shares at {risk_per_share} per share",
+            f"allowed risk {allowed_risk_local} {currency} buys 0 shares at "
+            f"{risk_per_share} per share",
         )
 
     # Step 5. Caps are applied AFTER the raw share count, never folded into it.
@@ -171,12 +240,19 @@ def size_long(
             parameter_id=unset.parameter_id,
         )
 
+    # The cap is a base-currency figure (`risk.max_position_value` is 25% of `account.equity`), so
+    # the position is converted UP to base to compare. Comparing a CAD position value against a USD
+    # cap is the same error as the sizing division and was present in the same line.
+    max_value_local = (max_value / base_per_local).quantize(Decimal("0.01"))
     position_value = (Decimal(shares) * entry).quantize(Decimal("0.01"))
-    if position_value > max_value:
-        shares = int((max_value / entry).to_integral_value(rounding=ROUND_DOWN))
+    if position_value > max_value_local:
+        shares = int((max_value_local / entry).to_integral_value(rounding=ROUND_DOWN))
         position_value = (Decimal(shares) * entry).quantize(Decimal("0.01"))
         if shares <= 0:
-            return Refusal("LIQ", f"position-value cap {max_value} buys 0 shares at {entry}")
+            return Refusal(
+                "LIQ",
+                f"position-value cap {max_value_local} {currency} buys 0 shares at {entry}",
+            )
 
     return RiskSnapshot(
         equity=equity,
@@ -189,7 +265,7 @@ def size_long(
         shares=shares,
         position_value=position_value,
         planned_risk=(Decimal(shares) * risk_per_share).quantize(Decimal("0.01")),
-        parameters=(equity_use, risk_use, bp_use, floor_use, value_use),
+        parameters=(equity_use, risk_use, bp_use, floor_use, value_use, *fx_uses),
     )
 
 
