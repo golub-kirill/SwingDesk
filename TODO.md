@@ -289,9 +289,22 @@ computation, checklist generation, report rendering, journal evidence, replay/de
 built or wired**, despite the pure logic mostly existing and being unit-tested in isolation — this
 is the gap the council's suspend-research call (§1) is about, and the build order it recommended:
 
-- [ ] **1. `PositionStore.record()` has no caller anywhere outside tests.** No CLI command or tool
-      gets a manually-executed position into the system at all. **First task — nothing else here
-      matters until a position can get in by any means.**
+- [x] **1. `PositionStore.record()` had no caller anywhere outside tests — fixed 2026-08-16.**
+      New `swingdesk open-position TICKER --entry --shares --stop [--opened-on --costs-per-share
+      --strategy --position-id --as-of]` command. `initial_costs_per_share` defaults to the DR-010
+      formula (`sizing._costs_per_share`, reused rather than reimplemented — `AGENTS.md` §10.5),
+      overridable once a broker confirmation names the real cost. `position_id` defaults to
+      `POS-<instrument id>-<opened-on>`, which doubles as a guard: a same-instrument same-day
+      re-run hits the store's own append-only rejection and refuses cleanly (exit 2) instead of
+      duplicating. An invalid stop (`Position`'s own validator) refuses the same way. 6 new tests
+      in `tests/test_cli.py`, each confirmed to fail when the command is stubbed out.
+      **Branched from PR #9** (`claude/correctness-fx-and-r-denominator`), not master — this needed
+      `initial_costs_per_share` on `Position`, which only exists on that branch. So the R
+      denominator every position opened through this command reports is cost-inclusive from day
+      one; nothing gets written under the old, cost-exclusive schema. **Consequence: this PR cannot
+      open against `master` until PR #9 merges** — its diff would otherwise show PR #9's frozen-file
+      commits as its own. Held, not blocked: `cli.py` and the tests are ready; rebase onto `master`
+      once PR #9 lands, then open normally.
 - [x] **2. `cli.py scan` never opened a `PositionStore` or passed `positions=` into `run()` —
       fixed 2026-08-16.** Now opens `PositionStore(args.data / "positions.duckdb")` alongside the
       existing `BarStore`/`Journal` and passes it through. `cli.py` is not a frozen file, so this
