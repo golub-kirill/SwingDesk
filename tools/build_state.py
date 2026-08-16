@@ -149,6 +149,22 @@ def worktree_rows() -> list[tuple[str, str]]:
     measurement of nothing. Getting that distinction wrong is what broke CI the first time this
     block shipped.
 
+    **Branch NAMES only - no tip, no merge state.** Both were tried and both self-reference: a
+    worktree lists its own branch, so anything about that branch which moves when you commit leaves
+    the census stale against itself the instant it is written. Tips move every commit. Merge state
+    moves on the first commit (the branch stops equalling `master`) and again whenever any sibling
+    merges. Gate 24 would have gone red on every commit, forever.
+
+    `verify_branches.py` had already reasoned this out for tips - "a branch tip moves with every
+    commit, so the gate would demand a HANDOFF edit per commit and be bypassed within a day" - and
+    this block put them in a GATE-ENFORCED table anyway, which is strictly worse than the case that
+    comment rejected. Merge state was then kept on the argument that it "flips once per lifecycle",
+    which was wrong for the same reason one step removed.
+
+    What remains changes only when a worktree is ADDED OR REMOVED, which is exactly the event a
+    fresh session needs to know about and exactly what gate 16 exists to catch. Gate 16 still prints
+    tip and merge state on every run, where a reader compares them and no parser depends on them.
+
     Reuses `verify_branches.py`'s own detection, so gate 16 (which checks that each branch name
     appears somewhere in this file) and this block can never disagree about what "currently checked
     out" means. A worktree whose directory now holds a different branch, or whose branch merged and
@@ -157,21 +173,9 @@ def worktree_rows() -> list[tuple[str, str]]:
     it has any of its own context to check it against. The commit history that produced each branch
     already says what it held, in more detail than a table cell ever could.
     """
-    from verify_branches import merged_branches, worktree_branches
+    from verify_branches import worktree_branches
 
-    branches = worktree_branches()
-    merged = merged_branches()
-
-    rows: list[tuple[str, str]] = []
-    for branch, sha in branches:
-        if merged is None:
-            state = "merge state unknown - no `master` ref in this clone"
-        elif branch in merged:
-            state = "merged into `master`"
-        else:
-            state = "**NOT merged**"
-        rows.append((f"`{branch}`", f"tip `{sha}` · {state}"))
-    return rows
+    return [(f"`{branch}`", "") for branch, _sha in worktree_branches()]
 
 
 # ------------------------------------------------------------------------ runtime facts
@@ -310,8 +314,12 @@ def render_worktrees(rows: list[tuple[str, str]]) -> str:
     An empty list is unmeasurable-from-here, not a measurement (see `worktree_rows`), and rendering
     it would overwrite another machine's true list with this machine's blindness.
     """
-    header = "| Branch | State |\n|---|---|"
-    body = header + "\n" + "\n".join(f"| {label} | {value} |" for label, value in rows)
+    listed = "\n".join(f"- {label}" for label, _ in rows)
+    body = (
+        f"{listed}\n\n"
+        "*Tip and merge state deliberately absent - both move under this document's own feet. "
+        "`python tools/verify_branches.py` prints them.*"
+    )
     return f"{WORKTREES_BEGIN}\n\n{GENERATED_NOTE}\n\n{body}\n\n{WORKTREES_END}"
 
 
