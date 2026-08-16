@@ -142,11 +142,20 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       human, and a gate that guesses at English gets bypassed; the obligation is inverted so the
       *result* declares what the prereg constrains. Five tests, each proven to fail on its condition.
       It found a real gap on first run: `PR-010.json` stated no scope at all.
-- [ ] **`[v]` No study declares which registered perturbations it ran.** Gate 25 reports this on
-      every run rather than failing (failing would make it red on arrival and bypassed). All five
-      reported studies are in this state, so condition 3 is unenforceable for every result currently
-      on record. Backfilling means reading each runner and asserting what it did — real work, and
-      not something to guess at.
+- [x] **`[v]` Every study now declares which registered perturbations it ran — 2026-08-16.**
+      Backfilled from each pre-registration and each runner's source, so gate 25's condition 4 gates
+      the present tree instead of a hypothetical future study. **The backfill found a second
+      undetected instance:** `PR-001` registered "SMA periods moved ±20% (parameter stability)" and
+      `run_pr001.py` fixes `SMA_SHORT = 50` / `SMA_LONG = 200` with no sensitivity loop; its report
+      never mentions the check. Its `reject` rests on one parameterisation.
+- [ ] **`[v]` Two studies rest on fewer checks than they registered.** Gate 25 prints this on every
+      run (permitted — concluding less than you registered is always allowed — but the verdict is
+      weaker than its report implies):
+      `PR-001` unrun `sma_periods_pm20pct` (`overlap_per_regime` was conditional on a classifier
+      that did not exist at run time, so it was not runnable rather than skipped) ·
+      `PR-002` unrun `thresholds_pm20pct`, `execution_delay_1bar`.
+      Both need new runs, which means new pre-registrations: neither runner can reproduce its
+      original sample (both fetch the current directory and current Yahoo history).
 
 ## 6. Code & gates
 

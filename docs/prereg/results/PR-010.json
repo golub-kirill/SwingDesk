@@ -15,5 +15,10 @@
   "p25": "16.8069",
   "p75": "39.1725",
   "p95": "87.0018",
-  "verdict": "reject"
+  "verdict": "reject",
+  "perturbations": {
+    "registered": [],
+    "run": [],
+    "recorded": "2026-08-16, read from each study's pre-registration and its runner's source. Recorded when gate 25 made the declaration mandatory; no measurement changed."
+  }
 }

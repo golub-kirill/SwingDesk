@@ -20,23 +20,41 @@ guesses at English produces false positives, gets bypassed, and teaches that red
 constrains, and the gate checks the declaration against the verdict. What a study will not say about
 itself cannot be checked, and this gate says so out loud rather than passing quietly.
 
-Three failures and one report:
+**A gate that passes because the tree is silent is not a gate.** The first cut of this file failed
+only on an affirmative verdict, and no study reports one - so two of its three conditions were
+unreachable and it was green for the same reason gate 23 used to be: it could not see its subject.
+The fix was not to soften or harden it but to make the tree declarable and then require the
+declaration. All five studies now carry a `perturbations` block, read from their pre-registrations
+and their runners' source, so condition 4 gates rather than reports.
+
+That backfill immediately surfaced a SECOND undetected instance. `PR-001` registered "SMA periods
+moved +/- 20% (parameter stability)" and `run_pr001.py` fixes `SMA_SHORT = 50` and `SMA_LONG = 200`
+with no sensitivity loop; its report never mentions the check. Its `reject` therefore rests on one
+parameterisation. Nothing had noticed in two weeks.
+
+Four failures and one report:
 
   1. A reported study must state its SCOPE. `country` is the one every prereg here constrains
      (`AGENTS.md` 3: "USA and Canada are never merged"). A study whose scope is unstated cannot be
-     checked against a rule that constrains scope, and PR-002 is what that costs.
+     checked against a rule that constrains scope, and PR-002 is what that costs. Caught `PR-010`,
+     which stated none.
 
   2. `accept` is REFUSED where the record declares a scope shortfall - `single_market: true`, or a
      non-empty `scope_unmet`. This is exactly PR-002's shape and would have caught it on the day.
 
-  3. `accept` is REFUSED where `perturbations` is declared and `run` does not cover `registered`.
-     A robustness claim resting on a subset of the checks that were registered for it is not the
-     claim the prereg authorised.
+  3. `accept` is REFUSED where `run` does not cover `registered`. A robustness claim resting on a
+     subset of the checks registered for it is not the claim the prereg authorised.
 
-  4. REPORTED, not failed: a study carrying no `perturbations` block at all. Every current study is
-     in this state, so failing would make the gate red on arrival and immediately bypassed. Printing
-     it on every run is what keeps the gap from being forgotten - the same reason gate 16 prints its
-     census when green.
+  4. A reported study must DECLARE `perturbations` - `registered` and `run`, both explicit. An empty
+     `registered` is a legitimate declaration (`PR-008` and `PR-010` register none); an ABSENT block
+     is not, because it is indistinguishable from nobody having looked. This is the condition that
+     makes the gate bite on the present tree rather than on a hypothetical future study.
+
+  5. REPORTED, not failed: registered perturbations left unrun under a NON-affirmative verdict.
+     `PR-001` and `PR-002` are both in this state. It is not a failure - concluding LESS than you
+     registered is always permitted, and failing here would push a study toward claiming more - but
+     it is printed on every run, because a `reject` resting on one parameterisation is a weaker
+     result than its report implies.
 
 Stdlib only, so it runs wherever gates 2 and 3 do.
 
@@ -88,7 +106,7 @@ def _shortfalls(record: dict) -> list[str]:
 
 def main() -> int:
     failures: list[str] = []
-    undeclared: list[str] = []
+    unrun: list[tuple[str, str, list[str]]] = []
     checked = 0
 
     for path, record in _results():
@@ -117,31 +135,45 @@ def main() -> int:
                 f"registered; a shortfall belongs in the inconclusive branch."
             )
 
-        # 3. An affirmative verdict on a subset of the registered robustness checks.
+        # 3 and 4. Robustness checks: the declaration is mandatory, and an affirmative verdict may
+        # not rest on a subset of what was registered.
         perturbations = record.get("perturbations")
-        if isinstance(perturbations, dict):
-            registered = set(map(str, perturbations.get("registered") or []))
-            ran = set(map(str, perturbations.get("run") or []))
-            missing = sorted(registered - ran)
-            if affirmative and missing:
-                failures.append(
-                    f"{name}: verdict {verdict!r} with registered perturbation(s) not run "
-                    f"({', '.join(missing)}). A robustness claim may not rest on a subset of the "
-                    f"checks registered for it."
-                )
+        if not isinstance(perturbations, dict) or "registered" not in perturbations \
+                or "run" not in perturbations:
+            failures.append(
+                f"{name}: declares no `perturbations` block with both `registered` and `run`. An "
+                f"empty `registered` is a legitimate declaration; an absent one is indistinguishable "
+                f"from nobody having looked."
+            )
+            continue
+
+        registered = set(map(str, perturbations.get("registered") or []))
+        ran = set(map(str, perturbations.get("run") or []))
+        missing = sorted(registered - ran)
+        if not missing:
+            continue
+        if affirmative:
+            failures.append(
+                f"{name}: verdict {verdict!r} with registered perturbation(s) not run "
+                f"({', '.join(missing)}). A robustness claim may not rest on a subset of the "
+                f"checks registered for it."
+            )
         else:
-            undeclared.append(name)
+            unrun.append((name, verdict, missing))
 
     for failure in failures:
         print(f"  {failure}")
 
-    if undeclared:
-        # Reported, never failed - see the module docstring. The point is that it stays visible.
-        print(f"\n  {len(undeclared)} study(ies) declare no `perturbations` block, so condition 3 "
-              f"cannot be checked for them:")
-        for name in undeclared:
-            print(f"      {name}")
-        print("  A study that does not say which registered checks it ran cannot be held to them.")
+    if unrun:
+        # Reported, never failed - concluding LESS than you registered is always permitted, and
+        # failing here would push a study toward claiming more. Printed because a verdict resting
+        # on a subset of its registered checks is weaker than its report implies.
+        print(f"\n  {len(unrun)} study(ies) left registered perturbation(s) unrun under a "
+              f"non-affirmative verdict:")
+        for name, verdict, missing in unrun:
+            print(f"      {name:16} {verdict:14} unrun: {', '.join(missing)}")
+        print("  Permitted - a study may always conclude less than it registered - but the verdict")
+        print("  rests on fewer checks than the pre-registration asked for.")
 
     print(f"\nprereg conformance: {checked} study(ies) checked, {len(failures)} failure(s)")
     return 1 if failures else 0
