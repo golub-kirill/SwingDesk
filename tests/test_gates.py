@@ -720,11 +720,20 @@ def test_track_a_gate_reports_a_missing_run_as_a_break(tmp_path: Path) -> None:
     assert "track A streak: 0" in out
 
 
-def test_track_a_gate_handles_a_missing_log(tmp_path: Path) -> None:
+def test_track_a_gate_reports_a_missing_log_as_unavailable_not_as_zero(tmp_path: Path) -> None:
+    """A checkout with no log has not measured a streak of zero. It has measured nothing.
+
+    Contract changed 2026-08-15. This returned 0 and printed "nothing scheduled has run", so from a
+    worktree - where `data/` never exists - the gate reported success while blind, and `HANDOFF.md`
+    §2's hand-kept counter sat wrong at 3 against a measured 4 with every gate green. Exit 4 is
+    `check_gates.py`'s UNAVAILABLE, which is counted separately and stops the suite saying "all
+    gates pass" (`AGENTS.md` §10.6).
+    """
     tmp_path.joinpath("data").mkdir()
     code, out = _run_streak_gate(tmp_path, "2026-08-13T22:00:00")
-    assert code == 0
-    assert "no data/daily_run.log yet" in out
+    assert code == 4, "a gate that cannot see its subject must not report PASS"
+    assert "UNAVAILABLE" in out
+    assert "streak: 0" not in out, "absent evidence must never render as a measured zero"
 
 
 def test_track_a_gate_excludes_todays_session_while_its_window_is_still_open(tmp_path: Path) -> None:
@@ -736,3 +745,48 @@ def test_track_a_gate_excludes_todays_session_while_its_window_is_still_open(tmp
     assert code == 0
     assert "track A streak: 1/20" in out
     assert "2026-08-11 to 2026-08-11" in out
+
+
+# ------------------------------------------------------------------ gate 24: the state block
+
+
+def _build_state():
+    """Import the gate 24 tool by path. It lives in `tools/`, which is not an installed package."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("build_state", TOOLS / "build_state.py")
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_handoff_still_carries_both_generated_markers() -> None:
+    """Delete a marker pair and gate 24 stops checking that half in silence.
+
+    `_replace` raises rather than skipping, so a removed marker is a hard failure instead of a block
+    that quietly stops being regenerated - which is how a generated section decays back into a typed
+    one.
+    """
+    state = _build_state()
+    text = (REPO / "HANDOFF.md").read_text(encoding="utf-8")
+    for marker in (state.REPO_BEGIN, state.REPO_END, state.RUNTIME_BEGIN, state.RUNTIME_END):
+        assert marker in text, f"HANDOFF.md lost {marker!r}"
+
+
+def test_missing_markers_fail_loudly_rather_than_no_op() -> None:
+    state = _build_state()
+    with pytest.raises(LookupError):
+        state._replace("no markers here", state.REPO_BEGIN, state.REPO_END, "body")
+
+
+def test_an_unmeasurable_runtime_block_does_not_render_as_a_measurement() -> None:
+    """`None` is not zero and must not look like it.
+
+    The whole defect this gate was built for was an absent measurement reading as a present one
+    (`AGENTS.md` §10.6), so the rendered form has to be unmistakable.
+    """
+    state = _build_state()
+    body = state.render_runtime(None)
+    assert "UNAVAILABLE" in body
+    assert "|---|---|" not in body, "an unmeasured block must not render as a table of figures"

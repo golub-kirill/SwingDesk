@@ -68,3 +68,91 @@ def test_an_assumed_parameter_is_flagged_as_not_evidence(rendered: str) -> None:
     """ATR's period is `assumed`. Nothing may look more validated than it is (`AGENTS.md` §3)."""
     body = rendered.split("__status__ ")[0]
     assert "ASSUMED, not evidence" in body
+
+
+# --------------------------------------------------------------- US-022: the funnel block
+
+
+def test_funnel_counts_appear_in_the_documented_order(rendered: str) -> None:
+    """US-022: eligible, measured, admitted and evaluated, in that order."""
+    body = rendered.split("__status__ ")[0]
+    assert "FUNNEL" in body
+    order = [body.find(f"  {label}") for label in
+             ("eligible", "measured", "admitted", "evaluated")]
+    assert order == sorted(order), "the four counts must appear in the documented order"
+
+
+def test_a_run_with_no_candidates_still_prints_a_funnel_block() -> None:
+    """US-022: zero is stated, not silence - a quiet day and a broken one must not read the same."""
+    from swingdesk.application.pipeline import RunResult
+    from swingdesk.contracts.run import RunManifest, RunMode
+
+    manifest = RunManifest(
+        run_id="r", started_at=AS_OF, mode=RunMode.LIVE, code_hash="a", config_hash="b",
+        snapshot_id="s", calendar_version="c", platform="p",
+    )
+    out = report.render(RunResult(manifest=manifest, outcomes=[]))
+    assert "FUNNEL" in out
+    assert "evaluated        0" in out
+
+
+def test_a_skip_naming_a_parameter_is_broken_out_from_one_that_does_not() -> None:
+    """US-022: an unset-parameter Skip (a SYSTEM fault) is shown separately from the same code
+    without a parameter (a fact about the account or the market) - the exact distinction
+    `presentation.funnel.SkipCause` exists to preserve."""
+    from tests.conftest import TEST_CA, TEST_US
+
+    from swingdesk.application.pipeline import InstrumentOutcome, RunResult
+    from swingdesk.contracts.run import RunManifest, RunMode
+    from swingdesk.journal_evidence.journal import DecisionRecord
+
+    manifest = RunManifest(
+        run_id="r", started_at=AS_OF, mode=RunMode.LIVE, code_hash="a", config_hash="b",
+        snapshot_id="s", calendar_version="c", platform="p",
+    )
+    outcomes = [
+        InstrumentOutcome(
+            instrument=TEST_US,
+            decision=DecisionRecord(TEST_US.id, "Skip", "RISK", "no value",
+                                    parameter_id="risk.per_trade_pct"),
+        ),
+        InstrumentOutcome(
+            instrument=TEST_CA,
+            decision=DecisionRecord(TEST_CA.id, "Skip", "RISK", "0 shares"),
+        ),
+    ]
+    out = report.render(RunResult(manifest=manifest, outcomes=outcomes))
+    assert "RISK [risk.per_trade_pct]" in out
+    assert "RISK                             1" in out, "the unparameterised RISK skip is its own line"
+
+
+def test_reconciliation_failure_is_reported_not_hidden() -> None:
+    """`Funnel.is_reconciled` is checked by the render, not asserted in the pure module - a broken
+    invariant must be visible to whoever reads the report, not raised mid-run over work already done.
+    """
+    from unittest.mock import patch
+
+    from tests.conftest import TEST_US
+
+    from swingdesk.application.pipeline import InstrumentOutcome, RunResult
+    from swingdesk.contracts.run import RunManifest, RunMode
+    from swingdesk.journal_evidence.journal import DecisionRecord
+    from swingdesk.presentation import funnel as funnel_module
+
+    manifest = RunManifest(
+        run_id="r", started_at=AS_OF, mode=RunMode.LIVE, code_hash="a", config_hash="b",
+        snapshot_id="s", calendar_version="c", platform="p",
+    )
+    outcomes = [InstrumentOutcome(instrument=TEST_US, decision=DecisionRecord(TEST_US.id, "Watch"))]
+    result = RunResult(manifest=manifest, outcomes=outcomes)
+
+    real = funnel_module.funnel(result)
+    broken = funnel_module.Funnel(
+        eligible=real.eligible, measured=real.measured, admitted=real.admitted,
+        evaluated=real.evaluated, trade=0, watch=0, skip=0, pause=0,  # buckets don't sum
+        unaccounted=0, skip_causes=(), changed=real.changed, first_sighting=real.first_sighting,
+    )
+    assert not broken.is_reconciled
+    with patch("swingdesk.presentation.report.funnel", return_value=broken):
+        out = report.render(result)
+    assert "RECONCILIATION FAILED" in out

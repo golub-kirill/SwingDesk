@@ -38,6 +38,18 @@ ADVISORY BY DESIGN, matching gate 21's reasoning: a scheduling failure has nothi
 today's code change is correct, so this never blocks a merge. It prints on every gate run instead,
 which is the property that makes a silent reset impossible to miss for long - not a hard veto.
 
+**Advisory is not the same as silent, and this gate confused the two until 2026-08-15.** `data/` is
+gitignored operational state and exists only in the main checkout, so from a worktree there is no
+log to read. This printed "nothing scheduled has run" and returned 0 - a false negative wearing a
+PASS. HANDOFF section 2's Track A row was hand-kept at 3 while the main checkout measured 4, and
+nothing contradicted it because the gate reported success from every tree that could not see the
+subject. That is the shape of gate 16's own fixed bug, "green from a worktree, red from the main
+checkout".
+
+So a checkout with no log now returns `UNAVAILABLE` (exit 4), not 0. A LOW streak is still a PASS -
+being behind on the clock is a fact about the schedule, not about today's change - but a streak this
+gate could not measure is not reported as one it did (`AGENTS.md` §10.6).
+
 Stdlib only.
 
     python tools/track_a_streak.py
@@ -57,8 +69,23 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from swingdesk.contracts.reference import Exchange
 from swingdesk.reference_data import calendar as cal
 
-REPO = Path(os.environ.get("SWINGDESK_ROOT") or Path(__file__).resolve().parents[1])
-LOG = REPO / "data" / "daily_run.log"
+_ROOT_OVERRIDE = os.environ.get("SWINGDESK_ROOT")
+REPO = Path(_ROOT_OVERRIDE or Path(__file__).resolve().parents[1])
+
+#: `data/` is gitignored operational state and exists only in the main checkout. `SWINGDESK_DATA`
+#: lets a worktree read it - several worktrees at once is this project's normal mode, and a gate
+#: that is structurally blind from most of them is how the hand-kept counter went unchallenged.
+#:
+#: **Ignored when `SWINGDESK_ROOT` is pinned, and that ordering is load-bearing.** A caller that
+#: pins the root is describing a COMPLETE tree - every test does - so letting a looser variable
+#: reach outside it would make the suite read the developer's real stores instead of its fixture.
+#: Written the other way round first, and three tests caught it within the minute.
+DATA = Path(
+    os.environ["SWINGDESK_DATA"]
+    if os.environ.get("SWINGDESK_DATA") and not _ROOT_OVERRIDE
+    else REPO / "data"
+)
+LOG = DATA / "daily_run.log"
 
 #: This machine's own local zone, read once. `DTZ` is a deliberate repo-wide rule with no
 #: exemption for `tools/` ("every stored time is tz-aware") - this module compares wall-clock
@@ -89,6 +116,9 @@ TOLERANCE = timedelta(minutes=30)
 
 #: `a.run_completes`, `registry/criteria.yml`.
 TARGET_STREAK = 20
+
+#: Exit code meaning "my subject is not present in this environment" (`check_gates.py`).
+UNAVAILABLE_EXIT = 4
 
 #: First scheduled day (`HANDOFF.md` §2: "SCHEDULED 2026-08-09").
 SCHEDULING_STARTED = date(2026, 8, 9)
@@ -191,27 +221,65 @@ def streak(attempts: list[Attempt], as_of: datetime) -> tuple[int, date | None, 
     return count, start, broke_at
 
 
-def main() -> int:
+@dataclass(frozen=True, slots=True)
+class Reading:
+    """One measurement of the streak, so callers share this gate's arithmetic instead of redoing it.
+
+    `end` is the most recent evaluable session, which is what `count` is counted back from.
+    """
+
+    count: int
+    start: date | None
+    end: date | None
+    broke_at: date | None
+    break_reason: str | None
+
+
+def measure(as_of: datetime | None = None) -> Reading | None:
+    """The current streak, or `None` when this checkout holds no log.
+
+    `None` is the third state and it is deliberately not zero. Zero is a measurement - the schedule
+    ran and nothing qualified. `None` means the subject is absent from this tree, and the two must
+    never render the same way (`AGENTS.md` §10.6).
+    """
     if not LOG.is_file():
-        print("track A: no data/daily_run.log yet - nothing scheduled has run")
-        return 0
-
+        return None
     attempts = _parse_attempts(LOG.read_text(encoding="utf-8", errors="replace"))
-    now = _now()
+    now = as_of or _now()
     count, start, broke_at = streak(attempts, now)
+    sessions = _evaluable_sessions(now)
 
-    if count == 0:
-        print("track A streak: 0")
-    else:
-        end = _evaluable_sessions(now)[-1]
-        print(f"track A streak: {count}/{TARGET_STREAK} consecutive clean sessions "
-              f"({start} to {end})")
+    reason: str | None = None
     if broke_at is not None:
         outcome = _scheduled_outcome(attempts, broke_at)
         reason = "no qualifying scheduled-window entry" if outcome is None else f"exit {outcome}"
-        print(f"  most recent break: {broke_at} ({reason})")
-    if count >= TARGET_STREAK:
-        print(f"  a.run_completes is MET as of {start}")
+
+    return Reading(
+        count=count,
+        start=start,
+        end=sessions[-1] if sessions else None,
+        broke_at=broke_at,
+        break_reason=reason,
+    )
+
+
+def main() -> int:
+    reading = measure()
+    if reading is None:
+        print("track A: UNAVAILABLE - no data/daily_run.log in this checkout.")
+        print("  `data/` is gitignored operational state and lives only in the main checkout.")
+        print("  This is not a streak of zero. Run it there to measure one.")
+        return UNAVAILABLE_EXIT
+
+    if reading.count == 0:
+        print("track A streak: 0")
+    else:
+        print(f"track A streak: {reading.count}/{TARGET_STREAK} consecutive clean sessions "
+              f"({reading.start} to {reading.end})")
+    if reading.broke_at is not None:
+        print(f"  most recent break: {reading.broke_at} ({reading.break_reason})")
+    if reading.count >= TARGET_STREAK:
+        print(f"  a.run_completes is MET as of {reading.start}")
     return 0
 
 

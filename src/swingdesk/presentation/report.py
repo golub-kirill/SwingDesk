@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from swingdesk.application.pipeline import InstrumentOutcome, RunResult
 from swingdesk.application.universe import UniverseSelection
+from swingdesk.presentation.funnel import funnel
 from swingdesk.trade_management.sizing import Refusal
 
 _RULE = "─" * 78
@@ -130,6 +131,55 @@ def _checklist_block(outcome: InstrumentOutcome) -> list[str]:
     return lines
 
 
+def _funnel_block(result: RunResult) -> list[str]:
+    """What happened to today's candidates, aggregated (US-022).
+
+    Always printed, even when there are no candidates at all — a quiet day (nothing triggered) and
+    a broken one (a parameter went unset, a source went stale) must not read the same, and the old
+    footer's single `decisions <n>` could not tell them apart. `funnel()` reads only what `result`
+    already carries, so this block can never disagree with the per-instrument blocks above it.
+    """
+    stats = funnel(result)
+    lines = [
+        "FUNNEL — what happened to today's candidates (US-022)",
+        _RULE,
+        f"  eligible         {stats.eligible}",
+        f"  measured         {stats.measured}",
+        f"  admitted         {stats.admitted}",
+        f"  evaluated        {stats.evaluated}",
+        "",
+        f"  Trade            {stats.trade}",
+        f"  Watch            {stats.watch}",
+        f"  Skip             {stats.skip}",
+        f"  Pause            {stats.pause}",
+    ]
+    if stats.unaccounted:
+        lines.append(f"  UNACCOUNTED      {stats.unaccounted}   <- evaluated with no decision recorded")
+    # is_reconciled is reported here, not asserted in funnel.py: a broken invariant belongs in the
+    # render where a human sees it, not in an exception raised over a run that already did its job.
+    if not stats.is_reconciled:
+        lines.append(
+            "  RECONCILIATION FAILED — the buckets above do not sum to evaluated. Treat this "
+            "report as a defect, not as today's answer."
+        )
+    lines += [
+        "",
+        f"  changed          {stats.changed}   (decision differs from its previous run)",
+        f"  first sighting   {stats.first_sighting}   (no previous decision on record)",
+    ]
+    if stats.skip_causes:
+        lines.append("")
+        lines.append("  skip causes, most common first:")
+        for cause in stats.skip_causes:
+            # A parameter_id marks a SYSTEM fault (an unset threshold); its absence marks a fact
+            # about the account or the market. Same code, different meaning - shown separately
+            # rather than collapsed, which is exactly how 1131 unset-parameter refusals once read
+            # as an ordinary quiet day.
+            label = f"{cause.code} [{cause.parameter_id}]" if cause.parameter_id else cause.code
+            lines.append(f"      {label:<32} {cause.count}")
+    return lines
+
+
 def render(result: RunResult) -> str:
     manifest = result.manifest
     lines: list[str] = [
@@ -199,6 +249,9 @@ def render(result: RunResult) -> str:
                 lines.append(f"      {decision.reason}")
         lines.extend(_checklist_block(outcome))
         lines.append("")
+
+    lines.extend(_funnel_block(result))
+    lines.append("")
 
     assumed = sorted(
         {
