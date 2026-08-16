@@ -295,6 +295,28 @@ def test_a_run_without_a_position_store_still_works(wired, registry) -> None:
     assert result.positions == []
 
 
+def test_a_held_dual_class_position_asks_the_vendor_for_the_right_symbol() -> None:
+    """`BRK.B` is the directory's id; the vendor wants `BRK-B`. The id must not change either.
+
+    Rebuilding the Instrument by stripping `.TO` produced ticker `BRK.B`, so the daily refresh of a
+    held dual-class position raised `VendorUnavailable`, the caller swallowed it, and management
+    continued against whatever was already stored. A position managed on silently stale bars looks
+    exactly like a position managed correctly - which is why this is asserted rather than watched
+    for. Same mapping defect that once left `BRK.A` and `BRK.B` out of every universe.
+    """
+    from swingdesk.application.pipeline import _held_instrument
+
+    held = _held_instrument("BRK.B")
+    assert held.id == "BRK.B", "the id is identity and is never re-derived"
+    assert held.ticker == "BRK-B"
+    assert held.vendor_symbol == "BRK-B"
+
+    canadian = _held_instrument("SHOP.TO")
+    assert canadian.id == "SHOP.TO"
+    assert canadian.vendor_symbol == "SHOP.TO", "the .TO suffix is re-added by the contract"
+    assert canadian.currency == "CAD"
+
+
 def test_output_hash_covers_the_position_half_of_the_run(wired, registry) -> None:
     """A run proposing an action on a held position must not hash like a run holding nothing.
 

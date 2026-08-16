@@ -239,15 +239,23 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
         universe path calls the same instrument `BRK.B`. That is two identities for one instrument
         in a bitemporal store, which cannot be un-split after the fact. Not yet triggered —
         `bars.duckdb` holds 12 dotted ids and **zero** dashed — but one CLI invocation away.
-      - **(b) `pipeline.py`:107 `_held_instrument()` does NOT derive the id** (it preserves it); it
-        derives the *vendor ticker* by stripping `.TO`, so a held `BRK.B` yields ticker `BRK.B`
-        where Yahoo needs `BRK-B`. The fetch raises `VendorUnavailable`, the `except` falls through
-        to the stored bars, and the position is then managed on data that silently stopped
-        refreshing. Only wrong where directory form ≠ vendor form (dotted and `$` symbols).
-      Fixing both means resolving through the directory, which needs an owner decision: **there is
-      no Canadian directory**, so a `.TO` instrument has no symbol to resolve against, and
-      fail-closed would refuse every Canadian candidate. Blocks any historical edge claim; does not
-      block Track-A-only PAPER. **Changes the daily-run path — behind the freeze.**
+      - **(b) — fixed 2026-08-16.** `pipeline.py`:99 `_held_instrument()` never derived the id (it
+        preserves it); it derived the *vendor ticker* by stripping `.TO`, so a held `BRK.B` asked
+        Yahoo for `BRK.B` where the vendor wants `BRK-B`. The fetch raised `VendorUnavailable`, the
+        `except` fell through to the stored bars, and the position went on being managed against
+        data that had quietly stopped refreshing — worse than failing, because it looks identical
+        to working. Now uses `vendor_symbol()`, the same mapping the universe path uses, which is
+        exactly the fix `DR-003` gap 2 applied there and missed here. Needed no directory and no
+        owner decision, so it landed ahead of (a). **Frozen file.**
+
+      **(a) is blocked on `DR-003` gap 1, not on an engineering choice.** Resolving identity means
+      resolving against a directory, and `DR-003` already records that Canada has no free symbol
+      directory in hand — so a `.TO` instrument has nothing to resolve against, and fail-closed
+      would refuse every Canadian candidate. Owner's call 2026-08-16: **source a TSX directory
+      first**; identity resolution waits on it. That makes `DR-003` gap 1 a blocker for a second
+      thing now — the US-only universe *and* instrument identity — and it needs its own decision
+      record when a source is evaluated. Blocks any historical edge claim; does not block
+      Track-A-only PAPER. **Changes the daily-run path — behind the freeze.**
 - [ ] **11 of 13 journalled runs carry `code_dirty = true`.** `a.reproducible` requires a
       byte-identical re-run from a stored manifest; a manifest pointing at a dirty tree cannot be
       replayed from its SHA.

@@ -39,6 +39,7 @@ from swingdesk.market_data.completeness import SessionFinding
 from swingdesk.platform.clock import Clock
 from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
 from swingdesk.reference_data import calendar as cal
+from swingdesk.reference_data.universe import vendor_symbol
 from swingdesk.trade_management import manage
 from swingdesk.trade_management.exits import ExitPolicy
 from swingdesk.trade_management.sizing import Refusal, RiskSnapshot, size_long
@@ -101,12 +102,23 @@ def _held_instrument(instrument_id: str) -> Instrument:
     A position is held regardless of whether the screener still nominates it, so the run must be
     able to fetch it anyway. The exchange comes from the same symbology rule the CLI uses; nothing
     here is guessed beyond what that rule already encodes.
+
+    The id is PRESERVED, never re-derived - it is the identity, and re-minting it here would split
+    a position's history from the bars written under the universe path's id.
+
+    The ticker is the vendor's form, and getting that from the id needs `vendor_symbol`, not a
+    `.TO` strip. This is the same defect that once made `BRK.A` and `BRK.B` absent from every
+    universe, "indexed as possibly delisted": the directory writes `BRK.B` and the vendor wants
+    `BRK-B`. That was fixed where the universe builds instruments and missed here, so a held
+    dual-class position asked for `BRK.B`, got `VendorUnavailable`, and fell through to the stored
+    bars - which is worse than failing, because the position went on being managed against data
+    that had quietly stopped refreshing.
     """
     exchange = cal.exchange_for(instrument_id)
     base = instrument_id.upper().removesuffix(".TO")
     return Instrument(
         id=instrument_id,
-        ticker=base,
+        ticker=vendor_symbol(base),
         exchange=exchange,
         currency="USD" if exchange.value == "NYSE" else "CAD",
     )
