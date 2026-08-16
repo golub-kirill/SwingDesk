@@ -64,8 +64,13 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       strikethrough-and-append convention. All 29 gates pass.
 - [ ] **`[c]` G0 status.** `CONSTRAINTS.md`:150 says ratifying the remaining `criteria.yml` values
       "closes G0"; `HANDOFF.md` §2 says G0 is closed.
-- [ ] **`[c]` The 120-day Track A clock.** `SUCCESS_AND_KILL_CRITERIA.md`:154 says "has not started";
-      `HANDOFF.md` §4 says it started 2026-08-10.
+- [x] **`[c]→[v]` The 120-day Track A clock — resolved by the v1.1.1 amendment above.**
+      `SUCCESS_AND_KILL_CRITERIA.md`:154's "has not started" is now struck through and corrected.
+      Checked `HANDOFF.md` §4 for a third copy before closing this: it already says "reversed
+      2026-08-09" (from the §4 rewrite in `279c625`) — consistent with the amendment, no drift.
+      The date is 2026-08-09 (`tools/track_a_streak.py`'s own `SCHEDULING_STARTED` constant, which
+      cites this same date), not 08-10 — 08-10 is the first NYSE session the schedule was
+      *evaluated against*, and the day it failed on batteries.
 - [ ] **`[c]` SPEC_GAP §32/§33** still read `DEFERRED`; `COVERAGE_AUDIT.md` says charter amendment
       A-001 makes them `MISSING, not OUT_OF_SCOPE`.
 - [ ] **`[c]` `HANDOFF.md`:124** says "Two ratified criteria are inert" and names only
