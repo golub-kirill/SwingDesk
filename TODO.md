@@ -248,10 +248,14 @@ is the gap the council's suspend-research call (§1) is about, and the build ord
 - [ ] **1. `PositionStore.record()` has no caller anywhere outside tests.** No CLI command or tool
       gets a manually-executed position into the system at all. **First task — nothing else here
       matters until a position can get in by any means.**
-- [ ] **2. `cli.py scan` never opens a `PositionStore` or passes `positions=` into `run()`.**
-      Confirmed: zero occurrences of "position" in `cli.py`. Appendix T's "positions run first" is
-      proven only in tests, never in the scheduled job. **Second task.** Changes the daily-run path
-      — behind the freeze, but registries/CLI-only changes may be safe; check before landing.
+- [x] **2. `cli.py scan` never opened a `PositionStore` or passed `positions=` into `run()` —
+      fixed 2026-08-16.** Now opens `PositionStore(args.data / "positions.duckdb")` alongside the
+      existing `BarStore`/`Journal` and passes it through. `cli.py` is not a frozen file, so this
+      did not need to wait behind the freeze. Item 1 (position entry) is still open, so the store
+      the scheduled job now reads is empty — this is what stops that being the reason a recorded
+      position could never be evaluated, not a claim that one exists yet. 2 new tests
+      (`tests/test_cli.py`, new file — there was no CLI test coverage at all before this), each
+      confirmed to fail against the pre-fix `cli.py`.
 - [ ] **3. No delivery channel.** The report is printed to stdout, redirected into a log file by
       `daily_run.cmd`. No push, no notification — the owner has to remember to open a log file.
 - [ ] **4. No approval channel.** US-010 requires: proposal sent → response recorded (choice,
