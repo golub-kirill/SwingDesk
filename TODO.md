@@ -33,7 +33,7 @@ open-tasks audit, not independently re-checked.
       typed. Two new standing measurements came with it: PIT integrity (**CLEAN**, 0 bars whose
       `event_time` postdates their `knowledge_time`) and the dirty-tree run count (**11 of 13**).
 
-**Nothing is committed yet.** The branch is `claude/swingdesk-review-verify-b8707c`; all 29 gates
+**Open as [PR #3](https://github.com/golub-kirill/SwingDesk/pull/3)**, `claude/swingdesk-review-verify-b8707c` → `master`, 5 commits, not yet merged. This file does not exist on `master` until it does — a fresh session reading from `master` will not find it. All 29 gates
 pass from the main checkout, 27 + 2 `UNAVAILABLE` from a worktree without `data/`.
 
 ## 2. Picked work
