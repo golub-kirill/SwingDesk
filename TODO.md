@@ -217,12 +217,17 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       denominator. No migration needed: `positions.duckdb` has never been written, so there were no
       legacy rows. Old behaviour (`entry − stop`) while `size_long`
       includes them (`entry − stop + costs`). Two different R denominators.
-- [ ] **`[v]` `output_hash` does not cover the numbers that determine the trade.** Found 2026-08-16
-      by changing every stop from 1×ATR to 2×ATR and watching the hash NOT move. It covers
-      `instrument`, `bars`, `decision`, `code` and `atr` — not `stop`, `shares`, `entry` or
-      `planned_risk`. So gate 9 and `a.reproducible` ("reproduces the control run byte-identically")
-      are blind to a change that halves position size. Deliberately not bundled into the exit-policy
-      fix: it changes every stored replay baseline and deserves its own reasoning.
+- [x] **`[v]` `output_hash` did not cover the numbers that determine the trade — fixed 2026-08-16.**
+      Found by changing every stop from 1×ATR to 2×ATR and watching the hash NOT move, then measured
+      three more ways: halving every share count and widening every stop 40% both left the golden
+      case at `78732401bd216ae2`, and a run proposing `EXIT_NOW` on a held position hashed
+      identically to a run holding nothing — the position half of the run, which runs *first*, was
+      absent from the payload in every form, including its own existence. Gate 9 passed in all four
+      cases while `a.reproducible` claimed byte-identical reproduction. Now covers entry, stop,
+      shares, planned risk, and every position and proposal; prose, checklists and timestamps stay
+      out as the churn guard (`DETERMINISM_SPEC` §7.2, which this closes as an open item). The
+      golden baseline was re-recorded deliberately: `78732401bd216ae2` → `4751a227d2a14884`. Four
+      tests assert the hash MOVES, each confirmed to fail against the old payload. **Frozen file.**
 
 - [ ] **`Instrument.id` is derived from the ticker** in `cli.py`:30 and `pipeline.py`:108, which the
       contract explicitly forbids ("Never derived from the ticker alone"). Blocks any historical

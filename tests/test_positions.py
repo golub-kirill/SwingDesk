@@ -295,6 +295,51 @@ def test_a_run_without_a_position_store_still_works(wired, registry) -> None:
     assert result.positions == []
 
 
+def test_output_hash_covers_the_position_half_of_the_run(wired, registry) -> None:
+    """A run proposing an action on a held position must not hash like a run holding nothing.
+
+    Appendix T puts positions FIRST in the run, and until 2026-08-16 `output_hash` contained no
+    trace of them in any form - not the proposal, not the position, not even its existence. So
+    `a.reproducible` read "reproduces byte-identically" while half the run was outside the bytes.
+    """
+    bars, journal, positions = wired
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    fetcher = fixture_fetcher({TEST_US.id: sessions})
+
+    without = run([TEST_US], FixedClock(AS_OF), registry, bars, journal,
+                  mode=RunMode.LIVE_AS_OF, fetcher=fetcher)
+
+    positions.record(_position())
+    holding = run([TEST_US], FixedClock(AS_OF), registry, bars, journal,
+                  mode=RunMode.LIVE_AS_OF, fetcher=fetcher, positions=positions)
+
+    assert holding.positions[0].action is not None, "the run must have proposed something"
+    assert without.manifest.output_hash != holding.manifest.output_hash
+
+
+def test_output_hash_moves_when_the_proposed_stop_moves(tmp_path, registry) -> None:
+    """Two positions differing only in their current stop are two different proposals.
+
+    The action KIND can be identical - both EXIT_NOW - while the stop the owner is being told to
+    move from is not. Hashing the kind alone would still leave that invisible.
+    """
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    fetcher = fixture_fetcher({TEST_US.id: sessions})
+
+    def hash_for(stop: Decimal, tag: str) -> str:
+        with (
+            BarStore(tmp_path / f"bars-{tag}.duckdb") as bars,
+            Journal(tmp_path / f"journal-{tag}.duckdb") as journal,
+            PositionStore(tmp_path / f"positions-{tag}.duckdb") as positions,
+        ):
+            positions.record(_position(current_stop=stop))
+            result = run([TEST_US], FixedClock(AS_OF), registry, bars, journal,
+                         mode=RunMode.LIVE_AS_OF, fetcher=fetcher, positions=positions)
+            return result.manifest.output_hash
+
+    assert hash_for(Decimal(96), "low") != hash_for(Decimal("99.5"), "high")
+
+
 # ------------------------------------------------------------------ the proposal rule
 
 def test_a_broken_stop_proposes_an_exit_before_anything_else(registry) -> None:

@@ -53,6 +53,55 @@ def test_run_is_reproducible(stores, registry) -> None:
     assert first.manifest.run_id != second.manifest.run_id
 
 
+def _registry_like(registry, overrides: dict[str, object]):
+    """The fixture registry with one value moved, so a test can vary a single input."""
+    entries = {pid: dict(entry) for pid, entry in registry._entries.items()}
+    for key, value in overrides.items():
+        entries[key]["value"] = value
+    return type(registry)(entries)
+
+
+def test_output_hash_moves_when_the_size_moves(stores, registry) -> None:
+    """Same decision word, different share count. A hash blind to this is not pinning the run.
+
+    Measured before the fix (2026-08-16): halving every candidate's share count left the golden
+    case at 78732401bd216ae2, and gate 9 passed. The payload carried the decision and the latest
+    ATR but not one number the owner would act on.
+    """
+    store, journal = stores
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    fetcher = fixture_fetcher({TEST_US.id: sessions})
+
+    lean = run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher)
+    rich = run([TEST_US], FixedClock(AS_OF), _registry_like(registry, {"account.equity": 40_000}),
+               store, journal, mode=MODE, fetcher=fetcher)
+
+    assert [d.decision for d in lean.decisions] == [d.decision for d in rich.decisions], (
+        "the decision word must be identical, or this test would pass on the old payload too"
+    )
+    assert lean.outcomes[0].risk.shares != rich.outcomes[0].risk.shares
+    assert lean.manifest.output_hash != rich.manifest.output_hash
+
+
+def test_output_hash_moves_when_the_stop_moves(stores, registry) -> None:
+    """A 2x ATR stop and a 3x ATR stop are different instructions at the same decision.
+
+    They hashed the same until 2026-08-16, as did a stop moved 40% wider on the golden case.
+    """
+    store, journal = stores
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    fetcher = fixture_fetcher({TEST_US.id: sessions})
+
+    tight = run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher)
+    wide = run([TEST_US], FixedClock(AS_OF),
+               _registry_like(registry, {"exit.atr_stop_multiple": "3.0"}),
+               store, journal, mode=MODE, fetcher=fetcher)
+
+    assert [d.decision for d in tight.decisions] == [d.decision for d in wide.decisions]
+    assert tight.outcomes[0].risk.stop != wide.outcomes[0].risk.stop
+    assert tight.manifest.output_hash != wide.manifest.output_hash
+
+
 def test_every_candidate_leaves_with_a_decision(stores, registry) -> None:
     """No candidate is left without a next action - M32/M33 operational standard."""
     store, journal = stores

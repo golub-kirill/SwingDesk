@@ -44,13 +44,13 @@
     "risk.per_trade_pct": "1.0"
   },
   "manifest": {
-    "run_id": "run-20260115T210000Z-8d2b8bc7",
+    "run_id": "run-20260115T210000Z-a611b509",
     "started_at": "2026-01-15T21:00:00Z",
     "mode": "replay",
-    "code_hash": "3a08fab",
+    "code_hash": "4d34986",
     "code_dirty": true,
     "config_hash": "496e1f5edce4c8f1",
-    "snapshot_id": "snap-20260115T210000Z-8d2b8bc7",
+    "snapshot_id": "snap-20260115T210000Z-a611b509",
     "component_versions": {
       "M18-T0280-v5.0": 1
     },
@@ -59,7 +59,7 @@
     "seed": null,
     "calendar_version": "pandas-market-calendars==5.4.0",
     "platform": "Windows python3.14.0",
-    "output_hash": "78732401bd216ae2",
+    "output_hash": "4751a227d2a14884",
     "completed_at": "2026-01-15T21:00:00Z"
   },
   "inputs_digest": "a9fdcba2dd91b0eb"

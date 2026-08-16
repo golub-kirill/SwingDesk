@@ -199,6 +199,84 @@ def _universe_hash(selection: UniverseSelection) -> str:
     return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
 
+def _trade_terms(risk: RiskSnapshot | Refusal | None) -> dict[str, str] | None:
+    """The four numbers that make a proposal actionable, or None when there is no trade.
+
+    A refusal contributes nothing here on purpose - its code is already carried on the decision, and
+    a refusal has no shares, no stop and no risk to pin.
+    """
+    if not isinstance(risk, RiskSnapshot):
+        return None
+    return {
+        "entry": str(risk.entry),
+        "stop": str(risk.stop),
+        "shares": str(risk.shares),
+        "planned_risk": str(risk.planned_risk),
+    }
+
+
+def _output_hash(result: RunResult) -> str:
+    """Hash of what the run DECIDED - including the numbers the owner would act on.
+
+    `DETERMINISM_SPEC` 8 carried this as an open question: whether the hash covers the full trace or
+    just the decisions, deferred because a full trace churns on cosmetic changes and a gate that
+    cries wolf gets ignored. That concern is right, and the answer is not to hash everything. It is
+    to hash what an owner would ACT ON differently: two runs that hash alike must be two runs the
+    owner could not tell apart at the point of doing something.
+
+    By that standard the previous payload - instrument, bar count, decision, reason code and latest
+    ATR - was not close, and this was measured rather than reasoned about:
+
+      - halving every candidate's share count left the hash at 78732401bd216ae2;
+      - moving every stop 40% further away left it at 78732401bd216ae2;
+      - a run holding an open position it proposed EXIT_NOW for hashed identically to a run holding
+        no position at all, because the position half - which Appendix T requires to run FIRST - was
+        absent from the payload in every form, including its own existence.
+
+    Gate 9 passed in all four cases, and `a.reproducible` reads "reproduces byte-identically" on the
+    strength of it. So the shares to buy, the stop to buy them against, the risk that entails, and
+    every proposal on an open position could all change without one check noticing.
+
+    Excluded deliberately, and this is the churn guard that keeps the gate believable: free-text
+    reasons, checklists, timestamps, and `previous_decision`. Prose gets rewritten without the
+    decision changing; the others are identity or context rather than something acted upon.
+    """
+    payload = {
+        "candidates": [
+            {
+                "instrument": o.instrument.id,
+                "bars": o.bars,
+                "decision": o.decision.decision if o.decision else None,
+                "code": o.decision.reason_code if o.decision else None,
+                "atr": str(o.observations.observations[-1].value)
+                if o.observations and o.observations.observations[-1].value is not None
+                else None,
+                "trade": _trade_terms(o.risk),
+            }
+            for o in result.outcomes
+        ],
+        # Present even when empty, so "no positions" and "positions not evaluated" hash apart.
+        "positions": [
+            {
+                "position_id": p.position.position_id,
+                "version": p.position.version,
+                "stale": p.stale,
+                "action": {
+                    "kind": p.action.kind.value,
+                    "code": p.action.reason_code,
+                    "old_stop": str(p.action.old_stop) if p.action.old_stop is not None else None,
+                    "new_stop": str(p.action.new_stop) if p.action.new_stop is not None else None,
+                    "shares_affected": p.action.shares_affected,
+                }
+                if p.action is not None
+                else None,
+            }
+            for p in result.positions
+        ],
+    }
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()[:16]
+
+
 class Fetcher(Protocol):
     """What the run needs from a bar source.
 
@@ -430,24 +508,7 @@ def run(
     result.steps = tuple(steps)
     journal.record_decisions(run_id, clock.now(), result.decisions)
 
-    output_hash = hashlib.sha256(
-        json.dumps(
-            [
-                {
-                    "instrument": o.instrument.id,
-                    "bars": o.bars,
-                    "decision": o.decision.decision if o.decision else None,
-                    "code": o.decision.reason_code if o.decision else None,
-                    "atr": str(o.observations.observations[-1].value)
-                    if o.observations and o.observations.observations[-1].value is not None
-                    else None,
-                }
-                for o in result.outcomes
-            ],
-            sort_keys=True,
-        ).encode()
-    ).hexdigest()[:16]
-
+    output_hash = _output_hash(result)
     journal.complete_run(run_id, output_hash, clock.now())
     result.manifest = manifest.model_copy(
         update={"output_hash": output_hash, "completed_at": clock.now()}
