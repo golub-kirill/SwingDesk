@@ -9,12 +9,8 @@ and what to do next in ranked order.
 
 ## 0. What this project is
 
-Decision-support software for swing trading Canadian and US equities and ETFs, built from the
-owner's 116-PDF course. **It never places orders.** See `README.md`, then `docs/README.md` for the
-document set and gates.
-
-The course is the requirements source. It supplies a complete governance and taxonomy specification
-and **zero numeric thresholds**. Every threshold here is authored and carries its provenance.
+Decision-support software for swing trading Canadian and US equities and ETFs. **It never places
+orders.** See `README.md`, then `docs/README.md` for the document set and gates.
 
 ### If you were told this is a documentation-only project, read this first
 
