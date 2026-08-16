@@ -229,9 +229,25 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       golden baseline was re-recorded deliberately: `78732401bd216ae2` → `4751a227d2a14884`. Four
       tests assert the hash MOVES, each confirmed to fail against the old payload. **Frozen file.**
 
-- [ ] **`Instrument.id` is derived from the ticker** in `cli.py`:30 and `pipeline.py`:108, which the
-      contract explicitly forbids ("Never derived from the ticker alone"). Blocks any historical
-      edge claim; does not block Track-A-only PAPER.
+- [ ] **Instrument identity is synthesized instead of resolved — two defects, not one.** Restated
+      2026-08-16 after checking each site; the earlier entry named the wrong pair of lines and
+      missed (b) entirely. `reference_data/universe.py:159` `to_instrument()` is the *correct*
+      construction — `id` from the `DirectoryStore` symbol, `ticker` from `vendor_symbol()` — and
+      both sites below bypass it.
+      - **(a) `cli.py`:29 really does derive `id` from what the user typed**, which the contract
+        forbids ("Never derived from the ticker alone"). Typing `BRK-B` mints id `BRK-B`; the
+        universe path calls the same instrument `BRK.B`. That is two identities for one instrument
+        in a bitemporal store, which cannot be un-split after the fact. Not yet triggered —
+        `bars.duckdb` holds 12 dotted ids and **zero** dashed — but one CLI invocation away.
+      - **(b) `pipeline.py`:107 `_held_instrument()` does NOT derive the id** (it preserves it); it
+        derives the *vendor ticker* by stripping `.TO`, so a held `BRK.B` yields ticker `BRK.B`
+        where Yahoo needs `BRK-B`. The fetch raises `VendorUnavailable`, the `except` falls through
+        to the stored bars, and the position is then managed on data that silently stopped
+        refreshing. Only wrong where directory form ≠ vendor form (dotted and `$` symbols).
+      Fixing both means resolving through the directory, which needs an owner decision: **there is
+      no Canadian directory**, so a `.TO` instrument has no symbol to resolve against, and
+      fail-closed would refuse every Canadian candidate. Blocks any historical edge claim; does not
+      block Track-A-only PAPER. **Changes the daily-run path — behind the freeze.**
 - [ ] **11 of 13 journalled runs carry `code_dirty = true`.** `a.reproducible` requires a
       byte-identical re-run from a stored manifest; a manifest pointing at a dirty tree cannot be
       replayed from its SHA.
