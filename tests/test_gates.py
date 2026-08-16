@@ -761,8 +761,8 @@ def _build_state():
     return module
 
 
-def test_handoff_still_carries_both_generated_markers() -> None:
-    """Delete a marker pair and gate 24 stops checking that half in silence.
+def test_handoff_still_carries_all_generated_markers() -> None:
+    """Delete a marker pair and gate 24 stops checking that section in silence.
 
     `_replace` raises rather than skipping, so a removed marker is a hard failure instead of a block
     that quietly stops being regenerated - which is how a generated section decays back into a typed
@@ -770,8 +770,47 @@ def test_handoff_still_carries_both_generated_markers() -> None:
     """
     state = _build_state()
     text = (REPO / "HANDOFF.md").read_text(encoding="utf-8")
-    for marker in (state.REPO_BEGIN, state.REPO_END, state.RUNTIME_BEGIN, state.RUNTIME_END):
+    for marker in (
+        state.REPO_BEGIN, state.REPO_END,
+        state.WORKTREES_BEGIN, state.WORKTREES_END,
+        state.RUNTIME_BEGIN, state.RUNTIME_END,
+    ):
         assert marker in text, f"HANDOFF.md lost {marker!r}"
+
+
+def test_worktree_rows_reflect_git_worktree_list() -> None:
+    """The worktree block and gate 16 read the same function, so they cannot disagree about what
+    "currently checked out" means."""
+    state = _build_state()
+    from verify_branches import worktree_branches
+
+    rows = state.worktree_rows()
+    if not rows:
+        pytest.skip("no sibling worktrees visible from this checkout")
+    rendered = state.render_worktrees(rows)
+    for branch, sha in worktree_branches():
+        assert branch in rendered, f"{branch!r} is checked out but missing from the generated block"
+        assert sha in rendered, f"{branch!r}'s tip {sha!r} is missing from the generated block"
+
+
+def test_a_checkout_with_no_sibling_worktrees_leaves_the_block_alone(tmp_path: Path) -> None:
+    """The CI regression, pinned. A runner sees zero sibling worktrees; that is blindness, not a
+    measurement of nothing, and rewriting the block from it would overwrite another machine's true
+    list and then fail the very gate that just wrote it.
+
+    Shipped without this test on 2026-08-16 and CI caught it within the hour: the generator produced
+    an empty list, compared it against five committed rows, and called the file stale - correctly.
+    """
+    state = _build_state()
+    committed = (
+        f"{state.WORKTREES_BEGIN}\n\n| Branch | State |\n|---|---|\n"
+        f"| `claude/somebody-elses-worktree` | tip `abc1234` · **NOT merged** |\n\n"
+        f"{state.WORKTREES_END}"
+    )
+    # An empty measurement must leave that text exactly as it stands.
+    assert state._replace(committed, state.WORKTREES_BEGIN, state.WORKTREES_END, committed) == committed
+    with pytest.raises(TypeError):
+        state.render_worktrees()  # type: ignore[call-arg]
 
 
 def test_missing_markers_fail_loudly_rather_than_no_op() -> None:

@@ -32,9 +32,10 @@ documentation is implementable.
 
 ## 2. State, measured
 
-**Nothing in the two generated blocks below is typed by hand.** They were, and they went stale while
-saying they had not — see `AGENTS.md` §10.6 for the two numbers that paid for this. Regenerate with
-`python tools/build_state.py`; gate 24 fails if they drift.
+**Nothing in the generated blocks below is typed by hand** — here, or in the worktree census further
+down. They were, and they went stale while saying they had not — see `AGENTS.md` §10.6 for the
+numbers that paid for this. Regenerate with `python tools/build_state.py`; gate 24 fails if they
+drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given checkout cannot see.
 
 ### Derived from the tree
 
@@ -45,7 +46,7 @@ saying they had not — see `AGENTS.md` §10.6 for the two numbers that paid for
 | | |
 |---|---|
 | Merge gates | **29**, one command: `python tools/check_gates.py` |
-| Tests | **407**, fully offline |
+| Tests | **409**, fully offline |
 | Docs | 104 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 6 `specified` · **1 `active`** |
 | Parameters | 100 - 62 `unset`, 33 `assumed`, 4 `owner`, **1 `validated`** |
@@ -92,42 +93,29 @@ Must stay green. A gate that is wrong gets **fixed or removed, never skipped**.
 
 ### You are not the only effort. Check this before starting work.
 
-This repository's normal mode is **several worktrees at once**, and the table above measures only the
-one you are standing in. On 2026-08-09 three efforts branched from `9a07fab`, none knew about the
-others, and one re-ran a study another had already finished and reached the opposite conclusion —
-`docs/08-pm/POSTMORTEM-2026-08-09.md`, root cause A. Gate 16 now fails if a worktree is missing here.
+This repository's normal mode is **several worktrees at once**. On 2026-08-09 three efforts branched
+from `9a07fab`, none knew about the others, and one re-ran a study another had already finished and
+reached the opposite conclusion — `docs/08-pm/POSTMORTEM-2026-08-09.md`, root cause A. Gate 16 fails
+if a worktree below is missing — but the list itself is never hand-typed: it comes from `git worktree
+list`, the same source gate 16 reads, so the two can never disagree and no session has to remember to
+add its own row. History of what each past effort held lives in `git log` and `POSTMORTEM-2026-08-09.md`,
+not here — a document read in a session's first minute does not need to carry it twice
+(`AGENTS.md` §10.6, extended 2026-08-16 to this table after it grew the same way a hand-typed count
+once did).
 
-| Branch | Tip | Merged? | What it holds |
-|---|---|---|---|
-| `claude/swingdesk-handoff-continue-f479bd` | 2026-08-09 | **yes** | PR-008, the v7.0 delta, `AGENTS.md` §9–§10 |
-| `claude/swingdesk-handoff-continue-1feb49` | 2026-08-08 | **yes**, merged 2026-08-09 | `DR-005` slippage at 25bp, `EXECUTION_MODEL`, four gates, `validation.max_allowable_drawdown` = 20% |
-| `claude/swingdesk-documentation-321418` | 2026-08-09 | **yes**, merged 2026-08-09 | `DR-006`, `DR-007`, ALLOCATION/TRANSITION/ENTITY_MAP/EXPECTATION_MODEL/DRIFT_AND_LEARNING/CHANGE_MANAGEMENT/KNOWLEDGE_GRAPH, five gates, `criteria.yml` v1.1.0 |
-| `claude/skills-llm-council-setup-1e1d65` | `63b089d` | no unique commits | **a fourth effort, started mid-reconciliation.** It appeared while the merge was running and gate 16 failed within the minute — which is the whole point of the gate. This row said *"at `master`'s tip"* until 2026-08-10; it is six commits behind and has been since `5a79f00` |
-| `claude/swingdesk-handoff-review-e8d9f4` | `664e84a` | **yes** — branched from `master`'s tip | **the fifth effort, 2026-08-10.** Handoff verification, an audit of two external reviews, and the P0/P1 fixes that came out of it |
-| `claude/indicators-candidate-stages-6403ce` | `6bdd982` | **yes** — merged as PR #2 | **the sixth effort.** `f39daf5` was already merged before this row first existed; this session then added `presentation/funnel.py` (US-022, the refusal funnel) and its tests on top, PR opened against `master` and merged. `report.py` was **not wired to it** at merge — confirmed off the freeze list (§5 names `daily_run.cmd`, `pipeline.py`, `sizing.py`; `report.py` is not among them) and wired 2026-08-15, same session as this row |
-| `claude/open-tasks-audit-a7debf` | `1e771c3` | **yes** — at `master`'s tip | **the seventh effort, 2026-08-15.** A full audit of open and pending work across the tree — the source of the consolidated list now in `TODO.md` |
-| `claude/swingdesk-review-verify-b8707c` | `2ce9160` | **partially** — merged as PR #3 (`af43ef4`), then 1 further commit pushed after merge | **the eighth effort, 2026-08-15.** Verification of an external plan-of-record review; `TODO.md`; `AGENTS.md` §10.6–§10.7; gate 24 (`HANDOFF` §2 generated); `criteria.yml` v1.1.1 via a 5-advisor council. `2ce9160` (a `TODO.md` staleness fix) landed on this branch after the PR merged and is not yet on `master` — needs its own disposition |
-| `claude/oda-fin-kronos-implementation-ff87ba` | `1e771c3` | **yes** — at `master`'s tip, no unique commits | **the ninth effort, appeared 2026-08-15** while PR #3's session was running — the same shape gate 16 was built to catch, and it caught it |
-| `claude/agents-md-trim-pdf-refs` | `af43ef4` | **no** — new, 1 uncommitted-then-worktreed edit | **the tenth effort, 2026-08-15/16.** An uncommitted `AGENTS.md` edit had been sitting dirty in the main checkout (owner-authored, trimming references to the 116-PDF course, which is not and cannot be in this repository) since before this session started measuring anything. Found only because a direct question — "can I see TODO.md?" — led to fast-forwarding the main checkout, which is not safe to do over a dirty file. Stashed, main checkout pulled clean to `master`'s tip, edit re-applied here rather than lost |
+<!-- BEGIN GENERATED: state:worktrees -->
 
-**Two things this table stopped being able to tell you, both fixed 2026-08-10.**
+*Generated by `tools/build_state.py` (gate 24). Do not edit between the markers - an edit here is overwritten and fails the gate.*
 
-The **directory names no longer match the branches checked out in them** — `git worktree list` is the
-truth, not the folder name. This directory, `swingdesk-documentation-321418`, currently holds
-`claude/swingdesk-handoff-review-e8d9f4`; the one named `…-continue-1feb49` holds the council branch.
-Reading a path and inferring a branch is now wrong.
+| Branch | State |
+|---|---|
+| `claude/agents-md-trim-pdf-refs` | tip `498d82b` · **NOT merged** |
+| `claude/oda-fin-kronos-implementation-ff87ba` | tip `1e771c3` · merged into `master` |
+| `claude/indicators-candidate-stages-6403ce` | tip `6bdd982` · merged into `master` |
+| `claude/open-tasks-audit-a7debf` | tip `1e771c3` · merged into `master` |
+| `claude/swingdesk-review-verify-b8707c` | tip `d988e16` · **NOT merged** |
 
-And **gate 16 was excluding the tree it ran in rather than the main checkout**, so it returned
-different verdicts on one commit depending on where you invoked it: green from a worktree, red from
-the main checkout. Because it counted the main checkout as a sibling, and that branch is `master` —
-a string this file contains many times over — the case it exempted could never fail. It was
-exempting the running effort, which is the one effort a fresh session is guaranteed not to know
-about. Run it anywhere now and it answers the same, and it prints each tip and merge state so a
-stale row like the council one above is visible without being parsed.
-
-**All three reconciled branches are merged and `RECONCILIATION_PLAN.md` is fully executed** — steps 1–8, of
-which the last three were gate renumbering, recomputing the base strategy at measured costs, and
-rebuilding this table from the merged tree. `criteria.yml` is **v1.1.0** with `k.track_a_timebox` ratified and `k.timebox_review` `met`.
+<!-- END GENERATED: state:worktrees -->
 
 ## 3. The uncomfortable summary
 

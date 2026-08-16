@@ -13,15 +13,33 @@ So section 2 is now generated between markers and `--check-only` is its gate - t
 `build_frd.py`, `build_components.py`, `build_checklists.py`, `build_coverage.py` and
 `build_lock.py`, none of which has ever gone stale.
 
-**Two blocks, because two kinds of fact.** Repo facts derive from the tree and are computable in
-every checkout. Runtime facts derive from `data/`, which is gitignored operational state present
-only in the main checkout. Splitting them is what lets `--check-only` verify the half it can see and
-report the other half as `UNAVAILABLE` rather than either failing every worktree or - the gate 23
-mistake this tool exists to stop repeating - exiting 0 as though it had checked.
+**Three blocks, and only ONE of them is a fact about the repository.** Repo facts derive from the
+tree: same answer in every checkout, on every machine, forever. Runtime facts derive from `data/`,
+gitignored operational state present only in the main checkout. Worktree facts derive from
+`git worktree list`, which is machine-local and changes minute to minute.
+
+Splitting them is what lets `--check-only` verify the parts it can see and report the rest as
+`UNAVAILABLE` rather than either failing everywhere or - the gate 23 mistake this tool exists to stop
+repeating - exiting 0 as though it had checked.
+
+**The worktree block was written as a repo fact on 2026-08-16 and CI rejected it within the hour.**
+The generator ran on a runner with no sibling worktrees, produced an empty list, compared it against
+five committed rows and called the file stale - correctly. Worktree state is not a property of the
+repository; it is a property of the machine holding this copy of it, and no committed list can be
+true on two machines at once. That is exactly the `data/` case, and it is handled the same way:
+measured where measurable, `UNAVAILABLE` where not, never silently either way.
+
+**The worktree block replaced a hand-typed table on 2026-08-16, for the same reason section 2 did.**
+That table grew one row per effort, forever, with "what it holds" prose no tool could check - and it
+required every session to remember to add its own row before its gates would pass. `git worktree
+list` already knows which worktrees exist without being told. History belongs in `git log` and
+`docs/08-pm/POSTMORTEM-2026-08-09.md`, which already carry it; a document a fresh session reads in
+its first minute does not need to carry it twice.
 
 Nothing here re-derives a number another tool already owns. The census comes from
-`verify_counts.measure()` and the streak from `track_a_streak.streak()`, so gate 14, gate 23 and
-this gate cannot disagree: there is one implementation per fact.
+`verify_counts.measure()`, the streak from `track_a_streak.measure()`, and the worktree list from
+`verify_branches.worktree_branches()` - so gate 14, gate 16, gate 23 and this gate cannot disagree:
+there is one implementation per fact.
 
 Facts that no tool can derive - `master`'s branch protection, the Task Scheduler trigger, the G0-G7
 project gates - stay hand-written BELOW the generated blocks, each carrying its own `as of` date.
@@ -66,6 +84,8 @@ REPO_BEGIN = "<!-- BEGIN GENERATED: state:repo -->"
 REPO_END = "<!-- END GENERATED: state:repo -->"
 RUNTIME_BEGIN = "<!-- BEGIN GENERATED: state:runtime -->"
 RUNTIME_END = "<!-- END GENERATED: state:runtime -->"
+WORKTREES_BEGIN = "<!-- BEGIN GENERATED: state:worktrees -->"
+WORKTREES_END = "<!-- END GENERATED: state:worktrees -->"
 
 #: Exit code meaning "my subject is not present in this environment" (`check_gates.py`).
 UNAVAILABLE_EXIT = 4
@@ -118,6 +138,40 @@ def repo_rows() -> list[tuple[str, str]]:
         ("Studies", f"{registered} registered · {reported} reported"),
         ("Criteria", f"`registry/criteria.yml` **v{_criteria_version()}**"),
     ]
+
+
+def worktree_rows() -> list[tuple[str, str]]:
+    """Every worktree currently checked out beside this one - not history, never typed by hand.
+
+    An EMPTY list means this checkout has no siblings: a CI runner, a fresh clone, or the main
+    checkout on a machine that happens to have none. That is not "zero worktrees exist anywhere",
+    it is "none are visible from here", and the caller treats it as unmeasurable rather than as a
+    measurement of nothing. Getting that distinction wrong is what broke CI the first time this
+    block shipped.
+
+    Reuses `verify_branches.py`'s own detection, so gate 16 (which checks that each branch name
+    appears somewhere in this file) and this block can never disagree about what "currently checked
+    out" means. A worktree whose directory now holds a different branch, or whose branch merged and
+    was cleaned up, simply stops appearing - which is the point. There is no "what it holds" column:
+    that was prose no tool could check, and it lived in the one document a fresh session reads before
+    it has any of its own context to check it against. The commit history that produced each branch
+    already says what it held, in more detail than a table cell ever could.
+    """
+    from verify_branches import merged_branches, worktree_branches
+
+    branches = worktree_branches()
+    merged = merged_branches()
+
+    rows: list[tuple[str, str]] = []
+    for branch, sha in branches:
+        if merged is None:
+            state = "merge state unknown - no `master` ref in this clone"
+        elif branch in merged:
+            state = "merged into `master`"
+        else:
+            state = "**NOT merged**"
+        rows.append((f"`{branch}`", f"tip `{sha}` · {state}"))
+    return rows
 
 
 # ------------------------------------------------------------------------ runtime facts
@@ -250,6 +304,17 @@ def render_repo() -> str:
     return f"{REPO_BEGIN}\n\n{GENERATED_NOTE}\n\n{_table(repo_rows())}\n\n{REPO_END}"
 
 
+def render_worktrees(rows: list[tuple[str, str]]) -> str:
+    """Render a NON-EMPTY worktree list. Callers must not render an empty one.
+
+    An empty list is unmeasurable-from-here, not a measurement (see `worktree_rows`), and rendering
+    it would overwrite another machine's true list with this machine's blindness.
+    """
+    header = "| Branch | State |\n|---|---|"
+    body = header + "\n" + "\n".join(f"| {label} | {value} |" for label, value in rows)
+    return f"{WORKTREES_BEGIN}\n\n{GENERATED_NOTE}\n\n{body}\n\n{WORKTREES_END}"
+
+
 def render_runtime(rows: list[tuple[str, str]] | None) -> str:
     if rows is None:
         body = (
@@ -279,15 +344,28 @@ def main() -> int:
 
     original = HANDOFF.read_text(encoding="utf-8")
     runtime = runtime_rows()
+    worktrees = worktree_rows()
 
+    # Each block is rewritten only when THIS checkout can measure its subject. A block left alone
+    # keeps whatever the last machine that could measure it wrote, which is the only honest option:
+    # overwriting it here would replace another environment's true answer with this one's blindness.
     updated = _replace(original, REPO_BEGIN, REPO_END, render_repo())
+    if worktrees:
+        updated = _replace(updated, WORKTREES_BEGIN, WORKTREES_END, render_worktrees(worktrees))
     if runtime is not None:
         updated = _replace(updated, RUNTIME_BEGIN, RUNTIME_END, render_runtime(runtime))
 
+    unmeasurable = [
+        name for name, measurable in
+        (("worktrees", bool(worktrees)), ("runtime", runtime is not None))
+        if not measurable
+    ]
+
     if not args.check_only:
         HANDOFF.write_text(updated, encoding="utf-8")
-        scope = "repo + runtime" if runtime is not None else "repo only (no local data/)"
-        print(f"state: wrote {HANDOFF.name} section 2 ({scope})")
+        scope = "repo" + "".join(f" + {n}" for n in ("worktrees", "runtime") if n not in unmeasurable)
+        skipped = f"; left alone: {', '.join(unmeasurable)}" if unmeasurable else ""
+        print(f"state: wrote {HANDOFF.name} section 2 ({scope}{skipped})")
         return 0
 
     if updated != original:
@@ -295,14 +373,16 @@ def main() -> int:
         print("  python tools/build_state.py")
         return 1
 
-    if runtime is None:
-        # The repo half verified; the runtime half could not be read here. Saying so is the whole
-        # point - gate 23 returned 0 in exactly this situation and a hand-kept counter went
-        # uncontradicted for days (`AGENTS.md` §10.6).
-        print("state: repo block current; runtime block UNAVAILABLE (no local data/ in this checkout)")
+    if unmeasurable:
+        # What could be checked here was checked. Naming what could not is the whole point - gate 23
+        # returned 0 in exactly this situation and a hand-kept counter went uncontradicted for days
+        # (`AGENTS.md` §10.6). Exit 4 is UNAVAILABLE, counted separately by `check_gates.py`, which
+        # then refuses to print "all gates pass".
+        print(f"state: repo block current; {' and '.join(unmeasurable)} "
+              f"UNAVAILABLE (not visible from this checkout)")
         return UNAVAILABLE_EXIT
 
-    print("state: section 2 current (repo + runtime)")
+    print("state: section 2 current (repo + worktrees + runtime)")
     return 0
 
 
