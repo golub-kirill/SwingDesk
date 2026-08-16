@@ -13,15 +13,25 @@ So section 2 is now generated between markers and `--check-only` is its gate - t
 `build_frd.py`, `build_components.py`, `build_checklists.py`, `build_coverage.py` and
 `build_lock.py`, none of which has ever gone stale.
 
-**Two blocks, because two kinds of fact.** Repo facts derive from the tree and are computable in
-every checkout. Runtime facts derive from `data/`, which is gitignored operational state present
-only in the main checkout. Splitting them is what lets `--check-only` verify the half it can see and
-report the other half as `UNAVAILABLE` rather than either failing every worktree or - the gate 23
-mistake this tool exists to stop repeating - exiting 0 as though it had checked.
+**Three blocks.** Repo facts derive from the tree and are computable in every checkout. Runtime
+facts derive from `data/`, which is gitignored operational state present only in the main checkout.
+Splitting them is what lets `--check-only` verify the half it can see and report the other half as
+`UNAVAILABLE` rather than either failing every worktree or - the gate 23 mistake this tool exists to
+stop repeating - exiting 0 as though it had checked. The third, worktrees, is its own case: computable
+everywhere like repo facts, but it is a LIST, not a census table, and it answers a different
+question - not "what does the tree measure" but "who else is standing in a copy of it right now".
+
+**The worktree block replaced a hand-typed table on 2026-08-16, for the same reason section 2 did.**
+That table grew one row per effort, forever, with "what it holds" prose no tool could check - and it
+required every session to remember to add its own row before its gates would pass. `git worktree
+list` already knows which worktrees exist without being told. History belongs in `git log` and
+`docs/08-pm/POSTMORTEM-2026-08-09.md`, which already carry it; a document a fresh session reads in
+its first minute does not need to carry it twice.
 
 Nothing here re-derives a number another tool already owns. The census comes from
-`verify_counts.measure()` and the streak from `track_a_streak.streak()`, so gate 14, gate 23 and
-this gate cannot disagree: there is one implementation per fact.
+`verify_counts.measure()`, the streak from `track_a_streak.measure()`, and the worktree list from
+`verify_branches.worktree_branches()` - so gate 14, gate 16, gate 23 and this gate cannot disagree:
+there is one implementation per fact.
 
 Facts that no tool can derive - `master`'s branch protection, the Task Scheduler trigger, the G0-G7
 project gates - stay hand-written BELOW the generated blocks, each carrying its own `as of` date.
@@ -66,6 +76,8 @@ REPO_BEGIN = "<!-- BEGIN GENERATED: state:repo -->"
 REPO_END = "<!-- END GENERATED: state:repo -->"
 RUNTIME_BEGIN = "<!-- BEGIN GENERATED: state:runtime -->"
 RUNTIME_END = "<!-- END GENERATED: state:runtime -->"
+WORKTREES_BEGIN = "<!-- BEGIN GENERATED: state:worktrees -->"
+WORKTREES_END = "<!-- END GENERATED: state:worktrees -->"
 
 #: Exit code meaning "my subject is not present in this environment" (`check_gates.py`).
 UNAVAILABLE_EXIT = 4
@@ -118,6 +130,34 @@ def repo_rows() -> list[tuple[str, str]]:
         ("Studies", f"{registered} registered · {reported} reported"),
         ("Criteria", f"`registry/criteria.yml` **v{_criteria_version()}**"),
     ]
+
+
+def worktree_rows() -> list[tuple[str, str]]:
+    """Every worktree currently checked out - not history, and never typed by hand.
+
+    Reuses `verify_branches.py`'s own detection, so gate 16 (which checks that each branch name
+    appears somewhere in this file) and this block can never disagree about what "currently checked
+    out" means. A worktree whose directory now holds a different branch, or whose branch merged and
+    was cleaned up, simply stops appearing - which is the point. There is no "what it holds" column:
+    that was prose no tool could check, and it lived in the one document a fresh session reads before
+    it has any of its own context to check it against. The commit history that produced each branch
+    already says what it held, in more detail than a table cell ever could.
+    """
+    from verify_branches import merged_branches, worktree_branches
+
+    branches = worktree_branches()
+    merged = merged_branches()
+
+    rows: list[tuple[str, str]] = []
+    for branch, sha in branches:
+        if merged is None:
+            state = "merge state unknown - no `master` ref in this clone"
+        elif branch in merged:
+            state = "merged into `master`"
+        else:
+            state = "**NOT merged**"
+        rows.append((f"`{branch}`", f"tip `{sha}` · {state}"))
+    return rows
 
 
 # ------------------------------------------------------------------------ runtime facts
@@ -250,6 +290,16 @@ def render_repo() -> str:
     return f"{REPO_BEGIN}\n\n{GENERATED_NOTE}\n\n{_table(repo_rows())}\n\n{REPO_END}"
 
 
+def render_worktrees() -> str:
+    rows = worktree_rows()
+    if rows:
+        header = "| Branch | State |\n|---|---|"
+        body = header + "\n" + "\n".join(f"| {label} | {value} |" for label, value in rows)
+    else:
+        body = "*No other worktree is currently checked out.*"
+    return f"{WORKTREES_BEGIN}\n\n{GENERATED_NOTE}\n\n{body}\n\n{WORKTREES_END}"
+
+
 def render_runtime(rows: list[tuple[str, str]] | None) -> str:
     if rows is None:
         body = (
@@ -281,6 +331,7 @@ def main() -> int:
     runtime = runtime_rows()
 
     updated = _replace(original, REPO_BEGIN, REPO_END, render_repo())
+    updated = _replace(updated, WORKTREES_BEGIN, WORKTREES_END, render_worktrees())
     if runtime is not None:
         updated = _replace(updated, RUNTIME_BEGIN, RUNTIME_END, render_runtime(runtime))
 
