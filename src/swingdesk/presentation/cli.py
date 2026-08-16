@@ -12,6 +12,7 @@ from swingdesk.application.pipeline import run
 from swingdesk.contracts.reference import Instrument
 from swingdesk.contracts.run import RunMode
 from swingdesk.journal_evidence.journal import Journal
+from swingdesk.journal_evidence.positions import PositionStore
 from swingdesk.market_data import BarStore
 from swingdesk.platform.clock import FixedClock, SystemClock
 from swingdesk.platform.parameters import ParameterRegistry
@@ -83,7 +84,20 @@ def main(argv: list[str] | None = None) -> int:
         instruments = [_instrument(t) for t in args.tickers]
         selection = None
 
-        with BarStore(args.data / "bars.duckdb") as store, Journal(args.data / "journal.duckdb") as journal:
+        with (
+            BarStore(args.data / "bars.duckdb") as store,
+            Journal(args.data / "journal.duckdb") as journal,
+            # Appendix T requires open positions evaluated before new candidates, and until
+            # 2026-08-16 this command never opened a PositionStore at all - "positions run first"
+            # was proven only in tests, never in the scheduled job. Passing a store with nothing
+            # recorded in it is safe: `run()` reads `positions is not None` to decide whether the
+            # positions step ran at all, so an empty store correctly makes `result.steps` read
+            # `("positions", "candidates")` - "checked, and there were none" - rather than the
+            # `("candidates",)` a caller with no store produces. Nothing currently writes to this
+            # store outside tests (TODO.md 6b item 1); wiring it in is what stops that being the
+            # reason a recorded position could never be evaluated by the scheduled run.
+            PositionStore(args.data / "positions.duckdb") as positions,
+        ):
             if args.universe:
                 built = universe_builder.rule_from_registry(registry)
                 if isinstance(built, Refusal):
@@ -102,7 +116,8 @@ def main(argv: list[str] | None = None) -> int:
                     return 3
 
             result = run(instruments, clock, registry, store, journal,
-                         mode=mode, lookback=args.lookback, universe=selection)
+                         mode=mode, lookback=args.lookback, universe=selection,
+                         positions=positions)
             print(report.render(result))
         return 0
 
