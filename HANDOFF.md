@@ -45,7 +45,7 @@ saying they had not — see `AGENTS.md` §10.6 for the two numbers that paid for
 | | |
 |---|---|
 | Merge gates | **29**, one command: `python tools/check_gates.py` |
-| Tests | **403**, fully offline |
+| Tests | **407**, fully offline |
 | Docs | 104 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 6 `specified` · **1 `active`** |
 | Parameters | 100 - 62 `unset`, 33 `assumed`, 4 `owner`, **1 `validated`** |
@@ -104,7 +104,7 @@ others, and one re-ran a study another had already finished and reached the oppo
 | `claude/swingdesk-documentation-321418` | 2026-08-09 | **yes**, merged 2026-08-09 | `DR-006`, `DR-007`, ALLOCATION/TRANSITION/ENTITY_MAP/EXPECTATION_MODEL/DRIFT_AND_LEARNING/CHANGE_MANAGEMENT/KNOWLEDGE_GRAPH, five gates, `criteria.yml` v1.1.0 |
 | `claude/skills-llm-council-setup-1e1d65` | `63b089d` | no unique commits | **a fourth effort, started mid-reconciliation.** It appeared while the merge was running and gate 16 failed within the minute — which is the whole point of the gate. This row said *"at `master`'s tip"* until 2026-08-10; it is six commits behind and has been since `5a79f00` |
 | `claude/swingdesk-handoff-review-e8d9f4` | `664e84a` | **yes** — branched from `master`'s tip | **the fifth effort, 2026-08-10.** Handoff verification, an audit of two external reviews, and the P0/P1 fixes that came out of it |
-| `claude/indicators-candidate-stages-6403ce` | `6bdd982` | **yes** — merged as PR #2 | **the sixth effort.** `f39daf5` was already merged before this row first existed; this session then added `presentation/funnel.py` (US-022, the refusal funnel) and its tests on top, PR opened against `master` and merged. `report.py` is **still not wired to it** — held for the Track A freeze (§5), so the module has no importer |
+| `claude/indicators-candidate-stages-6403ce` | `6bdd982` | **yes** — merged as PR #2 | **the sixth effort.** `f39daf5` was already merged before this row first existed; this session then added `presentation/funnel.py` (US-022, the refusal funnel) and its tests on top, PR opened against `master` and merged. `report.py` was **not wired to it** at merge — confirmed off the freeze list (§5 names `daily_run.cmd`, `pipeline.py`, `sizing.py`; `report.py` is not among them) and wired 2026-08-15, same session as this row |
 | `claude/open-tasks-audit-a7debf` | `1e771c3` | **yes** — at `master`'s tip | **the seventh effort, 2026-08-15.** A full audit of open and pending work across the tree — the source of the consolidated list now in `TODO.md` |
 | `claude/swingdesk-review-verify-b8707c` | `2b7e5cb` | **no** — 2 commits ahead of `master` | **the eighth effort, 2026-08-15.** Verification of an external plan-of-record review; `TODO.md`; `AGENTS.md` §10.6–§10.7; gate 24 (`HANDOFF` §2 generated); `criteria.yml` v1.1.1, correcting a stale note found in that same review, via a 5-advisor council |
 | `claude/oda-fin-kronos-implementation-ff87ba` | `1e771c3` | **yes** — at `master`'s tip, no unique commits | **the ninth effort, appeared 2026-08-15** while this session was running — the same shape gate 16 was built to catch, and it caught it: this row is why the gate is red until this commit lands |

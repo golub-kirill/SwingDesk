@@ -133,9 +133,13 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       pass" when a gate could not see its subject. `SWINGDESK_DATA` lets a worktree read the real
       stores; it is deliberately **ignored when `SWINGDESK_ROOT` is pinned**, so the test suite stays
       hermetic — three tests caught that ordering the moment it was written the other way round.
-- [ ] **`[c]` US-022 unfinished** — `presentation/funnel.py` exists, nothing imports it, `report.py`
-      is not wired. **`[v]`** Confirm whether the freeze covers it: `HANDOFF.md` §5 freezes
-      `daily_run.cmd`, `pipeline.py`, `sizing.py` — `report.py` is not on that list.
+- [x] **`[v]` US-022 finished — 2026-08-15.** `report.py` now imports `presentation.funnel` and
+      renders a FUNNEL block: eligible/measured/admitted/evaluated in the gherkin's documented order,
+      Trade/Watch/Skip/Pause, skip causes broken out by `(code, parameter_id)`, changed/first-sighting,
+      and `is_reconciled` checked in the render (not asserted in the pure module) so a broken
+      invariant is seen, not raised mid-run. Prints on a run with zero candidates too — zero stated,
+      not silence. 4 new tests against the story's own gherkin, `verify_docs.py` gate 3e passes
+      (citing US-022 without checking it was live). All 29 gates pass, 407 tests.
 - [ ] **`[c]` Gate 10** (traceability) — unblocked now that ATR is active, still to build.
 - [ ] **`[c]` Gate 22** + `DR-008`'s remaining machinery · **Gate 14's word-number hole.**
 - [ ] **`[c]` 6 specified components awaiting activation** — pivots (M12-T0201, M12-T0202), moving
