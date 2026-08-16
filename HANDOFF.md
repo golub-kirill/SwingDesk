@@ -32,9 +32,10 @@ documentation is implementable.
 
 ## 2. State, measured
 
-**Nothing in the two generated blocks below is typed by hand.** They were, and they went stale while
-saying they had not — see `AGENTS.md` §10.6 for the two numbers that paid for this. Regenerate with
-`python tools/build_state.py`; gate 24 fails if they drift.
+**Nothing in the generated blocks below is typed by hand** — here, or in the worktree census further
+down. They were, and they went stale while saying they had not — see `AGENTS.md` §10.6 for the
+numbers that paid for this. Regenerate with `python tools/build_state.py`; gate 24 fails if they
+drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given checkout cannot see.
 
 ### Derived from the tree
 
@@ -112,7 +113,7 @@ once did).
 | `claude/oda-fin-kronos-implementation-ff87ba` | tip `1e771c3` · merged into `master` |
 | `claude/indicators-candidate-stages-6403ce` | tip `6bdd982` · merged into `master` |
 | `claude/open-tasks-audit-a7debf` | tip `1e771c3` · merged into `master` |
-| `claude/swingdesk-review-verify-b8707c` | tip `2bbcdb6` · **NOT merged** |
+| `claude/swingdesk-review-verify-b8707c` | tip `d988e16` · **NOT merged** |
 
 <!-- END GENERATED: state:worktrees -->
 
