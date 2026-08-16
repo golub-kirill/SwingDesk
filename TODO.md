@@ -256,8 +256,25 @@ is the gap the council's suspend-research call (§1) is about, and the build ord
       position could never be evaluated, not a claim that one exists yet. 2 new tests
       (`tests/test_cli.py`, new file — there was no CLI test coverage at all before this), each
       confirmed to fail against the pre-fix `cli.py`.
-- [ ] **3. No delivery channel.** The report is printed to stdout, redirected into a log file by
-      `daily_run.cmd`. No push, no notification — the owner has to remember to open a log file.
+- [x] **3a. The report was never persisted — fixed 2026-08-16.** `scan` now writes one file per
+      run to `<data>/reports/<run_id>.txt` (`--report-dir` overrides). The `run_id` already carries
+      the start instant, so the name sorts chronologically and traces to the journal's `runs` row
+      without formatting a second copy of the date (`AGENTS.md` §10.5). A write failure is loud on
+      stderr but **not** fatal — the report was still produced on stdout, so `a.run_completes` is
+      satisfied and a disk error must not reset a 20-day counter. `tools/daily_run.cmd` is
+      untouched (it is frozen; it did not need to change). This also corrected `ROADMAP.md`'s
+      finish-line row, which read **done** on the strength of the run merely *rendering* something.
+      4 new tests, each confirmed to fail when persistence is stubbed out.
+      **Still text, not the HTML/PDF `PRODUCT_SURFACES` §3.1 names** — deliberately, because a
+      second rendering path for the same run is the defect this project keeps finding under other
+      names. HTML waits for one renderer with a text and an HTML backend.
+- [ ] **3b. Nothing actively notifies the owner.** A dated file is findable; it still has to be
+      gone and looked at. `PRODUCT_SURFACES` §3.4 specifies Firebase push ("a title, a short body,
+      and a reference id — never market data, journal contents, positions, or decisions") and the
+      §4 notification matrix marks Push ✓ for a completed run. **Needs an owner decision before any
+      code:** it requires credentials this project must never hold in plaintext (`SECURITY.md`, and
+      the `.swingdesk-local.json` ignored-file pattern gate 19 already guards), a real outbound
+      network call from the daily run, and a choice of channel. Not started.
 - [ ] **4. No approval channel.** US-010 requires: proposal sent → response recorded (choice,
       reason, timestamp) → nothing applied without that record. None of this exists — no channel, no
       store method to record a response, `ManagementAction.status` is only ever set by test code.
