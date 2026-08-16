@@ -45,7 +45,7 @@ saying they had not — see `AGENTS.md` §10.6 for the two numbers that paid for
 | | |
 |---|---|
 | Merge gates | **29**, one command: `python tools/check_gates.py` |
-| Tests | **408**, fully offline |
+| Tests | **409**, fully offline |
 | Docs | 104 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 6 `specified` · **1 `active`** |
 | Parameters | 100 - 62 `unset`, 33 `assumed`, 4 `owner`, **1 `validated`** |
@@ -112,7 +112,7 @@ once did).
 | `claude/oda-fin-kronos-implementation-ff87ba` | tip `1e771c3` · merged into `master` |
 | `claude/indicators-candidate-stages-6403ce` | tip `6bdd982` · merged into `master` |
 | `claude/open-tasks-audit-a7debf` | tip `1e771c3` · merged into `master` |
-| `claude/swingdesk-review-verify-b8707c` | tip `2ce9160` · **NOT merged** |
+| `claude/swingdesk-review-verify-b8707c` | tip `2bbcdb6` · **NOT merged** |
 
 <!-- END GENERATED: state:worktrees -->
 

@@ -784,10 +784,33 @@ def test_worktree_rows_reflect_git_worktree_list() -> None:
     state = _build_state()
     from verify_branches import worktree_branches
 
-    rendered = state.render_worktrees()
+    rows = state.worktree_rows()
+    if not rows:
+        pytest.skip("no sibling worktrees visible from this checkout")
+    rendered = state.render_worktrees(rows)
     for branch, sha in worktree_branches():
         assert branch in rendered, f"{branch!r} is checked out but missing from the generated block"
         assert sha in rendered, f"{branch!r}'s tip {sha!r} is missing from the generated block"
+
+
+def test_a_checkout_with_no_sibling_worktrees_leaves_the_block_alone(tmp_path: Path) -> None:
+    """The CI regression, pinned. A runner sees zero sibling worktrees; that is blindness, not a
+    measurement of nothing, and rewriting the block from it would overwrite another machine's true
+    list and then fail the very gate that just wrote it.
+
+    Shipped without this test on 2026-08-16 and CI caught it within the hour: the generator produced
+    an empty list, compared it against five committed rows, and called the file stale - correctly.
+    """
+    state = _build_state()
+    committed = (
+        f"{state.WORKTREES_BEGIN}\n\n| Branch | State |\n|---|---|\n"
+        f"| `claude/somebody-elses-worktree` | tip `abc1234` · **NOT merged** |\n\n"
+        f"{state.WORKTREES_END}"
+    )
+    # An empty measurement must leave that text exactly as it stands.
+    assert state._replace(committed, state.WORKTREES_BEGIN, state.WORKTREES_END, committed) == committed
+    with pytest.raises(TypeError):
+        state.render_worktrees()  # type: ignore[call-arg]
 
 
 def test_missing_markers_fail_loudly_rather_than_no_op() -> None:
