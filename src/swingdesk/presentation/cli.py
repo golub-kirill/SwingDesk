@@ -16,7 +16,7 @@ from swingdesk.journal_evidence.positions import PositionStore
 from swingdesk.market_data import BarStore
 from swingdesk.platform.clock import FixedClock, SystemClock
 from swingdesk.platform.parameters import ParameterRegistry
-from swingdesk.presentation import report
+from swingdesk.presentation import notify, report
 from swingdesk.reference_data import calendar as cal
 from swingdesk.reference_data.directory import DirectoryStore
 from swingdesk.trade_management.sizing import Refusal
@@ -64,6 +64,9 @@ def main(argv: list[str] | None = None) -> int:
                       help="ISO instant; pins the clock so the run is reproducible")
     scan.add_argument("--report-dir", type=Path, default=None,
                       help="where the run's report file is written; defaults to <data>/reports")
+    scan.add_argument("--no-notify", action="store_true",
+                      help="skip the local desktop notice (DR-011). The report is written either "
+                           "way; this only suppresses the pop-up")
 
     args = parser.parse_args(argv)
 
@@ -136,6 +139,17 @@ def main(argv: list[str] | None = None) -> int:
             print(report.render(result))
             if written is not None:
                 print(f"\nreport written  {written}")
+
+            # The notice goes LAST, after the report is on disk and on the console, so a run is
+            # never delayed or endangered by the act of announcing itself.
+            if not args.no_notify:
+                notice = notify.notify(result.manifest.run_id, notify.Outcome.COMPLETE)
+                if notice.delivered:
+                    print("notice delivered")
+                else:
+                    # Loud, never fatal - same reasoning as the report write above, and the same
+                    # rule: unnoticed non-delivery is the defect this exists to close.
+                    print(f"notice NOT delivered  {notice.detail}", file=sys.stderr)
         return 0
 
     return 1

@@ -11,9 +11,26 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from swingdesk.application.pipeline import RunResult
 from swingdesk.contracts.run import RunManifest
-from swingdesk.presentation import cli
+from swingdesk.presentation import cli, notify
+
+
+@pytest.fixture(autouse=True)
+def _never_raise_a_real_toast(monkeypatch):
+    """No test in this file may pop a desktop notification.
+
+    `scan` notifies by default - that is the point of `DR-011` - so without this, every run of the
+    suite would spray toasts across the screen and spawn a PowerShell process per test. Autouse
+    rather than per-test: forgetting it is invisible in CI and merely annoying locally, which is
+    exactly the kind of defect that never gets fixed.
+    """
+    monkeypatch.setattr(
+        cli.notify, "notify",
+        lambda run_id, outcome: notify.NotifyResult(True, "stubbed in tests"),
+    )
 
 
 def _fake_run(captured: dict):
@@ -133,3 +150,55 @@ def test_an_unwritable_report_dir_is_loud_but_not_fatal(tmp_path: Path, monkeypa
     assert "report NOT persisted" in captured.err
     assert "disk is full" in captured.err
     assert "SwingDesk run r" in captured.out, "the report itself must still be printed"
+
+
+# ------------------------------------------------- the local run notice (DR-011, TODO.md 6b 3b)
+
+
+def test_scan_notifies_with_the_run_id_and_nothing_else(tmp_path: Path, monkeypatch) -> None:
+    """The notice carries a terminal status and the run id. `DR-011` bans anything else, and this
+    asserts the CLI honours that rather than assembling its own richer message."""
+    seen: dict = {}
+    monkeypatch.setattr(cli, "run", _fake_run({}))
+    monkeypatch.setattr(
+        cli.notify, "notify",
+        lambda run_id, outcome: seen.update(run_id=run_id, outcome=outcome)
+        or notify.NotifyResult(True, "delivered"),
+    )
+
+    code = cli.main(["scan", "AAPL", "--data", str(tmp_path)])
+
+    assert code == 0
+    assert seen["run_id"] == "r"
+    assert seen["outcome"] is notify.Outcome.COMPLETE
+
+
+def test_no_notify_suppresses_the_notice_but_not_the_report(tmp_path: Path, monkeypatch) -> None:
+    called: list = []
+    monkeypatch.setattr(cli, "run", _fake_run({}))
+    monkeypatch.setattr(cli.notify, "notify", lambda *a: called.append(a))
+
+    code = cli.main(["scan", "AAPL", "--data", str(tmp_path), "--no-notify"])
+
+    assert code == 0
+    assert called == [], "--no-notify must not reach the notifier at all"
+    assert (tmp_path / "reports" / "r.txt").is_file(), "the report is written either way"
+
+
+def test_an_undelivered_notice_is_loud_but_not_fatal(tmp_path: Path, monkeypatch, capsys) -> None:
+    """Same rule as the report write: the run completed and produced a report, so `a.run_completes`
+    is satisfied and a failed pop-up must not reset a 20-day counter. But unnoticed non-delivery is
+    the defect this feature exists to close, so it never fails in silence.
+    """
+    monkeypatch.setattr(cli, "run", _fake_run({}))
+    monkeypatch.setattr(
+        cli.notify, "notify",
+        lambda run_id, outcome: notify.NotifyResult(False, "powershell.exe not found"),
+    )
+
+    code = cli.main(["scan", "AAPL", "--data", str(tmp_path)])
+
+    captured = capsys.readouterr()
+    assert code == 0, "a failed notice must not change the run's exit code"
+    assert "notice NOT delivered" in captured.err
+    assert "powershell.exe not found" in captured.err
