@@ -182,6 +182,23 @@ class Journal:
         ).fetchall()
         return [DecisionRecord(*row) for row in rows]
 
+    def runs_starting_between(
+        self, start: datetime, end: datetime
+    ) -> list[tuple[str, datetime]]:
+        """Every run's id and clock-recorded start within `[start, end]`, oldest first.
+
+        For `tools/track_a_streak.py`'s idle-day diagnostic (2026-08-16, council-reviewed): the log
+        says a scheduled attempt happened and how it exited, never what it decided - this is the
+        only way to learn that, because the log has no decision-level detail (see this module's own
+        docstring, "distinct from the log"). Not used by anything on the decision path.
+        """
+        rows = self._connection.execute(
+            "SELECT run_id, started_at FROM runs WHERE started_at BETWEEN ? AND ? "
+            "ORDER BY started_at",
+            [start, end],
+        ).fetchall()
+        return [(run_id, started_at) for run_id, started_at in rows]
+
     def latest_decisions(
         self, instrument_ids: list[str], as_of: datetime
     ) -> dict[str, str]:
