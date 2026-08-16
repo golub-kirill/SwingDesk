@@ -383,5 +383,20 @@
     "measurements_unchanged": true,
     "note": "Every figure in this file is exactly what the 2026-08-02 run produced and is unchanged. Only the verdict label is corrected. This file was NOT regenerated: run_pr002.py fetches the current symbol directory and current Yahoo history, so re-running would sample a different universe over a different window and would replace a reported result rather than reproduce it. tools/run_pr002.py now encodes the country condition so the defect cannot recur.",
     "perturbations_incomplete": "Separately and not fixed here: section 5 registers three perturbations - threshold +/-20 percent, 1-bar execution delay, and cost stress. Only cost stress (1x/3x) was run. Tracked in TODO.md section 5."
+  },
+  "perturbations": {
+    "registered": [
+      "thresholds_pm20pct",
+      "execution_delay_1bar",
+      "cost_stress_3x"
+    ],
+    "run": [
+      "cost_stress_3x"
+    ],
+    "not_run": {
+      "thresholds_pm20pct": "Registered in section 5 and never implemented in run_pr002.py.",
+      "execution_delay_1bar": "Registered in section 5 and never implemented in run_pr002.py. The engine enters at T+1 by construction, which is the BASE design, not the registered perturbation of it."
+    },
+    "recorded": "2026-08-16, read from each study's pre-registration and its runner's source. Recorded when gate 25 made the declaration mandatory; no measurement changed."
   }
 }

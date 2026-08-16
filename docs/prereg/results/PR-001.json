@@ -173,5 +173,17 @@
   "verdict": "reject",
   "verdict_if_sample_had_been_met": "reject",
   "verdict_valid": true,
-  "sample_shortfall": []
+  "sample_shortfall": [],
+  "perturbations": {
+    "registered": [
+      "sma_periods_pm20pct",
+      "overlap_per_regime"
+    ],
+    "run": [],
+    "not_run": {
+      "sma_periods_pm20pct": "Registered for this run and never implemented. run_pr001.py fixes SMA_SHORT=50 and SMA_LONG=200 with no sensitivity loop, and the report does not mention the check. The reject verdict therefore rests on one parameterisation.",
+      "overlap_per_regime": "Conditional at registration - 'once a classifier exists'. No regime classifier existed at the 2026-08-03 run, so this was not runnable rather than skipped."
+    },
+    "recorded": "2026-08-16, read from each study's pre-registration and its runner's source. Recorded when gate 25 made the declaration mandatory; no measurement changed."
+  }
 }

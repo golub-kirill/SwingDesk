@@ -854,3 +854,96 @@ def test_an_unmeasurable_runtime_block_does_not_render_as_a_measurement() -> Non
     body = state.render_runtime(None)
     assert "UNAVAILABLE" in body
     assert "|---|---|" not in body, "an unmeasured block must not render as a table of figures"
+
+
+# ------------------------------------------------ gate 25: prereg conformance
+
+
+def _conformance_tree(tmp_path: Path, record: dict) -> Path:
+    (tmp_path / "docs" / "prereg" / "results").mkdir(parents=True)
+    (tmp_path / "docs" / "prereg" / "results" / "PR-999.json").write_text(
+        json.dumps(record), encoding="utf-8"
+    )
+    return tmp_path
+
+
+def test_conformance_gate_catches_an_accept_over_a_declared_shortfall(tmp_path: Path) -> None:
+    """PR-002's exact shape, and the case this gate was built for.
+
+    It reported `single_market: true` beside a verdict of `accept`, on a prereg whose §6 permitted
+    accept only in both countries. The flag was recorded and no gate read it as part of the verdict.
+    """
+    root = _conformance_tree(
+        tmp_path,
+        {"prereg": "PR-999", "verdict": "accept", "country": "US", "single_market": True,
+         "perturbations": {"registered": [], "run": []}},
+    )
+    code, out = run_gate("verify_prereg_conformance.py", root)
+    assert code == 1
+    assert "single_market" in out
+    assert "inconclusive branch" in out
+
+
+def test_conformance_gate_catches_an_accept_missing_a_registered_perturbation(
+        tmp_path: Path) -> None:
+    """PR-002's second, quieter defect: §5 registered three perturbations and one was run."""
+    root = _conformance_tree(tmp_path, {
+        "prereg": "PR-999", "verdict": "accept", "country": "US",
+        "perturbations": {"registered": ["cost_stress", "threshold_20pct"],
+                          "run": ["cost_stress"]},
+    })
+    code, out = run_gate("verify_prereg_conformance.py", root)
+    assert code == 1
+    assert "threshold_20pct" in out
+
+
+def test_conformance_gate_requires_a_reported_study_to_state_its_scope(tmp_path: Path) -> None:
+    root = _conformance_tree(tmp_path, {"prereg": "PR-999", "verdict": "reject"})
+    code, out = run_gate("verify_prereg_conformance.py", root)
+    assert code == 1
+    assert "country" in out
+
+
+def test_conformance_gate_requires_a_perturbations_declaration(tmp_path: Path) -> None:
+    """The condition that makes this gate bite on the present tree rather than on a hypothetical
+    future study. An empty `registered` is a legitimate declaration; an ABSENT block is not,
+    because it cannot be told apart from nobody having looked.
+
+    The first cut of this gate only REPORTED this, and every study was in that state - so the gate
+    was green because the tree was silent, which is not a gate."""
+    root = _conformance_tree(
+        tmp_path, {"prereg": "PR-999", "verdict": "reject", "country": "US"}
+    )
+    code, out = run_gate("verify_prereg_conformance.py", root)
+    assert code == 1
+    assert "perturbations" in out
+
+
+def test_conformance_gate_accepts_an_empty_perturbation_registration(tmp_path: Path) -> None:
+    """PR-008 and PR-010 register none. Saying so explicitly is a declaration, not a gap."""
+    root = _conformance_tree(tmp_path, {
+        "prereg": "PR-999", "verdict": "reject", "country": "US",
+        "perturbations": {"registered": [], "run": []},
+    })
+    code, out = run_gate("verify_prereg_conformance.py", root)
+    assert code == 0, out
+
+
+def test_conformance_gate_allows_a_shortfall_on_a_non_affirmative_verdict(tmp_path: Path) -> None:
+    """A study may always conclude LESS than it registered. `inconclusive` over a single market is
+    precisely the correct handling - it is what PR-002 should have said - so it must not fail."""
+    root = _conformance_tree(tmp_path, {
+        "prereg": "PR-999", "verdict": "inconclusive", "country": "US", "single_market": True,
+        "perturbations": {"registered": [], "run": []},
+    })
+    code, out = run_gate("verify_prereg_conformance.py", root)
+    assert code == 0, out
+
+
+def test_conformance_gate_ignores_a_supporting_analysis(tmp_path: Path) -> None:
+    """A file without a prereg id and a verdict is not a study - `PR-002-survivorship-bound.json`
+    is one, and counting it as a study once inflated every summary that quoted it (gate 13)."""
+    root = _conformance_tree(tmp_path, {"note": "supporting analysis", "bound": "2.3%"})
+    code, out = run_gate("verify_prereg_conformance.py", root)
+    assert code == 0, out
+    assert "0 study(ies) checked" in out

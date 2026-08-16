@@ -574,5 +574,16 @@
   "verdict_reason": "every arm inside NONE's interval at 1x costs",
   "underpowered_arms": [],
   "separated_arms": [],
-  "rank_survivors": []
+  "rank_survivors": [],
+  "perturbations": {
+    "registered": [
+      "cost_stress_3x",
+      "holdout_period"
+    ],
+    "run": [
+      "cost_stress_3x",
+      "holdout_period"
+    ],
+    "recorded": "2026-08-16, read from each study's pre-registration and its runner's source. Recorded when gate 25 made the declaration mandatory; no measurement changed."
+  }
 }

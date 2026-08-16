@@ -131,12 +131,31 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **So the original `ACCEPT` rested on one of three registered robustness checks** — a defect
       independent of the country condition, and not fixed by the 2026-08-16 correction. Needs a new
       run, which means a new pre-registration: the runner cannot reproduce the 2026-08-02 sample.
-- [ ] **`[v]` Nothing binds a runner to its own pre-registration.** All five council reviewers
-      converged on this independently as the root cause. Gates 13/14 check that *documents* agree
-      with the result files; nothing checks that a *verdict* was derived using the branches and
-      perturbations its prereg registered. PR-002 failed both — wrong branch, 1 of 3 perturbations —
-      and every gate stayed green. The regression test added on 2026-08-16 pins PR-002 specifically;
-      a class-level conformance gate is the general fix and does not exist.
+- [x] **`[v]` Nothing bound a runner to its own pre-registration — gate 25, 2026-08-16.**
+      All five council reviewers converged on this independently as the root cause. Gates 13/14
+      check that *documents* agree with the result files; nothing checked that a *verdict* was
+      derived using the branches and perturbations its prereg registered. PR-002 failed both — wrong
+      branch, 1 of 3 perturbations — and every gate stayed green.
+      `tools/verify_prereg_conformance.py` refuses an affirmative verdict over a declared scope
+      shortfall (PR-002's exact shape) or with registered perturbations unrun, and requires every
+      reported study to state its scope. **It does not parse prose** — a prereg is written for a
+      human, and a gate that guesses at English gets bypassed; the obligation is inverted so the
+      *result* declares what the prereg constrains. Five tests, each proven to fail on its condition.
+      It found a real gap on first run: `PR-010.json` stated no scope at all.
+- [x] **`[v]` Every study now declares which registered perturbations it ran — 2026-08-16.**
+      Backfilled from each pre-registration and each runner's source, so gate 25's condition 4 gates
+      the present tree instead of a hypothetical future study. **The backfill found a second
+      undetected instance:** `PR-001` registered "SMA periods moved ±20% (parameter stability)" and
+      `run_pr001.py` fixes `SMA_SHORT = 50` / `SMA_LONG = 200` with no sensitivity loop; its report
+      never mentions the check. Its `reject` rests on one parameterisation.
+- [ ] **`[v]` Two studies rest on fewer checks than they registered.** Gate 25 prints this on every
+      run (permitted — concluding less than you registered is always allowed — but the verdict is
+      weaker than its report implies):
+      `PR-001` unrun `sma_periods_pm20pct` (`overlap_per_regime` was conditional on a classifier
+      that did not exist at run time, so it was not runnable rather than skipped) ·
+      `PR-002` unrun `thresholds_pm20pct`, `execution_delay_1bar`.
+      Both need new runs, which means new pre-registrations: neither runner can reproduce its
+      original sample (both fetch the current directory and current Yahoo history).
 
 ## 6. Code & gates
 
@@ -156,6 +175,16 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       invariant is seen, not raised mid-run. Prints on a run with zero candidates too — zero stated,
       not silence. 4 new tests against the story's own gherkin, `verify_docs.py` gate 3e passes
       (citing US-022 without checking it was live). All 29 gates pass, 407 tests.
+- [ ] **`[v]` Six gates have never been proven able to fail.** `tests/test_gates.py`'s own docstring
+      sets the bar — *"A gate that has never been seen red proves nothing"* — and these have zero
+      references in it: `verify_parameters` (1), `verify_transcription` (2), `verify_docs` (3e),
+      `verify_studies` (3f), `verify_criteria` (3g), `verify_components` (11).
+      Measured 2026-08-16 while auditing for the failure mode that bit three times this session
+      (gate 23 blind, `build_state` v1, gate 25 v1). **They are not blind in that sense** — every one
+      reports what it examined, which is the existing honesty mechanism, and 3f demonstrably caught
+      real defects during the PR-002 correction. What is missing is proof that their conditions can
+      fire, which is a different and weaker gap than the one already fixed. Fixture-and-assert tests,
+      one defect each, in the pattern the file already uses.
 - [ ] **`[c]` Gate 10** (traceability) — unblocked now that ATR is active, still to build.
 - [ ] **`[c]` Gate 22** + `DR-008`'s remaining machinery · **Gate 14's word-number hole.**
 - [ ] **`[c]` 6 specified components awaiting activation** — pivots (M12-T0201, M12-T0202), moving

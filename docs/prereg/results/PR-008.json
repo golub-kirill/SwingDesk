@@ -9284,5 +9284,10 @@
       "median_cs_half_spread_bps": "2.4407",
       "median_ar_half_spread_bps": "23.4401"
     }
-  ]
+  ],
+  "perturbations": {
+    "registered": [],
+    "run": [],
+    "recorded": "2026-08-16, read from each study's pre-registration and its runner's source. Recorded when gate 25 made the declaration mandatory; no measurement changed."
+  }
 }

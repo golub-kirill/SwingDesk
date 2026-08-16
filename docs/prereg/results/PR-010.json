@@ -1,5 +1,11 @@
 {
   "prereg": "PR-010",
+  "country": "US",
+  "country_recorded": {
+    "date": "2026-08-16",
+    "basis": "Scope was always US and simply went unrecorded. PR-010's prereg section 4 states 'universe: DR-003 liquidity rule, as PR-008'; PR-008.json declares country US; DR-003 records that no free Canadian symbol directory is in hand. Added when gate 25 began requiring a reported study to state the scope its prereg constrains.",
+    "measurements_unchanged": true
+  },
   "knowledge_time": "2026-08-03 22:17:23.260468-05:00",
   "instruments": 1134,
   "refused": 0,
@@ -9,5 +15,10 @@
   "p25": "16.8069",
   "p75": "39.1725",
   "p95": "87.0018",
-  "verdict": "reject"
+  "verdict": "reject",
+  "perturbations": {
+    "registered": [],
+    "run": [],
+    "recorded": "2026-08-16, read from each study's pre-registration and its runner's source. Recorded when gate 25 made the declaration mandatory; no measurement changed."
+  }
 }
