@@ -175,6 +175,16 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       invariant is seen, not raised mid-run. Prints on a run with zero candidates too — zero stated,
       not silence. 4 new tests against the story's own gherkin, `verify_docs.py` gate 3e passes
       (citing US-022 without checking it was live). All 29 gates pass, 407 tests.
+- [ ] **`[v]` Six gates have never been proven able to fail.** `tests/test_gates.py`'s own docstring
+      sets the bar — *"A gate that has never been seen red proves nothing"* — and these have zero
+      references in it: `verify_parameters` (1), `verify_transcription` (2), `verify_docs` (3e),
+      `verify_studies` (3f), `verify_criteria` (3g), `verify_components` (11).
+      Measured 2026-08-16 while auditing for the failure mode that bit three times this session
+      (gate 23 blind, `build_state` v1, gate 25 v1). **They are not blind in that sense** — every one
+      reports what it examined, which is the existing honesty mechanism, and 3f demonstrably caught
+      real defects during the PR-002 correction. What is missing is proof that their conditions can
+      fire, which is a different and weaker gap than the one already fixed. Fixture-and-assert tests,
+      one defect each, in the pattern the file already uses.
 - [ ] **`[c]` Gate 10** (traceability) — unblocked now that ATR is active, still to build.
 - [ ] **`[c]` Gate 22** + `DR-008`'s remaining machinery · **Gate 14's word-number hole.**
 - [ ] **`[c]` 6 specified components awaiting activation** — pivots (M12-T0201, M12-T0202), moving
