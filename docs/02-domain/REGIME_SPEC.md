@@ -134,7 +134,7 @@ it tested and rejected on a criterion that could not have been rigged after the 
 
 | Parameter | Status |
 |---|---|
-| `regime.classifier_rule` | **`validated:PR-002`** — the project's only validated parameter |
+| `regime.classifier_rule` | **`assumed:PR-002`** — downgraded from `validated:` on 2026-08-16 when PR-002's verdict was corrected to `INCONCLUSIVE`. The project has **zero** validated parameters. The fitted value and its measured separation are unchanged |
 | `regime.pct_above_ma_period` | `unset` — see below |
 | `regime.breadth_cutoffs` | `unset` — PR-002 fits the cut per window rather than fixing one |
 | `regime.atr_percentile_bands` | `unset` — the volatility axis is not classified |

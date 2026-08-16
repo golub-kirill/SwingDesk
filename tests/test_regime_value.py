@@ -10,6 +10,7 @@ from __future__ import annotations
 import random
 from datetime import date, timedelta
 from decimal import Decimal
+from pathlib import Path
 
 from swingdesk.contracts.trade import ExitReason, Trade
 from swingdesk.validation.studies import regime_value as study
@@ -123,3 +124,58 @@ def test_more_cells_do_not_manufacture_separation() -> None:
 
     result = study.evaluate("FOUR", four, seed=8, resamples=500)
     assert not result.separates
+
+
+# ------------------------------------------- PR-002 §6's country condition, added 2026-08-16
+
+
+def test_pr002_verdict_logic_downgrades_a_single_market_accept() -> None:
+    """PR-002 §6 permits `accept` only "in BOTH countries independently", and sends a result
+    significant in one country only to the inconclusive branch. Its third amendment - written before
+    any data was seen - recorded that Canada was unavailable and that the requirement was "NOT
+    quietly dropped".
+
+    `tools/run_pr002.py` implemented §6's percentile thresholds and nothing else. It recorded
+    `single_market` beside the verdict as a field, where no reader and no gate treats it as part of
+    the verdict, and emitted `accept` on a US-only sample. The prereg had already decided this case;
+    the code never encoded it, so the project's only `validated` parameter rested on a verdict its
+    own decision rule forbade.
+
+    This pins the condition against the runner's real source rather than a copy of its logic - a
+    reimplementation here would pass while the runner stayed wrong, which is the whole failure being
+    prevented.
+    """
+    source = (Path(__file__).resolve().parents[1] / "tools" / "run_pr002.py").read_text(
+        encoding="utf-8"
+    )
+
+    verdict_block = source.split("PR-002 section 6's COUNTRY condition", 1)
+    assert len(verdict_block) == 2, (
+        "run_pr002.py no longer carries the §6 country condition. A single-market run will emit "
+        "`accept` again, which §6 forbids."
+    )
+
+    after = verdict_block[1]
+    assert 'verdict = "inconclusive"' in after, (
+        "the country condition no longer downgrades the verdict"
+    )
+    assert "single_market" in after and 'verdict == "accept"' in after, (
+        "the downgrade must be conditioned on a single-market run AND an otherwise-accepting verdict"
+    )
+
+
+def test_pr002_result_records_the_corrected_verdict() -> None:
+    """The reported artifact must not drift back to `accept`.
+
+    `PR-002.json` is the record of what ran on 2026-08-02 and is corrected in place rather than
+    regenerated - `run_pr002.py` fetches the current directory and current Yahoo history, so a
+    re-run samples a different universe and would replace the record rather than reproduce it.
+    """
+    import json
+
+    path = Path(__file__).resolve().parents[1] / "docs" / "prereg" / "results" / "PR-002.json"
+    record = json.loads(path.read_text(encoding="utf-8"))
+
+    assert record["verdict"] == "inconclusive", "PR-002's verdict regressed to a value §6 forbids"
+    assert record["verdict_original"] == "accept", "the original verdict must stay on the record"
+    assert record["verdict_correction"]["measurements_unchanged"] is True

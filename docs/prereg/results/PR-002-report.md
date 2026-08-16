@@ -2,11 +2,19 @@
 
 ```
 prereg:     PR-002 (registered 2026-08-02, amended twice before running)
-status:     reported
+status:     reported 2026-08-02 - VERDICT CORRECTED 2026-08-16
 run:        2026-08-02
-verdict:    ACCEPT - the first hypothesis this project has failed to refute
+verdict:    INCONCLUSIVE - single-market finding, not generalised (corrected; was ACCEPT)
 data:       PR-002.json
 ```
+
+> ⚠️ **THE VERDICT ON THIS REPORT WAS WRONG AND IS CORRECTED.** It read `ACCEPT`. It should have
+> read `INCONCLUSIVE` on the day it was written. See §"Correction, 2026-08-16" at the end.
+>
+> **Every measurement below stands.** The numbers are exactly what the 2026-08-02 run produced and
+> none has been altered. What was wrong was the label applied to them, and the passages that lean on
+> that label are struck through in place rather than deleted — deleting a withdrawn claim hides the
+> record it exists to keep.
 
 ---
 
@@ -15,8 +23,9 @@ data:       PR-002.json
 Registered: *a regime label carries decision-relevant information — the distribution of forward
 outcomes for the same setup differs materially across regimes, measured out of sample.*
 
-Not refuted. `BREADTH_MEDIAN` separates outcomes on the test window under both cost regimes, under
-the registered baseline **and** under a stricter one added post-hoc.
+~~Not refuted.~~ **Not refuted, on one market.** `BREADTH_MEDIAN` separates outcomes on the test
+window under both cost regimes, under the registered baseline **and** under a stricter one added
+post-hoc — all of it on a US-only sample, which §6 sends to the inconclusive branch.
 
 ## How the variant was chosen
 
@@ -159,16 +168,67 @@ a careful reader should do with it.
 
 ## Consequence
 
-`regime.classifier_rule` is set to **`BREADTH_MEDIAN`, boundary fitted on the training window**,
-provenance `validated:PR-002` — the first `validated` parameter in this project.
+~~`regime.classifier_rule` is set to **`BREADTH_MEDIAN`, boundary fitted on the training window**,
+provenance `validated:PR-002` — the first `validated` parameter in this project.~~
 
-That provenance is permitted on survivorship-incomplete data only because the owner decision of
+~~That provenance is permitted on survivorship-incomplete data only because the owner decision of
 2026-08-02 allows advancement *provided the record discloses the coverage*, and the disclosure above
-is that record. Anyone reading the value must be able to reach this page in one step, which is why
-the registry note names the confound rather than the result.
+is that record.~~
+
+**Withdrawn 2026-08-16.** `validated:` required a verdict this study did not earn. The parameter
+keeps its fitted value and moves to **`assumed:PR-002`** — the value came from a real study that did
+not clear the validation bar, which is what `assumed:<citation>` means. **The project now has zero
+`validated` parameters**, and that is the honest count. Anyone reading the value must still be able
+to reach this page in one step, which is why the registry note names the confound rather than the
+result.
+
+## Correction, 2026-08-16
+
+**The verdict violated the study's own decision rule, and the rule had already anticipated this
+exact case before any data was seen.**
+
+§6 permits `accept` only where the effect holds **in BOTH countries independently**, and sends a
+result *"significant in one country only"* to the inconclusive branch — *"report as a single-market
+finding and do not generalise"*. The **third amendment**, dated 2026-08-02 and marked *"before any
+data was seen, before the study ran"*, records that Canada cannot be enumerated, that the
+two-country requirement **"cannot be met and is NOT quietly dropped"**, and that §6's inconclusive
+branch is *"the right handling"*.
+
+The runner then implemented §6's percentile thresholds and nothing else. `tools/run_pr002.py` had no
+country condition at all: it recorded `single_market: true` as a field beside the verdict — where no
+reader and no gate treats it as part of the verdict — and emitted `accept`. The prereg had decided
+this case; the code never encoded it.
+
+The limitations table above named the problem on the day and the title said ACCEPT anyway, which is
+worse than silence: it shows the rule was read, understood, and not applied.
+
+**What changed:** the verdict label, here and in `PR-002.json`, and the parameter's provenance.
+
+**What did not change:** every measurement. `BREADTH_LOW` +0.2299R vs `BREADTH_HIGH` −0.1304R over
+1183 trades, percentile 100.0, survival at 3× costs, the date-block null at 99.6 — all of it is what
+the 2026-08-02 run produced and all of it stands. `INCONCLUSIVE` here does not mean *"we measured
+nothing"*; it means *"we measured one market and the rule requires two"*.
+
+**This file was not regenerated, deliberately.** `run_pr002.py` fetches the current symbol directory
+and current Yahoo history, so re-running it today samples a different universe over a different
+window. That would replace a reported result with an unreported one rather than reproduce it, and
+the record of what ran on 2026-08-02 is the thing being corrected — not re-derived. The runner is
+patched so the defect cannot recur on the next study; this artifact is corrected in place, following
+`PR-008`'s precedent.
+
+**Not fixed here, and not bookkeeping.** §5 registers three perturbations — threshold ±20%, 1-bar
+execution delay, and cost stress. **Only cost stress was run.** So the original `ACCEPT` rested on
+one of three registered robustness checks, which weakens the finding independently of the country
+condition. That is a separate defect needing a separate run, tracked in `TODO.md` §5 — recorded here
+so this correction cannot be read as a relabelling exercise.
 
 ## Reproducing
 
 ```bash
 python tools/run_pr002.py --sample 320 --seed 20260802
 ```
+
+**This no longer reproduces the run above**, and did not on the day it was written either: the
+directory download and the Yahoo fetch both take *current* data, and `as_of` is the wall clock. The
+command re-runs the *method*, not the *sample*. Treat its output as a new study needing its own
+pre-registration, not as a check on this one.

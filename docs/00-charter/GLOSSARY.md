@@ -132,7 +132,7 @@ compares across them.
 | **Watch · Trade · Skip** | three of the four candidate-decision states | three of the nine watchlist statuses | separate columns `decision` and `watchlist_status` (`DECISION_STATE_MACHINE.md` §3) |
 | **Late** | a watchlist status | a skip code (`CODES.md`) | as above — same words, different enums |
 | **risk** | what is at risk: `Σ position remaining risk` | position *value*: `Shares × Entry` | Appendix C's own control cell — `Не равно риску` (`RISK_SPEC.md` §2) |
-| **validated** | a parameter's provenance, `validated:PR-002` | a component's validation status, one of nine | two ladders; a decision record never produces either (`decisions/README.md` §3) |
+| **validated** | a parameter's provenance, of the form `validated:<evidence-id>` | a component's validation status, one of nine | two ladders; a decision record never produces either (`decisions/README.md` §3). **No parameter currently holds it** — `regime.classifier_rule` was the only one and became `assumed:PR-002` on 2026-08-16, so this row's example is deliberately a form rather than a live id |
 | **expectation** | the *definition* — a formula in `STATISTICS_SPEC.md` | an *estimate* — a number from a sample | `EXPECTATION_MODEL.md` §1, the estimate/definition split |
 | **coverage** | universe coverage — instruments measured | ТЗ coverage — FULL/PARTIAL/ABSENT | plus **survivorship coverage** (`EvidenceRecord`) and test coverage. Four meanings; always qualify |
 | **active** | a component's activation state | a position that is open | `COMPONENT_REGISTRY_SPEC.md` §3 vs `Position.is_open` |

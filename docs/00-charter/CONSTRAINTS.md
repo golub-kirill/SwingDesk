@@ -49,11 +49,13 @@ Measured consequence: over a ~2.9-year window, NYSE and TSX differed by 16 tradi
 | D9 | Timeframes: `1Y`/`3M` context → `1D` decision → `1H` confirmation → `30m` execution | 2026-08-01 |
 
 **D10 was taken with the price known, which is what makes it a decision rather than a default.**
-PR-002 produced this project's first non-refuted result — breadth separates breakout outcomes out of
-sample — and its direction cannot be confirmed on free data, because survivorship bias is a
-mechanism that would produce that exact result with no real effect present
-(`docs/prereg/results/PR-002-report.md`). The owner reaffirmed the free tier on 2026-08-02 knowing
-this.
+PR-002 produced this project's first non-refuted result on a **single market** — breadth separates
+breakout outcomes out of sample, on US data only — and its direction cannot be confirmed on free
+data, because survivorship bias is a mechanism that would produce that exact result with no real
+effect present (`docs/prereg/results/PR-002-report.md`). The owner reaffirmed the free tier on
+2026-08-02 knowing this. **Its verdict was corrected to `INCONCLUSIVE` on 2026-08-16**: §6 required
+both countries and the runner never encoded that condition. The measurements stand; the label did
+not.
 
 The standing consequence, stated once so it is not rediscovered each time: **no historical result
 this project produces can have its survivorship exposure confirmed.** Results may still be produced,

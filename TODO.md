@@ -113,14 +113,30 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       return series) · PR-004 (needs ~100 journalled trades) · PR-006 (needs a forward test).
 - [ ] **`[c]` Prereg id-reservation has no gate** — three ids have already collided.
       `docs/prereg/README.md`:52 says "worth fixing if a third one appears." A third has appeared.
-- [ ] **`[v]` PR-002's verdict does not follow its own decision rule.** §6 permits `accept` only on
-      both countries; the third amendment (pre-run) says a single-market result takes the
-      `inconclusive` branch. `tools/run_pr002.py`:331-348 implements the percentile branches with no
-      country condition and emits `accept`. Fix the verdict to `INCONCLUSIVE`, drop
-      `validated:PR-002` from `regime.classifier_rule`, bar downstream use. Re-running is not
-      required to close the defect.
+- [x] **`[v]` PR-002's verdict corrected to `INCONCLUSIVE` — 2026-08-16, council-reviewed.**
+      §6 permits `accept` only on both countries; the third amendment (pre-run) assigned a
+      single-market result to the `inconclusive` branch; the runner implemented the percentile
+      thresholds with no country condition and emitted `accept`. Corrected in `PR-002.json` (original
+      verdict preserved) and in the report via `PR-008`'s strikethrough + Correction precedent.
+      `regime.classifier_rule` → **`assumed:PR-002`**; **the project now has zero `validated`
+      parameters**. `run_pr002.py` now encodes the condition, with a regression test proven to fail
+      when it is removed. Cascade fixed in CONSTRAINTS, GLOSSARY, REQUIREMENTS, PARAMETER_REGISTRY,
+      REGIME_SPEC, RULE_SPEC.
+      **The artifact was deliberately NOT regenerated:** `run_pr002.py` fetches the current directory
+      and current Yahoo history, so a re-run samples a different universe over a different window —
+      it would replace a reported result rather than reproduce it. Three of five council advisors
+      recommended re-running; that would have destroyed the evidence record.
 - [ ] **`[v]` PR-002's registered perturbations were not all run.** §5 registers threshold ±20%,
       1-bar execution delay, and cost stress. Only cost stress (1×/3×) is implemented in the runner.
+      **So the original `ACCEPT` rested on one of three registered robustness checks** — a defect
+      independent of the country condition, and not fixed by the 2026-08-16 correction. Needs a new
+      run, which means a new pre-registration: the runner cannot reproduce the 2026-08-02 sample.
+- [ ] **`[v]` Nothing binds a runner to its own pre-registration.** All five council reviewers
+      converged on this independently as the root cause. Gates 13/14 check that *documents* agree
+      with the result files; nothing checks that a *verdict* was derived using the branches and
+      perturbations its prereg registered. PR-002 failed both — wrong branch, 1 of 3 perturbations —
+      and every gate stayed green. The regression test added on 2026-08-16 pins PR-002 specifically;
+      a class-level conformance gate is the general fix and does not exist.
 
 ## 6. Code & gates
 

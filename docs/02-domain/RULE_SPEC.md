@@ -91,7 +91,8 @@ An object missing any of these is not a rule in this system's sense and may not 
 Two rows have no home in this tree at all. **`scope` exists nowhere as a field** — applicability is
 prose in every document that carries it, and `CONSTRAINTS.md` keeps USA and Canada separate by
 policy rather than by a field any object declares. **`evidence_status` exists for parameters and not
-for rules**: `regime.classifier_rule` carries `validated:PR-002` in `registry/parameters.yml`, but
+for rules**: `regime.classifier_rule` carries `assumed:PR-002` in `registry/parameters.yml` (it was
+`validated:PR-002` until 2026-08-16, when PR-002's verdict was corrected to `INCONCLUSIVE`), but
 that is the provenance of a *value*, not the standing of the rule that consumes it.
 
 ## 3. The record
