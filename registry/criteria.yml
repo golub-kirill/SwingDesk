@@ -12,9 +12,9 @@
 #
 # See docs/00-charter/SUCCESS_AND_KILL_CRITERIA.md.
 
-version: 1.1.0
-date: 2026-08-08
-status: ratified          # v1.0.0 owner-ratified 2026-08-02 and frozen; see amendments below
+version: 1.1.1
+date: 2026-08-15
+status: ratified          # v1.1.0 owner-ratified 2026-08-08 and frozen; see amendments below
 
 # Amendments are appended, never applied in place. v1.0.0's content stays exactly as ratified;
 # a later version may ADD a criterion, and may not edit one that has seen a result it governs.
@@ -31,6 +31,31 @@ amendments:
       made it a criterion that could never fire - the REQ-VALIDATION-001 shape, and one gate 3g
       cannot catch because the trigger references no parameter. The second clause fixes that: a
       kill criterion evadable by inaction is not a kill criterion.
+
+  - version: 1.1.1
+    date: 2026-08-15
+    status: ratified        # owner ratified 2026-08-15, in the same session that requested it
+    target: k.track_a_timebox.note
+    change: >-
+      Corrects a stale sentence in k.track_a_timebox's note (v1.1.0). Does not touch TRIGGER or
+      VALUE - both were already written to handle this exact case and needed no change. v1.1.0's
+      note text is left byte-for-byte as ratified, per this file's own header rule; see the
+      pointer comment at the field itself for where this correction lives.
+    note: >-
+      v1.1.0's note said "the clock has not started: no daily run is scheduled yet, and the owner
+      deferred scheduling on 2026-08-08." That was overtaken the next day. VERIFIED 2026-08-15
+      against data/daily_run.log and git history, not re-typed from memory: the Task Scheduler job
+      was created 2026-08-09 (two runs logged that evening). Its first 18:30 scheduled attempt,
+      2026-08-10, failed on batteries and left no log entry near the window (commit 664e84a) - the
+      exact failure the wrapper's own header warns about, arriving on day one. Clean scheduled-window
+      runs are logged 2026-08-11 through 2026-08-14 (`tools/track_a_streak.py`: 4/20 as of this
+      writing). So the clock DID start: first scheduled daily run 2026-08-09, per the trigger's own
+      wording. The 120-day branch of k.track_a_timebox governs; the 180-day-from-ratification
+      fallback is moot and stays on record as what it was, not deleted.
+      The same stale sentence was independently duplicated in prose in
+      `docs/00-charter/SUCCESS_AND_KILL_CRITERIA.md` §5, corrected forward there in this same change
+      using this file's own §10.5 convention (strike through, do not silently rewrite) rather than
+      as a second, disconnected governance track for one fact.
 
 # ---------------------------------------------------------------------------
 # Track A - is the system sound?
@@ -190,6 +215,9 @@ kill:
     status: ratified
 
   - id: k.track_a_timebox
+    # NOTE BELOW IS STALE as of 2026-08-15: it says the clock has not started. It has - see the
+    # v1.1.1 amendment above for the correction and its evidence. Left untouched, byte-for-byte,
+    # per this file's own header rule; the amendment is the record, this comment is a pointer to it.
     scope: project
     trigger: >-
       Track A's four run-measurable criteria (a.run_completes, a.decisions_coded,

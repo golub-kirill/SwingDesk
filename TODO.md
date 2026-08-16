@@ -54,10 +54,14 @@ pass from the main checkout, 27 + 2 `UNAVAILABLE` from a worktree without `data/
 
 Each of these is a silent wrong-answer generator: a session reads one, acts, and is wrong.
 
-- [ ] **`[v]` `registry/criteria.yml`:222 states a now-false fact inside a ratified file** —
-      *"The clock has not started: no daily run is scheduled yet."* Scheduling was reversed 08-09 and
-      `data/daily_run.log` proves runs since. Ratified files cannot be edited in place → **needs an
-      amendment (v1.1.1), not a fix.**
+- [x] **`[v]` `registry/criteria.yml`:222's stale note — fixed 2026-08-15 via v1.1.1 amendment.**
+      Council-reviewed (5 advisors + peer review); one response's recommendation was flagged by the
+      safety layer for arguing to edit the ratified note in place, and 3 of 5 peer reviewers
+      independently converged on the same objection blind to the flag. v1.1.0's note left
+      byte-for-byte untouched; a comment (not a data field) points to the v1.1.1 entry, which carries
+      the verified correction with its evidence. Same fix applied to
+      `docs/00-charter/SUCCESS_AND_KILL_CRITERIA.md`:154 via `AGENTS.md` §10.5's own
+      strikethrough-and-append convention. All 29 gates pass.
 - [ ] **`[c]` G0 status.** `CONSTRAINTS.md`:150 says ratifying the remaining `criteria.yml` values
       "closes G0"; `HANDOFF.md` §2 says G0 is closed.
 - [ ] **`[c]` The 120-day Track A clock.** `SUCCESS_AND_KILL_CRITERIA.md`:154 says "has not started";

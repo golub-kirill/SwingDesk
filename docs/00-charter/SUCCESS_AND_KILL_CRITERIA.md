@@ -151,7 +151,15 @@ the schedule is a legitimate owner decision — it was taken deliberately, with 
 it must not do is quietly become permanent while a kill criterion sits in a ratified file looking
 like protection.
 
-**The 180-day clock is running from 2026-08-08.** The 120-day clock has not started.
+~~**The 180-day clock is running from 2026-08-08.** The 120-day clock has not started.~~
+
+**CORRECTED 2026-08-15.** The 120-day clock started 2026-08-09, the first scheduled daily run
+(`data/daily_run.log`, verified against `git log`; the run's first scheduled attempt failed on
+batteries the next day, commit `664e84a` — a data-tier gap, not a scheduling one, and not what this
+clock measures). The 180-day fallback above never engaged and is now moot. Full evidence in
+`registry/criteria.yml` v1.1.1. The struck line is not deleted: it was true when it was written, on
+what was then known, and this file corrects forward rather than silently rewriting (`AGENTS.md`
+§10.5).
 
 **Three Track A criteria sit outside the box**: process compliance core and overall, and no critical
 violations. All three require *taken trades*, whose pace is the owner's trading cadence rather than
