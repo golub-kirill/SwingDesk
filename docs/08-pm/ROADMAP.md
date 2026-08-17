@@ -33,7 +33,7 @@ known, and what is known is mostly negative.
 
 | Capability | State |
 |---|---|
-| a single command produces a dated report | **done** — `swingdesk scan` |
+| a single command produces a dated report | **done** — `swingdesk scan`, which since 2026-08-16 also *persists* it: one file per run under `<data>/reports/`, named for the `run_id`. Until then this row was true only of rendering — the report went to stdout, `daily_run.cmd` redirected it into an append-only log that interleaves three programs and rotates at 50MB, and nothing dated survived. **Still text, not the HTML/PDF `PRODUCT_SURFACES` §3.1 names**, which waits for one renderer with two backends rather than a second rendering path |
 | every displayed number traces to a component with provenance and validation status | **done** for the components that exist; the trace is carried by `ObservationSeries`, not reconstructed |
 | the whole run is reproducible from its manifest | **done** — replay is a merge gate |
 | every candidate carries `Trade`/`Watch`/`Skip`/`Pause` with a reason code | **done** — asserted by test and by the journal's uncoded-refusal count |

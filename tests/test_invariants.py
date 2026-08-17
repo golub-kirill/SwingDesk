@@ -129,6 +129,24 @@ def test_stop_at_or_above_entry_always_refuses(entry: Decimal, stop: Decimal) ->
     assert result.code == "STOP"
 
 
+@given(
+    entry=st.decimals(min_value=Decimal("0.01"), max_value=10_000, places=2),
+    stop=st.decimals(min_value=-500, max_value=0, places=2),
+)
+@settings(max_examples=100, deadline=None)
+def test_a_nonpositive_stop_always_refuses(entry: Decimal, stop: Decimal) -> None:
+    """A stop must be a price, and `stop < entry` does not make it one.
+
+    A zero or negative stop passed the entry check, produced a risk-per-share larger than the entry
+    price, and sized against it. It is reachable: the stop is `entry - multiple * atr`, so any
+    instrument whose ATR exceeds half its price at a 2.0 multiple crosses zero, and
+    `universe.min_price` of 5.00 does not exclude those.
+    """
+    result = size_long(entry, stop, "USD", _registry())
+    assert isinstance(result, Refusal)
+    assert result.code == "STOP"
+
+
 @given(net=st.decimals(min_value=-10_000, max_value=10_000, places=2))
 @settings(max_examples=100, deadline=None)
 def test_r_denominator_is_the_planned_risk(net: Decimal) -> None:
@@ -257,6 +275,53 @@ def test_a_nonpositive_fx_rate_refuses() -> None:
                        _registry(**{"account.fx_rate_cad": "0"}))
     assert isinstance(result, Refusal)
     assert result.parameter_id == "account.fx_rate_cad"
+
+
+# ------------------------------------------- the two denominators are one, added 2026-08-17
+
+
+@given(
+    entry=st.decimals(min_value=1, max_value=10_000, places=2),
+    distance=st.decimals(min_value=Decimal("0.05"), max_value=500, places=2),
+)
+@settings(max_examples=200, deadline=None)
+def test_sizing_and_position_agree_on_the_denominator(entry: Decimal, distance: Decimal) -> None:
+    """One R denominator, across the module boundary it was broken across.
+
+    `size_long` computes `entry - stop + costs` and freezes it as `planned_risk`;
+    `Position.initial_risk_per_share` recomputes the same quantity from its own stored fields. Until
+    2026-08-16 the second omitted costs, so the two disagreed by the cost fraction - always in the
+    flattering direction, on the statistic the whole validation programme is denominated in.
+
+    Nothing asserted the agreement. Both sides were separately correct-looking and the defect lived
+    in the gap between two modules, which is where a per-module test cannot see. So this asserts the
+    equality itself rather than either value: whatever the cost model does, a position built from a
+    sizing result must report the risk that sizing planned.
+    """
+    from swingdesk.contracts.position import Position
+
+    sized = size_long(entry, entry - distance, "USD", _registry())
+    if isinstance(sized, Refusal):
+        return
+    assume(sized.shares > 0)
+
+    position = Position(
+        position_id="POS-1", version=1, instrument_id="TEST.1", opened_on=date(2026, 1, 2),
+        entry_price=sized.entry, shares=sized.shares, initial_stop=sized.stop,
+        current_stop=sized.stop, initial_costs_per_share=sized.costs_per_share,
+        knowledge_time=datetime(2026, 1, 2, tzinfo=UTC),
+    )
+
+    assert position.initial_risk_per_share == sized.risk_per_share
+
+    # The whole-position totals agree TO THE CENT, not exactly, and the gap is asymmetric
+    # quantization rather than disagreement: `size_long` quantizes `planned_risk` to cents,
+    # `Position.initial_risk` multiplies out at full precision. So `r_multiple` (net / planned_risk,
+    # whole-position dollars) and `Position.r_at` (per-share / per-share) are two formulas for one
+    # quantity and differ in about the sixth decimal place. Immaterial to any decision, and recorded
+    # in TODO.md rather than fixed here: choosing which one is authoritative is a small design
+    # decision, and this PR already changes two frozen files.
+    assert abs(position.initial_risk - sized.planned_risk) < Decimal("0.01")
 
 
 # ------------------------------------------------------------------------ ATR
