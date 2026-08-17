@@ -323,8 +323,27 @@ is the gap the council's suspend-research call (§1) is about, and the build ord
       stop move proposed on a stale observation stays answerable indefinitely, so an owner
       returning after a week can approve a trail computed against week-old bars. Needs a rule for
       how long a proposal stands.
-- [ ] **6. US-011 (fills recorded, open risk recomputed across the book) has zero implementation,**
-      not even a stub.
+- [x] **6. US-011 — built 2026-08-16.** `swingdesk record-fill POS-N SEQ --price --shares
+      --commission` records what the broker actually did. All three clauses:
+      **(a) fill price, shares, commission and slippage recorded** — new `Fill` contract and a
+      `fills` table keyed on the approved action it settles, so a fill cannot exist for something
+      nobody approved (D6 from the far side of the trade). An unapproved *or rejected* action is
+      refused.
+      **(b) open risk recomputed across the whole book, never decremented** —
+      `PositionStore.open_risk_as_of()` sums the latest version of every open position. Tested
+      against a partial exit *and* a trailed stop at once: a decremented running total would still
+      read the original 250 minus something and would not know the stop had moved.
+      **(c) slippage in R against the ORIGINALLY planned risk** — the denominator never moves,
+      so the same dollar miss does not look worse as a position is scaled out.
+      **The planned price comes from the ACTION, never from the reporter.** A reference supplied
+      after seeing the fill is one that can always be made to look acceptable.
+      **And it refuses to compute slippage when the plan named no price.** `EXIT_NOW` is proposed
+      for two different reasons: a broken stop, where the stop *is* the reference; and a maximum
+      holding period, which is an exit at market and names no price at all. Reporting `0.00` for
+      the second would be a manufactured measurement — and it would flatter the strategy, because
+      unknown slippage is not absent slippage. `slippage_per_share` returns `None`, and the CLI
+      prints `UNAVAILABLE` with the reason. 12 tests, each confirmed red against the unbuilt
+      feature.
 
 **An idea from the council's peer review, not yet scoped:** route items 1 and 4-6 through a path that
 can carry shadow/paper positions, so the chain can prove itself closes end-to-end without waiting on

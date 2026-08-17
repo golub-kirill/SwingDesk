@@ -5,11 +5,14 @@ from __future__ import annotations
 import argparse
 import sys
 from datetime import UTC
+from decimal import Decimal
 from pathlib import Path
+
+from pydantic import ValidationError
 
 from swingdesk.application import universe as universe_builder
 from swingdesk.application.pipeline import run
-from swingdesk.contracts.position import ActionStatus
+from swingdesk.contracts.position import ActionStatus, Fill
 from swingdesk.contracts.reference import Instrument
 from swingdesk.contracts.run import RunMode
 from swingdesk.journal_evidence.journal import Journal
@@ -90,7 +93,25 @@ def main(argv: list[str] | None = None) -> int:
     respond.add_argument("--as-of", default=None,
                          help="ISO instant this answer is recorded at; defaults to now")
 
+    fill = sub.add_parser(
+        "record-fill",
+        help="report what the broker actually did for an approved action (US-011)",
+    )
+    fill.add_argument("position_id")
+    fill.add_argument("sequence", type=int, help="the approved action this settles")
+    fill.add_argument("--price", type=Decimal, required=True, help="the actual fill price")
+    fill.add_argument("--shares", type=int, required=True, help="shares actually transacted")
+    fill.add_argument("--commission", type=Decimal, required=True,
+                      help="as charged, not the modelled estimate")
+    fill.add_argument("--filled-on", default=None, help="ISO date; defaults to today")
+    fill.add_argument("--data", type=Path, default=DEFAULT_DATA)
+    fill.add_argument("--as-of", default=None,
+                     help="ISO instant this is recorded at; defaults to now")
+
     args = parser.parse_args(argv)
+
+    if args.command == "record-fill":
+        return _record_fill(args)
 
     if args.command == "pending":
         return _pending(args)
@@ -123,6 +144,69 @@ def main(argv: list[str] | None = None) -> int:
         return code
 
     return 1
+
+
+def _record_fill(args: argparse.Namespace) -> int:
+    """Record what the broker actually did, and report the slippage against what was planned.
+
+    The planned price is taken from the ACTION, not from the owner - a reference the reporter
+    supplies is a reference they can choose after seeing the fill, which would make slippage a
+    number that always looks acceptable.
+
+    For a stop exit the plan named a price and the stop is it. For a time exit it named none, and
+    this says so rather than reporting 0.00: see `Fill.slippage_per_share`.
+    """
+    from datetime import date as date_cls
+    from datetime import datetime
+
+    clock = (
+        FixedClock(datetime.fromisoformat(args.as_of).replace(tzinfo=UTC))
+        if args.as_of
+        else SystemClock()
+    )
+    now = clock.now()
+    filled_on = date_cls.fromisoformat(args.filled_on) if args.filled_on else now.date()
+
+    with PositionStore(args.data / "positions.duckdb") as positions:
+        action = positions.proposal_at(args.position_id, args.sequence)
+        if action is None:
+            print(f"fill REFUSED  no action {args.position_id} #{args.sequence}", file=sys.stderr)
+            return 2
+
+        # `old_stop` is the plan's price for a stop exit and is carried on every proposal. A time
+        # exit sets it too, but its reason code says the holding period ran out - it did not plan
+        # to sell AT the stop, so that stop is not a reference this fill slipped against.
+        planned = action.old_stop if (action.reason_code or "").lower().startswith("stop") else None
+
+        try:
+            positions.record_fill(Fill(
+                position_id=args.position_id, sequence=args.sequence, filled_on=filled_on,
+                shares=args.shares, price=args.price, commission=args.commission,
+                planned_price=planned, recorded_at=now,
+            ))
+        except (ValueError, ValidationError) as refused:
+            print(f"fill REFUSED  {refused}", file=sys.stderr)
+            return 2
+
+        recorded = positions.fills_for(args.position_id)[-1]
+        print(f"recorded fill: {args.position_id} #{args.sequence}  "
+              f"{recorded.shares} sh @ {recorded.price}, commission {recorded.commission}")
+
+        history = positions.history(args.position_id)
+        slip = recorded.slippage_per_share
+        if slip is None:
+            print("  slippage       UNAVAILABLE - the plan named no price to slip against")
+            print("                 (a maximum-holding-period exit is at market, not at the stop)")
+        else:
+            in_r = recorded.slippage_r(history[0].initial_risk_per_share) if history else None
+            print(f"  planned        {recorded.planned_price}")
+            print(f"  slippage       {slip}/share"
+                  + (f"  = {in_r:.4f}R against the ORIGINAL denominator" if in_r is not None
+                     else ""))
+
+        # US-011: recomputed across the whole book, never decremented.
+        print(f"  open risk      {positions.open_risk_as_of(now)} across the book, recomputed")
+    return 0
 
 
 def _pending(args: argparse.Namespace) -> int:

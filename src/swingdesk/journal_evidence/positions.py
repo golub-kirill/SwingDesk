@@ -19,7 +19,13 @@ from typing import Any
 
 import duckdb
 
-from swingdesk.contracts.position import ActionKind, ActionStatus, ManagementAction, Position
+from swingdesk.contracts.position import (
+    ActionKind,
+    ActionStatus,
+    Fill,
+    ManagementAction,
+    Position,
+)
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS positions (
@@ -72,6 +78,24 @@ CREATE TABLE IF NOT EXISTS management_responses (
     responded_at TIMESTAMPTZ NOT NULL,
     choice       VARCHAR NOT NULL,
     reason       VARCHAR NOT NULL,
+    PRIMARY KEY (position_id, sequence)
+);
+
+-- What the broker actually did (US-011). Keyed on the approved action it settles, so a fill cannot
+-- exist for something nobody approved - D6 from the far side of the trade.
+--
+-- `planned_price` is nullable and the null MEANS something: an exit on a maximum holding period
+-- names no price to slip against, and recording 0.00 there would be a manufactured measurement.
+-- See `contracts.position.Fill.slippage_per_share`.
+CREATE TABLE IF NOT EXISTS fills (
+    position_id   VARCHAR NOT NULL,
+    sequence      BIGINT NOT NULL,
+    filled_on     DATE NOT NULL,
+    shares        INTEGER NOT NULL,
+    price         DECIMAL(18, 6) NOT NULL,
+    commission    DECIMAL(18, 6) NOT NULL,
+    planned_price DECIMAL(18, 6),
+    recorded_at   TIMESTAMPTZ NOT NULL,
     PRIMARY KEY (position_id, sequence)
 );
 """
@@ -321,6 +345,78 @@ class PositionStore:
         if row is None:
             return None
         return Response(responded_at=row[0], choice=ActionStatus(row[1]), reason=row[2])
+
+    def record_fill(self, fill: Fill) -> None:
+        """Append what the broker actually did. Refuses anything the owner did not approve.
+
+        That refusal is D6 seen from the far side of the trade: an approval is what makes an action
+        legitimate, so a fill settling an unapproved - or unanswered, or rejected - proposal is
+        either a mis-keyed sequence or an action taken outside the system. Both are worth stopping.
+        """
+        answer = self.response_for(fill.position_id, fill.sequence)
+        if answer is None:
+            raise ValueError(
+                f"{fill.position_id} #{fill.sequence} has no recorded response. A fill settles an "
+                f"APPROVED action; nothing here was approved."
+            )
+        if answer.choice is not ActionStatus.APPROVED:
+            raise ValueError(
+                f"{fill.position_id} #{fill.sequence} was {answer.choice.value}, not approved. "
+                f"A fill against a rejected proposal is an action taken outside this system."
+            )
+        existing = self._connection.execute(
+            "SELECT 1 FROM fills WHERE position_id = ? AND sequence = ?",
+            [fill.position_id, fill.sequence],
+        ).fetchone()
+        if existing is not None:
+            raise ValueError(
+                f"{fill.position_id} #{fill.sequence} is already filled. Fills are append-only; a "
+                f"correction is a new record against a new action, never an edit."
+            )
+        self._connection.execute(
+            "INSERT INTO fills VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            [
+                fill.position_id, fill.sequence, fill.filled_on, fill.shares, fill.price,
+                fill.commission, fill.planned_price, fill.recorded_at,
+            ],
+        )
+
+    def fills_for(self, position_id: str) -> list[Fill]:
+        rows = self._connection.execute(
+            """
+            SELECT position_id, sequence, filled_on, shares, price, commission, planned_price,
+                   recorded_at
+            FROM fills WHERE position_id = ? ORDER BY sequence
+            """,
+            [position_id],
+        ).fetchall()
+        return [
+            Fill(
+                position_id=r[0], sequence=int(r[1]),
+                filled_on=r[2] if isinstance(r[2], date) else date.fromisoformat(str(r[2])),
+                shares=r[3], price=Decimal(str(r[4])), commission=Decimal(str(r[5])),
+                planned_price=None if r[6] is None else Decimal(str(r[6])),
+                recorded_at=r[7],
+            )
+            for r in rows
+        ]
+
+    def open_risk_as_of(self, knowledge_time: datetime) -> Decimal:
+        """Open risk across the WHOLE BOOK, recomputed from current stops (`US-011`).
+
+        Recomputed, never decremented - the same rule `Position.open_risk` follows per position,
+        applied to the book. A running total that subtracted each exit as it happened would drift
+        from the stops that define it, and would be wrong in the direction that matters: it would
+        under-report risk after a stop was widened, which cannot happen here, or over-report it
+        after a trail, which makes the book look more dangerous than it is and invites overriding
+        the rule.
+
+        Sums the LATEST version of every open position, so a partially exited position contributes
+        its remaining shares at its current stop, not its original size.
+        """
+        return sum(
+            (p.open_risk for p in self.open_as_of(knowledge_time)), start=Decimal(0)
+        )
 
     def pending_approvals(self) -> int:
         """Proposals awaiting the owner. Reported on every run - a proposal nobody answered is not
