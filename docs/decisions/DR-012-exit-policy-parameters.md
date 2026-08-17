@@ -169,7 +169,40 @@ constant.
    one reset, not two.** Splitting them across two evenings would reset the counter twice for a single
    transition. That reading is the owner's to confirm, since the rule is theirs; §9 asks for it.
 
-## 9. What the owner is being asked
+## 9. Measured, not argued — both halves of §1 were run
+
+Run on the post-PR-#9 pipeline (`6e85e54`), against a **copy** of the real bar store, pinned with
+`--as-of 2026-08-14T21:00:00Z`, same three instruments both times. The live stores were never opened
+for write.
+
+| | Both parameters `unset` | Both set to 2.0 / 20 |
+|---|---|---|
+| Trade / Watch / Skip / Pause | 0 / **0** / **3** / 0 | 0 / **3** / **0** / 0 |
+| skip cause | `RISK [exit.atr_stop_multiple]` ×3 | none |
+| `output_hash` | `a441a15e`-run | `2e54048bd923a549` |
+
+**Unset**, each candidate carried the coded refusal in full:
+
+> `Skip [RISK]` — no exit policy: the ATR stop multiple and the maximum holding period are what turn
+> an observation into a stop, and sizing against an assumed one is the silent-default this registry
+> exists to prevent
+
+The funnel printed `skip causes: RISK [exit.atr_stop_multiple] 3`, and the checklist reported `E17`
+FAIL rather than a silent gap. So the fail-closed path §1 predicts is not a prediction — it is
+observed, and it is legible in the report rather than merely correct.
+
+**Set**, all three sized and reached `Watch — sized; awaiting a trigger`. Two things worth checking
+in the numbers, both of which hold:
+
+- The stop is the ratified distance. AAPL: entry `305.589996`, stop `290.3167903…` — exactly
+  `305.589996 − 2.0 × 7.6366`. Not `1 × ATR`, which is what the candidate path used before PR #9.
+- **The R denominator includes costs.** AAPL's `risk per share` reads `16.8011…`, not the
+  `15.2732` that `entry − stop` alone gives. The difference is `1.5279` = 50bp × 305.59, DR-010's
+  proportional term. `planned risk 84.01 <- R denominator, frozen`.
+
+This is what ratification buys and what it costs, on real bars, before anyone signs it.
+
+## 10. What the owner is being asked
 
 Three things, and only the first is required to unblock the chain:
 
