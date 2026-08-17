@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from swingdesk.application.pipeline import RunResult
+from swingdesk.contracts.position import ActionKind as _ActionKind
 from swingdesk.contracts.run import RunManifest
 from swingdesk.presentation import cli, notify
 
@@ -402,3 +403,74 @@ def test_answering_twice_is_refused_at_the_cli(tmp_path, capsys) -> None:
     assert code == 2
     assert "already answered" in capsys.readouterr().err
     assert [p.version for p in _history(root)] == [1, 2], "the second answer applied nothing"
+
+
+# ---------------------------------------------------- record-fill (US-011, TODO.md 6b item 6)
+
+
+def _approved(tmp_path, *, reason_code="STOP"):
+    """A position with one APPROVED EXIT_NOW, ready to be filled."""
+    root = _seeded(tmp_path, kind=_ActionKind.EXIT_NOW, reason_code=reason_code,
+                   reason="stop 290 touched", old_stop=Decimal(290), new_stop=None)
+    cli.main(["respond", "POS-1", "1", "--approve", "--reason", "out", "--data", str(root)])
+    return root
+
+
+def _fills(tmp_path):
+    from swingdesk.journal_evidence.positions import PositionStore
+
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        return store.fills_for("POS-1")
+
+
+def test_a_stop_exit_fill_reports_slippage_in_r(tmp_path, capsys) -> None:
+    """The planned price comes from the ACTION, never from the reporter - a reference supplied
+    after seeing the fill is one that can always be made to look acceptable."""
+    root = _approved(tmp_path)
+    capsys.readouterr()
+
+    code = cli.main(["record-fill", "POS-1", "1", "--price", "289.40", "--shares", "8",
+                     "--commission", "1.25", "--data", str(root)])
+
+    assert code == 0
+    recorded = _fills(root)[0]
+    assert recorded.planned_price == Decimal(290)
+    assert recorded.slippage_per_share == Decimal("0.60")
+    out = capsys.readouterr().out
+    assert "R against the ORIGINAL denominator" in out
+    assert "open risk" in out, "US-011 wants the book, recomputed"
+
+
+def test_a_time_exit_fill_refuses_to_invent_slippage(tmp_path, capsys) -> None:
+    """A maximum-holding-period exit is at market. 0.00 would be a manufactured measurement, and
+    it would flatter the strategy: unknown slippage is not absent slippage."""
+    root = _approved(tmp_path, reason_code="TIME")
+    capsys.readouterr()
+
+    code = cli.main(["record-fill", "POS-1", "1", "--price", "311.20", "--shares", "8",
+                     "--commission", "1.00", "--data", str(root)])
+
+    assert code == 0
+    assert _fills(root)[0].planned_price is None
+    assert _fills(root)[0].slippage_per_share is None
+    assert "UNAVAILABLE" in capsys.readouterr().out
+
+
+def test_a_fill_for_an_unapproved_action_is_refused(tmp_path, capsys) -> None:
+    """D6 from the far side of the trade."""
+    root = _seeded(tmp_path, kind=_ActionKind.EXIT_NOW, reason_code="STOP",
+                   reason="stop touched", old_stop=Decimal(290), new_stop=None)
+
+    code = cli.main(["record-fill", "POS-1", "1", "--price", "289", "--shares", "8",
+                     "--commission", "1", "--data", str(root)])
+
+    assert code == 2
+    assert "no recorded response" in capsys.readouterr().err
+    assert _fills(root) == [], "nothing may be recorded against an unapproved action"
+
+
+def test_a_fill_for_an_action_that_does_not_exist_is_refused(tmp_path, capsys) -> None:
+    code = cli.main(["record-fill", "POS-1", "99", "--price", "1", "--shares", "1",
+                     "--commission", "0", "--data", str(_approved(tmp_path))])
+    assert code == 2
+    assert "no action" in capsys.readouterr().err

@@ -17,6 +17,7 @@ from swingdesk.application.pipeline import run
 from swingdesk.contracts.position import (
     ActionKind,
     ActionStatus,
+    Fill,
     ManagementAction,
     Position,
 )
@@ -402,3 +403,106 @@ def test_proposal_at_reads_by_sequence_not_by_list_position(store) -> None:
 
     assert store.proposal_at("POS-1", 2).new_stop == Decimal(98)
     assert store.proposal_at("POS-1", 4) is None
+
+
+# ------------------------------------------------------- fills (US-011, TODO.md 6b item 6)
+
+
+def _approved_exit(store, *, reason_code: str = "STOP") -> None:
+    """A position with one APPROVED EXIT_NOW on it, ready to be filled."""
+    store.record(_position())
+    store.propose(ManagementAction(
+        position_id="POS-1", proposed_at=AS_OF, kind=ActionKind.EXIT_NOW,
+        reason_code=reason_code, reason="stop touched", old_stop=Decimal(96)))
+    store.respond("POS-1", 1, choice=ActionStatus.APPROVED, reason="out", at=AS_OF)
+
+
+def _fill(**kwargs) -> Fill:
+    base = dict(position_id="POS-1", sequence=1, filled_on=date(2026, 1, 15), shares=50,
+                price=Decimal("95.40"), commission=Decimal("1.25"),
+                planned_price=Decimal(96), recorded_at=AS_OF)
+    base.update(kwargs)
+    return Fill(**base)
+
+
+def test_slippage_is_measured_against_the_original_denominator(store) -> None:
+    """US-011. The denominator never moves - not after a trail, not after a scale-out. Measuring
+    against a shrinking one would make the same dollar miss look worse as a position is reduced."""
+    _approved_exit(store)
+    store.record_fill(_fill())
+
+    recorded = store.fills_for("POS-1")[0]
+    assert recorded.slippage_per_share == Decimal("0.60"), "planned 96, filled 95.40"
+    # _position()'s R denominator is entry 100 - stop 96 = 4.
+    assert recorded.slippage_r(Decimal(4)) == Decimal("0.15")
+
+
+def test_slippage_refuses_when_the_plan_named_no_price(store) -> None:
+    """A maximum-holding-period exit is at market. Reporting 0.00 slippage would be a manufactured
+    measurement, and it would flatter the strategy - unknown slippage is not absent slippage."""
+    _approved_exit(store, reason_code="TIME")
+    store.record_fill(_fill(planned_price=None))
+
+    recorded = store.fills_for("POS-1")[0]
+    assert recorded.slippage_per_share is None, "None is a refusal, never a zero"
+    assert recorded.slippage_r(Decimal(4)) is None
+
+
+def test_slippage_in_r_refuses_a_non_positive_denominator() -> None:
+    with pytest.raises(ValueError, match="not positive"):
+        _fill().slippage_r(Decimal(0))
+
+
+def test_a_fill_requires_an_approved_action(store) -> None:
+    """D6 from the far side of the trade: a fill settling something nobody approved is either a
+    mis-keyed sequence or an action taken outside this system."""
+    store.record(_position())
+    store.propose(ManagementAction(
+        position_id="POS-1", proposed_at=AS_OF, kind=ActionKind.EXIT_NOW,
+        reason_code="STOP", reason="stop touched", old_stop=Decimal(96)))
+
+    with pytest.raises(ValueError, match="no recorded response"):
+        store.record_fill(_fill())
+
+
+def test_a_fill_against_a_rejected_proposal_is_refused(store) -> None:
+    store.record(_position())
+    store.propose(ManagementAction(
+        position_id="POS-1", proposed_at=AS_OF, kind=ActionKind.EXIT_NOW,
+        reason_code="STOP", reason="stop touched", old_stop=Decimal(96)))
+    store.respond("POS-1", 1, choice=ActionStatus.REJECTED, reason="holding", at=AS_OF)
+
+    with pytest.raises(ValueError, match="not approved"):
+        store.record_fill(_fill())
+
+
+def test_a_fill_is_recorded_once(store) -> None:
+    _approved_exit(store)
+    store.record_fill(_fill())
+    with pytest.raises(ValueError, match="already filled"):
+        store.record_fill(_fill(price=Decimal(99)))
+
+
+def test_open_risk_is_recomputed_across_the_book_not_decremented(store) -> None:
+    """US-011's second clause. Two positions, one partially exited: the book's open risk is the sum
+    of what the CURRENT stops imply, never a running total with the exited part subtracted."""
+    store.record(_position())                                   # 50 sh, entry 100, stop 96 -> 200
+    store.record(_position(position_id="POS-2", entry_price=Decimal(50),
+                           initial_stop=Decimal(45), current_stop=Decimal(45), shares=10))  # -> 50
+    assert store.open_risk_as_of(AS_OF) == Decimal(250)
+
+    # POS-1 scales out to 20 shares and trails its stop to 98.
+    store.record(_position(version=2, shares=20, current_stop=Decimal(98),
+                           knowledge_time=datetime(2026, 1, 10, tzinfo=UTC)))
+
+    # Recomputed: (100-98)*20 + (50-45)*10 = 40 + 50. A decremented total would still read 250
+    # minus something, and would not know the stop moved at all.
+    assert store.open_risk_as_of(AS_OF) == Decimal(90)
+
+
+def test_a_closed_position_contributes_no_open_risk(store) -> None:
+    store.record(_position())
+    assert store.open_risk_as_of(AS_OF) == Decimal(200)
+    store.record(_position(version=2, closed_on=date(2026, 1, 14),
+                           knowledge_time=datetime(2026, 1, 14, tzinfo=UTC)))
+    assert store.open_risk_as_of(AS_OF) == Decimal(0)
