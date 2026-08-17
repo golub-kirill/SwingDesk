@@ -202,7 +202,8 @@ def main() -> int:
     print(f"{'cell':28} {'recorded':>9} {'replayed':>9} {'delta':>7}   "
           f"{'recorded mean R':>16} {'replayed mean R':>16} {'delta':>10}")
 
-    mismatched = 0
+    by_count = 0
+    by_mean_r = 0
     # `regimes[regime]["arms"][PERIOD][ARM]` - period nests OUTSIDE arm. Read the other way round
     # first, which produced a confident "MISMATCH in 20 cells" that was entirely this loop: every
     # lookup missed, every cell reported zero replayed trades, and the tool would have published a
@@ -219,16 +220,28 @@ def main() -> int:
                     sum((t.net_r for t in trades), start=Decimal(0)) / len(trades)
                     if trades else Decimal(0)
                 )
+                flag = ""
                 if was_n != now_n:
-                    mismatched += 1
+                    by_count += 1
+                    flag = "  <- COUNT"
+                # `TODO.md` 2 says "if mean-R does not match". EXACTLY, and this is deliberately
+                # not a tolerance: the first version of this loop compared only trade counts and
+                # printed "every cell matched" while four cells disagreed on the very number the
+                # instruction names - a check reporting success about something it never looked at.
+                # Choosing a tolerance here would be choosing how much disagreement to hide, and
+                # that is the owner's call to make with the deltas in front of them, not this
+                # tool's to make silently.
+                elif was_r != now_r:
+                    by_mean_r += 1
+                    flag = "  <- MEAN R"
                 print(f"{regime}/{arm}/{period:<8}{'':6} {was_n:>9} {now_n:>9} {now_n - was_n:>7}   "
-                      f"{was_r:>16.6f} {now_r:>16.6f} {now_r - was_r:>10.6f}")
+                      f"{was_r:>16.6f} {now_r:>16.6f} {now_r - was_r:>10.6f}{flag}")
 
     print()
-    if mismatched:
-        print(f"MISMATCH in {mismatched} cell(s). `TODO.md` 2's standing instruction is to STOP "
-              f"and report, not to publish a trade log that disagrees with the result it claims "
-              f"to belong to.")
+    if by_count or by_mean_r:
+        print(f"MISMATCH: {by_count} cell(s) on trade count, {by_mean_r} on mean R.")
+        print("`TODO.md` 2's standing instruction is to STOP and report, not to publish a trade "
+              "log that disagrees with the result it claims to belong to.")
         if args.write:
             print("--write was passed and is being IGNORED for that reason.")
         return 1

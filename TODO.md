@@ -55,26 +55,28 @@ pass from the main checkout, 27 + 2 `UNAVAILABLE` from a worktree without `data/
 
 ## 2. Picked work
 
-- [ ] **`[v]` Task 8 — PR-005 trade-log replay. Tool built 2026-08-16; the log is NOT published,
-      per this item's own standing instruction.** `tools/run_pr005_replay.py` exists;
+- [ ] **`[v]` Task 8 — PR-005 trade-log replay. Tool built and gaps refilled 2026-08-16; the log
+      is still NOT published, on four cells.** `tools/run_pr005_replay.py` exists;
       `docs/prereg/results/PR-005-trades.csv` deliberately does not.
-      **The primary period reproduces EXACTLY.** All ten `primary` cells match on trade count and
-      on mean R to every displayed digit — 1x/NONE 2629 trades at 0.027947, and so on across five
-      arms and both cost regimes. For a study whose runner cannot re-sample its own universe, that
-      is a stronger result than it sounds.
-      **The holdout is short exactly one trade in all ten cells, and the cause is the local store,
-      not the study.** Eight of the 68 admitted instruments — `EYE`, `FBNC`, `IWY`, `LEG`, `NDSN`,
-      `SFST`, `VBK`, `VGK` — have no **2026-07-31** session locally, while the other 60 do and the
-      store holds 3,926 rows for that date overall. One signal on that missing final bar is absent
-      from every arm and both regimes: 5 × 2 = the ten cells, each −1. Mean-R deltas are 0.00003 to
-      0.0007, all consistent with one trade out of ~1,000.
-      **So the replay is blocked on a data gap that is itself worth fixing** — this is exactly what
-      `market_data/completeness.py` checks for on the daily path, found here on stored history.
-      Fixing it means re-fetching those eight and re-running; that writes to the live bar store,
-      so it is an owner call, not a side effect of a research task.
-      The tool refuses on drifted parameters, refuses on a partial sample, and **ignores `--write`
-      when any cell mismatches** — publishing a trade log that disagrees with the result it claims
-      to belong to is the one outcome this task must not produce.
+      **All 20 cells now match on trade count, and 16 of 20 match mean R EXACTLY** — to every
+      displayed digit, across five arms and both cost regimes, for a study whose runner cannot
+      re-sample its own universe. The whole `primary` period is exact.
+      **Four `holdout` cells still differ on mean R:** `1x/A` +0.000326, `1x/D` +0.000520,
+      `3x/A` +0.000323, `3x/D` +0.000516. Arms A and D only, both regimes, same trade counts — so
+      the same trades at slightly different net R, consistent with window-edge exits moving once
+      the final session existed. **All four deltas are positive**: the replay reads marginally
+      better than the record, and `1x/D/holdout` — the most positive cell PR-005 reported — is one
+      of them. A drift that flatters is worth naming even at 0.0005R.
+      **What the refetch found and fixed (owner-authorised write to the live bar store).** The gap
+      was three sessions, not one: **2026-07-21, 07-22 and 07-31** were missing for six of the
+      eight. 26 rows written; **no bar inside PR-005's window was revised** — the 15 revisions that
+      came with the fetch all landed on 2026-08-13/14, outside it.
+      **`LEG` and `NDSN` still have no 2026-07-31 bar and the vendor does not supply one.** Not a
+      fetch failure — refetched successfully, the session simply is not there, while 60 other
+      instruments have it. That is a standing data-quality fact about this source.
+      **Decision needed:** publish the log accepting a ≤0.00052R holdout drift on four cells, or
+      hold until the difference is explained trade by trade. The tool refuses `--write` while any
+      cell disagrees, so publishing requires a deliberate change, not a flag.
       *Still blocks PR-009, the exit card and the EDGAR backfill.*
 - [ ] **`[c]` UDR-004 — regime ontology.** Three candidate lists now: ТЗ's 8, course v5.0's 11,
       v7.0's 7 (`RECONCILIATION_PLAN.md` §5). Ties to `USER_STORIES.md`:304 (US-004 unsatisfiable
