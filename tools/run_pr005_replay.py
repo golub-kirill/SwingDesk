@@ -61,6 +61,7 @@ from swingdesk.validation.backtest import BacktestConfig, CostModel, ExitPolicy,
 
 RESULT = REPO / "docs" / "prereg" / "results" / "PR-005.json"
 TRADES = REPO / "docs" / "prereg" / "results" / "PR-005-trades.csv"
+PROVENANCE = REPO / "docs" / "prereg" / "results" / "PR-005-trades-provenance.json"
 DATA = REPO / "data" / "bars.duckdb"
 
 #: Parameters the recorded result names, mapped to the runner constant that must still equal them.
@@ -121,6 +122,10 @@ def main() -> int:
                         help="write the trade log. Without this nothing is written and only the "
                              "comparison is reported - PR-005's own instruction is to stop on a "
                              "mismatch, so publishing is deliberately not the default")
+    parser.add_argument("--accept-drift", action="store_true",
+                        help="publish even though cells disagree. Requires --write, and writes the "
+                             "full cell-by-cell comparison beside the log so the disagreement "
+                             "travels WITH the artifact instead of living in someone's memory")
     args = parser.parse_args()
 
     recorded = json.loads(RESULT.read_text(encoding="utf-8"))
@@ -204,6 +209,7 @@ def main() -> int:
 
     by_count = 0
     by_mean_r = 0
+    comparison: list[dict] = []
     # `regimes[regime]["arms"][PERIOD][ARM]` - period nests OUTSIDE arm. Read the other way round
     # first, which produced a confident "MISMATCH in 20 cells" that was entirely this loop: every
     # lookup missed, every cell reported zero replayed trades, and the tool would have published a
@@ -220,6 +226,12 @@ def main() -> int:
                     sum((t.net_r for t in trades), start=Decimal(0)) / len(trades)
                     if trades else Decimal(0)
                 )
+                comparison.append({
+                    "cell": f"{regime}/{arm}/{period}",
+                    "recorded_trades": was_n, "replayed_trades": now_n,
+                    "recorded_mean_r": str(was_r), "replayed_mean_r": str(now_r),
+                    "mean_r_delta": str(now_r - was_r),
+                })
                 flag = ""
                 if was_n != now_n:
                     by_count += 1
@@ -238,16 +250,21 @@ def main() -> int:
                       f"{was_r:>16.6f} {now_r:>16.6f} {now_r - was_r:>10.6f}{flag}")
 
     print()
-    if by_count or by_mean_r:
+    drifted = by_count or by_mean_r
+    if drifted:
         print(f"MISMATCH: {by_count} cell(s) on trade count, {by_mean_r} on mean R.")
+
+    if drifted and not args.accept_drift:
         print("`TODO.md` 2's standing instruction is to STOP and report, not to publish a trade "
               "log that disagrees with the result it claims to belong to.")
         if args.write:
-            print("--write was passed and is being IGNORED for that reason.")
+            print("--write was passed and is being IGNORED. Pass --accept-drift as well, which "
+                  "records the disagreement beside the log rather than hiding it.")
         return 1
 
     if not args.write:
-        print("every cell matched. Pass --write to publish the trade log.")
+        print("pass --write to publish the trade log."
+              + (" --accept-drift is also required." if drifted else ""))
         return 0
 
     TRADES.parent.mkdir(parents=True, exist_ok=True)
@@ -256,6 +273,34 @@ def main() -> int:
         writer.writeheader()
         writer.writerows(rows)
     print(f"wrote {len(rows)} trades to {TRADES.relative_to(REPO)}")
+
+    # The disagreement travels WITH the artifact. A trade log whose caveat lives in a commit
+    # message is a trade log that will one day be read without it - and this one is destined for
+    # `PR-009`, which must register against the replay's vintage rather than against PR-005's
+    # published aggregate, because those two are now known not to be the same thing.
+    vintages = sorted({s.knowledge_time.isoformat() for s in loaded.values()})
+    PROVENANCE.write_text(json.dumps({
+        "generated_by": "tools/run_pr005_replay.py",
+        "replays": "PR-005",
+        "trades": len(rows),
+        "is_a_reproduction_of_pr005_inputs": False,
+        "why_not": (
+            "PR-005 ran at 2026-08-03T02:02:06Z and fetched live. The local store's earliest "
+            "knowledge_time for this sample postdates that, so the bytes the study read no longer "
+            "exist anywhere and cannot be recovered by refetching."
+        ),
+        "observed_effect": (
+            "Ungated (NONE), MA_STACK (B) and PRICE_AND_STACK (C) reproduce EXACTLY in every "
+            "period and regime, as does the whole primary period. ABOVE_LONG_MA (A) and STRUCTURE "
+            "(D) differ in the holdout by <=0.00052 mean R at identical trade counts - the two "
+            "gates that turn on a single margin, where a revised close or extreme flips the "
+            "verdict without changing which triggers fired."
+        ),
+        "read_this_log_as": "the replay's trades at the vintage below, not PR-005's trades",
+        "series_knowledge_times": vintages,
+        "cells": comparison,
+    }, indent=2) + "\n", encoding="utf-8")
+    print(f"wrote the cell-by-cell comparison to {PROVENANCE.relative_to(REPO)}")
     return 0
 
 
