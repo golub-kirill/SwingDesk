@@ -55,9 +55,27 @@ pass from the main checkout, 27 + 2 `UNAVAILABLE` from a worktree without `data/
 
 ## 2. Picked work
 
-- [ ] **`[c]` Task 8 — PR-005 trade-log replay.** `tools/run_pr005_replay.py` +
-      `docs/prereg/results/PR-005-trades.csv`. Confirmed absent. Blocks PR-009, the exit card, the
-      EDGAR backfill. **If mean-R does not match the published aggregate, stop and report it.**
+- [ ] **`[v]` Task 8 — PR-005 trade-log replay. Tool built 2026-08-16; the log is NOT published,
+      per this item's own standing instruction.** `tools/run_pr005_replay.py` exists;
+      `docs/prereg/results/PR-005-trades.csv` deliberately does not.
+      **The primary period reproduces EXACTLY.** All ten `primary` cells match on trade count and
+      on mean R to every displayed digit — 1x/NONE 2629 trades at 0.027947, and so on across five
+      arms and both cost regimes. For a study whose runner cannot re-sample its own universe, that
+      is a stronger result than it sounds.
+      **The holdout is short exactly one trade in all ten cells, and the cause is the local store,
+      not the study.** Eight of the 68 admitted instruments — `EYE`, `FBNC`, `IWY`, `LEG`, `NDSN`,
+      `SFST`, `VBK`, `VGK` — have no **2026-07-31** session locally, while the other 60 do and the
+      store holds 3,926 rows for that date overall. One signal on that missing final bar is absent
+      from every arm and both regimes: 5 × 2 = the ten cells, each −1. Mean-R deltas are 0.00003 to
+      0.0007, all consistent with one trade out of ~1,000.
+      **So the replay is blocked on a data gap that is itself worth fixing** — this is exactly what
+      `market_data/completeness.py` checks for on the daily path, found here on stored history.
+      Fixing it means re-fetching those eight and re-running; that writes to the live bar store,
+      so it is an owner call, not a side effect of a research task.
+      The tool refuses on drifted parameters, refuses on a partial sample, and **ignores `--write`
+      when any cell mismatches** — publishing a trade log that disagrees with the result it claims
+      to belong to is the one outcome this task must not produce.
+      *Still blocks PR-009, the exit card and the EDGAR backfill.*
 - [ ] **`[c]` UDR-004 — regime ontology.** Three candidate lists now: ТЗ's 8, course v5.0's 11,
       v7.0's 7 (`RECONCILIATION_PLAN.md` §5). Ties to `USER_STORIES.md`:304 (US-004 unsatisfiable
       while `regime.classifier_rule` is contested).
