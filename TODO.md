@@ -268,13 +268,32 @@ is the gap the council's suspend-research call (§1) is about, and the build ord
       **Still text, not the HTML/PDF `PRODUCT_SURFACES` §3.1 names** — deliberately, because a
       second rendering path for the same run is the defect this project keeps finding under other
       names. HTML waits for one renderer with a text and an HTML backend.
-- [ ] **3b. Nothing actively notifies the owner.** A dated file is findable; it still has to be
-      gone and looked at. `PRODUCT_SURFACES` §3.4 specifies Firebase push ("a title, a short body,
-      and a reference id — never market data, journal contents, positions, or decisions") and the
-      §4 notification matrix marks Push ✓ for a completed run. **Needs an owner decision before any
-      code:** it requires credentials this project must never hold in plaintext (`SECURITY.md`, and
-      the `.swingdesk-local.json` ignored-file pattern gate 19 already guards), a real outbound
-      network call from the daily run, and a choice of channel. Not started.
+- [x] **3b. Nothing actively notified the owner — fixed 2026-08-16 (`DR-011`), council-reviewed.**
+      `scan` now raises a **local** Windows desktop notification; `--no-notify` suppresses it. No
+      token, no dependency, no network call, nothing leaves the machine.
+      **The owner's first instruction was to reuse TradAlert's Telegram bot, and the council
+      changed that answer.** Its chairman named one assumption that would flip the whole design —
+      *is the owner at the machine at 18:30?* — the owner answered **yes**, and Telegram then
+      bought nothing but off-desk reach that nobody needed. What it would have cost, all verified
+      against the tree rather than argued: `SECURITY.md` §2.1 forbids a secret in the repo and
+      `verify_secrets.py` records that **this repo is public**; §3.4's binding property is *never
+      stores* and Telegram retains a searchable log on a third party's server, so the obvious
+      "content, not transport" amendment would have been **false**; and one bot token is one
+      `getUpdates` stream, which TradAlert's approve/reject buttons already own.
+      Content rule: a terminal status and the run id, **enforced by `body()`'s signature** — two
+      parameters, so no `RunResult` is in scope to interpolate — plus a test on the rendered
+      string. §3.4's privacy reason is moot locally; the rule is re-earned on `CHARTER` §4 ground:
+      a glanceable summary is one the owner can act on without the report's provenance and
+      Untested banner. Failure is loud on stderr, never fatal, with a subprocess timeout — the
+      hang case `set RC=%ERRORLEVEL%` does *not* protect against. `daily_run.cmd` untouched
+      (frozen, and it did not need to change). 13 + 3 new tests.
+      **Found while writing `DR-011`:** §3.4 banned "market data … or decisions" and then gave as
+      its own example *"the daily run finished, 3 candidates"* — a count that is both. Corrected by
+      strikethrough-and-append; left in place it was a standing instruction to reintroduce exactly
+      what the rule forbids.
+- [ ] **3c. Off-desk reach is deliberately NOT built.** If "I'm at the machine at 18:30" stops
+      being true, re-open `DR-011` — its §1 preserves the whole Telegram analysis so the next
+      session does not redo it. Firebase remains specified in §3.4 and unbuilt.
 - [ ] **4. No approval channel.** US-010 requires: proposal sent → response recorded (choice,
       reason, timestamp) → nothing applied without that record. None of this exists — no channel, no
       store method to record a response, `ManagementAction.status` is only ever set by test code.

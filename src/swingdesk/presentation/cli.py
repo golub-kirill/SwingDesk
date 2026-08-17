@@ -16,7 +16,7 @@ from swingdesk.journal_evidence.positions import PositionStore
 from swingdesk.market_data import BarStore
 from swingdesk.platform.clock import FixedClock, SystemClock
 from swingdesk.platform.parameters import ParameterRegistry
-from swingdesk.presentation import report
+from swingdesk.presentation import notify, report
 from swingdesk.reference_data import calendar as cal
 from swingdesk.reference_data.directory import DirectoryStore
 from swingdesk.trade_management.sizing import Refusal
@@ -64,79 +64,120 @@ def main(argv: list[str] | None = None) -> int:
                       help="ISO instant; pins the clock so the run is reproducible")
     scan.add_argument("--report-dir", type=Path, default=None,
                       help="where the run's report file is written; defaults to <data>/reports")
+    scan.add_argument("--no-notify", action="store_true",
+                      help="skip the local desktop notice (DR-011). The report is written either "
+                           "way; this only suppresses the pop-up")
 
     args = parser.parse_args(argv)
 
     if args.command == "scan":
-        from datetime import datetime
-
         if bool(args.tickers) == bool(args.universe):
             parser.error("pass either tickers or --universe, not both and not neither")
 
-        # The mode is declared here and travels on the manifest. `--as-of` pins the clock and still
-        # fetches fresh, so it is LIVE_AS_OF and not REPLAY however much it resembles one
-        # (SYSTEM_MODES 7): it compares against nothing.
-        clock = (
-            FixedClock(datetime.fromisoformat(args.as_of).replace(tzinfo=UTC))
-            if args.as_of
-            else SystemClock()
-        )
-        mode = RunMode.LIVE_AS_OF if args.as_of else RunMode.LIVE
-        registry = ParameterRegistry.load()
-        instruments = [_instrument(t) for t in args.tickers]
-        selection = None
+        code, run_id, outcome = _scan(args)
 
-        with (
-            BarStore(args.data / "bars.duckdb") as store,
-            Journal(args.data / "journal.duckdb") as journal,
-            # Appendix T requires open positions evaluated before new candidates, and until
-            # 2026-08-16 this command never opened a PositionStore at all - "positions run first"
-            # was proven only in tests, never in the scheduled job. Passing a store with nothing
-            # recorded in it is safe: `run()` reads `positions is not None` to decide whether the
-            # positions step ran at all, so an empty store correctly makes `result.steps` read
-            # `("positions", "candidates")` - "checked, and there were none" - rather than the
-            # `("candidates",)` a caller with no store produces. Nothing currently writes to this
-            # store outside tests (TODO.md 6b item 1); wiring it in is what stops that being the
-            # reason a recorded position could never be evaluated by the scheduled run.
-            PositionStore(args.data / "positions.duckdb") as positions,
-        ):
-            if args.universe:
-                built = universe_builder.rule_from_registry(registry)
-                if isinstance(built, Refusal):
-                    # Fail closed and say which parameter. A universe that silently admitted
-                    # everything would be worse than no run at all.
-                    print(f"universe REFUSED  {built}", file=sys.stderr)
-                    return 2
-                rule, parameters = built
-                with DirectoryStore(args.data / "directory.duckdb") as directory:
-                    selection = universe_builder.select(
-                        directory, store, rule, clock.now(),
-                        parameters=parameters, limit=args.limit,
-                    )
-                if not selection.members:
-                    print(report.render_empty_universe(selection), file=sys.stderr)
-                    return 3
+        # The notice goes last of ALL - outside the store block, not merely at the bottom of it.
+        # Two defects were found here by review on 2026-08-16 and both are closed by this
+        # placement: it used to run inside the `with`, holding three DuckDB locks open for up to
+        # the notifier's full 15s timeout to display a pop-up; and both refusal paths returned
+        # before ever reaching it, so a refused run said nothing at all - the exact silence
+        # `DR-011` 5 claims to remove, made worse by `track_a_streak` counting exit 2 as a clean
+        # day. Silence now means the scheduler did not fire, which is the only thing it should
+        # ever mean.
+        if not args.no_notify:
+            notice = notify.notify(run_id, outcome)
+            if notice.delivered:
+                print("notice delivered")
+            else:
+                # Loud, never fatal - same reasoning as the report write, and the same rule:
+                # unnoticed non-delivery is the defect this exists to close.
+                print(f"notice NOT delivered  {notice.detail}", file=sys.stderr)
+        return code
 
-            result = run(instruments, clock, registry, store, journal,
-                         mode=mode, lookback=args.lookback, universe=selection,
-                         positions=positions)
+    return 1
 
-            # Persist BEFORE printing, so the durable artifact exists even if writing to the
-            # console then fails - the log has swallowed enough already.
-            written: Path | None = None
-            try:
-                written = report.write(result, args.report_dir or args.data / "reports")
-            except OSError as unwritable:
-                # Not fatal, and not silent. The report WAS produced - it is on stdout below - so
-                # the run did what `a.run_completes` measures, and resetting a 20-day counter over
-                # a disk error would be a worse outcome than the error. But a delivery channel that
-                # fails quietly is the exact defect this whole change is closing, so it is loud.
-                print(f"report NOT persisted  {unwritable}", file=sys.stderr)
 
-            print(report.render(result))
-            if written is not None:
-                print(f"\nreport written  {written}")
-        return 0
+def _scan(args: argparse.Namespace) -> tuple[int, str | None, notify.Outcome]:
+    """One `scan`, returning its exit code and what the owner should be told about it.
+
+    Split out of `main()` so every store is closed before the notice is raised. The return carries
+    the run id where one exists - a refusal can happen before any run is journalled, and there is
+    then no manifest and no id to reference.
+    """
+    from datetime import datetime
+
+    # The mode is declared here and travels on the manifest. `--as-of` pins the clock and still
+    # fetches fresh, so it is LIVE_AS_OF and not REPLAY however much it resembles one
+    # (SYSTEM_MODES 7): it compares against nothing.
+    clock = (
+        FixedClock(datetime.fromisoformat(args.as_of).replace(tzinfo=UTC))
+        if args.as_of
+        else SystemClock()
+    )
+    mode = RunMode.LIVE_AS_OF if args.as_of else RunMode.LIVE
+    registry = ParameterRegistry.load()
+    instruments = [_instrument(t) for t in args.tickers]
+    selection = None
+
+    with (
+        BarStore(args.data / "bars.duckdb") as store,
+        Journal(args.data / "journal.duckdb") as journal,
+        # Appendix T requires open positions evaluated before new candidates, and until
+        # 2026-08-16 this command never opened a PositionStore at all - "positions run first"
+        # was proven only in tests, never in the scheduled job. Passing a store with nothing
+        # recorded in it is safe: `run()` reads `positions is not None` to decide whether the
+        # positions step ran at all, so an empty store correctly makes `result.steps` read
+        # `("positions", "candidates")` - "checked, and there were none" - rather than the
+        # `("candidates",)` a caller with no store produces. Nothing currently writes to this
+        # store outside tests (TODO.md 6b item 1); wiring it in is what stops that being the
+        # reason a recorded position could never be evaluated by the scheduled run.
+        PositionStore(args.data / "positions.duckdb") as positions,
+    ):
+        if args.universe:
+            built = universe_builder.rule_from_registry(registry)
+            if isinstance(built, Refusal):
+                # Fail closed and say which parameter. A universe that silently admitted
+                # everything would be worse than no run at all. No run was journalled, so there
+                # is no id to reference - the notice says so rather than inventing one.
+                print(f"universe REFUSED  {built}", file=sys.stderr)
+                return 2, None, notify.Outcome.REFUSED
+            rule, parameters = built
+            with DirectoryStore(args.data / "directory.duckdb") as directory:
+                selection = universe_builder.select(
+                    directory, store, rule, clock.now(),
+                    parameters=parameters, limit=args.limit,
+                )
+            if not selection.members:
+                print(report.render_empty_universe(selection), file=sys.stderr)
+                return 3, None, notify.Outcome.REFUSED
+
+        result = run(instruments, clock, registry, store, journal,
+                     mode=mode, lookback=args.lookback, universe=selection,
+                     positions=positions)
+
+        # Persist BEFORE printing, so the durable artifact exists even if writing to the
+        # console then fails - the log has swallowed enough already.
+        written: Path | None = None
+        try:
+            written = report.write(result, args.report_dir or args.data / "reports")
+        except OSError as unwritable:
+            # Not fatal, and not silent. The report WAS produced - it is on stdout below - so
+            # the run did what `a.run_completes` measures, and resetting a 20-day counter over
+            # a disk error would be a worse outcome than the error. But a delivery channel that
+            # fails quietly is the exact defect this whole change is closing, so it is loud.
+            print(f"report NOT persisted  {unwritable}", file=sys.stderr)
+
+        print(report.render(result))
+        if written is not None:
+            print(f"\nreport written  {written}")
+
+    # The outcome distinguishes "go and read it" from "there is nothing to read". Sending
+    # COMPLETE unconditionally told the owner "Report on disk." after a failed write - a notice
+    # asserting something the run already knew to be false.
+    outcome = (
+        notify.Outcome.COMPLETE if written is not None else notify.Outcome.COMPLETE_NO_REPORT
+    )
+    return 0, result.manifest.run_id, outcome
 
     return 1
 
