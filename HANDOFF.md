@@ -46,7 +46,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | | |
 |---|---|
 | Merge gates | **30**, one command: `python tools/check_gates.py` |
-| Tests | **446**, fully offline |
+| Tests | **452**, fully offline |
 | Docs | 105 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 458 registered · 6 `specified` · **1 `active`** |
 | Parameters | 100 - 62 `unset`, 34 `assumed`, 4 `owner`, **0 `validated`** |
@@ -70,7 +70,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | Universe coverage | bars stored for 3,740 of 13,144 listed symbols - **28.5%** |
 | Track A clock | **4/20** consecutive clean sessions (2026-08-11 to 2026-08-14) · most recent break 2026-08-10 · `a.run_completes`, computed by `tools/track_a_streak.py` |
 
-*Measured from `data/` on 2026-08-16.*
+*Measured from `data/` on 2026-08-17.*
 
 <!-- END GENERATED: state:runtime -->
 

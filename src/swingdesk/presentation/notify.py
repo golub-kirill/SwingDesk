@@ -70,10 +70,29 @@ class Outcome(StrEnum):
 
     Deliberately coarser than the decision vocabulary (`Trade`/`Watch`/`Skip`/`Pause`): this says
     whether to go and look, not what was found.
+
+    `COMPLETE_NO_REPORT` exists so the notice cannot lie. The trailer used to be the fixed string
+    "Report on disk." and was sent even when `report.write` had just raised - telling the owner to
+    go and read a file that is not there, while the only word of the failure sat on stderr in the
+    log this feature exists to stop them having to read.
+
+    The state is carried HERE rather than as a third parameter to `body()` on purpose: `DR-011`
+    fixes the notice at a status plus a reference, enforced by that signature, and widening it one
+    commit after ratifying it is how code and documents start disagreeing.
     """
 
     COMPLETE = "run complete"
+    COMPLETE_NO_REPORT = "run complete, report NOT written"
     REFUSED = "run REFUSED"
+
+
+#: What to do about it, per state. Fixed strings chosen from this table - never interpolated, so
+#: there is no path by which a candidate count or a ticker reaches a notice.
+_TRAILER = {
+    Outcome.COMPLETE: "Report on disk.",
+    Outcome.COMPLETE_NO_REPORT: "Nothing on disk - see the log.",
+    Outcome.REFUSED: "No run was recorded - see the log.",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -84,17 +103,23 @@ class NotifyResult:
     detail: str
 
 
-def body(run_id: str, outcome: Outcome) -> str:
+def body(run_id: str | None, outcome: Outcome) -> str:
     """The entire notice body. Two inputs, and there is deliberately no way to pass a third.
 
     This signature IS the content rule (see the module docstring). A future change that wants to
     add "and 3 candidates" has to add a parameter here, which is a visible act in review rather
     than a quiet interpolation somewhere in the caller.
+
+    `run_id` is optional because a refusal has none to give: the universe rule can refuse before
+    any run is journalled, so there is no manifest and no id. `None` renders as no reference at
+    all rather than as a placeholder - "run REFUSED - unknown" would be a fabricated identifier,
+    and this project does not manufacture references any more than it manufactures probabilities.
     """
-    return f"{outcome.value} - {run_id}. Report on disk."
+    reference = f" - {run_id}" if run_id else ""
+    return f"{outcome.value}{reference}. {_TRAILER[outcome]}"
 
 
-def notify(run_id: str, outcome: Outcome) -> NotifyResult:
+def notify(run_id: str | None, outcome: Outcome) -> NotifyResult:
     """Raise a local desktop notification. Never raises, never blocks indefinitely.
 
     Returns rather than throwing because the notice is an OUTPUT of a run that has already
@@ -114,6 +139,15 @@ def notify(run_id: str, outcome: Outcome) -> NotifyResult:
         completed = subprocess.run(
             ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", _SCRIPT],
             capture_output=True, text=True, timeout=TIMEOUT_SECONDS, env=environment,
+            # `errors="replace"`, for the same reason `cli.py` reconfigures its own streams that
+            # way. `text=True` alone decodes STRICTLY: `daily_run.cmd` runs the CLI under
+            # `-X utf8`, so Python decodes as UTF-8, while PowerShell 5.1 writes stderr in the
+            # console's OEM codepage (cp866 on a Russian install, cp437 elsewhere). Measured: a
+            # PowerShell error containing one non-ASCII byte raised UnicodeDecodeError inside
+            # subprocess's reader thread, `completed.stderr` came back None, and the diagnostic
+            # below fell through to "failed with no output" - destroying the message it exists to
+            # preserve, and dumping a traceback into the daily log while doing it.
+            errors="replace",
         )
     except FileNotFoundError:
         # Not Windows, or PowerShell absent. A fact about the machine, not a fault in the run.

@@ -15,15 +15,42 @@ import pytest
 
 from swingdesk.presentation import notify
 
-#: The whole permitted shape. `DR-011` fixes the notice at a terminal status plus the run id, and
-#: this pattern is the mechanical form of that rule - if it needs relaxing, the decision record
-#: has to change first.
-BODY = re.compile(r"^run (complete|REFUSED) - (run-[A-Za-z0-9-]+)\. Report on disk\.$")
+#: The whole permitted shape. `DR-011` fixes the notice at a terminal status, an optional
+#: reference, and a fixed trailer chosen from a table - this pattern is the mechanical form of
+#: that rule, and if it needs relaxing the decision record has to change first.
+BODY = re.compile(
+    r"^run (complete|complete, report NOT written|REFUSED)"
+    r"( - run-[A-Za-z0-9-]+)?\. "
+    r"(Report on disk|Nothing on disk - see the log|No run was recorded - see the log)\.$"
+)
 
 
-def test_the_body_is_a_status_and_a_run_id_and_nothing_else() -> None:
+def test_the_body_is_a_status_and_a_reference_and_nothing_else() -> None:
     for outcome in notify.Outcome:
         assert BODY.match(notify.body("run-20260817T183001Z-a1b2c3d4", outcome))
+
+
+def test_a_refusal_renders_without_a_fabricated_reference() -> None:
+    """A refusal can happen before any run is journalled, so there is no id. `None` must render as
+    no reference at all - "run REFUSED - unknown" would be a manufactured identifier."""
+    rendered = notify.body(None, notify.Outcome.REFUSED)
+    assert BODY.match(rendered)
+    assert "None" not in rendered
+    # The status is followed straight by its period - no dangling reference separator. Asserted
+    # this way rather than as `" - " not in rendered`, which was the first draft and was wrong:
+    # the trailer legitimately contains a dash ("No run was recorded - see the log").
+    assert rendered.startswith("run REFUSED. ")
+
+
+def test_the_trailer_never_promises_a_report_that_was_not_written() -> None:
+    """Found by review 2026-08-16: the trailer was the fixed string "Report on disk." and was sent
+    even when `report.write` had just raised, telling the owner to go read a file that is not
+    there while the only word of the failure sat on stderr in the log.
+    """
+    assert "Report on disk." in notify.body("run-1", notify.Outcome.COMPLETE)
+    for silent in (notify.Outcome.COMPLETE_NO_REPORT, notify.Outcome.REFUSED):
+        assert "Report on disk." not in notify.body("run-1", silent)
+        assert "see the log" in notify.body("run-1", silent)
 
 
 def test_the_body_cannot_be_given_anything_to_leak() -> None:
@@ -114,3 +141,26 @@ def test_the_notice_text_is_passed_by_environment_never_interpolated(monkeypatch
 
     assert "run-INJECTED" not in " ".join(seen["command"]), "the run id must not reach the command"
     assert "run-INJECTED" in seen["env"]["SWINGDESK_NOTIFY_BODY"]
+
+
+def test_the_notifier_decodes_leniently(monkeypatch) -> None:
+    """`text=True` alone decodes STRICTLY, and that destroyed the diagnosis this module works to
+    preserve.
+
+    Measured 2026-08-16: `daily_run.cmd` runs the CLI under `-X utf8`, so Python decodes as UTF-8
+    while PowerShell 5.1 writes stderr in the console's OEM codepage. One non-ASCII byte raised
+    `UnicodeDecodeError` inside subprocess's reader thread, `completed.stderr` came back `None`,
+    and the failure reported as "no output" - with a traceback in the daily log for company.
+    """
+    seen: dict = {}
+
+    def capture(command, **kwargs):
+        seen.update(kwargs)
+        return _completed(1, stderr="boom")
+
+    monkeypatch.setattr(subprocess, "run", capture)
+    notify.notify("run-1", notify.Outcome.COMPLETE)
+
+    assert seen.get("errors") == "replace", (
+        "a strict decode loses the error text on any non-UTF-8 PowerShell message"
+    )
