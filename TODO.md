@@ -55,9 +55,35 @@ pass from the main checkout, 27 + 2 `UNAVAILABLE` from a worktree without `data/
 
 ## 2. Picked work
 
-- [ ] **`[c]` Task 8 — PR-005 trade-log replay.** `tools/run_pr005_replay.py` +
-      `docs/prereg/results/PR-005-trades.csv`. Confirmed absent. Blocks PR-009, the exit card, the
-      EDGAR backfill. **If mean-R does not match the published aggregate, stop and report it.**
+- [x] **`[v]` Task 8 — PR-005 trade-log replay. Done 2026-08-16.**
+      `tools/run_pr005_replay.py` + `docs/prereg/results/PR-005-trades.csv` (26,351 trades) +
+      `PR-005-trades-provenance.json`. **PR-009, the exit card and the EDGAR backfill are
+      unblocked** — on a documented basis, not a pretended one.
+      **What reproduces exactly:** the whole `primary` period, all ten cells. And in the holdout,
+      the ungated arm (`NONE`), `MA_STACK` (B) and `PRICE_AND_STACK` (C) — trade counts and mean R
+      to every digit. 16 of 20 cells exact.
+      **What does not, and why it never will.** `ABOVE_LONG_MA` (A) and `STRUCTURE` (D) differ in
+      the holdout by ≤0.00052 mean R at *identical* trade counts. Those are the two gates that turn
+      on a single margin: A is one threshold with no confirmation, D depends on exact pivot
+      extremes. B and C need two conditions at once, so a marginal revision cannot flip them, and
+      NONE is not gated at all. A handful of revised closes therefore move A and D and nothing
+      else. **PR-005 ran at 02:02 UTC on 2026-08-03 and fetched live; the store's earliest
+      `knowledge_time` for this sample is later. The bytes it read exist nowhere and refetching
+      cannot recover them.** Measured, not assumed: the pre-refetch state already differed by
+      +0.177R (A) and +0.339R (D) *with one fewer trade*, so the missing sessions were never the
+      main cause.
+      **The refetch was still worth it** (owner-authorised write to the live store): the gap was
+      three sessions — 2026-07-21, 07-22, 07-31 — not one, for six of eight instruments. 26 rows,
+      no bar inside the window revised. It restored the missing VGK trade and corrected an FBNC
+      exit from `stop_gap`/07-23 to `stop`/07-22.
+      **`LEG` and `NDSN` have no 2026-07-31 bar and the vendor does not supply one** — refetched
+      successfully, the session simply is not there while 60 other instruments have it. A standing
+      data-quality fact about this source. It affects no trade: neither has an `end_of_data` exit
+      in any arm (checked, after the opposite hypothesis was tested and refuted).
+      **Publishing took two keys, deliberately.** `--write` alone still refuses; `--accept-drift`
+      is required and writes the cell-by-cell comparison beside the log. **`PR-009` must register
+      against this replay's vintage, not against PR-005's published aggregate** — they are now
+      known not to be the same thing, and the provenance file says so in the artifact itself.
 - [ ] **`[c]` UDR-004 — regime ontology.** Three candidate lists now: ТЗ's 8, course v5.0's 11,
       v7.0's 7 (`RECONCILIATION_PLAN.md` §5). Ties to `USER_STORIES.md`:304 (US-004 unsatisfiable
       while `regime.classifier_rule` is contested).

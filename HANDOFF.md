@@ -64,7 +64,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 |---|---|
 | Journal | 13 runs, 0 incomplete · **11 run(s) recorded against a dirty tree** and therefore not replayable from their SHA |
 | Decisions | 10083 recorded · 0 uncoded refusals (`a.no_uncoded_failures` requires 0) |
-| Bar store | 1,917,879 rows across 3,740 instruments |
+| Bar store | 1,917,905 rows across 3,740 instruments |
 | PIT integrity | **CLEAN** - bars whose `event_time` postdates their `knowledge_time`: 0 |
 | Directory | **10 pulls** · **2 confirmed** against the response's own `Last-Modified` (`source_session_date`); the rest predate the field and stay permanently unattributed (`DR-008` c3) |
 | Universe coverage | bars stored for 3,740 of 13,144 listed symbols - **28.5%** |

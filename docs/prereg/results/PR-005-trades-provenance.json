@@ -1,0 +1,241 @@
+{
+  "generated_by": "tools/run_pr005_replay.py",
+  "replays": "PR-005",
+  "trades": 26351,
+  "is_a_reproduction_of_pr005_inputs": false,
+  "why_not": "PR-005 ran at 2026-08-03T02:02:06Z and fetched live. The local store's earliest knowledge_time for this sample postdates that, so the bytes the study read no longer exist anywhere and cannot be recovered by refetching.",
+  "observed_effect": "Ungated (NONE), MA_STACK (B) and PRICE_AND_STACK (C) reproduce EXACTLY in every period and regime, as does the whole primary period. ABOVE_LONG_MA (A) and STRUCTURE (D) differ in the holdout by <=0.00052 mean R at identical trade counts - the two gates that turn on a single margin, where a revised close or extreme flips the verdict without changing which triggers fired.",
+  "read_this_log_as": "the replay's trades at the vintage below, not PR-005's trades",
+  "series_knowledge_times": [
+    "2026-08-17T15:58:42.743570-05:00",
+    "2026-08-17T15:58:43.053926-05:00",
+    "2026-08-17T15:58:43.180206-05:00",
+    "2026-08-17T15:58:43.226398-05:00",
+    "2026-08-17T15:58:43.270509-05:00",
+    "2026-08-17T15:58:43.450649-05:00",
+    "2026-08-17T15:58:43.541044-05:00",
+    "2026-08-17T15:58:43.756542-05:00",
+    "2026-08-17T15:58:43.902170-05:00",
+    "2026-08-17T15:58:43.965332-05:00",
+    "2026-08-17T15:58:44.045047-05:00",
+    "2026-08-17T15:58:44.098871-05:00",
+    "2026-08-17T15:58:44.236352-05:00",
+    "2026-08-17T15:58:44.275107-05:00",
+    "2026-08-17T15:58:44.492514-05:00",
+    "2026-08-17T15:58:44.583514-05:00",
+    "2026-08-17T15:58:44.642920-05:00",
+    "2026-08-17T15:58:44.821096-05:00",
+    "2026-08-17T15:58:44.970229-05:00",
+    "2026-08-17T15:58:45.007041-05:00",
+    "2026-08-17T15:58:45.139669-05:00",
+    "2026-08-17T15:58:45.187197-05:00",
+    "2026-08-17T15:58:45.224110-05:00",
+    "2026-08-17T15:58:45.259443-05:00",
+    "2026-08-17T15:58:45.360635-05:00",
+    "2026-08-17T15:58:45.418883-05:00",
+    "2026-08-17T15:58:45.464410-05:00",
+    "2026-08-17T15:58:45.498120-05:00",
+    "2026-08-17T15:58:45.536329-05:00",
+    "2026-08-17T15:58:45.689281-05:00",
+    "2026-08-17T15:58:45.816102-05:00",
+    "2026-08-17T15:58:45.854415-05:00",
+    "2026-08-17T15:58:45.891107-05:00",
+    "2026-08-17T15:58:45.937069-05:00",
+    "2026-08-17T15:58:45.999713-05:00",
+    "2026-08-17T15:58:46.153453-05:00",
+    "2026-08-17T15:58:46.185954-05:00",
+    "2026-08-17T15:58:46.231641-05:00",
+    "2026-08-17T15:58:46.448534-05:00",
+    "2026-08-17T15:58:46.520422-05:00",
+    "2026-08-17T15:58:46.696173-05:00",
+    "2026-08-17T15:58:46.864341-05:00",
+    "2026-08-17T15:58:47.020512-05:00",
+    "2026-08-17T15:58:47.065514-05:00",
+    "2026-08-17T15:58:47.143182-05:00",
+    "2026-08-17T15:58:47.242023-05:00",
+    "2026-08-17T15:58:47.345638-05:00",
+    "2026-08-17T15:58:47.573882-05:00",
+    "2026-08-17T15:58:47.643523-05:00",
+    "2026-08-17T15:58:47.690135-05:00",
+    "2026-08-17T15:58:47.805212-05:00",
+    "2026-08-17T15:58:47.896192-05:00",
+    "2026-08-17T15:58:48.049082-05:00",
+    "2026-08-17T15:58:48.118872-05:00",
+    "2026-08-17T15:58:48.273879-05:00",
+    "2026-08-17T15:58:48.353983-05:00",
+    "2026-08-17T15:58:48.388025-05:00",
+    "2026-08-17T15:58:48.462357-05:00",
+    "2026-08-17T15:58:48.631496-05:00",
+    "2026-08-17T15:58:48.707437-05:00",
+    "2026-08-17T15:58:48.778342-05:00",
+    "2026-08-17T15:58:48.845138-05:00",
+    "2026-08-17T15:58:48.904206-05:00",
+    "2026-08-17T15:58:48.981019-05:00",
+    "2026-08-17T15:58:49.015624-05:00",
+    "2026-08-17T15:58:49.068709-05:00",
+    "2026-08-17T15:58:49.308803-05:00",
+    "2026-08-17T15:58:49.439353-05:00"
+  ],
+  "cells": [
+    {
+      "cell": "1x/A/holdout",
+      "recorded_trades": 1017,
+      "replayed_trades": 1017,
+      "recorded_mean_r": "-0.02210668566927550496033707830",
+      "replayed_mean_r": "-0.02178030320824411119934734788",
+      "mean_r_delta": "0.00032638246103139376098973042"
+    },
+    {
+      "cell": "1x/B/holdout",
+      "recorded_trades": 796,
+      "replayed_trades": 796,
+      "recorded_mean_r": "-0.03031560192957762367758830366",
+      "replayed_mean_r": "-0.03031560192957762367758830366",
+      "mean_r_delta": "0E-29"
+    },
+    {
+      "cell": "1x/C/holdout",
+      "recorded_trades": 789,
+      "replayed_trades": 789,
+      "recorded_mean_r": "-0.03340786406381389672134673388",
+      "replayed_mean_r": "-0.03340786406381389672134673388",
+      "mean_r_delta": "0E-29"
+    },
+    {
+      "cell": "1x/D/holdout",
+      "recorded_trades": 606,
+      "replayed_trades": 606,
+      "recorded_mean_r": "0.05570076120606176876626275292",
+      "replayed_mean_r": "0.05622115664366819888228673144",
+      "mean_r_delta": "0.00052039543760643011602397852"
+    },
+    {
+      "cell": "1x/NONE/holdout",
+      "recorded_trades": 1184,
+      "replayed_trades": 1184,
+      "recorded_mean_r": "0.01065947618124313532593587073",
+      "replayed_mean_r": "0.01065947618124313532593587073",
+      "mean_r_delta": "0E-29"
+    },
+    {
+      "cell": "1x/A/primary",
+      "recorded_trades": 1877,
+      "replayed_trades": 1877,
+      "recorded_mean_r": "-0.02540286792373496992769381738",
+      "replayed_mean_r": "-0.02540286792373496992769381738",
+      "mean_r_delta": "0E-29"
+    },
+    {
+      "cell": "1x/B/primary",
+      "recorded_trades": 1474,
+      "replayed_trades": 1474,
+      "recorded_mean_r": "-0.03170111203576715461516111402",
+      "replayed_mean_r": "-0.03170111203576715461516111402",
+      "mean_r_delta": "0E-29"
+    },
+    {
+      "cell": "1x/C/primary",
+      "recorded_trades": 1453,
+      "replayed_trades": 1453,
+      "recorded_mean_r": "-0.01625596694028733942640194861",
+      "replayed_mean_r": "-0.01625596694028733942640194861",
+      "mean_r_delta": "0E-29"
+    },
+    {
+      "cell": "1x/D/primary",
+      "recorded_trades": 1274,
+      "replayed_trades": 1274,
+      "recorded_mean_r": "0.03218928989807299058979761676",
+      "replayed_mean_r": "0.03218928989807299058979761676",
+      "mean_r_delta": "0E-29"
+    },
+    {
+      "cell": "1x/NONE/primary",
+      "recorded_trades": 2629,
+      "replayed_trades": 2629,
+      "recorded_mean_r": "0.02794656539195212456019035056",
+      "replayed_mean_r": "0.02794656539195212456019035056",
+      "mean_r_delta": "0E-29"
+    },
+    {
+      "cell": "3x/A/holdout",
+      "recorded_trades": 1027,
+      "replayed_trades": 1027,
+      "recorded_mean_r": "-0.1298950610022825545398398371",
+      "replayed_mean_r": "-0.1295721799254981798171872100",
+      "mean_r_delta": "0.0003228810767843747226526271"
+    },
+    {
+      "cell": "3x/B/holdout",
+      "recorded_trades": 803,
+      "replayed_trades": 803,
+      "recorded_mean_r": "-0.1383901602196955002799426310",
+      "replayed_mean_r": "-0.1383901602196955002799426310",
+      "mean_r_delta": "0E-28"
+    },
+    {
+      "cell": "3x/C/holdout",
+      "recorded_trades": 796,
+      "replayed_trades": 796,
+      "recorded_mean_r": "-0.1432334282538173051899150602",
+      "replayed_mean_r": "-0.1432334282538173051899150602",
+      "mean_r_delta": "0E-28"
+    },
+    {
+      "cell": "3x/D/holdout",
+      "recorded_trades": 610,
+      "replayed_trades": 610,
+      "recorded_mean_r": "-0.05084465148036979111097746626",
+      "replayed_mean_r": "-0.05032818571349174158566552311",
+      "mean_r_delta": "0.00051646576687804952531194315"
+    },
+    {
+      "cell": "3x/NONE/holdout",
+      "recorded_trades": 1195,
+      "replayed_trades": 1195,
+      "recorded_mean_r": "-0.09586865204977471717366716552",
+      "replayed_mean_r": "-0.09586865204977471717366716552",
+      "mean_r_delta": "0E-29"
+    },
+    {
+      "cell": "3x/A/primary",
+      "recorded_trades": 1904,
+      "replayed_trades": 1904,
+      "recorded_mean_r": "-0.1761258340099893802547019579",
+      "replayed_mean_r": "-0.1761258340099893802547019579",
+      "mean_r_delta": "0E-28"
+    },
+    {
+      "cell": "3x/B/primary",
+      "recorded_trades": 1489,
+      "replayed_trades": 1489,
+      "recorded_mean_r": "-0.1721893806320143885041519402",
+      "replayed_mean_r": "-0.1721893806320143885041519402",
+      "mean_r_delta": "0E-28"
+    },
+    {
+      "cell": "3x/C/primary",
+      "recorded_trades": 1467,
+      "replayed_trades": 1467,
+      "recorded_mean_r": "-0.1570052858408226165423205475",
+      "replayed_mean_r": "-0.1570052858408226165423205475",
+      "mean_r_delta": "0E-28"
+    },
+    {
+      "cell": "3x/D/primary",
+      "recorded_trades": 1289,
+      "replayed_trades": 1289,
+      "recorded_mean_r": "-0.1046722265894525138897078967",
+      "replayed_mean_r": "-0.1046722265894525138897078967",
+      "mean_r_delta": "0E-28"
+    },
+    {
+      "cell": "3x/NONE/primary",
+      "recorded_trades": 2672,
+      "replayed_trades": 2672,
+      "recorded_mean_r": "-0.1234436679909826206380048656",
+      "replayed_mean_r": "-0.1234436679909826206380048656",
+      "mean_r_delta": "0E-28"
+    }
+  ]
+}
