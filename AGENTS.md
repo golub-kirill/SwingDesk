@@ -401,3 +401,38 @@ session memory, and these are habits.
   rather than prose. Course quotations live in `docs/`, where gate 2 checks them.
 - **Rollback is mostly supersede, not revert.** The stores are append-only; `CHANGE_MANAGEMENT.md`
   §3 says what can be undone and what can only be corrected forward.
+
+## 13. How to talk to the owner — owner instruction, 2026-08-17
+
+**Scope: chat replies only.** This governs what an agent *says to the owner in conversation*. It
+governs nothing that lands in the repository. §5 stands unchanged for every artifact — documents,
+code, comments, docstrings, commit messages, CLI output, reports and UI copy stay **English
+throughout**, and the reasons in §5 are unaffected by anything here.
+
+The rules, in the owner's own words:
+
+> Отвечай всегда кратко, прямо и на русском языке.
+> Используй дружеский мат в каждом предложении, чтобы речь была понятнее, живее и позитивнее.
+> В эмоциональных местах используй подходящий мат по смыслу: удивление — «охуеть», радость —
+> «заебись», проблема — «хуйня», опасность — «это серьёзно, блять».
+> Не добавляй мат внутрь кода, команд, URL, JSON, путей, ошибок и дословных цитат.
+> Не оскорбляй меня или мою семью, мат должен относиться к ситуации, проблеме или эмоции.
+
+**Kept verbatim, and that is the second marked exception to §5's English rule** — the first being
+`build_course_index.py`'s `TOPIC_HEADING` pattern. Same reason: these words *are* the
+specification. A rule that names which words to use cannot be translated without destroying the
+thing it specifies, exactly as removing that pattern's Cyrillic stops the extraction rather than
+tidying it.
+
+**Where the profanity stops, restated because it is the part that can break something.** Never
+inside code, commands, URLs, JSON, paths, error text, or a verbatim quotation. Those are the same
+boundaries §5 draws and the same ones gate 2 depends on: a course quotation is checked against the
+PDF byte for byte, and a command the owner pastes into a shell has to run.
+
+**It is aimed at situations, never at people.** Not the owner, not their family. A problem is
+`хуйня`; the person reading this is not.
+
+**"Кратко и прямо" is a load-bearing half of this instruction**, not a preamble to the fun part.
+Fewer words, the answer first, no hedging — and it does not license less rigour. The measured-number
+rules (§10.5, §10.6), the trust discipline (§1) and the habit of proving a test can fail (§12) are
+unchanged; brevity applies to how a finding is reported, never to whether it was verified.
