@@ -9,6 +9,7 @@ from pathlib import Path
 
 from swingdesk.application import universe as universe_builder
 from swingdesk.application.pipeline import run
+from swingdesk.contracts.position import ActionStatus
 from swingdesk.contracts.reference import Instrument
 from swingdesk.contracts.run import RunMode
 from swingdesk.journal_evidence.journal import Journal
@@ -19,6 +20,7 @@ from swingdesk.platform.parameters import ParameterRegistry
 from swingdesk.presentation import notify, report
 from swingdesk.reference_data import calendar as cal
 from swingdesk.reference_data.directory import DirectoryStore
+from swingdesk.trade_management import manage
 from swingdesk.trade_management.sizing import Refusal
 
 DEFAULT_DATA = Path("data")
@@ -68,7 +70,33 @@ def main(argv: list[str] | None = None) -> int:
                       help="skip the local desktop notice (DR-011). The report is written either "
                            "way; this only suppresses the pop-up")
 
+    pending = sub.add_parser(
+        "pending", help="proposals on open positions awaiting your answer (US-010)")
+    pending.add_argument("--data", type=Path, default=DEFAULT_DATA)
+
+    respond = sub.add_parser(
+        "respond",
+        help="answer a proposal. D1: this records a decision, it never places an order",
+    )
+    respond.add_argument("position_id", help="e.g. POS-AAPL-2026-08-10")
+    respond.add_argument("sequence", type=int, help="the proposal's number, from `pending`")
+    choice = respond.add_mutually_exclusive_group(required=True)
+    choice.add_argument("--approve", action="store_true")
+    choice.add_argument("--reject", action="store_true")
+    respond.add_argument("--reason", required=True,
+                         help="why. Required - Production Rules 3.8: an approval with no stated "
+                              "reason is an unlogged judgment")
+    respond.add_argument("--data", type=Path, default=DEFAULT_DATA)
+    respond.add_argument("--as-of", default=None,
+                         help="ISO instant this answer is recorded at; defaults to now")
+
     args = parser.parse_args(argv)
+
+    if args.command == "pending":
+        return _pending(args)
+
+    if args.command == "respond":
+        return _respond(args)
 
     if args.command == "scan":
         if bool(args.tickers) == bool(args.universe):
@@ -95,6 +123,102 @@ def main(argv: list[str] | None = None) -> int:
         return code
 
     return 1
+
+
+def _pending(args: argparse.Namespace) -> int:
+    """List proposals awaiting an answer, with what US-010 requires to answer them.
+
+    Each entry states the observation the run acted on, the rule that produced the proposal, and
+    the bounded set of choices - which is exactly two. Nothing here is a recommendation to trade:
+    the system proposes managing a position it was told about, and the owner decides (D1, A-001).
+    """
+    with PositionStore(args.data / "positions.duckdb") as positions:
+        waiting = positions.pending()
+        if not waiting:
+            print("no proposals awaiting your answer.")
+            return 0
+
+        print(f"{len(waiting)} proposal(s) awaiting your answer\n")
+        for item in waiting:
+            action = item.action
+            print(f"  {action.position_id}  #{item.sequence}   {action.kind.value.upper()}")
+            print(f"      proposed   {action.proposed_at:%Y-%m-%d %H:%M:%S %Z}")
+            if action.reason_code:
+                print(f"      code       {action.reason_code}")
+            print(f"      because    {action.reason}")
+            if action.old_stop is not None or action.new_stop is not None:
+                print(f"      stop       {action.old_stop} -> {action.new_stop}")
+            if action.shares_affected is not None:
+                print(f"      shares     {action.shares_affected}")
+            print(
+                f"      answer     swingdesk respond {action.position_id} {item.sequence} "
+                f"--approve|--reject --reason \"...\"\n"
+            )
+    return 0
+
+
+def _respond(args: argparse.Namespace) -> int:
+    """Record the owner's answer, and apply it when it is an approval.
+
+    This is the half of `US-010` that did not exist: `manage.apply_approved` was written, unit
+    tested, and called from nowhere but tests, so no decision the owner made could ever reach the
+    store. The order here is the requirement - the response is recorded FIRST, then acted on, so
+    "no action is applied without a recorded response" holds even if applying then fails.
+    """
+    from datetime import datetime
+
+    clock = (
+        FixedClock(datetime.fromisoformat(args.as_of).replace(tzinfo=UTC))
+        if args.as_of
+        else SystemClock()
+    )
+    now = clock.now()
+    verdict = ActionStatus.APPROVED if args.approve else ActionStatus.REJECTED
+
+    with PositionStore(args.data / "positions.duckdb") as positions:
+        try:
+            positions.respond(
+                args.position_id, args.sequence,
+                choice=verdict, reason=args.reason, at=now,
+            )
+        except ValueError as refused:
+            print(f"response REFUSED  {refused}", file=sys.stderr)
+            return 2
+
+        print(f"recorded: {args.position_id} #{args.sequence} {verdict.value} - {args.reason}")
+        if verdict is ActionStatus.REJECTED:
+            print("  nothing applied. The position is unchanged.")
+            return 0
+
+        history = positions.history(args.position_id)
+        if not history:
+            print(f"position REFUSED  no position {args.position_id} to apply this to",
+                  file=sys.stderr)
+            return 2
+        current = history[-1]
+
+        # Read by sequence, not by position in a list. `respond` above has already consumed this
+        # proposal out of `pending()`, and indexing `actions_for` would assume sequences run
+        # 1..n contiguously - they are monotonic, not contiguous, and being wrong there would
+        # apply the owner's answer to a different proposal than the one they read.
+        proposal = positions.proposal_at(args.position_id, args.sequence)
+        if proposal is None:
+            print(f"proposal REFUSED  {args.position_id} #{args.sequence} not found",
+                  file=sys.stderr)
+            return 2
+
+        applied = manage.apply_approved(
+            current, proposal.model_copy(update={"status": ActionStatus.APPROVED}), now
+        )
+        positions.record(applied)
+        print(f"  applied: {args.position_id} is now version {applied.version}")
+        if applied.current_stop != current.current_stop:
+            print(f"           stop {current.current_stop} -> {applied.current_stop}")
+        if applied.shares != current.shares:
+            print(f"           shares {current.shares} -> {applied.shares}")
+        if applied.closed_on is not None and current.closed_on is None:
+            print(f"           closed {applied.closed_on}")
+    return 0
 
 
 def _scan(args: argparse.Namespace) -> tuple[int, str | None, notify.Outcome]:
