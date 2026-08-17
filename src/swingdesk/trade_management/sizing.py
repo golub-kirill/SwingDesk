@@ -180,6 +180,25 @@ def size_long(
             f"stop {stop} is not below entry {entry}; no logical invalidation",
         )
 
+    # And a stop must be a PRICE. `stop >= entry` alone let a zero or negative stop through: it is
+    # below entry, the arithmetic that follows is finite, and 98 shares came back against a
+    # "risk per share" larger than the entry price itself.
+    #
+    # Reachable on the live path, not a hypothetical - the stop arrives as
+    # `entry - atr_stop_multiple * atr`, so any instrument whose ATR exceeds half its price at a 2.0
+    # multiple produces one. `universe.min_price` is 5.00, which does not exclude that.
+    #
+    # `Position` already refuses it (`initial_stop` is `gt=0`), so the two contracts disagreed: the
+    # run would size and propose a trade the store could never record. Found by
+    # `test_sizing_and_position_agree_on_the_denominator` on its first run, which is what a
+    # cross-module property test is for.
+    if stop <= 0:
+        return Refusal(
+            "STOP",
+            f"stop {stop} is not a positive price; an instrument cannot be stopped out at or "
+            f"below zero",
+        )
+
     try:
         equity, equity_use = registry.decimal_value("account.equity")
         risk_pct, risk_use = registry.decimal_value("risk.per_trade_pct")

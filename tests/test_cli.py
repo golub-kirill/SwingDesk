@@ -305,7 +305,13 @@ def _seeded(tmp_path, **action_kw):
         store.record(Position(
             position_id="POS-1", version=1, instrument_id="AAPL", opened_on=date(2026, 8, 10),
             entry_price=Decimal(300), shares=8, initial_stop=Decimal(290),
-            current_stop=Decimal(290), knowledge_time=datetime(2026, 8, 10, tzinfo=UTC),
+            current_stop=Decimal(290),
+            # What DR-010 actually charges at a 300 entry: max(floor 0.25, 50bp x 300) = 1.50, so
+            # the bp term binds and the floor does not. Picking the floor here would have made the
+            # fixture disagree with `size_long` on the same instrument, which is the very defect
+            # the cost-inclusive denominator exists to close.
+            initial_costs_per_share=Decimal("1.50"),
+            knowledge_time=datetime(2026, 8, 10, tzinfo=UTC),
         ))
         store.propose(ManagementAction(
             position_id="POS-1", proposed_at=datetime(2026, 8, 16, 22, 30, tzinfo=UTC), **fields))

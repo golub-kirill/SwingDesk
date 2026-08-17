@@ -37,9 +37,11 @@ def _position(**kwargs) -> Position:
         position_id="POS-1", version=1, instrument_id=TEST_US.id,
         opened_on=date(2025, 12, 1), entry_price=Decimal(100), shares=50,
         initial_stop=Decimal(96), current_stop=Decimal(96),
-        # Cost-inclusive R denominator (2026-08-16). 0.25 is DR-010's USD floor, so this fixture
-        # risks 4.25/share rather than 4.00 - the gap that used to make every reported R read high.
-        initial_costs_per_share=Decimal("0.25"),
+        # Cost-inclusive R denominator (2026-08-16). DR-010 charges
+        # `max(floor 0.25, 50bp x entry)`, which at a 100 entry is 0.50 - the bp term, not the
+        # floor, which binds only below a 50 entry. So this fixture risks 4.50/share rather than
+        # 4.00, and it is the number `size_long(100, 96, "USD")` freezes for the same instrument.
+        initial_costs_per_share=Decimal("0.50"),
         knowledge_time=datetime(2025, 12, 1, tzinfo=UTC),
     )
     base.update(kwargs)
@@ -51,11 +53,11 @@ def _position(**kwargs) -> Position:
 def test_r_denominator_survives_a_stop_move() -> None:
     """RISK_SPEC 2: R is what was risked when the decision was made, not what is at risk now."""
     position = _position()
-    # entry 100 - stop 96 + costs 0.25
-    assert position.initial_risk_per_share == Decimal("4.25")
+    # entry 100 - stop 96 + costs 0.50
+    assert position.initial_risk_per_share == Decimal("4.50")
 
     moved = position.model_copy(update={"current_stop": Decimal(102), "version": 2})
-    assert moved.initial_risk_per_share == Decimal("4.25"), "unchanged by the stop move"
+    assert moved.initial_risk_per_share == Decimal("4.50"), "unchanged by the stop move"
     assert moved.r_at(Decimal(106)) == position.r_at(Decimal(106)), "R is unmoved by the stop"
 
 
@@ -68,7 +70,7 @@ def test_the_r_denominator_includes_costs() -> None:
     fraction a trade that made 0.94R reported as 1.00R, always flattering, on the one statistic the
     entire validation programme is denominated in.
     """
-    priced = _position(initial_costs_per_share=Decimal("0.25"))
+    priced = _position(initial_costs_per_share=Decimal("0.50"))
     free = _position(initial_costs_per_share=Decimal(0))
 
     assert priced.initial_risk_per_share > free.initial_risk_per_share
