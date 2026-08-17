@@ -9,6 +9,7 @@ the right arguments into `run()` - the WIRING, not the pipeline it wires to, whi
 
 from __future__ import annotations
 
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
@@ -283,3 +284,121 @@ def test_the_notice_is_raised_after_every_store_is_closed(tmp_path, monkeypatch)
 
     assert cli.main(["scan", "AAPL", "--data", str(tmp_path)]) == 0
     assert captured.get("checked"), "the notifier must actually have run"
+
+
+# ------------------------------------- pending / respond: the loop closes (US-010, TODO 6b 4+5)
+
+
+def _seeded(tmp_path, **action_kw):
+    """A position with one unanswered MOVE_STOP proposal on it."""
+    from datetime import UTC, date, datetime
+    from decimal import Decimal
+
+    from swingdesk.contracts.position import ActionKind, ManagementAction, Position
+    from swingdesk.journal_evidence.positions import PositionStore
+
+    fields = dict(kind=ActionKind.MOVE_STOP, reason="2xATR trail cleared the current stop",
+                  old_stop=Decimal(290), new_stop=Decimal(298))
+    fields.update(action_kw)
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        store.record(Position(
+            position_id="POS-1", version=1, instrument_id="AAPL", opened_on=date(2026, 8, 10),
+            entry_price=Decimal(300), shares=8, initial_stop=Decimal(290),
+            current_stop=Decimal(290), knowledge_time=datetime(2026, 8, 10, tzinfo=UTC),
+        ))
+        store.propose(ManagementAction(
+            position_id="POS-1", proposed_at=datetime(2026, 8, 16, 22, 30, tzinfo=UTC), **fields))
+    return tmp_path
+
+
+def _history(tmp_path):
+    from swingdesk.journal_evidence.positions import PositionStore
+
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        return store.history("POS-1")
+
+
+def test_pending_states_what_is_needed_to_answer(tmp_path, capsys) -> None:
+    """US-010: the proposal states the observation, the rule that produced it, and the bounded set
+    of choices - which is exactly two."""
+    assert cli.main(["pending", "--data", str(_seeded(tmp_path))]) == 0
+
+    out = capsys.readouterr().out
+    assert "POS-1" in out and "#1" in out and "MOVE_STOP" in out
+    assert "2xATR trail cleared the current stop" in out, "the rule that produced it"
+    assert "290" in out and "298" in out, "the observation it acted on"
+    assert "--approve|--reject" in out, "the bounded choices"
+
+
+def test_pending_is_quiet_when_nothing_awaits_an_answer(tmp_path, capsys) -> None:
+    assert cli.main(["pending", "--data", str(tmp_path)]) == 0
+    assert "no proposals" in capsys.readouterr().out
+
+
+def test_an_approval_is_recorded_and_applied(tmp_path, capsys) -> None:
+    """`manage.apply_approved` was built, unit tested, and called from nowhere but tests, so no
+    decision the owner made could ever reach the store. This is that wiring."""
+    root = _seeded(tmp_path)
+
+    code = cli.main(["respond", "POS-1", "1", "--approve", "--reason", "trend intact",
+                     "--data", str(root)])
+
+    assert code == 0
+    versions = _history(root)
+    assert [p.version for p in versions] == [1, 2], "an approval writes a NEW version"
+    assert versions[1].current_stop == Decimal(298)
+    assert versions[0].current_stop == Decimal(290), "the earlier version stays readable"
+    assert "applied" in capsys.readouterr().out
+
+
+def test_a_rejection_is_recorded_and_changes_nothing(tmp_path, capsys) -> None:
+    root = _seeded(tmp_path)
+
+    code = cli.main(["respond", "POS-1", "1", "--reject", "--reason", "too early",
+                     "--data", str(root)])
+
+    assert code == 0
+    assert [p.version for p in _history(root)] == [1], "a rejection applies nothing"
+    assert "nothing applied" in capsys.readouterr().out
+
+
+def test_nothing_is_applied_without_a_recorded_response(tmp_path) -> None:
+    """US-010's third clause, asserted on the store rather than on the CLI's word for it."""
+    from swingdesk.journal_evidence.positions import PositionStore
+
+    root = _seeded(tmp_path)
+    with PositionStore(root / "positions.duckdb") as store:
+        assert store.response_for("POS-1", 1) is None
+    assert [p.version for p in _history(root)] == [1], "unanswered means unapplied"
+
+
+def test_a_response_without_a_reason_is_refused_by_the_parser(tmp_path, capsys) -> None:
+    """Production rule 3.8. `--reason` is `required=True`, so this never reaches the store.
+
+    The message is asserted, not merely the `SystemExit`: argparse exits the same way for an
+    unknown command, so a bare `pytest.raises(SystemExit)` passed even when `respond` did not
+    exist at all - a test that could not fail, which is the defect this session keeps finding.
+    """
+    with pytest.raises(SystemExit):
+        cli.main(["respond", "POS-1", "1", "--approve", "--data", str(_seeded(tmp_path))])
+    assert "--reason" in capsys.readouterr().err
+
+
+def test_approve_and_reject_are_mutually_exclusive(tmp_path, capsys) -> None:
+    """A response is one choice. Same reasoning as above for asserting the message."""
+    with pytest.raises(SystemExit):
+        cli.main(["respond", "POS-1", "1", "--approve", "--reject", "--reason", "x",
+                  "--data", str(_seeded(tmp_path))])
+    assert "not allowed with" in capsys.readouterr().err
+
+
+def test_answering_twice_is_refused_at_the_cli(tmp_path, capsys) -> None:
+    root = _seeded(tmp_path)
+    cli.main(["respond", "POS-1", "1", "--approve", "--reason", "yes", "--data", str(root)])
+    capsys.readouterr()
+
+    code = cli.main(["respond", "POS-1", "1", "--reject", "--reason", "no", "--data", str(root)])
+
+    assert code == 2
+    assert "already answered" in capsys.readouterr().err
+    assert [p.version for p in _history(root)] == [1, 2], "the second answer applied nothing"

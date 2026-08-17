@@ -294,12 +294,35 @@ is the gap the council's suspend-research call (§1) is about, and the build ord
 - [ ] **3c. Off-desk reach is deliberately NOT built.** If "I'm at the machine at 18:30" stops
       being true, re-open `DR-011` — its §1 preserves the whole Telegram analysis so the next
       session does not redo it. Firebase remains specified in §3.4 and unbuilt.
-- [ ] **4. No approval channel.** US-010 requires: proposal sent → response recorded (choice,
-      reason, timestamp) → nothing applied without that record. None of this exists — no channel, no
-      store method to record a response, `ManagementAction.status` is only ever set by test code.
-- [ ] **5. `manage.apply_approved()` is correct and unit-tested, and called from nowhere but
-      tests.** No code path takes an approved action and writes the resulting position version back
-      to the store.
+- [x] **4 + 5. The approval loop — built 2026-08-16.** They were one invariant pretending to be two
+      items: *nothing is applied without a recorded response* spans both, so they landed together.
+      `swingdesk pending` lists unanswered proposals with what US-010 requires to answer them (the
+      observation, the rule that produced it, the bounded choices — exactly two).
+      `swingdesk respond POS-N SEQ --approve|--reject --reason "…"` records the answer and, on an
+      approval, applies it through `manage.apply_approved()` — which until now was built, unit
+      tested, and **called from nowhere but tests**, so no decision the owner made could reach the
+      store.
+      **The response is a separate append-only table, not a status column updated in place.**
+      `management.status` records what the *run* proposed and has to stay readable as that forever;
+      rewriting it to `approved` would destroy the record of what was asked, which is half of what
+      an audit trail is for. It also had nowhere to put what rule 3.8 demands — the owner's reason
+      and the moment they answered are different facts from the system's reason and when it asked.
+      Verified after a real approval: position versions `[1, 2]`, proposal still reads `proposed`,
+      response reads `approved | trend intact | 2026-08-16`.
+      The primary key is the proposal being answered, so a second answer is refused **by the
+      schema**. `pending` is the *absence of a response*, never `status = 'proposed'` — the first
+      definition would have left every answered proposal pending forever. `proposal_at()` reads by
+      sequence rather than list position: sequences are monotonic, not contiguous, and indexing
+      would have applied the owner's answer to a different proposal than the one they read.
+      16 tests, each confirmed red against the unbuilt feature — including two that first passed
+      for the wrong reason, because argparse raises `SystemExit` for an unknown command too.
+      **Channel: the CLI, locally.** `DR-011` established the owner is at the machine; a Telegram
+      approval surface would re-open every question that record settled. `PRODUCT_SURFACES` §3.3
+      still names Telegram for this and remains unbuilt.
+- [ ] **5b. Nothing expires a proposal.** `ActionStatus.EXPIRED` exists and is never written. A
+      stop move proposed on a stale observation stays answerable indefinitely, so an owner
+      returning after a week can approve a trail computed against week-old bars. Needs a rule for
+      how long a proposal stands.
 - [ ] **6. US-011 (fills recorded, open risk recomputed across the book) has zero implementation,**
       not even a stub.
 

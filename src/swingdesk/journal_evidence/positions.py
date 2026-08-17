@@ -11,6 +11,7 @@ yesterday's stop, not today's.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -51,7 +52,50 @@ CREATE TABLE IF NOT EXISTS management (
     run_id          VARCHAR,
     PRIMARY KEY (position_id, sequence)
 );
+
+-- The owner's answer to a proposal (US-010, D6). A SEPARATE table rather than a status column
+-- updated in place, for the append-only reason this module opens with: `management.status` records
+-- what the RUN proposed and has to stay readable as that forever. Rewriting it to `approved` would
+-- destroy the record of what was asked, which is half of what an audit trail is for.
+--
+-- It also carries what `management` has nowhere to put. Production rule 3.8 requires a response to
+-- record the choice, a reason and a timestamp: `management.reason` is the SYSTEM's reason for
+-- proposing and `proposed_at` is when it asked, so the owner's reason and the moment they answered
+-- are different facts and need their own columns.
+--
+-- The primary key is the proposal being answered, so a second answer to the same proposal is
+-- refused by the schema rather than by a check someone has to remember. A recorded decision is
+-- immutable; changing your mind is a new proposal, never an edited answer.
+CREATE TABLE IF NOT EXISTS management_responses (
+    position_id  VARCHAR NOT NULL,
+    sequence     BIGINT NOT NULL,
+    responded_at TIMESTAMPTZ NOT NULL,
+    choice       VARCHAR NOT NULL,
+    reason       VARCHAR NOT NULL,
+    PRIMARY KEY (position_id, sequence)
+);
 """
+
+
+@dataclass(frozen=True, slots=True)
+class Response:
+    """The owner's answer to one proposal: the choice, a reason and when (Production Rules 3.8)."""
+
+    responded_at: datetime
+    choice: ActionStatus
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
+class Pending:
+    """A proposal nobody has answered, with the sequence needed to answer it.
+
+    The sequence is carried alongside rather than folded into `ManagementAction`, which is a
+    contract shared with the pure layers and has no business knowing about storage keys.
+    """
+
+    sequence: int
+    action: ManagementAction
 
 
 class PositionStore:
@@ -169,11 +213,125 @@ class PositionStore:
             for r in rows
         ]
 
+    def pending(self) -> list[Pending]:
+        """Every proposal the owner has not answered, oldest first.
+
+        "Unanswered" is the absence of a response row, NOT `status = 'proposed'`. The status column
+        is what the run proposed and never changes (see the schema), so counting on it would have
+        left every answered proposal pending forever the moment responses existed.
+        """
+        rows = self._connection.execute(
+            """
+            SELECT m.position_id, m.sequence, m.proposed_at, m.kind, m.status, m.reason_code,
+                   m.reason, m.old_stop, m.new_stop, m.shares_affected
+            FROM management m
+            LEFT JOIN management_responses r
+                   ON r.position_id = m.position_id AND r.sequence = m.sequence
+            WHERE r.sequence IS NULL AND m.kind <> 'hold'
+            ORDER BY m.proposed_at, m.position_id, m.sequence
+            """
+        ).fetchall()
+        return [
+            Pending(
+                sequence=int(r[1]),
+                action=ManagementAction(
+                    position_id=r[0], proposed_at=r[2], kind=ActionKind(r[3]),
+                    status=ActionStatus(r[4]), reason_code=r[5], reason=r[6],
+                    old_stop=None if r[7] is None else Decimal(str(r[7])),
+                    new_stop=None if r[8] is None else Decimal(str(r[8])),
+                    shares_affected=r[9],
+                ),
+            )
+            for r in rows
+        ]
+
+    def respond(
+        self, position_id: str, sequence: int, *, choice: ActionStatus, reason: str, at: datetime
+    ) -> None:
+        """Record the owner's answer to one proposal. Append-only, and answerable exactly once.
+
+        `reason` is required and must not be blank: production rule 3.8 wants the choice, a reason
+        and a timestamp, and an approval with no stated reason is the unlogged judgment that rule
+        exists to prevent. `apply_approved` in `trade_management.manage` is what acts on it - and
+        it refuses anything not APPROVED, so nothing can be applied that was not answered here.
+        """
+        if choice not in (ActionStatus.APPROVED, ActionStatus.REJECTED):
+            raise ValueError(
+                f"a response is APPROVED or REJECTED, not {choice}. `proposed` is the absence of "
+                f"an answer and `expired` is not something the owner chooses."
+            )
+        if not reason.strip():
+            raise ValueError("every response carries a reason (Production Rules 3.8)")
+
+        proposal = self._connection.execute(
+            "SELECT 1 FROM management WHERE position_id = ? AND sequence = ?",
+            [position_id, sequence],
+        ).fetchone()
+        if proposal is None:
+            raise ValueError(f"no proposal {position_id} #{sequence} to answer")
+
+        answered = self._connection.execute(
+            "SELECT choice FROM management_responses WHERE position_id = ? AND sequence = ?",
+            [position_id, sequence],
+        ).fetchone()
+        if answered is not None:
+            raise ValueError(
+                f"{position_id} #{sequence} was already answered {answered[0]!r}. Responses are "
+                f"append-only; a change of mind is a new proposal, not an edited answer."
+            )
+
+        self._connection.execute(
+            "INSERT INTO management_responses VALUES (?, ?, ?, ?, ?)",
+            [position_id, sequence, at, choice.value, reason],
+        )
+
+    def proposal_at(self, position_id: str, sequence: int) -> ManagementAction | None:
+        """One proposal by its sequence, answered or not.
+
+        `actions_for` cannot serve this: it returns actions in sequence order but not the sequences
+        themselves, so a caller had to assume they run 1..n contiguously. They are monotonic, not
+        contiguous - nothing guarantees a gap can never appear - and an off-by-one there would
+        apply the owner's answer to the WRONG proposal.
+        """
+        row = self._connection.execute(
+            """
+            SELECT position_id, proposed_at, kind, status, reason_code, reason,
+                   old_stop, new_stop, shares_affected
+            FROM management WHERE position_id = ? AND sequence = ?
+            """,
+            [position_id, sequence],
+        ).fetchone()
+        if row is None:
+            return None
+        return ManagementAction(
+            position_id=row[0], proposed_at=row[1], kind=ActionKind(row[2]),
+            status=ActionStatus(row[3]), reason_code=row[4], reason=row[5],
+            old_stop=None if row[6] is None else Decimal(str(row[6])),
+            new_stop=None if row[7] is None else Decimal(str(row[7])),
+            shares_affected=row[8],
+        )
+
+    def response_for(self, position_id: str, sequence: int) -> Response | None:
+        """The owner's answer, or None when the proposal is still unanswered."""
+        row = self._connection.execute(
+            "SELECT responded_at, choice, reason FROM management_responses "
+            "WHERE position_id = ? AND sequence = ?",
+            [position_id, sequence],
+        ).fetchone()
+        if row is None:
+            return None
+        return Response(responded_at=row[0], choice=ActionStatus(row[1]), reason=row[2])
+
     def pending_approvals(self) -> int:
         """Proposals awaiting the owner. Reported on every run - a proposal nobody answered is not
         an approval, and an unanswered queue is an operational fact (D6)."""
         row = self._connection.execute(
-            "SELECT COUNT(*) FROM management WHERE status = 'proposed' AND kind <> 'hold'"
+            """
+            SELECT COUNT(*) FROM management m
+            LEFT JOIN management_responses r
+                   ON r.position_id = m.position_id AND r.sequence = m.sequence
+            WHERE r.sequence IS NULL AND m.kind <> 'hold'
+            """
         ).fetchone()
         return int(row[0]) if row is not None else 0
 

@@ -300,3 +300,105 @@ def test_a_stop_is_only_ever_proposed_upward(registry) -> None:
     held = manage.evaluate(_position(), modest, ExitPolicy(Decimal(2), 20), AS_OF,
                            bars_held=3, atr=Decimal(2))
     assert held.kind is ActionKind.HOLD
+
+
+# ------------------------------------------------- the owner's answer (US-010, TODO.md 6b 4 + 5)
+
+
+def test_a_response_is_a_separate_fact_and_the_proposal_is_untouched(store) -> None:
+    """`management.status` records what the RUN proposed and must stay readable as that forever.
+    Rewriting it to `approved` would destroy the record of what was asked, which is half of what
+    an audit trail is for - so the answer lives in its own append-only table.
+    """
+    store.record(_position())
+    store.propose(ManagementAction(position_id="POS-1", proposed_at=AS_OF,
+                                   kind=ActionKind.MOVE_STOP, reason="raise",
+                                   old_stop=Decimal(96), new_stop=Decimal(98)))
+
+    store.respond("POS-1", 1, choice=ActionStatus.APPROVED, reason="trend intact", at=AS_OF)
+
+    assert store.proposal_at("POS-1", 1).status is ActionStatus.PROPOSED
+    answer = store.response_for("POS-1", 1)
+    assert answer.choice is ActionStatus.APPROVED
+    assert answer.reason == "trend intact"
+    assert answer.responded_at == AS_OF
+
+
+def test_a_proposal_can_be_answered_only_once(store) -> None:
+    """A recorded decision is immutable. Changing your mind is a new proposal, not an edit."""
+    store.record(_position())
+    store.propose(ManagementAction(position_id="POS-1", proposed_at=AS_OF,
+                                   kind=ActionKind.MOVE_STOP, reason="raise",
+                                   old_stop=Decimal(96), new_stop=Decimal(98)))
+    store.respond("POS-1", 1, choice=ActionStatus.APPROVED, reason="yes", at=AS_OF)
+
+    with pytest.raises(ValueError, match="already answered"):
+        store.respond("POS-1", 1, choice=ActionStatus.REJECTED, reason="no", at=AS_OF)
+
+
+def test_a_response_requires_a_reason(store) -> None:
+    """Production rule 3.8. An approval with no stated reason is an unlogged judgment."""
+    store.record(_position())
+    store.propose(ManagementAction(position_id="POS-1", proposed_at=AS_OF,
+                                   kind=ActionKind.MOVE_STOP, reason="raise",
+                                   old_stop=Decimal(96), new_stop=Decimal(98)))
+
+    with pytest.raises(ValueError, match="carries a reason"):
+        store.respond("POS-1", 1, choice=ActionStatus.APPROVED, reason="   ", at=AS_OF)
+
+
+def test_only_approved_or_rejected_are_answers(store) -> None:
+    """`proposed` is the ABSENCE of an answer and `expired` is not something the owner chooses."""
+    store.record(_position())
+    store.propose(ManagementAction(position_id="POS-1", proposed_at=AS_OF,
+                                   kind=ActionKind.MOVE_STOP, reason="raise",
+                                   old_stop=Decimal(96), new_stop=Decimal(98)))
+
+    for not_an_answer in (ActionStatus.PROPOSED, ActionStatus.EXPIRED):
+        with pytest.raises(ValueError, match="APPROVED or REJECTED"):
+            store.respond("POS-1", 1, choice=not_an_answer, reason="x", at=AS_OF)
+
+
+def test_answering_a_proposal_that_does_not_exist_is_refused(store) -> None:
+    store.record(_position())
+    with pytest.raises(ValueError, match="no proposal"):
+        store.respond("POS-1", 99, choice=ActionStatus.APPROVED, reason="x", at=AS_OF)
+
+
+def test_pending_is_the_absence_of_an_answer_not_the_status_column(store) -> None:
+    """The first definition counted `status = 'proposed'`, which never changes - so every answered
+    proposal would have stayed pending forever the moment responses existed."""
+    store.record(_position())
+    store.propose(ManagementAction(position_id="POS-1", proposed_at=AS_OF,
+                                   kind=ActionKind.MOVE_STOP, reason="raise",
+                                   old_stop=Decimal(96), new_stop=Decimal(98)))
+
+    assert [p.sequence for p in store.pending()] == [1]
+    assert store.pending_approvals() == 1
+
+    store.respond("POS-1", 1, choice=ActionStatus.REJECTED, reason="too early", at=AS_OF)
+
+    assert store.pending() == []
+    assert store.pending_approvals() == 0, "an answered proposal is not still waiting"
+
+
+def test_a_hold_never_awaits_an_answer(store) -> None:
+    """D6 routes stop moves and partial exits through the owner. A hold is a decision the system
+    records, not a question it asks."""
+    store.record(_position())
+    store.propose(ManagementAction(position_id="POS-1", proposed_at=AS_OF,
+                                   kind=ActionKind.HOLD, reason="stop intact"))
+    assert store.pending() == []
+
+
+def test_proposal_at_reads_by_sequence_not_by_list_position(store) -> None:
+    """Sequences are monotonic, not contiguous. Indexing a list would apply the owner's answer to
+    the wrong proposal the first time a gap appeared."""
+    store.record(_position())
+    for new_stop in (Decimal(97), Decimal(98), Decimal(99)):
+        store.propose(ManagementAction(position_id="POS-1", proposed_at=AS_OF,
+                                       kind=ActionKind.MOVE_STOP, reason=f"to {new_stop}",
+                                       old_stop=Decimal(96), new_stop=new_stop))
+
+    assert store.proposal_at("POS-1", 2).new_stop == Decimal(98)
+    assert store.proposal_at("POS-1", 4) is None
