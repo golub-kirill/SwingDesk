@@ -94,8 +94,22 @@ broker and reports the fill.
 | Never carries | market data, journal contents, positions, or decisions |
 | Never stores | anything — no data leaves the machine |
 
-The notification says *"the daily run finished, 3 candidates"* or *"stop-move proposal pending"*.
+~~The notification says *"the daily run finished, 3 candidates"* or *"stop-move proposal pending"*.~~
 The content lives locally and is read on a surface that authenticates.
+
+**Corrected 2026-08-16 (`DR-011`), struck through rather than deleted.** The example contradicted
+the row directly above it: *"3 candidates"* is a count derived from market data and a summary of
+decisions, both of which "Never carries" forbids. Left in place it was a standing instruction to
+reintroduce exactly what the rule bans. **The notice carries a terminal status and the run's
+reference id** — *"run complete — run-20260817T183001Z-a1b2c3d4"*. Nothing that can be acted on
+without opening the report, which is where provenance, validation status and the Untested banner
+live.
+
+**Transport, same date, same record.** The push role for *daily run complete* is filled by a
+**local desktop notification**, not Firebase — which remains specified here and unbuilt. That
+satisfies "no data leaves the machine" by construction rather than by a third party's policy;
+`DR-011` §3 carries the comparison. Telegram is **not** used for this event and its column below
+is unchanged.
 
 ## 4. Notification matrix
 

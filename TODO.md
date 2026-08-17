@@ -25,6 +25,23 @@ open-tasks audit, not independently re-checked.
 
 ## 1. Blocking now
 
+- [x] **`[v]` Track A restart rule + idle-day diagnostic — landed 2026-08-16, council-reviewed (5
+      advisors + peer review, unanimous on both original questions).** A merge to a frozen file that
+      changes decision output resets `a.run_completes` to zero from the merge date. Written into
+      `HANDOFF.md` §5. The council's sharper catch: the restart alone doesn't fix what the counter
+      proves — `CLEAN_EXIT_CODES = (0, 2)` counts a day where every candidate Skips identically
+      (exit params unset) the same as a day that evaluated something, so most days between PR #9
+      landing and DR-006 ratifying will read "clean" while idle. `tools/track_a_streak.py` now
+      prints a second, additional line from `journal.duckdb` — how many counted days were idle —
+      without touching what `a.run_completes` itself measures. 5 new tests
+      (`tests/test_gates.py`), each confirmed to fail against a broken `_idle()`.
+- [x] **`[v]` New research suspended — 2026-08-16, same council, unanimous.** No new
+      pre-registrations, UDR-004 paused, PR-001/PR-002 re-registration paused. **Not suspended:**
+      DR-006 ratification (unblocking, not research — but must land on evaluated values, not a
+      rubber stamp, or it repeats the pattern one level up) and PR-005 (a hard blocker on the exit
+      card, not a study). Resume research once one real end-to-end cycle — proposal → owner sees it
+      → position opened → managed → approved → applied → filled — has actually run. See §6b for the
+      gap analysis that prompted this and the build order now underway.
 - [x] **`[v]` Gate 16 was RED — fixed 2026-08-15.** Both undeclared worktrees are now named in
       `HANDOFF.md` §2. `python tools/verify_branches.py` exits 0.
 - [x] **`[v]` `HANDOFF.md` §2's stale rows — fixed at the mechanism, 2026-08-15.** §2 is now
@@ -38,9 +55,35 @@ pass from the main checkout, 27 + 2 `UNAVAILABLE` from a worktree without `data/
 
 ## 2. Picked work
 
-- [ ] **`[c]` Task 8 — PR-005 trade-log replay.** `tools/run_pr005_replay.py` +
-      `docs/prereg/results/PR-005-trades.csv`. Confirmed absent. Blocks PR-009, the exit card, the
-      EDGAR backfill. **If mean-R does not match the published aggregate, stop and report it.**
+- [x] **`[v]` Task 8 — PR-005 trade-log replay. Done 2026-08-16.**
+      `tools/run_pr005_replay.py` + `docs/prereg/results/PR-005-trades.csv` (26,351 trades) +
+      `PR-005-trades-provenance.json`. **PR-009, the exit card and the EDGAR backfill are
+      unblocked** — on a documented basis, not a pretended one.
+      **What reproduces exactly:** the whole `primary` period, all ten cells. And in the holdout,
+      the ungated arm (`NONE`), `MA_STACK` (B) and `PRICE_AND_STACK` (C) — trade counts and mean R
+      to every digit. 16 of 20 cells exact.
+      **What does not, and why it never will.** `ABOVE_LONG_MA` (A) and `STRUCTURE` (D) differ in
+      the holdout by ≤0.00052 mean R at *identical* trade counts. Those are the two gates that turn
+      on a single margin: A is one threshold with no confirmation, D depends on exact pivot
+      extremes. B and C need two conditions at once, so a marginal revision cannot flip them, and
+      NONE is not gated at all. A handful of revised closes therefore move A and D and nothing
+      else. **PR-005 ran at 02:02 UTC on 2026-08-03 and fetched live; the store's earliest
+      `knowledge_time` for this sample is later. The bytes it read exist nowhere and refetching
+      cannot recover them.** Measured, not assumed: the pre-refetch state already differed by
+      +0.177R (A) and +0.339R (D) *with one fewer trade*, so the missing sessions were never the
+      main cause.
+      **The refetch was still worth it** (owner-authorised write to the live store): the gap was
+      three sessions — 2026-07-21, 07-22, 07-31 — not one, for six of eight instruments. 26 rows,
+      no bar inside the window revised. It restored the missing VGK trade and corrected an FBNC
+      exit from `stop_gap`/07-23 to `stop`/07-22.
+      **`LEG` and `NDSN` have no 2026-07-31 bar and the vendor does not supply one** — refetched
+      successfully, the session simply is not there while 60 other instruments have it. A standing
+      data-quality fact about this source. It affects no trade: neither has an `end_of_data` exit
+      in any arm (checked, after the opposite hypothesis was tested and refuted).
+      **Publishing took two keys, deliberately.** `--write` alone still refuses; `--accept-drift`
+      is required and writes the cell-by-cell comparison beside the log. **`PR-009` must register
+      against this replay's vintage, not against PR-005's published aggregate** — they are now
+      known not to be the same thing, and the provenance file says so in the artifact itself.
 - [ ] **`[c]` UDR-004 — regime ontology.** Three candidate lists now: ТЗ's 8, course v5.0's 11,
       v7.0's 7 (`RECONCILIATION_PLAN.md` §5). Ties to `USER_STORIES.md`:304 (US-004 unsatisfiable
       while `regime.classifier_rule` is contested).
@@ -263,6 +306,119 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       i.e. a system fault rather than market judgment. That parameter was set 2026-08-11. Any
       statistic over the decision history must segment these out first.
 - [ ] **Tests cover the safe branch of the risky code, three times over.** See §8.
+
+## 6b. The operational chain — what a full cycle needs
+
+Traced end to end 2026-08-16, not just the pipeline internals: `daily_run.cmd` → `cli.py scan` →
+`report.py`. **BUILT and gated** (30/30 gates, 435 tests): candidate screening, sizing, exit-policy
+computation, checklist generation, report rendering, journal evidence, replay/determinism. **NOT
+built or wired**, despite the pure logic mostly existing and being unit-tested in isolation — this
+is the gap the council's suspend-research call (§1) is about, and the build order it recommended:
+
+- [ ] **1. `PositionStore.record()` has no caller anywhere outside tests.** No CLI command or tool
+      gets a manually-executed position into the system at all. **First task — nothing else here
+      matters until a position can get in by any means.**
+- [x] **2. `cli.py scan` never opened a `PositionStore` or passed `positions=` into `run()` —
+      fixed 2026-08-16.** Now opens `PositionStore(args.data / "positions.duckdb")` alongside the
+      existing `BarStore`/`Journal` and passes it through. `cli.py` is not a frozen file, so this
+      did not need to wait behind the freeze. Item 1 (position entry) is still open, so the store
+      the scheduled job now reads is empty — this is what stops that being the reason a recorded
+      position could never be evaluated, not a claim that one exists yet. 2 new tests
+      (`tests/test_cli.py`, new file — there was no CLI test coverage at all before this), each
+      confirmed to fail against the pre-fix `cli.py`.
+- [x] **3a. The report was never persisted — fixed 2026-08-16.** `scan` now writes one file per
+      run to `<data>/reports/<run_id>.txt` (`--report-dir` overrides). The `run_id` already carries
+      the start instant, so the name sorts chronologically and traces to the journal's `runs` row
+      without formatting a second copy of the date (`AGENTS.md` §10.5). A write failure is loud on
+      stderr but **not** fatal — the report was still produced on stdout, so `a.run_completes` is
+      satisfied and a disk error must not reset a 20-day counter. `tools/daily_run.cmd` is
+      untouched (it is frozen; it did not need to change). This also corrected `ROADMAP.md`'s
+      finish-line row, which read **done** on the strength of the run merely *rendering* something.
+      4 new tests, each confirmed to fail when persistence is stubbed out.
+      **Still text, not the HTML/PDF `PRODUCT_SURFACES` §3.1 names** — deliberately, because a
+      second rendering path for the same run is the defect this project keeps finding under other
+      names. HTML waits for one renderer with a text and an HTML backend.
+- [x] **3b. Nothing actively notified the owner — fixed 2026-08-16 (`DR-011`), council-reviewed.**
+      `scan` now raises a **local** Windows desktop notification; `--no-notify` suppresses it. No
+      token, no dependency, no network call, nothing leaves the machine.
+      **The owner's first instruction was to reuse TradAlert's Telegram bot, and the council
+      changed that answer.** Its chairman named one assumption that would flip the whole design —
+      *is the owner at the machine at 18:30?* — the owner answered **yes**, and Telegram then
+      bought nothing but off-desk reach that nobody needed. What it would have cost, all verified
+      against the tree rather than argued: `SECURITY.md` §2.1 forbids a secret in the repo and
+      `verify_secrets.py` records that **this repo is public**; §3.4's binding property is *never
+      stores* and Telegram retains a searchable log on a third party's server, so the obvious
+      "content, not transport" amendment would have been **false**; and one bot token is one
+      `getUpdates` stream, which TradAlert's approve/reject buttons already own.
+      Content rule: a terminal status and the run id, **enforced by `body()`'s signature** — two
+      parameters, so no `RunResult` is in scope to interpolate — plus a test on the rendered
+      string. §3.4's privacy reason is moot locally; the rule is re-earned on `CHARTER` §4 ground:
+      a glanceable summary is one the owner can act on without the report's provenance and
+      Untested banner. Failure is loud on stderr, never fatal, with a subprocess timeout — the
+      hang case `set RC=%ERRORLEVEL%` does *not* protect against. `daily_run.cmd` untouched
+      (frozen, and it did not need to change). 13 + 3 new tests.
+      **Found while writing `DR-011`:** §3.4 banned "market data … or decisions" and then gave as
+      its own example *"the daily run finished, 3 candidates"* — a count that is both. Corrected by
+      strikethrough-and-append; left in place it was a standing instruction to reintroduce exactly
+      what the rule forbids.
+- [ ] **3c. Off-desk reach is deliberately NOT built.** If "I'm at the machine at 18:30" stops
+      being true, re-open `DR-011` — its §1 preserves the whole Telegram analysis so the next
+      session does not redo it. Firebase remains specified in §3.4 and unbuilt.
+- [x] **4 + 5. The approval loop — built 2026-08-16.** They were one invariant pretending to be two
+      items: *nothing is applied without a recorded response* spans both, so they landed together.
+      `swingdesk pending` lists unanswered proposals with what US-010 requires to answer them (the
+      observation, the rule that produced it, the bounded choices — exactly two).
+      `swingdesk respond POS-N SEQ --approve|--reject --reason "…"` records the answer and, on an
+      approval, applies it through `manage.apply_approved()` — which until now was built, unit
+      tested, and **called from nowhere but tests**, so no decision the owner made could reach the
+      store.
+      **The response is a separate append-only table, not a status column updated in place.**
+      `management.status` records what the *run* proposed and has to stay readable as that forever;
+      rewriting it to `approved` would destroy the record of what was asked, which is half of what
+      an audit trail is for. It also had nowhere to put what rule 3.8 demands — the owner's reason
+      and the moment they answered are different facts from the system's reason and when it asked.
+      Verified after a real approval: position versions `[1, 2]`, proposal still reads `proposed`,
+      response reads `approved | trend intact | 2026-08-16`.
+      The primary key is the proposal being answered, so a second answer is refused **by the
+      schema**. `pending` is the *absence of a response*, never `status = 'proposed'` — the first
+      definition would have left every answered proposal pending forever. `proposal_at()` reads by
+      sequence rather than list position: sequences are monotonic, not contiguous, and indexing
+      would have applied the owner's answer to a different proposal than the one they read.
+      16 tests, each confirmed red against the unbuilt feature — including two that first passed
+      for the wrong reason, because argparse raises `SystemExit` for an unknown command too.
+      **Channel: the CLI, locally.** `DR-011` established the owner is at the machine; a Telegram
+      approval surface would re-open every question that record settled. `PRODUCT_SURFACES` §3.3
+      still names Telegram for this and remains unbuilt.
+- [ ] **5b. Nothing expires a proposal.** `ActionStatus.EXPIRED` exists and is never written. A
+      stop move proposed on a stale observation stays answerable indefinitely, so an owner
+      returning after a week can approve a trail computed against week-old bars. Needs a rule for
+      how long a proposal stands.
+- [x] **6. US-011 — built 2026-08-16.** `swingdesk record-fill POS-N SEQ --price --shares
+      --commission` records what the broker actually did. All three clauses:
+      **(a) fill price, shares, commission and slippage recorded** — new `Fill` contract and a
+      `fills` table keyed on the approved action it settles, so a fill cannot exist for something
+      nobody approved (D6 from the far side of the trade). An unapproved *or rejected* action is
+      refused.
+      **(b) open risk recomputed across the whole book, never decremented** —
+      `PositionStore.open_risk_as_of()` sums the latest version of every open position. Tested
+      against a partial exit *and* a trailed stop at once: a decremented running total would still
+      read the original 250 minus something and would not know the stop had moved.
+      **(c) slippage in R against the ORIGINALLY planned risk** — the denominator never moves,
+      so the same dollar miss does not look worse as a position is scaled out.
+      **The planned price comes from the ACTION, never from the reporter.** A reference supplied
+      after seeing the fill is one that can always be made to look acceptable.
+      **And it refuses to compute slippage when the plan named no price.** `EXIT_NOW` is proposed
+      for two different reasons: a broken stop, where the stop *is* the reference; and a maximum
+      holding period, which is an exit at market and names no price at all. Reporting `0.00` for
+      the second would be a manufactured measurement — and it would flatter the strategy, because
+      unknown slippage is not absent slippage. `slippage_per_share` returns `None`, and the CLI
+      prints `UNAVAILABLE` with the reason. 12 tests, each confirmed red against the unbuilt
+      feature.
+
+**An idea from the council's peer review, not yet scoped:** route items 1 and 4-6 through a path that
+can carry shadow/paper positions, so the chain can prove itself closes end-to-end without waiting on
+the owner's real capital — resolves the "necessary but not sufficient" ceiling multiple advisors
+named (closing the loop still depends on the owner actually trading, which is outside code).
 
 ## 7. The documents' own open questions
 

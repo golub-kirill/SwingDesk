@@ -179,3 +179,67 @@ class ManagementAction(BaseModel):
     def is_actionable(self) -> bool:
         """True when the action needs the owner's answer before anything can happen (D6)."""
         return self.status is ActionStatus.PROPOSED and self.kind is not ActionKind.HOLD
+
+
+class Fill(BaseModel):
+    """What actually happened at the broker, against what was approved (`US-011`).
+
+    D1 again, from the other side: the system never placed this order, so it cannot know the fill
+    until the owner reports it. A fill is therefore evidence arriving after the fact, not an
+    outcome the system produced - and it settles a specific approved action, so a fill can never
+    exist for something nobody approved.
+
+    Frozen and stored append-only, like everything else here. A fill that can be edited is not
+    evidence (`AUDIT_AND_IMMUTABILITY.md`).
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    position_id: str
+    sequence: int = Field(ge=1, description="The approved action this settles.")
+
+    filled_on: date
+    shares: int = Field(gt=0, description="Shares actually transacted, which may not be the plan.")
+    price: Decimal = Field(gt=0, description="What the broker actually filled at.")
+    commission: Decimal = Field(ge=0, description="As charged. Not the modelled estimate.")
+
+    planned_price: Decimal | None = Field(
+        default=None,
+        description="The price the approved plan named, when it named one. None is not zero - see "
+                    "`slippage_per_share`.",
+    )
+    recorded_at: datetime = Field(description="When we learned this. Not when it happened.")
+
+    @property
+    def slippage_per_share(self) -> Decimal | None:
+        """Adverse slippage per share, or None when the plan named no price to slip against.
+
+        **None is a refusal, not a zero, and this is the whole reason the field is optional.** An
+        `EXIT_NOW` is proposed for two different reasons (`trade_management.manage`): a broken stop,
+        where the plan names a price and the stop IS the reference; and a maximum holding period
+        reached, which is an exit at market and names no price at all. Reporting 0.00 slippage for
+        the second would be a manufactured measurement of exactly the kind `HANDOFF` 3 forbids -
+        and it would flatter the strategy, because a time exit's true slippage is unknown rather
+        than absent.
+
+        Positive is ADVERSE for a long exit: the plan said sell at the stop and the fill came in
+        below it.
+        """
+        if self.planned_price is None:
+            return None
+        return self.planned_price - self.price
+
+    def slippage_r(self, initial_risk_per_share: Decimal) -> Decimal | None:
+        """Slippage as a fraction of R, against the ORIGINAL denominator (`US-011`, `RISK_SPEC` 2).
+
+        The denominator is the risk planned at entry and never moves - not the risk after a stop
+        was trailed, and not the risk on the shares that remain. Measuring slippage against a
+        shrinking denominator would make the same dollar miss look worse and worse as a position
+        is scaled out, which is the opposite of comparable.
+        """
+        per_share = self.slippage_per_share
+        if per_share is None:
+            return None
+        if initial_risk_per_share <= 0:
+            raise ValueError("the R denominator is not positive; slippage in R is undefined")
+        return per_share / initial_risk_per_share

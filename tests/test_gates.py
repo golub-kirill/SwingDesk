@@ -747,6 +747,124 @@ def test_track_a_gate_excludes_todays_session_while_its_window_is_still_open(tmp
     assert "2026-08-11 to 2026-08-11" in out
 
 
+# ------------------------------------------------------------- gate 23: idle-day diagnostic
+#
+# Council finding, 2026-08-16: CLEAN_EXIT_CODES counts a run that skipped every candidate
+# identically the same as one that actually evaluated something. These tests prove idle_days() can
+# tell the two apart - and, per RISK_REGISTER B-1's own rule for this file, that it can fail.
+
+
+def _within_schedule_start(date_str: str) -> str:
+    """A `started_at` inside the 18:30 local tolerance, tagged with the TOOL's own LOCAL_ZONE -
+    not a hardcoded UTC offset. `idle_days()` matches sessions against the real machine's local
+    zone the same way the log-based tests do, so the fixture has to agree with it rather than
+    assume a zone, or this test would be true only on a machine that happens to sit near UTC."""
+    from datetime import datetime as _dt
+
+    import track_a_streak
+
+    day, month, year = date_str.split("/")[1], date_str.split("/")[0], date_str.split("/")[2]
+    return _dt(
+        int(year), int(month), int(day), 18, 15, tzinfo=track_a_streak.LOCAL_ZONE
+    ).isoformat()
+
+
+def _record_run(
+    journal_path: Path, run_id: str, started_at_iso: str, decisions: list[tuple],
+) -> None:
+    """Write one run and its decisions with the real classes, not hand-rolled SQL."""
+    from datetime import datetime
+
+    from swingdesk.contracts.run import RunManifest, RunMode
+    from swingdesk.journal_evidence.journal import DecisionRecord, Journal
+
+    manifest = RunManifest(
+        run_id=run_id, started_at=datetime.fromisoformat(started_at_iso),
+        mode=RunMode.LIVE, code_hash="a", config_hash="b", snapshot_id="s",
+        calendar_version="c", platform="p",
+    )
+    with Journal(journal_path) as journal:
+        journal.start_run(manifest)
+        journal.record_decisions(
+            run_id, datetime.fromisoformat(started_at_iso),
+            [DecisionRecord(instrument_id=iid, decision=d, reason_code=rc, parameter_id=pid)
+             for iid, d, rc, pid in decisions],
+        )
+        journal.complete_run(run_id, "hash", datetime.fromisoformat(started_at_iso))
+
+
+def test_idle_day_line_is_absent_without_a_journal(tmp_path: Path) -> None:
+    """No `journal.duckdb` means the check could not run - reported as UNAVAILABLE, not silence."""
+    log = _log_line(_TUE, "starting") + _log_line(_TUE, "finished, exit 0")
+    root = _streak_tree(tmp_path, log)
+    code, out = _run_streak_gate(root, "2026-08-11T22:00:00")
+    assert code == 0
+    assert "idle-day check: UNAVAILABLE" in out
+
+
+def test_idle_day_line_counts_a_uniformly_refused_day_as_idle(tmp_path: Path) -> None:
+    """Every candidate Skipped for the same unset parameter - the exact shape PR #9 produces with
+    exit.atr_stop_multiple / exit.max_holding_period unset."""
+    log = _log_line(_TUE, "starting") + _log_line(_TUE, "finished, exit 0")
+    root = _streak_tree(tmp_path, log)
+    _record_run(
+        root / "data" / "journal.duckdb", "run-idle", _within_schedule_start(_TUE),
+        [
+            ("AAA", "Skip", "RISK", "exit.atr_stop_multiple"),
+            ("BBB", "Skip", "RISK", "exit.atr_stop_multiple"),
+        ],
+    )
+    code, out = _run_streak_gate(root, "2026-08-11T22:00:00")
+    assert code == 0
+    assert "1/1 counted day(s) were idle" in out
+
+
+def test_idle_day_line_does_not_count_a_substantive_day_as_idle(tmp_path: Path) -> None:
+    """This is the fail-first case: without idle_days() distinguishing outcomes, this would read
+    identically to the uniformly-refused test above. A Watch alongside a Skip is real variety."""
+    log = _log_line(_TUE, "starting") + _log_line(_TUE, "finished, exit 0")
+    root = _streak_tree(tmp_path, log)
+    _record_run(
+        root / "data" / "journal.duckdb", "run-substantive", _within_schedule_start(_TUE),
+        [
+            ("AAA", "Watch", None, None),
+            ("BBB", "Skip", "DATA", None),
+        ],
+    )
+    code, out = _run_streak_gate(root, "2026-08-11T22:00:00")
+    assert code == 0
+    assert "0/1 counted day(s) were idle" in out
+
+
+def test_idle_day_line_treats_an_empty_run_as_idle(tmp_path: Path) -> None:
+    """No candidates at all - a positions-only run, or a refused universe - has no variety either."""
+    log = _log_line(_TUE, "starting") + _log_line(_TUE, "finished, exit 0")
+    root = _streak_tree(tmp_path, log)
+    _record_run(root / "data" / "journal.duckdb", "run-empty", _within_schedule_start(_TUE), [])
+    code, out = _run_streak_gate(root, "2026-08-11T22:00:00")
+    assert code == 0
+    assert "1/1 counted day(s) were idle" in out
+
+
+def test_idle_day_line_reports_unmatched_days_separately(tmp_path: Path) -> None:
+    """A counted-clean day with no matching journal run is UNMATCHED, not assumed idle or clean -
+    the same three-state discipline `measure()` itself uses for a missing log."""
+    log = "".join(
+        _log_line(d, e)
+        for day in (_TUE, _WED)
+        for d, e in ((day, "starting"), (day, "finished, exit 0"))
+    )
+    root = _streak_tree(tmp_path, log)
+    _record_run(
+        root / "data" / "journal.duckdb", "run-tue", _within_schedule_start(_TUE),
+        [("AAA", "Skip", "RISK", "exit.atr_stop_multiple")],
+    )
+    # Wednesday has a scheduled-window log entry but no matching journal run at all.
+    code, out = _run_streak_gate(root, "2026-08-12T22:00:00")
+    assert code == 0
+    assert "1/1 counted day(s) were idle (every candidate refused identically), 1 unmatched" in out
+
+
 # ------------------------------------------------------------------ gate 24: the state block
 
 

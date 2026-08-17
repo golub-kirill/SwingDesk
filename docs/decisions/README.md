@@ -93,6 +93,7 @@ is expected to be superseded when a study says so. Different lifetimes, differen
 | `DR-008` | Daily US directory collection under local control | operational policy; no trading parameter | **accepted — ratified 2026-08-10** |
 | `DR-009` | The owner's broker charges no commission, and the cost model never knew | account-structure choice only — its parameter moved to `DR-010` (§5, correction 2026-08-13) | proposed |
 | `DR-010` | Sizing costs are price-aware and currency-aware, not one flat constant | `risk.costs_bp_usd`, `risk.costs_bp_cad`, `risk.costs_floor_usd`, `risk.costs_floor_cad` | **accepted — ratified 2026-08-13** |
+| `DR-011` | The run notice is a local desktop notification — not Firebase, not Telegram | none — a surface, not a measured component. Also corrects `PRODUCT_SURFACES` §3.4's self-contradicting example | proposed — mechanism chosen by the owner 2026-08-16 |
 
 `DR-007` is the largest of these by a distance: fifteen parameters at once, four of them ratifying
 what a reported study already used and eight genuinely authored. It exists because a ratified kill
