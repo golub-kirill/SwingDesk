@@ -6,7 +6,18 @@ These checks make that impossible: a parameter cannot carry a value without sayi
 from, and an unset parameter cannot be mistaken for a default.
 
 Checks:
-  1. Every entry has id, unit, value, status, provenance, named_in, ui_editable.
+  1. Every entry has id, unit, value, status, provenance, named_in, read_by, ui_editable.
+  7. `read_by` names the code that CONSUMES the value, and it resolves - `module:symbol`, imported
+     and checked, exactly the way `implements` is resolved in the component registry. `none` is the
+     honest alternative and is counted rather than hidden.
+
+     Added 2026-08-18, and the measurement that bought it: **23 parameters carried a value that no
+     line of code read**, fourteen of them from `DR-007` alone. The registry recorded where the
+     course MENTIONS a concept (`named_in`) and where the value CAME FROM (`provenance`), and
+     nothing at all about whether anything consumed it. Three separate findings in one week -
+     the exit policy, the staleness gate, the corporate-actions gate - were all the same shape:
+     specified, implemented or not, and wired to nothing. A ratified decision that reaches no code
+     is a decision that did not happen, and until this field existed there was no way to see it.
   2. Ids are unique and namespaced (`group.name`).
   3. status is one of unset | assumed | owner | validated, and agrees with value/provenance:
        - value null            <=> status unset  and provenance null
@@ -33,6 +44,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import importlib
 import re
 import sys
 from decimal import Decimal, InvalidOperation
@@ -41,7 +53,8 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 DEFAULT_REGISTRY = REPO / "registry" / "parameters.yml"
 
-REQUIRED_FIELDS = ("id", "unit", "value", "status", "provenance", "named_in", "ui_editable")
+REQUIRED_FIELDS = ("id", "unit", "value", "status", "provenance", "named_in", "read_by",
+                   "ui_editable")
 VALID_STATUS = ("unset", "assumed", "owner", "validated")
 ID_PATTERN = re.compile(r"^[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*$")
 DECISION_REF = re.compile(r"\b(DR-\d{3})\b")
@@ -78,6 +91,32 @@ def load_entries(path: Path) -> list[dict]:
         raise SystemExit(2) from None
     data = yaml.safe_load(path.read_text(encoding="utf-8"))
     return data.get("parameters") or []
+
+
+def reader_failure(entry: dict) -> str | None:
+    """`None` when `read_by` resolves, or is the explicit `none`.
+
+    Mirrors `verify_decisions.py`'s `implemented_by` / `implementation: none` pair, which caught a
+    false implementation claim on its first run. A field checked only for presence is the defect
+    this project keeps finding under other names; this one is imported and looked up.
+    """
+    label = entry.get("id", "<no id>")
+    reader = entry.get("read_by")
+    if reader is None:
+        return f"{label}: no `read_by`. Name the code that consumes it, or write `none`"
+    if reader == "none":
+        return None
+    if not isinstance(reader, str) or ":" not in reader:
+        return f"{label}: `read_by` must be 'module:symbol' or 'none', got {reader!r}"
+
+    module_path, _, symbol = reader.partition(":")
+    try:
+        module = importlib.import_module(module_path)
+    except Exception as error:  # noqa: BLE001 - the message is the point
+        return f"{label}: `read_by` cannot import {module_path} ({error})"
+    if not hasattr(module, symbol):
+        return f"{label}: `read_by` names {module_path}:{symbol}, which has no {symbol!r}"
+    return None
 
 
 def check(entries: list[dict]) -> list[str]:
@@ -135,6 +174,10 @@ def check(entries: list[dict]) -> list[str]:
                     f"exists"
                 )
 
+        failure = reader_failure(entry)
+        if failure:
+            failures.append(failure)
+
         if not entry["named_in"]:
             failures.append(f"{label}: named_in is empty - cite the course topic or mark as authored")
 
@@ -172,6 +215,24 @@ def main() -> int:
     for status in VALID_STATUS:
         if status in by_status:
             print(f"  {status:<10} {by_status[status]}")
+
+    # The number this field exists to make visible. A parameter with a VALUE and no reader is a
+    # decision that was ratified and never reached the code - the shape behind the exit policy, the
+    # staleness gate and the corporate-actions gate, all found within one week of each other. It is
+    # NOT a failure: many are legitimately ahead of the consumer that will read them. It is a
+    # measurement, and it was invisible until it was printed.
+    orphans = [e for e in entries
+               if e.get("read_by") == "none" and e.get("status") != "unset"]
+    if orphans:
+        print("")
+        print(f"{len(orphans)} parameter(s) carry a VALUE that no code reads - decided, not wired.")
+        print("Not a failure; a standing measurement:")
+        by_provenance: dict[str, int] = {}
+        for entry in orphans:
+            key = str(entry.get("provenance"))
+            by_provenance[key] = by_provenance.get(key, 0) + 1
+        for provenance, count in sorted(by_provenance.items(), key=lambda kv: -kv[1]):
+            print(f"  {count:>3}  {provenance}")
 
     unset = by_status.get("unset", 0)
     if unset:

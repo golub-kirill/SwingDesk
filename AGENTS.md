@@ -175,6 +175,21 @@ or a missing citation; the linter rejects both.
 `assumed` requires a citation. `validated` requires an evidence id. `unset` means the component
 refuses.
 
+**And `read_by` names the code that CONSUMES the value** — `module:symbol`, imported and looked up
+by gate 1, or the explicit `none`. Three fields, three different questions, and the third was
+missing until 2026-08-18: `named_in` says where the course mentions the concept, `provenance` says
+where the value came from, `read_by` says whether anything acts on it.
+
+**What paid for it:** 23 parameters carried a value that no line of code read, fourteen of them from
+`DR-007` alone. Three findings in one week — the exit policy, the staleness gate, the
+corporate-actions gate — were all the same shape: specified, sometimes implemented, wired to
+nothing. **A ratified decision that reaches no code is a decision that did not happen**, and nothing
+in the registry could see it.
+
+`none` is honest and is not a loophole — many parameters legitimately precede their consumer. It is
+**counted and printed on every gate run**, broken down by provenance, so the number stops being a
+discovery and starts being a line in a report.
+
 ## 8. Before proposing a threshold or a rule
 
 Check whether the course actually specifies it. Usually it does not — that is the project's central

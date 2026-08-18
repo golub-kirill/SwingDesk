@@ -1223,3 +1223,52 @@ def test_a_module_without_the_record_is_a_failure() -> None:
 
 def test_a_missing_file_is_a_failure() -> None:
     assert "does not exist" in (_spec_failure("TEST-1", "docs/nope.md#x") or "")
+
+
+# ------------- gate 1: `read_by` resolves the CONSUMER of a value, added 2026-08-18
+#
+# The registry recorded where the course MENTIONS a concept (`named_in`) and where the value CAME
+# FROM (`provenance`), and nothing about whether anything consumed it. Measured that day: 23
+# parameters carried a value no line of code read, fourteen from `DR-007` alone. Three findings in
+# one week — the exit policy, the staleness gate, the corporate-actions gate — were all that shape.
+
+
+def _reader_failure(**entry):
+    import sys
+    sys.path.insert(0, str(TOOLS))
+    from verify_parameters import reader_failure
+
+    return reader_failure({"id": "test.param", **entry})
+
+
+def test_a_named_reader_that_resolves_passes() -> None:
+    """Positive control. Without it the failures below pass for any string at all."""
+    assert _reader_failure(read_by="swingdesk.trade_management.sizing:size_long") is None
+
+
+def test_an_explicit_none_passes() -> None:
+    """`none` is the honest alternative, not a loophole: many parameters legitimately precede the
+    code that will read them. It is counted and printed rather than hidden."""
+    assert _reader_failure(read_by="none") is None
+
+
+def test_a_missing_read_by_is_a_failure() -> None:
+    assert "no `read_by`" in (_reader_failure() or "")
+
+
+def test_a_reader_naming_a_module_that_does_not_exist_is_a_failure() -> None:
+    failure = _reader_failure(read_by="swingdesk.nowhere:whatever")
+    assert failure is not None
+    assert "cannot import" in failure
+
+
+def test_a_reader_naming_a_symbol_that_does_not_exist_is_a_failure() -> None:
+    """The half a presence check cannot see. `sizing` imports fine; `no_such_function` does not
+    exist in it, and that is exactly the shape of a pointer nobody has read."""
+    failure = _reader_failure(read_by="swingdesk.trade_management.sizing:no_such_function")
+    assert failure is not None
+    assert "no_such_function" in failure
+
+
+def test_a_malformed_reader_is_a_failure() -> None:
+    assert "module:symbol" in (_reader_failure(read_by="sizing.size_long") or "")

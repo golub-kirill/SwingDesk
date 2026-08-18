@@ -49,11 +49,25 @@ was measured today rather than planned:
       **A conclusion that rested on this and no longer stands:** "a wrong R could be why the base
       strategy is negative" — R was never wrong, it was merely unasserted, so there is no prior
       result to re-derive. **The entry-filter family stays closed.**
-- [ ] **`[v]` `calendar.sessions_behind` has no caller in `src/` and a spec defines staleness through
-      it.** The only mutant still surviving the suite, and it survives for a different reason than
-      the other two did: not a weak test, but **dead code**. `DATA_QUALITY_SPEC.md`:40 states
-      `sessions_behind > 0` means stale; nothing calls it. Delete it or wire it — twenty minutes
-      either way, and the choice is which of the two documents is wrong.
+- [ ] **`[v]` The staleness gate is specified, implemented, and not wired — and "delete or wire" is
+      the wrong framing.** Traced 2026-08-18 after `calendar.sessions_behind` came back as the only
+      mutant surviving the suite.
+      **What exists.** `DATA_QUALITY_SPEC.md` §2.1 specifies the whole rule: `sessions_behind > 0`
+      means stale → refetch once → still stale is a `DATA` skip → `data.freshness_window` sessions
+      behind drops the instrument from the run. `calendar.sessions_behind()` implements the
+      measurement correctly and is exported.
+      **Why nothing calls it, and why deleting it would be wrong.** Both governing parameters are
+      `unset` — `data.freshness_window` and `data.staleness_action_threshold`. Wiring it today makes
+      every instrument refuse; deleting it throws away a correct implementation of a ratified rule.
+      It is the `DR-012` situation one gate over: the code is right, the decision is missing.
+      **The gap this leaves is real and it is not theoretical.** `pipeline.py`'s held-position fetch
+      is **fail-open** by design (`FAIL_CLOSED_POLICY` row 1): a `VendorUnavailable` falls through to
+      the stored snapshot, and `managed.stale` is set **only when there are no bars at all**. So a
+      position whose fetch fails is managed against stored bars of *any* age with nothing said. PR #9
+      fixed one cause of that fallback — the dual-class vendor-ticker lookup that made `BRK.B` fetch
+      fail silently — but the *consequence* is still unguarded: the next cause will look identical.
+      **Needs an owner decision, not code:** how many sessions behind is too stale to manage a
+      position on. That is `data.freshness_window`, and it is exactly the shape `DR-012` had.
 
 ### Closed — kept for the reasoning, not as work
 
@@ -322,9 +336,24 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       a heading that exists, a `.py` path must carry the marker. A module that does not is the same
       false pointer one file type over.
       **`regime` and `trend` carry no record and were demoted** `specified` → `registered`, `spec`
-      nulled. They keep their code; they lose the claim. Both serve the entry-filter family that is
-      closed by evidence, so writing them a specification would document something the project has
-      decided not to have. Census moves 458/6/1 → 460/4/1.
+      nulled. **A documentation status, not a deletion** — the code is untouched, still imported,
+      still golden-vectored. What was removed is the claim that a specification was written.
+      **CORRECTION, 2026-08-18.** The demotion commit justified this as "both serve the entry-filter
+      family closed by evidence". That is true of `trend` and **false of `regime`**:
+      • **`trend`** — closed as a per-signal entry filter. `PR-001` and `PR-005` both refuted the
+      trend-definition family and `screen.trend_definition` stays `unset`.
+      • **`regime`** — **not closed.** `regime.classifier_rule` is SET (`assumed:PR-002`,
+      `BREADTH_MEDIAN` split at 0.647), and `PR-002`'s verdict was corrected to INCONCLUSIVE, not
+      refuted.
+      • **`breadth`** — **parked, not killed** (`HANDOFF.md` §5), and explicitly revivable **as a
+      portfolio participation gate — never a per-signal entry filter**.
+      So the demotion stands on its own evidence (no record in the module, so `specified` was a
+      false claim) and NOT on the reason first given. Regime has a live future role; it is at the
+      portfolio level, not the instrument level.
+      **Neither is consumed by the live path today** — zero references to `regime`, `trend` or
+      `breadth` in `pipeline.py` or `report.py`. Today's Watch/Skip is produced with no regime input
+      at all, which is a fact worth knowing before anyone assumes the report reflects one.
+      Census moves 458/6/1 → 460/4/1.
       5 tests; the three that assert a *failure* confirmed red against the pre-fix check, the two
       positive controls confirmed green. Restored from a file copy, never `git checkout` — see the
       process note under proposal expiry.
