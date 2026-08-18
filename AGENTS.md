@@ -5,6 +5,29 @@ Read this before changing anything. It is short on purpose.
 **Starting a fresh session?** Read `HANDOFF.md` first — measured state, what is closed by evidence,
 and what to do next in ranked order.
 
+### The four documents, and which question each answers
+
+Keeping them apart is the point; §10.7 is the rule and this is the map.
+
+| | Answers | Does **not** hold |
+|---|---|---|
+| `README.md` | what this project is, to someone who has never seen it | anything that changes weekly |
+| **`AGENTS.md`** (this file) | how to work here — habits, conventions, traps | state, open work, or history |
+| `HANDOFF.md` | measured state, and what a fresh session needs in its first ten minutes | the task list, the plan, or habits |
+| `TODO.md` | every open item, and only open items | any measured count — it names the command instead |
+
+### How this file is numbered, and why it looks odd
+
+**Section numbers here are citation targets and are therefore frozen.** Roughly fifty references
+point at them from across the repository, and some sit in files that may not be edited at all —
+accepted decision records, a published study report, a postmortem. Renumbering to tidy the sequence
+would mean rewriting ratified documents to chase a heading, which §11 rule 2 forbids for good reason.
+
+So one oddity is permanent and worth naming rather than repeatedly rediscovering: **§10.5, §10.6 and
+§10.7 are independent rules, not sub-rules of §10.** They are `##` headings like §10 itself, and §10
+means what its title says — the four rules of 2026-08-09, which are §10.1–§10.4. The decimals on the
+later three record only that they arrived after §10 and before §11.
+
 ---
 
 ## 0. What this project is
@@ -82,10 +105,16 @@ docs/03-data       point-in-time, calendar, vendors, quality
 docs/04-journal    schema, audit, checklists
 docs/05-validation backtest, walk-forward, prereg
 docs/06-engineering architecture, determinism, CI, tests
+docs/07-ux         surfaces, copy, and the standing Untested warning
+docs/08-pm         roadmap, postmortems, evidence summary, gap analysis
 docs/08-pm/plans   implementation plans - Tier 8, because a plan is a PM artefact
-docs/adr           decisions, append-only
-registry/          course_index.yml · parameters.yml · criteria.yml
-src/swingdesk/     nine bounded contexts
+docs/adr           ARCHITECTURE decisions - storage engine, calendar, schema language. Append-only
+docs/decisions     DOMAIN decisions - DR-NNN, a value or a definition. Append-only once accepted
+docs/prereg        pre-registrations and their reports - the research record
+docs/contracts     cross-context record shapes
+docs/runbooks      operational procedures
+registry/          course_index.yml · parameters.yml · criteria.yml · components.yml
+src/               one package per bounded context under src/swingdesk/
 tools/             generators, checkers, probes
 ```
 
@@ -94,6 +123,11 @@ tools/             generators, checkers, probes
 2026-08-11, and produced a top-level directory named after a skill plugin holding 12% of all
 documentation. Plans are Tier 8. A tool's default is not this repository's structure - check
 §4 before creating a directory, the same way §1 says to check before asserting.
+
+**`docs/adr/` and `docs/decisions/` are different stores and neither is a home for the other.** An
+ADR is structural and rarely revisited; a `DR-NNN` is a value or a definition the domain needs and is
+expected to be superseded when a study says so. `docs/decisions/README.md` §4 draws the line, and §9
+rule 2 below is the same rule aimed at a tool that offers to blur it.
 
 `registry/course_index.yml` is **generated** — never hand-edit it. `registry/criteria.yml` is
 **frozen**; v1.1.0 appends the Track A time box without touching v1.0.0's content, which is what an
@@ -369,7 +403,9 @@ belongs somewhere else, and §10.6 governs every number that remains.
 Migrated from `HANDOFF.md` §8 on 2026-08-15 — §10.7 makes this file the habit guide and HANDOFF
 session memory, and these are habits.
 
-**Two traps that have cost real time:**
+**Traps that have cost real time.** (This heading read *"Two traps"* over three bullets until
+2026-08-17 — gate 14 matches digits, so a count spelled in words is invisible to it. Written out,
+the words are as fragile as the numerals; the fix is to stop counting in prose at all.)
 
 - **The worktree venv points at the main checkout.** `pytest` run from a worktree exercises
   `C:\PycharmProjects\SwingDesk\src`, not the worktree's, unless `PYTHONPATH` says otherwise. The
@@ -390,7 +426,10 @@ session memory, and these are habits.
 **The habits:**
 
 - **Verify before asserting.** When you find a stale claim, **add a gate rather than fixing the
-  instance.** That rule has produced five gates and every one has since caught something.
+  instance.** Gates 3f, 3g, 3ci, 3e's gap-summary check, 24 and 25 all exist because of it, and
+  every one has since caught something. Gate 25 is the clearest case: nothing bound a study's runner
+  to its own pre-registration, so `PR-002` reached an affirmative verdict over a declared scope
+  shortfall with 1 of 3 registered perturbations run, and every gate stayed green.
 - **`unavailable` is not `fail`, and it is not `pass` either.** A gap in the *system* and a fact
   about the *trade* are different claims. Collapsing them is the most damaging error this product can
   make — and a gate that cannot see its subject makes the same error about itself (§10.6).

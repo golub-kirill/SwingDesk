@@ -46,9 +46,9 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | | |
 |---|---|
 | Merge gates | **30**, one command: `python tools/check_gates.py` |
-| Tests | **505**, fully offline |
+| Tests | **515**, fully offline |
 | Docs | 108 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
-| Components | 465 catalogued · 458 registered · 6 `specified` · **1 `active`** |
+| Components | 465 catalogued · 460 registered · 4 `specified` · **1 `active`** |
 | Parameters | 102 - 61 `unset`, 37 `assumed`, 4 `owner`, **0 `validated`** |
 | Golden vectors | 25 vectors across 6 components |
 | Studies | 7 registered · 5 reported |
@@ -79,7 +79,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | | As of | |
 |---|---|---|
 | `master` | 2026-08-10 | **protected** — required check `gates`, admins included, no force-push. A new merge commit is refused until its check reports; fast-forward a green commit, or use a PR |
-| CI | 2026-08-10 | `gates`, windows-latest. Two gates report `UNAVAILABLE` there because the course PDFs are not in the repo, and two more when `data/` is absent |
+| CI | 2026-08-17 | `gates`, windows-latest. Exactly **four** `UNAVAILABLE`, verified against run `32093559374`: gates 2 and 3 need the course PDFs, which are not in the repo; gates 23 and 24 need `data/`. Everything else must be green |
 | Daily run | 2026-08-09 | **SCHEDULED** — Windows Task Scheduler, `SwingDesk daily run`, weekdays 18:30 local, wrapper `tools/daily_run.cmd`, log `data/daily_run.log`. ~5 min per run |
 | Costs | 2026-08-09 | slippage **measured** — 25bps per side (`DR-005`); commission still assumed |
 | ТЗ coverage | 2026-08-13 | FULL 30 · PARTIAL 24 · ABSENT 0 · DEFERRED 3 — recounted from `SPEC_GAP_ANALYSIS.md` §3 by gate 3e |
@@ -152,13 +152,15 @@ Two adopted adjustments survive here because they are decisions, not state:
 
 ## 5. Next — the plan of record is a document now
 
-**`docs/08-pm/plans/2026-08-11-evidence-foundation.md`** carries the next block task by task:
-gate 19 (secret hygiene, and a document claiming a path is ignored must be telling the truth), gate
-20 (an accepted decision names what proves it happened), gate 21 (uncommitted work, advisory),
-`DR-008` amended to what will actually run, the sidecar wired, and the first trade log this project
-has ever had. Work beyond that block — EDGAR delisting backfill, the exit card, the parked breadth
-card, vector memory, and nine smaller debts — is deferred there with entry criteria rather than
-dates.
+**`docs/08-pm/plans/2026-08-11-evidence-foundation.md`** is that plan, and **its block is now
+delivered**: gates 19 (secret hygiene), 20 (an accepted decision names what proves it happened) and
+21 (uncommitted work, advisory) are all in the suite, `DR-008`'s collector runs on every scheduled
+evening, and the first trade log this project has ever had is published at
+`docs/prereg/results/PR-005-trades.csv` — 26,351 trades, with its provenance beside it.
+
+Work deferred there with entry criteria rather than dates — EDGAR delisting backfill, the exit card,
+the parked breadth card, vector memory, and nine smaller debts — is still deferred, and `TODO.md`
+is where any of it becomes an open item.
 
 **A five-advisor council reviewed the strategy question on 2026-08-11 and returned fewer cards than
 it was asked for.** Its verdict: build **no** strategy card first. Persist the trade log, then fund
@@ -183,32 +185,41 @@ crash is exit 3 or a missing log entry, and that is what resets the counter. `to
 runs before the pipeline and exits 3 naming any missing dependency, so an environment fault costs a
 log line at 18:30 instead of a day.
 
-**Owner rule, 2026-08-11: nothing lands that changes the daily-run code path until the counter has
-five clean days.** Frozen: `tools/daily_run.cmd`, `application/pipeline.py`,
-`trade_management/sizing.py`. Registries, documents, decision records and new `tools/` scripts are
-all safe. The plan's Task 5 is the one validated exception and carries its proof inline.
+**The freeze that ran 2026-08-11 → 2026-08-17 is LIFTED.** Owner rule: nothing landed that changed
+the daily-run code path until the counter had five clean days. It reached five on 2026-08-17, PR #9
+merged that evening, and the counter reset by design. Recorded here rather than deleted because the
+frozen-file list below is still live and still governs what resets the counter.
+
+**Frozen files:** `tools/daily_run.cmd`, `application/pipeline.py`, `trade_management/sizing.py`.
+Registries, documents, decision records and new `tools/` scripts are all safe.
 
 **Amendment, 2026-08-16, council-reviewed (5 advisors + peer review, unanimous on both points):** a
-merge to a frozen file that changes decision output resets the counter to zero, effective the merge
-date. **Implemented 2026-08-17 as `STREAK_RESTARTS` in `tools/track_a_streak.py`, after the rule
-fired with nothing enforcing it** — PR #9 merged and the tool went on reporting 5/20, four of those
-days having run under the pipeline that merge corrected. Prose is not a mechanism; adding a dated row
-there is now the only way to apply this rule — not the next scheduled run, which would just reopen the question every cycle. Cosmetic
-changes (logging, comments) do not. First trigger: PR #9 (FX refusal, cost-inclusive R denominator,
-one exit policy read from the registry, `output_hash` widened to cover trade terms and open
-positions, a held position's vendor-ticker lookup) — the 4 days banked 08-11→08-14 ran under a
-pipeline with five now-fixed correctness defects, and splicing them onto a corrected system's streak
-would report confidence in a system that only existed for one day.
+merge to a frozen file that changes decision output resets the counter to zero, **effective the merge
+date and not the next scheduled run** — which would just reopen the question every cycle. Cosmetic
+changes (logging, comments) do not reset it.
 
-**The council's sharper finding, which the restart alone does not fix:** with `exit.atr_stop_multiple`
-/ `exit.max_holding_period` still unset post-merge, every candidate Skips and every position Pauses —
-and `CLEAN_EXIT_CODES = (0, 2)` counts a coded refusal the same as a run that actually evaluated
-something. Most of the days between the restart and DR-006's ratification will be an idle system
-reporting "nothing happened" as clean. `tools/track_a_streak.py` now prints a separate, additional
-line — idle-day count within the streak, sourced from `journal.duckdb` — so this is visible rather
-than silently counted. **It does not change what `a.run_completes` measures**, which stays exactly
-its ratified text (the run completes and produces a report); it makes the gap between that text and
-what people read into the number visible instead of quiet.
+**First trigger, and it exposed that the rule had no mechanism.** PR #9 merged 2026-08-17 (FX
+refusal, cost-inclusive R denominator, one exit policy read from the registry, `output_hash` widened
+to cover trade terms and open positions, a held position's vendor-ticker lookup). The 4 days banked
+08-11→08-14 ran under a pipeline with five now-fixed correctness defects, and splicing them onto a
+corrected system's streak would report confidence in a system that had existed for one day.
+
+**It went on reporting 5/20 anyway.** The amendment lived only in this paragraph, so nothing applied
+it. Implemented the same evening as `STREAK_RESTARTS` in `tools/track_a_streak.py`: a dated list with
+a reason per row, sessions on or before the most recent restart outside the countable window. Adding
+a row is now the only way to apply this rule. The counter reads `0` and prints why — a bare zero
+after a deliberate reset is indistinguishable from an outage.
+
+**The council's sharper finding about idle days — the premise is gone, the diagnostic remains.** It
+warned that with `exit.atr_stop_multiple` / `exit.max_holding_period` unset post-merge, every
+candidate would Skip and every position Pause, while `CLEAN_EXIT_CODES = (0, 2)` counted a coded
+refusal as a clean run. **`DR-012` ratified both parameters on 2026-08-17, so that window never
+opened** — verified on real bars the same day: candidates size and reach `Watch` rather than
+refusing. The idle-day line in `tools/track_a_streak.py` stays, because the gap it measures is
+permanent: a day on which every candidate refused identically and a day that evaluated something are
+different facts, and the exit code alone cannot tell them apart. **It does not change what
+`a.run_completes` measures**, which stays exactly its ratified text — the run completes and produces
+a report.
 
 ### Two live risks
 

@@ -18,14 +18,14 @@ Master specification v1.0 §5. Its rule is that coverage may not be claimed with
 | Layer | Registered | Specified | Implemented | Validated | **Runtime** | Docs |
 |---|---:|---:|---:|---:|---:|---|
 | Source Facts | 9 | 0 | 0 | 0 | **0** | 2 of 2 |
-| Derived Observations | 168 | 6 | 6 | 0 | **1** | 2 of 2 |
-| Decision Logic | 192 | 1 | 1 | 0 | **0** | 3 of 3 |
+| Derived Observations | 168 | 5 | 6 | 0 | **1** | 2 of 2 |
+| Decision Logic | 192 | 0 | 1 | 0 | **0** | 3 of 3 |
 | Trade Management | 96 | 0 | 0 | 0 | **0** | 3 of 3 |
-| **Total** | **465** | 7 | 7 | 0 | **1** | |
+| **Total** | **465** | 5 | 7 | 0 | **1** | |
 
 ```
 registered   ██████████   465
-specified    ··········     7
+specified    ··········     5
 implemented  ··········     7
 validated    ··········     0
 runtime      ··········     1

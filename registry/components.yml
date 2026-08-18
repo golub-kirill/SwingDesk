@@ -788,7 +788,7 @@ components:
     consumers: [M33-T0485-v5.0]
     owner: owner
     verification: golden vectors
-    spec: "docs/02-domain/ALGORITHM_SPEC.md#swing-high"
+    spec: src/swingdesk/derived_observations/pivots.py
 
   - component: M12-T0202-v5.0
     name: Предыдущий минимум
@@ -802,7 +802,7 @@ components:
     consumers: [M33-T0485-v5.0]
     owner: owner
     verification: golden vectors
-    spec: "docs/02-domain/ALGORITHM_SPEC.md#swing-low"
+    spec: src/swingdesk/derived_observations/pivots.py
 
   - component: M12-T0203-v5.0
     name: Исторический максимум
@@ -1040,7 +1040,7 @@ components:
     consumers: []
     owner: owner
     verification: golden vectors
-    spec: "docs/02-domain/ALGORITHM_SPEC.md#atr"
+    spec: src/swingdesk/derived_observations/atr.py
 
   - component: M18-T0281-v5.0
     name: ATR в процентах
@@ -1404,7 +1404,7 @@ components:
     consumers: [M31-T0459-v5.0, M33-T0485-v5.0]
     owner: owner
     verification: golden vectors
-    spec: "docs/02-domain/ALGORITHM_SPEC.md#sma"
+    spec: src/swingdesk/derived_observations/moving_average.py
 
   - component: M25-T0383-v5.0
     name: EMA
@@ -1804,13 +1804,13 @@ components:
     stage: Context
     claim_type: Definition
     validation: Not Applicable
-    activation: specified
+    activation: registered
     implements: "swingdesk.derived_observations.regime:fit"
     parameters: [regime.classifier_rule, regime.breadth_cutoffs]
     consumers: []
     owner: owner
     verification: golden vectors
-    spec: "docs/02-domain/REGIME_SPEC.md#classifier"
+    spec: null
 
   - component: M30-T0451-v5.0
     name: Выбор стратегии под режим
@@ -1852,7 +1852,7 @@ components:
     consumers: [M30-T0450-v5.0]
     owner: owner
     verification: golden vectors
-    spec: "docs/02-domain/REGIME_SPEC.md#breadth"
+    spec: src/swingdesk/derived_observations/breadth.py
 
   - component: M31-T0460-v5.0
     name: Сильные и слабые секторы
@@ -2042,13 +2042,13 @@ components:
     stage: Candidate
     claim_type: Operational Course Rule
     validation: Untested
-    activation: specified
+    activation: registered
     implements: "swingdesk.decision_logic.trend:is_uptrend"
     parameters: [screen.trend_definition, screen.trend_pivot_count]
     consumers: []
     owner: owner
     verification: null
-    spec: "docs/02-domain/SCREENER_SPEC.md#trend-filter"
+    spec: null
 
   - component: M33-T0486-v5.0
     name: Фильтр по близости к максимуму

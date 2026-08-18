@@ -13,6 +13,11 @@ Six checks the registry unlocks, and the first is the one import analysis cannot
      missing must refuse, not run.
   5. `implements` points at a module and symbol that actually exist.
   6. Every non-Definition topic has a row (full-catalogue coverage, owner decision D2).
+  7. `spec` points at a document AND a heading that actually exist. Added 2026-08-18, because check
+     2 verified only that the field was non-empty while check 5 resolved `implements` for real - so
+     the code pointer was a fact and the spec pointer was a string length. All seven implemented
+     components pointed at anchors that do not exist, in a document that contains no algorithm
+     specifications and whose own section 7 has not decided whether it should.
 
 Plus a consistency check the spec implies rather than lists: a component's `consumers` must name
 components that exist, and must not name itself.
@@ -25,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import re
 import sys
 from pathlib import Path
 
@@ -44,6 +50,58 @@ def _load(path: Path):
         print("PyYAML required (pip install pyyaml)", file=sys.stderr)
         raise SystemExit(2) from None
     return yaml.safe_load(path.read_text(encoding="utf-8"))
+
+
+def _slug(heading: str) -> str:
+    """GitHub's anchor slug for a Markdown heading: lowercase, non-alphanumerics to hyphens."""
+    text = heading.lstrip("#").strip()
+    return re.sub(r"-+", "-", re.sub(r"[^a-z0-9]+", "-", text.lower())).strip("-")
+
+
+#: The marker a module carries when its ALGORITHM_SPEC record lives in its own docstring. Checked
+#: for CONTENT, not presence: a `.py` path that does not actually carry the record is the same
+#: false pointer as a dangling anchor, one file type over.
+SPEC_RECORD_MARKER = "ALGORITHM_SPEC record"
+
+
+def spec_failure(component: str, spec: str) -> str | None:
+    """`None` when `spec` resolves to a real specification. Two forms are legal.
+
+    `path/to/doc.md#anchor` - the document must exist AND contain that heading.
+    `path/to/module.py`     - the module must exist AND carry its ALGORITHM_SPEC record.
+
+    Resolved the way `implements` is resolved, and for the same reason: a pointer only checked for
+    length is not a pointer, it is a claim nobody has read. `spec` is what separates `registered`
+    from `specified` on the activation ladder, so a dangling one leaves a component standing in a
+    state it has not earned.
+
+    The `.py` form is not a concession - it is where these specifications actually live.
+    `ALGORITHM_SPEC.md` §7 asked whether specs belong in that document or beside the code, and five
+    components had already answered by carrying the full eleven-field record in their module
+    docstring while their `spec:` pointed at a heading that never existed.
+    """
+    path, _, fragment = spec.partition("#")
+    target = REPO / path
+    if not target.is_file():
+        return f"{component}: `spec` names {path}, which does not exist"
+
+    if path.endswith(".py"):
+        if fragment:
+            return f"{component}: `spec` {spec} - a module path takes no #fragment"
+        if SPEC_RECORD_MARKER not in target.read_text(encoding="utf-8"):
+            return (f"{component}: `spec` names {path}, which carries no "
+                    f"{SPEC_RECORD_MARKER!r}. The file exists; the specification it promises "
+                    f"does not")
+        return None
+
+    if not fragment:
+        return None
+    headings = {_slug(line) for line in target.read_text(encoding="utf-8").splitlines()
+                if line.startswith("#")}
+    if fragment.lower() not in headings:
+        return (f"{component}: `spec` points at {path}#{fragment}, and {path} has no such heading. "
+                f"The document exists; the section it promises does not")
+    return None
 
 
 def check(rows: list[dict], parameters: dict[str, dict], course: list[dict]) -> list[str]:
@@ -99,6 +157,13 @@ def check(rows: list[dict], parameters: dict[str, dict], course: list[dict]) -> 
                     f"{component}: activation is 'active' while {parameter_id} is unset. A "
                     f"component whose threshold is missing must refuse, not run."
                 )
+
+        # 7. spec resolves - document AND heading, not merely a non-empty string
+        spec = row.get("spec")
+        if spec:
+            failure = spec_failure(component, str(spec))
+            if failure:
+                failures.append(failure)
 
         # 5. implements resolves
         target = row.get("implements")

@@ -1,6 +1,6 @@
 # TODO — the single open-work list
 
-**Status:** working document · **Owner:** shared · **Last reconciled:** 2026-08-15
+**Status:** working document · **Owner:** shared · **Last reconciled:** 2026-08-17
 
 This is the **only** place open and pending work is listed. If a task is not here, it is not tracked.
 Sessions add and close items here; nowhere else keeps a parallel list.
@@ -18,12 +18,44 @@ python tools/track_a_streak.py       # the a.run_completes counter (run from the
 python tools/verify_counts.py        # every census this project knows how to derive
 ```
 
-Provenance marks: **`[v]`** verified against code or data on 2026-08-15 · **`[c]`** carried from the
-open-tasks audit, not independently re-checked.
+Provenance marks: **`[v]`** verified against code or data, most recently 2026-08-17 · **`[c]`**
+carried from the open-tasks audit, not independently re-checked. A `[c]` item is not a smaller
+claim than a `[v]` one — it is an *unverified* one, and promoting it means checking it, not
+retyping it.
 
 ---
 
 ## 1. Blocking now
+
+**Nothing blocks a merge.** All 30 gates are green on `master`, there are no open pull requests, and
+the 2026-08-11 freeze lifted on 2026-08-17.
+
+**What blocks the next thing worth doing** — one item, and it is not on any list below because it
+was measured today rather than planned:
+
+- [x] **`[v]` The R denominator was asserted by nothing — CLOSED 2026-08-18 by re-measurement, not
+      by work.** On the morning of 08-17, `planned_risk` could be replaced with the constant
+      `Decimal('42')` and the entire suite stayed green, including the test `INVARIANTS.md` §1 names
+      as enforcing that invariant — which asserts `(net/x)*x == net`, an identity that cannot fail
+      for any `x`. That test is still a tautology and should be replaced.
+      **But the defect it left open is closed.** Re-measured on `master` after PR #9 merged: the
+      `Decimal('42')` mutant is **killed**, and so is `risk_per_share = entry - stop + costs` →
+      `entry - stop`. What kills them is `test_sizing_and_position_agree_on_the_denominator`, the
+      cross-module property test written as part of #9 — it asserts the *equality* of `sizing`'s and
+      `Position`'s denominators rather than either value, so it constrains `planned_risk` without
+      naming it.
+      **The base rate is now 1 of 11, not 3.** The sole survivor is `calendar.sessions_behind`,
+      below.
+      **A conclusion that rested on this and no longer stands:** "a wrong R could be why the base
+      strategy is negative" — R was never wrong, it was merely unasserted, so there is no prior
+      result to re-derive. **The entry-filter family stays closed.**
+- [ ] **`[v]` `calendar.sessions_behind` has no caller in `src/` and a spec defines staleness through
+      it.** The only mutant still surviving the suite, and it survives for a different reason than
+      the other two did: not a weak test, but **dead code**. `DATA_QUALITY_SPEC.md`:40 states
+      `sessions_behind > 0` means stale; nothing calls it. Delete it or wire it — twenty minutes
+      either way, and the choice is which of the two documents is wrong.
+
+### Closed — kept for the reasoning, not as work
 
 - [x] **`[v]` Track A restart rule + idle-day diagnostic — landed 2026-08-16, council-reviewed (5
       advisors + peer review, unanimous on both original questions).** A merge to a frozen file that
@@ -50,8 +82,7 @@ open-tasks audit, not independently re-checked.
       typed. Two new standing measurements came with it: PIT integrity (**CLEAN**, 0 bars whose
       `event_time` postdates their `knowledge_time`) and the dirty-tree run count (**11 of 13**).
 
-**Open as [PR #3](https://github.com/golub-kirill/SwingDesk/pull/3)**, `claude/swingdesk-review-verify-b8707c` → `master`, 5 commits, not yet merged. This file does not exist on `master` until it does — a fresh session reading from `master` will not find it. All 29 gates
-pass from the main checkout, 27 + 2 `UNAVAILABLE` from a worktree without `data/`.
+**PR #3 merged.** This file has been on `master` since.
 
 ## 2. Picked work
 
@@ -275,6 +306,28 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       review: a patch that fails to apply is **FAIL** never skip (an exact-string mutant rots on the
       next rename, and a gate that mutated nothing is `(net/x)*x == net` one layer up); it ships with
       one planted survivor proving it can go red; output is named survivors with diffs, never a score.
+- [x] **`[v]` Gate 11 checked `spec` for string length while resolving `implements` for real —
+      fixed 2026-08-18.** Every one of the seven implemented components pointed at a heading that
+      does not exist (`ALGORITHM_SPEC.md#atr`, `#sma`, `#swing-high`, `#swing-low`,
+      `REGIME_SPEC.md#classifier`, `#breadth`, `SCREENER_SPEC.md#trend-filter`). The ladder defines
+      `specified` as "algorithm spec written", so all six `specified` rows stood in a state they had
+      not earned, for months, behind a green gate.
+      **What the investigation actually found is better than the defect.** The specifications were
+      not missing — **five of the seven carry the full eleven-field `ALGORITHM_SPEC record` in their
+      own module docstring**: `atr`, both pivots, `moving_average`, `breadth`. `ALGORITHM_SPEC.md`
+      §7 had been asking whether specs belong in that document or beside the code; the tree had
+      answered years-of-habit ago and nothing had written it down. §7 item 1 is now closed:
+      **beside the code, under the `ALGORITHM_SPEC record` marker.**
+      `spec:` now takes two forms and **gate 11 resolves both by content** — a `.md#anchor` must name
+      a heading that exists, a `.py` path must carry the marker. A module that does not is the same
+      false pointer one file type over.
+      **`regime` and `trend` carry no record and were demoted** `specified` → `registered`, `spec`
+      nulled. They keep their code; they lose the claim. Both serve the entry-filter family that is
+      closed by evidence, so writing them a specification would document something the project has
+      decided not to have. Census moves 458/6/1 → 460/4/1.
+      5 tests; the three that assert a *failure* confirmed red against the pre-fix check, the two
+      positive controls confirmed green. Restored from a file copy, never `git checkout` — see the
+      process note under proposal expiry.
 - [ ] **`[v]` Six gates have never been proven able to fail.** `tests/test_gates.py`'s own docstring
       sets the bar — *"A gate that has never been seen red proves nothing"* — and these have zero
       references in it: `verify_parameters` (1), `verify_transcription` (2), `verify_docs` (3e),
@@ -296,13 +349,15 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 ### Correctness findings from the 2026-08-15 review — all `[v]`
 
 - [x] **`[v]` Live path silently defaulted the exit policy — fixed 2026-08-16.** `_exit_policy()`
-      reads `exit.atr_stop_multiple` and `exit.max_holding_period` and REFUSES when unset (they are).
+      reads `exit.atr_stop_multiple` and `exit.max_holding_period` and REFUSES when unset. **They
+      were unset when this was written and were ratified 2026-08-17 (`DR-012`)**, so the refusal
+      path is now the exceptional one rather than the only one.
       Candidates Skip with the parameter named; open positions PAUSE rather than being managed on an
       invented stop. Old behaviour `pipeline.py`:289 and :369 both use
       `exits or ExitPolicy(Decimal("2.0"), 20)` — a hard-coded constant with no registry read and no
       provenance, while `exit.atr_stop_multiple` and `exit.max_holding_period` are both `unset`.
-      This is a no-silent-default violation sitting in the production path. **Frozen file — queue
-      behind the freeze.**
+      This is a no-silent-default violation sitting in the production path. **Was a frozen file
+      queued behind the freeze; the freeze lifted 2026-08-17 and PR #9 merged the same evening.**
 - [x] **`[v]` Sizing stop and exit policy disagreed — fixed 2026-08-16.** One policy for the whole
       run: the candidate path now sizes with `policy.stop_for()`, the same distance management and
       the checklist use. Old behaviour `pipeline.py`:343 sizes against `close − 1×ATR`;
@@ -399,6 +454,13 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 - [ ] **Tests cover the safe branch of the risky code, three times over.** See §8.
 
 ## 6b. The operational chain — what a full cycle needs
+
+**COMPLETE as of 2026-08-18.** Every buildable item below is done, and the one remaining open entry
+(3c, off-desk reach) is a deliberate non-goal rather than a gap — `DR-011` decided it and preserves
+the whole analysis so nobody redoes it. The chain ran end to end on 2026-08-17, which is the
+condition the 2026-08-16 council set before research resumes; `DR-014` then reordered what "resumes"
+means. **It has not run with owner capital and will not** (`DR-014`).
+
 
 Traced end to end 2026-08-16, not just the pipeline internals: `daily_run.cmd` → `cli.py scan` →
 `report.py`. **BUILT and gated** (30/30 gates, 435 tests): candidate screening, sizing, exit-policy
@@ -523,7 +585,34 @@ closes, which is exactly what the council's suspend-research call asked for — 
       **Channel: the CLI, locally.** `DR-011` established the owner is at the machine; a Telegram
       approval surface would re-open every question that record settled. `PRODUCT_SURFACES` §3.3
       still names Telegram for this and remains unbuilt.
-- [ ] **5b. Nothing expires a proposal.** `ActionStatus.EXPIRED` exists and is never written. A
+- [x] **5b — PROPOSAL EXPIRY. Built 2026-08-18.** *(The name is the fix for the name: "5b" is a
+      nested list index that tells a reader nothing. It is proposal expiry.)*
+      `manage.is_expired()` decides it, `DR-013` rules it, and nothing writes `ActionStatus.EXPIRED`
+      to a row — expiry is computed at READ time, the same shape `pending` already uses by defining
+      pending as the ABSENCE of a response rather than a status column. There is no daemon here to
+      write a stored value, so a stored one would be correct only until nobody was looking.
+      **Sessions, not calendar days.** A proposal made Friday is answerable Wednesday and expires
+      Thursday. Counting calendar days would expire proposals across exactly the intervals in which
+      no bar existed and no risk could have changed.
+      **`EXPIRING_KINDS` is a whitelist, deliberately** — `MOVE_STOP` and `PARTIAL_EXIT` only.
+      `EXIT_NOW` never expires (`DR-013` §2.1: it would convert the system's loudest statement into
+      silence). `PAUSE` was not classified by `DR-013`, so it inherits the fail-closed side rather
+      than a classification this module invented.
+      `pending` **shows** expired proposals rather than dropping them, and prints `AGE UNKNOWN` on
+      stderr when the rule cannot be applied at all. `respond` refuses **before** recording the
+      answer — the store's primary key means a recorded response cannot be taken back, so a
+      refusal after the write would arrive too late to matter.
+      `pending --as-of` added, so staleness is testable at a pinned instant like every other command.
+      5 new tests. Two assert the ABSENCE of expiry and so cannot go red against an unbuilt feature;
+      both were instead proven against **mutated** implementations (`EXIT_NOW` made expirable, and
+      the off-by-one flipped to `>=`).
+      **A process defect worth more than the feature.** The first mutation round restored the file
+      with `git checkout -- manage.py`, which reverts from the INDEX — and the new function was
+      never staged, so the "restore" deleted it. The second mutation then "failed" for the wrong
+      reason entirely. Caught only by the full gate suite, which reported `AttributeError: module
+      has no attribute 'is_expired'` in 12 tests that had passed targeted minutes earlier.
+      **Restore from a copy, never from git, when the ritual's subject is uncommitted.**
+- [x] ~~**5b. Nothing expires a proposal.**~~ `ActionStatus.EXPIRED` exists and is never written. A
       stop move proposed on a stale observation stays answerable indefinitely, so an owner
       returning after a week can approve a trail computed against week-old bars. Needs a rule for
       how long a proposal stands.

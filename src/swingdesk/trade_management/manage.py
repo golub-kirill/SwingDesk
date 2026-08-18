@@ -20,6 +20,8 @@ from typing import Any
 
 from swingdesk.contracts.market import Bar
 from swingdesk.contracts.position import ActionKind, ManagementAction, Position
+from swingdesk.contracts.reference import Exchange
+from swingdesk.reference_data import calendar as cal
 from swingdesk.trade_management.exits import ExitPolicy
 
 
@@ -118,3 +120,36 @@ def apply_approved(position: Position, action: ManagementAction, now: datetime) 
         update["closed_on"] = now.date()
 
     return position.model_copy(update=update)
+
+
+#: The only kinds a proposal may age out of (`DR-013` 2). Everything else NEVER expires, and the
+#: list is a whitelist rather than a blacklist on purpose: `EXIT_NOW` is critical because not acting
+#: leaves risk uncontrolled, and `PAUSE` means management could not be evaluated at all - which
+#: `DR-013` did not classify, so it inherits the fail-closed side rather than a classification this
+#: module invented. A kind added later expires only when a decision record says it may.
+EXPIRING_KINDS = (ActionKind.MOVE_STOP, ActionKind.PARTIAL_EXIT)
+
+
+def is_expired(
+    action: ManagementAction, as_of: datetime, expiry_days: int, exchange: Exchange
+) -> bool:
+    """Has this proposal aged past `DR-013`'s window, measured in SESSIONS rather than days?
+
+    Read-time only. Nothing writes `ActionStatus.EXPIRED` to a row, and `DR-013` 6.4 says why: a
+    status somebody has to remember to write is the defect `pending` already avoids by defining
+    pending as the ABSENCE of a response. There is no daemon here to write it, so a stored value
+    would be correct only until the next moment nobody was looking.
+
+    **Sessions, not calendar days.** A proposal made Friday is not stale on Monday - no bar existed
+    over the weekend and no risk changed. Counting calendar days would expire proposals during
+    exactly the intervals in which nothing could have invalidated them.
+
+    **Critical kinds never expire** (`EXPIRING_KINDS`). Expiring an `EXIT_NOW` would convert the
+    system's loudest statement into silence, and silence reads as "nothing to do" - `DR-013` 2.1.
+    """
+    if action.kind not in EXPIRING_KINDS:
+        return False
+    elapsed = cal.sessions(exchange, action.proposed_at.date(), as_of.date())
+    # The proposal's own session is not elapsed time. A proposal made this morning has seen zero
+    # sessions pass, not one - off by one here would expire everything a full day early.
+    return max(len(elapsed) - 1, 0) > expiry_days
