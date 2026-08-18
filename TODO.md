@@ -133,7 +133,20 @@ hands it over by name.
       liquidity $5M proxies. And `universe.min_adtv_20d = $5M` is itself `assumed` and never swept —
       a $3M–$8M sweep would test it and settle whether the six crossers are noise, in one pass.
 
-- [ ] **`[v]` Corporate actions — DR-016 is DRAFTED (proposed, 2026-08-18) and needs a ruling.**
+- [ ] **`[v]` Corporate actions — DR-016 DRAFTED and its PRECONDITION IS NOW BUILT (2026-08-18).**
+      **The actions series exists.** `POINT_IN_TIME_SPEC` §4 named three series and the tree had
+      two; `DR-016` named the third as its own blocker. Built: `CorporateAction` on the contract, a
+      bitemporal `corporate_actions` table beside the bars with `write_actions` / `actions_as_of`,
+      and `vendor_yahoo.fetch_actions` reading the vendor's splits and dividends.
+      **Not a `Series` member, deliberately** — a split has no open/high/low/close, so putting it in
+      that enum would mean inventing five empty fields and the first component to read one would
+      get numbers back. It is its own record with its own table, which is what "with their own
+      `knowledge_time`" in the spec's own row requires.
+      **Wired into no decision.** The gate needs `data.revision_epsilon`, which is `unset` pending
+      the ruling below, so storing an action changes nothing the run decides — which is exactly why
+      it was safe to land before the ruling. 11 tests, 5 mutants killed including the look-ahead one
+      (an action learned later must be invisible to an earlier read).
+      **What still needs the owner:**
       `data.revision_epsilon = 0.001`, scoped to price only; volume taken out of §4's
       raw-immutability rule and given no parameter, because the course names no such concept and the
       measured distribution contains no threshold. **Its precondition is `Series.ACTIONS`**, which

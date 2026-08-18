@@ -3,7 +3,7 @@
 from swingdesk.market_data.completeness import CompletenessReport, SessionFinding, check
 from swingdesk.market_data.store import BarStore, WriteResult
 from swingdesk.market_data.vendor_profile import QUESTRADE, YAHOO, VendorProfile
-from swingdesk.market_data.vendor_yahoo import VendorUnavailable, fetch
+from swingdesk.market_data.vendor_yahoo import VendorUnavailable, fetch, fetch_actions
 
 __all__ = [
     "QUESTRADE",
@@ -16,4 +16,5 @@ __all__ = [
     "WriteResult",
     "check",
     "fetch",
+    "fetch_actions",
 ]

@@ -21,7 +21,14 @@ from typing import Any
 
 import duckdb
 
-from swingdesk.contracts.market import Bar, BarSeries, Interval, Series
+from swingdesk.contracts.market import (
+    Bar,
+    BarSeries,
+    CorporateAction,
+    CorporateActionKind,
+    Interval,
+    Series,
+)
 from swingdesk.reference_data import calendar as cal
 
 _SCHEMA = """
@@ -38,6 +45,15 @@ CREATE TABLE IF NOT EXISTS bars (
     close           DECIMAL(18,6) NOT NULL,
     volume          BIGINT        NOT NULL,
     PRIMARY KEY (instrument_id, interval, series, event_time, knowledge_time)
+);
+
+CREATE TABLE IF NOT EXISTS corporate_actions (
+    instrument_id   VARCHAR       NOT NULL,
+    kind            VARCHAR       NOT NULL,
+    effective_date  DATE          NOT NULL,
+    knowledge_time  TIMESTAMPTZ   NOT NULL,
+    value           DECIMAL(18,6) NOT NULL,
+    PRIMARY KEY (instrument_id, kind, effective_date, knowledge_time)
 );
 
 CREATE TABLE IF NOT EXISTS snapshots (
@@ -256,6 +272,86 @@ class BarStore:
             )
         return WriteResult(inserted=len(new_rows) - revised, revised=revised,
                            unchanged=unchanged, unclosed=unclosed)
+
+    # ------------------------------------------------------- corporate actions
+
+    def write_actions(
+        self, actions: Iterable[CorporateAction], knowledge_time: datetime
+    ) -> WriteResult:
+        """Store splits and dividends. Bitemporal and append-only, exactly like bars.
+
+        Separate from `write` because an action is not a bar: `POINT_IN_TIME_SPEC` §4 names it a
+        third series, and it has no OHLCV to compare. The revision rule is therefore also different
+        and simpler - an action either matches what is stored or it does not, with no epsilon.
+        `data.revision_epsilon` (`DR-016`) exists because vendor PRICES carry float noise; a split
+        ratio is 2, not 1.9999998.
+
+        No unclosed guard here either, and that is deliberate rather than forgotten. A split is
+        declared before it takes effect, so an action whose `effective_date` is in the future is
+        the normal case and the useful one - it is the only warning the system can get before the
+        price level moves under a held position.
+        """
+        rows: list[tuple[Any, ...]] = []
+        unchanged = 0
+        revised = 0
+        for action in actions:
+            stored = self._connection.execute(
+                "SELECT value FROM corporate_actions WHERE instrument_id = ? AND kind = ? "
+                "AND effective_date = ? QUALIFY ROW_NUMBER() OVER ("
+                "PARTITION BY instrument_id, kind, effective_date ORDER BY knowledge_time DESC) = 1",
+                [action.instrument_id, action.kind.value, action.effective_date],
+            ).fetchone()
+            if stored is not None:
+                if stored[0] == action.value:
+                    unchanged += 1
+                    continue
+                revised += 1
+            rows.append((action.instrument_id, action.kind.value, action.effective_date,
+                         knowledge_time, action.value))
+
+        if rows:
+            self._connection.executemany(
+                "INSERT OR REPLACE INTO corporate_actions "
+                "(instrument_id, kind, effective_date, knowledge_time, value) VALUES (?,?,?,?,?)",
+                rows,
+            )
+        return WriteResult(inserted=len(rows) - revised, revised=revised, unchanged=unchanged)
+
+    def actions_as_of(
+        self,
+        instrument_id: str,
+        knowledge_time: datetime,
+        since: date | None = None,
+    ) -> tuple[CorporateAction, ...]:
+        """Best version of every action known at `knowledge_time`, oldest first.
+
+        As-of like every other read here. A backtest asking what was known on the decision bar must
+        not be handed a split the vendor only published afterwards - that is the look-ahead this
+        store exists to prevent, and a corporate action is exactly the kind of fact that arrives
+        late.
+        """
+        clauses = ["instrument_id = ?", "knowledge_time <= ?"]
+        params: list[Any] = [instrument_id, knowledge_time]
+        if since is not None:
+            clauses.append("effective_date >= ?")
+            params.append(since)
+        rows = self._connection.execute(
+            f"""
+            SELECT kind, effective_date, value, knowledge_time FROM corporate_actions
+            WHERE {' AND '.join(clauses)}
+            QUALIFY ROW_NUMBER() OVER (
+                PARTITION BY kind, effective_date ORDER BY knowledge_time DESC) = 1
+            ORDER BY effective_date, kind
+            """,
+            params,
+        ).fetchall()
+        return tuple(
+            CorporateAction(
+                instrument_id=instrument_id, kind=CorporateActionKind(row[0]),
+                effective_date=row[1], value=row[2], knowledge_time=row[3],
+            )
+            for row in rows
+        )
 
     # -------------------------------------------------------------- snapshots
 

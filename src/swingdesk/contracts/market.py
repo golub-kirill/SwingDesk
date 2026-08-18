@@ -40,10 +40,71 @@ class Series(StrEnum):
 
     A raw bar should never change; a change is a data-quality event, not a revision. Adjusted
     history is rewritten by every corporate action (POINT_IN_TIME_SPEC 4).
+
+    `POINT_IN_TIME_SPEC` §4 names a third series, `actions`. It is deliberately NOT a member here:
+    this enum labels OHLCV bars, and a split has no open, high, low or close. Modelling one as a
+    `Bar` would mean inventing five fields to leave empty and a `volume` that means nothing, and the
+    first component to read it would get numbers back. Corporate actions get their own record
+    (`CorporateAction`) and their own table, which is what "with their own `knowledge_time`" in that
+    row of the spec actually requires.
     """
 
     RAW = "raw"
     ADJUSTED = "adjusted"
+
+
+class CorporateActionKind(StrEnum):
+    """What the issuer did. Named `CorporateActionKind` rather than `ActionKind` because
+    `contracts.position.ActionKind` already means "what the run proposes to do about a position",
+    and two enums called `ActionKind` in one system is the §11 terminology failure waiting to
+    happen."""
+
+    SPLIT = "split"
+    DIVIDEND = "dividend"
+
+
+class CorporateAction(BaseModel):
+    """One split or cash dividend, as the issuer declared it.
+
+    **Why this exists, and it is the biggest unguarded risk in the system** (`DR-015` §4, `DR-016`).
+    Both decision paths read `Series.RAW`, and raw bars are unadjusted - so a split does not restate
+    history, it means the next bars arrive at a different price level. A 2:1 split over a weekend
+    leaves a stored stop of 290 compared against Monday raw prices near 145: an instant stop-out
+    that never happened, on a position still held. Measured on this store, nine split-shaped jumps
+    landed on current universe members in one year.
+
+    `value` carries the ratio for a split and the per-share cash amount for a dividend. One field
+    rather than two nullable ones, because the kind already says which it is and a nullable pair
+    invites reading the wrong one.
+
+    Bitemporal like every other fact here: `effective_date` is when the action took effect,
+    `knowledge_time` when we learned of it. A vendor that revises an action writes a new row.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    instrument_id: str
+    kind: CorporateActionKind
+    effective_date: date = Field(
+        description="The EXCHANGE-LOCAL session the action took effect on. Stored, never derived "
+                    "from a timestamp's date - the same rule and the same reason as `Bar."
+                    "session_date` (CALENDAR_SPEC 6)."
+    )
+    value: Decimal = Field(gt=0, description="Split ratio, or cash per share for a dividend.")
+    knowledge_time: datetime = Field(description="When this was learned. Timezone-aware.")
+
+    @property
+    def price_factor(self) -> Decimal:
+        """What a pre-action raw price must be multiplied by to compare with a post-action one.
+
+        A 2:1 split has `value` 2 and a factor of 1/2: a stop of 290 set before it corresponds to
+        145 after. A dividend returns 1 - it moves the price by roughly its amount on the ex-date,
+        but that is a market reaction rather than a restatement, and pretending otherwise would
+        silently adjust stops for something the exchange did not re-denominate.
+        """
+        if self.kind is not CorporateActionKind.SPLIT:
+            return Decimal(1)
+        return Decimal(1) / self.value
 
 
 class Bar(BaseModel):
