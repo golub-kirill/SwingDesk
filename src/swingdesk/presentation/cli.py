@@ -12,7 +12,7 @@ from pydantic import ValidationError
 
 from swingdesk.application import universe as universe_builder
 from swingdesk.application.pipeline import run
-from swingdesk.contracts.position import ActionStatus, Fill
+from swingdesk.contracts.position import ActionStatus, Fill, Position
 from swingdesk.contracts.reference import Instrument
 from swingdesk.contracts.run import RunMode
 from swingdesk.journal_evidence.journal import Journal
@@ -24,7 +24,14 @@ from swingdesk.presentation import notify, report
 from swingdesk.reference_data import calendar as cal
 from swingdesk.reference_data.directory import DirectoryStore
 from swingdesk.trade_management import manage
-from swingdesk.trade_management.sizing import Refusal
+
+# `_costs_per_share` carries a leading underscore because `sizing.py` never expected a second
+# caller - and it still cannot be promoted to a public name today, because `sizing.py` is one of
+# the three files frozen since 2026-08-11 (HANDOFF.md 5) and a rename is a change to it regardless
+# of size. Reused as-is rather than duplicating DR-010's formula, which would create the exact
+# two-implementations-of-one-number problem AGENTS.md 10.5 exists to prevent. Promote this to a
+# public name once the freeze lifts (TODO.md).
+from swingdesk.trade_management.sizing import Refusal, _costs_per_share
 
 DEFAULT_DATA = Path("data")
 
@@ -108,6 +115,26 @@ def main(argv: list[str] | None = None) -> int:
     fill.add_argument("--as-of", default=None,
                      help="ISO instant this is recorded at; defaults to now")
 
+    opened = sub.add_parser(
+        "open-position",
+        help="record a position already opened at the broker (D1: this never places the order)",
+    )
+    opened.add_argument("ticker", help="e.g. AAPL or CNQ.TO")
+    opened.add_argument("--entry", type=Decimal, required=True, help="fill price, per share")
+    opened.add_argument("--shares", type=int, required=True)
+    opened.add_argument("--stop", type=Decimal, required=True, help="initial stop, per share")
+    opened.add_argument("--opened-on", default=None,
+                        help="ISO date the fill happened; defaults to today")
+    opened.add_argument("--costs-per-share", type=Decimal, default=None,
+                        help="override the DR-010 round-trip cost estimate with the real one, "
+                             "once a broker confirmation names it")
+    opened.add_argument("--strategy", default="unspecified")
+    opened.add_argument("--position-id", default=None,
+                        help="override the default POS-<instrument id>-<opened-on> identity")
+    opened.add_argument("--data", type=Path, default=DEFAULT_DATA)
+    opened.add_argument("--as-of", default=None,
+                        help="ISO instant this is being recorded as of; defaults to now")
+
     args = parser.parse_args(argv)
 
     if args.command == "record-fill":
@@ -118,6 +145,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "respond":
         return _respond(args)
+
+    if args.command == "open-position":
+        return _open_position(args)
 
     if args.command == "scan":
         if bool(args.tickers) == bool(args.universe):
@@ -305,6 +335,80 @@ def _respond(args: argparse.Namespace) -> int:
     return 0
 
 
+def _open_position(args: argparse.Namespace) -> int:
+    """Record a manually-executed entry. `TODO.md` §6b item 1.
+
+    Extracted into its own function on 2026-08-17, and it had to be: master's #14/#15 pulled
+    the scan path out of `main()` into `_scan()`, which returns a 3-tuple so the notifier can
+    run after the stores close. This block was written against the older inline `main()`, so
+    the textual merge dropped it INSIDE `_scan()` - after that function's own `return`. It
+    parsed, it type-checked, ruff and mypy were clean, and the command was unreachable: every
+    `open-position` invocation fell through to `main()`'s final `return 1` and printed nothing
+    at all. Six tests caught it; no gate would have.
+    """
+    from datetime import date as date_cls
+    from datetime import datetime
+
+    # This RECORDS a fact, and computes nothing that would let it be mistaken for one (D1).
+    # `--as-of` is when the record is being MADE, not when the fill happened - `opened_on`
+    # carries that, kept separately on purpose (bitemporal store: event time vs knowledge time).
+    clock = (
+        FixedClock(datetime.fromisoformat(args.as_of).replace(tzinfo=UTC))
+        if args.as_of
+        else SystemClock()
+    )
+    now = clock.now()
+    opened_on = date_cls.fromisoformat(args.opened_on) if args.opened_on else now.date()
+    instrument = _instrument(args.ticker)
+    registry = ParameterRegistry.load()
+
+    if args.costs_per_share is not None:
+        costs = args.costs_per_share
+    else:
+        costs_result = _costs_per_share(args.entry, instrument.currency, registry)
+        if isinstance(costs_result, Refusal):
+            # Same fail-closed rule sizing itself follows: a missing cost parameter is refused,
+            # never assumed. `--costs-per-share` is the owner's own escape hatch once a broker
+            # confirmation names the real number.
+            print(f"costs REFUSED  {costs_result}", file=sys.stderr)
+            return 2
+        costs, _bp_use, _floor_use = costs_result
+
+    position_id = args.position_id or f"POS-{instrument.id}-{opened_on.isoformat()}"
+    try:
+        position = Position(
+            position_id=position_id, version=1, instrument_id=instrument.id,
+            opened_on=opened_on, entry_price=args.entry, shares=args.shares,
+            initial_stop=args.stop, current_stop=args.stop,
+            initial_costs_per_share=costs, strategy=args.strategy, knowledge_time=now,
+        )
+    except ValidationError as invalid:
+        print(f"position REFUSED  {invalid}", file=sys.stderr)
+        return 2
+
+    with PositionStore(args.data / "positions.duckdb") as store:
+        try:
+            store.record(position)
+        except ValueError as duplicate:
+            # Append-only: a second `open-position` for the same instrument on the same date
+            # is refused rather than silently duplicated - the store's own guard, not a new one
+            # written here (positions.py: "Rejects a version that already exists").
+            print(f"position REFUSED  {duplicate}", file=sys.stderr)
+            return 2
+
+    print(
+        f"recorded {position.position_id}: {position.shares} sh {instrument.id} @ "
+        f"{position.entry_price}, stop {position.initial_stop}, costs {costs}/share"
+    )
+    print(
+        f"  R denominator {position.initial_risk_per_share}/share "
+        f"({position.initial_risk} total) - this is what every R on this position is "
+        f"measured against, and it never changes (RISK_SPEC 2)"
+    )
+    return 0
+    return 0
+
+
 def _scan(args: argparse.Namespace) -> tuple[int, str | None, notify.Outcome]:
     """One `scan`, returning its exit code and what the owner should be told about it.
 
@@ -387,7 +491,6 @@ def _scan(args: argparse.Namespace) -> tuple[int, str | None, notify.Outcome]:
     )
     return 0, result.manifest.run_id, outcome
 
-    return 1
 
 
 if __name__ == "__main__":

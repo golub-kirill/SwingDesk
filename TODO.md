@@ -406,9 +406,52 @@ computation, checklist generation, report rendering, journal evidence, replay/de
 built or wired**, despite the pure logic mostly existing and being unit-tested in isolation — this
 is the gap the council's suspend-research call (§1) is about, and the build order it recommended:
 
-- [ ] **1. `PositionStore.record()` has no caller anywhere outside tests.** No CLI command or tool
-      gets a manually-executed position into the system at all. **First task — nothing else here
-      matters until a position can get in by any means.**
+- [x] **1. `PositionStore.record()` had no caller anywhere outside tests — fixed 2026-08-16.**
+      New `swingdesk open-position TICKER --entry --shares --stop [--opened-on --costs-per-share
+      --strategy --position-id --as-of]` command. `initial_costs_per_share` defaults to the DR-010
+      formula (`sizing._costs_per_share`, reused rather than reimplemented — `AGENTS.md` §10.5),
+      overridable once a broker confirmation names the real cost. `position_id` defaults to
+      `POS-<instrument id>-<opened-on>`, which doubles as a guard: a same-instrument same-day
+      re-run hits the store's own append-only rejection and refuses cleanly (exit 2) instead of
+      duplicating. An invalid stop (`Position`'s own validator) refuses the same way. 6 new tests
+      in `tests/test_cli.py`, each confirmed to fail when the command is stubbed out.
+      **Branched from PR #9** (`claude/correctness-fx-and-r-denominator`), not master — this needed
+      `initial_costs_per_share` on `Position`, which only exists on that branch. So the R
+      denominator every position opened through this command reports is cost-inclusive from day
+      one; nothing gets written under the old, cost-exclusive schema. **Consequence: this PR cannot
+      open against `master` until PR #9 merges** — its diff would otherwise show PR #9's frozen-file
+      commits as its own. Held, not blocked: `cli.py` and the tests are ready; rebase onto `master`
+      once PR #9 lands, then open normally.
+      **2026-08-17: merged the corrected PR #9 in, and the merge broke the command silently.** Master's
+      #14/#15 pulled the scan path out of `main()` into `_scan()` (which returns a 3-tuple so the
+      notifier can run after the stores close). This block was written against the older inline
+      `main()`, so the textual merge dropped it **inside `_scan()`, after that function's own
+      `return`** — dead code. ruff clean, mypy clean, every gate green, and every `open-position`
+      invocation fell through to `main()`'s final `return 1` printing **nothing at all**. The six
+      tests above caught it; **no gate would have**, and neither would review of a diff that shows
+      only an import collision. Extracted as `_open_position()` beside `_record_fill`/`_pending`/
+      `_respond` and wired into the dispatch; confirmed by deleting the dispatch line again and
+      watching the same six go red.
+
+**And the chain closed. `TODO.md` §1's condition for resuming research is met — 2026-08-17.**
+Run end to end on a **copy** of the real bar store (live stores never opened for write), with
+DR-012's values set locally and reverted afterwards:
+
+| Step | Command | What happened |
+|---|---|---|
+| 1 | `open-position AAPL --entry 305.59 --shares 5 --stop 290.32` | `POS-AAPL-2026-07-15` recorded, costs `1.5280`/share, R denominator `16.7980` (`83.99` total) |
+| 2 | `scan AAPL` | position evaluated **before** candidates; proposed `exit_now`, code `TIME` |
+| 3 | `pending` | the observation, the rule, the two bounded choices |
+| 4 | `respond … --approve --reason …` | recorded and applied — version 2, `closed 2026-08-17` |
+| 5 | `record-fill … --price 311.20 --shares 5` | fill recorded; `slippage UNAVAILABLE — the plan named no price to slip against`; `open risk 0 across the book, recomputed` |
+
+Step 5 is the one to read twice: it **refused to manufacture a slippage number** for a
+maximum-holding-period exit, printed the reason, and recomputed the book rather than decrementing
+it. The design held under a real run, not just a fixture.
+
+Two things this does NOT establish, stated so the next session does not over-read it: no owner
+capital was involved, and it ran on a store copy under a pinned clock. It is the chain proving it
+closes, which is exactly what the council's suspend-research call asked for — not a trade.
 - [x] **2. `cli.py scan` never opened a `PositionStore` or passed `positions=` into `run()` —
       fixed 2026-08-16.** Now opens `PositionStore(args.data / "positions.duckdb")` alongside the
       existing `BarStore`/`Journal` and passes it through. `cli.py` is not a frozen file, so this
@@ -530,6 +573,18 @@ by review only).
   **never fired** on the real store: `SELECT COUNT(*) FROM bars WHERE event_time > knowledge_time`
   returns **0** over 1,917,879 rows / 3,740 instruments. There is nothing to quarantine and no
   forensic backup to take. **The code fix still stands; the incident response does not.**
+  **Update 2026-08-17 — the defect has now been OBSERVED, and it changed a decision.** Still 0 on
+  the real store (re-measured, unchanged). But one `scan --as-of 2026-08-14T21:00:00Z` against a
+  *copy* of it produced **1** violation immediately: AAPL's `2026-08-17` session written with
+  `knowledge_time` `2026-08-14 16:00:00-05:00`, because `--as-of` pins the clock and still fetches
+  live, and `store.write(refreshed.bars, started)` stamps every fetched bar with the pinned instant.
+  That bar then passed `as_of`'s `knowledge_time <= ?` filter, became `held.bars[-1]`, and the run
+  proposed `EXIT_NOW / TIME` — *"maximum holding period reached at 2026-08-17"* — from a run pinned
+  three days earlier. **`pipeline.py` calls `store.as_of(...)` with no `end` argument**, though the
+  method accepts one and bounds `event_time` with it, so the decision read is unbounded on exactly
+  the axis §8's third bullet says has no test. One line closes it; the reproduction above is the
+  test it never had. Nothing to quarantine on the real store still holds — the three `--as-of` runs
+  it has ever seen were all same-day.
 - **`[v]` `--as-of` was run three times** (2026-08-02, `run-20260802T120000Z-*`, identical
   instruments and identical `output_hash`) — a determinism check. The same-`knowledge_time`
   collision therefore *did* occur and was harmless, because the vendor returned byte-identical
