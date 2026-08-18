@@ -793,9 +793,17 @@ parameters:
   # ---- data quality (docs/03-data/DATA_QUALITY_SPEC.md, not yet written) ----
   - id: data.freshness_window
     unit: trading days
-    value: null
-    status: unset
-    provenance: null
+    value: 2
+    status: assumed
+    provenance: assumed:DR-015
+    note: >-
+      Trading SESSIONS, never calendar days - Friday's bar on Monday is one session old and three
+      calendar days old, and counting days would refuse the whole universe every Monday.
+      NOT A TOLERANCE. A refetch triggers at sessions_behind > 0; this window only decides when to
+      stop trying and drop the instrument from the run. A Monday run against a Friday series is one
+      session behind and refetches before it computes anything.
+      Two is the first count a single failed attempt cannot explain - it means both today's retries
+      and yesterday's failed, which is an outage rather than a hiccup.
     named_in: [FAIL-CLOSED row 1 return condition, Appendix N code DATA]
     ui_editable: true
 
