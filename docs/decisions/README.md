@@ -94,7 +94,9 @@ is expected to be superseded when a study says so. Different lifetimes, differen
 | `DR-009` | The owner's broker charges no commission, and the cost model never knew | account-structure choice only — its parameter moved to `DR-010` (§5, correction 2026-08-13) | proposed |
 | `DR-010` | Sizing costs are price-aware and currency-aware, not one flat constant | `risk.costs_bp_usd`, `risk.costs_bp_cad`, `risk.costs_floor_usd`, `risk.costs_floor_cad` | **accepted — ratified 2026-08-13** |
 | `DR-011` | The run notice is a local desktop notification — not Firebase, not Telegram | none — a surface, not a measured component. Also corrects `PRODUCT_SURFACES` §3.4's self-contradicting example | proposed — mechanism chosen by the owner 2026-08-16 |
-| `DR-012` | The protective stop is 2.0 × ATR(14) and the maximum holding period is 20 sessions | `exit.atr_stop_multiple`, `exit.max_holding_period` | **proposed — owner ratification required; the decision path produces nothing until it lands** |
+| `DR-012` | The protective stop is 2.0 × ATR(14) and the maximum holding period is 20 sessions | `exit.atr_stop_multiple`, `exit.max_holding_period` | **accepted — ratified 2026-08-17** |
+| `DR-013` | A non-critical proposal expires after 3 days; a critical one never expires and never proceeds unanswered | `management.proposal_expiry_days` | **accepted — ruled 2026-08-17** |
+| `DR-014` | No owner capital in the observable state of the project — paper only; Canada deferred with a re-entry condition | none directly — changes the STANDING of `DR-006`'s six `risk.*` parameters and withdraws `PR-006`'s precondition | **accepted — ruled 2026-08-17** |
 
 `DR-007` is the largest of these by a distance: fifteen parameters at once, four of them ratifying
 what a reported study already used and eight genuinely authored. It exists because a ratified kill

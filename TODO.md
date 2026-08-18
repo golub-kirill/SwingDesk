@@ -125,12 +125,38 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 4. Pending decisions
 
-**Decision records** — only DR-007 / DR-008 / DR-010 are accepted.
+**Decision records** — DR-007 / DR-008 / DR-010 / **DR-012 / DR-013 / DR-014** are accepted.
 
-- [ ] **`[v]` DR-006** — six `risk.*` parameters, binds a real account, header reads
-      `status: proposed — owner ratification required`. Carries 3 unresolved items of its own
-      (lines 156, 161, 165). Every portfolio cap in `parameters.yml` currently cites
-      `assumed:DR-006`.
+- [x] **`[v]` DR-012 — ratified by the owner 2026-08-17.** `exit.atr_stop_multiple = 2.0` and
+      `exit.max_holding_period = 20` are in the registry carrying `assumed:DR-012`. Provenance argued
+      at length in §4 of the record: **never `assumed:PR-005`** (PR-005 held both as study
+      *conditions* and was refuted) and **never `validated`**. The project still has **zero**
+      `validated` parameters. Ratification makes the system able to decide; it does not make the
+      decisions good. Only `PR-009` can move either value.
+      **§8.6 ruled: ONE counter reset, attached to PR #9's merge date, not two.** On `master` as it
+      stands these values change nothing at all — `pipeline.py` still carries the literal and never
+      reads the registry — so the record merges ahead of #9 with no operational consequence.
+- [x] **`[v]` DR-013 — proposal expiry, ruled 2026-08-17.** Unblocks §6b item 5b, which was
+      unbuildable without the rule. **Non-critical (`MOVE_STOP`, `PARTIAL_EXIT`) expires after 3
+      trading days; critical (`EXIT_NOW`) NEVER expires and never auto-applies.** The split is the
+      substance: the two classes fail in opposite directions — expiring an `EXIT_NOW` hides live
+      risk, keeping a `MOVE_STOP` alive presents stale arithmetic as current.
+      `management.proposal_expiry_days = 3`, `assumed:DR-013`. Expiry is computed **at read time**,
+      never written by a job — same shape as `pending`, which is the absence of a response rather
+      than a status column. **Still to build** (§6b item 5b).
+      The owner chose the wall clock over supersession-by-next-run, which was what was recommended;
+      §4 of the record keeps the rejected argument, because supersession ties expiry to the scheduler
+      and a week of missed runs would silently extend every proposal's life.
+- [x] **`[v]` DR-014 — no owner capital, paper only, Canada deferred. Ruled 2026-08-17.** One answer
+      that six open items were all secretly hanging on. **The owner will not trade this system with
+      their own money in its current or observable state**; paper / simulated positions are the
+      authorised vehicle.
+- [ ] **`[v]` DR-006 — DEFERRED by DR-014, and no longer urgent.** Six `risk.*` parameters, header
+      still reads `status: proposed — owner ratification required`, 3 unresolved items of its own
+      (lines 156, 161, 165), every portfolio cap still citing `assumed:DR-006`. **What changed: it
+      "binds a real account" and there is now no real account to bind.** It has been ranked a blocker
+      since 2026-08-02 and was never a blocker on anything reachable without capital. The
+      don't-rubber-stamp warning stands for whenever it *is* ratified.
 - [ ] **`[c]` DR-009** · **`[c]` DR-001 / DR-002 / DR-003 / DR-005** — proposed since 08-02, used as
       working fact throughout.
 
@@ -218,6 +244,37 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       invariant is seen, not raised mid-run. Prints on a run with zero candidates too — zero stated,
       not silence. 4 new tests against the story's own gherkin, `verify_docs.py` gate 3e passes
       (citing US-022 without checking it was live). All 29 gates pass, 407 tests.
+- [ ] **`[v]` MEASURED 2026-08-17: 3 of 11 mutants survive the entire test suite.** The council's
+      own flip condition, turned from an assumption into a number. Method: patch one computed
+      quantity per module in committed source, run the **whole** suite, restore, record whether
+      anything died. **`git stash push -- src/` cannot do this** — it reverts *uncommitted* work, so
+      on a clean tree it stashes nothing and the suite runs unchanged. That is precisely why
+      `AGENTS.md` §12's ritual only ever applied to newly written tests, and why auditing the
+      existing 480 needs real mutants.
+      **The three survivors, and they are not one kind:**
+      • `sizing.py` — `planned_risk` replaced with the constant `Decimal('42')`. **The R denominator
+      the entire validation programme is expressed in.** 480 tests green.
+      • `sizing.py` — `risk_per_share = entry - stop + costs` → `entry - stop`. Green.
+      • `calendar.py:112` — `sessions_behind` returning `max(0, len(window) - 1)`. Green, **and for a
+      different reason: the function has no caller anywhere in `src/`** while
+      `DATA_QUALITY_SPEC.md`:40 defines staleness through it (`sessions_behind > 0 means stale`). A
+      spec rule implemented in dead code. That is a third disease, and the mutation method surfaced
+      it by accident.
+      **Killed (properly asserted):** `exits.py` stop distance and holding-period comparison,
+      `position.py` `open_risk`, `atr.py` true range, `pivots.py` confirmation lag,
+      `universe.py` ADTV window and `vendor_symbol`, `directory.py` departure set.
+      **What this decides:** survivors on the live decision path *are* concentrated in `sizing.py`
+      (2 of 2 there), so a declared-critical-surface gate would catch the ones that matter — but 27%
+      overall, and one survivor outside the surface, means a hand-authored list is **regression, not
+      detection**. It re-checks defects someone already thought of. `Decimal('42')` came from a human
+      hypothesis no machine would have scheduled. The detector that actually worked this session was
+      a **cross-module property test** asserting the *equality* of two implementations rather than
+      either value — it found the zero-stop sizing defect nobody had hypothesised, on its first run.
+      **Build order therefore: seam properties first (detection), mutant list second (cheap
+      insurance).** If the mutant list is built, three non-negotiables from the council's peer
+      review: a patch that fails to apply is **FAIL** never skip (an exact-string mutant rots on the
+      next rename, and a gate that mutated nothing is `(net/x)*x == net` one layer up); it ships with
+      one planted survivor proving it can go red; output is named survivors with diffs, never a score.
 - [ ] **`[v]` Six gates have never been proven able to fail.** `tests/test_gates.py`'s own docstring
       sets the bar — *"A gate that has never been seen red proves nothing"* — and these have zero
       references in it: `verify_parameters` (1), `verify_transcription` (2), `verify_docs` (3e),

@@ -436,3 +436,28 @@ PDF byte for byte, and a command the owner pastes into a shell has to run.
 Fewer words, the answer first, no hedging — and it does not license less rigour. The measured-number
 rules (§10.5, §10.6), the trust discipline (§1) and the habit of proving a test can fail (§12) are
 unchanged; brevity applies to how a finding is reported, never to whether it was verified.
+
+## 14. Force the answer — owner instruction, 2026-08-17
+
+> *"Do not process before my answer for action even if I'm asking you to. Force me to answer."*
+
+**When an action needs the owner's decision, do not proceed on an assumption, and do not accept a
+casual go-ahead as the answer.** Put the question, wait, and if the reply is a general "just do it"
+rather than an answer to *that* question, ask again.
+
+This is not `D6` restated. `D6` ("a proposal is not permission") stops the **system** from acting
+unasked; this stops an **agent** from treating ambient approval as a specific one. Both directions
+have to be closed or the audit trail records a decision nobody made.
+
+Two things follow, and they are the enforceable part:
+
+- **A critical proposal is answered by `swingdesk respond POS-N SEQ --approve|--reject --reason "…"`
+  and by nothing else.** That is also what puts the owner's reason and the moment they answered into
+  the append-only response table, which is what Production Rule 3.8 requires and what a sentence in
+  chat cannot do.
+- **A critical proposal never expires and never auto-applies** (`DR-013` §2.2). A timer that exits a
+  position is the system deciding with a delay, which `CHARTER.md` A-001 forbids.
+
+The general form, worth carrying beyond proposals: **when the owner asks for something whose right
+answer is theirs to give, the helpful move is the question, not the guess.** Do the parts that do not
+depend on the answer, then ask — do not silently pick a default and proceed.

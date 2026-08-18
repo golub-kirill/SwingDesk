@@ -2,12 +2,18 @@
 
 ```
 date:            2026-08-17
-status:          proposed — owner ratification required
+status:          accepted — ratified by the owner 2026-08-17
 parameters:      exit.atr_stop_multiple, exit.max_holding_period
 components:      none — M48-T0738 and M57-T0866 stay `registered`; this sets their inputs, not their
                  activation
 supersedes:      nothing. It removes the hard-coded ExitPolicy(2.0, 20) that PR #9 deletes
-implemented_by:  src/swingdesk/application/pipeline.py :: _exit_policy
+implementation:  none
+arrives_with:    PR #9 - `_exit_policy` in src/swingdesk/application/pipeline.py. Until it merges,
+                 pipeline.py carries the ExitPolicy(2.0, 20) literal and never opens the registry,
+                 so these values are ratified and INERT. That is section 8.6's own argument for
+                 attaching the single Track A reset to #9's merge rather than to this record - and
+                 gate 20 reached it independently, by refusing an implementation claim this branch
+                 could not support.
 ```
 
 ## 1. Why this record exists at all
@@ -161,13 +167,22 @@ constant.
 5. **The report must keep disclosing these as assumed.** They are `assumed`, so they count toward the
    run's "assumed inputs" line and the standing Untested banner. A ratified parameter is not a
    validated one, and the report is where that distinction reaches the owner.
-6. **The Track A counter.** `registry/parameters.yml` is **not** one of the three frozen files
-   (`tools/daily_run.cmd`, `application/pipeline.py`, `trade_management/sizing.py`), so on the letter
-   of the 2026-08-16 amendment this record does not itself reset the streak. But it plainly changes
-   decision output, and PR #9 — which does touch two frozen files — resets it already. **The honest
-   reading is that PR #9 and this ratification are one change to the decision path and should cost
-   one reset, not two.** Splitting them across two evenings would reset the counter twice for a single
-   transition. That reading is the owner's to confirm, since the rule is theirs; §9 asks for it.
+6. **The Track A counter — ONE reset. Owner ruling, 2026-08-17.** `registry/parameters.yml` is **not**
+   one of the three frozen files (`tools/daily_run.cmd`, `application/pipeline.py`,
+   `trade_management/sizing.py`), so on the letter of the 2026-08-16 amendment this record does not
+   itself reset the streak. But it plainly changes decision output, and PR #9 — which does touch two
+   frozen files — resets it already.
+
+   **Ruled: PR #9 and this ratification are one change to the decision path and cost one reset, not
+   two.** The reset attaches to PR #9's merge date. Splitting them across two evenings would reset the
+   counter twice for a single transition, which makes the counter a penalty for landing a correctness
+   fix carefully rather than a measurement of operational stability.
+
+   Worth stating for whoever reads this next: on `master` as it stands, setting these two values
+   changes nothing at all, because `pipeline.py` still carries the `ExitPolicy(2.0, 20)` literal and
+   never reads the registry. The values only take effect when PR #9 lands. So this record can merge
+   ahead of #9 with no operational consequence whatsoever — which is why the single reset lands
+   naturally on #9 rather than here.
 
 ## 9. Measured, not argued — both halves of §1 were run
 
@@ -202,13 +217,18 @@ in the numbers, both of which hold:
 
 This is what ratification buys and what it costs, on real bars, before anyone signs it.
 
-## 10. What the owner is being asked
+## 10. What the owner was asked, and answered — 2026-08-17
 
-Three things, and only the first is required to unblock the chain:
+1. **Ratify 2.0 and 20** — **ratified as proposed.** The values are now in `registry/parameters.yml`
+   carrying `assumed:DR-012`, and this record is `accepted`. Per `docs/decisions/README.md` §3 rule 2
+   it is not edited again; a change needs a new record naming this one.
+2. **Confirm the single-reset reading in §8.6** — **confirmed: one reset.** See §8.6.
+3. **`exit.atr_trailing_multiple` and `exit.stagnation_threshold` stay `unset`** — noted, unchanged.
+   They are separate exit slots; PR-005 and PR-007 both ran with no trailing at all, so there is not
+   even a hard-coded constant to inherit for them.
 
-1. **Ratify 2.0 and 20**, or name different values. Ratifying does not endorse the strategy — §4 is
-   written so that cannot be misread later.
-2. **Confirm the single-reset reading in §8.6**, so PR #9 and this land as one transition.
-3. **Note that `exit.atr_trailing_multiple` and `exit.stagnation_threshold` stay `unset`** and are not
-   part of this. They are separate exit slots; PR-005 and PR-007 both ran with no trailing at all, so
-   there is not even a hard-coded constant to inherit for them.
+**What ratification does NOT mean, restated once more because this is the record people will cite.**
+The provenance is `assumed`, not `validated`. This project still has **zero** `validated` parameters,
+and `EVIDENCE_SUMMARY.md` still says the base strategy is negative at measured costs across the whole
+admissible universe. Ratifying the exit constants makes the system able to decide; it does not make
+the decisions good. Only `PR-009` can move either value off `assumed`.
