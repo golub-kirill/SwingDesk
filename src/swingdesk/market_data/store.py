@@ -14,7 +14,7 @@ event (POINT_IN_TIME_SPEC 3).
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -22,6 +22,7 @@ from typing import Any
 import duckdb
 
 from swingdesk.contracts.market import Bar, BarSeries, Interval, Series
+from swingdesk.reference_data import calendar as cal
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS bars (
@@ -218,10 +219,15 @@ class BarStore:
         unchanged = 0
         revised = 0
         unclosed = 0
+        # Resolved for the whole batch in one calendar call. Per bar it cost 17 minutes a run -
+        # see `_unclosed_sessions`.
+        unclosed_dates = _unclosed_sessions(
+            first.instrument_id, {bar.session_date for bar in incoming}, knowledge_time
+        )
         for bar in incoming:
             # An unclosed bar is refused BEFORE the revision comparison, so a partial print can
             # neither enter the store nor overwrite a good bar already in it.
-            if _is_unclosed(bar, knowledge_time):
+            if bar.session_date in unclosed_dates:
                 unclosed += 1
                 continue
             existing = current.get(bar.event_time)
@@ -301,8 +307,46 @@ class WriteResult:
                 f"unchanged={self.unchanged}, unclosed={self.unclosed})")
 
 
+def _unclosed_sessions(
+    instrument_id: str, session_dates: set[date], knowledge_time: datetime
+) -> set[date]:
+    """Which of `session_dates` had not closed at `knowledge_time`. One calendar call, not one per bar.
+
+    **Batched because the per-bar form was measured at 17 minutes per scheduled run.**
+    `calendar._schedule` is `lru_cache(maxsize=64)` keyed on `(exchange, start, end)`, and a
+    one-year fetch asks about ~260 distinct sessions — so a per-bar lookup evicts its own entries
+    and misses essentially every time. Measured over 20 synthetic instruments: 1,628 ms per
+    instrument with the per-bar call against 724 ms without, which is **+1,041 s across a
+    1,152-member universe**. The nightly run takes about five minutes and has to finish before
+    `DR-015`'s 19:30 second pass; tripling it would have broken the very window that record set.
+
+    A date absent from the calendar's answer is left OUT of this set, so it is treated as closed and
+    allowed through. That covers both a session that had already finished and a date the calendar
+    does not know at all — the second deliberately, per `_is_unclosed`'s contract below.
+    """
+    # Only sessions near the capture instant can still be open. A session closes at 16:00
+    # exchange-local on its own date, and the exchanges here run at UTC-4/-5, so anything two
+    # calendar days or more before `knowledge_time` has certainly finished - whatever the zone.
+    # Without this the calendar is asked about a full year of sessions on every write, which is
+    # ~260 `ExchangeSession` objects built per instrument and 88 s across a 1,152-member run.
+    cutoff = (knowledge_time - timedelta(days=2)).date()
+    candidates = {day for day in session_dates if day >= cutoff}
+    if not candidates:
+        return set()
+    exchange = cal.exchange_for(instrument_id)
+    return {
+        session.session_date
+        for session in cal.sessions(exchange, min(candidates), max(candidates))
+        if session.session_date in candidates and knowledge_time < session.close_time
+    }
+
+
 def _is_unclosed(bar: Bar, knowledge_time: datetime) -> bool:
     """True when this bar was captured before its own session had finished.
+
+    Kept as the single-bar statement of the rule, and used by the tests that pin it. `write` calls
+    `_unclosed_sessions` instead, which answers the same question for a whole batch at once — see
+    there for why that mattered.
 
     `CALENDAR_SPEC.md` §5: the unclosed current bar is never a decision input, and
     `calendar.last_completed_session` has enforced that on every READ since it was written. Nothing
@@ -320,8 +364,6 @@ def _is_unclosed(bar: Bar, knowledge_time: datetime) -> bool:
     any venue or date the calendar cannot resolve - the `unavailable`-is-not-`fail` rule
     (`AGENTS.md` §12) applied to a write.
     """
-    from swingdesk.reference_data import calendar as cal
-
     session = cal.session(cal.exchange_for(bar.instrument_id), bar.session_date)
     return session is not None and knowledge_time < session.close_time
 

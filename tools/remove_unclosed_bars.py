@@ -51,14 +51,21 @@ REPO = Path(os.environ.get("SWINGDESK_ROOT") or Path(__file__).resolve().parents
 DATA = Path(os.environ.get("SWINGDESK_DATA") or REPO / "data")
 
 
-def unclosed_rows(connection: duckdb.DuckDBPyConnection) -> list[tuple[str, object, object]]:
+def unclosed_rows(connection: duckdb.DuckDBPyConnection) -> list[tuple[str, object, object, object]]:
     """Every stored daily raw bar whose `knowledge_time` predates its own session's close.
 
     A session the calendar does not know is LEFT ALONE - not knowing whether a bar is unclosed is a
     different claim from knowing that it is, and this script must never delete on ignorance.
+
+    Returns `event_time` alongside the identifying fields even though `session_date` reads more
+    naturally, because `event_time` is in the primary key and `session_date` is not. Measured on
+    the live store: zero (instrument, session_date, knowledge_time) triples match more than one
+    row, so the shorter predicate would delete exactly the right rows today. That is a property of
+    the DATA, and a delete from an append-only store should not rest on one - a single instrument
+    with two intraday-derived timestamps folded onto one session would silently widen every match.
     """
     rows = connection.execute(
-        "SELECT instrument_id, session_date, knowledge_time FROM bars "
+        "SELECT instrument_id, session_date, knowledge_time, event_time FROM bars "
         "WHERE interval = '1d' AND series = 'raw'"
     ).fetchall()
 
@@ -70,10 +77,10 @@ def unclosed_rows(connection: duckdb.DuckDBPyConnection) -> list[tuple[str, obje
                 closes[(exchange.value, session.session_date)] = session.close_time
 
     doomed = []
-    for instrument_id, session_date, knowledge_time in rows:
+    for instrument_id, session_date, knowledge_time, event_time in rows:
         close_time = closes.get((cal.exchange_for(instrument_id).value, session_date))
         if close_time is not None and knowledge_time < close_time:
-            doomed.append((instrument_id, session_date, knowledge_time))
+            doomed.append((instrument_id, event_time, knowledge_time, session_date))
     return doomed
 
 
@@ -98,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     by_session: dict[object, int] = {}
-    for _, session_date, _ in doomed:
+    for _, _, _, session_date in doomed:
         by_session[session_date] = by_session.get(session_date, 0) + 1
 
     print(f"store: {store}  ({total:,} rows)")
@@ -116,9 +123,11 @@ def main(argv: list[str] | None = None) -> int:
         shutil.copy2(store, backup)
 
     with duckdb.connect(str(store)) as writer:
+        # Keyed on the PRIMARY KEY (instrument_id, interval, series, event_time, knowledge_time),
+        # so each statement can match at most one row by construction rather than by luck.
         writer.executemany(
-            "DELETE FROM bars WHERE instrument_id = ? AND session_date = ? "
-            "AND knowledge_time = ? AND interval = '1d' AND series = 'raw'",
+            "DELETE FROM bars WHERE instrument_id = ? AND event_time = ? AND knowledge_time = ? "
+            "AND interval = '1d' AND series = 'raw' AND session_date = ?",
             doomed,
         )
         writer.execute("CHECKPOINT")
