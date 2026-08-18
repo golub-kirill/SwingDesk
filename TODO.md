@@ -128,6 +128,25 @@ hands it over by name.
       **Council-reviewed, direction chosen 4–1 on reproducibility rather than bias:** a lagged window
       makes admission idempotent, so a replayed screen returns what the live screen returned. One
       universe and one lag for live admission AND studies.
+      **MEASURED 2026-08-18, and it reframes what the screen is FOR** (`DR-003` addendum). Over the
+      2026-08-17 run's 1,148 sized candidates: risked $100/trade, position value median **$1,355**
+      and max **$2,500**, against an admitted set whose 20-day ADTV is median **$46.8M**. Position
+      as a share of one session's dollar volume: median **0.0026%**, worst **0.0462%** — against a
+      conventional 10%-of-ADV execution limit, that is **200× inside it**, and the screen would only
+      begin to bind at roughly a **$2.2M** account.
+      So `$5M` is **not a liquidity constraint at this size**; it is a **quality proxy** — tighter
+      spread, real price discovery, not a shell. Two consequences: raising it buys no executability
+      and would have to be argued on spread or data quality instead, and **`DR-017`'s lag is
+      justified by reproducibility ALONE** — it cannot also be defended as protecting the owner from
+      an unfillable position, and that weaker argument is now blocked from being borrowed later.
+      **The SHAPE of the rule is off-convention too.** Index providers screen on turnover relative
+      to size, not absolute dollars: S&P's **FALR** (annual dollar traded ÷ float-adjusted market
+      cap, ≥ 0.75) and MSCI's **ATVR** (annualised traded value ÷ free-float cap, 20% developed).
+      $5M/day is heavy turnover for a $200M company and a rounding error for a $200B one. So the
+      proposed $3M–$8M sweep tests the LEVEL of a measure whose FORM is also unvalidated — recorded
+      as a constraint rather than a defect, because a ratio needs point-in-time float-adjusted market
+      cap and this project has no free source for it, the same wall that made index membership
+      unusable.
       **Still open and NOT decided by DR-017:** is backfilled volume executable? The fill-in is
       overwhelmingly upward; if it is late off-exchange prints then settled ADTV overstates the very
       liquidity $5M proxies. And `universe.min_adtv_20d = $5M` is itself `assumed` and never swept —

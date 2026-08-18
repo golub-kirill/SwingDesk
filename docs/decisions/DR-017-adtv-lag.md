@@ -74,6 +74,15 @@ Direction chosen 4–1, and **the argument that carried it was reproducibility, 
 window makes admission **idempotent**, so a replayed screen returns the number the live screen
 returned. Today it cannot, because the bars underneath it keep changing.
 
+**Reproducibility is the ONLY argument for this lag, and that is now measured rather than assumed.**
+It would be natural to defend the lag as protecting the owner from an unfillable position. It does
+not, and the claim would not survive contact with the numbers: measured over the 2026-08-17 run's
+1,148 sized candidates, the largest position the sizing rule produces is **0.046% of one session's
+dollar volume** against a conventional 10%-of-ADV execution limit — more than two hundred times
+inside it, and the screen would only begin to bind at roughly a **$2.2M** account. `DR-003`'s
+addendum carries the full table. So the lag buys an idempotent screen and nothing else, which is
+enough on its own and is the only thing this record claims for it.
+
 **One universe and one lag for live admission and for studies.** Two universes is the failure mode
 this would otherwise create, and it is worse than the defect being fixed.
 
@@ -116,9 +125,19 @@ it. The fill-in is overwhelmingly upward. If it is late off-exchange prints, the
 more reproducible and no more true. That is a separate measurement — the venue mix of the delta —
 and it needs a source this project does not currently have.
 
-**Whether `universe.min_adtv_20d = $5M` is the right threshold at all.** It is `assumed:DR-003` and
-has never been swept. A $3M–$8M sweep would test it and would answer, in the same pass, whether the
-six crossers are noise or signal. Ruling this record does not make that less needed.
+**Whether `universe.min_adtv_20d = $5M` is the right threshold at all — and whether a dollar
+threshold is the right SHAPE.** It is `assumed:DR-003`, never swept, and a $3M–$8M sweep would test
+it while also answering whether the six crossers are noise. Ruling this record does not make that
+less needed.
+
+But the sweep tests a level, and the form underneath it is also unvalidated. Index providers do not
+screen on absolute dollar volume; they screen on turnover relative to size — S&P's **Float-Adjusted
+Liquidity Ratio** (annual dollar value traded ÷ float-adjusted market cap, ≥ 0.75) and MSCI's
+**ATVR** (annualised traded value ÷ free-float market cap, 20% for developed markets). $5M a day is
+heavy turnover for a $200M company and a rounding error for a $200B one, and the ratio is what
+separates them. `DR-003`'s 2026-08-18 addendum records this, along with the constraint that makes it
+hard here: a ratio needs point-in-time float-adjusted market capitalisation, which this project has
+no free source for.
 
 ## 6. What would overturn this
 
