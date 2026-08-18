@@ -33,15 +33,27 @@ the 2026-08-11 freeze lifted on 2026-08-17.
 **What blocks the next thing worth doing** — one item, and it is not on any list below because it
 was measured today rather than planned:
 
-- [ ] **`[v]` The R denominator is not asserted by anything, and every research output is
-      denominated in it.** `planned_risk` was replaced with the constant `Decimal('42')` and the
-      entire suite stayed green, including the test `INVARIANTS.md` §1 names as enforcing that
-      invariant — which asserts `(net/x)*x == net`, an identity that cannot fail for any `x`.
-      Widened sample: **3 of 11** mutants survive (§6). Two are on the live sizing path.
-      **This is why `DR-014` reordered research behind it**: a study run now emits numbers in a unit
-      nothing verifies. The build order the council and the owner converged on is **seam properties
-      first (detection), a stored mutant list second (cheap insurance)** — §6 carries the detail and
-      the three non-negotiables for the list.
+- [x] **`[v]` The R denominator was asserted by nothing — CLOSED 2026-08-18 by re-measurement, not
+      by work.** On the morning of 08-17, `planned_risk` could be replaced with the constant
+      `Decimal('42')` and the entire suite stayed green, including the test `INVARIANTS.md` §1 names
+      as enforcing that invariant — which asserts `(net/x)*x == net`, an identity that cannot fail
+      for any `x`. That test is still a tautology and should be replaced.
+      **But the defect it left open is closed.** Re-measured on `master` after PR #9 merged: the
+      `Decimal('42')` mutant is **killed**, and so is `risk_per_share = entry - stop + costs` →
+      `entry - stop`. What kills them is `test_sizing_and_position_agree_on_the_denominator`, the
+      cross-module property test written as part of #9 — it asserts the *equality* of `sizing`'s and
+      `Position`'s denominators rather than either value, so it constrains `planned_risk` without
+      naming it.
+      **The base rate is now 1 of 11, not 3.** The sole survivor is `calendar.sessions_behind`,
+      below.
+      **A conclusion that rested on this and no longer stands:** "a wrong R could be why the base
+      strategy is negative" — R was never wrong, it was merely unasserted, so there is no prior
+      result to re-derive. **The entry-filter family stays closed.**
+- [ ] **`[v]` `calendar.sessions_behind` has no caller in `src/` and a spec defines staleness through
+      it.** The only mutant still surviving the suite, and it survives for a different reason than
+      the other two did: not a weak test, but **dead code**. `DATA_QUALITY_SPEC.md`:40 states
+      `sessions_behind > 0` means stale; nothing calls it. Delete it or wire it — twenty minutes
+      either way, and the choice is which of the two documents is wrong.
 
 ### Closed — kept for the reasoning, not as work
 
