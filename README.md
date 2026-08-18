@@ -9,9 +9,17 @@ parties. The human makes every trading decision; this system prepares and record
 
 ## Status
 
-Walking skeleton, gated. One instrument through one feed, one derived observation, one risk
-calculation, one journal entry, one report — with the merge gates that keep it honest running from
-a single command:
+**The operational loop is closed and gated; the strategy is not known to work.** Those are two
+different claims and this project keeps them apart deliberately.
+
+*Closed* means a position can be recorded, evaluated before candidates on every scheduled run,
+proposed on, approved by the owner, applied, and settled against what the broker actually did —
+end to end, on real bars, first demonstrated 2026-08-17. *Not known to work* means the base
+strategy is negative at measured costs across the whole admissible universe and **no parameter in
+this system has ever reached `validated`**. See `docs/08-pm/EVIDENCE_SUMMARY.md`, which outlives
+any one session.
+
+Everything that keeps those two claims from blurring runs from a single command:
 
 ```bash
 python tools/check_gates.py
@@ -53,10 +61,16 @@ ever displayed as more validated than it is.
   `1H` → execution `30m`. Lower frames refine a setup; they never invent one. Each resolution is
   fetched and stored independently — deriving `1H` from `30m` would cap hourly history at 60
   trading days when ~725 are available (`ADR-0001`).
-- Storage: local database for bars, features and backtests. Firebase is used for push notifications
-  only.
-- Surfaces, in build order: CLI + reports → web admin panel → Telegram approval of open-position
-  actions + Firebase push.
+- Storage: local databases for bars, the directory, positions and the journal. Nothing leaves the
+  machine.
+- Notification: a **local desktop notice** (`DR-011`, 2026-08-16). Firebase is specified in
+  `PRODUCT_SURFACES` §3.4 and **unbuilt**; the record explains why local is stronger on §3.4's own
+  terms — "no data leaves the machine" is satisfied by construction rather than by a third party's
+  policy.
+- Surfaces: **CLI + reports, built.** The owner's approval of open-position actions runs through
+  `swingdesk pending` / `respond` on the CLI, not Telegram — `DR-011` established the owner is at
+  the machine when the run fires, and a Telegram approval surface would re-open every question that
+  record settled. A web admin panel and Telegram remain specified and unbuilt.
 
 ## Layout
 
@@ -74,3 +88,7 @@ tests/
 English throughout — documents, code, and UI. The course's controlled vocabulary
 (`STAGE`, `LAYER`, `CLAIM TYPE`, `VALIDATION`, `Trade/Watch/Skip/Pause`, the skip and error codes)
 is used verbatim and is never translated or paraphrased.
+
+**This governs artifacts, not conversation.** `AGENTS.md` §13 records an owner instruction about the
+language an agent replies in, which changes nothing that lands in the repository. If the two ever
+appear to disagree, this rule wins for anything committed.

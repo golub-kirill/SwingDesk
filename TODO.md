@@ -1,6 +1,6 @@
 # TODO — the single open-work list
 
-**Status:** working document · **Owner:** shared · **Last reconciled:** 2026-08-15
+**Status:** working document · **Owner:** shared · **Last reconciled:** 2026-08-17
 
 This is the **only** place open and pending work is listed. If a task is not here, it is not tracked.
 Sessions add and close items here; nowhere else keeps a parallel list.
@@ -18,12 +18,32 @@ python tools/track_a_streak.py       # the a.run_completes counter (run from the
 python tools/verify_counts.py        # every census this project knows how to derive
 ```
 
-Provenance marks: **`[v]`** verified against code or data on 2026-08-15 · **`[c]`** carried from the
-open-tasks audit, not independently re-checked.
+Provenance marks: **`[v]`** verified against code or data, most recently 2026-08-17 · **`[c]`**
+carried from the open-tasks audit, not independently re-checked. A `[c]` item is not a smaller
+claim than a `[v]` one — it is an *unverified* one, and promoting it means checking it, not
+retyping it.
 
 ---
 
 ## 1. Blocking now
+
+**Nothing blocks a merge.** All 30 gates are green on `master`, there are no open pull requests, and
+the 2026-08-11 freeze lifted on 2026-08-17.
+
+**What blocks the next thing worth doing** — one item, and it is not on any list below because it
+was measured today rather than planned:
+
+- [ ] **`[v]` The R denominator is not asserted by anything, and every research output is
+      denominated in it.** `planned_risk` was replaced with the constant `Decimal('42')` and the
+      entire suite stayed green, including the test `INVARIANTS.md` §1 names as enforcing that
+      invariant — which asserts `(net/x)*x == net`, an identity that cannot fail for any `x`.
+      Widened sample: **3 of 11** mutants survive (§6). Two are on the live sizing path.
+      **This is why `DR-014` reordered research behind it**: a study run now emits numbers in a unit
+      nothing verifies. The build order the council and the owner converged on is **seam properties
+      first (detection), a stored mutant list second (cheap insurance)** — §6 carries the detail and
+      the three non-negotiables for the list.
+
+### Closed — kept for the reasoning, not as work
 
 - [x] **`[v]` Track A restart rule + idle-day diagnostic — landed 2026-08-16, council-reviewed (5
       advisors + peer review, unanimous on both original questions).** A merge to a frozen file that
@@ -50,8 +70,7 @@ open-tasks audit, not independently re-checked.
       typed. Two new standing measurements came with it: PIT integrity (**CLEAN**, 0 bars whose
       `event_time` postdates their `knowledge_time`) and the dirty-tree run count (**11 of 13**).
 
-**Open as [PR #3](https://github.com/golub-kirill/SwingDesk/pull/3)**, `claude/swingdesk-review-verify-b8707c` → `master`, 5 commits, not yet merged. This file does not exist on `master` until it does — a fresh session reading from `master` will not find it. All 29 gates
-pass from the main checkout, 27 + 2 `UNAVAILABLE` from a worktree without `data/`.
+**PR #3 merged.** This file has been on `master` since.
 
 ## 2. Picked work
 
@@ -296,13 +315,15 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 ### Correctness findings from the 2026-08-15 review — all `[v]`
 
 - [x] **`[v]` Live path silently defaulted the exit policy — fixed 2026-08-16.** `_exit_policy()`
-      reads `exit.atr_stop_multiple` and `exit.max_holding_period` and REFUSES when unset (they are).
+      reads `exit.atr_stop_multiple` and `exit.max_holding_period` and REFUSES when unset. **They
+      were unset when this was written and were ratified 2026-08-17 (`DR-012`)**, so the refusal
+      path is now the exceptional one rather than the only one.
       Candidates Skip with the parameter named; open positions PAUSE rather than being managed on an
       invented stop. Old behaviour `pipeline.py`:289 and :369 both use
       `exits or ExitPolicy(Decimal("2.0"), 20)` — a hard-coded constant with no registry read and no
       provenance, while `exit.atr_stop_multiple` and `exit.max_holding_period` are both `unset`.
-      This is a no-silent-default violation sitting in the production path. **Frozen file — queue
-      behind the freeze.**
+      This is a no-silent-default violation sitting in the production path. **Was a frozen file
+      queued behind the freeze; the freeze lifted 2026-08-17 and PR #9 merged the same evening.**
 - [x] **`[v]` Sizing stop and exit policy disagreed — fixed 2026-08-16.** One policy for the whole
       run: the candidate path now sizes with `policy.stop_for()`, the same distance management and
       the checklist use. Old behaviour `pipeline.py`:343 sizes against `close − 1×ATR`;
@@ -399,6 +420,13 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 - [ ] **Tests cover the safe branch of the risky code, three times over.** See §8.
 
 ## 6b. The operational chain — what a full cycle needs
+
+**COMPLETE as of 2026-08-18.** Every buildable item below is done, and the one remaining open entry
+(3c, off-desk reach) is a deliberate non-goal rather than a gap — `DR-011` decided it and preserves
+the whole analysis so nobody redoes it. The chain ran end to end on 2026-08-17, which is the
+condition the 2026-08-16 council set before research resumes; `DR-014` then reordered what "resumes"
+means. **It has not run with owner capital and will not** (`DR-014`).
+
 
 Traced end to end 2026-08-16, not just the pipeline internals: `daily_run.cmd` → `cli.py scan` →
 `report.py`. **BUILT and gated** (30/30 gates, 435 tests): candidate screening, sizing, exit-policy
@@ -550,7 +578,7 @@ closes, which is exactly what the council's suspend-research call asked for — 
       reason entirely. Caught only by the full gate suite, which reported `AttributeError: module
       has no attribute 'is_expired'` in 12 tests that had passed targeted minutes earlier.
       **Restore from a copy, never from git, when the ritual's subject is uncommitted.**
-- [ ] ~~**5b. Nothing expires a proposal.**~~ `ActionStatus.EXPIRED` exists and is never written. A
+- [x] ~~**5b. Nothing expires a proposal.**~~ `ActionStatus.EXPIRED` exists and is never written. A
       stop move proposed on a stale observation stays answerable indefinitely, so an owner
       returning after a week can approve a trail computed against week-old bars. Needs a rule for
       how long a proposal stands.
