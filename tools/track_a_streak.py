@@ -139,6 +139,33 @@ SCHEDULING_STARTED = date(2026, 8, 9)
 #: all - resets it (`HANDOFF.md` §5, quoted above).
 CLEAN_EXIT_CODES = (0, 2)
 
+#: DELIBERATE restarts: a merge to a frozen file that changed decision output, which the 2026-08-16
+#: amendment (`HANDOFF.md` §5, council-reviewed, unanimous) resets the counter to zero from.
+#:
+#: THIS EXISTED ONLY AS PROSE UNTIL 2026-08-17, and the rule fired that day with nothing to enforce
+#: it. PR #9 merged - five correctness fixes to `pipeline.py` and `sizing.py`, every one of which
+#: changes what the run decides - and this tool went on reporting 5/20, counting four days
+#: (2026-08-11 to 08-14) that ran under the defective pipeline. That is the exact number the
+#: amendment was written to forbid: "splicing them onto a corrected system's streak would report
+#: confidence in a system that only existed for one day."
+#:
+#: A date here is a claim that the system evaluating candidates changed on that date. Adding one is
+#: how the rule is applied; there is no other mechanism, and prose was already shown not to be one.
+#: Sessions on or before a restart date never count toward the current streak, even if their runs
+#: exited cleanly - they measured a different system.
+STREAK_RESTARTS: tuple[tuple[date, str], ...] = (
+    (date(2026, 8, 17),
+     "PR #9 - FX refusal, cost-inclusive R denominator, one exit policy read from the registry, "
+     "output_hash widened to cover trade terms and open positions, a held position's vendor-ticker "
+     "lookup. Merged with DR-012's ratification as ONE transition costing ONE reset (DR-012 section 8.6)"),
+)
+
+
+def restarted_at(as_of: datetime) -> tuple[date, str] | None:
+    """The most recent deliberate restart at or before `as_of`, if any."""
+    past = [r for r in STREAK_RESTARTS if r[0] <= as_of.date()]
+    return max(past, key=lambda r: r[0]) if past else None
+
 _STARTING = re.compile(
     r"^===== \[\w+ (\d{2})/(\d{2})/(\d{4})\s+(\d{1,2}):(\d{2}):\d{2}\.\d+\] daily run starting"
 )
@@ -219,6 +246,14 @@ def streak(attempts: list[Attempt], as_of: datetime) -> tuple[int, date | None, 
     non-clean outcome.
     """
     sessions = _evaluable_sessions(as_of)
+
+    # A deliberate restart truncates the countable window. Not a "break" - `broke_at` reports a
+    # FAILURE, and a restart is the opposite: a correctness fix landing on purpose. Reporting one as
+    # the other would make an intentional reset read as an outage in every later summary.
+    restart = restarted_at(as_of)
+    if restart is not None:
+        sessions = tuple(s for s in sessions if s > restart[0])
+
     count = 0
     start: date | None = None
     broke_at: date | None = None
@@ -363,13 +398,28 @@ def main() -> int:
               f"({reading.start} to {reading.end})")
     if reading.broke_at is not None:
         print(f"  most recent break: {reading.broke_at} ({reading.break_reason})")
+
+    # Printed whenever one applies, because a small number after a restart means something entirely
+    # different from a small number after an outage, and the reader cannot tell them apart otherwise.
+    restart = restarted_at(datetime.now(LOCAL_ZONE))
+    if restart is not None:
+        print(f"  counting from a deliberate restart on {restart[0]}: {restart[1]}")
     if reading.count >= TARGET_STREAK:
         print(f"  a.run_completes is MET as of {reading.start}")
 
     # Advisory, additional to the count above - never changes it (2026-08-16, council-reviewed).
+    #
+    # `idle_days` returns None for TWO reasons and they are not the same claim: the journal is absent
+    # (a fact about this checkout) or the streak has no counted sessions (a fact about the streak).
+    # Printing the first message for the second case asserts something false about the environment,
+    # which is the `unavailable`-is-not-`zero` conflation `AGENTS.md` 12 calls the most damaging
+    # error this product can make. Latent until 2026-08-17, when the deliberate restart made a zero
+    # streak the normal state and the tool immediately claimed a database that exists does not.
     idle = idle_days(reading)
-    if idle is None:
+    if idle is None and not JOURNAL.is_file():
         print("  idle-day check: UNAVAILABLE - no data/journal.duckdb in this checkout.")
+    elif idle is None:
+        print("  idle-day check: nothing to check - the streak has no counted sessions yet.")
     elif idle.examined:
         print(
             f"  {idle.idle}/{idle.examined} counted day(s) were idle (every candidate refused "
