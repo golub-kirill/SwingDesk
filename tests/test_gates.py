@@ -1065,3 +1065,110 @@ def test_conformance_gate_ignores_a_supporting_analysis(tmp_path: Path) -> None:
     code, out = run_gate("verify_prereg_conformance.py", root)
     assert code == 0, out
     assert "0 study(ies) checked" in out
+
+
+# ------------------------------------- the deliberate restart (2026-08-17), and what it exposed
+#
+# The 2026-08-16 amendment - a merge to a frozen file that changes decision output resets the
+# counter from the merge date - existed ONLY AS PROSE until 2026-08-17, and fired that day with
+# nothing enforcing it. PR #9 merged and the tool went on reporting 5/20, four of those days having
+# run under the pipeline the merge corrected. These pin the mechanism that replaced the prose.
+
+
+def test_a_restart_truncates_the_streak_to_sessions_after_it() -> None:
+    """Sessions on or before a restart date never count, however cleanly they ran - they measured a
+    different system. This is the whole point of the amendment, and it is asserted on the pure
+    function rather than through the CLI so the restart date can be varied."""
+    from datetime import date, datetime
+
+    import track_a_streak
+
+    attempts = [
+        track_a_streak.Attempt(
+            session_date=date(2026, 8, d),
+            started_at=datetime(2026, 8, d, 18, 30, tzinfo=track_a_streak.LOCAL_ZONE),
+            exit_code=0,
+        )
+        for d in (11, 12, 13, 14, 17)
+    ]
+    # `as_of` is the restart evening itself, NOT a later day, and that choice is the test.
+    # At 2026-08-18 the un-truncated tool also returns zero - because 08-18 has no run - so the
+    # assertion would have passed against the unfixed code, for the wrong reason. Caught by the
+    # stash ritual (`AGENTS.md` 12) and fixed here. At 2026-08-17 the two answers differ: five
+    # clean sessions without the restart, zero with it.
+    as_of = datetime(2026, 8, 17, 22, 0, tzinfo=track_a_streak.LOCAL_ZONE)
+
+    count, start, _ = track_a_streak.streak(attempts, as_of)
+    assert count == 0, (
+        "every counted session is on or before the 2026-08-17 restart, so the streak is zero - "
+        f"got {count} starting {start}"
+    )
+
+
+def test_the_restart_is_reported_rather_than_leaving_a_bare_zero(tmp_path: Path) -> None:
+    """A zero after a deliberate restart and a zero after an outage are different facts. Printing
+    the number alone makes an intentional reset read as a failure."""
+    log = "".join(
+        _log_line(d, e)
+        for day in (_TUE, _WED, _THU)
+        for d, e in ((day, "starting"), (day, "finished, exit 0"))
+    )
+    code, out = _run_streak_gate(_streak_tree(tmp_path, log), "2026-08-18T22:00:00")
+
+    assert code == 0, "advisory - a restart must never fail the gate"
+    assert "track A streak: 0" in out
+    assert "deliberate restart on 2026-08-17" in out
+    assert "PR #9" in out, "the reason travels with the number (CHARTER 4)"
+
+
+def test_the_restart_date_itself_is_never_reported_as_a_break() -> None:
+    """`broke_at` reports a FAILURE; a restart is a correctness fix landing on purpose. Sessions
+    at or before the restart are outside the window entirely, so the restart date can never surface
+    as the thing that broke a streak.
+
+    Asserted as that invariant rather than "no break is ever printed", which would be a stronger
+    claim than is true: a genuinely missing run AFTER the restart is a real break and must still be
+    reported. The first draft of this test asserted the stronger thing and failed correctly.
+    """
+    from datetime import date, datetime
+
+    import track_a_streak
+
+    restart = track_a_streak.STREAK_RESTARTS[-1][0]
+    attempts = [
+        track_a_streak.Attempt(
+            session_date=date(2026, 8, d),
+            started_at=datetime(2026, 8, d, 18, 30, tzinfo=track_a_streak.LOCAL_ZONE),
+            exit_code=0,
+        )
+        for d in (11, 12, 13, 14, 17)
+    ]
+    as_of = datetime(2026, 8, 21, 22, 0, tzinfo=track_a_streak.LOCAL_ZONE)
+
+    _, _, broke_at = track_a_streak.streak(attempts, as_of)
+    assert broke_at != restart, "an intentional reset must never read as an outage"
+    assert broke_at is None or broke_at > restart
+
+
+def test_a_zero_streak_does_not_claim_the_journal_is_missing(tmp_path: Path) -> None:
+    """The conflation `AGENTS.md` 12 calls the most damaging error this product can make.
+
+    `idle_days()` returns None for two unrelated reasons - no journal, or no counted sessions - and
+    the caller printed the environment message for both. Latent until the restart made a zero
+    streak normal, at which point the tool asserted that a database sitting right there did not
+    exist.
+    """
+    log = "".join(
+        _log_line(d, e)
+        for day in (_TUE, _WED)
+        for d, e in ((day, "starting"), (day, "finished, exit 0"))
+    )
+    root = _streak_tree(tmp_path, log)
+    _record_run(root / "data" / "journal.duckdb", "r1", _within_schedule_start(_TUE),
+                [("TEST.1", "Skip", "RISK", "risk.per_trade_pct")])
+
+    _, out = _run_streak_gate(root, "2026-08-18T22:00:00")
+
+    assert "track A streak: 0" in out
+    assert "UNAVAILABLE" not in out, "the journal exists; saying otherwise is a false claim"
+    assert "nothing to check" in out
