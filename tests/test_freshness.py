@@ -8,13 +8,14 @@ tests were weak. `DR-015` supplied the number it was waiting for.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
 import pytest
 from tests.conftest import TEST_US, fixture_fetcher
 
 from swingdesk.application.pipeline import run
+from swingdesk.contracts.market import Interval, Series
 from swingdesk.contracts.position import ActionKind, Position
 from swingdesk.contracts.reference import Exchange
 from swingdesk.contracts.run import RunMode
@@ -287,3 +288,86 @@ def test_the_staleness_of_a_position_moves_the_output_hash(wired, registry, tmp_
                      positions=other_positions)
 
     assert current.manifest.output_hash != behind.manifest.output_hash
+
+
+# ------------------------------------------------------------------ the write-time guard
+#
+# `CALENDAR_SPEC.md` §5 forbids the unclosed current bar as a decision input, and
+# `last_completed_session` has enforced that on every READ since it was written. Nothing enforced it
+# on WRITE, and the store carries 296 rows to prove it: one manual fetch on 2026-08-03 at 13:25
+# local, two and a half hours before the 16:00 ET close.
+
+
+def _bar(session: date, knowledge_time: datetime, close: str = "100.00"):
+    from swingdesk.contracts.market import Bar, Interval, Series
+
+    return Bar(
+        instrument_id=TEST_US.id, interval=Interval.DAY, series=Series.RAW,
+        event_time=datetime(session.year, session.month, session.day, tzinfo=UTC),
+        session_date=session, open=Decimal(close), high=Decimal(close),
+        low=Decimal(close), close=Decimal(close), volume=1_000,
+        knowledge_time=knowledge_time,
+    )
+
+
+def _closed_session() -> tuple[date, datetime, datetime]:
+    """A real session, an instant during it, and an instant after its close."""
+    session = cal.session(Exchange.NYSE, date(2026, 1, 15))
+    assert session is not None
+    return session.session_date, session.close_time - timedelta(hours=2), session.close_time
+
+
+def test_a_bar_captured_before_its_session_closed_is_refused(stores) -> None:
+    store, _ = stores
+    session, during, _ = _closed_session()
+
+    result = store.write([_bar(session, during)], during)
+
+    assert result.unclosed == 1
+    assert result.written == 0
+    assert store.as_of(TEST_US.id, Interval.DAY, Series.RAW, during).bars == ()
+
+
+def test_the_same_bar_captured_after_the_close_is_written(stores) -> None:
+    """The positive control. Without it the test above passes against a store that refuses
+    everything, which is exactly what an over-eager guard would look like."""
+    store, _ = stores
+    session, _, at_close = _closed_session()
+
+    result = store.write([_bar(session, at_close)], at_close)
+
+    assert result.unclosed == 0
+    assert result.written == 1
+    assert len(store.as_of(TEST_US.id, Interval.DAY, Series.RAW, at_close).bars) == 1
+
+
+def test_a_partial_bar_cannot_overwrite_a_good_one(stores) -> None:
+    """The guard runs BEFORE the revision comparison, so a mid-session print can neither enter the
+    store nor replace a settled bar already in it. This is the damaging half: on 2026-08-03 the
+    partial closes were out by up to 4.3%."""
+    store, _ = stores
+    session, during, at_close = _closed_session()
+    store.write([_bar(session, at_close, close="100.00")], at_close)
+
+    later = at_close + timedelta(days=1)
+    result = store.write([_bar(session, during, close="95.70")], during)
+
+    assert result.unclosed == 1
+    assert result.revised == 0
+    stored = store.as_of(TEST_US.id, Interval.DAY, Series.RAW, later).bars
+    assert len(stored) == 1
+    assert stored[0].close == Decimal("100.00"), "the settled bar survived"
+
+
+def test_a_session_the_calendar_does_not_know_is_allowed_through(stores) -> None:
+    """`unavailable` is not `fail` (`AGENTS.md` §12), applied to a write. Not knowing whether a bar
+    is unclosed is a different claim from knowing that it is, and refusing on ignorance would drop
+    bars for any date the calendar cannot resolve."""
+    store, _ = stores
+    holiday = date(2026, 1, 1)
+    assert cal.session(Exchange.NYSE, holiday) is None, "the fixture assumes a closed day"
+
+    result = store.write([_bar(holiday, AS_OF)], AS_OF)
+
+    assert result.unclosed == 0
+    assert result.written == 1

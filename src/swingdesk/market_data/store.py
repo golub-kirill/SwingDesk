@@ -217,7 +217,13 @@ class BarStore:
         new_rows: list[tuple[Any, ...]] = []
         unchanged = 0
         revised = 0
+        unclosed = 0
         for bar in incoming:
+            # An unclosed bar is refused BEFORE the revision comparison, so a partial print can
+            # neither enter the store nor overwrite a good bar already in it.
+            if _is_unclosed(bar, knowledge_time):
+                unclosed += 1
+                continue
             existing = current.get(bar.event_time)
             if existing is not None and _same_bar(existing, bar):
                 unchanged += 1
@@ -242,7 +248,8 @@ class BarStore:
                 """,
                 new_rows,
             )
-        return WriteResult(inserted=len(new_rows) - revised, revised=revised, unchanged=unchanged)
+        return WriteResult(inserted=len(new_rows) - revised, revised=revised,
+                           unchanged=unchanged, unclosed=unclosed)
 
     # -------------------------------------------------------------- snapshots
 
@@ -271,12 +278,19 @@ class BarStore:
 class WriteResult:
     """What a write actually changed."""
 
-    __slots__ = ("inserted", "revised", "unchanged")
+    __slots__ = ("inserted", "revised", "unchanged", "unclosed")
 
-    def __init__(self, inserted: int, revised: int, unchanged: int) -> None:
+    def __init__(self, inserted: int, revised: int, unchanged: int, unclosed: int = 0) -> None:
         self.inserted = inserted
         self.revised = revised
         self.unchanged = unchanged
+        self.unclosed = unclosed
+        """Bars refused because their session had not closed when they were captured.
+
+        Counted rather than silently dropped: a fetch that returns a session's worth of nothing is
+        a fact the caller should be able to report, and `vendor_yahoo` already uses the same shape
+        for rows that fail validation.
+        """
 
     @property
     def written(self) -> int:
@@ -284,7 +298,32 @@ class WriteResult:
 
     def __repr__(self) -> str:
         return (f"WriteResult(inserted={self.inserted}, revised={self.revised}, "
-                f"unchanged={self.unchanged})")
+                f"unchanged={self.unchanged}, unclosed={self.unclosed})")
+
+
+def _is_unclosed(bar: Bar, knowledge_time: datetime) -> bool:
+    """True when this bar was captured before its own session had finished.
+
+    `CALENDAR_SPEC.md` §5: the unclosed current bar is never a decision input, and
+    `calendar.last_completed_session` has enforced that on every READ since it was written. Nothing
+    enforced it on WRITE, and on 2026-08-03 one manual fetch at 13:25 local - two and a half hours
+    before the 16:00 ET close - stored 296 mid-session prints as if they were session bars. Their
+    closes were out by up to 4.3%, and 196 of them were never corrected by a later fetch because
+    the instrument was not fetched again with that session in window.
+
+    A partial bar is not a slightly-worse bar. Its close is a mid-session price, its high and low
+    are partial extremes, and its volume is a fraction of the session's - so it is wrong in the
+    four fields that every downstream component reads, while looking exactly like a good one.
+
+    A session the calendar does not know is ALLOWED through. Not knowing whether a bar is unclosed
+    is different from knowing that it is, and refusing on ignorance would silently drop bars for
+    any venue or date the calendar cannot resolve - the `unavailable`-is-not-`fail` rule
+    (`AGENTS.md` §12) applied to a write.
+    """
+    from swingdesk.reference_data import calendar as cal
+
+    session = cal.session(cal.exchange_for(bar.instrument_id), bar.session_date)
+    return session is not None and knowledge_time < session.close_time
 
 
 def _same_bar(existing: Bar, incoming: Bar) -> bool:

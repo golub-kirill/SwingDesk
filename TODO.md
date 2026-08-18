@@ -79,17 +79,33 @@ hands it over by name.
       nothing about the run as a whole. Needs a ruling, or an explicit decision that the
       per-instrument gate discharges it and the parameter should be retired (`AGENTS.md` §11).
 
-- [ ] **`[v]` The store contains 98 UNCLOSED bars, and nothing stops a fetch from writing another.**
-      Found 2026-08-18 while measuring for `DR-016`, by accident. Of 220 raw closes that changed
-      between captures, **98 were not vendor restatements** — the first capture was taken *before*
-      that session's close. All 98 are session 2026-08-03, first captured 13:25 local against a
-      16:00 ET close: one early manual fetch stored mid-session prices as if they were closes, with
-      deltas up to **4.3%**.
-      **`CALENDAR_SPEC.md` §5 forbids using the unclosed current bar and `last_completed_session`
-      enforces that on READS. Nothing enforces it on WRITES.** Two things needed, and they are
-      separable: refuse an intra-session bar at write time, and decide what happens to the 98 rows
-      already stored (the stores are append-only, so this is a supersede, never a delete —
-      `CHANGE_MANAGEMENT.md` §3). `DR-016` §4 states why it is not bundled into that record.
+- [x] **`[v]` Unclosed bars — GUARD BUILT 2026-08-18, deletion ruled by the owner and pending one
+      command.** Found while measuring for `DR-016`, by accident.
+      **The scope was three times what I first reported, and the first number came from a method
+      that structurally undercounts.** I found 98 by comparing consecutive versions, which can only
+      see a bad bar that was later corrected. Re-scoped against the calendar directly — every stored
+      bar whose `knowledge_time` predates its own session's close — the answer is **296**, all from
+      one manual fetch on 2026-08-03 at 13:25 local, 2.5 hours before the 16:00 ET close. Stored
+      closes were out by up to **4.3%**. The same fetch also wrote ~350 bars per session for
+      07-27→07-31; those sessions had closed, so those bars are correct and are untouched.
+      **`CALENDAR_SPEC.md` §5 forbids the unclosed current bar and `last_completed_session` enforced
+      it on every READ. Nothing enforced it on WRITE.** Now `BarStore.write` does: a bar captured
+      before its session's close is refused before the revision comparison, so a partial print can
+      neither enter the store nor overwrite a good bar already in it. Counted on `WriteResult`
+      rather than dropped silently. A session the calendar does not know is allowed through —
+      `unavailable` is not `fail`, applied to a write. 4 tests, both mutants killed.
+      **OWNER RULING, 2026-08-18: delete the rows, do not supersede them.** *"We have no reason to
+      replay broken stuff step by step."* This is a deliberate exception to `CHANGE_MANAGEMENT.md`
+      §3 (rollback is supersede, never revert): a replay pinned to a `knowledge_time` before the
+      deletion will not reproduce, and that is the accepted cost, recorded rather than discovered.
+      **Still to run — one command, and it needs the owner because the harness blocks the write:**
+      `python tools/remove_unclosed_bars.py --apply`. It recomputes the predicate from the calendar
+      rather than trusting a hard-coded date, backs the store up first, and verifies the count
+      before and after. Dry-run confirms 296.
+      **The gap heals itself.** `pipeline.run` fetches a full year per universe member every evening
+      and `write` inserts what is missing, so a member's 2026-08-03 bar returns on the next
+      scheduled run — correct this time. 96 of the 296 are current members; the other 200 are not
+      evaluated at all until `refresh_universe.py` reaches them, which refetches them anyway.
 
 - [ ] **`[v]` ADTV admission reads volume that is materially provisional, and this may be bigger than
       corporate actions.** Measured 2026-08-18: of 7,131 settled bars the vendor served twice, **7,129
