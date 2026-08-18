@@ -18,6 +18,7 @@ parameters:
     value: 10000
     status: owner
     provenance: owner
+    read_by: swingdesk.trade_management.sizing:size_long
     named_in: [Appendix C - "Equity × risk %"]
     note: Configurable default, not a constant. Single-user install (CONSTRAINTS §6).
     ui_editable: true
@@ -27,6 +28,7 @@ parameters:
     value: USD
     status: owner
     provenance: owner
+    read_by: swingdesk.trade_management.sizing:_to_base_currency
     named_in: [Appendix C - "FX-adjusted P&L", Appendix A - CAD/USD exposure]
     note: >-
       USD base with Canadian holdings means every .TO position carries a currency effect reported
@@ -38,6 +40,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: swingdesk.trade_management.sizing:_to_base_currency
     named_in: [Appendix C - "FX-adjusted P&L", Appendix A - CAD/USD exposure]
     note: >-
       Rate converting a CAD-denominated risk or position value into account.base_currency.
@@ -58,6 +61,7 @@ parameters:
     value: 5.00
     status: assumed
     provenance: "assumed:DR-003"
+    read_by: swingdesk.application.universe:rule_from_registry
     named_in: [M33-T0479]
     note: >-
       Same knob as screen.min_price but applied at universe construction, before screening. Costs
@@ -70,6 +74,7 @@ parameters:
     value: 5000000
     status: assumed
     provenance: "assumed:DR-003"
+    read_by: swingdesk.application.universe:rule_from_registry
     named_in: [M33-T0481, Appendix A - Dollar volume]
     note: >-
       20-day average dollar volume. Chosen as the A-tier membership rule because it is computable
@@ -84,6 +89,7 @@ parameters:
     value: 250
     status: assumed
     provenance: "assumed:DR-003"
+    read_by: swingdesk.application.universe:rule_from_registry
     named_in: [M72 - warm-up and sample requirements]
     note: >-
       Minimum daily history before an instrument is eligible; also bounds indicator warm-up. 250 is
@@ -97,6 +103,7 @@ parameters:
     value: 14
     status: assumed
     provenance: "assumed:Wilder 1978, New Concepts in Technical Trading Systems"
+    read_by: swingdesk.derived_observations.atr:compute
     named_in: [M18-T0280, M18-T0281, M27, M48-T0738]
     note: >-
       The course names ATR repeatedly and never gives a period. 14 is Wilder's original and the de
@@ -110,6 +117,7 @@ parameters:
     value: 1.0
     status: owner
     provenance: owner
+    read_by: swingdesk.trade_management.sizing:size_long
     named_in: [Appendix C, M93-T1324]
     note: 'Course states explicitly: "Риск % задаётся личным планом."'
     ui_editable: true
@@ -119,6 +127,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [Appendix C]
     note: >-
       RETIRED 2026-08-13, superseded by risk.costs_bp_usd / risk.costs_bp_cad /
@@ -133,6 +142,7 @@ parameters:
     value: 50
     status: assumed
     provenance: assumed:DR-010
+    read_by: swingdesk.trade_management.sizing:_costs_per_share
     named_in: [Appendix C]
     note: >-
       Carries DR-005's measured slippage forward honestly: read as "materially more than 5bp",
@@ -146,6 +156,7 @@ parameters:
     value: 50
     status: assumed
     provenance: assumed:DR-010
+    read_by: swingdesk.trade_management.sizing:_costs_per_share
     named_in: [Appendix C]
     note: >-
       Same rate as risk.costs_bp_usd - DR-009 structures A (TSX/CAD) and C (US/USD) both measured
@@ -159,6 +170,7 @@ parameters:
     value: 0.25
     status: assumed
     provenance: assumed:DR-010
+    read_by: swingdesk.trade_management.sizing:_costs_per_share
     named_in: [Appendix C]
     note: >-
       The conservative constant DR-009 set, carried forward unchanged as a floor rather than
@@ -173,6 +185,7 @@ parameters:
     value: 0.25
     status: assumed
     provenance: assumed:DR-010
+    read_by: swingdesk.trade_management.sizing:_costs_per_share
     named_in: [Appendix C]
     note: >-
       Same value as risk.costs_floor_usd - no currency-specific floor has been measured yet, so
@@ -185,6 +198,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [Appendix C]
     ui_editable: true
 
@@ -195,6 +209,7 @@ parameters:
       25% of account.equity, computed at the current value of 10000. Stored as currency because sizing reads it as one; it must be recomputed if equity changes, which is why DR-006 section 7 wants a percentage-based parameter instead.
     status: assumed
     provenance: "assumed:DR-006"
+    read_by: swingdesk.trade_management.sizing:size_long
     named_in: [Appendix C, M49-T762]
     ui_editable: true
 
@@ -203,6 +218,7 @@ parameters:
     value: 1.0
     status: assumed
     provenance: "assumed:DR-006"
+    read_by: none
     named_in: [Appendix C, M49-T760]
     ui_editable: true
 
@@ -211,6 +227,7 @@ parameters:
     value: 6
     status: assumed
     provenance: "assumed:DR-006"
+    read_by: none
     named_in: [M51-T780, M93-T1326]
     ui_editable: true
 
@@ -219,6 +236,7 @@ parameters:
     value: 2
     status: assumed
     provenance: "assumed:DR-006"
+    read_by: none
     named_in: [M51-T782, M93-T1327]
     ui_editable: true
 
@@ -229,6 +247,7 @@ parameters:
       Threshold on the correlation of daily returns over a 60-session lookback. The lookback is authored with the threshold and needs a registry entry of its own - see DR-006 section 7.
     status: assumed
     provenance: "assumed:DR-006"
+    read_by: none
     named_in: [M49-T761, M51-T781]
     note: The size adjustment applied above the threshold is also unspecified.
     ui_editable: true
@@ -238,6 +257,7 @@ parameters:
     value: 6
     status: assumed
     provenance: "assumed:DR-006"
+    read_by: none
     named_in: [M49-T764]
     ui_editable: true
 
@@ -246,6 +266,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M51-T792, M93-T1328]
     ui_editable: true
 
@@ -254,6 +275,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M51-T793, M93-T1329]
     ui_editable: true
 
@@ -262,6 +284,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M49-T765, M93]
     ui_editable: true
 
@@ -270,6 +293,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [FAIL-CLOSED degradation table row 5, M67 standard]
     note: Named as mandatory in the fail-closed table; levels and streak triggers never stated.
     ui_editable: true
@@ -279,6 +303,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [Appendix N code STOP, M48-T746]
     ui_editable: true
 
@@ -287,6 +312,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [Appendix O code REVENGE - "Pause after threshold"]
     ui_editable: true
 
@@ -295,6 +321,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [Appendix N code PSYCH]
     ui_editable: true
 
@@ -304,6 +331,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M33-T0479]
     ui_editable: true
 
@@ -312,6 +340,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M33-T0480]
     ui_editable: true
 
@@ -320,6 +349,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M33-T0481]
     ui_editable: true
 
@@ -328,6 +358,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M33-T0482]
     note: 'Denominator IS specified elsewhere: "RVOL: x 20D median" (M34-T513). Threshold is not.'
     ui_editable: true
@@ -337,6 +368,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M33-T0483]
     ui_editable: true
 
@@ -345,6 +377,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M33-T0484]
     ui_editable: true
 
@@ -353,6 +386,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     note: >-
       STAYS UNSET BY EVIDENCE, and the family is CLOSED. Two pre-registered studies, both
       reported 2026-08-02, both refuted:
@@ -374,6 +408,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M33-T0486]
     ui_editable: true
 
@@ -382,6 +417,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M33-T0487, M31-T0464]
     note: Lookback, ranking method and percentile cutoff all unspecified.
     ui_editable: false
@@ -391,6 +427,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M33-T0488]
     note: Pre-registration required before activation.
     ui_editable: false
@@ -400,6 +437,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M33-T0489, M89-T1276]
     note: Depth, speed and volume-dry-up all unspecified. Pre-registration required.
     ui_editable: false
@@ -409,6 +447,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M33-T0490, M18-T0285]
     note: Pre-registration required before activation.
     ui_editable: false
@@ -418,6 +457,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M33-T0491]
     note: 'Unit IS specified: "Gap: % prior close to open" (M34-T513). Threshold is not.'
     ui_editable: true
@@ -427,6 +467,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M33-T0492, M34, Appendix N code EVENT]
     note: No blackout window length stated anywhere in the course.
     ui_editable: true
@@ -436,6 +477,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [Appendix E item 12, Appendix N code LIQ]
     ui_editable: true
 
@@ -444,6 +486,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M32-T0474]
     ui_editable: true
 
@@ -452,6 +495,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M32-T0476]
     ui_editable: false
 
@@ -460,6 +504,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [Appendix T - "Daily Priority 1 ограничен"]
     ui_editable: true
 
@@ -469,6 +514,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M48-T0738, M52-T0799, M53-T0815, M55-T0834]
     ui_editable: true
 
@@ -477,6 +523,7 @@ parameters:
     value: 2.0
     status: assumed
     provenance: assumed:DR-012
+    read_by: swingdesk.application.pipeline:_exit_policy
     named_in: [M48-T0738]
     note: >-
       Ratified by the owner 2026-08-17. Protective stop is entry - 2.0 x ATR(14) at the signal bar,
@@ -496,6 +543,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M55-T0834]
     ui_editable: true
 
@@ -504,6 +552,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M55-T0835]
     ui_editable: true
 
@@ -512,6 +561,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M55-T0835]
     note: Anchor definition (highest high since entry vs since signal) is also unstated.
     ui_editable: true
@@ -521,6 +571,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M55-T0842, M27-T0415]
     ui_editable: true
 
@@ -529,6 +580,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M55-T0843, M55-T0844]
     ui_editable: true
 
@@ -537,6 +589,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M55-T0833]
     ui_editable: true
 
@@ -545,6 +598,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M53-T0816]
     ui_editable: true
 
@@ -553,6 +607,7 @@ parameters:
     value: 20
     status: assumed
     provenance: assumed:DR-012
+    read_by: swingdesk.application.pipeline:_exit_policy
     named_in: [M57-T0866, M71-T1067]
     note: >-
       Ratified by the owner 2026-08-17. Time exit at the close of session 20 after entry, if the stop
@@ -571,6 +626,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M57-T0865, M57-T0867]
     ui_editable: true
 
@@ -579,6 +635,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M55-T0838, M55-T0839, M55-T0840, M55-T0841]
     note: 'Course states only: period fixed in advance, and a touch is not itself a signal.'
     ui_editable: false
@@ -588,6 +645,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M54-T0821, M54-T0822]
     ui_editable: true
 
@@ -596,6 +654,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M54-T0827]
     ui_editable: false
 
@@ -604,6 +663,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M58 standard - "указать количество и порядок исполнения"]
     note: Course requires an order be stated; it does not state one.
     ui_editable: false
@@ -614,6 +674,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M30-T0446 chart panel, M30-T0450 chart panel]
     note: >-
       WEAK CITATION, verified 2026-08-02. ADX appears in the course only as a chart-panel label
@@ -628,6 +689,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M30-T0442, M30-T0443]
     ui_editable: true
 
@@ -636,6 +698,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M30-T0448, M31-T0457]
     ui_editable: true
 
@@ -644,6 +707,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M31-T0459]
     note: 'Bounded 0-100 with a 50% reference line is specified; which MA is not.'
     ui_editable: true
@@ -653,6 +717,7 @@ parameters:
     value: "BREADTH_MEDIAN: share of universe above its own 200d SMA, split at the train-window median (0.647)"
     status: assumed
     provenance: "assumed:PR-002"
+    read_by: none
     note: >-
       DOWNGRADED 2026-08-16 from a `validated:` provenance citing PR-002 (the literal token is not
       written here: gate 3f scans this file for it and would read a historical mention as a live
@@ -700,6 +765,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M31-T0464, M77-T1138]
     ui_editable: true
 
@@ -708,6 +774,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M31-T0465]
     ui_editable: false
 
@@ -717,6 +784,7 @@ parameters:
     value: "daily zero-filled portfolio returns, net of costs, rf=0, annualised x sqrt(252)"
     status: assumed
     provenance: "assumed:DR-001"
+    read_by: none
     named_in: [M69-T1028]
     note: >-
       Periodicity, contiguous zero-filled series or not, risk-free rate and annualisation all
@@ -730,6 +798,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M69-T1029]
     ui_editable: false
 
@@ -738,6 +807,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M69-T1027]
     ui_editable: false
 
@@ -746,6 +816,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M50-T0775]
     note: Has a dedicated topic and appears in no formula sheet, including Appendix D.
     ui_editable: false
@@ -755,6 +826,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M69 fail-closed - "малая выборка", M72-T1074, M74-T1113]
     ui_editable: true
 
@@ -763,6 +835,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M69 fail-closed]
     ui_editable: true
 
@@ -771,6 +844,7 @@ parameters:
     value: "A|B|C|D ordinal, assigned on the setup before the outcome is known"
     status: assumed
     provenance: "assumed:DR-002"
+    read_by: none
     named_in: [M68-T1017, Appendix G Setup entity]
     note: >-
       Named as a "standard scale"; no range, no weights. Deliberately separate from the process
@@ -782,6 +856,7 @@ parameters:
     value: "100 minus severity weights (Moderate 10, Moderate/Major 20, Major 35, Critical 100), floor 0"
     status: assumed
     provenance: "assumed:DR-002"
+    read_by: none
     named_in: [M68-T1016, Appendix G Review entity]
     note: >-
       Computed from journalled error codes, never hand-entered - a self-reported score drifts with
@@ -796,6 +871,7 @@ parameters:
     value: 2
     status: assumed
     provenance: assumed:DR-015
+    read_by: none
     note: >-
       Trading SESSIONS, never calendar days - Friday's bar on Monday is one session old and three
       calendar days old, and counting days would refuse the whole universe every Monday.
@@ -812,6 +888,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [Appendix T - "При stale data или mismatch новые сделки блокируются"]
     ui_editable: true
 
@@ -820,6 +897,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [POINT_IN_TIME_SPEC 3 - revision deltas]
     note: >-
       Without a tolerance, vendor float noise produces phantom revisions on every fetch. Price,
@@ -831,6 +909,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [CALENDAR_SPEC 2d - measured]
     note: >-
       Only extreme outliers are informative. Measured overlap: normal 0.366-0.824, half-day
@@ -843,6 +922,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [FAIL-CLOSED row 1 - "использовать второй источник"]
     note: Beyond this, the two sources disagree and the instrument is DATA-skipped. Never averaged.
     ui_editable: true
@@ -852,6 +932,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [DATA_QUALITY_SPEC 2.2]
     note: Repeated DATA skips should eventually drop an instrument from the universe.
     ui_editable: true
@@ -862,6 +943,7 @@ parameters:
     value: "0.50 / 0.20 / 0.30 train / validation / test"
     status: assumed
     provenance: "assumed:DR-007"
+    read_by: none
     named_in: [M73-T1091, M73-T1092, Appendix K]
     ui_editable: false
 
@@ -870,6 +952,7 @@ parameters:
     value: "756 train / 252 test / 252 step"
     status: assumed
     provenance: "assumed:DR-007"
+    read_by: none
     named_in: [M73-T1093, Appendix K]
     note: Window length, step size and fold count all unspecified.
     ui_editable: false
@@ -879,6 +962,7 @@ parameters:
     value: 21
     status: assumed
     provenance: "assumed:DR-007"
+    read_by: none
     named_in: [M73 robustness]
     ui_editable: false
 
@@ -887,6 +971,7 @@ parameters:
     value: 3
     status: assumed
     provenance: "assumed:DR-007"
+    read_by: none
     named_in: [M73-T1099, M73-T1100]
     ui_editable: false
 
@@ -895,6 +980,7 @@ parameters:
     value: 12
     status: assumed
     provenance: "assumed:DR-007"
+    read_by: none
     named_in: [M74-T1112]
     note: Topic exists solely to state this and states no number.
     ui_editable: false
@@ -904,6 +990,7 @@ parameters:
     value: 20
     status: assumed
     provenance: "assumed:DR-007"
+    read_by: none
     named_in: [M74-T1113]
     ui_editable: false
 
@@ -912,6 +999,7 @@ parameters:
     value: 20
     status: owner
     provenance: owner
+    read_by: none
     named_in: [M75-T1122]
     note: >-
       Owner decision, 2026-08-05. M75-T1122 names "Максимальная допустимая просадка" and gives no
@@ -927,6 +1015,7 @@ parameters:
     value: "Appendix S stage 1: 100% plan/stop/journal, no critical violations; plus every ratified Track A criterion met"
     status: assumed
     provenance: "assumed:DR-007"
+    read_by: none
     named_in: [M74-T1114, Appendix S]
     note: >-
       Appendix S supplies the only hard gate in the course - "100% plan/stop/journal; no critical
@@ -943,6 +1032,7 @@ parameters:
     value: "200 primary / 60 holdout, per arm"
     status: assumed
     provenance: "assumed:DR-007"
+    read_by: none
     named_in: [M72-T1074]
     note: >-
       Distinct from stats.min_sample_for_verdict, which governs reporting a statistic. This one
@@ -955,6 +1045,7 @@ parameters:
     value: "2016-08-01 to present, or all available history if shorter"
     status: assumed
     provenance: "assumed:DR-007"
+    read_by: none
     named_in: [M72-T1072, M72-T1073]
     note: >-
       Topic 1073 requires the period to span different market regimes, which constrains the choice
@@ -966,6 +1057,7 @@ parameters:
     value: "verdict invariant under one grid step either way; reported fragile if the statistic moves more than 0.5x its own magnitude"
     status: assumed
     provenance: "assumed:DR-007"
+    read_by: none
     named_in: [M72-T1087, M73-T1095]
     note: >-
       How far a result may move when a parameter moves to its neighbours before the result counts as
@@ -977,6 +1069,7 @@ parameters:
     value: 10000
     status: assumed
     provenance: "assumed:DR-007"
+    read_by: none
     named_in: [M73-T1096, M73-T1097]
     note: Resampling method (i.i.d. or block) is an open item, not just the count.
     ui_editable: false
@@ -986,6 +1079,7 @@ parameters:
     value: 0.05
     status: assumed
     provenance: "assumed:DR-007"
+    read_by: none
     named_in: [M73-T1101]
     ui_editable: false
 
@@ -994,6 +1088,7 @@ parameters:
     value: 1
     status: assumed
     provenance: "assumed:DR-007"
+    read_by: none
     named_in: [M73-T1102]
     ui_editable: false
 
@@ -1002,6 +1097,7 @@ parameters:
     value: "0.10, minimum 20 trades"
     status: assumed
     provenance: "assumed:DR-007"
+    read_by: none
     named_in: [Appendix J - QA stage]
     note: >-
       Appendix J requires "повторная независимая проверка части выборки" - an independent re-check of
@@ -1015,6 +1111,7 @@ parameters:
     value: "0.005 USD per share, each side"
     status: assumed
     provenance: "assumed:DR-004"
+    read_by: none
     named_in: [M72-T1081]
     note: >-
       A model, not a scalar: per-trade, per-share and percentage schedules are different functions
@@ -1027,6 +1124,7 @@ parameters:
     value: "25 bps of price, each side, applied to the fill"
     status: assumed
     provenance: "assumed:DR-005"
+    read_by: none
     named_in: [M72-T1082, M74-T1110]
     note: >-
       M74-T1110 requires measured live slippage to be compared against this, so the model must be
@@ -1042,6 +1140,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: swingdesk.validation.golden:_run_pivot
     named_in: [M12-T0201, M12-T0202]
     note: >-
       Bars required to the left of a swing point. The course marks a pivot as "зона или структура"
@@ -1053,6 +1152,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: swingdesk.validation.golden:_run_pivot
     named_in: [M12-T0201, M12-T0202]
     note: >-
       Bars required to the right BEFORE the pivot counts as confirmed - "подтверждается завершёнными
@@ -1065,6 +1165,7 @@ parameters:
     value: null
     status: unset
     provenance: null
+    read_by: none
     named_in: [M10-T0166, M71-T1057]
     note: >-
       How many consecutive rising highs and rising lows constitute "higher highs and higher lows"
@@ -1078,6 +1179,7 @@ parameters:
     value: 3
     status: assumed
     provenance: assumed:DR-013
+    read_by: swingdesk.presentation.cli:_expiry
     named_in: [US-010, "authored - the course names no proposal lifetime anywhere"]
     note: >-
       How long a NON-CRITICAL proposal (MOVE_STOP, PARTIAL_EXIT) stays answerable. A CRITICAL one
