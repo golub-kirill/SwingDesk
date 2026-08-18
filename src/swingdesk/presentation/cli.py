@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from datetime import UTC
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -12,14 +12,14 @@ from pydantic import ValidationError
 
 from swingdesk.application import universe as universe_builder
 from swingdesk.application.pipeline import run
-from swingdesk.contracts.position import ActionStatus, Fill, Position
+from swingdesk.contracts.position import ActionStatus, Fill, ManagementAction, Position
 from swingdesk.contracts.reference import Instrument
 from swingdesk.contracts.run import RunMode
 from swingdesk.journal_evidence.journal import Journal
 from swingdesk.journal_evidence.positions import PositionStore
 from swingdesk.market_data import BarStore
 from swingdesk.platform.clock import FixedClock, SystemClock
-from swingdesk.platform.parameters import ParameterRegistry
+from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
 from swingdesk.presentation import notify, report
 from swingdesk.reference_data import calendar as cal
 from swingdesk.reference_data.directory import DirectoryStore
@@ -83,6 +83,8 @@ def main(argv: list[str] | None = None) -> int:
     pending = sub.add_parser(
         "pending", help="proposals on open positions awaiting your answer (US-010)")
     pending.add_argument("--data", type=Path, default=DEFAULT_DATA)
+    pending.add_argument("--as-of", default=None,
+                         help="ISO instant to judge staleness at (DR-013); defaults to now")
 
     respond = sub.add_parser(
         "respond",
@@ -187,7 +189,6 @@ def _record_fill(args: argparse.Namespace) -> int:
     this says so rather than reporting 0.00: see `Fill.slippage_per_share`.
     """
     from datetime import date as date_cls
-    from datetime import datetime
 
     clock = (
         FixedClock(datetime.fromisoformat(args.as_of).replace(tzinfo=UTC))
@@ -239,6 +240,28 @@ def _record_fill(args: argparse.Namespace) -> int:
     return 0
 
 
+def _expiry(
+    positions: PositionStore, action: ManagementAction, now: datetime
+) -> bool | Refusal:
+    """Is this proposal past `DR-013`'s window? A `Refusal` when the rule cannot be applied.
+
+    The exchange comes from the POSITION, never from parsing `position_id`. That id defaults to
+    `POS-<instrument id>-<opened-on>` but `--position-id` overrides it, so splitting the string
+    would work until the first time somebody used the flag - and then it would pick the wrong
+    calendar silently, which is the worst way for a date rule to be wrong.
+    """
+    try:
+        days, _ = ParameterRegistry.load().int_value("management.proposal_expiry_days")
+    except ParameterUnset as unset:
+        return Refusal("RISK", "no expiry window is set, so staleness cannot be judged",
+                       parameter_id=unset.parameter_id)
+    history = positions.history(action.position_id)
+    if not history:
+        return Refusal("DATA", f"no position {action.position_id} to date this proposal against")
+    exchange = cal.exchange_for(history[-1].instrument_id)
+    return manage.is_expired(action, now, days, exchange)
+
+
 def _pending(args: argparse.Namespace) -> int:
     """List proposals awaiting an answer, with what US-010 requires to answer them.
 
@@ -246,13 +269,36 @@ def _pending(args: argparse.Namespace) -> int:
     the bounded set of choices - which is exactly two. Nothing here is a recommendation to trade:
     the system proposes managing a position it was told about, and the owner decides (D1, A-001).
     """
+
+    now = (
+        FixedClock(datetime.fromisoformat(args.as_of).replace(tzinfo=UTC)).now()
+        if getattr(args, "as_of", None)
+        else SystemClock().now()
+    )
+
     with PositionStore(args.data / "positions.duckdb") as positions:
-        waiting = positions.pending()
-        if not waiting:
+        everything = positions.pending()
+
+        # Split at READ time (`DR-013` 6.4). Expired ones are SHOWN, not dropped: an owner who
+        # cannot tell "nothing pending" from "something aged out while I was away" has been told
+        # less than the truth, and the second is the case they most need to know about.
+        waiting, expired, unjudgeable = [], [], []
+        for item in everything:
+            verdict = _expiry(positions, item.action, now)
+            if isinstance(verdict, Refusal):
+                unjudgeable.append((item, verdict))
+            elif verdict:
+                expired.append(item)
+            else:
+                waiting.append(item)
+
+        if not everything:
             print("no proposals awaiting your answer.")
             return 0
-
-        print(f"{len(waiting)} proposal(s) awaiting your answer\n")
+        if not waiting:
+            print("no proposals awaiting your answer.")
+        else:
+            print(f"{len(waiting)} proposal(s) awaiting your answer\n")
         for item in waiting:
             action = item.action
             print(f"  {action.position_id}  #{item.sequence}   {action.kind.value.upper()}")
@@ -268,6 +314,20 @@ def _pending(args: argparse.Namespace) -> int:
                 f"      answer     swingdesk respond {action.position_id} {item.sequence} "
                 f"--approve|--reject --reason \"...\"\n"
             )
+
+        if expired:
+            print(f"{len(expired)} EXPIRED and can no longer be answered (DR-013):\n")
+            for item in expired:
+                a = item.action
+                print(f"  {a.position_id}  #{item.sequence}   {a.kind.value.upper()}"
+                      f"   proposed {a.proposed_at:%Y-%m-%d}")
+                print("      the observation it acted on is stale; a later run will re-propose "
+                      "if the rule still fires\n")
+
+        # Never silently. A proposal whose age cannot be judged is not a proposal that is fine.
+        for item, refusal in unjudgeable:
+            print(f"  {item.action.position_id}  #{item.sequence}   AGE UNKNOWN  {refusal}",
+                  file=sys.stderr)
     return 0
 
 
@@ -279,7 +339,6 @@ def _respond(args: argparse.Namespace) -> int:
     store. The order here is the requirement - the response is recorded FIRST, then acted on, so
     "no action is applied without a recorded response" holds even if applying then fails.
     """
-    from datetime import datetime
 
     clock = (
         FixedClock(datetime.fromisoformat(args.as_of).replace(tzinfo=UTC))
@@ -290,6 +349,28 @@ def _respond(args: argparse.Namespace) -> int:
     verdict = ActionStatus.APPROVED if args.approve else ActionStatus.REJECTED
 
     with PositionStore(args.data / "positions.duckdb") as positions:
+        # BEFORE the response is recorded, not after. `DR-013` 6.3 refuses an expired proposal
+        # rather than applying it late, and the store's primary key means a recorded answer cannot
+        # be taken back - so the check has to come first or the refusal arrives too late to matter.
+        proposed = positions.proposal_at(args.position_id, args.sequence)
+        if proposed is not None:
+            # `stale`, not `verdict` - `verdict` above already holds the owner's APPROVED/REJECTED
+            # choice, and shadowing it here passed a bool into `respond(choice=...)`. Caught
+            # immediately by the store's own validator, which refused with "a response is APPROVED
+            # or REJECTED, not False" - a validator earning its keep on the first shadowed name.
+            stale = _expiry(positions, proposed, now)
+            if isinstance(stale, Refusal):
+                print(f"response REFUSED  {stale}", file=sys.stderr)
+                return 2
+            if stale:
+                print(
+                    f"response REFUSED  RISK: {args.position_id} #{args.sequence} expired - it was "
+                    f"proposed {proposed.proposed_at:%Y-%m-%d} on an observation that is now stale "
+                    f"(DR-013). A later run re-proposes if the rule still fires",
+                    file=sys.stderr,
+                )
+                return 2
+
         try:
             positions.respond(
                 args.position_id, args.sequence,
@@ -347,7 +428,6 @@ def _open_position(args: argparse.Namespace) -> int:
     at all. Six tests caught it; no gate would have.
     """
     from datetime import date as date_cls
-    from datetime import datetime
 
     # This RECORDS a fact, and computes nothing that would let it be mistaken for one (D1).
     # `--as-of` is when the record is being MADE, not when the fill happened - `opened_on`
@@ -416,7 +496,6 @@ def _scan(args: argparse.Namespace) -> tuple[int, str | None, notify.Outcome]:
     the run id where one exists - a refusal can happen before any run is journalled, and there is
     then no manifest and no id to reference.
     """
-    from datetime import datetime
 
     # The mode is declared here and travels on the manifest. `--as-of` pins the clock and still
     # fetches fresh, so it is LIVE_AS_OF and not REPLAY however much it resembles one

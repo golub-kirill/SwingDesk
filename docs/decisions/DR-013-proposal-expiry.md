@@ -6,9 +6,10 @@ status:          accepted — ruled by the owner 2026-08-17
 parameters:      management.proposal_expiry_days
 components:      none — ActionStatus.EXPIRED already exists on the ManagementAction contract
 supersedes:      nothing. TODO.md §6b item 5b, which was unbuildable without this rule
-implementation:  none
-still_to_build:  TODO.md section 6b item 5b. This record IS the rule that build was waiting on;
-                 ActionStatus.EXPIRED exists on the contract and is still written by nothing.
+implemented_by:  src/swingdesk/trade_management/manage.py :: is_expired
+surfaces:        cli.py `_expiry` - `pending` splits live from expired, `respond` refuses an expired
+                 proposal BEFORE recording any answer. Read-time only: nothing writes
+                 ActionStatus.EXPIRED to a row, per section 6.4.
 ```
 
 ## 1. The gap

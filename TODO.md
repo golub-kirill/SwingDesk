@@ -523,7 +523,34 @@ closes, which is exactly what the council's suspend-research call asked for — 
       **Channel: the CLI, locally.** `DR-011` established the owner is at the machine; a Telegram
       approval surface would re-open every question that record settled. `PRODUCT_SURFACES` §3.3
       still names Telegram for this and remains unbuilt.
-- [ ] **5b. Nothing expires a proposal.** `ActionStatus.EXPIRED` exists and is never written. A
+- [x] **5b — PROPOSAL EXPIRY. Built 2026-08-18.** *(The name is the fix for the name: "5b" is a
+      nested list index that tells a reader nothing. It is proposal expiry.)*
+      `manage.is_expired()` decides it, `DR-013` rules it, and nothing writes `ActionStatus.EXPIRED`
+      to a row — expiry is computed at READ time, the same shape `pending` already uses by defining
+      pending as the ABSENCE of a response rather than a status column. There is no daemon here to
+      write a stored value, so a stored one would be correct only until nobody was looking.
+      **Sessions, not calendar days.** A proposal made Friday is answerable Wednesday and expires
+      Thursday. Counting calendar days would expire proposals across exactly the intervals in which
+      no bar existed and no risk could have changed.
+      **`EXPIRING_KINDS` is a whitelist, deliberately** — `MOVE_STOP` and `PARTIAL_EXIT` only.
+      `EXIT_NOW` never expires (`DR-013` §2.1: it would convert the system's loudest statement into
+      silence). `PAUSE` was not classified by `DR-013`, so it inherits the fail-closed side rather
+      than a classification this module invented.
+      `pending` **shows** expired proposals rather than dropping them, and prints `AGE UNKNOWN` on
+      stderr when the rule cannot be applied at all. `respond` refuses **before** recording the
+      answer — the store's primary key means a recorded response cannot be taken back, so a
+      refusal after the write would arrive too late to matter.
+      `pending --as-of` added, so staleness is testable at a pinned instant like every other command.
+      5 new tests. Two assert the ABSENCE of expiry and so cannot go red against an unbuilt feature;
+      both were instead proven against **mutated** implementations (`EXIT_NOW` made expirable, and
+      the off-by-one flipped to `>=`).
+      **A process defect worth more than the feature.** The first mutation round restored the file
+      with `git checkout -- manage.py`, which reverts from the INDEX — and the new function was
+      never staged, so the "restore" deleted it. The second mutation then "failed" for the wrong
+      reason entirely. Caught only by the full gate suite, which reported `AttributeError: module
+      has no attribute 'is_expired'` in 12 tests that had passed targeted minutes earlier.
+      **Restore from a copy, never from git, when the ritual's subject is uncommitted.**
+- [ ] ~~**5b. Nothing expires a proposal.**~~ `ActionStatus.EXPIRED` exists and is never written. A
       stop move proposed on a stale observation stays answerable indefinitely, so an owner
       returning after a week can approve a trail computed against week-old bars. Needs a rule for
       how long a proposal stands.

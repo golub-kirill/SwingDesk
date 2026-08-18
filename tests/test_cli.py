@@ -580,3 +580,79 @@ def test_a_fill_for_an_action_that_does_not_exist_is_refused(tmp_path, capsys) -
                      "--commission", "0", "--data", str(_approved(tmp_path))])
     assert code == 2
     assert "no action" in capsys.readouterr().err
+
+
+# ---------------------------------- proposal expiry (DR-013, TODO.md 6b item 5b) - 2026-08-18
+#
+# `ActionStatus.EXPIRED` was defined on the contract and written by nothing, so a MOVE_STOP computed
+# on week-old bars stayed answerable forever. DR-013 ruled the window: non-critical expires after 3
+# TRADING days, critical never does.
+
+
+def _answer(root, seq=1, at="2026-08-21T22:00:00", approve=True):
+    flag = "--approve" if approve else "--reject"
+    return cli.main(["respond", "POS-1", str(seq), flag, "--reason", "ok",
+                     "--as-of", at, "--data", str(root)])
+
+
+def test_a_stale_stop_move_can_no_longer_be_answered(tmp_path, capsys) -> None:
+    """The defect itself. Proposed Sunday 2026-08-16; by Friday 08-21 four sessions have elapsed,
+    one past the window, and approving would move a real stop on a four-day-old observation."""
+    root = _seeded(tmp_path)
+    capsys.readouterr()
+
+    code = _answer(root)
+
+    assert code == 2
+    err = capsys.readouterr().err
+    assert "expired" in err and "DR-013" in err
+    assert [p.version for p in _history(root)] == [1], "nothing may be applied to the position"
+
+
+def test_a_stop_move_inside_the_window_is_still_answerable(tmp_path, capsys) -> None:
+    """The boundary matters as much as the rule. Three elapsed sessions is INSIDE - proposals must
+    not expire a day early, which is the off-by-one an inclusive session count would produce."""
+    root = _seeded(tmp_path)
+    capsys.readouterr()
+
+    code = _answer(root, at="2026-08-20T22:00:00")
+
+    assert code == 0
+    assert [p.version for p in _history(root)] == [1, 2], "the approval must apply"
+
+
+def test_a_critical_exit_never_expires(tmp_path, capsys) -> None:
+    """DR-013 2.1: expiring an EXIT_NOW converts the system's loudest statement into silence, and
+    silence reads as "nothing to do". Same date that expires a MOVE_STOP above."""
+    root = _seeded(tmp_path, kind=_ActionKind.EXIT_NOW, reason_code="STOP",
+                   reason="stop 290 touched", old_stop=Decimal(290), new_stop=None)
+    capsys.readouterr()
+
+    code = _answer(root, at="2026-09-30T22:00:00")
+
+    assert code == 0, "a critical proposal is answerable however long it has waited"
+    assert [p.version for p in _history(root)] == [1, 2]
+
+
+def test_pending_shows_an_expired_proposal_rather_than_hiding_it(tmp_path, capsys) -> None:
+    """An owner who cannot tell "nothing pending" from "something aged out while I was away" has
+    been told less than the truth, and the second is the case they most need to know about."""
+    root = _seeded(tmp_path)
+    capsys.readouterr()
+
+    assert cli.main(["pending", "--data", str(root), "--as-of", "2026-08-21T22:00:00"]) == 0
+
+    out = capsys.readouterr().out
+    assert "no proposals awaiting your answer" in out, "it is not answerable"
+    assert "EXPIRED" in out and "POS-1" in out, "but it is still reported"
+
+
+def test_pending_still_lists_a_live_proposal(tmp_path, capsys) -> None:
+    root = _seeded(tmp_path)
+    capsys.readouterr()
+
+    assert cli.main(["pending", "--data", str(root), "--as-of", "2026-08-18T22:00:00"]) == 0
+
+    out = capsys.readouterr().out
+    assert "1 proposal(s) awaiting your answer" in out
+    assert "EXPIRED" not in out
