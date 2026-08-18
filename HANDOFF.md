@@ -47,7 +47,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 |---|---|
 | Merge gates | **30**, one command: `python tools/check_gates.py` |
 | Tests | **567**, fully offline |
-| Docs | 110 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
+| Docs | 111 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 460 registered · 4 `specified` · **1 `active`** |
 | Parameters | 102 - 60 `unset`, 38 `assumed`, 4 `owner`, **0 `validated`** |
 | Golden vectors | 25 vectors across 6 components |
@@ -64,10 +64,10 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 |---|---|
 | Journal | 14 runs, 0 incomplete · **11 run(s) recorded against a dirty tree** and therefore not replayable from their SHA |
 | Decisions | 11235 recorded · 0 uncoded refusals (`a.no_uncoded_failures` requires 0) |
-| Bar store | 1,920,316 rows across 3,740 instruments |
+| Bar store | 1,920,020 rows across 3,738 instruments |
 | PIT integrity | **CLEAN** - bars whose `event_time` postdates their `knowledge_time`: 0 |
 | Directory | **11 pulls** · **3 confirmed** against the response's own `Last-Modified` (`source_session_date`); the rest predate the field and stay permanently unattributed (`DR-008` c3) |
-| Universe coverage | bars stored for 3,740 of 13,146 listed symbols - **28.4%** |
+| Universe coverage | bars stored for 3,738 of 13,146 listed symbols - **28.4%** |
 | Track A clock | **0/20** consecutive clean sessions · `a.run_completes`, computed by `tools/track_a_streak.py` |
 
 *Measured from `data/` on 2026-08-18.*

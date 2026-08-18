@@ -98,43 +98,40 @@ hands it over by name.
       replay broken stuff step by step."* This is a deliberate exception to `CHANGE_MANAGEMENT.md`
       §3 (rollback is supersede, never revert): a replay pinned to a `knowledge_time` before the
       deletion will not reproduce, and that is the accepted cost, recorded rather than discovered.
-      **Still to run — one command, and it needs the owner because the harness blocks the write:**
-      `python tools/remove_unclosed_bars.py --apply`. It recomputes the predicate from the calendar
-      rather than trusting a hard-coded date, backs the store up first, and verifies the count
-      before and after. Dry-run confirms 296.
+      **DONE 2026-08-18 — the owner ran it.** 296 rows deleted, store 1,920,316 → **1,920,020**,
+      `unclosed bars still present: 0`. Verified independently afterwards: the **1,768** good bars
+      the same 13:25 fetch wrote for sessions 07-27…07-31 are untouched, 3,412 instruments still
+      hold a valid 2026-08-03 bar, and PIT integrity is clean. Backup kept beside the store.
       **The gap heals itself.** `pipeline.run` fetches a full year per universe member every evening
       and `write` inserts what is missing, so a member's 2026-08-03 bar returns on the next
       scheduled run — correct this time. 96 of the 296 are current members; the other 200 are not
       evaluated at all until `refresh_universe.py` reaches them, which refetches them anyway.
 
-- [ ] **`[v]` ADTV admission reads volume that is materially provisional, and this may be bigger than
-      corporate actions.** Measured 2026-08-18: of 7,131 settled bars the vendor served twice, **7,129
-      had their volume rewritten** — p50 **1.1%**, p90 **32%**, p99 **83%**, worst case **164×**.
-      Prices barely move by comparison (close p90 is 0.02%).
-      `universe.min_adtv_20d` admits an instrument on 20-day average dollar volume, so **membership is
-      decided on a number that is still being written**. Measured: **6 of 1,172 instruments cross the
-      $5M line** between first sight and settlement, and **all six in the same direction** (refused on
-      stale, would be admitted on settled) — a small but strictly one-way selection effect on the
-      population every study runs on.
-      **The settlement curve is measured and it is a cliff, not a taper.** Revision rate by the age of
-      the bar when it is re-fetched, from the 2026-08-17 run (293,851 re-observed bars):
-      0–3 days **98.5%** · 4–7 days **3.84%** · 8–14 days **0.00%** · 15–30 days **0.00%** ·
-      30+ days **0.00%**. **Zero revisions in 283,718 observations of bars older than a week.**
-      So a lag that excludes bars younger than 8 calendar days reads volume that is never revised
-      again — an exact citation rather than a chosen percentile.
-      **Council-reviewed 2026-08-18** (5 advisors + peer review). Unanimous against accepting it as
-      noise and against widening the $5M threshold — the latter dies at this project's own provenance
-      gate, since a fudge factor has no citation. Direction chosen 4–1: **lag the ADTV window**, and
-      the argument that carried it is reproducibility rather than bias — a lagged window makes
-      admission **idempotent**, so a replayed screen returns the number the live screen returned.
-      **One universe and one lag for live admission AND studies**; two universes is the failure mode.
-      Still open, and each needs its own answer: the exact lag in sessions; whether membership churn
-      on cutover is logged; and the council's sharpest unanswered question — **is backfilled volume
-      executable?** If the 96.4% upward fill-in is late off-exchange prints, settled ADTV overstates
-      the very liquidity $5M is a proxy for, and lagging optimises toward a slightly wrong number.
-      **Also worth deciding while the universe rule is open:** `universe.min_adtv_20d = $5M` is itself
-      `assumed` and never swept. A $3M–$8M sweep would validate it and answer whether six crossers are
-      noise, in the same pass.
+- [ ] **`[v]` ADTV admission reads provisional volume — DR-017 DRAFTED 2026-08-18, needs a ruling.**
+      `universe.min_adtv_20d` admits on 20-day average dollar volume, and the vendor's recent volume
+      is not final: of 7,131 settled bars served twice, **7,129 had volume rewritten** (p50 1.1%,
+      p90 32%, p99 83%, max 164×), against a close that moves p90 0.02%. **6 of 1,172 instruments
+      cross the $5M line between first sight and settlement, all six the same direction.**
+      **CORRECTION to my own number, and it is the substance of DR-017 §2.** I first reported the
+      settlement curve as *"a cliff at 8 calendar days"*. Wrong unit — `AGENTS.md` §3 makes sessions
+      the unit of every duration here, and eight calendar days is a different quantity every week.
+      Re-measured in sessions over the daily-run era (5,980 revisions): **0 sessions 16.9% · 1
+      session 80.1% · 2 sessions 3.0% · 3+ sessions ZERO.** Much tighter than the calendar figure
+      implied, and it makes the lag **3 sessions rather than ~6**.
+      **The methodological trap, worth carrying beyond this item:** across the whole store the tail
+      runs to 5 sessions, and every one of those comes from the single 2026-08-09 capture that
+      re-observed bootstrap bars. **Age-at-re-fetch is not settlement age** — if nothing looks at a
+      bar for five sessions, a revision made at one session old is recorded as five. Only a
+      gap-free observation regime separates them, so the measurement is restricted to one.
+      **Proposed:** `universe.adtv_lag_sessions = 3` — three, not two, because two is the oldest age
+      at which a revision was *seen*, and three is the first with a measured zero.
+      **Council-reviewed, direction chosen 4–1 on reproducibility rather than bias:** a lagged window
+      makes admission idempotent, so a replayed screen returns what the live screen returned. One
+      universe and one lag for live admission AND studies.
+      **Still open and NOT decided by DR-017:** is backfilled volume executable? The fill-in is
+      overwhelmingly upward; if it is late off-exchange prints then settled ADTV overstates the very
+      liquidity $5M proxies. And `universe.min_adtv_20d = $5M` is itself `assumed` and never swept —
+      a $3M–$8M sweep would test it and settle whether the six crossers are noise, in one pass.
 
 - [ ] **`[v]` Corporate actions — DR-016 is DRAFTED (proposed, 2026-08-18) and needs a ruling.**
       `data.revision_epsilon = 0.001`, scoped to price only; volume taken out of §4's
