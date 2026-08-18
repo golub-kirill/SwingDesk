@@ -336,9 +336,24 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       a heading that exists, a `.py` path must carry the marker. A module that does not is the same
       false pointer one file type over.
       **`regime` and `trend` carry no record and were demoted** `specified` → `registered`, `spec`
-      nulled. They keep their code; they lose the claim. Both serve the entry-filter family that is
-      closed by evidence, so writing them a specification would document something the project has
-      decided not to have. Census moves 458/6/1 → 460/4/1.
+      nulled. **A documentation status, not a deletion** — the code is untouched, still imported,
+      still golden-vectored. What was removed is the claim that a specification was written.
+      **CORRECTION, 2026-08-18.** The demotion commit justified this as "both serve the entry-filter
+      family closed by evidence". That is true of `trend` and **false of `regime`**:
+      • **`trend`** — closed as a per-signal entry filter. `PR-001` and `PR-005` both refuted the
+      trend-definition family and `screen.trend_definition` stays `unset`.
+      • **`regime`** — **not closed.** `regime.classifier_rule` is SET (`assumed:PR-002`,
+      `BREADTH_MEDIAN` split at 0.647), and `PR-002`'s verdict was corrected to INCONCLUSIVE, not
+      refuted.
+      • **`breadth`** — **parked, not killed** (`HANDOFF.md` §5), and explicitly revivable **as a
+      portfolio participation gate — never a per-signal entry filter**.
+      So the demotion stands on its own evidence (no record in the module, so `specified` was a
+      false claim) and NOT on the reason first given. Regime has a live future role; it is at the
+      portfolio level, not the instrument level.
+      **Neither is consumed by the live path today** — zero references to `regime`, `trend` or
+      `breadth` in `pipeline.py` or `report.py`. Today's Watch/Skip is produced with no regime input
+      at all, which is a fact worth knowing before anyone assumes the report reflects one.
+      Census moves 458/6/1 → 460/4/1.
       5 tests; the three that assert a *failure* confirmed red against the pre-fix check, the two
       positive controls confirmed green. Restored from a file copy, never `git checkout` — see the
       process note under proposal expiry.
