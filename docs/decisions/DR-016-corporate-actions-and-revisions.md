@@ -50,20 +50,47 @@ mid-session capture:
 | open | 806 | — | — | — | — |
 | close | 122 | 0.0009% | 0.022% | — | 0.084% |
 
-### 2.1 The rule as written would fire on almost every bar
+### 2.1 What the table above does and does not say — corrected 2026-08-18
 
-**Volume is not a settled fact.** It changed on 7,129 of 7,131 revisions — essentially every bar the
-vendor served twice. Half the revisions move it by more than 1%, 1,993 of them by more than 10%, and
-the extreme case is 164 times the first figure. This is not float noise and no epsilon absorbs it: the
-vendor's daily volume is genuinely provisional for days after the close.
+**The table is conditional, and an earlier draft of this record read it as absolute.** Its denominator
+is *bars that were revised at all*, because `BarStore.write` is delta-based (`POINT_IN_TIME_SPEC.md`
+§3): a re-fetch returning an identical bar writes nothing, so a bar with two versions is **by
+construction** a bar that changed. "Volume revised on 7,129 of 7,131" therefore means **when a bar is
+revised, it is volume 99.97% of the time and price almost never** — which is the finding, and it
+stands. It does **not** mean the vendor rewrites most bars.
 
-So §4's third row — *raw bar changed → `DATA_ERR` (`Critical`)* — applied literally to the whole bar,
-raises a **Critical** fault roughly 1,150 times an evening. **A Critical gate that fires on every bar
-is a gate that gets switched off**, and that is the outcome this record exists to prevent. The rule is
-right about prices and wrong about volume, and it cannot tell them apart because it was written before
-anyone had measured which fields move.
+**The absolute rate, measured against the right denominator.** On the 2026-08-17 run, 1,152
+instruments were fetched over a one-year lookback, re-observing **293,851** prior bars. Rows written:
+2,411 — of which 1,085 were the new session and **1,326 were revisions**. So the vendor revises
+**0.451%** of re-observed bars.
 
-### 2.2 Prices, by contrast, are stable enough to gate on
+**And that number is an average over a cliff.** By the age of the bar at the moment of re-fetch:
+
+| Age at re-fetch | Re-observed | Revised | Rate |
+|---|---|---|---|
+| 0–3 days | 1,097 | 1,081 | **98.5%** |
+| 4–7 days | 9,036 | 347 | 3.84% |
+| 8–14 days | 6,926 | 0 | **0.00%** |
+| 15–30 days | 11,832 | 0 | **0.00%** |
+| 30+ days | 264,960 | 0 | **0.00%** |
+
+**Volume settles completely within eight calendar days: zero revisions in 283,718 observations of
+bars older than a week.** That is a measured cliff, not an estimated percentile, and it is the single
+most useful number this exercise produced — see §4 and `TODO.md`, because it belongs to the ADTV
+question rather than to this record.
+
+### 2.2 The rule as written still fires far too often
+
+The correction above does not rescue §4's third row. *Raw bar changed → `DATA_ERR` (`Critical`)*,
+applied literally to the whole bar, fires **1,326 times on the single evening of 2026-08-17** —
+because the bars a nightly run re-observes include the recent ones, and those are revised 98.5% of the
+time. **A Critical gate that fires over a thousand times an evening is a gate that gets switched
+off**, and that is the outcome this record exists to prevent.
+
+The rule is right about prices and wrong about volume, and it cannot tell them apart because it was
+written before anyone had measured which fields move.
+
+### 2.3 Prices, by contrast, are stable enough to gate on
 
 Close is the tightest: 122 revisions, median 9 parts per million, **maximum 8.4 basis points**. High
 and low are looser but still bounded — p99 under 0.7%, maximum 3%. Nothing in three weeks of real

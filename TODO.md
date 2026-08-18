@@ -96,10 +96,29 @@ hands it over by name.
       had their volume rewritten** — p50 **1.1%**, p90 **32%**, p99 **83%**, worst case **164×**.
       Prices barely move by comparison (close p90 is 0.02%).
       `universe.min_adtv_20d` admits an instrument on 20-day average dollar volume, so **membership is
-      decided on a number that is still being written**. It bears on which 1,152 instruments the run
-      evaluates at all, which is upstream of every other finding this week. Not yet quantified: how
-      many members cross the $5M line in either direction once volume settles. **That measurement is
-      the next thing to take, and it is cheap** — the bitemporal store already holds both versions.
+      decided on a number that is still being written**. Measured: **6 of 1,172 instruments cross the
+      $5M line** between first sight and settlement, and **all six in the same direction** (refused on
+      stale, would be admitted on settled) — a small but strictly one-way selection effect on the
+      population every study runs on.
+      **The settlement curve is measured and it is a cliff, not a taper.** Revision rate by the age of
+      the bar when it is re-fetched, from the 2026-08-17 run (293,851 re-observed bars):
+      0–3 days **98.5%** · 4–7 days **3.84%** · 8–14 days **0.00%** · 15–30 days **0.00%** ·
+      30+ days **0.00%**. **Zero revisions in 283,718 observations of bars older than a week.**
+      So a lag that excludes bars younger than 8 calendar days reads volume that is never revised
+      again — an exact citation rather than a chosen percentile.
+      **Council-reviewed 2026-08-18** (5 advisors + peer review). Unanimous against accepting it as
+      noise and against widening the $5M threshold — the latter dies at this project's own provenance
+      gate, since a fudge factor has no citation. Direction chosen 4–1: **lag the ADTV window**, and
+      the argument that carried it is reproducibility rather than bias — a lagged window makes
+      admission **idempotent**, so a replayed screen returns the number the live screen returned.
+      **One universe and one lag for live admission AND studies**; two universes is the failure mode.
+      Still open, and each needs its own answer: the exact lag in sessions; whether membership churn
+      on cutover is logged; and the council's sharpest unanswered question — **is backfilled volume
+      executable?** If the 96.4% upward fill-in is late off-exchange prints, settled ADTV overstates
+      the very liquidity $5M is a proxy for, and lagging optimises toward a slightly wrong number.
+      **Also worth deciding while the universe rule is open:** `universe.min_adtv_20d = $5M` is itself
+      `assumed` and never swept. A $3M–$8M sweep would validate it and answer whether six crossers are
+      noise, in the same pass.
 
 - [ ] **`[v]` Corporate actions — DR-016 is DRAFTED (proposed, 2026-08-18) and needs a ruling.**
       `data.revision_epsilon = 0.001`, scoped to price only; volume taken out of §4's
