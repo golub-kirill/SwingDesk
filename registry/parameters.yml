@@ -455,10 +455,21 @@ parameters:
 
   - id: exit.atr_stop_multiple
     unit: multiple of ATR
-    value: null
-    status: unset
-    provenance: null
+    value: 2.0
+    status: assumed
+    provenance: assumed:DR-012
     named_in: [M48-T0738]
+    note: >-
+      Ratified by the owner 2026-08-17. Protective stop is entry - 2.0 x ATR(14) at the signal bar,
+      fixed at entry, NO trailing (exit.atr_trailing_multiple stays unset deliberately - a different
+      exit slot and a separate decision).
+      assumed:DR-012, never assumed:PR-005 and never validated. PR-005 and PR-007 both HELD this
+      value fixed as a study CONDITION; it was never among their findings, and PR-005 was refuted.
+      The course quantifies nothing here - EXIT_MODEL_SPEC section 4 audits all 92 topics in M52-M58
+      and finds no exit carrying a numeric parameter, naming this gap by name.
+      Chosen for continuity of the only measurement basis that exists: PR-005-trades.csv, 26,351
+      trades, was generated under exactly this value, and PR-009 varies the exit against it as the
+      incumbent. Only PR-009 can move it off assumed.
     ui_editable: true
 
   - id: exit.atr_trailing_multiple
@@ -520,10 +531,20 @@ parameters:
 
   - id: exit.max_holding_period
     unit: trading days
-    value: null
-    status: unset
-    provenance: null
+    value: 20
+    status: assumed
+    provenance: assumed:DR-012
     named_in: [M57-T0866, M71-T1067]
+    note: >-
+      Ratified by the owner 2026-08-17. Time exit at the close of session 20 after entry, if the stop
+      has not been hit. The stop is checked FIRST on a bar satisfying both, so a bar that breaks the
+      stop and completes the holding period is a stop-out, never a time exit.
+      UNIT NOTE, not pedantry: this is trading days and ExitPolicy counts BARS. On the daily interval
+      this system runs the two coincide exactly; they would not on any other interval, and
+      ExitPolicy takes the number as max_holding_bars. Anything that ever feeds it intraday bars must
+      convert - nothing does today.
+      Same provenance argument as exit.atr_stop_multiple: assumed:DR-012, held as a study condition
+      by PR-005/PR-007 rather than found by them, and unquantified by the course.
     ui_editable: true
 
   - id: exit.stagnation_threshold
@@ -1022,4 +1043,25 @@ parameters:
       How many consecutive rising highs and rising lows constitute "higher highs and higher lows"
       for TrendDefinition.STRUCTURE. Two is the minimum that can express a direction; the course
       names the structure and no count.
+    ui_editable: true
+
+  # ---- management: the lifetime of a proposal awaiting the owner (DR-013, ruled 2026-08-17) ----
+  - id: management.proposal_expiry_days
+    unit: trading days
+    value: 3
+    status: assumed
+    provenance: assumed:DR-013
+    named_in: [US-010, "authored - the course names no proposal lifetime anywhere"]
+    note: >-
+      How long a NON-CRITICAL proposal (MOVE_STOP, PARTIAL_EXIT) stays answerable. A CRITICAL one
+      (EXIT_NOW) never expires and never auto-applies - DR-013 section 2.2 and CHARTER A-001: a timer
+      that exits a position is the system deciding with a delay.
+      Trading days, not calendar days, so a Friday proposal is not aged out by a weekend in which no
+      bar existed and no risk changed.
+      Expiry is computed AT READ TIME and never written by a background job - there is no daemon here,
+      and a status somebody must remember to write is the defect `pending` already avoids by defining
+      pending as the ABSENCE of a response rather than a status column.
+      Weakest part of DR-013 and it says so: 3 is a judgment about how long an observation on daily
+      bars stays actionable, with no measurement behind it. The owner is the only instrument that can
+      move it.
     ui_editable: true
