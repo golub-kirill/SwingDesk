@@ -97,6 +97,7 @@ is expected to be superseded when a study says so. Different lifetimes, differen
 | `DR-012` | The protective stop is 2.0 × ATR(14) and the maximum holding period is 20 sessions | `exit.atr_stop_multiple`, `exit.max_holding_period` | **accepted — ratified 2026-08-17** |
 | `DR-013` | A non-critical proposal expires after 3 days; a critical one never expires and never proceeds unanswered | `management.proposal_expiry_days` | **accepted — ruled 2026-08-17** |
 | `DR-015` | Two sessions is too stale to decide on; a failed fetch retries 3x30s then once more at 19:30 | `data.freshness_window` | **accepted — ruled 2026-08-18** |
+| `DR-016` | A raw PRICE that changes is a critical fault; a raw VOLUME that changes is Tuesday | `data.revision_epsilon`, scoped to price; volume taken out of the rule and given no parameter | proposed — owner ratification required |
 | `DR-014` | No owner capital in the observable state of the project — paper only; Canada deferred with a re-entry condition | none directly — changes the STANDING of `DR-006`'s six `risk.*` parameters and withdraws `PR-006`'s precondition | **accepted — ruled 2026-08-17** |
 
 `DR-007` is the largest of these by a distance: fifteen parameters at once, four of them ratifying

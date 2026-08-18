@@ -79,8 +79,37 @@ hands it over by name.
       nothing about the run as a whole. Needs a ruling, or an explicit decision that the
       per-instrument gate discharges it and the parameter should be retired (`AGENTS.md` §11).
 
-- [ ] **`[v]` Corporate actions — the biggest open risk, and now the only one of the three
-      "specified, implemented, wired to nothing" findings still open.** `DR-015` §4 hands it over
+- [ ] **`[v]` The store contains 98 UNCLOSED bars, and nothing stops a fetch from writing another.**
+      Found 2026-08-18 while measuring for `DR-016`, by accident. Of 220 raw closes that changed
+      between captures, **98 were not vendor restatements** — the first capture was taken *before*
+      that session's close. All 98 are session 2026-08-03, first captured 13:25 local against a
+      16:00 ET close: one early manual fetch stored mid-session prices as if they were closes, with
+      deltas up to **4.3%**.
+      **`CALENDAR_SPEC.md` §5 forbids using the unclosed current bar and `last_completed_session`
+      enforces that on READS. Nothing enforces it on WRITES.** Two things needed, and they are
+      separable: refuse an intra-session bar at write time, and decide what happens to the 98 rows
+      already stored (the stores are append-only, so this is a supersede, never a delete —
+      `CHANGE_MANAGEMENT.md` §3). `DR-016` §4 states why it is not bundled into that record.
+
+- [ ] **`[v]` ADTV admission reads volume that is materially provisional, and this may be bigger than
+      corporate actions.** Measured 2026-08-18: of 7,131 settled bars the vendor served twice, **7,129
+      had their volume rewritten** — p50 **1.1%**, p90 **32%**, p99 **83%**, worst case **164×**.
+      Prices barely move by comparison (close p90 is 0.02%).
+      `universe.min_adtv_20d` admits an instrument on 20-day average dollar volume, so **membership is
+      decided on a number that is still being written**. It bears on which 1,152 instruments the run
+      evaluates at all, which is upstream of every other finding this week. Not yet quantified: how
+      many members cross the $5M line in either direction once volume settles. **That measurement is
+      the next thing to take, and it is cheap** — the bitemporal store already holds both versions.
+
+- [ ] **`[v]` Corporate actions — DR-016 is DRAFTED (proposed, 2026-08-18) and needs a ruling.**
+      `data.revision_epsilon = 0.001`, scoped to price only; volume taken out of §4's
+      raw-immutability rule and given no parameter, because the course names no such concept and the
+      measured distribution contains no threshold. **Its precondition is `Series.ACTIONS`**, which
+      `POINT_IN_TIME_SPEC.md` §4 names and `contracts/market.py` does not implement — the vendor does
+      supply splits and dividends (`yfinance` 1.5.2), so the record is buildable once the series
+      exists. **Zero positions exist today, so the catastrophic case has no current exposure** — the
+      guard should land before the first real position, not after.
+      Original statement of the risk, still accurate: `DR-015` §4 hands it over
       explicitly. Both decision paths read `Series.RAW`; raw bars are unadjusted, so a split does
       not restate history — **the next bars arrive at a different price level**. A 2:1 split over a
       weekend leaves a stored stop of 290 compared against Monday raw prices near 145: an instant
