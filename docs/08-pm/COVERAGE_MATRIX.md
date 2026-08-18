@@ -40,14 +40,22 @@ A parameter with no value makes its component refuse, so an `unset` count is a m
 | Source Facts | 9 | 3 | 6 | 0 |
 | Derived Observations | 10 | 2 | 8 | 0 |
 | Decision Logic | 19 | 0 | 19 | 0 |
+<<<<<<< HEAD
 | Trade Management | 39 | 17 | 22 | 0 |
+=======
+| Trade Management | 40 | 17 | 23 | 0 |
+>>>>>>> origin/master
 | *(programme-level)* | 24 | 19 | 5 | 0 |
 
 Programme-level parameters (`validation.*`, `stats.*`) govern the validation programme rather than a component, so they have no layer.
 
 | Status | Count |
 |---|---:|
+<<<<<<< HEAD
 | `unset` | 60 |
+=======
+| `unset` | 61 |
+>>>>>>> origin/master
 | `assumed` | 37 |
 | `owner` | 4 |
 | `validated` | 0 |

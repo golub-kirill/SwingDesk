@@ -37,6 +37,11 @@ def _position(**kwargs) -> Position:
         position_id="POS-1", version=1, instrument_id=TEST_US.id,
         opened_on=date(2025, 12, 1), entry_price=Decimal(100), shares=50,
         initial_stop=Decimal(96), current_stop=Decimal(96),
+        # Cost-inclusive R denominator (2026-08-16). DR-010 charges
+        # `max(floor 0.25, 50bp x entry)`, which at a 100 entry is 0.50 - the bp term, not the
+        # floor, which binds only below a 50 entry. So this fixture risks 4.50/share rather than
+        # 4.00, and it is the number `size_long(100, 96, "USD")` freezes for the same instrument.
+        initial_costs_per_share=Decimal("0.50"),
         knowledge_time=datetime(2025, 12, 1, tzinfo=UTC),
     )
     base.update(kwargs)
@@ -48,12 +53,36 @@ def _position(**kwargs) -> Position:
 def test_r_denominator_survives_a_stop_move() -> None:
     """RISK_SPEC 2: R is what was risked when the decision was made, not what is at risk now."""
     position = _position()
-    assert position.initial_risk_per_share == Decimal(4)
-    assert position.r_at(Decimal(106)) == Decimal("1.5")
+    # entry 100 - stop 96 + costs 0.50
+    assert position.initial_risk_per_share == Decimal("4.50")
 
     moved = position.model_copy(update={"current_stop": Decimal(102), "version": 2})
-    assert moved.initial_risk_per_share == Decimal(4), "unchanged by the stop move"
-    assert moved.r_at(Decimal(106)) == Decimal("1.5"), "a +1.5R trade stays +1.5R"
+    assert moved.initial_risk_per_share == Decimal("4.50"), "unchanged by the stop move"
+    assert moved.r_at(Decimal(106)) == position.r_at(Decimal(106)), "R is unmoved by the stop"
+
+
+def test_the_r_denominator_includes_costs() -> None:
+    """`sizing.size_long` freezes `planned_risk` from `entry - stop + costs`, so that is what
+    `RISK_SPEC.md` §2 means by the denominator.
+
+    Until 2026-08-16 `Position` returned `entry - stop`, so the R a position reported and the R its
+    own sizing planned were two different numbers - and the difference ran one way. At a 6% cost
+    fraction a trade that made 0.94R reported as 1.00R, always flattering, on the one statistic the
+    entire validation programme is denominated in.
+    """
+    priced = _position(initial_costs_per_share=Decimal("0.50"))
+    free = _position(initial_costs_per_share=Decimal(0))
+
+    assert priced.initial_risk_per_share > free.initial_risk_per_share
+    assert free.initial_risk_per_share == Decimal(4), "costs of zero recover the old arithmetic"
+    # The same exit is worth LESS R once the costs of getting there are in the denominator.
+    assert priced.r_at(Decimal(106)) < free.r_at(Decimal(106))
+
+
+def test_costs_cannot_be_negative() -> None:
+    """A negative cost would shrink the denominator and inflate every R computed from it."""
+    with pytest.raises(ValidationError):
+        _position(initial_costs_per_share=Decimal("-0.01"))
 
 
 def test_open_risk_is_recomputed_and_may_go_negative() -> None:
@@ -267,6 +296,73 @@ def test_a_run_without_a_position_store_still_works(wired, registry) -> None:
                  fetcher=fixture_fetcher({TEST_US.id: sessions}))
     assert result.steps == ("candidates",)
     assert result.positions == []
+
+
+def test_a_held_dual_class_position_asks_the_vendor_for_the_right_symbol() -> None:
+    """`BRK.B` is the directory's id; the vendor wants `BRK-B`. The id must not change either.
+
+    Rebuilding the Instrument by stripping `.TO` produced ticker `BRK.B`, so the daily refresh of a
+    held dual-class position raised `VendorUnavailable`, the caller swallowed it, and management
+    continued against whatever was already stored. A position managed on silently stale bars looks
+    exactly like a position managed correctly - which is why this is asserted rather than watched
+    for. Same mapping defect that once left `BRK.A` and `BRK.B` out of every universe.
+    """
+    from swingdesk.application.pipeline import _held_instrument
+
+    held = _held_instrument("BRK.B")
+    assert held.id == "BRK.B", "the id is identity and is never re-derived"
+    assert held.ticker == "BRK-B"
+    assert held.vendor_symbol == "BRK-B"
+
+    canadian = _held_instrument("SHOP.TO")
+    assert canadian.id == "SHOP.TO"
+    assert canadian.vendor_symbol == "SHOP.TO", "the .TO suffix is re-added by the contract"
+    assert canadian.currency == "CAD"
+
+
+def test_output_hash_covers_the_position_half_of_the_run(wired, registry) -> None:
+    """A run proposing an action on a held position must not hash like a run holding nothing.
+
+    Appendix T puts positions FIRST in the run, and until 2026-08-16 `output_hash` contained no
+    trace of them in any form - not the proposal, not the position, not even its existence. So
+    `a.reproducible` read "reproduces byte-identically" while half the run was outside the bytes.
+    """
+    bars, journal, positions = wired
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    fetcher = fixture_fetcher({TEST_US.id: sessions})
+
+    without = run([TEST_US], FixedClock(AS_OF), registry, bars, journal,
+                  mode=RunMode.LIVE_AS_OF, fetcher=fetcher)
+
+    positions.record(_position())
+    holding = run([TEST_US], FixedClock(AS_OF), registry, bars, journal,
+                  mode=RunMode.LIVE_AS_OF, fetcher=fetcher, positions=positions)
+
+    assert holding.positions[0].action is not None, "the run must have proposed something"
+    assert without.manifest.output_hash != holding.manifest.output_hash
+
+
+def test_output_hash_moves_when_the_proposed_stop_moves(tmp_path, registry) -> None:
+    """Two positions differing only in their current stop are two different proposals.
+
+    The action KIND can be identical - both EXIT_NOW - while the stop the owner is being told to
+    move from is not. Hashing the kind alone would still leave that invisible.
+    """
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    fetcher = fixture_fetcher({TEST_US.id: sessions})
+
+    def hash_for(stop: Decimal, tag: str) -> str:
+        with (
+            BarStore(tmp_path / f"bars-{tag}.duckdb") as bars,
+            Journal(tmp_path / f"journal-{tag}.duckdb") as journal,
+            PositionStore(tmp_path / f"positions-{tag}.duckdb") as positions,
+        ):
+            positions.record(_position(current_stop=stop))
+            result = run([TEST_US], FixedClock(AS_OF), registry, bars, journal,
+                         mode=RunMode.LIVE_AS_OF, fetcher=fetcher, positions=positions)
+            return result.manifest.output_hash
+
+    assert hash_for(Decimal(96), "low") != hash_for(Decimal("99.5"), "high")
 
 
 # ------------------------------------------------------------------ the proposal rule

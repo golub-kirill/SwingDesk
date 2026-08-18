@@ -18,7 +18,6 @@ import subprocess
 import sys
 from dataclasses import dataclass, field, replace
 from datetime import datetime
-from decimal import Decimal
 from pathlib import Path
 from typing import Protocol
 from uuid import uuid4
@@ -38,8 +37,9 @@ from swingdesk.journal_evidence.positions import PositionStore
 from swingdesk.market_data import YAHOO, BarStore, VendorUnavailable, check, vendor_yahoo
 from swingdesk.market_data.completeness import SessionFinding
 from swingdesk.platform.clock import Clock
-from swingdesk.platform.parameters import ParameterRegistry
+from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
 from swingdesk.reference_data import calendar as cal
+from swingdesk.reference_data.universe import vendor_symbol
 from swingdesk.trade_management import manage
 from swingdesk.trade_management.exits import ExitPolicy
 from swingdesk.trade_management.sizing import Refusal, RiskSnapshot, size_long
@@ -102,15 +102,58 @@ def _held_instrument(instrument_id: str) -> Instrument:
     A position is held regardless of whether the screener still nominates it, so the run must be
     able to fetch it anyway. The exchange comes from the same symbology rule the CLI uses; nothing
     here is guessed beyond what that rule already encodes.
+
+    The id is PRESERVED, never re-derived - it is the identity, and re-minting it here would split
+    a position's history from the bars written under the universe path's id.
+
+    The ticker is the vendor's form, and getting that from the id needs `vendor_symbol`, not a
+    `.TO` strip. This is the same defect that once made `BRK.A` and `BRK.B` absent from every
+    universe, "indexed as possibly delisted": the directory writes `BRK.B` and the vendor wants
+    `BRK-B`. That was fixed where the universe builds instruments and missed here, so a held
+    dual-class position asked for `BRK.B`, got `VendorUnavailable`, and fell through to the stored
+    bars - which is worse than failing, because the position went on being managed against data
+    that had quietly stopped refreshing.
     """
     exchange = cal.exchange_for(instrument_id)
     base = instrument_id.upper().removesuffix(".TO")
     return Instrument(
         id=instrument_id,
-        ticker=base,
+        ticker=vendor_symbol(base),
         exchange=exchange,
         currency="USD" if exchange.value == "NYSE" else "CAD",
     )
+
+
+def _exit_policy(registry: ParameterRegistry) -> ExitPolicy | Refusal:
+    """The run's exit semantics, from the registry, or a coded refusal naming what is missing.
+
+    There used to be no such function. `ExitPolicy(Decimal("2.0"), 20)` appeared as a literal in two
+    places, and the candidate path did not use it at all - it sized against `entry - 1x ATR` while
+    management and the checklist used `2x ATR`. So the stop a candidate was sized on and the stop
+    that would later exit it were different distances, and neither carried provenance.
+
+    Both are hard-coded defaults for parameters the registry holds UNSET (`exit.atr_stop_multiple`,
+    `exit.max_holding_period`). "Unset is not default" is a non-negotiable, and this was the one
+    place in the decision path that broke it - the more quietly for the value being plausible.
+
+    CONSEQUENCE, stated because it is large: with both parameters unset, every candidate now Skips
+    with a coded refusal naming the parameter, and open positions PAUSE rather than being managed on
+    an invented stop. That is the fail-closed design working, and it is the same shape the 4,486
+    `risk.per_trade_pct` refusals took before that parameter was set. The run still completes, and
+    every candidate still leaves with a decision and a reason code.
+    """
+    try:
+        multiple, _ = registry.decimal_value("exit.atr_stop_multiple")
+        holding, _ = registry.int_value("exit.max_holding_period")
+    except ParameterUnset as unset:
+        return Refusal(
+            "RISK",
+            "no exit policy: the ATR stop multiple and the maximum holding period are what turn an "
+            "observation into a stop, and sizing against an assumed one is the silent-default this "
+            "registry exists to prevent",
+            parameter_id=unset.parameter_id,
+        )
+    return ExitPolicy(multiple, holding)
 
 
 def _git(*args: str) -> str:
@@ -166,6 +209,84 @@ def _universe_hash(selection: UniverseSelection) -> str:
         sort_keys=True,
     )
     return hashlib.sha256(payload.encode()).hexdigest()[:16]
+
+
+def _trade_terms(risk: RiskSnapshot | Refusal | None) -> dict[str, str] | None:
+    """The four numbers that make a proposal actionable, or None when there is no trade.
+
+    A refusal contributes nothing here on purpose - its code is already carried on the decision, and
+    a refusal has no shares, no stop and no risk to pin.
+    """
+    if not isinstance(risk, RiskSnapshot):
+        return None
+    return {
+        "entry": str(risk.entry),
+        "stop": str(risk.stop),
+        "shares": str(risk.shares),
+        "planned_risk": str(risk.planned_risk),
+    }
+
+
+def _output_hash(result: RunResult) -> str:
+    """Hash of what the run DECIDED - including the numbers the owner would act on.
+
+    `DETERMINISM_SPEC` 8 carried this as an open question: whether the hash covers the full trace or
+    just the decisions, deferred because a full trace churns on cosmetic changes and a gate that
+    cries wolf gets ignored. That concern is right, and the answer is not to hash everything. It is
+    to hash what an owner would ACT ON differently: two runs that hash alike must be two runs the
+    owner could not tell apart at the point of doing something.
+
+    By that standard the previous payload - instrument, bar count, decision, reason code and latest
+    ATR - was not close, and this was measured rather than reasoned about:
+
+      - halving every candidate's share count left the hash at 78732401bd216ae2;
+      - moving every stop 40% further away left it at 78732401bd216ae2;
+      - a run holding an open position it proposed EXIT_NOW for hashed identically to a run holding
+        no position at all, because the position half - which Appendix T requires to run FIRST - was
+        absent from the payload in every form, including its own existence.
+
+    Gate 9 passed in all four cases, and `a.reproducible` reads "reproduces byte-identically" on the
+    strength of it. So the shares to buy, the stop to buy them against, the risk that entails, and
+    every proposal on an open position could all change without one check noticing.
+
+    Excluded deliberately, and this is the churn guard that keeps the gate believable: free-text
+    reasons, checklists, timestamps, and `previous_decision`. Prose gets rewritten without the
+    decision changing; the others are identity or context rather than something acted upon.
+    """
+    payload = {
+        "candidates": [
+            {
+                "instrument": o.instrument.id,
+                "bars": o.bars,
+                "decision": o.decision.decision if o.decision else None,
+                "code": o.decision.reason_code if o.decision else None,
+                "atr": str(o.observations.observations[-1].value)
+                if o.observations and o.observations.observations[-1].value is not None
+                else None,
+                "trade": _trade_terms(o.risk),
+            }
+            for o in result.outcomes
+        ],
+        # Present even when empty, so "no positions" and "positions not evaluated" hash apart.
+        "positions": [
+            {
+                "position_id": p.position.position_id,
+                "version": p.position.version,
+                "stale": p.stale,
+                "action": {
+                    "kind": p.action.kind.value,
+                    "code": p.action.reason_code,
+                    "old_stop": str(p.action.old_stop) if p.action.old_stop is not None else None,
+                    "new_stop": str(p.action.new_stop) if p.action.new_stop is not None else None,
+                    "shares_affected": p.action.shares_affected,
+                }
+                if p.action is not None
+                else None,
+            }
+            for p in result.positions
+        ],
+    }
+    return hashlib.sha256(json.dumps(payload, sort_keys=True).encode()).hexdigest()[:16]
 
 
 class Fetcher(Protocol):
@@ -246,6 +367,10 @@ def run(
     result = RunResult(manifest=manifest, universe=universe)
     steps: list[str] = []
 
+    # One exit policy for the whole run - management, sizing and the checklist. An injected policy
+    # still wins so a study can pin its own; otherwise it comes from the registry and may refuse.
+    policy = exits if exits is not None else _exit_policy(registry)
+
     # --- open positions, BEFORE any candidate -------------------------------------------
     # CHECKLIST_SPEC 4 requires open positions and gaps to be checked first. Not a preference about
     # code - a data failure must never lock the owner out of managing risk on positions already
@@ -286,12 +411,21 @@ def run(
             else:
                 bar = held.bars[-1]
                 bars_held = sum(1 for b in held.bars if b.session_date >= position.opened_on) - 1
-                policy = exits or ExitPolicy(Decimal("2.0"), 20)
                 observations = atr.compute(held, registry)
                 latest_atr = observations.observations[-1].value
-                managed.action = manage.evaluate(
-                    position, bar, policy, started, bars_held=max(bars_held, 0), atr=latest_atr
-                )
+                if isinstance(policy, Refusal):
+                    # A held position must never be managed against an invented stop. Pausing says
+                    # so; silently applying a default would move a real stop on a guess.
+                    managed.action = ManagementAction(
+                        position_id=position.position_id, proposed_at=started,
+                        kind=ActionKind.PAUSE, reason_code=policy.code,
+                        reason=f"no exit policy; management cannot be evaluated ({policy})",
+                        old_stop=position.current_stop,
+                    )
+                else:
+                    managed.action = manage.evaluate(
+                        position, bar, policy, started, bars_held=max(bars_held, 0), atr=latest_atr
+                    )
             positions.propose(managed.action, run_id=run_id)
 
     steps.append("candidates")
@@ -338,9 +472,16 @@ def run(
             )
             continue
 
-        # 4. Risk. Stop derived from the observation, then size. Stop before size, always.
+        # 4. Risk. Stop derived from the observation BY THE RUN'S EXIT POLICY, then size. Stop
+        # before size, always - and the same policy that will later exit the position, so the
+        # distance a candidate is sized on is the distance it is actually stopped at.
+        if isinstance(policy, Refusal):
+            outcome.decision = DecisionRecord(
+                instrument.id, "Skip", policy.code, policy.reason, policy.parameter_id
+            )
+            continue
         entry = stored.bars[-1].close
-        stop = entry - latest.value
+        stop = policy.stop_for(entry, latest.value)
         sized = size_long(entry, stop, instrument.currency, registry)
         outcome.risk = sized
 
@@ -366,36 +507,20 @@ def run(
 
     # The pre-trade checklist is generated for every candidate that reached a decision - including
     # a Skip, because a skipped candidate's checklist is what makes the skip reviewable.
-    policy = exits or ExitPolicy(Decimal("2.0"), 20)
     for outcome in result.outcomes:
         if outcome.decision is None:
             continue
         outcome.checklist = checklist_builder.generate(
-            outcome.instrument, run_id, started,
-            risk=outcome.risk, decision=outcome.decision, exits=policy, universe=universe,
+            outcome.instrument, run_id, started, risk=outcome.risk, decision=outcome.decision,
+            # A refused policy is no policy: the checklist reports the exit item UNAVAILABLE rather
+            # than describing a stop the run never adopted.
+            exits=None if isinstance(policy, Refusal) else policy, universe=universe,
         )
 
     result.steps = tuple(steps)
     journal.record_decisions(run_id, clock.now(), result.decisions)
 
-    output_hash = hashlib.sha256(
-        json.dumps(
-            [
-                {
-                    "instrument": o.instrument.id,
-                    "bars": o.bars,
-                    "decision": o.decision.decision if o.decision else None,
-                    "code": o.decision.reason_code if o.decision else None,
-                    "atr": str(o.observations.observations[-1].value)
-                    if o.observations and o.observations.observations[-1].value is not None
-                    else None,
-                }
-                for o in result.outcomes
-            ],
-            sort_keys=True,
-        ).encode()
-    ).hexdigest()[:16]
-
+    output_hash = _output_hash(result)
     journal.complete_run(run_id, output_hash, clock.now())
     result.manifest = manifest.model_copy(
         update={"output_hash": output_hash, "completed_at": clock.now()}

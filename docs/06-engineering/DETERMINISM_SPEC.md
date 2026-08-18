@@ -175,11 +175,36 @@ The current case covers all four decision branches: a candidate that sizes, a se
 calendar diverges, a warm-up refusal, and a vendor that returned nothing. A fixture that exercises
 only the happy path pins the least interesting third of the run.
 
-## 8. Open items
+### 7.2 What `output_hash` covers, and why that line
 
-- [ ] Whether `output_hash` covers the full trace or just the decisions. It covers decisions,
-      bar counts and the latest observation today. Full trace is stricter and catches more, but will
-      churn on cosmetic changes — which trains people to ignore it.
+**The rule: two runs that hash alike must be two runs the owner could not tell apart at the point of
+doing something.** Not the full trace — that churns on cosmetic edits and a gate that cries wolf is
+a gate people learn to bypass. Not the decision word alone either, which is what it was until
+2026-08-16.
+
+| In | Out |
+|---|---|
+| instrument, bar count, decision, reason code, latest observation | free-text reasons |
+| entry, stop, shares, planned risk | checklists |
+| every open position: id, version, staleness | timestamps and run identity |
+| every proposal: kind, code, old stop, new stop, shares affected | `previous_decision` (from_state) |
+
+The right-hand column is prose, identity or context: rewriting a reason does not change what the
+owner does. The left-hand column is the instruction.
+
+This was settled by measurement, not argument. Against the previous payload:
+
+- halving every candidate's share count left the golden case at `78732401bd216ae2`;
+- moving every stop 40% wider left it at `78732401bd216ae2`;
+- a run holding an open position it proposed `EXIT_NOW` for hashed identically to a run holding no
+  position at all — the position half of the run, which `CHECKLIST_SPEC` §4 requires to run
+  *first*, appeared in the payload in no form whatsoever, not even its existence.
+
+Gate 9 passed in all three cases, and `a.reproducible` claims a run "reproduces byte-identically" on
+the strength of it. Widening the payload invalidates every previously recorded baseline; that is the
+cost of the change and it is paid once, by re-recording deliberately with `--record`.
+
+## 8. Open items
 - [ ] Whether a dirty working tree is allowed to produce a journalled run at all, or only a
       scratch one. The manifest records `code_dirty` and the replay diagnosis reports it, but
       nothing refuses.

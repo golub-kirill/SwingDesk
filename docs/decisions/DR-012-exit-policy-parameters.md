@@ -7,13 +7,14 @@ parameters:      exit.atr_stop_multiple, exit.max_holding_period
 components:      none — M48-T0738 and M57-T0866 stay `registered`; this sets their inputs, not their
                  activation
 supersedes:      nothing. It removes the hard-coded ExitPolicy(2.0, 20) that PR #9 deletes
-implementation:  none
-arrives_with:    PR #9 - `_exit_policy` in src/swingdesk/application/pipeline.py. Until it merges,
-                 pipeline.py carries the ExitPolicy(2.0, 20) literal and never opens the registry,
-                 so these values are ratified and INERT. That is section 8.6's own argument for
-                 attaching the single Track A reset to #9's merge rather than to this record - and
-                 gate 20 reached it independently, by refusing an implementation claim this branch
-                 could not support.
+implemented_by:  src/swingdesk/application/pipeline.py :: _exit_policy
+implementation_note:
+                 Was `implementation: none` while this record sat ahead of PR #9, because until #9
+                 merged pipeline.py carried the ExitPolicy(2.0, 20) literal and never opened the
+                 registry - the values were ratified and INERT. Gate 20 enforced that honestly, by
+                 refusing an implementation claim the branch could not support, and section 8.6's
+                 single-reset ruling rests on the same fact. Updated in the commit that actually
+                 brings `_exit_policy`, so the pointer is never ahead of the code it names.
 ```
 
 ## 1. Why this record exists at all
