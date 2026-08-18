@@ -1172,3 +1172,54 @@ def test_a_zero_streak_does_not_claim_the_journal_is_missing(tmp_path: Path) -> 
     assert "track A streak: 0" in out
     assert "UNAVAILABLE" not in out, "the journal exists; saying otherwise is a false claim"
     assert "nothing to check" in out
+
+
+# ------------------------------- gate 11: `spec` is resolved, not measured for length (2026-08-18)
+#
+# The check existed and passed for months while every one of the seven implemented components
+# pointed at a heading that did not exist. `implements` was resolved for real - import the module,
+# find the symbol - and `spec` was checked for non-emptiness. A pointer only checked for length is
+# not a pointer; it is a claim nobody has read.
+
+
+def _spec_failure(component: str, spec: str):
+    import sys
+    sys.path.insert(0, str(TOOLS))
+    from verify_components import spec_failure
+
+    return spec_failure(component, spec)
+
+
+def test_a_dangling_document_anchor_is_a_failure() -> None:
+    """The defect itself. `ALGORITHM_SPEC.md` exists and has numbered headings only, so every one
+    of `#atr`, `#sma`, `#swing-high`, `#classifier`, `#breadth`, `#trend-filter` named a section
+    that was never written."""
+    failure = _spec_failure("TEST-1", "docs/02-domain/ALGORITHM_SPEC.md#atr")
+    assert failure is not None
+    assert "no such heading" in failure
+
+
+def test_a_real_document_anchor_passes() -> None:
+    """A positive control. Without one, the test above passes for any string at all and proves
+    nothing about anchors (`AGENTS.md` 12)."""
+    assert _spec_failure("TEST-1", "docs/02-domain/ALGORITHM_SPEC.md#1-the-required-fields") is None
+
+
+def test_a_module_carrying_its_record_passes() -> None:
+    """`ALGORITHM_SPEC.md` 7 asked whether specs live in that document or beside the code. Five
+    components had already answered by carrying the eleven-field record in their module docstring,
+    so the `.py` form is where these specifications actually are."""
+    assert _spec_failure("TEST-1", "src/swingdesk/derived_observations/atr.py") is None
+
+
+def test_a_module_without_the_record_is_a_failure() -> None:
+    """The `.py` form must check CONTENT, not existence — otherwise it is the original defect one
+    file type over. `regime.py` is real code and carries no record, which is why its component was
+    demoted rather than pointed at it."""
+    failure = _spec_failure("TEST-1", "src/swingdesk/derived_observations/regime.py")
+    assert failure is not None
+    assert "carries no" in failure
+
+
+def test_a_missing_file_is_a_failure() -> None:
+    assert "does not exist" in (_spec_failure("TEST-1", "docs/nope.md#x") or "")

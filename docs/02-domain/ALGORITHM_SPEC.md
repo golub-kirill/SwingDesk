@@ -111,9 +111,20 @@ Nothing reaches `active` without parameter values, golden vectors and a recorded
 
 ## 7. Open items
 
-- [ ] Whether specs live in this document or one file per component alongside the code. Per-component
-      scales better at 463 requirements and keeps the spec next to what it governs; this document
-      then holds the template and the rules.
+- [x] ~~Whether specs live in this document or one file per component alongside the code.~~
+      **DECIDED 2026-08-18: beside the code, in the module docstring, under the marker
+      `ALGORITHM_SPEC record`.** This document keeps the template (§2) and the rules (§3).
+
+      It was decided by practice long before it was decided in writing, which is why it is recorded
+      rather than debated: **five of the seven implemented components already carried the full
+      eleven-field record in their own docstring** — `atr`, both pivots, `moving_average`,
+      `breadth` — while `components.yml` pointed every one of them at a heading in this file that
+      had never been written. The specification existed; only the pointer was fiction.
+
+      `registry/components.yml` `spec:` therefore takes two forms, and **gate 11 resolves both by
+      content**: `path/to/doc.md#anchor` requires the heading to exist, and `path/to/module.py`
+      requires the file to carry the marker. A `.py` path that does not is the same false pointer
+      one file type over, and is refused as such.
 - [ ] Warm-up interaction with `universe.min_bar_history` — an instrument may satisfy universe
       eligibility while still being warm-up-incomplete for a long-window component.
 - [ ] Whether a component may declare a *fallback* interval (compute on `1d` if `1h` is missing) or

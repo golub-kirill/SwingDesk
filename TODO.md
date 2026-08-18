@@ -294,6 +294,28 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       review: a patch that fails to apply is **FAIL** never skip (an exact-string mutant rots on the
       next rename, and a gate that mutated nothing is `(net/x)*x == net` one layer up); it ships with
       one planted survivor proving it can go red; output is named survivors with diffs, never a score.
+- [x] **`[v]` Gate 11 checked `spec` for string length while resolving `implements` for real —
+      fixed 2026-08-18.** Every one of the seven implemented components pointed at a heading that
+      does not exist (`ALGORITHM_SPEC.md#atr`, `#sma`, `#swing-high`, `#swing-low`,
+      `REGIME_SPEC.md#classifier`, `#breadth`, `SCREENER_SPEC.md#trend-filter`). The ladder defines
+      `specified` as "algorithm spec written", so all six `specified` rows stood in a state they had
+      not earned, for months, behind a green gate.
+      **What the investigation actually found is better than the defect.** The specifications were
+      not missing — **five of the seven carry the full eleven-field `ALGORITHM_SPEC record` in their
+      own module docstring**: `atr`, both pivots, `moving_average`, `breadth`. `ALGORITHM_SPEC.md`
+      §7 had been asking whether specs belong in that document or beside the code; the tree had
+      answered years-of-habit ago and nothing had written it down. §7 item 1 is now closed:
+      **beside the code, under the `ALGORITHM_SPEC record` marker.**
+      `spec:` now takes two forms and **gate 11 resolves both by content** — a `.md#anchor` must name
+      a heading that exists, a `.py` path must carry the marker. A module that does not is the same
+      false pointer one file type over.
+      **`regime` and `trend` carry no record and were demoted** `specified` → `registered`, `spec`
+      nulled. They keep their code; they lose the claim. Both serve the entry-filter family that is
+      closed by evidence, so writing them a specification would document something the project has
+      decided not to have. Census moves 458/6/1 → 460/4/1.
+      5 tests; the three that assert a *failure* confirmed red against the pre-fix check, the two
+      positive controls confirmed green. Restored from a file copy, never `git checkout` — see the
+      process note under proposal expiry.
 - [ ] **`[v]` Six gates have never been proven able to fail.** `tests/test_gates.py`'s own docstring
       sets the bar — *"A gate that has never been seen red proves nothing"* — and these have zero
       references in it: `verify_parameters` (1), `verify_transcription` (2), `verify_docs` (3e),
