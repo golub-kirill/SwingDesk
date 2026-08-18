@@ -33,12 +33,22 @@ def registry() -> ParameterRegistry:
     values = {
         "atr.period": 14,
         "account.equity": 10000,
+        # Sizing reads the account's currency and refuses to size an instrument denominated in
+        # another one without a rate (2026-08-16). The slice trades US instruments, so the rate is
+        # never reached; the base currency is, on every call.
+        "account.base_currency": "USD",
         "risk.per_trade_pct": "1.0",
         "risk.costs_bp_usd": "50",
         "risk.costs_floor_usd": "0.02",
         "risk.costs_bp_cad": "50",
         "risk.costs_floor_cad": "0.02",
         "risk.max_position_value": 1_000_000,
+        # The run's exit semantics, and the SAME policy the candidate path sizes against
+        # (2026-08-16). Both are UNSET in the real registry, where the pipeline therefore refuses;
+        # the fixture sets them so the slice can exercise the working path, and
+        # test_pipeline covers the unset case explicitly.
+        "exit.atr_stop_multiple": "2.0",
+        "exit.max_holding_period": 20,
     }
     return ParameterRegistry(
         {

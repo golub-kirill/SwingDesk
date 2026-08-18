@@ -37,6 +37,7 @@ CREATE TABLE IF NOT EXISTS positions (
     shares           INTEGER NOT NULL,
     initial_stop     DECIMAL(18, 6) NOT NULL,
     current_stop     DECIMAL(18, 6) NOT NULL,
+    initial_costs_per_share DECIMAL(18, 6) NOT NULL,
     strategy         VARCHAR NOT NULL,
     strategy_version INTEGER NOT NULL,
     knowledge_time   TIMESTAMPTZ NOT NULL,
@@ -154,11 +155,12 @@ class PositionStore:
                 f"append-only; a change is a new version, never a rewrite."
             )
         self._connection.execute(
-            "INSERT INTO positions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO positions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 position.position_id, position.version, position.instrument_id,
                 position.opened_on, position.entry_price, position.shares,
-                position.initial_stop, position.current_stop, position.strategy,
+                position.initial_stop, position.current_stop,
+                position.initial_costs_per_share, position.strategy,
                 position.strategy_version, position.knowledge_time, position.closed_on,
             ],
         )
@@ -193,7 +195,8 @@ class PositionStore:
         rows = self._connection.execute(
             """
             SELECT position_id, version, instrument_id, opened_on, entry_price, shares,
-                   initial_stop, current_stop, strategy, strategy_version, knowledge_time, closed_on
+                   initial_stop, current_stop, initial_costs_per_share,
+                   strategy, strategy_version, knowledge_time, closed_on
             FROM positions
             WHERE knowledge_time <= ?
             QUALIFY ROW_NUMBER() OVER (
@@ -210,7 +213,8 @@ class PositionStore:
         rows = self._connection.execute(
             """
             SELECT position_id, version, instrument_id, opened_on, entry_price, shares,
-                   initial_stop, current_stop, strategy, strategy_version, knowledge_time, closed_on
+                   initial_stop, current_stop, initial_costs_per_share,
+                   strategy, strategy_version, knowledge_time, closed_on
             FROM positions WHERE position_id = ? ORDER BY version
             """,
             [position_id],
@@ -438,7 +442,8 @@ class PositionStore:
             opened_on=r[3] if isinstance(r[3], date) else date.fromisoformat(str(r[3])),
             entry_price=Decimal(str(r[4])), shares=r[5],
             initial_stop=Decimal(str(r[6])), current_stop=Decimal(str(r[7])),
-            strategy=r[8], strategy_version=r[9], knowledge_time=r[10],
-            closed_on=r[11] if r[11] is None or isinstance(r[11], date)
-            else date.fromisoformat(str(r[11])),
+            initial_costs_per_share=Decimal(str(r[8])),
+            strategy=r[9], strategy_version=r[10], knowledge_time=r[11],
+            closed_on=r[12] if r[12] is None or isinstance(r[12], date)
+            else date.fromisoformat(str(r[12])),
         )

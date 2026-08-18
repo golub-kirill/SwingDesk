@@ -295,23 +295,101 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ### Correctness findings from the 2026-08-15 review — all `[v]`
 
-- [ ] **Live path silently defaults the exit policy.** `pipeline.py`:289 and :369 both use
+- [x] **`[v]` Live path silently defaulted the exit policy — fixed 2026-08-16.** `_exit_policy()`
+      reads `exit.atr_stop_multiple` and `exit.max_holding_period` and REFUSES when unset (they are).
+      Candidates Skip with the parameter named; open positions PAUSE rather than being managed on an
+      invented stop. Old behaviour `pipeline.py`:289 and :369 both use
       `exits or ExitPolicy(Decimal("2.0"), 20)` — a hard-coded constant with no registry read and no
       provenance, while `exit.atr_stop_multiple` and `exit.max_holding_period` are both `unset`.
       This is a no-silent-default violation sitting in the production path. **Frozen file — queue
       behind the freeze.**
-- [ ] **Sizing stop and exit policy disagree.** `pipeline.py`:343 sizes against `close − 1×ATR`;
+- [x] **`[v]` Sizing stop and exit policy disagreed — fixed 2026-08-16.** One policy for the whole
+      run: the candidate path now sizes with `policy.stop_for()`, the same distance management and
+      the checklist use. Old behaviour `pipeline.py`:343 sizes against `close − 1×ATR`;
       the exit policy everywhere else is `2×ATR`. No shared strategy card reconciles them.
       **Frozen file.**
-- [ ] **CAD is sized against USD with no FX.** `size_long` treats CAD as supported, so a `.TO`
+- [x] **`[v]` CAD is sized against USD with no FX — fixed 2026-08-16 (PR #9).** `size_long` treats CAD as supported, so a `.TO`
       candidate's `risk_per_share` and `position_value` (CAD) are compared against `account.equity`
       (USD) and `risk.max_position_value` with no conversion and no rate recorded. It does not
       refuse — it mis-sizes. **Frozen file.**
-- [ ] **`Position.initial_risk_per_share` excludes costs** (`entry − stop`) while `size_long`
+- [x] **`[v]` `Position.initial_risk_per_share` excluded costs — fixed 2026-08-16.** Now
+      `entry - stop + costs`, with `initial_costs_per_share` stored at entry and frozen with the
+      denominator. No migration needed: `positions.duckdb` has never been written, so there were no
+      legacy rows. Old behaviour (`entry − stop`) while `size_long`
       includes them (`entry − stop + costs`). Two different R denominators.
-- [ ] **`Instrument.id` is derived from the ticker** in `cli.py`:30 and `pipeline.py`:108, which the
-      contract explicitly forbids ("Never derived from the ticker alone"). Blocks any historical
-      edge claim; does not block Track-A-only PAPER.
+- [x] **`[v]` `output_hash` did not cover the numbers that determine the trade — fixed 2026-08-16.**
+      Found by changing every stop from 1×ATR to 2×ATR and watching the hash NOT move, then measured
+      three more ways: halving every share count and widening every stop 40% both left the golden
+      case at `78732401bd216ae2`, and a run proposing `EXIT_NOW` on a held position hashed
+      identically to a run holding nothing — the position half of the run, which runs *first*, was
+      absent from the payload in every form, including its own existence. Gate 9 passed in all four
+      cases while `a.reproducible` claimed byte-identical reproduction. Now covers entry, stop,
+      shares, planned risk, and every position and proposal; prose, checklists and timestamps stay
+      out as the churn guard (`DETERMINISM_SPEC` §7.2, which this closes as an open item). The
+      golden baseline was re-recorded deliberately: `78732401bd216ae2` → `4751a227d2a14884`. Four
+      tests assert the hash MOVES, each confirmed to fail against the old payload. **Frozen file.**
+- [x] **`[v]` `size_long` sized against a zero or negative stop — fixed 2026-08-17 (PR #9).**
+      `stop >= entry` was the only stop check, so `size_long(1.00, 0.00)` returned **98 shares**
+      against a risk-per-share of 1.02 — larger than the entry price itself — and a stop of −5.00
+      was accepted too. `Position.initial_stop` is `gt=0`, so the two contracts disagreed: the run
+      would size and propose a trade the store could never record.
+      **Reachable, not hypothetical.** The stop arrives as `entry − atr_stop_multiple × atr`, so any
+      instrument whose ATR exceeds half its price at a 2.0 multiple crosses zero, and
+      `universe.min_price` of 5.00 does not exclude those. Now a coded `STOP` refusal.
+      **Found by the cross-module property test below, on its first run** — which is the argument
+      for that test, not a coincidence. **Frozen file; folded into PR #9 rather than sent as its own
+      PR, because both touch `sizing.py` and the 2026-08-16 amendment resets the Track A counter per
+      *merge* to a frozen file — two PRs would have cost two resets.**
+- [x] **`[v]` Nothing asserted that sizing and `Position` agree on the R denominator — added
+      2026-08-17.** `test_sizing_and_position_agree_on_the_denominator` (`tests/test_invariants.py`)
+      pins the equality across the module boundary the defect above it lived in. Both sides were
+      separately correct-looking; the disagreement existed only in the gap between two modules, which
+      is exactly where a per-module test cannot look. It asserts the *equality* rather than either
+      value, so it survives any change to the cost model. Confirmed red against the pre-fix tree.
+- [ ] **`[v]` Two formulas for R, differing by a quantization step.** Found 2026-08-17 by the test
+      above. `r_multiple(net, snapshot)` divides by `planned_risk`, which `size_long` quantizes to
+      cents; `Position.r_at(price)` divides by `initial_risk_per_share`, unquantized. So
+      `Position.initial_risk` reads `99.9648` where `planned_risk` reads `99.96` for the same trade,
+      and the two R values differ around the sixth decimal place.
+      **Immaterial to any decision and deliberately not fixed in PR #9** — sub-cent, and the fix is a
+      choice about which is authoritative rather than a bug fix, on a file already under the freeze.
+      It is still one quantity with two implementations, which is what Production Rule 3.8 forbids.
+      The test asserts agreement to the cent and names the asymmetry inline.
+- [x] **`[v]` A test fixture disagreed with DR-010 at its own entry price — fixed 2026-08-17.**
+      `tests/test_positions.py::_position` set `initial_costs_per_share=0.25` and its comment called
+      that "DR-010's USD floor", but DR-010 charges `max(floor 0.25, 50bp × entry)` and at the
+      fixture's entry of 100 the bp term (0.50) binds — the floor governs only below a 50 entry. The
+      fixture the cost-inclusive denominator is demonstrated on therefore modelled a cost `size_long`
+      would never charge it. Now 0.50, which is what `size_long(100, 96, "USD")` freezes.
+      `tests/test_cli.py::_seeded` got the same treatment at its 300 entry: 1.50, not the floor.
+
+- [ ] **Instrument identity is synthesized instead of resolved — two defects, not one.** Restated
+      2026-08-16 after checking each site; the earlier entry named the wrong pair of lines and
+      missed (b) entirely. `reference_data/universe.py:159` `to_instrument()` is the *correct*
+      construction — `id` from the `DirectoryStore` symbol, `ticker` from `vendor_symbol()` — and
+      both sites below bypass it.
+      - **(a) `cli.py`:29 really does derive `id` from what the user typed**, which the contract
+        forbids ("Never derived from the ticker alone"). Typing `BRK-B` mints id `BRK-B`; the
+        universe path calls the same instrument `BRK.B`. That is two identities for one instrument
+        in a bitemporal store, which cannot be un-split after the fact. Not yet triggered —
+        `bars.duckdb` holds 12 dotted ids and **zero** dashed — but one CLI invocation away.
+      - **(b) — fixed 2026-08-16.** `pipeline.py`:99 `_held_instrument()` never derived the id (it
+        preserves it); it derived the *vendor ticker* by stripping `.TO`, so a held `BRK.B` asked
+        Yahoo for `BRK.B` where the vendor wants `BRK-B`. The fetch raised `VendorUnavailable`, the
+        `except` fell through to the stored bars, and the position went on being managed against
+        data that had quietly stopped refreshing — worse than failing, because it looks identical
+        to working. Now uses `vendor_symbol()`, the same mapping the universe path uses, which is
+        exactly the fix `DR-003` gap 2 applied there and missed here. Needed no directory and no
+        owner decision, so it landed ahead of (a). **Frozen file.**
+
+      **(a) is blocked on `DR-003` gap 1, not on an engineering choice.** Resolving identity means
+      resolving against a directory, and `DR-003` already records that Canada has no free symbol
+      directory in hand — so a `.TO` instrument has nothing to resolve against, and fail-closed
+      would refuse every Canadian candidate. Owner's call 2026-08-16: **source a TSX directory
+      first**; identity resolution waits on it. That makes `DR-003` gap 1 a blocker for a second
+      thing now — the US-only universe *and* instrument identity — and it needs its own decision
+      record when a source is evaluated. Blocks any historical edge claim; does not block
+      Track-A-only PAPER. **Changes the daily-run path — behind the freeze.**
 - [ ] **11 of 13 journalled runs carry `code_dirty = true`.** `a.reproducible` requires a
       byte-identical re-run from a stored manifest; a manifest pointing at a dirty tree cannot be
       replayed from its SHA.
