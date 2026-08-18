@@ -10,14 +10,14 @@ stash-and-watch-it-go-red habit).
 
 ---
 
-## 1. The one decision that gates everything — now a document, awaiting a signature
+## 1. RATIFIED — the gate is open
 
-**Ratify `DR-012`** (`docs/decisions/DR-012-exit-policy-parameters.md`, [PR #18](https://github.com/golub-kirill/SwingDesk/pull/18)):
-`exit.atr_stop_multiple = 2.0`, `exit.max_holding_period = 20`.
+**`DR-012` was ratified by the owner on 2026-08-17** and the values are in the registry with
+`assumed:DR-012`: `exit.atr_stop_multiple = 2.0`, `exit.max_holding_period = 20`.
+([PR #18](https://github.com/golub-kirill/SwingDesk/pull/18))
 
-Yesterday this was "a decision record is missing". Today the record exists, argues its own
-provenance, and carries a measured before/after. **The values are deliberately NOT written into
-`registry/parameters.yml`** — writing them is the ratification, and that is the owner's.
+Yesterday this was "a decision record is missing". It now exists, is `accepted`, argues its own
+provenance, and carries a measured before/after.
 
 Three things in it a fresh session should not re-derive:
 
@@ -30,10 +30,11 @@ Three things in it a fresh session should not re-derive:
   `RISK [exit.atr_stop_multiple]`; set → 3 Watches at `entry − 2.0 × ATR` with a cost-inclusive R
   denominator. The owner ratifies against a measurement.
 
-**§8.6 asks the owner one further question:** `registry/parameters.yml` is not a frozen file, so on
-the letter of the 2026-08-16 amendment ratifying does not reset the Track A counter — but it plainly
-changes decision output, and PR #9 resets it already. The honest reading is **one transition, one
-reset**. Confirm it, or the counter gets reset twice for a single change.
+**§8.6 ruled: ONE reset, attached to PR #9's merge date.** And gate 20 then proved the argument
+without being asked — it refused DR-012's claim to be implemented by `_exit_policy`, because that
+function does not exist on `master`. Which is the same fact from the other side: **on `master` these
+values are ratified and INERT**, since `pipeline.py` still carries the literal and never opens the
+registry. The record now reads `implementation: none` with `arrives_with: PR #9`.
 
 ## 2. What is open
 
@@ -113,24 +114,81 @@ exit with *"maximum holding period reached at 2026-08-17"* — from a run pinned
 bullet records as missing. Not fixed today: `pipeline.py` is frozen and #19 is already stacked on the
 only PR touching it. **This is the next code task after the freeze lifts.**
 
-## 6. Owner decisions still waiting
+## 6. Owner decisions — four answered 2026-08-17, and one answer moved everything
 
-Unchanged from yesterday except where noted:
+**`DR-014` is the one to read.** The owner will **not trade this system with their own money** in its
+current or observable state; paper / simulated positions are the authorised vehicle. Six items that
+were each carried as independently open turned out to hang on that single answer:
 
-- **`DR-012`** — §1 above. New today.
-- **5b — proposal expiry.** `ActionStatus.EXPIRED` exists and is never written; a stop move computed
-  on week-old bars stays answerable indefinitely. **Now the only unbuilt item in `TODO.md` §6b.**
-  Needs a rule for how long a proposal stands before it can be built — and the mechanism should take
-  the duration as an `unset` parameter that fails closed, not a constant.
-- **DR-006** — six `risk.*` parameters; every portfolio cap cites `assumed:DR-006`. Must land on
-  evaluated values, not a rubber stamp.
-- **DR-011** — status `proposed`; the mechanism was the owner's choice, the record is unratified.
-- **A TSX symbol directory** — `DR-003` gap 1. Blocks instrument identity and the Canadian half.
+| Was | Is now |
+|---|---|
+| `DR-006` — urgent, "binds a real account" | **Deferred.** There is no account to bind. Ranked a blocker since 2026-08-02; never blocked anything reachable without capital |
+| `PR-006` — "the only route left" to the spread level | **Precondition withdrawn by choice.** The spread LEVEL is a permanent limitation now, not a to-do |
+| `D10` paid data | Unchanged, and now consistent — no capital at risk means survivorship costs evidence, not money |
+| Canada / TSX directory | **Deferred with a re-entry condition**, not blocked. Re-opens when a solid working strategy exists |
+| The CAD FX rate | Stays unset **deliberately**. `size_long` refusing `.TO` is intended behaviour, not a gap |
+| Resuming research | **Reordered, not resumed** — see §7 |
 
-## 7. New in `AGENTS.md`
+**`DR-013` — proposal expiry, ruled.** Non-critical (`MOVE_STOP`, `PARTIAL_EXIT`) expires after **3
+trading days**; critical (`EXIT_NOW`) **never expires and never auto-applies**. `TODO.md` §6b item 5b
+is unblocked and is now **the only unbuilt item in §6b**. `management.proposal_expiry_days = 3` is in
+the registry; the code is not written.
+
+**`AGENTS.md` §14 — force the answer.** Owner instruction: do not proceed on an assumption when a
+decision is theirs, and do not accept a casual go-ahead as the answer to a specific proposal. `D6`
+stops the *system* acting unasked; this stops an *agent* treating ambient approval as a specific one.
+
+Still waiting: **`DR-011`** (proposed; mechanism was the owner's choice, record unratified),
+**four ADRs**, **UDR-001/002/004**, **course v7.0 adoption**.
+
+## 7. The test suite does not prove what it appears to — measured, then counciled
+
+`planned_risk`, the R denominator the whole validation programme is expressed in, was replaced with
+the constant `Decimal('42')`. **The entire suite stayed green**, including the test `INVARIANTS.md`
+§1 names as enforcing that invariant — which asserts `(net/x)*x == net`, an identity that cannot fail
+for any `x`.
+
+**Base rate, measured 2026-08-17: 3 of 11 mutants survive the whole suite.** Two are in `sizing.py`
+(`planned_risk`, `risk_per_share`). The third is `sessions_behind` in `calendar.py`, and it survived
+for a **different reason** — the function has no caller anywhere in `src/`, while
+`DATA_QUALITY_SPEC.md`:40 defines staleness through it. A spec rule implemented in dead code. Full
+detail in `TODO.md` §6.
+
+**A five-advisor council reviewed this and was unanimous on the form of the answer: do not write a
+test-architecture ruleset.** This project already has a documentation surplus and a falsifiability
+deficit; `INVARIANTS.md` was a careful audit that was *wrong about invariant #1* while claiming a
+test enforced it. Its recommendation was two gates — a hand-authored mutant list over a declared
+critical surface, and a `check:` line requiring every "closed by verification" block to carry a
+runnable command.
+
+**The owner's steer sharpens it: a stored list is regression, not detection.** It only re-checks
+defects someone already thought of; `Decimal('42')` came from a human hypothesis no machine would
+have scheduled. **So: seam properties first (detection), mutant list second (cheap insurance).** The
+detector that actually worked this session was a cross-module property test asserting the *equality*
+of two implementations rather than either value — it found the zero-stop sizing defect nobody had
+hypothesised, on its first run.
+
+Three non-negotiables if the list is built, from the council's peer review: a patch that fails to
+apply is **FAIL** never skip (an exact-string mutant rots on the next rename, and a gate that mutated
+nothing is `(net/x)*x == net` one layer up); it ships with one planted survivor proving it can go
+red; output is named survivors with diffs, never a score.
+
+**One trap, verified:** `git stash push -- src/` **cannot** census a committed suite. It reverts
+*uncommitted* work, so on a clean tree it stashes nothing and the suite runs unchanged — which is
+exactly why `AGENTS.md` §12's ritual has only ever applied to newly written tests. Auditing the
+existing suite needs real mutants against committed source.
+
+## 8. New in `AGENTS.md`
 
 **§13 — how to talk to the owner**, on owner instruction: brief, direct, Russian, friendly profanity
 aimed at situations and never at people. **Chat replies only.** §5 stands unchanged for every artifact
 in the tree — documents, code, comments, commits, CLI output and reports stay English, and the rules
 are kept in the owner's own words as the second marked exception to that rule, for the same reason the
 first exists.
+
+**§14 — force the answer**, on owner instruction: *"Do not process before my answer for action even if
+I'm asking you to. Force me to answer."* When a decision is the owner's, do the parts that do not
+depend on it, then ask — never pick a default and proceed. A critical proposal is answered by
+`swingdesk respond POS-N SEQ --approve|--reject --reason "…"` and by nothing else, because that is
+what puts the owner's reason and the moment they answered into the append-only response table.
+A sentence in chat cannot do that.
