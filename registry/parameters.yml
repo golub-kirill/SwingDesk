@@ -871,7 +871,7 @@ parameters:
     value: 2
     status: assumed
     provenance: assumed:DR-015
-    read_by: none
+    read_by: swingdesk.market_data.freshness:window
     note: >-
       Trading SESSIONS, never calendar days - Friday's bar on Monday is one session old and three
       calendar days old, and counting days would refuse the whole universe every Monday.

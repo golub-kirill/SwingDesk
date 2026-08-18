@@ -41,7 +41,7 @@ def stores(tmp_path):
 def test_run_is_reproducible(stores, registry) -> None:
     """Same inputs, same output hash. The ratified Track A criterion a.reproducible."""
     store, journal = stores
-    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
     fetcher = fixture_fetcher({TEST_US.id: sessions})
 
     first = run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher)
@@ -69,7 +69,7 @@ def test_output_hash_moves_when_the_size_moves(stores, registry) -> None:
     ATR but not one number the owner would act on.
     """
     store, journal = stores
-    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
     fetcher = fixture_fetcher({TEST_US.id: sessions})
 
     lean = run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher)
@@ -89,7 +89,7 @@ def test_output_hash_moves_when_the_stop_moves(stores, registry) -> None:
     They hashed the same until 2026-08-16, as did a stop moved 40% wider on the golden case.
     """
     store, journal = stores
-    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
     fetcher = fixture_fetcher({TEST_US.id: sessions})
 
     tight = run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher)
@@ -105,8 +105,8 @@ def test_output_hash_moves_when_the_stop_moves(stores, registry) -> None:
 def test_every_candidate_leaves_with_a_decision(stores, registry) -> None:
     """No candidate is left without a next action - M32/M33 operational standard."""
     store, journal = stores
-    us = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
-    ca = _sessions(TEST_CA.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    us = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
+    ca = _sessions(TEST_CA.exchange, date(2025, 1, 1), date(2026, 1, 15))
     fetcher = fixture_fetcher({TEST_US.id: us, TEST_CA.id: ca})
 
     result = run([TEST_US, TEST_CA], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher)
@@ -133,7 +133,7 @@ def test_revision_deltas_not_snapshots(stores, registry) -> None:
     ~20M rows a day (POINT_IN_TIME_SPEC 3).
     """
     store, journal = stores
-    sessions = _sessions(TEST_US.exchange, date(2025, 6, 1), date(2026, 1, 14))
+    sessions = _sessions(TEST_US.exchange, date(2025, 6, 1), date(2026, 1, 15))
     fetcher = fixture_fetcher({TEST_US.id: sessions})
 
     run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher)
@@ -236,7 +236,7 @@ def _universe_selection(instruments):
 def test_a_universe_supplies_the_candidates(stores, registry) -> None:
     """The CHARTER 4 shape: the run starts from a rule, not from a typed list."""
     store, journal = stores
-    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
     selection = _universe_selection([TEST_US])
 
     result = run([], FixedClock(AS_OF), registry, store, journal, mode=MODE,
@@ -250,7 +250,7 @@ def test_the_universe_is_pinned_in_the_manifest(stores, registry) -> None:
     """The universe is a run INPUT. Unpinned, a changed universe moves output_hash with nothing in
     the manifest explaining why - the defect gate 9 caught in config_hash."""
     store, journal = stores
-    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
     fetcher = fixture_fetcher({TEST_US.id: sessions, TEST_CA.id: sessions})
 
     one = run([], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher,
@@ -265,7 +265,7 @@ def test_the_universe_is_pinned_in_the_manifest(stores, registry) -> None:
 def test_a_run_without_a_universe_pins_nothing(stores, registry) -> None:
     """None means "explicit instrument list", and must not be confused with an empty universe."""
     store, journal = stores
-    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
     result = run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE,
                  fetcher=fixture_fetcher({TEST_US.id: sessions}))
     assert result.manifest.universe_hash is None
@@ -280,7 +280,7 @@ def test_the_universe_hash_moves_when_the_rule_moves(stores, registry) -> None:
     from swingdesk.reference_data.universe import LiquidityRule
 
     store, journal = stores
-    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
     fetcher = fixture_fetcher({TEST_US.id: sessions})
 
     loose = _universe_selection([TEST_US])
@@ -307,7 +307,7 @@ def test_the_mode_is_recorded_and_cannot_be_omitted(stores, registry) -> None:
     fetcher would be automatic and would re-create the inference SYSTEM_MODES 3 objects to.
     """
     store, journal = stores
-    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
     fetcher = fixture_fetcher({TEST_US.id: sessions})
 
     result = run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher)
@@ -325,7 +325,7 @@ def test_a_decision_records_what_it_was_before(stores, registry) -> None:
     became a Skip distinguishable from a Skip that has been a Skip all week.
     """
     store, journal = stores
-    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
     fetcher = fixture_fetcher({TEST_US.id: sessions})
 
     first = run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher)
@@ -347,7 +347,7 @@ def test_from_state_is_read_as_of_the_run_start_not_as_of_now(stores, registry) 
     predecessor - a record that says every instrument's decision is unchanged from itself.
     """
     store, journal = stores
-    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
     fetcher = fixture_fetcher({TEST_US.id: sessions})
 
     run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher)
@@ -384,7 +384,7 @@ def test_an_unset_exit_policy_refuses_rather_than_defaulting(stores, registry) -
     unset = ParameterRegistry(entries)
 
     store, journal = stores
-    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
     result = run([TEST_US], FixedClock(AS_OF), unset, store, journal, mode=MODE,
                  fetcher=fixture_fetcher({TEST_US.id: sessions}))
 
@@ -406,7 +406,7 @@ def test_the_sizing_stop_is_the_policy_stop(stores, registry) -> None:
     from swingdesk.trade_management.exits import ExitPolicy
 
     store, journal = stores
-    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
     policy = ExitPolicy(Decimal("2.0"), 20)
     result = run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE,
                  fetcher=fixture_fetcher({TEST_US.id: sessions}), exits=policy)

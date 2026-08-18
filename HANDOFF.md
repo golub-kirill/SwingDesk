@@ -46,7 +46,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | | |
 |---|---|
 | Merge gates | **30**, one command: `python tools/check_gates.py` |
-| Tests | **521**, fully offline |
+| Tests | **554**, fully offline |
 | Docs | 109 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 460 registered · 4 `specified` · **1 `active`** |
 | Parameters | 102 - 60 `unset`, 38 `assumed`, 4 `owner`, **0 `validated`** |
@@ -109,6 +109,7 @@ once did).
 
 - `claude/full-cycle-trade-dev-c6b1f1`
 - `claude/prune-empty-worktrees`
+- `claude/swingdesk-session-continuation-39adaa`
 
 *Tip and merge state deliberately absent - both move under this document's own feet. `python tools/verify_branches.py` prints them.*
 
@@ -209,6 +210,17 @@ it. Implemented the same evening as `STREAK_RESTARTS` in `tools/track_a_streak.p
 a reason per row, sessions on or before the most recent restart outside the countable window. Adding
 a row is now the only way to apply this rule. The counter reads `0` and prints why — a bare zero
 after a deliberate reset is indistinguishable from an outage.
+
+**Second trigger, 2026-08-18, and this time the mechanism was already there.** `DR-015` built: two
+frozen files changed — `application/pipeline.py` (the freshness gate at both decision reads) and
+`tools/daily_run.cmd` (the 19:30 second pass) — and the change moves decision output, which is what
+the amendment turns on. Measured against the 2026-08-17 run: **67 of 1152 candidates were one
+session behind and were sized and left on `Watch`; they now leave with a `DATA` skip.** A row was
+added to `STREAK_RESTARTS` and the counter reports the reason with the number.
+
+**Deliberately taken while the counter was at 0.** The reset cost nothing on 2026-08-18 and would
+have cost two weeks in two weeks — the reasoning is `DR-015` §3's, not this session's, and it is
+the whole argument for building the second pass now rather than later.
 
 **The council's sharper finding about idle days — the premise is gone, the diagnostic remains.** It
 warned that with `exit.atr_stop_multiple` / `exit.max_holding_period` unset post-merge, every

@@ -17,7 +17,8 @@ from swingdesk.contracts.reference import Instrument
 from swingdesk.contracts.run import RunMode
 from swingdesk.journal_evidence.journal import Journal
 from swingdesk.journal_evidence.positions import PositionStore
-from swingdesk.market_data import BarStore
+from swingdesk.market_data import BarStore, vendor_yahoo
+from swingdesk.market_data.retry import RetryingFetcher
 from swingdesk.platform.clock import FixedClock, SystemClock
 from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
 from swingdesk.presentation import notify, report
@@ -542,9 +543,22 @@ def _scan(args: argparse.Namespace) -> tuple[int, str | None, notify.Outcome]:
                 print(report.render_empty_universe(selection), file=sys.stderr)
                 return 3, None, notify.Outcome.REFUSED
 
+        # The retry lives HERE, wrapped around the injected fetcher, and not inside `run()`
+        # (DR-015 §3). `pipeline.py` is one of the frozen files and, more to the point, must stay
+        # pure: a `time.sleep` in the decision path is a decision that takes an hour on a bad night.
+        # One instance per run, because its 90-second budget is a property of the run - see
+        # `market_data/retry.py` for why an unbounded per-instrument retry is not what DR-015 costed.
+        fetcher = RetryingFetcher(vendor_yahoo.fetch)
+
         result = run(instruments, clock, registry, store, journal,
                      mode=mode, lookback=args.lookback, universe=selection,
-                     positions=positions)
+                     positions=positions, fetcher=fetcher)
+
+        # Only when something failed. DR-015 §6 asks for a measured distribution of fetch failures
+        # and observes that nobody has counted one; this is the line that starts counting, into
+        # `data/daily_run.log` where the other run facts already live.
+        if retries := fetcher.summary():
+            print(retries, file=sys.stderr)
 
         # Persist BEFORE printing, so the durable artifact exists even if writing to the
         # console then fails - the log has swallowed enough already.

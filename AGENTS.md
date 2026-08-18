@@ -426,6 +426,12 @@ the words are as fragile as the numerals; the fix is to stop counting in prose a
   `C:\PycharmProjects\SwingDesk\src`, not the worktree's, unless `PYTHONPATH` says otherwise. The
   documentation gates read files by path and are unaffected; the code gates are not. Always run gates
   with `PYTHONPATH=$PWD/src`.
+  **The symptom is a PASS, which is why knowing the rule is not enough to be safe from it.** Caught
+  again 2026-08-18, by a session that had this paragraph in context: `pytest tests/ -q` from the
+  worktree came back fully green against a change that had broken **37 assertions**, because it was
+  testing `master`. A suite that goes green from a worktree without `PYTHONPATH` is evidence about
+  the main checkout and says nothing whatever about your change. `ruff` and `mypy` take file paths
+  and are honest; `pytest` and `import-linter` import the package and are not.
 - **`data/` is not in your worktree either, and that is the same trap wearing a different hat.** The
   DuckDB stores and the scheduler log live only in the main checkout. Gates 23 and 24 read them and
   report `UNAVAILABLE` rather than passing blind; point them at the real stores with

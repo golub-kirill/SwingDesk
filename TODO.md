@@ -30,8 +30,11 @@ retyping it.
 **Nothing blocks a merge.** All 30 gates are green on `master`, there are no open pull requests, and
 the 2026-08-11 freeze lifted on 2026-08-17.
 
-**What blocks the next thing worth doing** — one item, and it is not on any list below because it
-was measured today rather than planned:
+**What blocks the next thing worth doing.** The two items that stood here on 2026-08-18 are both
+closed — the R denominator by re-measurement, the staleness gate by `DR-015` being built — and what
+follows them is open work rather than a blocker. **Corporate actions is the one to read**: it is the
+last of the three "specified, implemented, wired to nothing" findings still open, and `DR-015` §4
+hands it over by name.
 
 - [x] **`[v]` The R denominator was asserted by nothing — CLOSED 2026-08-18 by re-measurement, not
       by work.** On the morning of 08-17, `planned_risk` could be replaced with the constant
@@ -49,25 +52,45 @@ was measured today rather than planned:
       **A conclusion that rested on this and no longer stands:** "a wrong R could be why the base
       strategy is negative" — R was never wrong, it was merely unasserted, so there is no prior
       result to re-derive. **The entry-filter family stays closed.**
-- [ ] **`[v]` The staleness gate is specified, implemented, and not wired — and "delete or wire" is
-      the wrong framing.** Traced 2026-08-18 after `calendar.sessions_behind` came back as the only
-      mutant surviving the suite.
-      **What exists.** `DATA_QUALITY_SPEC.md` §2.1 specifies the whole rule: `sessions_behind > 0`
-      means stale → refetch once → still stale is a `DATA` skip → `data.freshness_window` sessions
-      behind drops the instrument from the run. `calendar.sessions_behind()` implements the
-      measurement correctly and is exported.
-      **Why nothing calls it, and why deleting it would be wrong.** Both governing parameters are
-      `unset` — `data.freshness_window` and `data.staleness_action_threshold`. Wiring it today makes
-      every instrument refuse; deleting it throws away a correct implementation of a ratified rule.
-      It is the `DR-012` situation one gate over: the code is right, the decision is missing.
-      **The gap this leaves is real and it is not theoretical.** `pipeline.py`'s held-position fetch
-      is **fail-open** by design (`FAIL_CLOSED_POLICY` row 1): a `VendorUnavailable` falls through to
-      the stored snapshot, and `managed.stale` is set **only when there are no bars at all**. So a
-      position whose fetch fails is managed against stored bars of *any* age with nothing said. PR #9
-      fixed one cause of that fallback — the dual-class vendor-ticker lookup that made `BRK.B` fetch
-      fail silently — but the *consequence* is still unguarded: the next cause will look identical.
-      **Needs an owner decision, not code:** how many sessions behind is too stale to manage a
-      position on. That is `data.freshness_window`, and it is exactly the shape `DR-012` had.
+- [x] **`[v]` The staleness gate is specified, implemented, and not wired — BUILT 2026-08-18
+      (`DR-015`).** `calendar.sessions_behind` has a caller: `market_data/freshness.py`, read at
+      both decision points in `pipeline.py`. The retry wrapper is `market_data/retry.py`, injected
+      in `cli.py` so the pipeline never sleeps, and the 19:30 second pass is an argument to
+      `tools/daily_run.cmd`. `data.freshness_window`'s `read_by` names its consumer, so the
+      decided-not-wired count fell **27 → 26**.
+      **The gap was not theoretical, and the number is the finding.** Measured against the
+      2026-08-17 scheduled run before any of it existed: of 1152 evaluated candidates, **67 (5.8%)
+      ended the run one session behind** — last bar Friday 08-14, last completed session Monday
+      08-17. Every one was sized and left on `Watch` against a stale close, and every one reported
+      `completeness clean`. That is correct and is the point: §2.2 looks for a hole *inside* the
+      stored window, and a series that simply stops early has no hole. Nothing in the report told
+      those 67 apart from the other 1085.
+      **The held-position half is the one `TODO` §1 named** — fetching is fail-open by design and
+      `managed.stale` was set only when there were **no** bars at all, so a position whose fetch
+      failed was managed against stored bars of any age, silently. Fail-open on the FETCH is
+      unchanged; deciding on what it fell back to is now fail-closed, and the position PAUSEs.
+      **Track A restarted 2026-08-18** — two frozen files, and the change moves decision output.
+
+- [ ] **`[v]` `data.staleness_action_threshold` is still `unset` and still read by nothing.**
+      `DR-015` set `data.freshness_window` and did not touch this one. They are not duplicates:
+      the window is **per instrument** — this candidate is too stale to size — while Appendix T's
+      *"при stale data или mismatch новые сделки блокируются"* is a **system-wide** block on new
+      entries. Today a run where every candidate is stale refuses each one individually and says
+      nothing about the run as a whole. Needs a ruling, or an explicit decision that the
+      per-instrument gate discharges it and the parameter should be retired (`AGENTS.md` §11).
+
+- [ ] **`[v]` Corporate actions — the biggest open risk, and now the only one of the three
+      "specified, implemented, wired to nothing" findings still open.** `DR-015` §4 hands it over
+      explicitly. Both decision paths read `Series.RAW`; raw bars are unadjusted, so a split does
+      not restate history — **the next bars arrive at a different price level**. A 2:1 split over a
+      weekend leaves a stored stop of 290 compared against Monday raw prices near 145: an instant
+      stop-out that never happened, on a position still held.
+      `DATA_QUALITY_SPEC.md` §4 specifies the gate in full, including the `DATA_ERR`/`Critical`
+      case for a changed raw bar. **Nothing is implemented** — no mention of splits or dividends
+      anywhere in `src/` — and `data.revision_epsilon` is `unset`. Needs its own record, same shape
+      as `DR-015`. **Stale data makes the system decide on old information, which is now refused.
+      An unhandled split makes it decide on *wrong* information while every freshness check
+      passes.**
 
 ### Closed — kept for the reasoning, not as work
 
@@ -204,6 +227,21 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       don't-rubber-stamp warning stands for whenever it *is* ratified.
 - [ ] **`[c]` DR-009** · **`[c]` DR-001 / DR-002 / DR-003 / DR-005** — proposed since 08-02, used as
       working fact throughout.
+
+- [ ] **`[v]` DR-015 is BUILT (2026-08-18), and left two things for the owner.**
+      **a. The retry's per-run ceiling is an implementation reading, not a ruling.** §3 states two
+      figures that do not agree: "three attempts, 30 seconds apart" is two sleeps and 60 seconds,
+      "ninety seconds" is three. The attempt count is stated twice so it governs per instrument;
+      ninety seconds is implemented as a ceiling on the **run**, spent across it. **Why a ceiling at
+      all:** the wrapper is called per instrument, the universe was 1152 members on 2026-08-17, and
+      unbounded that is over nineteen hours of sleeping in a vendor outage — on a job that must
+      finish before `DR-015`'s own 19:30 pass. §7 of the record carries the argument.
+      **The question: 90 seconds per run, or the full three attempts for every instrument whatever
+      the total?** Nothing else is blocked on the answer.
+      **b. Register the 19:30 task.** One `schtasks` line, on the machine that runs the schedule — a
+      repository cannot create it. `docs/runbooks/README.md` §1a has the command and the check.
+      **Until it exists the retry inside the run is live and the second pass is not**; the two halves
+      of §3 are independent.
 
 **ADRs — all four unratified.**
 

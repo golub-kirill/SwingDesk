@@ -35,6 +35,7 @@ from swingdesk.derived_observations import atr
 from swingdesk.journal_evidence.journal import DecisionRecord, Journal
 from swingdesk.journal_evidence.positions import PositionStore
 from swingdesk.market_data import YAHOO, BarStore, VendorUnavailable, check, vendor_yahoo
+from swingdesk.market_data import freshness as fresh
 from swingdesk.market_data.completeness import SessionFinding
 from swingdesk.platform.clock import Clock
 from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
@@ -154,6 +155,31 @@ def _exit_policy(registry: ParameterRegistry) -> ExitPolicy | Refusal:
             parameter_id=unset.parameter_id,
         )
     return ExitPolicy(multiple, holding)
+
+
+def _freshness_window(registry: ParameterRegistry) -> int | Refusal:
+    """How many sessions behind is too stale to decide on, or a coded refusal naming the parameter.
+
+    Same shape as `_exit_policy` above, for the same reason: `data.freshness_window` is a ruled
+    number (`DR-015`, `assumed`), and an unset one must refuse rather than pick a plausible default.
+    Read ONCE per run and passed down, so the registry is not re-read 1152 times.
+
+    `DATA_QUALITY_SPEC` §2.1 has specified this gate since it was written and
+    `calendar.sessions_behind` has implemented the measurement the whole time - with no caller. It
+    was the last mutant surviving the entire suite, and it survived as dead code rather than as a
+    weak test. `DR-015` supplied the number it was waiting for.
+    """
+    try:
+        allowed = fresh.window(registry)
+    except ParameterUnset as unset:
+        return Refusal(
+            "DATA",
+            "no freshness window: how many sessions behind is too stale to decide on is a ruled "
+            "number, and deciding on data of unknown age is the silent-default this registry "
+            "exists to prevent",
+            parameter_id=unset.parameter_id,
+        )
+    return allowed
 
 
 def _git(*args: str) -> str:
@@ -371,6 +397,19 @@ def run(
     # still wins so a study can pin its own; otherwise it comes from the registry and may refuse.
     policy = exits if exits is not None else _exit_policy(registry)
 
+    # How stale is too stale, read once for the whole run (DATA_QUALITY_SPEC 2.1, DR-015).
+    #
+    # WHERE THE SPEC'S "REFETCH ONCE" IS DISCHARGED, because this is a judgment and not an omission.
+    # 2.1 reads "stale -> refetch once; still stale -> DATA skip", which describes a store-first
+    # system that fetches on demand. This pipeline is fetch-first: every candidate and every held
+    # position is fetched at the top of its own branch BEFORE anything reads the store, and since
+    # DR-015 the injected fetcher retries a VendorUnavailable three times. So by the time freshness
+    # is assessed below, the instrument has already had between one and three fetch attempts in this
+    # run, and the refetch obligation is met by construction. Issuing another vendor call here would
+    # be a second request for the same bars milliseconds after the first - 67 of them on the
+    # 2026-08-17 universe - and would answer no question the first one did not.
+    freshness_window = _freshness_window(registry)
+
     # --- open positions, BEFORE any candidate -------------------------------------------
     # CHECKLIST_SPEC 4 requires open positions and gaps to be checked first. Not a preference about
     # code - a data failure must never lock the owner out of managing risk on positions already
@@ -406,6 +445,35 @@ def run(
                     position_id=position.position_id, proposed_at=started,
                     kind=ActionKind.PAUSE, reason_code="DATA",
                     reason="no bars available for an open position; management cannot be evaluated",
+                    old_stop=position.current_stop,
+                )
+            elif isinstance(freshness_window, Refusal):
+                managed.action = ManagementAction(
+                    position_id=position.position_id, proposed_at=started,
+                    kind=ActionKind.PAUSE, reason_code=freshness_window.code,
+                    reason=f"{freshness_window.reason} ({freshness_window.parameter_id})",
+                    old_stop=position.current_stop,
+                )
+            elif (aged := fresh.assess(
+                instrument.exchange, held.bars[-1].session_date, started, freshness_window
+            )).verdict is not fresh.Verdict.FRESH:
+                # The gap TODO.md 1 named, now closed. Fetching here is fail-open by design
+                # (FAIL_CLOSED_POLICY row 1) and `stale` was set ONLY when there were no bars at
+                # all - so a position whose fetch failed went on being managed against stored bars
+                # of any age, silently, and the next cause of that fallback would have looked
+                # exactly like the dual-class ticker bug PR #9 fixed. Fail-open on the FETCH is
+                # correct and unchanged; what changes is that deciding on what it fell back to is
+                # now fail-closed, which is the distinction row 2 of section 7 draws.
+                #
+                # PAUSE rather than skip: a held position cannot be skipped, and it must never be
+                # dropped from the run - CHECKLIST_SPEC 4 exists so a data failure can never lock
+                # the owner out of managing risk on something already open. So the window's
+                # DROPPED verdict lands here as a pause too; the reason says which it was.
+                managed.stale = True
+                managed.action = ManagementAction(
+                    position_id=position.position_id, proposed_at=started,
+                    kind=ActionKind.PAUSE, reason_code="DATA",
+                    reason=f"{aged.reason}; management cannot be evaluated",
                     old_stop=position.current_stop,
                 )
             else:
@@ -447,7 +515,29 @@ def run(
         stored = store.as_of(instrument.id, Interval.DAY, Series.RAW, started)
         outcome.bars = len(stored)
 
-        # 2. Completeness, against the calendar. This is what separates a half-day from a gap.
+        # 2. Freshness, against the calendar (DATA_QUALITY_SPEC 2.1). BEFORE completeness, which is
+        # 2.2 and answers a different question - and the order matters because the two are easy to
+        # mistake for each other. Completeness looks for a hole INSIDE the stored window; a series
+        # that simply stops early has no hole and passes it. Measured on the 2026-08-17 run: 67 of
+        # 1152 candidates were one session behind, every one of them reported `completeness clean`,
+        # and every one was sized and left on Watch against a stale close.
+        if isinstance(freshness_window, Refusal):
+            outcome.decision = DecisionRecord(
+                instrument.id, "Skip", freshness_window.code,
+                freshness_window.reason, freshness_window.parameter_id,
+            )
+            continue
+        if stored.bars:
+            aged = fresh.assess(
+                instrument.exchange, stored.bars[-1].session_date, started, freshness_window
+            )
+            if aged.verdict is not fresh.Verdict.FRESH:
+                # Both verdicts refuse, and the reason distinguishes them: STALE may recover on its
+                # own tomorrow, DROPPED means the run stopped trying (DR-015 2.1).
+                outcome.decision = DecisionRecord(instrument.id, "Skip", "DATA", aged.reason)
+                continue
+
+        # 3. Completeness, against the calendar. This is what separates a half-day from a gap.
         # The empty-bars fallback uses the RUN's clock, not the wall clock. It read date.today()
         # until ruff's DTZ011 found it: a replay of an old manifest would have measured completeness
         # against the date of the replay, so that branch was reproducible only on the day it ran.
@@ -463,7 +553,7 @@ def run(
             )
             continue
 
-        # 3. Derived observation.
+        # 4. Derived observation.
         outcome.observations = atr.compute(stored, registry)
         latest = outcome.observations.observations[-1]
         if latest.value is None:
@@ -472,7 +562,7 @@ def run(
             )
             continue
 
-        # 4. Risk. Stop derived from the observation BY THE RUN'S EXIT POLICY, then size. Stop
+        # 5. Risk. Stop derived from the observation BY THE RUN'S EXIT POLICY, then size. Stop
         # before size, always - and the same policy that will later exit the position, so the
         # distance a candidate is sized on is the distance it is actually stopped at.
         if isinstance(policy, Refusal):

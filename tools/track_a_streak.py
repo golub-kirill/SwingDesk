@@ -158,6 +158,12 @@ STREAK_RESTARTS: tuple[tuple[date, str], ...] = (
      "PR #9 - FX refusal, cost-inclusive R denominator, one exit policy read from the registry, "
      "output_hash widened to cover trade terms and open positions, a held position's vendor-ticker "
      "lookup. Merged with DR-012's ratification as ONE transition costing ONE reset (DR-012 section 8.6)"),
+    (date(2026, 8, 18),
+     "DR-015 built - the staleness gate reached the decision path. Two frozen files changed "
+     "(pipeline.py, daily_run.cmd) and the change moves decision output: measured against the "
+     "2026-08-17 run, 67 of 1152 candidates were one session behind and were sized and left on "
+     "Watch; they now leave with a DATA skip. A streak spanning that boundary would count days "
+     "spent deciding on stale data toward a system that refuses to"),
 )
 
 

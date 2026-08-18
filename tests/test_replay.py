@@ -25,6 +25,39 @@ def case_dir(tmp_path):
     return destination
 
 
+class _Branches(dict):
+    """What each instrument decided, as `(decision, reason_code)`, plus its free text."""
+
+    def __init__(self, decisions) -> None:
+        super().__init__({d.instrument_id: (d.decision, d.reason_code) for d in decisions})
+        self._reasons = {d.instrument_id: d.reason or "" for d in decisions}
+
+    def reason(self, instrument_id: str) -> str:
+        return self._reasons[instrument_id]
+
+
+def _decisions(case) -> _Branches:
+    """Re-run the case for its decisions. `replay()` returns only the hash, which is the point of a
+    determinism gate and exactly why it cannot say WHICH branches a case still covers."""
+    import tempfile
+    from pathlib import Path
+
+    from swingdesk.contracts.run import RunMode
+    from swingdesk.journal_evidence.journal import Journal
+    from swingdesk.market_data import BarStore
+    from swingdesk.platform.clock import FixedClock
+
+    with tempfile.TemporaryDirectory() as scratch:
+        root = Path(scratch)
+        with BarStore(root / "b.duckdb") as store, Journal(root / "j.duckdb") as journal:
+            result = harness.run(
+                list(case.instruments), FixedClock(case.as_of),
+                harness._registry_for(case.parameters), store, journal,
+                mode=RunMode.REPLAY, lookback=case.lookback, fetcher=harness._fetcher(case),
+            )
+    return _Branches(result.decisions)
+
+
 def _rewrite(directory, mutate) -> None:
     path = directory / "case.json"
     document = json.loads(path.read_text(encoding="utf-8"))
@@ -45,10 +78,30 @@ def test_case_covers_every_branch(case_dir) -> None:
     """
     result = harness.replay(harness.load_case(case_dir))
     assert result.matched
-    # Four instruments, three fixtures: one is deliberately absent so the fetcher refuses.
+
+    # Counting instruments was all this asserted until 2026-08-18, which is a count and not a
+    # branch: the case could have lost the warm-up path entirely and still shown four rows. It
+    # nearly did - `DR-015`'s freshness gate drops a stale series BEFORE warm-up is reached, and
+    # TEST.3's bars ended a month before the as-of. Now the outcomes themselves are asserted.
     case = harness.load_case(case_dir)
-    assert len(case.instruments) == 4
-    assert len(case.bars) == 3
+    branches = _decisions(case)
+
+    assert branches["TEST.1"] == ("Watch", None), "a candidate that sizes"
+    # A different exchange AND a different currency. It reaches sizing on the TSX calendar and is
+    # then refused for the reason PR #9 introduced: the account is USD and `account.fx_rate_cad` is
+    # null in this case, so the R denominator cannot be expressed in the account's own currency.
+    assert branches["TEST.2.TO"] == ("Skip", "RISK"), "a second exchange, and the FX refusal"
+    assert branches["TEST.3"] == ("Skip", "DATA"), "warm-up incomplete"
+    assert branches["TEST.4"] == ("Skip", "DATA"), "no recorded bars: the vendor refuses"
+    assert branches["TEST.5"] == ("Skip", "DATA"), "two sessions behind: dropped by the window"
+
+    # Same code, different causes - so the reasons are what tell the three DATA branches apart.
+    assert "warm-up" in branches.reason("TEST.3")
+    assert "no recorded bars" in branches.reason("TEST.4")
+    assert "dropped from this run" in branches.reason("TEST.5")
+
+    assert len(case.instruments) == 5
+    assert len(case.bars) == 4, "TEST.4 is deliberately absent so the fetcher refuses"
 
 
 def test_edited_inputs_are_not_called_non_determinism(case_dir) -> None:

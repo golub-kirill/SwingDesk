@@ -17,6 +17,7 @@ import pytest
 from swingdesk.application.pipeline import RunResult
 from swingdesk.contracts.position import ActionKind as _ActionKind
 from swingdesk.contracts.run import RunManifest
+from swingdesk.market_data.retry import RetryingFetcher
 from swingdesk.presentation import cli, notify
 
 
@@ -47,9 +48,10 @@ def _fake_run(captured: dict):
     from datetime import UTC, datetime
 
     def run(instruments, clock, registry, store, journal, *, mode, lookback,
-            universe=None, positions=None, exits=None):
+            universe=None, positions=None, exits=None, fetcher=None):
         captured["positions"] = positions
         captured["instruments"] = instruments
+        captured["fetcher"] = fetcher
         # Kept so a test can prove they are SHUT by the time the notice is raised.
         captured["bar_store"] = store
         captured["position_store"] = positions
@@ -79,6 +81,22 @@ def test_scan_opens_a_position_store_and_passes_it_to_run(tmp_path: Path, monkey
     assert code == 0
     assert captured["positions"] is not None, "run() must not be called with positions=None"
     assert (tmp_path / "positions.duckdb").exists()
+
+
+def test_scan_wraps_the_fetcher_in_the_retry_dr_015_ruled(tmp_path: Path, monkeypatch) -> None:
+    """`DR-015` §3 puts the retry around the injected fetcher, and `run()` falls back to the bare
+    `vendor_yahoo.fetch` when nothing is passed - so a retry that exists and is never injected is
+    the exact "decided, but wired to nothing" shape `AGENTS.md` §7 was written for. This asserts
+    the wiring, which is the half that cannot be proven by testing the wrapper.
+    """
+    captured: dict = {}
+    monkeypatch.setattr(cli, "run", _fake_run(captured))
+
+    assert cli.main(["scan", "AAPL", "--data", str(tmp_path)]) == 0
+
+    fetcher = captured["fetcher"]
+    assert isinstance(fetcher, RetryingFetcher), "the scheduled run must not get the bare fetcher"
+    assert fetcher.slept == 0.0, "a run that fetched nothing cannot have waited"
 
 
 def test_scan_still_works_with_an_empty_position_store(tmp_path: Path, monkeypatch) -> None:

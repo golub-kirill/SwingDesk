@@ -233,7 +233,7 @@ def test_the_run_generates_a_checklist_for_every_decided_candidate(tmp_path, reg
     from swingdesk.reference_data import calendar as cal
 
     sessions = [s.session_date
-                for s in cal.sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))]
+                for s in cal.sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))]
     with (
         BarStore(tmp_path / "bars.duckdb") as bars,
         Journal(tmp_path / "journal.duckdb") as journal,
