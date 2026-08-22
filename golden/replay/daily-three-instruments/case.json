@@ -1,6 +1,6 @@
 {
   "case": "daily-three-instruments",
-  "note": "Four instruments over one year of recorded sessions, chosen so the output hash covers every branch the slice has: a full run that sizes, a second exchange with a different calendar, a warm-up refusal, and a vendor that returned nothing. A fixture that only exercises the happy path pins the least interesting third of the pipeline.",
+  "note": "Five instruments over one year of recorded sessions, chosen so the output hash covers every branch the slice has: a candidate that sizes, a second exchange whose different calendar is walked before an FX refusal stops it, a warm-up refusal, a vendor that returned nothing, and a series two sessions behind the last completed session, which DR-015's freshness window drops. A fixture that only exercises the happy path pins the least interesting third of the pipeline, and a test that counts the instruments rather than naming their outcomes does not notice when a branch quietly leaves.",
   "as_of": "2026-01-15T21:00:00+00:00",
   "lookback": "1y",
   "instruments": [
@@ -27,6 +27,12 @@
       "ticker": "TEST4",
       "exchange": "NYSE",
       "currency": "USD"
+    },
+    {
+      "id": "TEST.5",
+      "ticker": "TEST5",
+      "exchange": "NYSE",
+      "currency": "USD"
     }
   ],
   "parameters": {
@@ -41,16 +47,17 @@
     "risk.costs_floor_cad": "0.02",
     "risk.costs_floor_usd": "0.02",
     "risk.max_position_value": 1000000,
-    "risk.per_trade_pct": "1.0"
+    "risk.per_trade_pct": "1.0",
+    "data.freshness_window": 2
   },
   "manifest": {
-    "run_id": "run-20260115T210000Z-a611b509",
+    "run_id": "run-20260115T210000Z-fbb97436",
     "started_at": "2026-01-15T21:00:00Z",
     "mode": "replay",
-    "code_hash": "4d34986",
+    "code_hash": "c1c5d90",
     "code_dirty": true,
-    "config_hash": "496e1f5edce4c8f1",
-    "snapshot_id": "snap-20260115T210000Z-a611b509",
+    "config_hash": "411adfa4c77c617e",
+    "snapshot_id": "snap-20260115T210000Z-fbb97436",
     "component_versions": {
       "M18-T0280-v5.0": 1
     },
@@ -59,8 +66,8 @@
     "seed": null,
     "calendar_version": "pandas-market-calendars==5.4.0",
     "platform": "Windows python3.14.0",
-    "output_hash": "4751a227d2a14884",
+    "output_hash": "0a3858a76dbe8d0b",
     "completed_at": "2026-01-15T21:00:00Z"
   },
-  "inputs_digest": "a9fdcba2dd91b0eb"
+  "inputs_digest": "2d60831162a85124"
 }

@@ -150,3 +150,70 @@ admitting it produces a candidate that silently never qualifies.
 5. **The plateau was located on 115 instruments and should be re-checked on the population.** Once
    coverage is complete the same percentiles can be computed over every eligible symbol rather than
    a sample, which is the cheap confirmation that 5M–25M really is flat (ROADMAP X6).
+
+---
+
+## What `min_adtv_20d` actually does, measured 2026-08-18
+
+Added rather than edited above, because this record's reasoning is history and must not be rewritten
+(`AGENTS.md` §3). Nothing here changes a threshold. It names what one of them is **for**, which had
+never been written down and which the next argument about it would otherwise have to guess.
+
+### The screen does not constrain execution at this account size, and it is not close
+
+Measured against the 2026-08-17 scheduled run, using the live registry, the real `size_long`, and the
+stored bars — 1,148 of that run's 1,149 sized candidates:
+
+| | |
+|---|---|
+| Risked per trade | **$100** (`account.equity` $10,000 × `risk.per_trade_pct` 1%) |
+| Position value | median **$1,355**, max **$2,500** |
+| 20-day ADTV of the admitted set | median **$46.8M**, min **$5.1M** |
+| **Position as a share of one session's dollar volume** | median **0.0026%**, p99 **0.0418%**, **worst 0.0462%** |
+
+The conventional execution limit is to stay under **10% of ADV**. The worst case here is **0.046%**,
+which is more than two hundred times below it. Scaling linearly with equity — position size is a
+fixed fraction of it — **the screen would begin to bind at roughly a $2.2M account.**
+
+**So `universe.min_adtv_20d = $5M` is not doing the job its name suggests.** At this size the owner
+is invisible in any admitted instrument, and would be invisible at ten times the threshold's
+strictness. What the screen actually buys is a **quality proxy**: a name with $5M a day of turnover
+has a tighter spread, real price discovery, and is not a shell — all of which matter, none of which
+are "can I get out".
+
+### Why this is worth recording rather than leaving implicit
+
+Three things follow, and each would otherwise be re-argued from scratch:
+
+1. **A tighter threshold is not a safety improvement.** Raising $5M would shrink the universe and
+   buy no executability that is not already there a hundredfold over. Any future argument for
+   raising it has to be made on spread or on data quality, not on liquidity.
+2. **`DR-017`'s lag is justified by reproducibility alone.** That record lags the ADTV window three
+   sessions so a replayed screen returns what the live screen returned. It cannot also be defended
+   as protecting the owner from an unfillable position, because no admitted position is anywhere
+   near unfillable. Stating that here keeps the weaker argument from being borrowed later.
+3. **This is a proxy, and the thing it proxies for is measurable directly.** Spread is the honest
+   quantity, and `EVIDENCE_SUMMARY.md` already records that its LEVEL is not obtainable from daily
+   OHLC. Until a source exists, dollar volume stands in for it — which is a defensible reason for
+   the rule and a different reason from the one its name implies.
+
+### The shape of the rule is off-convention, and that is the open question
+
+Index providers do not screen on absolute dollar volume. They screen on **turnover relative to
+size**:
+
+| | Measure | Threshold |
+|---|---|---|
+| S&P U.S. indices | **Float-Adjusted Liquidity Ratio** — annual dollar value traded ÷ float-adjusted market cap | **≥ 0.75** (reduced from 1.00), plus ≥ 250,000 shares in each of the prior six months |
+| MSCI GIMI | **ATVR** — annualised traded value ÷ free-float market cap | Developed: 20% (3-month) + 90% frequency of trading + 20% (12-month). Emerging: 15% / 80% / 15% |
+
+The reason is that an absolute figure means different things at different sizes: $5M a day is heavy
+turnover for a $200M company and a rounding error for a $200B one, and the second is the less liquid
+of the two *relative to how much of it exists*. A ratio measures that; a dollar figure cannot.
+
+**This is recorded as an open question, not as a defect.** A ratio needs float-adjusted market
+capitalisation, which this project has no point-in-time source for — the same constraint that made
+index membership unusable in the first place (see the head of this record). So the dollar form may
+well be the only implementable one here. What changes is that the choice is now **recorded as a
+constraint rather than assumed to be the standard**, and `DR-017` §5's proposed $3M–$8M sweep is
+known to be testing the level of a measure whose *form* is also unvalidated.

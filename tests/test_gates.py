@@ -1115,10 +1115,19 @@ def test_the_restart_is_reported_rather_than_leaving_a_bare_zero(tmp_path: Path)
     )
     code, out = _run_streak_gate(_streak_tree(tmp_path, log), "2026-08-18T22:00:00")
 
+    # Read from STREAK_RESTARTS, never restated here. This assertion named 2026-08-17 and "PR #9"
+    # as literals until 2026-08-18, when adding the second restart row broke a test that was
+    # measuring nothing about the behaviour it names - the same one-owner rule AGENTS.md 10.5
+    # applies to counts, applied to a date.
+    sys.path.insert(0, str(TOOLS))
+    import track_a_streak
+
+    latest_date, latest_reason = track_a_streak.STREAK_RESTARTS[-1]
+
     assert code == 0, "advisory - a restart must never fail the gate"
     assert "track A streak: 0" in out
-    assert "deliberate restart on 2026-08-17" in out
-    assert "PR #9" in out, "the reason travels with the number (CHARTER 4)"
+    assert f"deliberate restart on {latest_date}" in out
+    assert latest_reason[:40] in out, "the reason travels with the number (CHARTER 4)"
 
 
 def test_the_restart_date_itself_is_never_reported_as_a_break() -> None:
@@ -1272,3 +1281,111 @@ def test_a_reader_naming_a_symbol_that_does_not_exist_is_a_failure() -> None:
 
 def test_a_malformed_reader_is_a_failure() -> None:
     assert "module:symbol" in (_reader_failure(read_by="sizing.size_long") or "")
+
+
+# ------------------------------------------------------- the 19:30 second pass (DR-015 section 3)
+#
+# The second pass writes to the same log as the 18:30 run. `a.run_completes` counts the SCHEDULED
+# attempt and nothing else, so the question these ask is not "does the second pass work" but "can
+# the second pass be mistaken for the run Track A is measuring". It must not be, and the reason it
+# is not must be a property of the words rather than of two numbers happening to differ by more
+# than the tolerance.
+
+
+def _second_pass_line(date_str: str, event: str, at: str = "19:30:01.00") -> str:
+    return f"===== [Day {date_str} {at}] second pass {event} \n"
+
+
+def test_a_second_pass_is_not_parsed_as_a_scheduled_attempt(tmp_path: Path) -> None:
+    """A session whose 18:30 run crashed is a break, and a clean 19:30 pass must not paper over it.
+
+    This is the failure mode that matters. If the second pass counted, every crashed evening would
+    be rescued by its own retry and the counter would report a system that never fails - which is
+    the opposite of what `a.run_completes` exists to measure.
+    """
+    log = (
+        _log_line(_TUE, "starting") + _log_line(_TUE, "finished, exit 0")
+        + _second_pass_line(_WED, "starting") + _second_pass_line(_WED, "finished, exit 0")
+    )
+    code, out = _run_streak_gate(_streak_tree(tmp_path, log), "2026-08-12T22:00:00")
+
+    assert code == 0
+    assert "track A streak: 0" in out
+    assert "most recent break: 2026-08-12 (no qualifying scheduled-window entry)" in out
+
+
+def test_the_same_lines_worded_as_a_daily_run_would_have_counted(tmp_path: Path) -> None:
+    """The positive control, and this pair is the whole point of the two tests.
+
+    Identical timing, identical exit code, only the marker words differ - and at 19:30 the +-30
+    minute window would exclude it anyway. So without this control the test above would pass for
+    the wrong reason and go on passing if someone widened the tolerance. Written at 18:30 to hold
+    the window constant, leaving the WORDS as the only variable.
+    """
+    counted = (
+        _log_line(_TUE, "starting") + _log_line(_TUE, "finished, exit 0")
+        + _log_line(_WED, "starting") + _log_line(_WED, "finished, exit 0")
+    )
+    ignored = (
+        _log_line(_TUE, "starting") + _log_line(_TUE, "finished, exit 0")
+        + _second_pass_line(_WED, "starting", at="18:30:01.00")
+        + _second_pass_line(_WED, "finished, exit 0", at="18:30:01.00")
+    )
+
+    (tmp_path / "a").mkdir()
+    (tmp_path / "b").mkdir()
+    _, counted_out = _run_streak_gate(_streak_tree(tmp_path / "a", counted), "2026-08-12T22:00:00")
+    _, ignored_out = _run_streak_gate(_streak_tree(tmp_path / "b", ignored), "2026-08-12T22:00:00")
+
+    assert "track A streak: 2/20" in counted_out, "the wording the parser knows"
+    # Zero, not one: the streak walks BACKWARD from the most recent evaluable session, so a
+    # Wednesday the parser cannot see breaks it before Tuesday is ever reached.
+    assert "track A streak: 0" in ignored_out, "the same run, wearing the second pass's words"
+    assert "most recent break: 2026-08-12" in ignored_out
+
+
+def test_a_second_pass_never_displaces_the_scheduled_attempt(tmp_path: Path) -> None:
+    """Both passes on the same evening: the streak still counts one session, not two, and it is the
+    18:30 run's exit code that decides it."""
+    log = "".join(
+        _log_line(day, "starting") + _log_line(day, "finished, exit 0")
+        + _second_pass_line(day, "starting") + _second_pass_line(day, "finished, exit 0")
+        for day in (_TUE, _WED)
+    )
+    code, out = _run_streak_gate(_streak_tree(tmp_path, log), "2026-08-12T22:00:00")
+
+    assert code == 0
+    assert "track A streak: 2/20" in out
+    assert "2026-08-11 to 2026-08-12" in out
+
+
+def test_the_wrapper_and_the_parser_agree_on_the_marker_words() -> None:
+    """Read from the two files rather than restated here, so this cannot drift into agreeing with
+    itself. `daily_run.cmd` is the only thing that writes these lines and `track_a_streak.py` the
+    only thing that reads them; a rename on one side is invisible until the counter is wrong.
+    """
+    import re
+
+    wrapper = (TOOLS / "daily_run.cmd").read_text(encoding="utf-8")
+    assert 'set PASS=daily run' in wrapper
+    assert 'set PASS=second pass' in wrapper
+    assert 'if /I "%~1"=="second-pass"' in wrapper, "the argument the scheduled task passes"
+
+    sys.path.insert(0, str(TOOLS))
+    import track_a_streak
+
+    scheduled = "===== [Day 08/11/2026 18:30:01.00] daily run starting "
+    second = "===== [Day 08/11/2026 19:30:01.00] second pass starting "
+    assert track_a_streak._STARTING.match(scheduled), "the run Track A measures"
+    assert not track_a_streak._STARTING.match(second), "and the pass it must never measure"
+    assert re.search(r"second pass", wrapper), "the wrapper writes what the parser refuses"
+
+
+def test_the_second_pass_does_not_pull_the_directory_again() -> None:
+    """`DR-008` c3 attributes a pull to the session date the vendor's own `Last-Modified` reports.
+    A second pull an hour later can only add a duplicate row or a refusal, on the one record whose
+    entire value is being auditable."""
+    wrapper = (TOOLS / "daily_run.cmd").read_text(encoding="utf-8")
+    guard = wrapper.index('if "%SECOND%"=="0"')
+    fetch = wrapper.index("fetch_directory.py")
+    assert guard < fetch, "the directory pull must sit inside the first-pass guard"

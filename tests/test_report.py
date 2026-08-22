@@ -35,7 +35,7 @@ AS_OF = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
 def rendered(tmp_path, registry) -> str:
     sessions = [
         s.session_date
-        for s in cal.sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+        for s in cal.sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
     ]
     fetcher = fixture_fetcher({TEST_US.id: sessions})
     with BarStore(tmp_path / "bars.duckdb") as store, Journal(tmp_path / "journal.duckdb") as journal:

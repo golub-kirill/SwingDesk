@@ -248,7 +248,7 @@ def wired(tmp_path):
 def test_open_positions_are_evaluated_before_candidates(wired, registry) -> None:
     """CHECKLIST_SPEC 4, asserted from the run's own trace rather than from a claim."""
     bars, journal, positions = wired
-    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
     positions.record(_position())
 
     result = run([TEST_US, TEST_CA], FixedClock(AS_OF), registry, bars, journal, mode=RunMode.LIVE_AS_OF,
@@ -276,7 +276,7 @@ def test_a_position_with_no_bars_is_paused_not_skipped(wired, registry) -> None:
 def test_the_run_proposes_and_never_applies(wired, registry) -> None:
     """D1 and D6 together: the stored position is untouched by the run."""
     bars, journal, positions = wired
-    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
     positions.record(_position())
 
     run([TEST_US], FixedClock(AS_OF), registry, bars, journal, mode=RunMode.LIVE_AS_OF,
@@ -291,7 +291,7 @@ def test_the_run_proposes_and_never_applies(wired, registry) -> None:
 def test_a_run_without_a_position_store_still_works(wired, registry) -> None:
     """The store is optional so the walking skeleton keeps running while N2 lands."""
     bars, journal, _ = wired
-    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
     result = run([TEST_US], FixedClock(AS_OF), registry, bars, journal, mode=RunMode.LIVE_AS_OF,
                  fetcher=fixture_fetcher({TEST_US.id: sessions}))
     assert result.steps == ("candidates",)
@@ -328,7 +328,7 @@ def test_output_hash_covers_the_position_half_of_the_run(wired, registry) -> Non
     `a.reproducible` read "reproduces byte-identically" while half the run was outside the bytes.
     """
     bars, journal, positions = wired
-    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
     fetcher = fixture_fetcher({TEST_US.id: sessions})
 
     without = run([TEST_US], FixedClock(AS_OF), registry, bars, journal,
@@ -348,7 +348,7 @@ def test_output_hash_moves_when_the_proposed_stop_moves(tmp_path, registry) -> N
     The action KIND can be identical - both EXIT_NOW - while the stop the owner is being told to
     move from is not. Hashing the kind alone would still leave that invisible.
     """
-    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 14))
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
     fetcher = fixture_fetcher({TEST_US.id: sessions})
 
     def hash_for(stop: Decimal, tag: str) -> str:
@@ -371,7 +371,7 @@ def test_a_broken_stop_proposes_an_exit_before_anything_else(registry) -> None:
     """Same ordering as the backtest engine. The live and simulated paths must agree here."""
     from tests.conftest import make_bars
 
-    bar = make_bars(TEST_US, [date(2026, 1, 14)])[0]
+    bar = make_bars(TEST_US, [date(2026, 1, 15)])[0]
     low_bar = bar.model_copy(update={"low": Decimal(90), "open": Decimal(99)})
     action = manage.evaluate(
         _position(), low_bar, ExitPolicy(Decimal(2), 20), AS_OF, bars_held=3, atr=Decimal(2)
@@ -383,7 +383,7 @@ def test_a_stop_is_only_ever_proposed_upward(registry) -> None:
     """A stop that can move down is not a stop."""
     from tests.conftest import make_bars
 
-    bar = make_bars(TEST_US, [date(2026, 1, 14)])[0]
+    bar = make_bars(TEST_US, [date(2026, 1, 15)])[0]
     # Close far above entry: the ATR-derived stop is well above the current one.
     high = bar.model_copy(update={"close": Decimal(140), "high": Decimal(141),
                                   "low": Decimal(139), "open": Decimal(139)})
@@ -599,6 +599,6 @@ def test_open_risk_is_recomputed_across_the_book_not_decremented(store) -> None:
 def test_a_closed_position_contributes_no_open_risk(store) -> None:
     store.record(_position())
     assert store.open_risk_as_of(AS_OF) == Decimal(200)
-    store.record(_position(version=2, closed_on=date(2026, 1, 14),
+    store.record(_position(version=2, closed_on=date(2026, 1, 15),
                            knowledge_time=datetime(2026, 1, 14, tzinfo=UTC)))
     assert store.open_risk_as_of(AS_OF) == Decimal(0)

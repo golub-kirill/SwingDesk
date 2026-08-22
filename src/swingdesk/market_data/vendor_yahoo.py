@@ -15,7 +15,14 @@ from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from typing import SupportsFloat
 
-from swingdesk.contracts.market import Bar, BarSeries, Interval, Series
+from swingdesk.contracts.market import (
+    Bar,
+    BarSeries,
+    CorporateAction,
+    CorporateActionKind,
+    Interval,
+    Series,
+)
 from swingdesk.contracts.reference import Instrument
 
 #: What Yahoo will serve, measured 2026-08-01 (ADR-0001). Requesting more silently returns less,
@@ -115,3 +122,65 @@ def _decimal(value: SupportsFloat) -> Decimal:
     noise into a Decimal that is then compared for revisions.
     """
     return Decimal(repr(float(value))).quantize(Decimal("0.000001"))
+
+
+def fetch_actions(
+    instrument: Instrument,
+    knowledge_time: datetime,
+    period: str = "max",
+) -> tuple[CorporateAction, ...]:
+    """Splits and cash dividends for one instrument, oldest first.
+
+    The precondition `DR-016` names. `POINT_IN_TIME_SPEC` §4 calls actions the third series and
+    nothing implemented it, so the corporate-actions gate that `DATA_QUALITY_SPEC` §4 specifies in
+    full had no input to run on - the same "specified, wired to nothing" shape as the staleness gate
+    one door over.
+
+    Separate from `fetch` rather than folded into it, and this is a boundary rather than a
+    preference: `fetch` returns a `BarSeries` and an action is not a bar. yfinance also serves these
+    from a different endpoint, so a caller that wants bars should not pay for actions it will not
+    read.
+
+    **A zero or negative ratio is dropped, not stored.** The same rule the bar path uses for a
+    malformed row: this is a scrape of a consumer site and its output is untrusted input
+    (SECURITY 6). A split ratio of 0 would make `price_factor` divide by zero at exactly the moment
+    someone is comparing a held stop against a new price level.
+    """
+    import yfinance as yf
+
+    try:
+        ticker = yf.Ticker(instrument.vendor_symbol)
+        splits = ticker.get_splits(period=period)
+        dividends = ticker.get_dividends(period=period)
+    except Exception as error:
+        raise VendorUnavailable(f"{instrument.vendor_symbol} actions: {error}") from error
+
+    actions: list[CorporateAction] = []
+    for kind, series in (
+        (CorporateActionKind.SPLIT, splits),
+        (CorporateActionKind.DIVIDEND, dividends),
+    ):
+        if series is None:
+            continue
+        for stamp, raw in series.items():
+            local = stamp.to_pydatetime()
+            try:
+                value = _decimal(raw)
+            except (ValueError, InvalidOperation, TypeError):
+                continue
+            if value <= 0:
+                continue
+            actions.append(
+                CorporateAction(
+                    instrument_id=instrument.id,
+                    kind=kind,
+                    # Exchange-local, computed here while the timestamp still carries the
+                    # exchange's own timezone - the same rule and the same reason as a bar's
+                    # session_date (CALENDAR_SPEC 6).
+                    effective_date=local.date(),
+                    value=value,
+                    knowledge_time=knowledge_time,
+                )
+            )
+
+    return tuple(sorted(actions, key=lambda a: (a.effective_date, a.kind.value)))

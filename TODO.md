@@ -27,11 +27,17 @@ retyping it.
 
 ## 1. Blocking now
 
-**Nothing blocks a merge.** All 30 gates are green on `master`, there are no open pull requests, and
-the 2026-08-11 freeze lifted on 2026-08-17.
+**`master` went RED on its own, 2026-08-22, and it is fixed in this branch.** Four tests in
+`test_cli.py` seeded a proposal dated 2026-08-16 and let `pending` / `respond` read the wall clock;
+`management.proposal_expiry_days` is 3 sessions, so on 2026-08-20 the window closed and gate 8 began
+failing on an untouched tree. Fixed by pinning `--as-of` the way the file's own expiry tests already
+do, and the trap is now in `AGENTS.md` §12. The 2026-08-11 freeze lifted on 2026-08-17.
 
-**What blocks the next thing worth doing** — one item, and it is not on any list below because it
-was measured today rather than planned:
+**What blocks the next thing worth doing.** The two items that stood here on 2026-08-18 are both
+closed — the R denominator by re-measurement, the staleness gate by `DR-015` being built — and what
+follows them is open work rather than a blocker. **Corporate actions is the one to read**: it is the
+last of the three "specified, implemented, wired to nothing" findings still open, and `DR-015` §4
+hands it over by name.
 
 - [x] **`[v]` The R denominator was asserted by nothing — CLOSED 2026-08-18 by re-measurement, not
       by work.** On the morning of 08-17, `planned_risk` could be replaced with the constant
@@ -49,25 +55,138 @@ was measured today rather than planned:
       **A conclusion that rested on this and no longer stands:** "a wrong R could be why the base
       strategy is negative" — R was never wrong, it was merely unasserted, so there is no prior
       result to re-derive. **The entry-filter family stays closed.**
-- [ ] **`[v]` The staleness gate is specified, implemented, and not wired — and "delete or wire" is
-      the wrong framing.** Traced 2026-08-18 after `calendar.sessions_behind` came back as the only
-      mutant surviving the suite.
-      **What exists.** `DATA_QUALITY_SPEC.md` §2.1 specifies the whole rule: `sessions_behind > 0`
-      means stale → refetch once → still stale is a `DATA` skip → `data.freshness_window` sessions
-      behind drops the instrument from the run. `calendar.sessions_behind()` implements the
-      measurement correctly and is exported.
-      **Why nothing calls it, and why deleting it would be wrong.** Both governing parameters are
-      `unset` — `data.freshness_window` and `data.staleness_action_threshold`. Wiring it today makes
-      every instrument refuse; deleting it throws away a correct implementation of a ratified rule.
-      It is the `DR-012` situation one gate over: the code is right, the decision is missing.
-      **The gap this leaves is real and it is not theoretical.** `pipeline.py`'s held-position fetch
-      is **fail-open** by design (`FAIL_CLOSED_POLICY` row 1): a `VendorUnavailable` falls through to
-      the stored snapshot, and `managed.stale` is set **only when there are no bars at all**. So a
-      position whose fetch fails is managed against stored bars of *any* age with nothing said. PR #9
-      fixed one cause of that fallback — the dual-class vendor-ticker lookup that made `BRK.B` fetch
-      fail silently — but the *consequence* is still unguarded: the next cause will look identical.
-      **Needs an owner decision, not code:** how many sessions behind is too stale to manage a
-      position on. That is `data.freshness_window`, and it is exactly the shape `DR-012` had.
+- [x] **`[v]` The staleness gate is specified, implemented, and not wired — BUILT 2026-08-18
+      (`DR-015`).** `calendar.sessions_behind` has a caller: `market_data/freshness.py`, read at
+      both decision points in `pipeline.py`. The retry wrapper is `market_data/retry.py`, injected
+      in `cli.py` so the pipeline never sleeps, and the 19:30 second pass is an argument to
+      `tools/daily_run.cmd`. `data.freshness_window`'s `read_by` names its consumer, so the
+      decided-not-wired count fell **27 → 26**.
+      **The gap was not theoretical, and the number is the finding.** Measured against the
+      2026-08-17 scheduled run before any of it existed: of 1152 evaluated candidates, **67 (5.8%)
+      ended the run one session behind** — last bar Friday 08-14, last completed session Monday
+      08-17. Every one was sized and left on `Watch` against a stale close, and every one reported
+      `completeness clean`. That is correct and is the point: §2.2 looks for a hole *inside* the
+      stored window, and a series that simply stops early has no hole. Nothing in the report told
+      those 67 apart from the other 1085.
+      **The held-position half is the one `TODO` §1 named** — fetching is fail-open by design and
+      `managed.stale` was set only when there were **no** bars at all, so a position whose fetch
+      failed was managed against stored bars of any age, silently. Fail-open on the FETCH is
+      unchanged; deciding on what it fell back to is now fail-closed, and the position PAUSEs.
+      **Track A restarted 2026-08-18** — two frozen files, and the change moves decision output.
+
+- [ ] **`[v]` `data.staleness_action_threshold` is still `unset` and still read by nothing.**
+      `DR-015` set `data.freshness_window` and did not touch this one. They are not duplicates:
+      the window is **per instrument** — this candidate is too stale to size — while Appendix T's
+      *"при stale data или mismatch новые сделки блокируются"* is a **system-wide** block on new
+      entries. Today a run where every candidate is stale refuses each one individually and says
+      nothing about the run as a whole. Needs a ruling, or an explicit decision that the
+      per-instrument gate discharges it and the parameter should be retired (`AGENTS.md` §11).
+
+- [x] **`[v]` Unclosed bars — GUARD BUILT 2026-08-18, deletion ruled by the owner and pending one
+      command.** Found while measuring for `DR-016`, by accident.
+      **The scope was three times what I first reported, and the first number came from a method
+      that structurally undercounts.** I found 98 by comparing consecutive versions, which can only
+      see a bad bar that was later corrected. Re-scoped against the calendar directly — every stored
+      bar whose `knowledge_time` predates its own session's close — the answer is **296**, all from
+      one manual fetch on 2026-08-03 at 13:25 local, 2.5 hours before the 16:00 ET close. Stored
+      closes were out by up to **4.3%**. The same fetch also wrote ~350 bars per session for
+      07-27→07-31; those sessions had closed, so those bars are correct and are untouched.
+      **`CALENDAR_SPEC.md` §5 forbids the unclosed current bar and `last_completed_session` enforced
+      it on every READ. Nothing enforced it on WRITE.** Now `BarStore.write` does: a bar captured
+      before its session's close is refused before the revision comparison, so a partial print can
+      neither enter the store nor overwrite a good bar already in it. Counted on `WriteResult`
+      rather than dropped silently. A session the calendar does not know is allowed through —
+      `unavailable` is not `fail`, applied to a write. 4 tests, both mutants killed.
+      **OWNER RULING, 2026-08-18: delete the rows, do not supersede them.** *"We have no reason to
+      replay broken stuff step by step."* This is a deliberate exception to `CHANGE_MANAGEMENT.md`
+      §3 (rollback is supersede, never revert): a replay pinned to a `knowledge_time` before the
+      deletion will not reproduce, and that is the accepted cost, recorded rather than discovered.
+      **DONE 2026-08-18 — the owner ran it.** 296 rows deleted, store 1,920,316 → **1,920,020**,
+      `unclosed bars still present: 0`. Verified independently afterwards: the **1,768** good bars
+      the same 13:25 fetch wrote for sessions 07-27…07-31 are untouched, 3,412 instruments still
+      hold a valid 2026-08-03 bar, and PIT integrity is clean. Backup kept beside the store.
+      **The gap heals itself.** `pipeline.run` fetches a full year per universe member every evening
+      and `write` inserts what is missing, so a member's 2026-08-03 bar returns on the next
+      scheduled run — correct this time. 96 of the 296 are current members; the other 200 are not
+      evaluated at all until `refresh_universe.py` reaches them, which refetches them anyway.
+
+- [ ] **`[v]` ADTV admission reads provisional volume — DR-017 DRAFTED 2026-08-18, needs a ruling.**
+      `universe.min_adtv_20d` admits on 20-day average dollar volume, and the vendor's recent volume
+      is not final: of 7,131 settled bars served twice, **7,129 had volume rewritten** (p50 1.1%,
+      p90 32%, p99 83%, max 164×), against a close that moves p90 0.02%. **6 of 1,172 instruments
+      cross the $5M line between first sight and settlement, all six the same direction.**
+      **CORRECTION to my own number, and it is the substance of DR-017 §2.** I first reported the
+      settlement curve as *"a cliff at 8 calendar days"*. Wrong unit — `AGENTS.md` §3 makes sessions
+      the unit of every duration here, and eight calendar days is a different quantity every week.
+      Re-measured in sessions over the daily-run era (5,980 revisions): **0 sessions 16.9% · 1
+      session 80.1% · 2 sessions 3.0% · 3+ sessions ZERO.** Much tighter than the calendar figure
+      implied, and it makes the lag **3 sessions rather than ~6**.
+      **The methodological trap, worth carrying beyond this item:** across the whole store the tail
+      runs to 5 sessions, and every one of those comes from the single 2026-08-09 capture that
+      re-observed bootstrap bars. **Age-at-re-fetch is not settlement age** — if nothing looks at a
+      bar for five sessions, a revision made at one session old is recorded as five. Only a
+      gap-free observation regime separates them, so the measurement is restricted to one.
+      **Proposed:** `universe.adtv_lag_sessions = 3` — three, not two, because two is the oldest age
+      at which a revision was *seen*, and three is the first with a measured zero.
+      **Council-reviewed, direction chosen 4–1 on reproducibility rather than bias:** a lagged window
+      makes admission idempotent, so a replayed screen returns what the live screen returned. One
+      universe and one lag for live admission AND studies.
+      **MEASURED 2026-08-18, and it reframes what the screen is FOR** (`DR-003` addendum). Over the
+      2026-08-17 run's 1,148 sized candidates: risked $100/trade, position value median **$1,355**
+      and max **$2,500**, against an admitted set whose 20-day ADTV is median **$46.8M**. Position
+      as a share of one session's dollar volume: median **0.0026%**, worst **0.0462%** — against a
+      conventional 10%-of-ADV execution limit, that is **200× inside it**, and the screen would only
+      begin to bind at roughly a **$2.2M** account.
+      So `$5M` is **not a liquidity constraint at this size**; it is a **quality proxy** — tighter
+      spread, real price discovery, not a shell. Two consequences: raising it buys no executability
+      and would have to be argued on spread or data quality instead, and **`DR-017`'s lag is
+      justified by reproducibility ALONE** — it cannot also be defended as protecting the owner from
+      an unfillable position, and that weaker argument is now blocked from being borrowed later.
+      **The SHAPE of the rule is off-convention too.** Index providers screen on turnover relative
+      to size, not absolute dollars: S&P's **FALR** (annual dollar traded ÷ float-adjusted market
+      cap, ≥ 0.75) and MSCI's **ATVR** (annualised traded value ÷ free-float cap, 20% developed).
+      $5M/day is heavy turnover for a $200M company and a rounding error for a $200B one. So the
+      proposed $3M–$8M sweep tests the LEVEL of a measure whose FORM is also unvalidated — recorded
+      as a constraint rather than a defect, because a ratio needs point-in-time float-adjusted market
+      cap and this project has no free source for it, the same wall that made index membership
+      unusable.
+      **Still open and NOT decided by DR-017:** is backfilled volume executable? The fill-in is
+      overwhelmingly upward; if it is late off-exchange prints then settled ADTV overstates the very
+      liquidity $5M proxies. And `universe.min_adtv_20d = $5M` is itself `assumed` and never swept —
+      a $3M–$8M sweep would test it and settle whether the six crossers are noise, in one pass.
+
+- [ ] **`[v]` Corporate actions — DR-016 DRAFTED and its PRECONDITION IS NOW BUILT (2026-08-18).**
+      **The actions series exists.** `POINT_IN_TIME_SPEC` §4 named three series and the tree had
+      two; `DR-016` named the third as its own blocker. Built: `CorporateAction` on the contract, a
+      bitemporal `corporate_actions` table beside the bars with `write_actions` / `actions_as_of`,
+      and `vendor_yahoo.fetch_actions` reading the vendor's splits and dividends.
+      **Not a `Series` member, deliberately** — a split has no open/high/low/close, so putting it in
+      that enum would mean inventing five empty fields and the first component to read one would
+      get numbers back. It is its own record with its own table, which is what "with their own
+      `knowledge_time`" in the spec's own row requires.
+      **Wired into no decision.** The gate needs `data.revision_epsilon`, which is `unset` pending
+      the ruling below, so storing an action changes nothing the run decides — which is exactly why
+      it was safe to land before the ruling. 11 tests, 5 mutants killed including the look-ahead one
+      (an action learned later must be invisible to an earlier read).
+      **What still needs the owner:**
+      `data.revision_epsilon = 0.001`, scoped to price only; volume taken out of §4's
+      raw-immutability rule and given no parameter, because the course names no such concept and the
+      measured distribution contains no threshold. **Its precondition is `Series.ACTIONS`**, which
+      `POINT_IN_TIME_SPEC.md` §4 names and `contracts/market.py` does not implement — the vendor does
+      supply splits and dividends (`yfinance` 1.5.2), so the record is buildable once the series
+      exists. **Zero positions exist today, so the catastrophic case has no current exposure** — the
+      guard should land before the first real position, not after.
+      Original statement of the risk, still accurate: `DR-015` §4 hands it over
+      explicitly. Both decision paths read `Series.RAW`; raw bars are unadjusted, so a split does
+      not restate history — **the next bars arrive at a different price level**. A 2:1 split over a
+      weekend leaves a stored stop of 290 compared against Monday raw prices near 145: an instant
+      stop-out that never happened, on a position still held.
+      `DATA_QUALITY_SPEC.md` §4 specifies the gate in full, including the `DATA_ERR`/`Critical`
+      case for a changed raw bar. **Nothing is implemented** — no mention of splits or dividends
+      anywhere in `src/` — and `data.revision_epsilon` is `unset`. Needs its own record, same shape
+      as `DR-015`. **Stale data makes the system decide on old information, which is now refused.
+      An unhandled split makes it decide on *wrong* information while every freshness check
+      passes.**
 
 ### Closed — kept for the reasoning, not as work
 
@@ -204,6 +323,21 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       don't-rubber-stamp warning stands for whenever it *is* ratified.
 - [ ] **`[c]` DR-009** · **`[c]` DR-001 / DR-002 / DR-003 / DR-005** — proposed since 08-02, used as
       working fact throughout.
+
+- [ ] **`[v]` DR-015 is BUILT (2026-08-18), and left two things for the owner.**
+      **a. The retry's per-run ceiling is an implementation reading, not a ruling.** §3 states two
+      figures that do not agree: "three attempts, 30 seconds apart" is two sleeps and 60 seconds,
+      "ninety seconds" is three. The attempt count is stated twice so it governs per instrument;
+      ninety seconds is implemented as a ceiling on the **run**, spent across it. **Why a ceiling at
+      all:** the wrapper is called per instrument, the universe was 1152 members on 2026-08-17, and
+      unbounded that is over nineteen hours of sleeping in a vendor outage — on a job that must
+      finish before `DR-015`'s own 19:30 pass. §7 of the record carries the argument.
+      **The question: 90 seconds per run, or the full three attempts for every instrument whatever
+      the total?** Nothing else is blocked on the answer.
+      **b. Register the 19:30 task.** One `schtasks` line, on the machine that runs the schedule — a
+      repository cannot create it. `docs/runbooks/README.md` §1a has the command and the check.
+      **Until it exists the retry inside the run is live and the second pass is not**; the two halves
+      of §3 are independent.
 
 **ADRs — all four unratified.**
 

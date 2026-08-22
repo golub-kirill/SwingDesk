@@ -6,9 +6,11 @@ status:          accepted — ruled by the owner 2026-08-18
 parameters:      data.freshness_window
 components:      none — calendar.sessions_behind already implements the measurement
 supersedes:      nothing. Supplies the number DATA_QUALITY_SPEC section 2.1 has always required
-implementation:  none
-still_to_build:  the retry wrapper around the fetcher, the freshness check at the decision read,
-                 and the 19:30 second pass. This record is the rule they were waiting on.
+implemented_by:  src/swingdesk/market_data/freshness.py :: def assess
+also_built:      market_data/retry.py (the wrapper), application/pipeline.py (both decision reads),
+                 presentation/cli.py (the injection), tools/daily_run.cmd (the 19:30 pass)
+built:           2026-08-18. Section 7 records what landed and the one number it had to read
+                 between the lines.
 ```
 
 ## 1. Why this record exists
@@ -126,3 +128,64 @@ A measured distribution of how often fetches fail and how many sessions behind t
 gets. `data/daily_run.log` has recorded every scheduled run since 2026-08-09 and nobody has counted
 this. If failures are almost always fixed by the first retry, the second and third are ceremony; if
 they routinely survive to 19:30, the window is the wrong instrument and the vendor is the problem.
+
+## 7. Built, 2026-08-18
+
+Recorded here rather than in a session file because §6 asks a question this build partly answered,
+and because one number had to be read between two the record states.
+
+**What landed.** The retry wrapper (`market_data/retry.py`), injected in `cli.py` so `pipeline.py`
+never sleeps; the freshness verdict (`market_data/freshness.py`), read at both decision points in
+`pipeline.py`; and the second pass, as an argument to the same `daily_run.cmd` rather than a second
+copy of it. `data.freshness_window`'s `read_by` now names its consumer, so the parameter has left
+the decided-but-not-wired count (27 → 26).
+
+**The refetch in §2.1 is discharged by the pipeline's own shape, not skipped.** "Stale → refetch
+once" describes a store-first system. This pipeline fetches every candidate and every held position
+*before* anything reads the store, and with the wrapper in place that fetch is up to three attempts.
+A further vendor call at the freshness check would be a second request for the same bars
+milliseconds after the first — 67 of them on the 2026-08-17 universe — answering nothing the first
+did not.
+
+**The one number this record does not state, and the implementation needed.** §3 gives two figures
+that do not agree: *"three attempts, 30 seconds apart"* is two sleeps and 60 seconds; *"ninety
+seconds"* is three. The attempt count is stated twice, so it governs per instrument. Ninety seconds
+is then read as what it literally says — a ceiling on a **run** — and implemented as a sleep budget
+spent across the whole run.
+
+**That ceiling is not decoration.** §3 costs the retry as *"ninety seconds inside a run that takes
+about five minutes"* and concludes *"it costs nothing"*, which is the arithmetic for one instrument
+failing once. The wrapper is called per instrument and the scheduled universe was **1152 members**
+on 2026-08-17, so an unbounded retry through a vendor outage is over nineteen hours of sleeping on
+a job that must finish before this record's own 19:30 pass. The budget is what makes §3's stated
+cost true. **It is an implementation reading of this record, not a second ruling** — if the owner
+wants a different ceiling, or wants the full three attempts guaranteed for every instrument
+whatever the total cost, that is a change to make here.
+
+**§6's question, partly answered.** The distribution it asks for was measured before building, from
+the log it names: ten scheduled runs (2026-08-09 → 08-17), roughly 11,200 instrument-fetches,
+**zero** `VendorUnavailable` — no "no data returned", no "no usable rows after validation". So on
+the evidence so far the retry is insurance against a failure that has not yet occurred here, which
+is precisely why its worst case is bounded rather than extrapolated from the observed one. The half
+§6 still wants — how many sessions behind the store actually gets — was also measured, and it is
+not zero: see §8.
+
+## 8. What the gate found on the day it was wired
+
+Measured against the 2026-08-17 scheduled run, before any of this existed:
+
+| | |
+|---|---|
+| Candidates evaluated | 1152 |
+| Level with the last completed session | 1085 |
+| **One session behind** | **67 (5.8%)** |
+| At or past the window | 0 |
+
+Every one of those 67 was **sized and left on `Watch`** against a close from the previous session,
+and every one reported `completeness clean` — correctly, because §2.2 looks for a hole *inside* the
+stored window and a series that simply stops early has no hole. Staleness and completeness are
+different questions, which is why `DATA_QUALITY_SPEC` §2 asks both, and why nothing in the report
+distinguished those 67 from the other 1085.
+
+They now leave with a `DATA` skip. **That is a behaviour change on the live path**, it moves
+`output_hash`, and it is the change this record was ruled to make.

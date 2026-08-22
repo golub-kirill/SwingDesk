@@ -49,6 +49,15 @@ def registry() -> ParameterRegistry:
         # test_pipeline covers the unset case explicitly.
         "exit.atr_stop_multiple": "2.0",
         "exit.max_holding_period": 20,
+        # How stale is too stale (DR-015). Set here for the same reason the exit pair is: the slice
+        # needs the working path, and `test_pipeline` covers the unset case explicitly.
+        #
+        # Note what this made visible the moment it was wired. Every fixture in the suite ran a
+        # series ending the day BEFORE its as-of, which the gate correctly reads as one session
+        # behind - the Monday-against-Friday case DR-015 §2.1 is written about. The fixtures now
+        # run through the as-of session, which is what the scheduled 18:30 run actually sees: the
+        # session that closed at 16:00 has a bar by then.
+        "data.freshness_window": 2,
     }
     return ParameterRegistry(
         {

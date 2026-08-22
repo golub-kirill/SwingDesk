@@ -17,6 +17,7 @@ import pytest
 from swingdesk.application.pipeline import RunResult
 from swingdesk.contracts.position import ActionKind as _ActionKind
 from swingdesk.contracts.run import RunManifest
+from swingdesk.market_data.retry import RetryingFetcher
 from swingdesk.presentation import cli, notify
 
 
@@ -47,9 +48,10 @@ def _fake_run(captured: dict):
     from datetime import UTC, datetime
 
     def run(instruments, clock, registry, store, journal, *, mode, lookback,
-            universe=None, positions=None, exits=None):
+            universe=None, positions=None, exits=None, fetcher=None):
         captured["positions"] = positions
         captured["instruments"] = instruments
+        captured["fetcher"] = fetcher
         # Kept so a test can prove they are SHUT by the time the notice is raised.
         captured["bar_store"] = store
         captured["position_store"] = positions
@@ -79,6 +81,22 @@ def test_scan_opens_a_position_store_and_passes_it_to_run(tmp_path: Path, monkey
     assert code == 0
     assert captured["positions"] is not None, "run() must not be called with positions=None"
     assert (tmp_path / "positions.duckdb").exists()
+
+
+def test_scan_wraps_the_fetcher_in_the_retry_dr_015_ruled(tmp_path: Path, monkeypatch) -> None:
+    """`DR-015` §3 puts the retry around the injected fetcher, and `run()` falls back to the bare
+    `vendor_yahoo.fetch` when nothing is passed - so a retry that exists and is never injected is
+    the exact "decided, but wired to nothing" shape `AGENTS.md` §7 was written for. This asserts
+    the wiring, which is the half that cannot be proven by testing the wrapper.
+    """
+    captured: dict = {}
+    monkeypatch.setattr(cli, "run", _fake_run(captured))
+
+    assert cli.main(["scan", "AAPL", "--data", str(tmp_path)]) == 0
+
+    fetcher = captured["fetcher"]
+    assert isinstance(fetcher, RetryingFetcher), "the scheduled run must not get the bare fetcher"
+    assert fetcher.slept == 0.0, "a run that fetched nothing cannot have waited"
 
 
 def test_scan_still_works_with_an_empty_position_store(tmp_path: Path, monkeypatch) -> None:
@@ -390,6 +408,21 @@ def test_the_notice_is_raised_after_every_store_is_closed(tmp_path, monkeypatch)
 # ------------------------------------- pending / respond: the loop closes (US-010, TODO 6b 4+5)
 
 
+#: An instant INSIDE `DR-013`'s expiry window for the proposal `_seeded` creates.
+#:
+#: **Why every test touching a live proposal has to pin the clock.** `_seeded` dates its proposal
+#: 2026-08-16 and `management.proposal_expiry_days` is 3 SESSIONS, so a test that lets `pending` or
+#: `respond` read the wall clock passes only while real time is still inside that window. Four of
+#: them did. They passed when written on 2026-08-17, and on 2026-08-20 the window closed and
+#: `master` went red with nobody having touched it - the failure surfacing in tests about approval,
+#: rejection and double-answering, none of which is about expiry at all.
+#:
+#: The tests that are ABOUT expiry were never affected: they pin `--as-of` on both sides of the
+#: boundary, which is what this constant makes the default habit rather than a detail those tests
+#: happened to get right.
+LIVE = "2026-08-18T22:00:00"
+
+
 def _seeded(tmp_path, **action_kw):
     """A position with one unanswered MOVE_STOP proposal on it."""
     from datetime import UTC, date, datetime
@@ -428,7 +461,7 @@ def _history(tmp_path):
 def test_pending_states_what_is_needed_to_answer(tmp_path, capsys) -> None:
     """US-010: the proposal states the observation, the rule that produced it, and the bounded set
     of choices - which is exactly two."""
-    assert cli.main(["pending", "--data", str(_seeded(tmp_path))]) == 0
+    assert cli.main(["pending", "--data", str(_seeded(tmp_path)), "--as-of", LIVE]) == 0
 
     out = capsys.readouterr().out
     assert "POS-1" in out and "#1" in out and "MOVE_STOP" in out
@@ -448,7 +481,7 @@ def test_an_approval_is_recorded_and_applied(tmp_path, capsys) -> None:
     root = _seeded(tmp_path)
 
     code = cli.main(["respond", "POS-1", "1", "--approve", "--reason", "trend intact",
-                     "--data", str(root)])
+                     "--data", str(root), "--as-of", LIVE])
 
     assert code == 0
     versions = _history(root)
@@ -462,7 +495,7 @@ def test_a_rejection_is_recorded_and_changes_nothing(tmp_path, capsys) -> None:
     root = _seeded(tmp_path)
 
     code = cli.main(["respond", "POS-1", "1", "--reject", "--reason", "too early",
-                     "--data", str(root)])
+                     "--data", str(root), "--as-of", LIVE])
 
     assert code == 0
     assert [p.version for p in _history(root)] == [1], "a rejection applies nothing"
@@ -501,10 +534,12 @@ def test_approve_and_reject_are_mutually_exclusive(tmp_path, capsys) -> None:
 
 def test_answering_twice_is_refused_at_the_cli(tmp_path, capsys) -> None:
     root = _seeded(tmp_path)
-    cli.main(["respond", "POS-1", "1", "--approve", "--reason", "yes", "--data", str(root)])
+    cli.main(["respond", "POS-1", "1", "--approve", "--reason", "yes", "--data", str(root),
+              "--as-of", LIVE])
     capsys.readouterr()
 
-    code = cli.main(["respond", "POS-1", "1", "--reject", "--reason", "no", "--data", str(root)])
+    code = cli.main(["respond", "POS-1", "1", "--reject", "--reason", "no", "--data", str(root),
+                     "--as-of", LIVE])
 
     assert code == 2
     assert "already answered" in capsys.readouterr().err

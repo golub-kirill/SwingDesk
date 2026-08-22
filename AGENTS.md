@@ -426,10 +426,26 @@ the words are as fragile as the numerals; the fix is to stop counting in prose a
   `C:\PycharmProjects\SwingDesk\src`, not the worktree's, unless `PYTHONPATH` says otherwise. The
   documentation gates read files by path and are unaffected; the code gates are not. Always run gates
   with `PYTHONPATH=$PWD/src`.
+  **The symptom is a PASS, which is why knowing the rule is not enough to be safe from it.** Caught
+  again 2026-08-18, by a session that had this paragraph in context: `pytest tests/ -q` from the
+  worktree came back fully green against a change that had broken **37 assertions**, because it was
+  testing `master`. A suite that goes green from a worktree without `PYTHONPATH` is evidence about
+  the main checkout and says nothing whatever about your change. `ruff` and `mypy` take file paths
+  and are honest; `pytest` and `import-linter` import the package and are not.
 - **`data/` is not in your worktree either, and that is the same trap wearing a different hat.** The
   DuckDB stores and the scheduler log live only in the main checkout. Gates 23 and 24 read them and
   report `UNAVAILABLE` rather than passing blind; point them at the real stores with
   `SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data` when you need the runtime figures.
+- **A test that pins a date but not the clock is a time bomb, and it goes off on a day nobody is
+  looking.** Found 2026-08-22: four tests in `test_cli.py` seeded a proposal dated 2026-08-16 and
+  then called `pending` and `respond` WITHOUT `--as-of`, so they read the wall clock.
+  `management.proposal_expiry_days` is 3 sessions, so they passed when written on 2026-08-17 and
+  **on 2026-08-20 the window closed and `master` went red with nobody having touched it.** The
+  failures surfaced in tests about approval, rejection and double-answering - none of which is about
+  expiry - so the symptom pointed nowhere near the cause.
+  **The tests that were ABOUT expiry never broke**, because those pin `--as-of` on both sides of the
+  boundary. The rule that separates them: if a fixture carries a hard-coded date and the code under
+  test reads `now`, the test is asserting something about today's date. **Pin both, or neither.**
 - **Hand-maintained counts drift, every time.** Six have now been caught: the study verdicts
   (`5 studies, 3 refuted` in five documents), the gate total, the specification coverage summary
   (31/22 against a table saying 30/24), a component-activation claim in

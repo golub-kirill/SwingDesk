@@ -55,6 +55,62 @@ python tools/refresh_universe.py --budget 500
 The report prints the coverage fraction on every run precisely so this is visible before it is
 mistaken for a finding.
 
+### 1a. The staleness gate, and the 19:30 second pass — `DR-015`
+
+**What refuses, and why it is not the same as a fetch failure.** A series behind the calendar's last
+completed session is stale. Any staleness at all (`sessions_behind > 0`) means the run has already
+refetched — the fetch happens before anything reads the store, and since `DR-015` the fetcher retries
+a vendor failure **three times, 30 seconds apart**. If the series is still behind after that:
+
+| How far behind | Candidate | Held position |
+|---|---|---|
+| 0 sessions | proceeds | managed normally |
+| 1 session | `DATA` skip | `PAUSE`, marked stale |
+| ≥ `data.freshness_window` (2) | `DATA` skip, **dropped** — the run stops trying | `PAUSE`, marked stale |
+
+**A held position is never dropped.** `CHECKLIST_SPEC.md` §4 exists so a data failure cannot lock you
+out of managing risk on capital already committed; a position past the window pauses like any other,
+and the reason says which case it was.
+
+**Reading it in the log.** A run that had to retry prints one line, and only when something failed:
+
+```
+vendor retries  4 retry/retries, 1 instrument(s) failed every attempt, 60s slept of a 90s budget
+```
+
+`BUDGET SPENT` on the end of that line means the run stopped paying for retries partway through and
+later instruments got one attempt each. That is a vendor outage, not a per-instrument fault — go to
+step 2 above and scope it.
+
+**The second pass.** `DR-015` §3 gives a failed evening one more attempt at 19:30 rather than
+blocking the 18:30 run for an hour. It is the same wrapper with an argument:
+
+```bash
+tools\daily_run.cmd second-pass
+```
+
+It is idempotent by construction — the stores are append-only and bitemporal, so a pass that finds
+nothing new writes nothing new. It writes `second pass starting` / `second pass finished` to the same
+log, deliberately different words from the 18:30 run's, so `tools/track_a_streak.py` can never count
+it as the scheduled attempt. **Track A measures the 18:30 run and only that**; a clean second pass
+does not rescue a broken evening, and it is not supposed to.
+
+**Registering it is the owner's step**, once, on the machine that runs the schedule — the repository
+cannot create a scheduled task for you:
+
+```bash
+schtasks /Create /TN "SwingDesk second pass" /TR "\"C:\PycharmProjects\SwingDesk\tools\daily_run.cmd\" second-pass" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 19:30
+```
+
+Verify it the same way as the first:
+
+```bash
+schtasks /Query /TN "SwingDesk second pass" /FO LIST
+```
+
+**Until that task exists, the retry inside the run is live and the second pass is not.** The two
+halves of `DR-015` §3 are independent, and the first one needs nothing registered.
+
 ## 2. Broker or platform failure
 
 ```verbatim
