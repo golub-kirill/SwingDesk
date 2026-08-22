@@ -165,3 +165,125 @@ was never able to perform, and conflating those two produces a system that canno
 - [ ] **`risk.max_sector_risk` and `risk.correlation_threshold` are set and unevaluable** (§3).
       Whether a set-but-uncheckable parameter should be visible as such in the daily report is a
       display decision nobody has taken.
+
+---
+
+## 8. Partially ratified 2026-08-22, and the anchor moved from 6R to 4R
+
+Appended, never edited above: §1's argument for 6R is history and stays readable as what was believed
+(`AGENTS.md` §3). What follows is why it did not survive its own project's trade log.
+
+### 8.1 The measurement that moved it
+
+§1 anchors 6R on this: *"A single catastrophic session — everything gaps through its stop at once —
+costs roughly the whole open risk, so about 6R … Two and a half such days reach the drawdown pause."*
+
+Recomputed from `docs/prereg/results/PR-005-trades.csv`, 26,351 trades, which did not exist when this
+record was drafted:
+
+| | |
+|---|---|
+| Mean loss on a clean stop | **−1.070R** |
+| **Mean loss when the exit gaps through the stop** | **−1.692R** |
+| Worst single gap exit | **−11.78R** |
+| Gap exits worse than −1.5R | 35% of gaps, 4.0% of all trades |
+
+So a session in which the whole book gaps does not cost ~6R. It costs **6 × 1.692 = 10.15R**, and
+`validation.max_allowable_drawdown` = −15R is then **1.5 sessions away, not two and a half**. The
+record's own design intent — *"the pause should fire on a pattern, not on one bad day"* — was not
+met by the number chosen to meet it.
+
+**Four positions restores it:** 4 × 1.692 = 6.77R, and 15 ÷ 6.77 = **2.2 sessions**, which is what §1
+was reaching for.
+
+### 8.2 And the risk this cap addresses is correlated, which is why it is the RIGHT instrument
+
+The per-trade stop cannot defend against a gap — by construction, the price it names does not trade
+between the close and the open. What can defend is a bound on how much is exposed at once, and the
+log says that is exactly the shape of the risk:
+
+- **89 sessions hold 52% of all 3,003 gap exits.** Gap risk arrives in clusters, not independently.
+- The worst single session produced **87 simultaneous gap-outs**.
+
+A cap on concurrent open risk is therefore not one control among six. It is the only control in this
+system that acts on the failure mode that actually occurs.
+
+### 8.3 What the owner ratified
+
+| Parameter | Value | Provenance |
+|---|---|---|
+| `risk.max_open_risk` | **4R** (was 6R) | `owner`, 2026-08-22 |
+| `risk.max_concurrent_positions` | **4** (was 6) | `owner`, 2026-08-22 |
+| `risk.max_position_value` | 2,500 | `owner`, 2026-08-22 |
+| `risk.liquidity_cap_order_to_adtv_pct` | 1.0% | `owner`, 2026-08-22 |
+
+§5 already provided for this: *"Any value the owner sets directly carries provenance `owner` rather
+than `assumed:DR-006`, and that is the stronger provenance for exactly these six."*
+
+**A consistency the smaller cap produces for free:** at four positions of maximum size the account is
+exactly fully invested (4 × 2,500 = 10,000 = `account.equity`). §2 wanted that as a floor on
+diversification and got it only approximately at six; at four the two caps coincide exactly.
+
+### 8.4 Two parameters stay proposed, and §3's reason for it was wrong
+
+`risk.max_sector_risk` and `risk.correlation_threshold` are NOT ratified here. But §3 called them
+*unevaluable*, and researching that before ratifying showed the claim does not hold:
+
+- **Correlation is not blocked at all.** §3 says *"nothing computes a correlation matrix over the
+  candidate set"* — a statement about missing CODE, not missing data. Measured 2026-08-22: the full
+  **1152 × 1152** matrix over 60 sessions of daily returns builds from the existing store in
+  **0.09 seconds**. Of 662,976 pairs, **1.57% sit at r ≥ 0.70**, and the 99th percentile is r = 0.759
+  — so the threshold is neither vacuous nor over-broad.
+- **Sector has a free source.** §3 says *"no free point-in-time sector source"*. Half of that is
+  wrong and the half that is right is not the half that blocks it: `yfinance` — already this
+  project's only bar vendor — returns sector and industry directly for equities on both exchanges
+  (`AAPL` → Technology, `XOM` → Energy, `CNQ.TO` → Energy). What is missing is the **point-in-time**
+  version: it serves today's classification, not the one in force in 2016. That is a real
+  restriction for a backtest and **no restriction at all for live admission.**
+
+**What genuinely blocks the sector cap is narrower and was not named:** an ETF returns no sector at
+all (`SPY` → `None`), and §2 requires ETFs to consume their constituents' sector budget, quoting the
+course's *`Учитывать ETF и корреляции`*. Look-through to an ETF's holdings is the missing piece —
+not the sector of an ordinary share.
+
+### 8.5 Ratified is not wired
+
+All four remain `read_by: none` today. `positions.open_risk_as_of` already computes total open risk
+and the report already prints it; nothing compares it to a limit. Until that lands these are decided
+and unenforced, which is the exact shape `AGENTS.md` §7 counts and prints on every gate run.
+
+### 8.6 The clustered days cannot be seen coming, and the obvious signal points the wrong way
+
+§8.2 says a cap is the right instrument because gap risk is correlated. The natural objection is
+that a correlated risk you can *forecast* should be dodged rather than capped. Tested, on the two
+signals this project's data can actually produce:
+
+**Day of week — refuted.** If weekend news drove it, Monday would dominate. Monday holds 23.6% of the
+89 clustered days against a 19.2% base rate, and **Tuesday holds 24.7%**. There is no weekend effect
+to trade.
+
+**Prior realised volatility — refuted, and inverted.** Annualised 10-session volatility of the
+cross-sectional median return, measured strictly before the session in question:
+
+| | median prior vol | p90 |
+|---|---|---|
+| Ordinary session (n=1,708) | **8.40%** | 17.42% |
+| Clustered gap session (n=89) | **7.09%** | 14.99% |
+
+**The violent days arrive out of calmer tape than average, not out of storms.** A rule standing down
+whenever prior volatility exceeded the ordinary p75 would have caught 15% of the clustered days while
+sitting out 25% of all sessions — a **lift of 0.59×, worse than choosing at random**. At p90 it is
+0.68×. The reflex to cut exposure when volatility rises would have made this worse.
+
+That is not mysterious in hindsight: a market already at high volatility has repriced, and the
+recognisable episodes here — the peak day is 2020-02-24 with 87 simultaneous gap-outs — arrived into
+a quiet, record-high tape.
+
+**Two caveats, because this is one test and not a law.** The cross-section before 2024 is the same 68
+instruments the trade log holds, so "market" here is thin and is the same population that gapped.
+And only two signals were tested; implied volatility, options skew and an earnings calendar are all
+plausible and none of them exist in this project's data.
+
+**What survives is the conclusion this section was written to check:** the days that do the damage
+were not forecastable from what we hold, so a standing bound on how much is exposed at once is not
+the fallback. It is the control.
