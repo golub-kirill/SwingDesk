@@ -26,6 +26,7 @@ from swingdesk.contracts.position import (
     ManagementAction,
     Position,
 )
+from swingdesk.platform import schema
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS positions (
@@ -131,6 +132,10 @@ class PositionStore:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self._connection = duckdb.connect(str(self.path))
         self._connection.execute(_SCHEMA)
+        # A store never opens against a schema it cannot serve. `CREATE TABLE IF NOT
+        # EXISTS` above is silent when a COLUMN is added to a table that already exists,
+        # and that silence cost four trading days - see `platform/schema.py`.
+        schema.reconcile(self._connection, _SCHEMA)
 
     def close(self) -> None:
         self._connection.close()
