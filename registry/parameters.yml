@@ -207,8 +207,8 @@ parameters:
     value: 2500
     note: >-
       25% of account.equity, computed at the current value of 10000. Stored as currency because sizing reads it as one; it must be recomputed if equity changes, which is why DR-006 section 7 wants a percentage-based parameter instead.
-    status: assumed
-    provenance: "assumed:DR-006"
+    status: owner
+    provenance: owner
     read_by: swingdesk.trade_management.sizing:size_long
     named_in: [Appendix C, M49-T762]
     ui_editable: true
@@ -216,17 +216,17 @@ parameters:
   - id: risk.liquidity_cap_order_to_adtv_pct
     unit: percent
     value: 1.0
-    status: assumed
-    provenance: "assumed:DR-006"
+    status: owner
+    provenance: owner
     read_by: none
     named_in: [Appendix C, M49-T760]
     ui_editable: true
 
   - id: risk.max_open_risk
     unit: R
-    value: 6
-    status: assumed
-    provenance: "assumed:DR-006"
+    value: 4
+    status: owner
+    provenance: owner
     read_by: none
     named_in: [M51-T780, M93-T1326]
     ui_editable: true
@@ -254,9 +254,9 @@ parameters:
 
   - id: risk.max_concurrent_positions
     unit: count
-    value: 6
-    status: assumed
-    provenance: "assumed:DR-006"
+    value: 4
+    status: owner
+    provenance: owner
     read_by: none
     named_in: [M49-T764]
     ui_editable: true

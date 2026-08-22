@@ -48,8 +48,8 @@ Programme-level parameters (`validation.*`, `stats.*`) govern the validation pro
 | Status | Count |
 |---|---:|
 | `unset` | 60 |
-| `assumed` | 38 |
-| `owner` | 4 |
+| `assumed` | 34 |
+| `owner` | 8 |
 | `validated` | 0 |
 
 ## 3. How to read the runtime column
