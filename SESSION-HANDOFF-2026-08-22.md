@@ -68,6 +68,24 @@ the failures surfaced in tests about approval and rejection, neither of which is
 **The rule:** if a fixture carries a hard-coded date and the code under test reads `now`, the test is
 asserting something about today. Pin both, or neither.
 
+## 4b. The scheduled run was DEAD for four days, and is fixed
+
+**Found 2026-08-22 while checking whether the tree was ready to hand over.** Exit 1 on every evening
+from 2026-08-18 to 08-21, both passes, ~45 seconds each instead of the usual 5-12 minutes.
+
+**Cause:** `PR #9` added `initial_costs_per_share` to the `positions` table on 08-17.
+`CREATE TABLE IF NOT EXISTS` does nothing to a table that already exists, so the column never
+appeared on disk, and `positions.open_as_of` - which `run()` calls before any candidate - died on
+`BinderException: Referenced column ... not found`.
+
+**Fixed structurally, not patched.** `platform/schema.py` reconciles every store at open: an empty
+drifted table is re-created from its own declared SQL, a populated one refuses and names the drift.
+The live `positions.duckdb` is healed (it held 0 rows) and a real `scan --universe --limit 5` now
+completes and writes a report. Backup kept beside the store.
+
+**What it cost:** Track A reads 0 with its most recent break on 2026-08-21, and the journal carries
+**7 incomplete runs**. Those are real and stay in the record.
+
 ## 5. Still on the owner
 
 - **`DR-016`** — `data.revision_epsilon = 0.001`, price only. Proposed.

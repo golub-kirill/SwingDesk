@@ -436,6 +436,17 @@ the words are as fragile as the numerals; the fix is to stop counting in prose a
   DuckDB stores and the scheduler log live only in the main checkout. Gates 23 and 24 read them and
   report `UNAVAILABLE` rather than passing blind; point them at the real stores with
   `SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data` when you need the runtime figures.
+- **`CREATE TABLE IF NOT EXISTS` is silent when a COLUMN is added, and the store dies days later.**
+  Found 2026-08-22, after the scheduled run had been dead since 08-18. `PR #9` added
+  `initial_costs_per_share` to `positions` on 08-17; the table already existed, so the statement did
+  nothing and the column never appeared on disk. Every evening from 08-18 - **both passes**, once the
+  19:30 task was registered - died on `BinderException: Referenced column ... not found`.
+  **Nothing noticed for four trading days**, because the failure was a stack trace in a log rather
+  than a coded refusal, and `a.run_completes` is a number nobody reads between sessions.
+  `platform/schema.py` now reconciles every store at open: an empty drifted table is re-created from
+  its own declared SQL, a POPULATED one refuses and names the drift, because filling a `NOT NULL`
+  column on existing rows means inventing a value. **Adding a column to a schema is a migration, and
+  it is not free just because the `CREATE` statement did not complain.**
 - **A test that pins a date but not the clock is a time bomb, and it goes off on a day nobody is
   looking.** Found 2026-08-22: four tests in `test_cli.py` seeded a proposal dated 2026-08-16 and
   then called `pending` and `respond` WITHOUT `--as-of`, so they read the wall clock.
