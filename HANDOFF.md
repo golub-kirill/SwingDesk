@@ -46,7 +46,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | | |
 |---|---|
 | Merge gates | **30**, one command: `python tools/check_gates.py` |
-| Tests | **620**, fully offline |
+| Tests | **622**, fully offline |
 | Docs | 111 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 460 registered · 4 `specified` · **1 `active`** |
 | Parameters | 102 - 60 `unset`, 34 `assumed`, 8 `owner`, **0 `validated`** |
@@ -68,7 +68,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | PIT integrity | **CLEAN** - bars whose `event_time` postdates their `knowledge_time`: 0 |
 | Directory | **17 pulls** · **7 confirmed** against the response's own `Last-Modified` (`source_session_date`); the rest predate the field and stay permanently unattributed (`DR-008` c3) |
 | Universe coverage | bars stored for 3,738 of 13,169 listed symbols - **28.4%** |
-| Track A clock | **0/20** consecutive clean sessions · most recent break 2026-08-21 · `a.run_completes`, computed by `tools/track_a_streak.py` |
+| Track A clock | **0/20** consecutive clean sessions · counting from a **deliberate restart on 2026-08-22**, not an outage - `python tools/track_a_streak.py` prints why · `a.run_completes`, computed by `tools/track_a_streak.py` |
 
 *Measured from `data/` on 2026-08-22.*
 

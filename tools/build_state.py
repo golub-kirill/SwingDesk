@@ -270,8 +270,22 @@ def _track_a_row() -> tuple[str, str]:
 
     Two implementations of one number is how the number this tool exists to fix went wrong in the
     first place.
+
+    **The restart is carried, and it has to be.** `HANDOFF.md` §5 states the rule the tool already
+    follows on its own console - *"a bare zero after a deliberate reset is indistinguishable from an
+    outage"* - and until 2026-08-22 this row did not follow it. It went unnoticed because a break
+    date happened to be present in every zero so far, which gave the reader a cause. The restart on
+    2026-08-22 truncated the countable window to sessions that have not happened yet, so `broke_at`
+    became `None` and the row rendered a bare **0/20** with no explanation at all: the exact failure
+    §5 describes, in the one document §10.5 makes the owner of the number.
+
+    The DATE only. The reason is a paragraph and belongs where `track_a_streak.py` already prints
+    it in full; a row that carried it would be a second copy going stale on its own schedule.
     """
-    from track_a_streak import TARGET_STREAK, measure
+    # `clock_now` rather than this module's own `datetime.now()`: the restart in force is a
+    # function of the instant, and reading a different clock from the one gate 23 counts against is
+    # how the two come to disagree. It was `_now` until 2026-08-22 and is public for this caller.
+    from track_a_streak import TARGET_STREAK, clock_now, measure, restarted_at
 
     reading = measure()
     if reading is None:
@@ -281,6 +295,10 @@ def _track_a_row() -> tuple[str, str]:
         body += f" ({reading.start} to {reading.end})"
     if reading.broke_at is not None:
         body += f" · most recent break {reading.broke_at}"
+    restart = restarted_at(clock_now())
+    if restart is not None:
+        body += (f" · counting from a **deliberate restart on {restart[0]}**, not an outage - "
+                 f"`python tools/track_a_streak.py` prints why")
     return ("Track A clock", body + " · `a.run_completes`, computed by `tools/track_a_streak.py`")
 
 

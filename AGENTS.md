@@ -444,8 +444,14 @@ the words are as fragile as the numerals; the fix is to stop counting in prose a
   PYTHONPATH=$PWD/src python tools/build_state.py
   ```
   From a worktree the same command regenerates the repo and worktree blocks and **leaves the runtime
-  block alone**, which is why gate 24 answers `UNAVAILABLE` there instead of guessing. Worth knowing
-  before a session spends twenty minutes on a red gate that describes last night's weather.
+  block alone**, which is why gate 24 answers `UNAVAILABLE` there instead of guessing. Point it at
+  the real stores and it regenerates all three, so a worktree can land the fix without the main
+  checkout committing anything:
+  ```bash
+  SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data PYTHONPATH=$PWD/src python tools/build_state.py
+  ```
+  Worth knowing before a session spends twenty minutes on a red gate that describes last night's
+  weather — or concludes the block can only be fixed from a checkout that cannot commit to `master`.
 - **`CREATE TABLE IF NOT EXISTS` is silent when a COLUMN is added, and the store dies days later.**
   Found 2026-08-22, after the scheduled run had been dead since 08-18. `PR #9` added
   `initial_costs_per_share` to `positions` on 08-17; the table already existed, so the statement did

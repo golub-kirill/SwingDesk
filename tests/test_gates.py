@@ -1403,3 +1403,67 @@ def test_the_second_pass_does_not_pull_the_directory_again() -> None:
     guard = wrapper.index('if "%SECOND%"=="0"')
     fetch = wrapper.index("fetch_directory.py")
     assert guard < fetch, "the directory pull must sit inside the first-pass guard"
+
+
+def test_the_track_a_row_never_renders_a_bare_zero_after_a_restart() -> None:
+    """`HANDOFF.md` section 5: "a bare zero after a deliberate reset is indistinguishable from an
+    outage". `track_a_streak.py` follows that rule on its own console; this row did not.
+
+    It went unnoticed because every zero so far also carried a break date, which gave the reader a
+    cause. The 2026-08-22 restart truncated the countable window to sessions that have not happened
+    yet, so `broke_at` became None and the row rendered `**0/20** consecutive clean sessions` and
+    nothing else - in section 2, which `AGENTS.md` 10.5 makes the single owner of that number.
+    """
+    import sys as _sys
+
+    _sys.path.insert(0, str(TOOLS))
+    import track_a_streak
+
+    state = _build_state()
+    if not track_a_streak.LOG.is_file():
+        pytest.skip("no data/daily_run.log in this checkout - the row reports UNAVAILABLE")
+
+    _label, body = state._track_a_row()
+    restart = track_a_streak.restarted_at(track_a_streak.clock_now())
+    if restart is None:
+        return  # no restart in force; the row has nothing to disclose
+
+    assert str(restart[0]) in body, "the row must name the restart date"
+    assert "deliberate restart" in body
+    assert "not an outage" in body
+
+
+def test_the_track_a_row_reads_the_same_clock_the_streak_counts_against(monkeypatch) -> None:
+    """Two clocks in one measurement is how the restart line came to name a reset that had not
+    happened yet at the instant the count was taken.
+
+    Asserted by MOVING the clock rather than by scanning the source: a text search for
+    `datetime.now(` trips on the comment explaining why it is not used, which is a test measuring
+    its own prose.
+    """
+    import sys as _sys
+
+    _sys.path.insert(0, str(TOOLS))
+    import track_a_streak
+
+    state = _build_state()
+    if not track_a_streak.LOG.is_file():
+        pytest.skip("no data/daily_run.log in this checkout - the row reports UNAVAILABLE")
+
+    from datetime import timedelta
+
+    # The DAY BEFORE the first restart. `restarted_at` compares dates, so a restart is in force
+    # from midnight of its own date - an earlier hour on the same day is not "before" it.
+    first_restart = min(d for d, _ in track_a_streak.STREAK_RESTARTS) - timedelta(days=1)
+
+    monkeypatch.setenv("SWINGDESK_NOW", f"{first_restart}T09:00:00")
+    _label, before = state._track_a_row()
+    assert "deliberate restart" not in before, (
+        "at an instant before the first restart there is nothing to disclose, and claiming one "
+        "would be the row reading a clock the streak did not"
+    )
+
+    latest = max(d for d, _ in track_a_streak.STREAK_RESTARTS)
+    monkeypatch.setenv("SWINGDESK_NOW", f"{latest}T23:00:00")
+    _label, after = state._track_a_row()
+    assert str(latest) in after and "deliberate restart" in after
