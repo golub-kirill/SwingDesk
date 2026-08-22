@@ -287,3 +287,29 @@ plausible and none of them exist in this project's data.
 **What survives is the conclusion this section was written to check:** the days that do the damage
 were not forecastable from what we hold, so a standing bound on how much is exposed at once is not
 the fallback. It is the control.
+
+### 8.7 The ETF look-through exists too — and the vendor lies about it for bond funds
+
+§8.4 named ETF look-through as the one thing genuinely missing. Checked rather than assumed:
+**`yfinance` supplies it.** `Ticker.funds_data.sector_weightings` returns exactly the composition §2
+requires so that an ETF consumes its constituents' sector budget:
+
+| | |
+|---|---|
+| `SPY` | technology 37.4% · financial services 12.2% · communication services 9.9% |
+| `VGK` | financial services 25.2% · industrials 19.9% · healthcare 12.3% |
+| **`NEAR`** | **healthcare 100.0%**, every other sector 0.0% |
+
+**`NEAR` is a short-maturity BOND fund. It has no equity sectors at all.** The vendor does not
+answer "not applicable"; it answers confidently and wrongly. Consumed naively, one bond ETF would
+spend an entire sector budget on a fiction — and it would do so silently, which is worse than the
+check not existing.
+
+**So the guard is a precondition of the feature, not a refinement of it.** A look-through whose
+weights are degenerate — one sector at 100%, or an instrument that is not an equity fund — must be
+refused and reported `unavailable`, never consumed. That is `AGENTS.md` §12's
+`unavailable`-is-not-`fail` rule applied at the one point where the source is confidently wrong,
+and it is the same shape as `SECURITY.md` §6 treating this vendor as untrusted input.
+
+Nothing here changes what §8.3 ratified. It moves `risk.max_sector_risk` from "cannot be evaluated"
+to "buildable, with a named guard that must land with it".

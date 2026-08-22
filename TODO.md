@@ -315,12 +315,60 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       that six open items were all secretly hanging on. **The owner will not trade this system with
       their own money in its current or observable state**; paper / simulated positions are the
       authorised vehicle.
-- [ ] **`[v]` DR-006 — DEFERRED by DR-014, and no longer urgent.** Six `risk.*` parameters, header
-      still reads `status: proposed — owner ratification required`, 3 unresolved items of its own
-      (lines 156, 161, 165), every portfolio cap still citing `assumed:DR-006`. **What changed: it
-      "binds a real account" and there is now no real account to bind.** It has been ranked a blocker
-      since 2026-08-02 and was never a blocker on anything reachable without capital. The
-      don't-rubber-stamp warning stands for whenever it *is* ratified.
+- [x] **`[v]` DR-006 — PARTIALLY RATIFIED 2026-08-22. The book cap is 4R, not 6R.**
+      The trade log reopened the anchor. §1 justified 6R as "a catastrophic session costs roughly
+      the whole open risk, so about 6R … two and a half such days reach the drawdown pause". Measured
+      over PR-005's 26,351 trades: a gap exit loses **−1.692R**, not 1R (clean stop −1.070R, worst
+      single gap **−11.78R**, 35% of gaps worse than −1.5R). So a whole-book gap session costs
+      **10.15R** and −15R is **1.5 sessions** away, not 2.5. Four positions restores the record's own
+      intent: 4 × 1.692 = 6.77R → **2.2 sessions**.
+      **Ratified, provenance `owner`:** `risk.max_open_risk` **4R** · `risk.max_concurrent_positions`
+      **4** · `risk.max_position_value` **2,500** · `risk.liquidity_cap_order_to_adtv_pct` **1.0%**.
+      Free consistency: 4 × 2,500 = 10,000 = `account.equity`, so four max-size positions is exactly
+      fully invested — §2 wanted that floor and got it only approximately at six.
+      **Why a cap and not a forecast, measured:** 89 sessions hold **52%** of all 3,003 gap exits and
+      the worst produced **87 simultaneous** gap-outs, so the risk is correlated — but it is **not
+      predictable from anything we hold**. Day-of-week refuted (Mon 23.6% vs 19.2% base, Tue 24.7%).
+      Prior realised volatility refuted **and inverted**: clustered days follow *lower* vol (7.09%)
+      than ordinary ones (8.40%), and standing down above the ordinary p75 gives **lift 0.59×, worse
+      than random**. The reflex to cut exposure when vol rises would have made this worse. Full
+      argument in `DR-006` §8.
+
+- [ ] **`[v]` DR-006's last two: sector and correlation. §3 called them UNEVALUABLE and that is
+      WRONG — both are buildable today.** This is the plan; nothing here is blocked on a ruling.
+      **a. Correlation is not blocked at all.** §3 says "nothing computes a correlation matrix" — a
+      statement about missing CODE, not missing data. Measured 2026-08-22: the full **1152 × 1152**
+      matrix over 60 sessions of daily returns builds from the existing store in **0.09 s**. Of
+      662,976 pairs, **1.57% sit at r ≥ 0.70**; median r = 0.091, p99 = **0.759**, so the threshold
+      is neither vacuous nor over-broad. **Build:** compute it in the allocation path, refuse a
+      candidate whose correlation with an OPEN position is ≥ the threshold. Cheap enough to run
+      every evening.
+      **b. Sector has a free source, and so does the ETF look-through §2 requires.** `yfinance` —
+      already this project's only bar vendor — returns sector and industry directly for equities on
+      both exchanges (`AAPL` → Technology, `XOM` → Energy, `CNQ.TO` → Energy). And
+      `Ticker.funds_data.sector_weightings` returns an ETF's sector composition, which is exactly
+      what §2's *`Учитывать ETF и корреляции`* asks for: `SPY` → technology 37.4%, financials 12.2%;
+      `VGK` → financials 25.2%, industrials 19.9%.
+      **c. THE TRAP, and it must be guarded before any of this is wired.** The vendor returns a
+      confidently fabricated answer for bond funds rather than `unavailable`: **`NEAR` → healthcare
+      100.0%**, every other sector 0.0%. `NEAR` is a short-maturity BOND fund with no equity sectors
+      at all. Consumed naively it would spend the entire healthcare budget on a fiction. **Refuse a
+      look-through whose weights are degenerate** (one sector at 100%, or a quoteType that is not an
+      equity fund) and report `unavailable` — never consume it. This is the
+      `unavailable`-is-not-`fail` rule (`AGENTS.md` §12) at the point where the vendor lies.
+      **d. What stays genuinely missing:** the POINT-IN-TIME sector. The vendor serves today's
+      classification, not the one in force in 2016. That restricts a BACKTEST and does not restrict
+      live admission, and the two must not be conflated the way §3 conflated them.
+      **Both parameters stay `assumed:DR-006` and unratified** until the above is built and the owner
+      can rule on numbers whose checks actually run.
+
+- [ ] **`[v]` The four ratified caps are still wired to nothing.** `positions.open_risk_as_of` already
+      computes total open risk and `report.py` already prints it; **nothing compares it to a limit.**
+      Until that lands, `DR-006` is decided and unenforced — the exact shape `AGENTS.md` §7 counts and
+      prints on every gate run. **Build:** a portfolio-level refusal in the candidate path, fail-closed
+      and coded, same shape as the freshness gate. It is the only control that acts on the correlated
+      gap day, so it should not wait behind the two above.
+
 - [ ] **`[c]` DR-009** · **`[c]` DR-001 / DR-002 / DR-003 / DR-005** — proposed since 08-02, used as
       working fact throughout.
 
