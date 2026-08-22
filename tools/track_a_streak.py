@@ -106,7 +106,7 @@ JOURNAL = DATA / "journal.duckdb"
 LOCAL_ZONE = datetime.now().astimezone().tzinfo
 
 
-def _now() -> datetime:
+def clock_now() -> datetime:
     """Wall clock, overridable by `SWINGDESK_NOW` (ISO datetime, naive - interpreted as local) so a
     test can pin it - the same pattern `SWINGDESK_ROOT` already uses for the filesystem root. Never
     set in normal use; a gate that only ever runs against the real clock cannot be tested against a
@@ -306,7 +306,7 @@ def measure(as_of: datetime | None = None) -> Reading | None:
     if not LOG.is_file():
         return None
     attempts = _parse_attempts(LOG.read_text(encoding="utf-8", errors="replace"))
-    now = as_of or _now()
+    now = as_of or clock_now()
     count, start, broke_at = streak(attempts, now)
     sessions = _evaluable_sessions(now)
 
@@ -416,13 +416,13 @@ def main() -> int:
     # Printed whenever one applies, because a small number after a restart means something entirely
     # different from a small number after an outage, and the reader cannot tell them apart otherwise.
     #
-    # `_now()`, not `datetime.now()`. This line read the wall clock while the COUNT above was
+    # `clock_now()`, not `datetime.now()`. This line read the wall clock while the COUNT above was
     # measured against `SWINGDESK_NOW`, so with the two pinned apart the tool would name a restart it
     # had not counted from - and on any day after a new restart row lands, name one that had not
     # happened yet at the pinned instant. Found 2026-08-22 by the row added that day: a test pinned
     # to 2026-08-18 went on passing because the printed line was reading today's date rather than
     # the one it had pinned. Same shape as the fixture trap in `AGENTS.md` §12.
-    restart = restarted_at(_now())
+    restart = restarted_at(clock_now())
     if restart is not None:
         print(f"  counting from a deliberate restart on {restart[0]}: {restart[1]}")
     if reading.count >= TARGET_STREAK:
