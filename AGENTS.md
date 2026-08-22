@@ -436,6 +436,16 @@ the words are as fragile as the numerals; the fix is to stop counting in prose a
   DuckDB stores and the scheduler log live only in the main checkout. Gates 23 and 24 read them and
   report `UNAVAILABLE` rather than passing blind; point them at the real stores with
   `SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data` when you need the runtime figures.
+- **A test that pins a date but not the clock is a time bomb, and it goes off on a day nobody is
+  looking.** Found 2026-08-22: four tests in `test_cli.py` seeded a proposal dated 2026-08-16 and
+  then called `pending` and `respond` WITHOUT `--as-of`, so they read the wall clock.
+  `management.proposal_expiry_days` is 3 sessions, so they passed when written on 2026-08-17 and
+  **on 2026-08-20 the window closed and `master` went red with nobody having touched it.** The
+  failures surfaced in tests about approval, rejection and double-answering - none of which is about
+  expiry - so the symptom pointed nowhere near the cause.
+  **The tests that were ABOUT expiry never broke**, because those pin `--as-of` on both sides of the
+  boundary. The rule that separates them: if a fixture carries a hard-coded date and the code under
+  test reads `now`, the test is asserting something about today's date. **Pin both, or neither.**
 - **Hand-maintained counts drift, every time.** Six have now been caught: the study verdicts
   (`5 studies, 3 refuted` in five documents), the gate total, the specification coverage summary
   (31/22 against a table saying 30/24), a component-activation claim in
