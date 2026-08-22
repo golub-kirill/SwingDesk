@@ -81,25 +81,33 @@ is expected to be superseded when a study says so. Different lifetimes, differen
 
 ## 5. Index
 
-| ID | Decision | Sets | Status |
-|---|---|---|---|
-| `DR-001` | Sharpe ratio convention | `stats.sharpe_convention` | proposed |
-| `DR-002` | Process score scale | `stats.process_score_scale`, `stats.quality_grade_scale` | proposed |
-| `DR-003` | A-tier liquidity rule | `universe.min_price`, `universe.min_adtv_20d`, `universe.min_bar_history` | proposed |
-| `DR-004` | Cost model | `costs.commission_model`, `costs.slippage_model` | proposed — slippage superseded by `DR-005` |
-| `DR-005` | Slippage measured from daily OHLC | `costs.slippage_model` | proposed |
-| `DR-006` | Portfolio risk block | six `risk.*` constraints | **proposed — binds a real account** |
-| `DR-007` | Validation programme thresholds | fourteen of fifteen `validation.*` | **accepted — ratified 2026-08-08** |
-| `DR-008` | Daily US directory collection under local control | operational policy; no trading parameter | **accepted — ratified 2026-08-10** |
-| `DR-009` | The owner's broker charges no commission, and the cost model never knew | account-structure choice only — its parameter moved to `DR-010` (§5, correction 2026-08-13) | proposed |
-| `DR-010` | Sizing costs are price-aware and currency-aware, not one flat constant | `risk.costs_bp_usd`, `risk.costs_bp_cad`, `risk.costs_floor_usd`, `risk.costs_floor_cad` | **accepted — ratified 2026-08-13** |
-| `DR-011` | The run notice is a local desktop notification — not Firebase, not Telegram | none — a surface, not a measured component. Also corrects `PRODUCT_SURFACES` §3.4's self-contradicting example | proposed — mechanism chosen by the owner 2026-08-16 |
-| `DR-012` | The protective stop is 2.0 × ATR(14) and the maximum holding period is 20 sessions | `exit.atr_stop_multiple`, `exit.max_holding_period` | **accepted — ratified 2026-08-17** |
-| `DR-013` | A non-critical proposal expires after 3 days; a critical one never expires and never proceeds unanswered | `management.proposal_expiry_days` | **accepted — ruled 2026-08-17** |
-| `DR-015` | Two sessions is too stale to decide on; a failed fetch retries 3x30s then once more at 19:30 | `data.freshness_window` | **accepted — ruled 2026-08-18** |
-| `DR-016` | A raw PRICE that changes is a critical fault; a raw VOLUME that changes is Tuesday | `data.revision_epsilon`, scoped to price; volume taken out of the rule and given no parameter | proposed — owner ratification required |
-| `DR-017` | The ADTV window is lagged three sessions, because volume is still being written for two | a new lag on the ADTV window; it enters the registry on ratification | proposed — owner ratification required |
-| `DR-014` | No owner capital in the observable state of the project — paper only; Canada deferred with a re-entry condition | none directly — changes the STANDING of `DR-006`'s six `risk.*` parameters and withdraws `PR-006`'s precondition | **accepted — ruled 2026-08-17** |
+| ID | The question it answers | Decision | Sets | Status |
+|---|---|---|---|---|
+| `DR-001` | **Which Sharpe do we mean?** | Sharpe ratio convention | `stats.sharpe_convention` | proposed |
+| `DR-002` | **How is process quality scored?** | Process score scale | `stats.process_score_scale`, `stats.quality_grade_scale` | proposed |
+| `DR-003` | **Which instruments may we even look at?** | A-tier liquidity rule | `universe.min_price`, `universe.min_adtv_20d`, `universe.min_bar_history` | proposed |
+| `DR-004` | **What does a trade cost?** | Cost model | `costs.commission_model`, `costs.slippage_model` | proposed — slippage superseded by `DR-005` |
+| `DR-005` | **How much of that cost is slippage?** | Slippage measured from daily OHLC | `costs.slippage_model` | proposed |
+| `DR-006` | **How many positions may be open at once?** | Portfolio risk block | six `risk.*` constraints | **proposed — binds a real account** |
+| `DR-007` | **What counts as a study that passed?** | Validation programme thresholds | fourteen of fifteen `validation.*` | **accepted — ratified 2026-08-08** |
+| `DR-008` | **Where does the list of tradeable symbols come from?** | Daily US directory collection under local control | operational policy; no trading parameter | **accepted — ratified 2026-08-10** |
+| `DR-009` | **Does the broker charge commission?** | The owner's broker charges no commission, and the cost model never knew | account-structure choice only — its parameter moved to `DR-010` (§5, correction 2026-08-13) | proposed |
+| `DR-010` | **What does a trade cost at THIS price, in THIS currency?** | Sizing costs are price-aware and currency-aware, not one flat constant | `risk.costs_bp_usd`, `risk.costs_bp_cad`, `risk.costs_floor_usd`, `risk.costs_floor_cad` | **accepted — ratified 2026-08-13** |
+| `DR-011` | **How does the owner find out a run finished?** | The run notice is a local desktop notification — not Firebase, not Telegram | none — a surface, not a measured component. Also corrects `PRODUCT_SURFACES` §3.4's self-contradicting example | proposed — mechanism chosen by the owner 2026-08-16 |
+| `DR-012` | **Where is the stop, and how long may a trade live?** | The protective stop is 2.0 × ATR(14) and the maximum holding period is 20 sessions | `exit.atr_stop_multiple`, `exit.max_holding_period` | **accepted — ratified 2026-08-17** |
+| `DR-013` | **How long does a proposal stay answerable?** | A non-critical proposal expires after 3 days; a critical one never expires and never proceeds unanswered | `management.proposal_expiry_days` | **accepted — ruled 2026-08-17** |
+| `DR-014` | **Is real money involved?** | No owner capital in the observable state of the project — paper only; Canada deferred with a re-entry condition | none directly — changes the STANDING of `DR-006`'s six `risk.*` parameters and withdraws `PR-006`'s precondition | **accepted — ruled 2026-08-17** |
+| `DR-015` | **How old may data be before we refuse to decide on it?** | Two sessions is too stale to decide on; a failed fetch retries 3x30s then once more at 19:30 | `data.freshness_window` | **accepted — ruled 2026-08-18** |
+| `DR-016` | **When is a changed bar a fault rather than a revision?** | A raw PRICE that changes is a critical fault; a raw VOLUME that changes is Tuesday | `data.revision_epsilon`, scoped to price; volume taken out of the rule and given no parameter | proposed — owner ratification required |
+| `DR-017` | **How settled must volume be before it admits an instrument?** | The ADTV window is lagged three sessions, because volume is still being written for two | a new lag on the ADTV window; it enters the registry on ratification | proposed — owner ratification required |
+
+**The middle column is the one to read first.** A record's own title states its *conclusion*, which
+is the least useful thing about it to someone who has not read it - `DR-006` is "the portfolio risk
+block", which says nothing to anybody arriving cold. The question is what a reader is actually
+holding when they come looking, and sorting the shelf by conclusions is how a decision store becomes
+unbrowsable. Added 2026-08-22 at the owner's request, after "I can't tell anything if I don't even
+have a normal name".
+
 
 `DR-007` is the largest of these by a distance: fifteen parameters at once, four of them ratifying
 what a reported study already used and eight genuinely authored. It exists because a ratified kill
