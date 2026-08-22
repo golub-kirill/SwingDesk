@@ -86,6 +86,21 @@ completes and writes a report. Backup kept beside the store.
 **What it cost:** Track A reads 0 with its most recent break on 2026-08-21, and the journal carries
 **7 incomplete runs**. Those are real and stay in the record.
 
+## 4c. One friction to know about before you run the gates
+
+**`HANDOFF.md` §2's runtime block drifts every time the scheduled run executes**, and gate 24
+compares it. So on the MAIN checkout the gate can be red on any morning after an evening run, with
+nothing wrong. Regenerate and it goes green:
+
+```bash
+PYTHONPATH=$PWD/src python tools/build_state.py
+```
+
+From a worktree the block cannot be regenerated at all (`data/` lives only in the main checkout) and
+gate 24 correctly reports `UNAVAILABLE` rather than guessing. The block was refreshed against the
+real stores on 2026-08-22 immediately before this handoff, so it is current as of then and will drift
+again after the next evening.
+
 ## 5. Still on the owner
 
 - **`DR-016`** — `data.revision_epsilon = 0.001`, price only. Proposed.
