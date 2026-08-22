@@ -13,6 +13,7 @@ from pathlib import Path
 from swingdesk.application.pipeline import InstrumentOutcome, RunResult
 from swingdesk.application.universe import UniverseSelection
 from swingdesk.presentation.funnel import funnel
+from swingdesk.trade_management import portfolio
 from swingdesk.trade_management.sizing import Refusal
 
 _RULE = "─" * 78
@@ -105,6 +106,49 @@ def _positions_block(result: RunResult) -> list[str]:
     if pending:
         lines.append("")
         lines.append(f"  {pending} proposal(s) await your approval. Nothing has been done.")
+    return lines
+
+
+def _capacity_block(result: RunResult) -> list[str]:
+    """Room in the book for one more position, or why that could not be answered (`DR-006` §8.3).
+
+    Three outcomes, printed apart on purpose. "Within the cap", "the cap has no value" and "the book
+    was never read" are three different claims, and a block that showed the first for all three
+    would be the `unavailable`-as-`pass` collapse `HANDOFF.md` §7 names as this product's most
+    damaging possible error.
+    """
+    capacity = result.capacity
+    lines = ["", "BOOK CAPACITY — the cap DR-006 §8.3 ratified", _RULE]
+
+    if isinstance(capacity, Refusal):
+        lines.append(f"  REFUSED  {capacity}")
+        lines.append("           no candidate was admitted; the cap itself has no value")
+        return lines
+
+    if capacity is None:
+        if "positions" not in result.steps:
+            lines.append("  UNAVAILABLE  the book was not read this run, so the cap could not be")
+            lines.append("               applied. That is `unavailable` - not `within the cap`.")
+        else:
+            lines.append(f"  positions      {len(result.positions)} open")
+            lines.append("  NOT ASSESSED   no candidate reached sizing, so nothing was compared")
+            lines.append("                 against the cap")
+        return lines
+
+    caps, book = capacity.caps, capacity.book
+    lines.append(f"  positions      {book.count} / {caps.max_concurrent}"
+                 f"   [{portfolio.MAX_CONCURRENT}]")
+    lines.append(f"  open risk      {book.open_risk_r:.2f}R / {caps.max_open_risk}R"
+                 f"   [{portfolio.MAX_OPEN_RISK}]")
+    if capacity.binding is not None:
+        lines.append(f"  BINDING        {capacity.binding}")
+        lines.append(f"                 {capacity.reason}")
+    else:
+        lines.append(f"  room           {capacity.reason}")
+    lines.append("")
+    lines.append("  Each candidate is measured against the BOOK ALONE. Watch names do not consume")
+    lines.append("  capacity from one another, so the room above is for ONE more position, not for")
+    lines.append("  every candidate below it (ALLOCATION_SPEC §6 rule 4 - rs.ranking_method unset).")
     return lines
 
 
@@ -206,6 +250,7 @@ def render(result: RunResult) -> str:
         lines.append("")
 
     lines.extend(_positions_block(result))
+    lines.extend(_capacity_block(result))
     if result.positions or result.universe is not None:
         lines.extend(["", "CANDIDATES", _RULE])
 

@@ -80,7 +80,7 @@ class RiskSnapshot:
         return any(parameter.is_assumed for parameter in self.parameters)
 
 
-def _costs_per_share(
+def costs_per_share(
     entry: Decimal, currency: str, registry: ParameterRegistry
 ) -> tuple[Decimal, ParameterUse, ParameterUse] | Refusal:
     """Round-trip cost per share: `max(floor, bp/10000 * entry)`, both terms per-currency (DR-010).
@@ -112,10 +112,15 @@ def _costs_per_share(
     return max(floor, proportional), bp_use, floor_use
 
 
-def _to_base_currency(
+def to_base_currency(
     currency: str, registry: ParameterRegistry
 ) -> tuple[Decimal, tuple[ParameterUse, ...]] | Refusal:
     """Base-currency units per one unit of `currency`, and the parameters that produced it.
+
+    Public since 2026-08-22, unchanged otherwise. The portfolio cap has to total an open book that
+    may hold both currencies, and a second conversion written next to it would be the same rule in
+    two places - the failure master ТЗ §8 forbids and this repository has already paid for. One
+    caller inside this module, one in `trade_management.portfolio`, one rule.
 
     Returns exactly `1` with no FX parameter recorded when the instrument is already denominated in
     `account.base_currency` - the common case, and one that must not be made to depend on a rate
@@ -159,6 +164,29 @@ def _to_base_currency(
     return rate, (base_use, rate_use)
 
 
+def allowed_risk(
+    registry: ParameterRegistry,
+) -> tuple[Decimal, ParameterUse, ParameterUse] | Refusal:
+    """One R in `account.base_currency`: `equity x risk %` (Appendix C, step 3 of RISK_SPEC §3).
+
+    Extracted from `size_long` on 2026-08-22 because a second caller appeared. The portfolio cap is
+    denominated in R (`risk.max_open_risk` = 4R), so anything comparing a book to it needs the
+    currency value of one R - and `swingdesk open-position` needs it without sizing anything at all.
+    Re-deriving `equity x pct / 100` at that call site would put the only arithmetic the course
+    supplies in two places.
+    """
+    try:
+        equity, equity_use = registry.decimal_value("account.equity")
+        risk_pct, risk_use = registry.decimal_value("risk.per_trade_pct")
+    except ParameterUnset as unset:
+        return Refusal(
+            "RISK",
+            "a required risk parameter has no value; the system refuses rather than assuming one",
+            parameter_id=unset.parameter_id,
+        )
+    return (equity * risk_pct / Decimal(100)).quantize(Decimal("0.01")), equity_use, risk_use
+
+
 def size_long(
     entry: Decimal,
     stop: Decimal,
@@ -199,15 +227,11 @@ def size_long(
             f"below zero",
         )
 
-    try:
-        equity, equity_use = registry.decimal_value("account.equity")
-        risk_pct, risk_use = registry.decimal_value("risk.per_trade_pct")
-    except ParameterUnset as unset:
-        return Refusal(
-            "RISK",
-            "a required risk parameter has no value; the system refuses rather than assuming one",
-            parameter_id=unset.parameter_id,
-        )
+    budget = allowed_risk(registry)
+    if isinstance(budget, Refusal):
+        return budget
+    allowed, equity_use, risk_use = budget
+    equity, risk_pct = Decimal(equity_use.value), Decimal(risk_use.value)
 
     # Step 2b. The account and the instrument may not be in the same currency, and until 2026-08-16
     # this function assumed they were. `account.equity` is denominated in `account.base_currency`;
@@ -216,15 +240,15 @@ def size_long(
     # oversizing error of whatever the rate happens to be, with no refusal and nothing on the record
     # saying a conversion was skipped.
     #
-    # `_costs_per_share` reads per-currency cost parameters and so LOOKED currency-aware, which is
+    # `costs_per_share` reads per-currency cost parameters and so LOOKED currency-aware, which is
     # what made this survive review: the costs were right and the denominator they fed was measured
     # in a currency the numerator never shared.
-    fx_result = _to_base_currency(currency, registry)
+    fx_result = to_base_currency(currency, registry)
     if isinstance(fx_result, Refusal):
         return fx_result
     base_per_local, fx_uses = fx_result
 
-    costs_result = _costs_per_share(entry, currency, registry)
+    costs_result = costs_per_share(entry, currency, registry)
     if isinstance(costs_result, Refusal):
         return costs_result
     costs, bp_use, floor_use = costs_result
@@ -239,8 +263,7 @@ def size_long(
     # so the budget is converted INTO the instrument's currency before the division. Converting the
     # budget rather than the per-share risk keeps `allowed_risk` reported in the units the owner set
     # it in - the number on the report should be the number in the registry.
-    allowed_risk = (equity * risk_pct / Decimal(100)).quantize(Decimal("0.01"))
-    allowed_risk_local = (allowed_risk / base_per_local).quantize(Decimal("0.01"))
+    allowed_risk_local = (allowed / base_per_local).quantize(Decimal("0.01"))
     shares = int((allowed_risk_local / risk_per_share).to_integral_value(rounding=ROUND_DOWN))
     if shares <= 0:
         return Refusal(
@@ -276,7 +299,7 @@ def size_long(
     return RiskSnapshot(
         equity=equity,
         risk_pct=risk_pct,
-        allowed_risk=allowed_risk,
+        allowed_risk=allowed,
         entry=entry,
         stop=stop,
         costs_per_share=costs,

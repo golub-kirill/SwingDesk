@@ -164,6 +164,14 @@ STREAK_RESTARTS: tuple[tuple[date, str], ...] = (
      "2026-08-17 run, 67 of 1152 candidates were one session behind and were sized and left on "
      "Watch; they now leave with a DATA skip. A streak spanning that boundary would count days "
      "spent deciding on stale data toward a system that refuses to"),
+    (date(2026, 8, 22),
+     "DR-006's book cap reached the decision path. One frozen file changed (pipeline.py) and the "
+     "change moves decision output: a candidate that would push the book past risk.max_open_risk "
+     "(4R) or risk.max_concurrent_positions (4) now leaves with a Skip/RISK where it used to reach "
+     "Watch. Also sizing.py, cosmetically - two private helpers made public so the cap reuses the "
+     "one FX rule and the one definition of 1R rather than copying either. Taken while the counter "
+     "already read 0, which is DR-015 section 3's argument reused: the reset costs nothing today "
+     "and would cost weeks in two weeks"),
 )
 
 
@@ -407,7 +415,14 @@ def main() -> int:
 
     # Printed whenever one applies, because a small number after a restart means something entirely
     # different from a small number after an outage, and the reader cannot tell them apart otherwise.
-    restart = restarted_at(datetime.now(LOCAL_ZONE))
+    #
+    # `_now()`, not `datetime.now()`. This line read the wall clock while the COUNT above was
+    # measured against `SWINGDESK_NOW`, so with the two pinned apart the tool would name a restart it
+    # had not counted from - and on any day after a new restart row lands, name one that had not
+    # happened yet at the pinned instant. Found 2026-08-22 by the row added that day: a test pinned
+    # to 2026-08-18 went on passing because the printed line was reading today's date rather than
+    # the one it had pinned. Same shape as the fixture trap in `AGENTS.md` §12.
+    restart = restarted_at(_now())
     if restart is not None:
         print(f"  counting from a deliberate restart on {restart[0]}: {restart[1]}")
     if reading.count >= TARGET_STREAK:

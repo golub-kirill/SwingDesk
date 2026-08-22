@@ -156,3 +156,64 @@ def test_reconciliation_failure_is_reported_not_hidden() -> None:
     with patch("swingdesk.presentation.report.funnel", return_value=broken):
         out = report.render(result)
     assert "RECONCILIATION FAILED" in out
+
+
+# ------------------------------------------------------------------ the book capacity block
+
+
+def test_a_run_with_no_position_store_says_the_cap_was_not_evaluated(rendered: str) -> None:
+    """The `rendered` fixture passes no position store, so the book is unknown. It must say so.
+
+    `unavailable` is not `pass`. A block that printed "within the cap" here would assert something
+    the run never checked, which `HANDOFF.md` §7 names as the most damaging error this product can
+    make.
+    """
+    body = rendered.split("__status__ ")[0]
+    assert "BOOK CAPACITY" in body
+    assert "UNAVAILABLE" in body
+
+
+def _rendered_with_book(tmp_path, registry, held) -> str:
+    from swingdesk.journal_evidence.positions import PositionStore
+
+    sessions = [
+        s.session_date
+        for s in cal.sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
+    ]
+    with (
+        BarStore(tmp_path / "bars.duckdb") as store,
+        Journal(tmp_path / "journal.duckdb") as journal,
+        PositionStore(tmp_path / "positions.duckdb") as positions,
+    ):
+        for position in held:
+            positions.record(position)
+        result = run([TEST_US], FixedClock(AS_OF), registry, store, journal, mode=MODE,
+                     fetcher=fixture_fetcher({TEST_US.id: sessions}), positions=positions)
+        return report.render(result)
+
+
+def test_the_capacity_block_shows_the_book_against_both_caps(tmp_path, registry) -> None:
+    from tests.test_portfolio import _position
+
+    body = _rendered_with_book(tmp_path, registry, [_position(1)])
+    assert "risk.max_concurrent_positions" in body
+    assert "risk.max_open_risk" in body
+    assert "2.00R / 4R" in body, "open risk must be shown in the unit the cap is written in"
+
+
+def test_the_capacity_block_names_the_cap_that_bound(tmp_path, registry) -> None:
+    from tests.test_portfolio import _position
+
+    held = [_position(i, shares=10, stop="99.9", instrument=f"HELD.{i}") for i in range(1, 5)]
+    body = _rendered_with_book(tmp_path, registry, held)
+    assert "BINDING" in body
+    assert "risk.max_concurrent_positions" in body
+
+
+def test_the_capacity_block_warns_that_room_is_for_one_position(tmp_path, registry) -> None:
+    """The one sentence that stops the block being misread. Candidates are measured against the
+    book alone, so "room for 3 more" never means "open the three Watch names below"."""
+    from tests.test_portfolio import _position
+
+    body = _rendered_with_book(tmp_path, registry, [_position(1)])
+    assert "BOOK ALONE" in body

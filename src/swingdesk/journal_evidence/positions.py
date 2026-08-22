@@ -89,6 +89,29 @@ CREATE TABLE IF NOT EXISTS management_responses (
 -- `planned_price` is nullable and the null MEANS something: an exit on a maximum holding period
 -- names no price to slip against, and recording 0.00 there would be a manufactured measurement.
 -- See `contracts.position.Fill.slippage_per_share`.
+-- The owner's acknowledgement that a position was recorded PAST a ratified portfolio cap
+-- (`DR-006` §8.3; owner ruling 2026-08-22). `open-position` refuses over the cap, and recording
+-- anyway requires `--acknowledge-over-cap "<reason>"` - this is where that reason lands.
+--
+-- Its own table for the same reason `management_responses` is: `positions` records what was opened
+-- and must stay readable as that forever, while this records what the OWNER decided about a limit,
+-- when, and why. Two facts, two rows. An override that is only printed to a terminal is a decision
+-- nobody can audit afterwards, which is the failure D6 and Production Rule 3.8 both exist to stop.
+--
+-- The book state is stored ALONGSIDE the reason rather than recomputed later: open risk is derived
+-- from stops that move, so "the book held 4 positions and 4.00R" is only a fact about the moment
+-- the owner answered.
+CREATE TABLE IF NOT EXISTS cap_overrides (
+    position_id    VARCHAR NOT NULL,
+    recorded_at    TIMESTAMPTZ NOT NULL,
+    binding        VARCHAR NOT NULL,
+    positions_open INTEGER NOT NULL,
+    open_risk_r    DECIMAL(18, 6) NOT NULL,
+    requested_r    DECIMAL(18, 6) NOT NULL,
+    reason         VARCHAR NOT NULL,
+    PRIMARY KEY (position_id, recorded_at)
+);
+
 CREATE TABLE IF NOT EXISTS fills (
     position_id   VARCHAR NOT NULL,
     sequence      BIGINT NOT NULL,
@@ -109,6 +132,24 @@ class Response:
 
     responded_at: datetime
     choice: ActionStatus
+    reason: str
+
+
+@dataclass(frozen=True, slots=True)
+class CapOverride:
+    """One acknowledged breach of a ratified portfolio cap, with the book as it stood.
+
+    `binding` is the parameter id that refused - `risk.max_concurrent_positions` or
+    `risk.max_open_risk` - so a later reader can tell which limit was crossed without re-deriving a
+    book that has since moved.
+    """
+
+    position_id: str
+    recorded_at: datetime
+    binding: str
+    positions_open: int
+    open_risk_r: Decimal
+    requested_r: Decimal
     reason: str
 
 
@@ -167,6 +208,30 @@ class PositionStore:
                 position.initial_stop, position.current_stop,
                 position.initial_costs_per_share, position.strategy,
                 position.strategy_version, position.knowledge_time, position.closed_on,
+            ],
+        )
+
+    def record_cap_override(self, override: CapOverride) -> None:
+        """Append one acknowledged cap breach. Append-only, like everything else here.
+
+        Written in the SAME command that records the position it excuses, so a position past the cap
+        can never exist without the acknowledgement that let it in.
+        """
+        existing = self._connection.execute(
+            "SELECT 1 FROM cap_overrides WHERE position_id = ? AND recorded_at = ?",
+            [override.position_id, override.recorded_at],
+        ).fetchone()
+        if existing:
+            raise ValueError(
+                f"a cap override for {override.position_id} at {override.recorded_at} is already "
+                f"recorded. Overrides are append-only; changing your mind is a new decision."
+            )
+        self._connection.execute(
+            "INSERT INTO cap_overrides VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [
+                override.position_id, override.recorded_at, override.binding,
+                override.positions_open, override.open_risk_r, override.requested_r,
+                override.reason,
             ],
         )
 
@@ -410,8 +475,33 @@ class PositionStore:
             for r in rows
         ]
 
+    def cap_overrides(self) -> list[CapOverride]:
+        """Every acknowledged cap breach, oldest first. The audit trail for `--acknowledge-over-cap`."""
+        rows = self._connection.execute(
+            """
+            SELECT position_id, recorded_at, binding, positions_open, open_risk_r, requested_r,
+                   reason
+            FROM cap_overrides ORDER BY recorded_at, position_id
+            """
+        ).fetchall()
+        return [
+            CapOverride(
+                position_id=r[0], recorded_at=r[1], binding=r[2], positions_open=int(r[3]),
+                open_risk_r=Decimal(str(r[4])), requested_r=Decimal(str(r[5])), reason=r[6],
+            )
+            for r in rows
+        ]
+
     def open_risk_as_of(self, knowledge_time: datetime) -> Decimal:
         """Open risk across the WHOLE BOOK, recomputed from current stops (`US-011`).
+
+        **A RAW PER-CURRENCY SUM, and it is not convertible here.** `Position.open_risk` is
+        denominated in the instrument's own currency, so a mixed USD/CAD book returns a number in no
+        currency at all. This store may depend only on `platform` (the dependency law's "Journal
+        depends only on platform"), so it cannot read `account.fx_rate_cad` and must not pretend to.
+        Anything that COMPARES this to a limit goes through `trade_management.portfolio.book`, which
+        converts each position and refuses when the rate is unset. Correct today only because the
+        store holds no CAD position; the same shape as the sizing error closed on 2026-08-16.
 
         Recomputed, never decremented - the same rule `Position.open_risk` follows per position,
         applied to the book. A running total that subtracted each exit as it happened would drift

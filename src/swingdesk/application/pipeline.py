@@ -18,6 +18,7 @@ import subprocess
 import sys
 from dataclasses import dataclass, field, replace
 from datetime import datetime
+from decimal import Decimal
 from pathlib import Path
 from typing import Protocol
 from uuid import uuid4
@@ -27,7 +28,7 @@ from swingdesk.application.universe import UniverseSelection
 from swingdesk.contracts.checklist import Checklist
 from swingdesk.contracts.market import BarSeries as BarSeriesLike
 from swingdesk.contracts.market import Interval, Series
-from swingdesk.contracts.observation import ObservationSeries
+from swingdesk.contracts.observation import ObservationSeries, ParameterUse
 from swingdesk.contracts.position import ActionKind, ManagementAction, Position
 from swingdesk.contracts.reference import Instrument
 from swingdesk.contracts.run import RunManifest, RunMode
@@ -41,9 +42,9 @@ from swingdesk.platform.clock import Clock
 from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
 from swingdesk.reference_data import calendar as cal
 from swingdesk.reference_data.universe import vendor_symbol
-from swingdesk.trade_management import manage
+from swingdesk.trade_management import manage, portfolio
 from swingdesk.trade_management.exits import ExitPolicy
-from swingdesk.trade_management.sizing import Refusal, RiskSnapshot, size_long
+from swingdesk.trade_management.sizing import Refusal, RiskSnapshot, size_long, to_base_currency
 
 
 @dataclass
@@ -75,6 +76,15 @@ class RunResult:
     positions: list[PositionOutcome] = field(default_factory=list)
     steps: tuple[str, ...] = ()
     universe: UniverseSelection | None = None
+
+    capacity: portfolio.Capacity | Refusal | None = None
+    """What room the book had for one more position, or why that could not be answered.
+
+    `None` means the cap was NOT EVALUATED - no position store was passed, so the run had no way to
+    know the book. That is `unavailable`, not `pass`: a gap in the system and a fact about the
+    account are different claims, and collapsing them is the error `HANDOFF.md` §7 calls the most
+    damaging this product can make. The report prints which of the three it was.
+    """
 
     @property
     def decisions(self) -> list[DecisionRecord]:
@@ -115,13 +125,12 @@ def _held_instrument(instrument_id: str) -> Instrument:
     bars - which is worse than failing, because the position went on being managed against data
     that had quietly stopped refreshing.
     """
-    exchange = cal.exchange_for(instrument_id)
     base = instrument_id.upper().removesuffix(".TO")
     return Instrument(
         id=instrument_id,
         ticker=vendor_symbol(base),
-        exchange=exchange,
-        currency="USD" if exchange.value == "NYSE" else "CAD",
+        exchange=cal.exchange_for(instrument_id),
+        currency=cal.currency_for(instrument_id),
     )
 
 
@@ -180,6 +189,29 @@ def _freshness_window(registry: ParameterRegistry) -> int | Refusal:
             parameter_id=unset.parameter_id,
         )
     return allowed
+
+
+def _portfolio_caps(registry: ParameterRegistry) -> portfolio.Caps | Refusal:
+    """The book's two bounds, or a coded refusal naming the parameter that has no value.
+
+    Third function of this shape in this module, and the shape is the point: `_exit_policy`,
+    `_freshness_window` and this one all read a ruled number ONCE per run and hand down either the
+    value or a `Refusal` carrying the parameter id. An unset cap must refuse rather than admit
+    everything, because a limit nobody set is not a limit of infinity - it is a limit nobody set.
+
+    `DR-006` §8.3 ratified both on 2026-08-22 with provenance `owner`, and until this call existed
+    neither was read by any line of code (`AGENTS.md` §7).
+    """
+    try:
+        return portfolio.limits(registry)
+    except ParameterUnset as unset:
+        return Refusal(
+            "RISK",
+            "no portfolio cap: how much open risk the book may carry and how many positions may be "
+            "held at once are ruled numbers, and admitting a candidate against an unmeasured book "
+            "is the silent-default this registry exists to prevent",
+            parameter_id=unset.parameter_id,
+        )
 
 
 def _git(*args: str) -> str:
@@ -410,6 +442,30 @@ def run(
     # 2026-08-17 universe - and would answer no question the first one did not.
     freshness_window = _freshness_window(registry)
 
+    # The book's two bounds, read once for the whole run (`DR-006` §8, `RISK_SPEC` §3 step 6).
+    caps = _portfolio_caps(registry)
+    if isinstance(caps, Refusal):
+        # Recorded on the result immediately, not only when a candidate trips it: a run where every
+        # candidate refused earlier for some other reason must still report that the cap itself has
+        # no value. An unset limit that nothing happened to reach is still an unset limit.
+        result.capacity = caps
+
+    # Base-currency units per one unit of an instrument's currency, closed over this run's registry.
+    # `sizing.to_base_currency` is the ONE place that knows the rule and the one place that refuses
+    # when `account.fx_rate_cad` is unset; the portfolio module borrows it rather than owning a
+    # second copy.
+    def rate_for(currency: str) -> tuple[Decimal, tuple[ParameterUse, ...]] | Refusal:
+        return to_base_currency(currency, registry)
+
+    # The open book, and its price in base currency.
+    #
+    # `None` means NOT EVALUATED rather than empty: without a position store this run cannot know
+    # what is held, and admitting candidates against an unknown book while reporting a cap would be
+    # the `unavailable`-read-as-`pass` collapse (`AGENTS.md` §12). An EMPTY list is a different and
+    # stronger fact - the store was read and holds nothing - and the caps then bind normally.
+    open_positions: list[Position] | None = None
+    priced_book: portfolio.Book | Refusal | None = None
+
     # --- open positions, BEFORE any candidate -------------------------------------------
     # CHECKLIST_SPEC 4 requires open positions and gaps to be checked first. Not a preference about
     # code - a data failure must never lock the owner out of managing risk on positions already
@@ -417,7 +473,10 @@ def run(
     if positions is not None:
         steps.append("positions")
         known = {instrument.id: instrument for instrument in instruments}
-        for position in positions.open_as_of(started):
+        # Read ONCE and kept: the candidate path prices this same list against the caps, and a
+        # second `open_as_of` would let the two halves of the run disagree about what is held.
+        open_positions = positions.open_as_of(started)
+        for position in open_positions:
             managed = PositionOutcome(position=position)
             result.positions.append(managed)
 
@@ -580,6 +639,54 @@ def run(
                 instrument.id, "Skip", sized.code, sized.reason, sized.parameter_id
             )
             continue
+
+        # 6. The book. `RISK_SPEC` §3's binding sequence puts portfolio checks AFTER the position
+        # and liquidity caps of step 5, which live inside `size_long` - so this runs on a candidate
+        # that has already been sized, and the report can show the size that did not fit.
+        #
+        # The book is priced ONCE per run, lazily, on the first candidate that sizes: `r_unit` is
+        # 1R in base currency and comes from that candidate's own `allowed_risk`, which is
+        # `account.equity` x `risk.per_trade_pct` / 100. Taking it from a snapshot the run already
+        # computed keeps the sizing law in `sizing.py` and nowhere else.
+        if isinstance(caps, Refusal):
+            outcome.decision = DecisionRecord(
+                instrument.id, "Skip", caps.code, caps.reason, caps.parameter_id
+            )
+            continue
+        if open_positions is not None:
+            if priced_book is None:
+                priced_book = portfolio.book(open_positions, rate_for, sized.allowed_risk)
+                if isinstance(priced_book, Refusal):
+                    result.capacity = priced_book
+            if isinstance(priced_book, Refusal):
+                outcome.decision = DecisionRecord(
+                    instrument.id, "Skip", priced_book.code, priced_book.reason,
+                    priced_book.parameter_id,
+                )
+                continue
+
+            requested = to_base_currency(instrument.currency, registry)
+            if isinstance(requested, Refusal):
+                # Unreachable while `size_long` refuses the same instrument for the same reason,
+                # and handled anyway: a caller that ever sizes without converting must not have
+                # this branch silently size the book in two currencies.
+                outcome.decision = DecisionRecord(
+                    instrument.id, "Skip", requested.code, requested.reason, requested.parameter_id
+                )
+                continue
+            base_per_local, _ = requested
+            requested_r = sized.planned_risk * base_per_local / sized.allowed_risk
+
+            capacity = portfolio.assess(priced_book, caps, requested_r)
+            result.capacity = capacity
+            if not capacity.admitted:
+                # NO `parameter_id`. A full book is a fact about the ACCOUNT, not an unset
+                # threshold, and `funnel.py` splits skip causes on exactly that field - the
+                # distinction that once let 1131 unset-parameter refusals read as a quiet day.
+                outcome.decision = DecisionRecord(
+                    instrument.id, "Skip", "RISK", capacity.reason
+                )
+                continue
 
         outcome.decision = DecisionRecord(instrument.id, "Watch", None,
                                           "sized; awaiting a trigger")

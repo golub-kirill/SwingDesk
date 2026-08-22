@@ -362,12 +362,39 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **Both parameters stay `assumed:DR-006` and unratified** until the above is built and the owner
       can rule on numbers whose checks actually run.
 
-- [ ] **`[v]` The four ratified caps are still wired to nothing.** `positions.open_risk_as_of` already
-      computes total open risk and `report.py` already prints it; **nothing compares it to a limit.**
-      Until that lands, `DR-006` is decided and unenforced — the exact shape `AGENTS.md` §7 counts and
-      prints on every gate run. **Build:** a portfolio-level refusal in the candidate path, fail-closed
-      and coded, same shape as the freshness gate. It is the only control that acts on the correlated
-      gap day, so it should not wait behind the two above.
+- [x] **`[v]` The book cap is WIRED — built 2026-08-22 (`DR-006` §9).** `risk.max_open_risk` (4R) and
+      `risk.max_concurrent_positions` (4) both name a consumer now:
+      `trade_management/portfolio.py:limits`. A candidate that would push the book past either leaves
+      with `Skip` / `RISK` at step 6 of `RISK_SPEC.md` §3, after sizing, and the report carries a
+      `BOOK CAPACITY` block. The decided-not-wired census fell by two — derive it with
+      `python tools/verify_parameters.py`, never from this line.
+      **Three owner rulings shaped it, all 2026-08-22, all argued in `DR-006` §9.2:** `open-position`
+      REFUSES over the cap and needs `--acknowledge-over-cap "<reason>"`, which is recorded in a new
+      append-only `cap_overrides` table; candidates are measured against the open book alone, never
+      against each other; a negative open risk frees R-capacity unclamped while the count cap still
+      binds.
+      **What it made visible rather than introduced:** `positions.open_risk_as_of` sums across
+      currencies with no FX conversion, and cannot convert — the dependency law lets that module
+      depend only on `platform`. Its docstring now says so and `portfolio.book` is the only converter.
+      **Track A restarted 2026-08-22** — one frozen file, and the change moves decision output.
+
+- [ ] **`[v]` `account.fx_rate_cad` is unset, and that now costs more than it used to.** The book cap
+      is denominated in R and R is base currency, so a CAD position's risk has no expression at all:
+      `open-position` refuses a `.TO` entry, and if one were recorded anyway the whole book becomes
+      untotallable and **every candidate in every later run refuses**. Sizing has refused CAD
+      candidates on the same parameter since 2026-08-16, so nothing regressed — the surface just got
+      wider.
+      **Owner, 2026-08-22: worth setting when the time is right.** Not a value any agent may draft
+      (`AGENTS.md` §3): a rate is a measured market fact and needs a source and an as-of date. Canada
+      is deferred (`DR-014`), so this is not blocking anything today.
+
+- [ ] **`[v]` The book's R excludes round-trip costs and 1R includes them** (`DR-006` §10).
+      `Position.open_risk` is `(entry − stop) × shares`; `sizing.allowed_risk` is spent against
+      `entry − stop + costs`. So a book measured in R understates by the cost fraction — small,
+      one-directional, and in the PERMISSIVE direction. Not corrected in the build, deliberately:
+      `ALLOCATION_SPEC.md` §6 rule 6 names `Position.open_risk` as the quantity, and inventing a
+      cost-inclusive variant at the call site would put a second definition of open risk in the tree.
+      Needs a domain answer, not an implementation one.
 
 - [ ] **`[c]` DR-009** · **`[c]` DR-001 / DR-002 / DR-003 / DR-005** — proposed since 08-02, used as
       working fact throughout.
@@ -407,6 +434,20 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 - [ ] **`[c]` PR-009** registered, blocked on Task 8.
 - [ ] **`[c]` Four prereg ids unwritten:** PR-001b (unblocked, writable now) · PR-003 (needs a daily
       return series) · PR-004 (needs ~100 journalled trades) · PR-006 (needs a forward test).
+- [ ] **`[v]` `PR-011` — screening out the instrument classes that cannot hold a stop — IS NOT
+      WRITTEN.** Migrated here 2026-08-22 from `SESSION-HANDOFF-2026-08-22.md` §3 before that file
+      was deleted; it lived nowhere else, which is why it is now in the one open-work list
+      (`AGENTS.md` §10.7).
+      **The finding it rests on:** the gap rate is not a general property of holding overnight. It
+      splits hard by instrument class — bond ETFs **27.4%**, foreign-market ETFs **23.3%**, US single
+      names **7.5%** — and both bad classes have a mechanical cause rather than a statistical one. A
+      bond ETF's 2×ATR stop is 0.57% of price while round-trip costs eat 88% of it; a foreign ETF's
+      underlying trades while the US market is shut, so the stop is unenforceable by construction.
+      **The trap, and the reason this is a pre-registration rather than a change:** excluding those
+      classes flips the sign of mean net R (−0.0691 → +0.0362) **on the fitted data**. That number is
+      post-hoc and **must not be adopted as a finding**. A screen justified by a mechanism is
+      registerable; a screen justified by the sign it produces on the sample that suggested it is
+      the thing pre-registration exists to stop.
 - [ ] **`[c]` Prereg id-reservation has no gate** — three ids have already collided.
       `docs/prereg/README.md`:52 says "worth fixing if a third one appears." A third has appeared.
 - [x] **`[v]` PR-002's verdict corrected to `INCONCLUSIVE` — 2026-08-16, council-reviewed.**

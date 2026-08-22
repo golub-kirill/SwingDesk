@@ -33,6 +33,18 @@ def exchange_for(ticker: str) -> Exchange:
     return Exchange.TSX if ticker.upper().endswith(_TSX_SUFFIX) else Exchange.NYSE
 
 
+def currency_for(ticker: str) -> str:
+    """Trading currency for a vendor ticker, from the same symbology rule as `exchange_for`.
+
+    Here rather than in a caller because it was already written twice - once where the pipeline
+    mints an `Instrument` for a held position, once implicitly wherever a `.TO` name is treated as
+    Canadian. A rule stated in two places is a rule that will disagree with itself, and this one
+    decides which cost parameters apply and whether an FX rate is required (`DR-010`, `AGENTS.md`
+    §3: USA and Canada are never merged).
+    """
+    return "CAD" if exchange_for(ticker) is Exchange.TSX else "USD"
+
+
 @lru_cache(maxsize=4)
 def _calendar(exchange: Exchange) -> Any:
     return mcal.get_calendar(exchange.value)

@@ -12,11 +12,12 @@ from pydantic import ValidationError
 
 from swingdesk.application import universe as universe_builder
 from swingdesk.application.pipeline import run
+from swingdesk.contracts.observation import ParameterUse
 from swingdesk.contracts.position import ActionStatus, Fill, ManagementAction, Position
 from swingdesk.contracts.reference import Instrument
 from swingdesk.contracts.run import RunMode
 from swingdesk.journal_evidence.journal import Journal
-from swingdesk.journal_evidence.positions import PositionStore
+from swingdesk.journal_evidence.positions import CapOverride, PositionStore
 from swingdesk.market_data import BarStore, vendor_yahoo
 from swingdesk.market_data.retry import RetryingFetcher
 from swingdesk.platform.clock import FixedClock, SystemClock
@@ -24,15 +25,20 @@ from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
 from swingdesk.presentation import notify, report
 from swingdesk.reference_data import calendar as cal
 from swingdesk.reference_data.directory import DirectoryStore
-from swingdesk.trade_management import manage
 
-# `_costs_per_share` carries a leading underscore because `sizing.py` never expected a second
-# caller - and it still cannot be promoted to a public name today, because `sizing.py` is one of
-# the three files frozen since 2026-08-11 (HANDOFF.md 5) and a rename is a change to it regardless
-# of size. Reused as-is rather than duplicating DR-010's formula, which would create the exact
-# two-implementations-of-one-number problem AGENTS.md 10.5 exists to prevent. Promote this to a
-# public name once the freeze lifts (TODO.md).
-from swingdesk.trade_management.sizing import Refusal, _costs_per_share
+# `costs_per_share` was `_costs_per_share` until 2026-08-22 and carried a comment saying it could
+# not be renamed while `sizing.py` was frozen. The freeze lifted on 2026-08-17 and the amendment
+# that replaced it costs a Track A restart per merge, which this change is already paying - so the
+# private import is gone rather than being explained again. Same reasoning promoted
+# `to_base_currency`, which the portfolio cap needs for exactly the DR-010 reason this note gives:
+# reuse the one implementation, never copy the formula.
+from swingdesk.trade_management import manage, portfolio
+from swingdesk.trade_management.sizing import (
+    Refusal,
+    allowed_risk,
+    costs_per_share,
+    to_base_currency,
+)
 
 DEFAULT_DATA = Path("data")
 
@@ -132,6 +138,10 @@ def main(argv: list[str] | None = None) -> int:
                         help="override the DR-010 round-trip cost estimate with the real one, "
                              "once a broker confirmation names it")
     opened.add_argument("--strategy", default="unspecified")
+    opened.add_argument("--acknowledge-over-cap", default=None, metavar="REASON",
+                        help="record this position even though it breaches a ratified portfolio "
+                             "cap (DR-006 8.3). The reason is written to the store, not just "
+                             "printed - an override nobody can audit is not an override")
     opened.add_argument("--position-id", default=None,
                         help="override the default POS-<instrument id>-<opened-on> identity")
     opened.add_argument("--data", type=Path, default=DEFAULT_DATA)
@@ -417,6 +427,59 @@ def _respond(args: argparse.Namespace) -> int:
     return 0
 
 
+def _capacity_for(
+    positions: PositionStore, position: Position, registry: ParameterRegistry, now: datetime
+) -> portfolio.Capacity | Refusal:
+    """Is there room in the book for `position`? (`DR-006` §8.3.)
+
+    Read BEFORE the position is recorded, so the book it is measured against is the book as it
+    stood when the fill happened rather than one that already includes it.
+
+    The R unit comes from `sizing.allowed_risk` and the conversion from `sizing.to_base_currency` -
+    this command sizes nothing, so both would otherwise have to be re-derived here, which is how a
+    second definition of 1R gets into the tree.
+    """
+    try:
+        caps = portfolio.limits(registry)
+    except ParameterUnset as unset:
+        return Refusal(
+            "RISK",
+            "the book cannot be judged against a cap that has no value; set it, or acknowledge "
+            "the breach explicitly",
+            parameter_id=unset.parameter_id,
+        )
+
+    budget = allowed_risk(registry)
+    if isinstance(budget, Refusal):
+        return budget
+    r_unit, _equity_use, _risk_use = budget
+
+    def rate_for(currency: str) -> tuple[Decimal, tuple[ParameterUse, ...]] | Refusal:
+        return to_base_currency(currency, registry)
+
+    priced = portfolio.book(positions.open_as_of(now), rate_for, r_unit)
+    if isinstance(priced, Refusal):
+        return priced
+
+    currency = cal.currency_for(position.instrument_id)
+    rate = rate_for(currency)
+    if isinstance(rate, Refusal):
+        # Reworded rather than passed through: the underlying refusal is about SIZING across
+        # currencies, and this command sizes nothing. What matters here is the consequence, which
+        # is larger than this one command - a position whose risk cannot be expressed in R makes
+        # the whole book untotallable, so every candidate in every later run refuses too. Owner
+        # ruling 2026-08-22: refuse, and let --acknowledge-over-cap record it anyway.
+        return Refusal(
+            rate.code,
+            f"this position is denominated in {currency} and its risk cannot be expressed in R, "
+            f"so the cap cannot be applied to it - and once it is in the book, no later run can "
+            f"total the book either, which would refuse every candidate: {rate.reason}",
+            parameter_id=rate.parameter_id,
+        )
+    base_per_local, _uses = rate
+    return portfolio.assess(priced, caps, position.open_risk * base_per_local / r_unit)
+
+
 def _open_position(args: argparse.Namespace) -> int:
     """Record a manually-executed entry. `TODO.md` §6b item 1.
 
@@ -446,7 +509,7 @@ def _open_position(args: argparse.Namespace) -> int:
     if args.costs_per_share is not None:
         costs = args.costs_per_share
     else:
-        costs_result = _costs_per_share(args.entry, instrument.currency, registry)
+        costs_result = costs_per_share(args.entry, instrument.currency, registry)
         if isinstance(costs_result, Refusal):
             # Same fail-closed rule sizing itself follows: a missing cost parameter is refused,
             # never assumed. `--costs-per-share` is the owner's own escape hatch once a broker
@@ -467,7 +530,32 @@ def _open_position(args: argparse.Namespace) -> int:
         print(f"position REFUSED  {invalid}", file=sys.stderr)
         return 2
 
+    acknowledged = (args.acknowledge_over_cap or "").strip()
+
     with PositionStore(args.data / "positions.duckdb") as store:
+        # The portfolio cap, BEFORE the position is recorded (DR-006 8.3; owner ruling
+        # 2026-08-22). This command records a fill that has already happened at the broker, so
+        # refusing it makes the store disagree with reality - which is why the escape hatch
+        # exists and why it demands a reason rather than a bare flag. What it must never do is
+        # record a fifth position as though the limit had been met.
+        capacity = _capacity_for(store, position, registry, now)
+        breached = isinstance(capacity, Refusal) or not capacity.admitted
+        binding = (
+            capacity.parameter_id or capacity.code if isinstance(capacity, Refusal)
+            else capacity.binding
+        )
+        detail = capacity.reason
+
+        if breached and not acknowledged:
+            print(f"position REFUSED  {detail}", file=sys.stderr)
+            print(
+                '                  If the position is real, re-run with '
+                '--acknowledge-over-cap "<reason>". The reason is recorded, because a limit '
+                'crossed without a stated reason is a decision nobody can review.',
+                file=sys.stderr,
+            )
+            return 2
+
         try:
             store.record(position)
         except ValueError as duplicate:
@@ -476,6 +564,27 @@ def _open_position(args: argparse.Namespace) -> int:
             # written here (positions.py: "Rejects a version that already exists").
             print(f"position REFUSED  {duplicate}", file=sys.stderr)
             return 2
+
+        if breached:
+            book = None if isinstance(capacity, Refusal) else capacity.book
+            store.record_cap_override(CapOverride(
+                position_id=position.position_id, recorded_at=now,
+                binding=binding or "RISK",
+                positions_open=0 if book is None else book.count,
+                open_risk_r=Decimal(0) if book is None else book.open_risk_r,
+                requested_r=(
+                    Decimal(0) if isinstance(capacity, Refusal) else capacity.requested_r
+                ),
+                reason=acknowledged,
+            ))
+            print(f"CAP BREACH ACKNOWLEDGED  {binding}", file=sys.stderr)
+            print(f"                         {detail}", file=sys.stderr)
+            print(f"                         your reason: {acknowledged}", file=sys.stderr)
+        elif acknowledged:
+            # A flag that excused nothing. Said out loud rather than swallowed, so nobody carries
+            # it forward believing the cap was crossed and forgiven.
+            print("note: --acknowledge-over-cap was passed and the position is INSIDE the cap; "
+                  "nothing was overridden and no override was recorded", file=sys.stderr)
 
     print(
         f"recorded {position.position_id}: {position.shares} sh {instrument.id} @ "
@@ -486,7 +595,6 @@ def _open_position(args: argparse.Namespace) -> int:
         f"({position.initial_risk} total) - this is what every R on this position is "
         f"measured against, and it never changes (RISK_SPEC 2)"
     )
-    return 0
     return 0
 
 

@@ -162,17 +162,112 @@ def test_open_position_accepts_a_real_broker_cost_override(tmp_path: Path) -> No
     assert recorded[0].initial_costs_per_share == Decimal("1.23")
 
 
-def test_open_position_prices_cad_through_the_cad_parameters(tmp_path: Path) -> None:
-    """`.TO` resolves to CAD, and CAD costs are a SEPARATE registry entry (AGENTS.md 3: USA and
-    Canada are never merged) - this proves the command reads the right one, not just A currency."""
+def _overrides(tmp_path: Path) -> list:
+    """Every acknowledged cap breach in the store under `tmp_path`."""
+    from swingdesk.journal_evidence.positions import PositionStore
+
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        return store.cap_overrides()
+
+
+def _tiny(tmp_path: Path, ticker: str) -> tuple[int, list]:
+    """One position worth 0.01R, so the count cap binds long before the R cap can."""
+    return _open(tmp_path, ticker, "--entry", "100", "--shares", "10", "--stop", "99.9",
+                 "--opened-on", "2026-08-10")
+
+
+def test_open_position_refuses_a_cad_fill_while_the_rate_is_unset(tmp_path: Path) -> None:
+    """The book cap is denominated in R and R is base currency, so a CAD position's risk cannot be
+    expressed at all while `account.fx_rate_cad` is unset - and once such a position is in the
+    book, no later run can total the book either, which would refuse every candidate.
+
+    Owner ruling 2026-08-22: refuse, and let `--acknowledge-over-cap` record it anyway. This is the
+    same fail-closed answer `size_long` already gives a CAD candidate, reached from a command that
+    sizes nothing.
+    """
     code, recorded = _open(
-        tmp_path, "SHOP.TO", "--entry", "80", "--shares", "10", "--stop", "76",
+        tmp_path, "TEST2.TO", "--entry", "80", "--shares", "10", "--stop", "76",
         "--opened-on", "2026-08-10",
     )
+    assert code == 2
+    assert recorded == [], "a refused position must not reach the store"
+
+
+def test_an_acknowledged_cad_fill_is_recorded_with_its_reason(tmp_path: Path) -> None:
+    """The escape hatch, and the CAD cost pricing it must not disturb. `.TO` resolves to CAD and
+    CAD costs are a SEPARATE registry entry (AGENTS.md 3: USA and Canada are never merged), so this
+    still proves the command reads the right one - it just has to say so out loud first."""
+    code, recorded = _open(
+        tmp_path, "TEST2.TO", "--entry", "80", "--shares", "10", "--stop", "76",
+        "--opened-on", "2026-08-10",
+        "--acknowledge-over-cap", "paper position, CAD rate not set yet",
+    )
     assert code == 0
-    assert recorded[0].instrument_id == "SHOP.TO"
+    assert recorded[0].instrument_id == "TEST2.TO"
     # max(0.25, 50bp * 80) = max(0.25, 0.40) = 0.40
     assert recorded[0].initial_costs_per_share == Decimal("0.40")
+
+    overrides = _overrides(tmp_path)
+    assert len(overrides) == 1
+    assert overrides[0].position_id == recorded[0].position_id
+    assert overrides[0].binding == "account.fx_rate_cad"
+    assert overrides[0].reason == "paper position, CAD rate not set yet"
+
+
+def test_a_fifth_position_is_refused_on_the_concurrency_cap(tmp_path: Path) -> None:
+    """`risk.max_concurrent_positions` is 4 (DR-006 8.3, owner). Four tiny positions leave the R
+    cap nowhere near binding, so the count is the only thing that can refuse the fifth."""
+    for ticker in ("TEST1", "TEST2", "TEST3", "TEST4"):
+        code, _ = _tiny(tmp_path, ticker)
+        assert code == 0, f"{ticker} is inside the cap and must be recorded"
+
+    code, recorded = _tiny(tmp_path, "TEST5")
+    assert code == 2
+    assert len(recorded) == 4, "the fifth must not reach the store"
+    assert _overrides(tmp_path) == [], "a refusal is not an override"
+
+
+def test_a_fifth_position_is_recorded_when_the_breach_is_acknowledged(tmp_path: Path) -> None:
+    for ticker in ("TEST1", "TEST2", "TEST3", "TEST4"):
+        _tiny(tmp_path, ticker)
+
+    code = cli.main([
+        "open-position", "TEST5", "--entry", "100", "--shares", "10", "--stop", "99.9",
+        "--opened-on", "2026-08-10", "--data", str(tmp_path),
+        "--acknowledge-over-cap", "scaling in on a plan agreed with myself",
+    ])
+    assert code == 0
+
+    overrides = _overrides(tmp_path)
+    assert len(overrides) == 1
+    assert overrides[0].binding == "risk.max_concurrent_positions"
+    assert overrides[0].positions_open == 4, "the book AS IT STOOD, not including the new one"
+    assert overrides[0].reason == "scaling in on a plan agreed with myself"
+
+
+def test_a_blank_reason_is_not_an_acknowledgement(tmp_path: Path) -> None:
+    """Production Rule 3.8's shape: an approval with no stated reason is an unlogged judgment, and
+    whitespace is what a hurried operator types to get past a prompt."""
+    for ticker in ("TEST1", "TEST2", "TEST3", "TEST4"):
+        _tiny(tmp_path, ticker)
+
+    code = cli.main([
+        "open-position", "TEST5", "--entry", "100", "--shares", "10", "--stop", "99.9",
+        "--opened-on", "2026-08-10", "--data", str(tmp_path), "--acknowledge-over-cap", "   ",
+    ])
+    assert code == 2
+
+
+def test_the_flag_records_no_override_when_nothing_was_breached(tmp_path: Path) -> None:
+    """A flag that excused nothing must leave no trace saying it did. An audit table that collects
+    overrides for positions inside the cap is an audit table nobody can read."""
+    code = cli.main([
+        "open-position", "TEST1", "--entry", "100", "--shares", "10", "--stop", "99.9",
+        "--opened-on", "2026-08-10", "--data", str(tmp_path),
+        "--acknowledge-over-cap", "belt and braces",
+    ])
+    assert code == 0
+    assert _overrides(tmp_path) == []
 
 
 def test_open_position_refuses_an_invalid_stop_cleanly(tmp_path: Path) -> None:

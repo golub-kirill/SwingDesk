@@ -2,12 +2,20 @@
 
 ```
 date:       2026-08-08
-status:     proposed — owner ratification required
+status:     accepted — partially ratified by the owner 2026-08-22 (four of six; sector and
+            correlation stay proposed, §8.4)
 parameters: risk.max_open_risk, risk.max_concurrent_positions, risk.max_sector_risk,
             risk.correlation_threshold, risk.max_position_value,
             risk.liquidity_cap_order_to_adtv_pct
-components: none - swingdesk.trade_management.sizing and the allocation path read these
+components: none - swingdesk.trade_management.portfolio enforces the book caps,
+            swingdesk.trade_management.sizing the position-value cap
+implemented_by: src/swingdesk/trade_management/portfolio.py :: risk.max_open_risk
 ```
+
+**The header moved from `proposed` to `accepted` on 2026-08-22 and §9 says why**, so the change is
+recorded rather than silent: §8.3 ratified four of the six on that date and the header went on
+reading `proposed — owner ratification required` for as long as the caps reached no code. Gate 20
+now binds this record to the file that enforces it.
 
 `ALLOCATION_SPEC.md` §2 named six constraints and reported all six `unset` — which meant the system
 could not tell you that you had too many candidates, because it did not know what "too many" was.
@@ -313,3 +321,82 @@ and it is the same shape as `SECURITY.md` §6 treating this vendor as untrusted 
 
 Nothing here changes what §8.3 ratified. It moves `risk.max_sector_risk` from "cannot be evaluated"
 to "buildable, with a named guard that must land with it".
+
+---
+
+## 9. Built 2026-08-22, and the three rulings that shaped it
+
+§8 ratified the numbers. This section records what enforces them, because a ratified decision that
+reaches no code is a decision that did not happen (`AGENTS.md` §7) — and between §8.3 and this
+section, these two caps sat in the registry with `read_by: none` for exactly as long as it took to
+build the gate.
+
+### 9.1 Where the cap lives
+
+| | |
+|---|---|
+| The verdict | `src/swingdesk/trade_management/portfolio.py` — pure: `limits`, `book`, `assess` |
+| The candidate path | `application/pipeline.py`, step 6 of `RISK_SPEC.md` §3, after `size_long` |
+| The manual entry | `presentation/cli.py`, `open-position`, before the position is recorded |
+| The display | `presentation/report.py`, a `BOOK CAPACITY` block |
+| The audit of a breach | `positions.duckdb`, new append-only table `cap_overrides` |
+
+The refusal is `Skip` / `RISK` — `CODES.md` reserved *open/sector/currency/event limit exceeded*
+with action *Skip or choose better candidate* long before any arithmetic could raise it, and it
+carries **no** `parameter_id`: a full book is a fact about the account, not an unset threshold, and
+`funnel.py` splits skip causes on exactly that field.
+
+### 9.2 Three owner rulings, taken before the build
+
+1. **`open-position` refuses over the cap**, and records only with
+   `--acknowledge-over-cap "<reason>"`. The reason lands in `cap_overrides` with the book as it
+   stood — an override that is only printed is a decision nobody can review afterwards. The command
+   records a fill that already happened at the broker, so the escape hatch is required; what it
+   must never do is record a fifth position as though the limit had been met.
+2. **Candidates are measured against the open book alone.** A `Watch` is not a position and consumes
+   no capacity. Allocating the last slot *between* admissible candidates is a ranking,
+   `rs.ranking_method` is `unset`, and `ALLOCATION_SPEC.md` §6 rule 4 forbids falling back to id
+   order — which would be an alphabetical bias silently applied. The report says so in the block, so
+   "room for 3 more" cannot be read as "open the three Watch names below".
+3. **Negative open risk counts as it is, unclamped.** A stop above entry frees R-capacity, and
+   `risk.max_concurrent_positions` still bounds how many instruments can gap at once. Clamping would
+   hide the difference between "risk removed" and "risk locked in as profit", which is the reason
+   `Position.open_risk` already refuses to clamp.
+
+### 9.3 What the build made visible, and did not invent
+
+- **A mixed-currency book cannot be totalled while `account.fx_rate_cad` is `unset`.** The cap is
+  denominated in R and R is base currency, so a CAD position's risk has no expression at all. The
+  consequence is larger than one command: once such a position is in the book, no later run can
+  total the book either, and every candidate refuses. `open-position` therefore refuses a `.TO`
+  entry and names the parameter. Canada is deferred (`DR-014`), so this costs nothing today.
+- **`PositionStore.open_risk_as_of` sums across currencies with no conversion.** It has never been
+  wrong — the store holds no CAD position — and it cannot convert, because the dependency law lets
+  that module depend only on `platform`. Its docstring now says plainly that it is a raw
+  per-currency sum, and everything that compares a book to a limit goes through `portfolio.book`.
+- **Open risk excludes round-trip costs and 1R includes them.** `Position.open_risk` is
+  `(entry − stop) × shares` and `sizing.allowed_risk` is spent against `entry − stop + costs`, so a
+  book measured in R understates by the cost fraction — small, one-directional, and in the
+  permissive direction. Recorded rather than corrected: `ALLOCATION_SPEC.md` §6 rule 6 names
+  `Position.open_risk` as the quantity, and inventing a cost-inclusive variant here would put a
+  second definition of open risk in the tree. §10 carries it as an open item.
+
+### 9.4 What this still does not do
+
+`risk.max_sector_risk` and `risk.correlation_threshold` remain `assumed:DR-006` and unenforced —
+§8.4 established that both are *buildable*, not that either is built. The degeneracy guard §8.7
+names is a precondition of the sector cap and does not exist yet. Neither omission weakens the two
+caps above: they are the ones §8.2 shows acting on the failure mode that actually occurs.
+
+## 10. Open items added 2026-08-22
+
+- [ ] **Whether the book's R should include round-trip costs** (§9.3). The understatement is the
+      cost fraction and always permissive. Fixing it means either a cost-inclusive open-risk
+      property on `Position` or a cap expressed against `initial_risk`, and both are domain
+      definitions rather than implementation details.
+- [ ] **`account.fx_rate_cad` needs a value with a source and an as-of date.** Until it has one the
+      cap cannot see a Canadian position at all. Owner's own note, 2026-08-22: worth doing when the
+      time is right. It is not a value this record may draft — a rate is a measured market fact.
+- [ ] **`risk.liquidity_cap_order_to_adtv_pct` is ratified and still reads nothing.** §2 said it
+      would not bind until the account is roughly 20× larger, which is why it was not built here.
+      That is a reason to defer it, not a reason for it to be invisible.

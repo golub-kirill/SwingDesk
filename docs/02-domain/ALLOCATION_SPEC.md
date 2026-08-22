@@ -39,8 +39,8 @@ So "candidates exceed capital" almost never means the cash ran out. It means one
 
 | Constraint | Parameter | Value | Evaluable? |
 |---|---|---|---|
-| total open risk across positions | `risk.max_open_risk` | 6R | yes |
-| how many positions can be managed at once | `risk.max_concurrent_positions` | 6 | yes |
+| total open risk across positions | `risk.max_open_risk` | 4R | yes — **enforced** |
+| how many positions can be managed at once | `risk.max_concurrent_positions` | 4 | yes — **enforced** |
 | one position's share of the account | `risk.max_position_value` | 2500 | yes |
 | order size against liquidity | `risk.liquidity_cap_order_to_adtv_pct` | 1.0% | yes |
 | risk concentrated in one sector or theme | `risk.max_sector_risk` | 2R | **no** — no sector source |
@@ -49,6 +49,13 @@ So "candidates exceed capital" almost never means the cash ran out. It means one
 **All six were `unset` when this document was written.** `DR-006-portfolio-risk-block.md` proposed
 values for them on 2026-08-08 (`assumed:DR-006`, awaiting ratification), and that record's §3 carries
 the evaluability column above.
+
+**Updated 2026-08-22.** The owner ratified four of the six with provenance `owner` (`DR-006` §8.3),
+and the first two moved: the anchor is **4R and 4 positions**, not 6R and 6. The trade log this
+project did not have when §1 of that record was written says a gap exit loses −1.692R rather than
+1R, so a whole-book gap session costs 10.15R and the −15R drawdown pause is 1.5 sessions away, not
+the two and a half §1 designed for. Four restores the intent. The two rows still marked **no** are
+`assumed` and unratified; `DR-006` §8.4 shows both are buildable and neither is built.
 
 Two things follow, and they are different:
 
@@ -66,6 +73,13 @@ refusal and the allocation path has nothing to allocate.
 `CODES.md` already reserves the outcome — `RISK`: *open/sector/currency/event limit exceeded*, action
 *Skip or choose better candidate*. The skip code for a candidate that lost the allocation exists;
 the arithmetic that would raise it does not.
+
+**Half of that last sentence stopped being true on 2026-08-22, and the half that remains is the
+point of §7.** The arithmetic for the two ADMISSIBILITY caps exists —
+`trade_management/portfolio.py`, read at step 6 of `RISK_SPEC.md` §3 — and a candidate that would
+push the book past either leaves with `Skip` / `RISK`. What still does not exist is the RANKING:
+choosing which of several admissible candidates takes the last slot. Those are the two questions §1
+insists on keeping apart, and this is what it looks like to have answered one of them.
 
 ## 3. What the course supplies
 
@@ -181,10 +195,35 @@ express it.
 - **No strategy to generate the pressure.** The live path reaches `"sized; awaiting a trigger"`, so
   the run produces at most one candidate per instrument and never competes for capital.
 
+**Correction, 2026-08-22: the first two bullets overstate the blockage, and `DR-006` §8.4 measured
+it.** Correlation is not blocked at all — the full 1152 × 1152 matrix over 60 sessions of daily
+returns builds from the existing store in 0.09 s, so "nothing computes one" is a statement about
+missing CODE, not missing data. Sector has a free source for live admission (`yfinance` returns it
+directly, with an ETF look-through), and the vendor fabricates that look-through for bond funds, so a
+degeneracy guard is a precondition rather than a refinement (§8.7). What is genuinely missing is only
+the **point-in-time** sector, which restricts a backtest and not live admission. The bullets are kept
+as written because they are what was believed; neither is a reason the two caps stay unratified.
+
 **Allocation is therefore specified ahead of its first use, deliberately** — the same reason the
 intrabar policy in `EXECUTION_MODEL.md` §4 was written before a target existed. Written now it costs
 a document; written the day 1,133 universe members first produce 40 admissible candidates, it is
 written under pressure and against a live account.
+
+### What was built on 2026-08-22, and what deliberately was not
+
+**Built: the admissibility half.** Each candidate is measured against the OPEN BOOK — "if this one
+were taken, would the book pass 4R or 4 positions?" — and refused with `Skip` / `RISK` if it would.
+`open-position` applies the same test before recording a manual entry, and refuses without
+`--acknowledge-over-cap "<reason>"`, which is itself recorded (`DR-006` §9.2).
+
+**Not built: the ranking.** Candidates do not compete with each other for the remaining capacity, and
+that is rule 4 being obeyed rather than a shortcut: `rs.ranking_method` is `unset`, so there is no
+ordering to apply, and truncating an id-sorted list is §4's alphabetical bias. The consequence has to
+be said out loud wherever the room is displayed, and the run report says it — **the room shown is for
+ONE more position, not for every candidate listed under it.** Two `Watch` names each individually
+inside a book with one slot left are still two names and one slot.
+
+`deferred` (§5) is therefore still unbuilt too: with no ranking there is no line to fall below.
 
 ## 8. Open items
 

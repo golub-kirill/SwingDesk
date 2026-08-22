@@ -23,7 +23,7 @@ from swingdesk.contracts.position import (
 )
 from swingdesk.contracts.run import RunMode
 from swingdesk.journal_evidence.journal import Journal
-from swingdesk.journal_evidence.positions import PositionStore
+from swingdesk.journal_evidence.positions import CapOverride, PositionStore
 from swingdesk.market_data import BarStore
 from swingdesk.platform.clock import FixedClock
 from swingdesk.trade_management import manage
@@ -602,3 +602,44 @@ def test_a_closed_position_contributes_no_open_risk(store) -> None:
     store.record(_position(version=2, closed_on=date(2026, 1, 15),
                            knowledge_time=datetime(2026, 1, 14, tzinfo=UTC)))
     assert store.open_risk_as_of(AS_OF) == Decimal(0)
+
+
+# ------------------------------------------------------------------ acknowledged cap breaches
+
+
+def _override(**kwargs) -> CapOverride:
+    base = dict(
+        position_id="POS-1", recorded_at=datetime(2026, 8, 22, 18, 0, tzinfo=UTC),
+        binding="risk.max_concurrent_positions", positions_open=4,
+        open_risk_r=Decimal("3.90"), requested_r=Decimal("1.00"),
+        reason="the fill already happened at the broker",
+    )
+    base.update(kwargs)
+    return CapOverride(**base)
+
+
+def test_a_cap_override_is_readable_with_the_book_it_excused(store) -> None:
+    """The book is STORED, not recomputed later: open risk is derived from stops that move, so
+    "4 positions and 3.90R" is only ever a fact about the moment the owner answered."""
+    store.record_cap_override(_override())
+
+    recorded = store.cap_overrides()
+    assert len(recorded) == 1
+    assert recorded[0].binding == "risk.max_concurrent_positions"
+    assert recorded[0].positions_open == 4
+    assert recorded[0].open_risk_r == Decimal("3.90")
+    assert recorded[0].reason == "the fill already happened at the broker"
+
+
+def test_cap_overrides_are_append_only(store) -> None:
+    store.record_cap_override(_override())
+    with pytest.raises(ValueError, match="append-only"):
+        store.record_cap_override(_override(reason="a different story"))
+    assert store.cap_overrides()[0].reason == "the fill already happened at the broker"
+
+
+def test_cap_overrides_are_ordered_oldest_first(store) -> None:
+    store.record_cap_override(_override(
+        position_id="POS-2", recorded_at=datetime(2026, 8, 23, 18, 0, tzinfo=UTC)))
+    store.record_cap_override(_override())
+    assert [o.position_id for o in store.cap_overrides()] == ["POS-1", "POS-2"]
