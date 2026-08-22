@@ -153,11 +153,6 @@ class Capacity:
         return max(self.caps.max_concurrent - self.book.count, 0)
 
     @property
-    def risk_remaining_r(self) -> Decimal:
-        """R left under `risk.max_open_risk`. May be negative - an over-cap book is a real state."""
-        return self.caps.max_open_risk - self.book.open_risk_r
-
-    @property
     def reason(self) -> str:
         """The text that travels on the refusal, or on the admission."""
         if self.binding == MAX_CONCURRENT:
@@ -180,10 +175,16 @@ class Capacity:
 def assess(book: Book, caps: Caps, requested_r: Decimal) -> Capacity:
     """Does one more position of `requested_r` fit inside both caps?
 
-    The count is tested first because it is the cleaner cause to report: "the book is full" is a
-    fact an owner can act on, while an R figure needs the arithmetic explained. Both are checked -
-    `DR-006` §1 sets them to the same number precisely so neither can bind while the other looks
-    satisfied, and a run that stopped at the first would not notice if they ever diverged.
+    **Both caps refuse; only the first one to bind is NAMED.** The count is tested first because it
+    is the cleaner cause to report - "the book is full" is a fact an owner can act on, while an R
+    figure needs the arithmetic explained - and `binding` carries one id because a refusal with two
+    causes is a refusal an owner cannot answer. So a candidate over both caps reports the count and
+    says nothing about the R budget, which is a reporting choice and not a gap in enforcement:
+    passing this function requires being inside both.
+
+    `DR-006` §1 sets the two to the same number, so they normally bind together. If they ever
+    diverge, this reports whichever bound first rather than both - `Capacity` has one `binding`
+    field, deliberately.
     """
     binding: str | None = None
     if book.count + 1 > caps.max_concurrent:

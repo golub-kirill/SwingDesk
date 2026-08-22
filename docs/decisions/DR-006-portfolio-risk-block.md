@@ -374,6 +374,14 @@ carries **no** `parameter_id`: a full book is a fact about the account, not an u
   wrong — the store holds no CAD position — and it cannot convert, because the dependency law lets
   that module depend only on `platform`. Its docstring now says plainly that it is a raw
   per-currency sum, and everything that compares a book to a limit goes through `portfolio.book`.
+- **The cap widened what can refuse a manual entry, and that is worth stating rather than
+  discovering.** Before it, `open-position` needed only the `DR-010` cost parameters; it now also
+  needs `account.equity` and `risk.per_trade_pct` (one R has to be valued before a book can be
+  measured in R), both caps, and — for a `.TO` name — the FX rate. All carry values today except
+  the rate, so nothing is blocked; each refusal names its parameter, and
+  `--acknowledge-over-cap` records past any of them. The general shape: a command that records a
+  FACT now depends on parameters that describe a POLICY, which is correct fail-closed behaviour and
+  is also one registry edit away from being felt.
 - **Open risk excludes round-trip costs and 1R includes them.** `Position.open_risk` is
   `(entry − stop) × shares` and `sizing.allowed_risk` is spent against `entry − stop + costs`, so a
   book measured in R understates by the cost fraction — small, one-directional, and in the

@@ -451,7 +451,17 @@ def _capacity_for(
 
     budget = allowed_risk(registry)
     if isinstance(budget, Refusal):
-        return budget
+        # Reworded for the same reason the FX refusal below is: `allowed_risk` speaks about sizing,
+        # and this command sizes nothing. Worth naming plainly because it WIDENS what can block the
+        # recording of a fact that already happened at the broker - before the cap existed this
+        # command needed only the DR-010 cost parameters, and it now also needs `account.equity`,
+        # `risk.per_trade_pct`, both caps and (for a `.TO` name) the FX rate.
+        return Refusal(
+            budget.code,
+            f"the cap is denominated in R and one R cannot be valued, so the book cannot be judged "
+            f"at all: {budget.reason}",
+            parameter_id=budget.parameter_id,
+        )
     r_unit, _equity_use, _risk_use = budget
 
     def rate_for(currency: str) -> tuple[Decimal, tuple[ParameterUse, ...]] | Refusal:
@@ -540,8 +550,12 @@ def _open_position(args: argparse.Namespace) -> int:
         # record a fifth position as though the limit had been met.
         capacity = _capacity_for(store, position, registry, now)
         breached = isinstance(capacity, Refusal) or not capacity.admitted
+        # Parenthesised, because `a or b if c else d` parses as `(a or b) if c else d` and reads
+        # to most people as `a or (b if c else d)`. This value labels a row in an append-only audit
+        # table, so a later "clarification" in the wrong direction would mislabel which cap was
+        # crossed in records nobody re-derives.
         binding = (
-            capacity.parameter_id or capacity.code if isinstance(capacity, Refusal)
+            (capacity.parameter_id or capacity.code) if isinstance(capacity, Refusal)
             else capacity.binding
         )
         detail = capacity.reason

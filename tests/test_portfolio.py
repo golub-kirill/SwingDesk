@@ -306,3 +306,112 @@ def test_the_output_hash_moves_when_the_book_fills(wired, registry, tmp_path) ->
                    positions=positions).manifest.output_hash
 
     assert with_room != full
+
+
+def test_a_capacity_refusal_is_not_overwritten_by_a_later_admission(wired, registry) -> None:
+    """`requested_r` varies per candidate because the share count rounds DOWN, so on a partly-full
+    book one candidate can be refused and the next admitted. The report renders `result.capacity`,
+    and assigning it unconditionally left it holding whichever candidate ran last - so a run whose
+    funnel showed RISK skips could print "room for 2 more position(s)".
+
+    The report contradicting the decisions it is rendering is the failure; a refusal sticks.
+    """
+    bars, journal, positions = wired
+    # 3.9R open across two positions: a candidate wanting 0.2R fits, one wanting 0.3R does not.
+    positions.record(_position(1, shares=50, stop="96", instrument="HELD.1"))       # 2.00R
+    positions.record(_position(2, shares=95, stop="98", instrument="HELD.2"))       # 1.90R
+
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
+    result = run([TEST_US], FixedClock(AS_OF), registry, bars, journal, mode=RunMode.LIVE_AS_OF,
+                 fetcher=fixture_fetcher({TEST_US.id: sessions}), positions=positions)
+
+    assert isinstance(result.capacity, portfolio.Capacity)
+    assert result.capacity.book.open_risk_r == Decimal("3.9")
+
+    # Measured, not hoped for: at 3.9R the fixture candidate asks for 0.978R and is refused.
+    assert [o.decision.reason_code for o in result.outcomes] == ["RISK"]
+    assert not result.capacity.admitted, (
+        "a run that refused a candidate on capacity must not report room"
+    )
+
+
+def _wide_range_fetcher(sessions: list[date], half_range: dict[str, str]):
+    """Bars whose daily range differs per instrument, so ATR - and therefore the stop distance,
+    the share count and `planned_risk` - differ too.
+
+    `conftest.make_bars` walks a fixed +-1.00 range whatever the price, so every candidate it
+    produces asks for almost exactly the same R. Two candidates asking for DIFFERENT amounts is the
+    whole condition this test needs, and there is no way to get it from the shared fixture.
+    """
+    from swingdesk.contracts.market import Bar, BarSeries, Interval, Series
+
+    def _fetch(instrument, interval, knowledge_time, period=None):
+        # Held positions are fetched too, before any candidate. They are not the subject here, so
+        # anything not named gets the ordinary narrow range.
+        half = Decimal(half_range.get(instrument.id, "1.00"))
+        bars = []
+        for offset, session in enumerate(sessions):
+            close = Decimal(100) + Decimal(offset) * Decimal("0.50")
+            bars.append(Bar(
+                instrument_id=instrument.id, interval=Interval.DAY, series=Series.RAW,
+                event_time=datetime(session.year, session.month, session.day, tzinfo=UTC),
+                session_date=session, open=close - Decimal("0.25"),
+                high=close + half, low=close - half, close=close,
+                volume=1_000_000 + offset,
+                knowledge_time=datetime(2026, 1, 15, 21, 0, tzinfo=UTC),
+            ))
+        return BarSeries(
+            instrument_id=instrument.id, interval=Interval.DAY, series=Series.RAW,
+            knowledge_time=datetime(2026, 1, 15, 21, 0, tzinfo=UTC), bars=tuple(bars),
+        )
+
+    return _fetch
+
+
+def test_a_later_admitted_candidate_does_not_erase_an_earlier_refusal(wired, registry) -> None:
+    """The ordering case, which the single-candidate test above cannot reach.
+
+    Share counts round DOWN, so `planned_risk` - and therefore `requested_r` - varies between
+    candidates. On a book with 0.6R of room, a candidate asking 0.98R is refused and one asking
+    0.55R is admitted. Assigning `result.capacity` unconditionally left the report holding whichever
+    ran LAST, so the BOOK CAPACITY block printed "room for 2 more position(s)" on a run whose funnel
+    showed a RISK skip - the report contradicting the decisions it was rendering.
+    """
+    from swingdesk.contracts.reference import Exchange, Instrument
+
+    bars, journal, positions = wired
+    positions.record(_position(1, shares=50, stop="96", instrument="HELD.1"))   # 2.0R
+    positions.record(_position(2, shares=70, stop="98", instrument="HELD.2"))   # 1.4R -> 3.4R book
+
+    narrow = Instrument(id="TEST.1", ticker="TEST1", exchange=Exchange.NYSE, currency="USD")
+    wide = Instrument(id="TEST.3", ticker="TEST3", exchange=Exchange.NYSE, currency="USD")
+    sessions = _sessions(narrow.exchange, date(2025, 1, 1), date(2026, 1, 15))
+
+    # The refused one FIRST, the admitted one second - the order that made the bug visible.
+    result = run([narrow, wide], FixedClock(AS_OF), registry, bars, journal,
+                 mode=RunMode.LIVE_AS_OF, positions=positions,
+                 fetcher=_wide_range_fetcher(sessions, {"TEST.1": "1.00", "TEST.3": "13.50"}))
+
+    codes = [o.decision.reason_code for o in result.outcomes]
+    decisions = [o.decision.decision for o in result.outcomes]
+    assert codes == ["RISK", None], f"expected one refusal then one admission, got {codes}"
+    assert decisions == ["Skip", "Watch"]
+
+    assert isinstance(result.capacity, portfolio.Capacity)
+    assert not result.capacity.admitted, (
+        "the admitted candidate must not overwrite the refusal the report has to show"
+    )
+
+
+def test_the_report_never_shows_room_on_a_run_that_refused_for_capacity() -> None:
+    """The invariant above, asserted directly on `assess` so it holds for any candidate order."""
+    book = portfolio.book([_position(1, shares=50), _position(2, shares=95, stop="98")],
+                          _usd_only, R)
+    assert isinstance(book, portfolio.Book)
+    assert book.open_risk_r == Decimal("3.9")
+
+    tight = portfolio.assess(book, CAPS, Decimal("0.3"))   # 4.2R - refused
+    loose = portfolio.assess(book, CAPS, Decimal("0.1"))   # 4.0R - admitted
+    assert not tight.admitted and loose.admitted, (
+        "the two must genuinely differ, or the pipeline test above proves nothing"
+    )

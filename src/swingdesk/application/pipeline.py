@@ -454,8 +454,16 @@ def run(
     # `sizing.to_base_currency` is the ONE place that knows the rule and the one place that refuses
     # when `account.fx_rate_cad` is unset; the portfolio module borrows it rather than owning a
     # second copy.
+    # Memoised per currency: the rate depends on nothing else, and the candidate loop asks for it
+    # once per instrument - 1152 times on the measured universe, for one of two answers. The book
+    # is priced once for the same reason; leaving this uncached would have been inconsistent with
+    # the decision three lines below it.
+    rates: dict[str, tuple[Decimal, tuple[ParameterUse, ...]] | Refusal] = {}
+
     def rate_for(currency: str) -> tuple[Decimal, tuple[ParameterUse, ...]] | Refusal:
-        return to_base_currency(currency, registry)
+        if currency not in rates:
+            rates[currency] = to_base_currency(currency, registry)
+        return rates[currency]
 
     # The open book, and its price in base currency.
     #
@@ -665,7 +673,7 @@ def run(
                 )
                 continue
 
-            requested = to_base_currency(instrument.currency, registry)
+            requested = rate_for(instrument.currency)
             if isinstance(requested, Refusal):
                 # Unreachable while `size_long` refuses the same instrument for the same reason,
                 # and handled anyway: a caller that ever sizes without converting must not have
@@ -678,7 +686,19 @@ def run(
             requested_r = sized.planned_risk * base_per_local / sized.allowed_risk
 
             capacity = portfolio.assess(priced_book, caps, requested_r)
-            result.capacity = capacity
+            # A REFUSAL STICKS; an admission does not overwrite one.
+            #
+            # `requested_r` varies per candidate because the share count rounds DOWN, so on a
+            # partly-full book one candidate can be refused (3.50R + 0.60R > 4R) and the next
+            # admitted (3.50R + 0.40R <= 4R). Assigning unconditionally left `result.capacity`
+            # holding whichever candidate happened to be evaluated last, and the report then said
+            # "room for 2 more position(s)" on a run whose funnel showed RISK skips - the report
+            # contradicting the decisions it was rendering.
+            # `reported`, not `held` - that name already belongs to the held position's bars
+            # earlier in this function, and mypy caught the reuse.
+            reported = result.capacity
+            if not (isinstance(reported, portfolio.Capacity) and not reported.admitted):
+                result.capacity = capacity
             if not capacity.admitted:
                 # NO `parameter_id`. A full book is a fact about the ACCOUNT, not an unset
                 # threshold, and `funnel.py` splits skip causes on exactly that field - the

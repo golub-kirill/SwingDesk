@@ -119,7 +119,7 @@ def to_base_currency(
 
     Public since 2026-08-22, unchanged otherwise. The portfolio cap has to total an open book that
     may hold both currencies, and a second conversion written next to it would be the same rule in
-    two places - the failure master ТЗ §8 forbids and this repository has already paid for. One
+    two places - the failure master TZ §8 forbids and this repository has already paid for. One
     caller inside this module, one in `trade_management.portfolio`, one rule.
 
     Returns exactly `1` with no FX parameter recorded when the instrument is already denominated in
