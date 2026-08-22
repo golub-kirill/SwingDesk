@@ -1119,10 +1119,19 @@ def test_the_restart_is_reported_rather_than_leaving_a_bare_zero(tmp_path: Path)
     # as literals until 2026-08-18, when adding the second restart row broke a test that was
     # measuring nothing about the behaviour it names - the same one-owner rule AGENTS.md 10.5
     # applies to counts, applied to a date.
+    #
+    # And `restarted_at(<the pinned now>)`, not `STREAK_RESTARTS[-1]`: the gate is run above with
+    # SWINGDESK_NOW pinned to 2026-08-18, so the restart it must name is the one in force THEN, not
+    # whichever row happens to be last today. Taking the last row made this test pass for the wrong
+    # reason on 2026-08-22 - it agreed with a wall-clock read in the tool that was itself the bug.
+    from datetime import datetime
+
     sys.path.insert(0, str(TOOLS))
     import track_a_streak
 
-    latest_date, latest_reason = track_a_streak.STREAK_RESTARTS[-1]
+    latest_date, latest_reason = track_a_streak.restarted_at(
+        datetime(2026, 8, 18, 22, 0, tzinfo=track_a_streak.LOCAL_ZONE)
+    )
 
     assert code == 0, "advisory - a restart must never fail the gate"
     assert "track A streak: 0" in out
@@ -1143,7 +1152,6 @@ def test_the_restart_date_itself_is_never_reported_as_a_break() -> None:
 
     import track_a_streak
 
-    restart = track_a_streak.STREAK_RESTARTS[-1][0]
     attempts = [
         track_a_streak.Attempt(
             session_date=date(2026, 8, d),
@@ -1153,6 +1161,12 @@ def test_the_restart_date_itself_is_never_reported_as_a_break() -> None:
         for d in (11, 12, 13, 14, 17)
     ]
     as_of = datetime(2026, 8, 21, 22, 0, tzinfo=track_a_streak.LOCAL_ZONE)
+
+    # The restart IN FORCE at `as_of`, which is what `streak()` itself uses - not the newest row in
+    # the tuple. Taking the last row asserted against a restart dated after this fixture's own
+    # `as_of` the moment a later one was added, and failed for a reason that said nothing about the
+    # invariant. A test that pins a date must pin every date it compares to (`AGENTS.md` §12).
+    restart = track_a_streak.restarted_at(as_of)[0]
 
     _, _, broke_at = track_a_streak.streak(attempts, as_of)
     assert broke_at != restart, "an intentional reset must never read as an outage"

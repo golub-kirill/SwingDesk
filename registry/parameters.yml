@@ -28,7 +28,7 @@ parameters:
     value: USD
     status: owner
     provenance: owner
-    read_by: swingdesk.trade_management.sizing:_to_base_currency
+    read_by: swingdesk.trade_management.sizing:to_base_currency
     named_in: [Appendix C - "FX-adjusted P&L", Appendix A - CAD/USD exposure]
     note: >-
       USD base with Canadian holdings means every .TO position carries a currency effect reported
@@ -40,7 +40,7 @@ parameters:
     value: null
     status: unset
     provenance: null
-    read_by: swingdesk.trade_management.sizing:_to_base_currency
+    read_by: swingdesk.trade_management.sizing:to_base_currency
     named_in: [Appendix C - "FX-adjusted P&L", Appendix A - CAD/USD exposure]
     note: >-
       Rate converting a CAD-denominated risk or position value into account.base_currency.
@@ -142,7 +142,7 @@ parameters:
     value: 50
     status: assumed
     provenance: assumed:DR-010
-    read_by: swingdesk.trade_management.sizing:_costs_per_share
+    read_by: swingdesk.trade_management.sizing:costs_per_share
     named_in: [Appendix C]
     note: >-
       Carries DR-005's measured slippage forward honestly: read as "materially more than 5bp",
@@ -156,7 +156,7 @@ parameters:
     value: 50
     status: assumed
     provenance: assumed:DR-010
-    read_by: swingdesk.trade_management.sizing:_costs_per_share
+    read_by: swingdesk.trade_management.sizing:costs_per_share
     named_in: [Appendix C]
     note: >-
       Same rate as risk.costs_bp_usd - DR-009 structures A (TSX/CAD) and C (US/USD) both measured
@@ -170,7 +170,7 @@ parameters:
     value: 0.25
     status: assumed
     provenance: assumed:DR-010
-    read_by: swingdesk.trade_management.sizing:_costs_per_share
+    read_by: swingdesk.trade_management.sizing:costs_per_share
     named_in: [Appendix C]
     note: >-
       The conservative constant DR-009 set, carried forward unchanged as a floor rather than
@@ -185,7 +185,7 @@ parameters:
     value: 0.25
     status: assumed
     provenance: assumed:DR-010
-    read_by: swingdesk.trade_management.sizing:_costs_per_share
+    read_by: swingdesk.trade_management.sizing:costs_per_share
     named_in: [Appendix C]
     note: >-
       Same value as risk.costs_floor_usd - no currency-specific floor has been measured yet, so
@@ -227,7 +227,7 @@ parameters:
     value: 4
     status: owner
     provenance: owner
-    read_by: none
+    read_by: swingdesk.trade_management.portfolio:limits
     named_in: [M51-T780, M93-T1326]
     ui_editable: true
 
@@ -257,7 +257,7 @@ parameters:
     value: 4
     status: owner
     provenance: owner
-    read_by: none
+    read_by: swingdesk.trade_management.portfolio:limits
     named_in: [M49-T764]
     ui_editable: true
 

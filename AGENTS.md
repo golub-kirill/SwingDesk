@@ -436,6 +436,16 @@ the words are as fragile as the numerals; the fix is to stop counting in prose a
   DuckDB stores and the scheduler log live only in the main checkout. Gates 23 and 24 read them and
   report `UNAVAILABLE` rather than passing blind; point them at the real stores with
   `SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data` when you need the runtime figures.
+- **Gate 24 can be red on the main checkout on any morning, with nothing wrong.** `HANDOFF.md` §2's
+  runtime block is generated from `data/`, and the scheduled evening run moves what `data/` says. So
+  the block drifts every night the run executes and the gate compares it the next morning.
+  Regenerate rather than investigate:
+  ```bash
+  PYTHONPATH=$PWD/src python tools/build_state.py
+  ```
+  From a worktree the same command regenerates the repo and worktree blocks and **leaves the runtime
+  block alone**, which is why gate 24 answers `UNAVAILABLE` there instead of guessing. Worth knowing
+  before a session spends twenty minutes on a red gate that describes last night's weather.
 - **`CREATE TABLE IF NOT EXISTS` is silent when a COLUMN is added, and the store dies days later.**
   Found 2026-08-22, after the scheduled run had been dead since 08-18. `PR #9` added
   `initial_costs_per_share` to `positions` on 08-17; the table already existed, so the statement did

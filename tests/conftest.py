@@ -37,6 +37,11 @@ def registry() -> ParameterRegistry:
         # another one without a rate (2026-08-16). The slice trades US instruments, so the rate is
         # never reached; the base currency is, on every call.
         "account.base_currency": "USD",
+        # Present and UNSET, exactly as the real registry has it. Carrying the key matters: an
+        # absent key refuses with "no such parameter" and a null one refuses naming
+        # `account.fx_rate_cad`, and only the second is what production does. The portfolio cap
+        # refuses a CAD position on this, so the difference is now load-bearing.
+        "account.fx_rate_cad": None,
         "risk.per_trade_pct": "1.0",
         "risk.costs_bp_usd": "50",
         "risk.costs_floor_usd": "0.02",
@@ -58,6 +63,15 @@ def registry() -> ParameterRegistry:
         # run through the as-of session, which is what the scheduled 18:30 run actually sees: the
         # session that closed at 16:00 has a bar by then.
         "data.freshness_window": 2,
+        # The book cap (DR-006 8.3, owner 2026-08-22). Set here for the same reason the exit pair
+        # and the freshness window are: without them every candidate refuses at step 6 and the
+        # slice never reaches Watch. `test_portfolio` covers the unset case explicitly.
+        #
+        # The real values, deliberately - a fixture that loosened the cap to keep tests quiet would
+        # be testing a system nobody runs. The slice's book is empty, so 4 binds on nothing until a
+        # test records positions into it.
+        "risk.max_open_risk": 4,
+        "risk.max_concurrent_positions": 4,
     }
     return ParameterRegistry(
         {
