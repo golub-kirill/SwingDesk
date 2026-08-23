@@ -39,6 +39,13 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 18 | `build_lock.py --check-only` | `requirements-lock.txt` drifting from what the declarations resolve to | **exists** — the file it replaced held 8 entries against 56 installed, and was referenced by nothing |
 | 16 | `verify_branches.py` | a parallel worktree missing from `HANDOFF.md` §2 | **exists** — and until 2026-08-10 it excluded the tree it ran in rather than the main checkout, so it answered differently depending on where it was invoked |
 | 15 | `verify_project_manifest.py` | the document index drifting from the tree: a duplicate id or display number, a path that does not exist, a status contradicting the document's own header, a row with no manifest entry, or a document in no index at all | **exists** — caught three specifications marked `planned` that were written, and two never indexed |
+| 19 | `verify_secrets.py` | a tracked secret, or a `.gitignore` claiming to exclude a path it does not | **exists** |
+| 20 | `verify_decisions.py` | an accepted decision record that names no implementation and does not say `implementation: none` — **caught a false implementation claim on its first run** |
+| 21 | `verify_worktree_clean.py` | finished work left uncommitted. Advisory |
+| 23 | `track_a_streak.py` | the `a.run_completes` streak being hand-kept. Advisory, and `UNAVAILABLE` without `data/` — **the counter it replaced read 3 against a computed 4** |
+| 24 | `build_state.py --check-only` | `HANDOFF.md` §2 being typed rather than generated. `UNAVAILABLE` for the blocks a given checkout cannot see |
+| 25 | `verify_prereg_conformance.py` | a reported verdict that does not conform to its own pre-registration — **caught `PR-002` reaching an affirmative verdict having run only one of the three perturbations it declared** |
+| 26 | `verify_schedule.py` | a scheduled task missing, disabled, or last exiting non-zero. Advisory, and `UNAVAILABLE` off the scheduling machine — **added after `TODO.md` carried "register the 19:30 task" for five days after it was registered** |
 
 ### Three states, not two
 
@@ -93,6 +100,13 @@ Not busywork — each maps to a specific way this project could quietly go wrong
 | 13 | the evidence base looking larger, or more negative, than it is. The count that prompted this claimed *more* refuted studies than existed and was quoted in `RISK_REGISTER.md` as the project's central risk |
 | 14 | a number that was right the day it was written. Counts had been reconciled by hand three times, and each pass found what the last careful read missed — the defect class that does not look like one |
 | 15 | the map ceasing to describe the territory. An index is read as an inventory, so a document it calls `planned` is assumed absent and one it omits is assumed not to exist — both were true here, and neither is visible from inside the index |
+| 19 | a credential reaching the history, where removing it means rewriting every commit after it |
+| 20 | a ratified decision that reaches no code. A decision nobody implemented is a decision that did not happen, and nothing else in the tree can see the difference |
+| 21 | work that is finished, green and only on one machine |
+| 23 | a hand-kept counter agreeing with itself. The number is the ratified Track A criterion, and the document that owned it was wrong about it |
+| 24 | the single owner §10.5 established being typed by hand — which is drift that no second copy is left to contradict |
+| 25 | a study's runner drifting from its own registration. `PR-002` reached an affirmative verdict over a declared scope shortfall and every other gate stayed green |
+| 26 | a claim about the machine that no gate could check. Two documents here disagreed for five days about whether a scheduled task existed, and the stale one was the one being acted on |
 
 ## 3. Merge rules
 

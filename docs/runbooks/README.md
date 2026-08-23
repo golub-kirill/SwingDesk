@@ -116,21 +116,38 @@ log, deliberately different words from the 18:30 run's, so `tools/track_a_streak
 it as the scheduled attempt. **Track A measures the 18:30 run and only that**; a clean second pass
 does not rescue a broken evening, and it is not supposed to.
 
-**Registering it is the owner's step**, once, on the machine that runs the schedule — the repository
-cannot create a scheduled task for you:
+**DONE — registered 2026-08-18.** Confirmed against the machine on 2026-08-23: the task exists, is
+`Enabled`, and has been running. **Check before creating it**, because `schtasks /Create` on an
+existing name offers to REPLACE it and a wrong keystroke there discards a working registration:
+
+```bash
+python tools/verify_schedule.py
+```
+
+That is gate 26, and it reports both tasks, their last exit code and the two settings that make a
+task silently not run. It is `UNAVAILABLE` anywhere but the scheduling machine.
+
+Registering it, if it ever has to be done again, is the owner's step — the repository cannot create
+a scheduled task:
 
 ```bash
 schtasks /Create /TN "SwingDesk second pass" /TR "\"C:\PycharmProjects\SwingDesk\tools\daily_run.cmd\" second-pass" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 19:30
 ```
 
-Verify it the same way as the first:
+**This section read *"until that task exists, the second pass is not live"* for five days after the
+task existed**, and `TODO.md` carried the same open item while `AGENTS.md` §12 already described the
+19:30 pass running and failing. Two documents in one repository disagreed about a fact neither could
+check. Gate 26 exists so the next such claim is checked rather than remembered.
 
-```bash
-schtasks /Query /TN "SwingDesk second pass" /FO LIST
-```
+**Two settings only the verbose query shows**, and both make an evening pass silently not happen:
 
-**Until that task exists, the retry inside the run is live and the second pass is not.** The two
-halves of `DR-015` §3 are independent, and the first one needs nothing registered.
+| | |
+|---|---|
+| `Logon Mode: Interactive only` | both tasks. The run happens only while the user is logged on |
+| `Power Management: No Start On Batteries` | the **second pass only**. On battery it does not start |
+
+Neither is a defect this repository can fix — they are the machine's settings — but an evening with
+no log line and one of these in force is not the same event as a run that decided nothing.
 
 ## 2. Broker or platform failure
 

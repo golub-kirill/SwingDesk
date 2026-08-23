@@ -494,10 +494,24 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       finish before `DR-015`'s own 19:30 pass. §7 of the record carries the argument.
       **The question: 90 seconds per run, or the full three attempts for every instrument whatever
       the total?** Nothing else is blocked on the answer.
-      **b. Register the 19:30 task.** One `schtasks` line, on the machine that runs the schedule — a
-      repository cannot create it. `docs/runbooks/README.md` §1a has the command and the check.
-      **Until it exists the retry inside the run is live and the second pass is not**; the two halves
-      of §3 are independent.
+      **b. Register the 19:30 task — DONE 2026-08-18, and this item was FALSE for five days.**
+      Confirmed against the machine 2026-08-23: the task exists, is `Enabled`, and has been running
+      since it was created. `AGENTS.md` §12 already described the 19:30 pass running and failing —
+      *"both passes, once the 19:30 task was registered"* — so two documents here disagreed about a
+      fact neither could check, and the stale one was the one being acted on. The owner was handed
+      a `schtasks /Create` line for a task that already existed and was one keystroke from replacing
+      a working registration.
+      **Gate 26 (`tools/verify_schedule.py`) now asks the machine**, per `AGENTS.md` §12's own habit:
+      when you find a stale claim, add a gate rather than fixing the instance. Advisory, and
+      `UNAVAILABLE` anywhere but the scheduling machine.
+      **It is RED as of 2026-08-23 and correctly so:** both passes last ran 2026-08-21 and both
+      exited 1 on the schema drift `AGENTS.md` §12 records. `positions.duckdb` carries
+      `initial_costs_per_share` again, so **Monday 2026-08-24 is the first run that can get past it
+      — and the repair is unverified in production until then.**
+      **Two machine settings the verbose query shows and nothing else does:** both tasks are
+      `Logon Mode: Interactive only`, and the second pass alone carries
+      `Power Management: No Start On Batteries`. Neither is fixable from this repository; both make
+      an evening with no log line a different event from a run that decided nothing.
 
 **ADRs — all four unratified.**
 

@@ -49,12 +49,13 @@ PASS, FAIL, UNAVAILABLE = "PASS", "FAIL", "UNAVAILABLE"
 #: Exit code a gate uses to say "my subject is not present in this environment".
 UNAVAILABLE_EXIT = 4
 
-#: The only gates permitted to report UNAVAILABLE, and the two legitimate reasons. Gates 2 and 3
+#: The only gates permitted to report UNAVAILABLE, and the three legitimate reasons. Gates 2 and 3
 #: read the 116 course PDFs, the requirements source, which are not in the repository. Gates 23 and
-#: 24 read `data/`, gitignored operational state present only in the main checkout. Any other gate
-#: exiting 4 is a FAIL - see the module docstring.
+#: 24 read `data/`, gitignored operational state present only in the main checkout. Gate 26 reads
+#: the Windows Task Scheduler, which exists only on the machine that runs the schedule. Any other
+#: gate exiting 4 is a FAIL - see the module docstring.
 MAY_BE_UNAVAILABLE = frozenset({
-    "2 transcription", "3 course index", "23 track A streak", "24 state block",
+    "2 transcription", "3 course index", "23 track A streak", "24 state block", "26 schedule",
 })
 
 
@@ -157,6 +158,8 @@ def main() -> int:
                                [python, "tools/track_a_streak.py"], "23 track A streak"),
         "24 state block": _run("HANDOFF section 2 is generated, not typed",
                             [python, "tools/build_state.py", "--check-only"], "24 state block"),
+        "26 schedule": _run("the scheduled tasks exist and last succeeded (advisory)",
+                            [python, "tools/verify_schedule.py"], "26 schedule"),
     }
 
     print("\n" + "=" * 62)
