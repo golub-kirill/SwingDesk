@@ -43,6 +43,7 @@ from decimal import Decimal
 from swingdesk.contracts.position import Position
 from swingdesk.derived_observations import correlation
 from swingdesk.platform.parameters import ParameterRegistry
+from swingdesk.reference_data import classification
 from swingdesk.reference_data.calendar import currency_for
 from swingdesk.trade_management.sizing import Refusal
 
@@ -60,6 +61,11 @@ MAX_CONCURRENT = "risk.max_concurrent_positions"
 #: (`DR-006` §7) and became a parameter on 2026-08-23.
 CORRELATION_THRESHOLD = "risk.correlation_threshold"
 CORRELATION_LOOKBACK = "risk.correlation_lookback_sessions"
+
+#: How much of the book may sit in one sector or theme. 2R, `assumed:DR-006` - one third of the
+#: book at the ratified 6R and half of it at the 4R §8.3 settled on, which is a consequence worth
+#: knowing rather than a re-derivation: the anchor moved and this number did not.
+MAX_SECTOR_RISK = "risk.max_sector_risk"
 
 #: Base-currency units per one unit of the named currency, or a coded refusal. Injected rather than
 #: imported so this module holds no FX rule of its own - `sizing.to_base_currency` has that shape.
@@ -396,5 +402,252 @@ def assess_correlation(
         admitted=binding is None,
         limit=limit,
         pairs=pairs,
+        binding=binding,
+    )
+
+
+# ------------------------------------------------------------------ sector
+
+
+def sector_limit(registry: ParameterRegistry) -> Decimal:
+    """How much of the book may sit in one sector, or `ParameterUnset` naming it.
+
+    One number and no companion, unlike the other two pairs here - the window a correlation is
+    measured over is part of that threshold's definition, and 2R is complete on its own.
+    """
+    limit, _ = registry.decimal_value(MAX_SECTOR_RISK)
+    return limit
+
+
+@dataclass(frozen=True, slots=True)
+class SectorBook:
+    """The open book's risk in R, split by sector.
+
+    Carries what it could NOT attribute as prominently as what it could, and the two are different
+    facts. `unclassified_r` is risk from positions whose look-through covered only part of the
+    instrument - measured, and belonging to no sector. `unmeasured` is positions whose exposure
+    could not be judged at all. Both make the per-sector figures an UNDERSTATEMENT, which is the
+    permissive direction, so neither may be silent.
+    """
+
+    by_sector: Mapping[str, Decimal]
+
+    unclassified_r: Decimal
+    """R from positions that WERE classified, left over by a look-through covering part of the
+    instrument. Measured, and belonging to no sector."""
+
+    unmeasured: tuple[classification.Exposure, ...]
+    """Positions whose composition could not be judged at all."""
+
+    unmeasured_r: Decimal
+    """R held by those positions. Reported apart from `unclassified_r` because the two are different
+    gaps: one is composition the vendor did not report, the other is a position the vendor could not
+    be asked about. Adding them would make one number that answers neither question."""
+
+    total_r: Decimal
+
+    def held_in(self, sector: str) -> Decimal:
+        """Open risk already sitting in one sector, in R. Zero when nothing is."""
+        return self.by_sector.get(sector, Decimal(0))
+
+    @property
+    def is_complete(self) -> bool:
+        """Every position was attributed in full. False means the split understates some sector."""
+        return not self.unmeasured and self.unclassified_r == 0
+
+
+ExposureFor = Callable[[str], "classification.Exposure"]
+"""An instrument id to its judged sector composition. Injected rather than looked up, so this module
+holds no store and no vendor - the same arrangement `RateFor` has for the FX rule."""
+
+
+def sector_book(
+    positions: Sequence[Position],
+    rate_for: RateFor,
+    r_unit: Decimal,
+    exposure_for: ExposureFor,
+) -> SectorBook | Refusal:
+    """Split the open book's risk across sectors, or refuse naming what blocked the conversion.
+
+    Currency is converted per position before anything is added, for the reason `book` gives at
+    length: `Position.open_risk` is in the INSTRUMENT's currency and adding those raw produces a
+    number in no currency at all.
+
+    **A partial look-through spends what it reports and no more.** Weights summing to 0.94 put 94%
+    of the position's R into sectors and the remaining 6% into `unclassified_r`. Normalising to 1
+    would invent composition the vendor did not report; dropping the position would hide exposure
+    that was measured. The remainder is carried visibly instead, which is the only option that
+    neither invents nor discards.
+    """
+    if r_unit <= 0:
+        return Refusal(
+            "RISK",
+            f"1R is {r_unit} in base currency, so open risk cannot be expressed in R; sector risk "
+            f"cannot be measured against a cap denominated in R",
+        )
+
+    by_sector: dict[str, Decimal] = {}
+    unclassified = Decimal(0)
+    unmeasured: list[classification.Exposure] = []
+    unmeasured_risk = Decimal(0)
+    total = Decimal(0)
+
+    for position in positions:
+        currency = currency_for(position.instrument_id)
+        rate = rate_for(currency)
+        if isinstance(rate, Refusal):
+            return Refusal(
+                rate.code,
+                f"open position {position.position_id} is denominated in {currency} and its sector "
+                f"risk cannot be totalled without a rate: {rate.reason}",
+                parameter_id=rate.parameter_id,
+            )
+        base_per_local, _uses = rate
+        risk_r = position.open_risk * base_per_local / r_unit
+        total += risk_r
+
+        exposure = exposure_for(position.instrument_id)
+        if not exposure.is_available:
+            unmeasured.append(exposure)
+            unmeasured_risk += risk_r
+            continue
+        attributed = Decimal(0)
+        for weight in exposure.weights:
+            share = risk_r * weight.weight
+            by_sector[weight.sector] = by_sector.get(weight.sector, Decimal(0)) + share
+            attributed += share
+        unclassified += risk_r - attributed
+
+    return SectorBook(
+        # Sorted into a fresh dict: this feeds a report and a decision reason, and an insertion
+        # order that follows whatever order the position store returned is the named determinism
+        # hazard (`DETERMINISM_SPEC` §3.2).
+        by_sector={sector: by_sector[sector] for sector in sorted(by_sector)},
+        unclassified_r=unclassified,
+        unmeasured=tuple(unmeasured),
+        unmeasured_r=unmeasured_risk,
+        total_r=total,
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class SectorCapacity:
+    """Whether one more position fits inside the sector budget, and which sector decided."""
+
+    admitted: bool
+    limit: Decimal
+    book: SectorBook
+    candidate: classification.Exposure
+    requested_r: Decimal
+    binding: str | None
+    """The sector that would go past the cap, or `None` when the candidate was admitted."""
+
+    @property
+    def is_unavailable(self) -> bool:
+        """The CANDIDATE could not be classified, so the check did not run.
+
+        Admits, because `DR-006` §3 forbids a check the system could not perform from refusing every
+        candidate - a sector gate that refused for want of sector data would stop the system
+        entirely while looking like risk discipline. An unmeasured POSITION is a different and
+        weaker gap: it makes the split understate, and it is reported on `book.is_complete`.
+        """
+        return not self.candidate.is_available
+
+    def projected(self, sector: str) -> Decimal:
+        """Risk in one sector if this candidate were taken, in R."""
+        return self.book.held_in(sector) + self.requested_r * self._weight(sector)
+
+    def _weight(self, sector: str) -> Decimal:
+        for weight in self.candidate.weights:
+            if weight.sector == sector:
+                return weight.weight
+        return Decimal(0)
+
+    @property
+    def reason(self) -> str:
+        """The text that travels on the refusal, or on the admission."""
+        if self.binding is not None:
+            return (
+                f"taking this candidate would put {self.projected(self.binding):.2f}R in "
+                f"{self.binding}, past the {self.limit}R {MAX_SECTOR_RISK} allows; the book "
+                f"already carries {self.book.held_in(self.binding):.2f}R there"
+            )
+        if self.is_unavailable:
+            return f"UNAVAILABLE - {self.candidate.unavailable}"
+        if not self.candidate.weights:
+            return "this candidate has no sector exposure to spend"
+        heaviest = max(
+            (weight.sector for weight in self.candidate.weights),
+            key=lambda sector: (self.projected(sector), sector),
+        )
+        text = (
+            f"heaviest sector after this candidate is {heaviest} at "
+            f"{self.projected(heaviest):.2f}R of the {self.limit}R {MAX_SECTOR_RISK} allows"
+        )
+        # Built clause by clause rather than as one sentence, because the two gaps are independent
+        # and a fixed sentence prints "0.00R sits in no sector" next to a real unclassified
+        # position - a zero that reads as reassurance about the wrong quantity.
+        gaps = []
+        if self.book.unmeasured:
+            gaps.append(
+                f"{len(self.book.unmeasured)} open position(s) holding "
+                f"{self.book.unmeasured_r:.2f}R could not be classified"
+            )
+        if self.book.unclassified_r:
+            gaps.append(
+                f"{self.book.unclassified_r:.2f}R sits in no sector from partial look-throughs"
+            )
+        if gaps:
+            text += "; " + " and ".join(gaps) + ", so the split understates"
+        return text
+
+
+def assess_sector(
+    book: SectorBook,
+    limit: Decimal,
+    candidate: classification.Exposure,
+    requested_r: Decimal,
+) -> SectorCapacity:
+    """Does one more position fit inside the sector budget? (`RISK_SPEC` §3 step 6, `DR-006` §2.)
+
+    **An ETF consumes its constituents' sector budget rather than sitting outside it.** That is
+    Appendix C's control cell requiring ETFs to count toward sector risk, and it is why a candidate
+    is measured through its weights rather than by a single label: a broad index fund spends a
+    little of every sector, a sector fund spends nearly all of one, and both are the same
+    arithmetic.
+
+    **The WORST sector binds, and only it is named.** A candidate can push two sectors past the cap
+    at once; the reason carries one, because a refusal with two causes is a refusal an owner cannot
+    answer. Passing this function requires being inside the cap in every sector, so naming one is a
+    reporting choice and not a gap in enforcement - the same rule `assess` follows for the book.
+
+    **An unclassifiable CANDIDATE is admitted unchecked**, and says so. `DR-006` §3 again: a gap in
+    the system and a fact about the trade are different claims, and a sector cap that refused every
+    unclassified name would refuse most of the universe on the day the store was first created.
+    """
+    binding: str | None = None
+    if candidate.is_available:
+        over = [
+            weight.sector
+            for weight in candidate.weights
+            if book.held_in(weight.sector) + requested_r * weight.weight > limit
+        ]
+        if over:
+            binding = max(
+                over,
+                key=lambda sector: (
+                    book.held_in(sector)
+                    + requested_r * next(
+                        w.weight for w in candidate.weights if w.sector == sector
+                    ),
+                    sector,
+                ),
+            )
+    return SectorCapacity(
+        admitted=binding is None,
+        limit=limit,
+        book=book,
+        candidate=candidate,
+        requested_r=requested_r,
         binding=binding,
     )

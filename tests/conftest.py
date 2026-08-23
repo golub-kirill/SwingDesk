@@ -83,6 +83,11 @@ def registry() -> ParameterRegistry:
         # only ever test one side of a threshold.
         "risk.correlation_threshold": "0.70",
         "risk.correlation_lookback_sessions": 60,
+        # The sector cap (DR-006 2, built 2026-08-23). Real value again. It binds on nothing until
+        # a test passes a ClassificationStore: without one every instrument reports `unavailable`
+        # and every candidate is admitted UNCHECKED, which is production's own behaviour until
+        # `tools/refresh_classifications.py` has run.
+        "risk.max_sector_risk": 2,
     }
     return ParameterRegistry(
         {

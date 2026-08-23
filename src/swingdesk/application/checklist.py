@@ -147,7 +147,10 @@ EVALUATORS: dict[str, Evaluator] = {
         "regime.breadth_cutoffs is unset"
     ),
     "sector_benchmark": _unavailable(
-        "Instrument.sector and .industry are None - no free point-in-time sector source is in hand"
+        "a sector is now known for a classified instrument (DR-006 12) and this item needs more "
+        "than that: comparing a candidate to its sector requires a BENCHMARK series per sector, "
+        "and no sector-to-index mapping exists. The classification is also today's, not the one "
+        "in force on an older date"
     ),
     "trigger_not_late": _unavailable(
         "the run has no trigger and no maximum entry, so `Late` is not computable (CODES LATE)"
@@ -165,10 +168,9 @@ EVALUATORS: dict[str, Evaluator] = {
         "observable on free data (costs.slippage_model is a MODEL, not a measurement)"
     ),
     "exposure_within_limits": _unavailable(
-        "open risk and correlation to the book are both enforced at step 6; the SECTOR, currency "
-        "and event buckets this item also requires are not - there is no sector source, and "
-        "DR-006 8.7 makes the ETF look-through guard a precondition of building one. Half an "
-        "answer is not an answer"
+        "open risk, correlation to the book and sector are all enforced at step 6 - but sector "
+        "only for a candidate whose classification has been fetched, and the CURRENCY and EVENT "
+        "buckets this item also requires are not enforced at all. Half an answer is not an answer"
     ),
 }
 

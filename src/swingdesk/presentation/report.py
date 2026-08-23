@@ -219,6 +219,76 @@ def _correlation_block(result: RunResult) -> list[str]:
     return lines
 
 
+def _sector_block(result: RunResult) -> list[str]:
+    """How the open book's risk is spread across sectors, and what it could not place (`DR-006` §2).
+
+    **The unattributed totals are printed next to the split, not under it.** A sector table that
+    showed only what it could place would read as a complete picture of the book, and the two ways
+    it is incomplete both push the same way: an unclassifiable position and a partial look-through
+    each make every sector figure an UNDERSTATEMENT, which admits candidates the full picture would
+    have refused.
+    """
+    limit = result.sector_limit
+    lines = ["", "SECTOR — how much of the book sits in one theme (DR-006 §2)", _RULE]
+
+    if isinstance(limit, Refusal):
+        lines.append(f"  REFUSED  {limit}")
+        lines.append("           no candidate was admitted; the cap itself has no value")
+        return lines
+
+    if limit is None:
+        lines.append("  UNAVAILABLE  the cap was not read this run")
+        return lines
+
+    lines.append(f"  cap            {limit}R in any one sector   [{portfolio.MAX_SECTOR_RISK}]")
+
+    book = result.sector_book
+    if isinstance(book, Refusal):
+        lines.append(f"  REFUSED  {book}")
+        return lines
+    if book is None:
+        if "positions" not in result.steps:
+            lines.append("  UNAVAILABLE  the book was not read this run, so its sector split could")
+            lines.append("               not be computed. That is not `inside the cap`.")
+        else:
+            lines.append("  NOT ASSESSED   no candidate reached the sector check")
+        return lines
+
+    if book.by_sector:
+        for sector, risk in book.by_sector.items():
+            over = "  <- AT OR PAST THE CAP" if risk >= limit else ""
+            lines.append(f"      {sector:<28} {risk:.2f}R{over}")
+    else:
+        lines.append("      (no open risk could be placed in any sector)")
+
+    if book.unclassified_r:
+        lines.append(
+            f"  unattributed   {book.unclassified_r:.2f}R of {book.total_r:.2f}R sits in no "
+            f"sector - partial look-throughs, spent as reported and not normalised"
+        )
+    if book.unmeasured:
+        lines.append(
+            f"  UNCLASSIFIED   {len(book.unmeasured)} open position(s) holding "
+            f"{book.unmeasured_r:.2f}R could not be placed at all"
+        )
+        lines.append(f"                 {book.unmeasured[0].unavailable}")
+    if not book.is_complete:
+        lines.append("  The split above therefore UNDERSTATES every sector it shows.")
+
+    unchecked = [
+        outcome.sector
+        for outcome in result.outcomes
+        if outcome.sector is not None and outcome.sector.is_unavailable
+    ]
+    if unchecked:
+        lines.append(
+            f"  UNAVAILABLE    {len(unchecked)} candidate(s) could not be classified and were "
+            f"admitted UNCHECKED"
+        )
+        lines.append(f"                 {unchecked[0].candidate.unavailable}")
+    return lines
+
+
 def _checklist_block(outcome: InstrumentOutcome) -> list[str]:
     """The pre-trade checklist, with the unanswered items shown rather than summarised away.
 
@@ -319,6 +389,7 @@ def render(result: RunResult) -> str:
     lines.extend(_positions_block(result))
     lines.extend(_capacity_block(result))
     lines.extend(_correlation_block(result))
+    lines.extend(_sector_block(result))
     if result.positions or result.universe is not None:
         lines.extend(["", "CANDIDATES", _RULE])
 
@@ -361,6 +432,10 @@ def render(result: RunResult) -> str:
         concentration = outcome.correlation
         if concentration is not None and concentration.admitted and concentration.pairs:
             lines.append(f"  correlation          {concentration.reason}")
+
+        sector = outcome.sector
+        if sector is not None and sector.admitted:
+            lines.append(f"  sector               {sector.reason}")
 
         decision = outcome.decision
         if decision is not None:

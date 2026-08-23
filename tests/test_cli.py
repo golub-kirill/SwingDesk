@@ -48,8 +48,9 @@ def _fake_run(captured: dict):
     from datetime import UTC, datetime
 
     def run(instruments, clock, registry, store, journal, *, mode, lookback,
-            universe=None, positions=None, exits=None, fetcher=None):
+            universe=None, positions=None, classifications=None, exits=None, fetcher=None):
         captured["positions"] = positions
+        captured["classifications"] = classifications
         captured["instruments"] = instruments
         captured["fetcher"] = fetcher
         # Kept so a test can prove they are SHUT by the time the notice is raised.
@@ -81,6 +82,13 @@ def test_scan_opens_a_position_store_and_passes_it_to_run(tmp_path: Path, monkey
     assert code == 0
     assert captured["positions"] is not None, "run() must not be called with positions=None"
     assert (tmp_path / "positions.duckdb").exists()
+
+    # Same wiring, same argument, `DR-006` §2's sector cap (2026-08-23). A cap that no command
+    # opens a store for is the "decided, but wired to nothing" shape `AGENTS.md` §7 counts - and
+    # an EMPTY store is the correct state before `tools/refresh_classifications.py` has run: every
+    # candidate reports `unavailable` and is admitted unchecked, which is the truth.
+    assert captured["classifications"] is not None, "the sector cap must reach run()"
+    assert (tmp_path / "classifications.duckdb").exists()
 
 
 def test_scan_wraps_the_fetcher_in_the_retry_dr_015_ruled(tmp_path: Path, monkeypatch) -> None:

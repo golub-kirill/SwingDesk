@@ -473,6 +473,14 @@ the words are as fragile as the numerals; the fix is to stop counting in prose a
   **The tests that were ABOUT expiry never broke**, because those pin `--as-of` on both sides of the
   boundary. The rule that separates them: if a fixture carries a hard-coded date and the code under
   test reads `now`, the test is asserting something about today's date. **Pin both, or neither.**
+- **A PARTIALLY pinned clock is worse than an unpinned one, because its tests agree with the bug.**
+  Found 2026-08-22, migrated here from that day's session handoff when it was retired.
+  `tools/track_a_streak.py` computed the streak from `SWINGDESK_NOW` and printed the
+  deliberate-restart line from the **wall clock**. A test pinned to 2026-08-18 went on passing,
+  because the line it was reading had quietly opted out of the pin. Same family as the trap above and
+  worth its own sentence: **when a tool takes an injectable clock, every read of "now" in it uses
+  that clock — including the ones that only print.** A half-pinned tool is a tool whose tests measure
+  the calendar.
 - **Hand-maintained counts drift, every time.** Six have now been caught: the study verdicts
   (`5 studies, 3 refuted` in five documents), the gate total, the specification coverage summary
   (31/22 against a table saying 30/24), a component-activation claim in

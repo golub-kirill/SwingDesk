@@ -23,7 +23,8 @@ from swingdesk.contracts.market import (
     Interval,
     Series,
 )
-from swingdesk.contracts.reference import Instrument
+from swingdesk.contracts.reference import Classification, Instrument, SectorWeight
+from swingdesk.reference_data.classification import FUND_KINDS
 
 #: What Yahoo will serve, measured 2026-08-01 (ADR-0001). Requesting more silently returns less,
 #: so the ceiling is stated here rather than discovered.
@@ -113,6 +114,86 @@ def fetch(
         knowledge_time=knowledge_time,
         bars=tuple(bars),
     )
+
+
+def fetch_classification(instrument: Instrument, knowledge_time: datetime) -> Classification:
+    """What the vendor says this instrument is made of: kind, industry, and sector composition.
+
+    The precondition `DR-006` §8.4 named. `Instrument.sector` has been `None` since the contract was
+    written and §3 recorded the sector cap as unevaluable for want of a source; this is the source.
+    An ordinary share carries its own sector as a single weight of 1, an equity fund carries its
+    look-through, and both come back in the same shape - which is what lets the sector budget add a
+    share to an ETF without a special case.
+
+    **Recorded as answered. Judged elsewhere.** This function does not apply `DR-006` §8.7's
+    degeneracy guard, and that is deliberate rather than an omission: refusing here would store
+    nothing, and "we asked and the answer was unusable" would become indistinguishable from "we
+    never asked". `reference_data.classification.look_through` judges it, on the way out of the
+    store rather than on the way in.
+
+    What IS enforced here is the boundary this vendor needs, because it is an unofficial scrape of a
+    consumer site and its output is untrusted input (`SECURITY` §6): a weight that is not a number,
+    is negative, or exceeds 1 is dropped rather than stored. Same rule the bar path uses for a
+    malformed row, and the same reason - a bad value surfaces as a coded gap rather than as an
+    exception three layers up.
+    """
+    import yfinance as yf
+
+    ticker = yf.Ticker(instrument.vendor_symbol)
+    try:
+        info = ticker.info or {}
+    except Exception as error:
+        raise VendorUnavailable(f"{instrument.vendor_symbol} info: {error}") from error
+
+    quote_type = str(info.get("quoteType") or "").strip()
+    if not quote_type:
+        # Without the kind there is no way to tell a direct sector from a look-through, and
+        # guessing which one an answer is would be the substitution this project refuses by name.
+        raise VendorUnavailable(
+            f"{instrument.vendor_symbol} info: no quoteType, so a sector cannot be classified"
+        )
+
+    weights: list[SectorWeight] = []
+    if quote_type.upper() in FUND_KINDS:
+        try:
+            reported = ticker.funds_data.sector_weightings or {}
+        except Exception:  # noqa: BLE001 - a fund with no look-through is a gap, not a failure
+            # NOT a VendorUnavailable. The kind is known and the composition is not, which is a
+            # classification with no weights - `look_through` reports that as `unavailable` and the
+            # candidate is admitted unchecked. Raising here would lose the quoteType as well.
+            reported = {}
+        for sector, share in reported.items():
+            weight = _weight(share)
+            if weight is not None:
+                weights.append(SectorWeight(sector=str(sector), weight=weight))
+    else:
+        sector = str(info.get("sector") or "").strip()
+        if sector:
+            weights.append(SectorWeight(sector=sector, weight=Decimal(1)))
+
+    industry = str(info.get("industry") or "").strip() or None
+    return Classification(
+        instrument_id=instrument.id,
+        quote_type=quote_type,
+        industry=industry,
+        weights=tuple(weights),
+        knowledge_time=knowledge_time,
+    )
+
+
+def _weight(value: object) -> Decimal | None:
+    """A vendor sector share as a Decimal fraction, or `None` when it is not one.
+
+    Quantised at six places, the same as a price: the vendor serves float64 and converting the repr
+    rather than the float keeps binary noise out of a number that is later summed and compared.
+    """
+    try:
+        weight = Decimal(repr(float(value))).quantize(Decimal("0.000001"))  # type: ignore[arg-type]
+    except (ValueError, InvalidOperation, TypeError):
+        return None
+    if weight < 0 or weight > 1:
+        return None
+    return weight
 
 
 def _decimal(value: SupportsFloat) -> Decimal:

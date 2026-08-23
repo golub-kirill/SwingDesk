@@ -234,9 +234,18 @@ parameters:
   - id: risk.max_sector_risk
     unit: R
     value: 2
+    note: >-
+      How much open risk may sit in any one sector or theme. An ETF consumes its constituents'
+      sector budget rather than sitting outside it, which is Appendix C's control cell requiring
+      ETFs and correlations to count toward sector risk. Measured through the vendor look-through
+      that DR-006 section 8.7 also shows being fabricated for bond funds, so a candidate whose
+      composition cannot be judged is admitted UNCHECKED and reported unavailable - never refused,
+      because a check the system could not perform must not stop the system (DR-006 section 3).
+      Point-in-time sector is still missing: the vendor serves today's classification, which
+      restricts a backtest and not live admission.
     status: assumed
     provenance: "assumed:DR-006"
-    read_by: none
+    read_by: swingdesk.trade_management.portfolio:sector_limit
     named_in: [M51-T782, M93-T1327]
     ui_editable: true
 

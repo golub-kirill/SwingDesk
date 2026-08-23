@@ -349,9 +349,29 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **Do not confuse the two failure directions**: an unset parameter refuses every candidate; a
       pair that could not be measured refuses none and reports `UNAVAILABLE`.
 
+- [x] **`[v]` The SECTOR cap is WIRED — built 2026-08-23 (`DR-006` §12). All six of `DR-006`'s
+      constraints now reach code.** Items **b**, **c** and **d** below are all discharged and the
+      plan is kept for the measurements it carries.
+      `risk.max_sector_risk` names `trade_management/portfolio.py:sector_limit`. A candidate is
+      measured through its sector WEIGHTS, so an ETF consumes its constituents' budget — Appendix
+      C's own control cell — and a share and a fund are the same arithmetic. New store
+      (`ClassificationStore`, bitemporal, read as-of), new vendor call
+      (`vendor_yahoo.fetch_classification`), new pass (`tools/refresh_classifications.py`).
+      **§8.7's guard landed with it, and the exactness is deliberate:** a fund reporting one sector
+      at *exactly* 1 with every other at *exactly* 0 is refused, because a real single-sector ETF
+      carries a remainder and a tolerance would refuse the names the cap most needs to see.
+      **THREE incompletenesses, and they are not the same** (`DR-006` §12.4): an unset cap refuses
+      every candidate; an unclassifiable CANDIDATE is admitted UNCHECKED; an unclassifiable POSITION
+      makes the split understate and refuses nothing.
+      **The store starts EMPTY, so today every candidate is admitted unchecked and the report says
+      so.** That is not a defect — it is §3 being obeyed — but it does mean the cap protects nothing
+      until the refresh pass has run. `unchecked` is a coverage number to close, not a verdict.
+      **The point-in-time gap is now ENCODED**: read as-of, so a replay before the first pull finds
+      nothing rather than answering an older question with today's classification.
+
 - [ ] **`[v]` DR-006's last one: SECTOR. §3 called it UNEVALUABLE and that is WRONG — it is
-      buildable today.** This is the plan; nothing here is blocked on a ruling. Item **a** is done
-      (see above) and is kept for the measurement it carries.
+      buildable today. DONE 2026-08-23 — see the entry above.** Kept for the measurements; every
+      item in it is discharged.
       **a. Correlation is not blocked at all. DONE 2026-08-23.** §3 says "nothing computes a
       correlation matrix" — a statement about missing CODE, not missing data. Measured 2026-08-22:
       the full **1152 × 1152**
@@ -377,7 +397,10 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       classification, not the one in force in 2016. That restricts a BACKTEST and does not restrict
       live admission, and the two must not be conflated the way §3 conflated them.
       **Both parameters stay `assumed:DR-006` and unratified** until the above is built and the owner
-      can rule on numbers whose checks actually run.
+      can rule on numbers whose checks actually run. **Built 2026-08-23; the ruling is now open and
+      is in `DR-006` §13 — four items, of which two want an owner: whether the correlation cap should
+      RESIZE rather than refuse, and whether 2R is still the right sector budget now that the book
+      anchor moved from 6R to 4R and 2R went from a third of the book to half of it.**
 
 - [x] **`[v]` The book cap is WIRED — built 2026-08-22 (`DR-006` §9).** `risk.max_open_risk` (4R) and
       `risk.max_concurrent_positions` (4) both name a consumer now:

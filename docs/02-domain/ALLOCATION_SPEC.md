@@ -43,7 +43,7 @@ So "candidates exceed capital" almost never means the cash ran out. It means one
 | how many positions can be managed at once | `risk.max_concurrent_positions` | 4 | yes — **enforced** |
 | one position's share of the account | `risk.max_position_value` | 2500 | yes |
 | order size against liquidity | `risk.liquidity_cap_order_to_adtv_pct` | 1.0% | yes |
-| risk concentrated in one sector or theme | `risk.max_sector_risk` | 2R | **no** — no sector source |
+| risk concentrated in one sector or theme | `risk.max_sector_risk` | 2R | yes — **enforced**, on classified names |
 | duplicate economic exposure | `risk.correlation_threshold` | 0.70 over 60 sessions | yes — **enforced** |
 
 **All six were `unset` when this document was written.** `DR-006-portfolio-risk-block.md` proposed
@@ -63,8 +63,17 @@ correlate at or above `risk.correlation_threshold` with any OPEN position leaves
 `risk.correlation_lookback_sessions` = 60 — it had been prose inside the threshold's registry note,
 where nothing could read it. **The value stays `assumed` and unratified**: §8.4's condition was that
 the owner rules on numbers whose checks actually run, and building the check is what makes that
-ruling possible, not a substitute for it. `risk.max_sector_risk` is the one row still marked **no**,
-and the ETF-look-through degeneracy guard §8.7 names is a precondition of moving it.
+ruling possible, not a substitute for it.
+
+**And the sector row moved the same day** (`DR-006` §12). A candidate is measured through its
+sector WEIGHTS, so an ETF consumes its constituents' budget rather than sitting outside it - which
+is what Appendix C's control cell asks for. The `unavailable` qualifier on that row is load-bearing
+and not a hedge: the classification store starts empty and is filled by a separate pass
+(`tools/refresh_classifications.py`), so until it has run **every** candidate is admitted UNCHECKED
+and the report says so. §3 of that record forbids turning a check the system could not perform into
+a blanket refusal, so `unchecked` is a coverage number to close rather than a verdict to read past.
+All six constraints now reach code; none of the six has moved from `assumed` to `validated`, and
+building a check has never been what does that.
 
 Two things follow, and they are different:
 
@@ -213,12 +222,17 @@ degeneracy guard is a precondition rather than a refinement (§8.7). What is gen
 the **point-in-time** sector, which restricts a backtest and not live admission. The bullets are kept
 as written because they are what was believed; neither is a reason the two caps stay unratified.
 
-**And the correlation bullet is now closed, 2026-08-23.** `derived_observations/correlation.py`
-computes it and `trade_management/portfolio.py` spends it, so *"nothing computes one"* is no longer
+**And both bullets are now closed, 2026-08-23.** `derived_observations/correlation.py` computes the
+correlation and `trade_management/portfolio.py` spends it, so *"nothing computes one"* is no longer
 true of this tree. Note what it is not: the matrix is never built. A candidate is correlated against
 the OPEN BOOK — at most `risk.max_concurrent_positions` comparisons, not 662,976 — because the pair
-that matters is candidate-to-held, and candidate-to-candidate is a ranking (§6 rule 4). The sector
-bullet stands.
+that matters is candidate-to-held, and candidate-to-candidate is a ranking (§6 rule 4).
+
+`reference_data/classification.py` closes the sector bullet, with the qualification that bullet was
+half right about: **`Instrument.sector` is still `None`**, and deliberately so. The classification is
+a bitemporal fact with a `knowledge_time`, not a field on an instrument record — which is what makes
+a run replayed before the first pull correctly find nothing instead of answering an older question
+with today's answer. The point-in-time gap is encoded rather than described (`DR-006` §12.5).
 
 **Allocation is therefore specified ahead of its first use, deliberately** — the same reason the
 intrabar policy in `EXECUTION_MODEL.md` §4 was written before a target existed. Written now it costs

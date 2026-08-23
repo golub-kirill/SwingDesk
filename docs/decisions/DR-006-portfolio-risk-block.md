@@ -508,4 +508,128 @@ strongest available claim of independence and a flat series is the weakest avail
 `risk.max_sector_risk` alone. §8.7's degeneracy guard remains its precondition: the vendor answers
 `NEAR` → healthcare 100.0% for a short-maturity bond fund, confidently and wrongly, and consuming
 that would spend an entire sector budget on a fiction. Nothing in this section makes that closer or
-further away.
+further away. **§12 closes it, the same day.**
+
+---
+
+## 12. The sector cap, built 2026-08-23
+
+The last of the six. `risk.max_sector_risk` stays `assumed:DR-006` and unratified for the same
+reason §11 gives about the correlation threshold, and this section records what now enforces it.
+
+### 12.1 The guard landed with the feature, because §8.7 said it had to
+
+The vendor answers `NEAR` — a short-maturity bond fund with no equity sectors at all — as
+**healthcare 100.0%**, every other sector 0.0%. `reference_data/classification.py`'s `look_through`
+refuses a fund look-through in that exact shape and reports `unavailable`. It never consumes it.
+
+**The test is EXACT, and that is a design choice worth stating.** A genuine sector ETF is
+legitimately almost all one sector, so a tolerance would refuse the instruments this cap most needs
+to see; the bond funds §8.7 measured come back at exactly 1 with every other sector at exactly 0,
+while a real single-sector fund carries a remainder elsewhere. Exactness is what separates the
+vendor saying *not applicable* in the only vocabulary it has from the vendor answering correctly.
+
+**The known weakness, recorded rather than discovered later.** `funds_data.asset_classes` on the
+same vendor object reports stock/bond/cash shares directly and would identify a bond fund without
+this inference. It is the better guard, it is not used, and the reason is that it has not been
+measured against this vendor — §8.7 specified the test that had been. A false positive here fails
+toward `unavailable`, which **admits** the candidate unchecked; that is the permissive direction,
+which is why §12.5 carries it as an open item rather than treating it as settled.
+
+### 12.2 Where it lives
+
+| | |
+|---|---|
+| The store | `reference_data/classification.py` — `ClassificationStore`, bitemporal, read as-of |
+| The guard | the same file — `look_through`, pure, applied on the way OUT of the store |
+| The vendor | `market_data/vendor_yahoo.py` — `fetch_classification` |
+| The budget | `trade_management/portfolio.py` — `sector_limit`, `sector_book`, `assess_sector` |
+| The candidate path | `application/pipeline.py`, step 6c, after the correlation cap |
+| The refresh | `tools/refresh_classifications.py`, a separate pass |
+| The display | `presentation/report.py`, a `SECTOR` block, plus a per-candidate line |
+
+**Judged on the way out, not on the way in.** The vendor's answer is stored as given and refused
+when read. Refusing at the fetch boundary would store nothing, and *"we asked and the answer was
+unusable"* would become indistinguishable from *"we never asked"* — two different facts about the
+same instrument, and only one of them is a reason to try again.
+
+**Classification is a separate pass**, for the reason `refresh_universe.py` gives about bars: one
+more vendor round trip per instrument, on a universe of 1152 members, inside a 45-minute evening
+budget (`NFR.md`), to refresh a fact that changes a few times a year.
+
+### 12.3 The arithmetic, and the ETF requirement it discharges
+
+Appendix C's control cell says sector risk must count ETFs and correlations. An ETF therefore
+consumes its **constituents'** sector budget rather than sitting outside it, so a candidate is
+measured through its weights and never by a single label:
+
+- an ordinary share carries its own sector as a single weight of 1;
+- a fund carries its look-through;
+- both are the same quantity, which is what lets the budget add a share to an ETF with no special
+  case anywhere in the arithmetic.
+
+Consequence, and it is the point of the requirement: on a book holding 1.50R of technology, a
+pure-technology candidate asking 1R is refused at 2.50R while the same 1R through a
+30%-technology fund is admitted at 1.80R. Both halves have a test, because either alone is
+satisfied by a cap that ignores weights entirely.
+
+### 12.4 Three ways the answer can be incomplete, and they are not the same
+
+This is the part most likely to be flattened by a later change.
+
+| | What it means | What happens |
+|---|---|---|
+| The **cap** is unset | nobody ruled the number | every candidate refuses, naming the parameter |
+| The **candidate** cannot be classified | the check did not run | admitted **unchecked**, reported `UNAVAILABLE` |
+| A **position** cannot be classified, or its look-through is partial | the split understates | nothing refuses; the report says the split understates |
+
+The second is §3 of this record, verbatim in effect: a check the system was never able to perform
+must not fail closed into a blanket refusal, because that stops the system entirely while looking
+like risk discipline. **Until `tools/refresh_classifications.py` has run, that is every candidate**,
+and the report says so on every run — which makes `unchecked` a coverage number to close rather
+than a verdict to read past.
+
+The third is the quietly dangerous one, because it is silent by nature: an unclassifiable position
+and a partial look-through both make every per-sector figure an **understatement**, and an
+understated sector admits candidates the full picture would have refused. `SectorBook.is_complete`
+exists so that the report can say it out loud, and the block prints the unattributed R next to the
+split rather than under it.
+
+**A partial look-through spends what it reports and no more.** Weights summing to 0.94 put 94% of
+the position's R into sectors and 6% into `unclassified_r`. Normalising to 1 would invent
+composition the vendor did not report; dropping the position would hide exposure that was measured.
+Carrying the remainder visibly is the only option that neither invents nor discards.
+
+### 12.5 What this still does not do
+
+- **The point-in-time sector is still missing, and is now ENCODED rather than described.** The store
+  is read as-of, so a run replayed before the first pull finds nothing and reports `unavailable`. It
+  does not answer a 2016 question with today's classification. §8.4 d is unchanged: that restricts a
+  BACKTEST and does not restrict live admission.
+- **The degeneracy guard should be `asset_classes`, once someone measures it** (§12.1). One vendor
+  call answers it; nobody has made it, and inventing the answer here would be the substitution this
+  record refuses everywhere else.
+- **The classification store starts empty and nothing schedules the refresh.** `swingdesk scan`
+  opens the store, so the cap is wired; `tools/refresh_classifications.py` fills it and is a manual
+  pass, like `refresh_universe.py`. Whether it joins the weekend prep task is an operational
+  decision, not a code one — `docs/runbooks/README.md` §1 carries it.
+- **`risk.max_sector_risk` = 2R was anchored against the 6R book and the anchor moved to 4R** (§8.3)
+  without this number moving with it. At 6R it was one third of the book; at 4R it is half. That may
+  be right — half the book in one theme is still a bound — but it is now a different statement from
+  the one §2 argued, and it is the owner's to rule on. §13 carries it.
+
+---
+
+## 13. Open items added 2026-08-23
+
+- [ ] **The correlation cap REFUSES; the course also names a size adjustment** (§11.3 reading 1).
+      `RISK_SPEC.md` §4 lists *"correlation threshold and its size adjustment"* as one unsupplied
+      input and only the threshold has a value. Halving a correlated candidate rather than refusing
+      it is a defensible alternative and needs a number this record does not have.
+- [ ] **`risk.max_sector_risk` = 2R was one third of a 6R book and is half of a 4R one** (§12.5).
+      Ratified numbers moved around it and it did not move. Owner ruling.
+- [ ] **The degeneracy guard should read `asset_classes` rather than infer from the weights**
+      (§12.1). One measurement against the vendor decides it. Until then a genuine fund reporting
+      exactly one sector at exactly 100% is refused, which admits it unchecked.
+- [ ] **Nothing schedules `tools/refresh_classifications.py`.** The cap is wired and its input is
+      empty, so today it reports `unavailable` for every candidate — correctly, and uselessly.
