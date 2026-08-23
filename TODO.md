@@ -334,10 +334,47 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       than random**. The reflex to cut exposure when vol rises would have made this worse. Full
       argument in `DR-006` §8.
 
-- [ ] **`[v]` DR-006's last two: sector and correlation. §3 called them UNEVALUABLE and that is
-      WRONG — both are buildable today.** This is the plan; nothing here is blocked on a ruling.
-      **a. Correlation is not blocked at all.** §3 says "nothing computes a correlation matrix" — a
-      statement about missing CODE, not missing data. Measured 2026-08-22: the full **1152 × 1152**
+- [x] **`[v]` The CORRELATION cap is WIRED — built 2026-08-23 (`DR-006` §11).** Item **a** below is
+      done. A candidate whose daily returns correlate at or above `risk.correlation_threshold` with
+      any OPEN position leaves with `Skip` / `RISK` at step 6b, right after the book cap.
+      `risk.correlation_lookback_sessions` = 60 is a **new parameter**: the window had been prose
+      inside the threshold's own entry, and that entry carried two `note:` keys, so the loader kept
+      the second and the window was not in the loaded registry at all (`DR-006` §7, worse than the
+      item said). Both stay `assumed:DR-006` and **unratified** — §8.4's condition was a ruling on
+      numbers whose checks run, and building the check enables that ruling rather than replacing it.
+      **Four readings are authored and one wants an owner ruling:** it REFUSES rather than resizes,
+      and the size adjustment `RISK_SPEC.md` §4 names alongside the threshold is still unspecified.
+      The other three — sign kept (`r >=`, not `|r| >=`), the window is the last 60 SHARED sessions,
+      and a candidate already in the book refuses at r = 1 — are recorded in §11.3.
+      **Do not confuse the two failure directions**: an unset parameter refuses every candidate; a
+      pair that could not be measured refuses none and reports `UNAVAILABLE`.
+
+- [x] **`[v]` The SECTOR cap is WIRED — built 2026-08-23 (`DR-006` §12). All six of `DR-006`'s
+      constraints now reach code.** Items **b**, **c** and **d** below are all discharged and the
+      plan is kept for the measurements it carries.
+      `risk.max_sector_risk` names `trade_management/portfolio.py:sector_limit`. A candidate is
+      measured through its sector WEIGHTS, so an ETF consumes its constituents' budget — Appendix
+      C's own control cell — and a share and a fund are the same arithmetic. New store
+      (`ClassificationStore`, bitemporal, read as-of), new vendor call
+      (`vendor_yahoo.fetch_classification`), new pass (`tools/refresh_classifications.py`).
+      **§8.7's guard landed with it, and the exactness is deliberate:** a fund reporting one sector
+      at *exactly* 1 with every other at *exactly* 0 is refused, because a real single-sector ETF
+      carries a remainder and a tolerance would refuse the names the cap most needs to see.
+      **THREE incompletenesses, and they are not the same** (`DR-006` §12.4): an unset cap refuses
+      every candidate; an unclassifiable CANDIDATE is admitted UNCHECKED; an unclassifiable POSITION
+      makes the split understate and refuses nothing.
+      **The store starts EMPTY, so today every candidate is admitted unchecked and the report says
+      so.** That is not a defect — it is §3 being obeyed — but it does mean the cap protects nothing
+      until the refresh pass has run. `unchecked` is a coverage number to close, not a verdict.
+      **The point-in-time gap is now ENCODED**: read as-of, so a replay before the first pull finds
+      nothing rather than answering an older question with today's classification.
+
+- [ ] **`[v]` DR-006's last one: SECTOR. §3 called it UNEVALUABLE and that is WRONG — it is
+      buildable today. DONE 2026-08-23 — see the entry above.** Kept for the measurements; every
+      item in it is discharged.
+      **a. Correlation is not blocked at all. DONE 2026-08-23.** §3 says "nothing computes a
+      correlation matrix" — a statement about missing CODE, not missing data. Measured 2026-08-22:
+      the full **1152 × 1152**
       matrix over 60 sessions of daily returns builds from the existing store in **0.09 s**. Of
       662,976 pairs, **1.57% sit at r ≥ 0.70**; median r = 0.091, p99 = **0.759**, so the threshold
       is neither vacuous nor over-broad. **Build:** compute it in the allocation path, refuse a
@@ -360,7 +397,27 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       classification, not the one in force in 2016. That restricts a BACKTEST and does not restrict
       live admission, and the two must not be conflated the way §3 conflated them.
       **Both parameters stay `assumed:DR-006` and unratified** until the above is built and the owner
-      can rule on numbers whose checks actually run.
+      can rule on numbers whose checks actually run. **Built 2026-08-23; the ruling is now open and
+      is in `DR-006` §13 — four items, of which two want an owner: whether the correlation cap should
+      RESIZE rather than refuse, and whether 2R is still the right sector budget now that the book
+      anchor moved from 6R to 4R and 2R went from a third of the book to half of it.**
+      **BOTH halves are now measured** (`DR-006` §14 and §15, owner asked for research before
+      ruling on each). Derive the correlation figures with
+      `python tools/measure_correlation_cap.py`. Headline: the cap bites on **20.2%** of candidates
+      on a four-position book — never quote `PR-005`'s 43.5%, whose book held a median of 22 —
+      refusing costs nothing measurable in return, and the premise **fails on the coarse measure
+      and holds five-fold on the precise one**: correlated co-held pairs did not end up losing
+      together more often, but they gapped out on the SAME session 4.94× as often, CI [2.32, 7.56].
+      §15.4 concludes the size adjustment is unnecessary rather than merely unauthored.
+      **The sector half is measured too** (`DR-006` §14).
+      Derive the figures with `python tools/measure_sector_cap.py`, never from this line. The
+      headline: `PR-005` held a median of 20 positions at once and 95% of its days were over four,
+      so it never simulated a capped book and cannot be replayed as one — what §14 samples is the
+      POPULATION such a book would have drawn from. §14.4 recommends keeping 2R on a new argument
+      and states the case against. **§14.6 records a real defect the research found in the build
+      itself:** the vendor spells its eleven sectors two ways, so a share and an ETF in one sector
+      would each have got their own budget and a concentrated book would have read as diversified.
+      Fixed the same day; not reachable from the fixtures and no gate would have caught it.
 
 - [x] **`[v]` The book cap is WIRED — built 2026-08-22 (`DR-006` §9).** `risk.max_open_risk` (4R) and
       `risk.max_concurrent_positions` (4) both name a consumer now:

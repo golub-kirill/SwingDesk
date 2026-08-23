@@ -335,13 +335,20 @@ def test_a_capacity_refusal_is_not_overwritten_by_a_later_admission(wired, regis
     )
 
 
-def _wide_range_fetcher(sessions: list[date], half_range: dict[str, str]):
+def _wide_range_fetcher(
+    sessions: list[date], half_range: dict[str, str], zigzag: frozenset[str] = frozenset()
+):
     """Bars whose daily range differs per instrument, so ATR - and therefore the stop distance,
     the share count and `planned_risk` - differ too.
 
     `conftest.make_bars` walks a fixed +-1.00 range whatever the price, so every candidate it
     produces asks for almost exactly the same R. Two candidates asking for DIFFERENT amounts is the
     whole condition this test needs, and there is no way to get it from the shared fixture.
+
+    `zigzag` puts an instrument on the alternating close path instead of the walking one, which is
+    how a fixture holds two names that are not the same bet. Since the correlation cap was built
+    (2026-08-23) a held name on the walking path correlates with a candidate on it at r = 1.00, so
+    a test about CAPACITY has to put the book somewhere else or it stops being about capacity.
     """
     from swingdesk.contracts.market import Bar, BarSeries, Interval, Series
 
@@ -349,9 +356,14 @@ def _wide_range_fetcher(sessions: list[date], half_range: dict[str, str]):
         # Held positions are fetched too, before any candidate. They are not the subject here, so
         # anything not named gets the ordinary narrow range.
         half = Decimal(half_range.get(instrument.id, "1.00"))
+        alternating = instrument.id in zigzag
         bars = []
         for offset, session in enumerate(sessions):
-            close = Decimal(100) + Decimal(offset) * Decimal("0.50")
+            close = (
+                Decimal(100) + (Decimal("0.50") if offset % 2 else Decimal(0))
+                if alternating
+                else Decimal(100) + Decimal(offset) * Decimal("0.50")
+            )
             bars.append(Bar(
                 instrument_id=instrument.id, interval=Interval.DAY, series=Series.RAW,
                 event_time=datetime(session.year, session.month, session.day, tzinfo=UTC),
@@ -388,9 +400,13 @@ def test_a_later_admitted_candidate_does_not_erase_an_earlier_refusal(wired, reg
     sessions = _sessions(narrow.exchange, date(2025, 1, 1), date(2026, 1, 15))
 
     # The refused one FIRST, the admitted one second - the order that made the bug visible.
+    # The book is put on the alternating path so the correlation cap has nothing to say here: this
+    # test is about which VERDICT the report keeps, and a held name correlating with the candidate
+    # at r = 1.00 would refuse the admission before the ordering question was ever reached.
     result = run([narrow, wide], FixedClock(AS_OF), registry, bars, journal,
                  mode=RunMode.LIVE_AS_OF, positions=positions,
-                 fetcher=_wide_range_fetcher(sessions, {"TEST.1": "1.00", "TEST.3": "13.50"}))
+                 fetcher=_wide_range_fetcher(sessions, {"TEST.1": "1.00", "TEST.3": "13.50"},
+                                             zigzag=frozenset({"HELD.1", "HELD.2"})))
 
     codes = [o.decision.reason_code for o in result.outcomes]
     decisions = [o.decision.decision for o in result.outcomes]

@@ -5,9 +5,10 @@ date:       2026-08-08
 status:     accepted — partially ratified by the owner 2026-08-22 (four of six; sector and
             correlation stay proposed, §8.4)
 parameters: risk.max_open_risk, risk.max_concurrent_positions, risk.max_sector_risk,
-            risk.correlation_threshold, risk.max_position_value,
-            risk.liquidity_cap_order_to_adtv_pct
-components: none - swingdesk.trade_management.portfolio enforces the book caps,
+            risk.correlation_threshold, risk.correlation_lookback_sessions,
+            risk.max_position_value, risk.liquidity_cap_order_to_adtv_pct
+components: none - swingdesk.trade_management.portfolio enforces the book and correlation caps,
+            swingdesk.derived_observations.correlation supplies the statistic,
             swingdesk.trade_management.sizing the position-value cap
 implemented_by: src/swingdesk/trade_management/portfolio.py :: risk.max_open_risk
 ```
@@ -408,3 +409,568 @@ caps above: they are the ones §8.2 shows acting on the failure mode that actual
 - [ ] **`risk.liquidity_cap_order_to_adtv_pct` is ratified and still reads nothing.** §2 said it
       would not bind until the account is roughly 20× larger, which is why it was not built here.
       That is a reason to defer it, not a reason for it to be invisible.
+
+---
+
+## 11. The correlation cap, built 2026-08-23
+
+§8.4 established that this constraint was buildable and §9.4 recorded that it was not built. This
+section is that gap closed. **It changes nothing about the parameter's status:**
+`risk.correlation_threshold` is still `assumed:DR-006` and still unratified, because §8.4's
+condition was that the owner rules on numbers *whose checks actually run* — and building the check
+is what makes that ruling possible rather than a substitute for it.
+
+### 11.1 The second number stopped being a note
+
+§7 carried this as an open item: *"the 60-session window it is measured over lives in a note. Two
+numbers in one parameter is the shape this registry exists to prevent."* It was worse than the item
+said. The threshold's entry carried **two `note:` keys**, so PyYAML kept the second and discarded
+the first — the one describing the window. The lookback was not merely unreadable by code; it was
+not in the loaded registry at all.
+
+`risk.correlation_lookback_sessions` = **60**, `assumed:DR-006`, is the fix, and both are read
+together by one function for the reason §1 gives about the book's pair: a threshold measured over an
+unknown window is not a threshold.
+
+### 11.2 Where it lives
+
+| | |
+|---|---|
+| The statistic | `src/swingdesk/derived_observations/correlation.py` — `daily_returns`, `pearson`, `measure` |
+| The verdict | `src/swingdesk/trade_management/portfolio.py` — `correlation_limit`, `assess_correlation` |
+| The candidate path | `application/pipeline.py`, step 6b, immediately after the book cap |
+| The display | `presentation/report.py`, a `CORRELATION` block, plus a per-candidate line |
+
+The statistic sits in **Derived Observations** because that is where the course's own component
+registry files both topics that name it — `M49-T0761` and `M51-T0781` — and a derived observation
+does not own a decision. The verdict is a risk decision and sits with the other one.
+
+**The matrix is never built.** §8.4 measured the full 1152 × 1152 matrix at 0.09 s and that
+measurement is what established the constraint was evaluable; it is not what the run does. A
+candidate is correlated against the OPEN BOOK — at most `risk.max_concurrent_positions` comparisons
+— because the pair that matters is candidate-to-held. Candidate-to-candidate is a ranking, and
+`rs.ranking_method` is `unset` (§9.2 rule 2, reused unchanged).
+
+### 11.3 Four readings this build had to take, all authored
+
+None of these is in the course, and each could have gone the other way.
+
+1. **It refuses; it does not resize.** `RISK_SPEC.md` §4 lists *"correlation threshold and its size
+   adjustment"* as one unsupplied input, and the adjustment is the half nobody has specified. A
+   refusal is the fail-closed reading and it is what `TODO.md` §4 planned. **This is the item most
+   worth an owner ruling** — halving the size of a correlated candidate is a defensible alternative
+   and would need a number this record does not have.
+2. **The sign is kept: `r >= threshold`, not `|r| >= threshold`.** What §2 bounds is *duplicate*
+   exposure. This system is long-only, so a strongly negative r is the opposite arrangement, and
+   refusing it would forbid the one pairing that reduces the exposure the cap exists to bound.
+3. **The window is the last 60 sessions the pair SHARES**, not the last 60 calendar sessions
+   intersected. A halt or a vendor gap on one side removes that session from the pair rather than
+   from the window, so the statistic is always computed on the number of observations it claims. The
+   alternative silently measures 41 sessions and reports a 60-session correlation.
+4. **A candidate already in the book meets itself at r = 1 and is refused.** Adding to a position is
+   the most complete duplicate exposure there is, and the course supplies no pyramiding rule that
+   would tell it apart from a second bet. Recorded as a consequence rather than discovered later.
+
+### 11.4 The two failure directions, which look alike and are opposite
+
+This is the part most likely to be broken by a later change, so it is stated as a rule rather than
+left in the code.
+
+- **An UNSET threshold or lookback refuses every candidate** and names the parameter. That is the
+  registry failing closed on a number nobody ruled (`AGENTS.md` §3), and it happens outside the
+  position-store branch, exactly as the book cap does.
+- **A pair that could not be MEASURED refuses nothing.** Too little overlapping history, or a side
+  that did not move, is a gap in the *system*. §3 of this record is explicit: a check the system was
+  never able to perform must not fail closed into a blanket refusal, because that stops the system
+  entirely while looking like risk discipline. It is recorded, counted, and printed as `UNAVAILABLE`
+  — and a candidate admitted that way is reported as **unchecked**, never as independent.
+
+`pearson` returns `None` rather than `0.0` for a constant series, for the same reason: zero is the
+strongest available claim of independence and a flat series is the weakest available data.
+
+### 11.5 What it cost elsewhere
+
+- **The test fixture had to gain a second price path.** `conftest.make_bars` walks one arithmetic
+  sequence, so every instrument in the suite correlated with every other at exactly **r = 1.00** —
+  which proves the cap bites and cannot prove it admits anything. `make_bars(zigzag=True)` is the
+  alternating path; the two measure about **-0.03** apart over a year, and one test asserts that
+  premise so the admitting tests cannot go green for the wrong reason.
+- **The stored replay case gained both parameters**, re-recorded deliberately. `output_hash` was
+  unchanged at `0a3858a76dbe8d0b` — that case passes no position store, so no candidate reaches the
+  measurement — and only `config_hash` moved. A determinism gate whose hash had moved here would
+  have been reporting a real change; it did not.
+- **Track A is unaffected.** `pipeline.py` is frozen under `DR-015` §3, and this change does move
+  decision output — but the counter restarted on 2026-08-22 and reads from
+  `tools/track_a_streak.py`, never from this document (`AGENTS.md` §10.6).
+
+### 11.6 What is still not built
+
+`risk.max_sector_risk` alone. §8.7's degeneracy guard remains its precondition: the vendor answers
+`NEAR` → healthcare 100.0% for a short-maturity bond fund, confidently and wrongly, and consuming
+that would spend an entire sector budget on a fiction. Nothing in this section makes that closer or
+further away. **§12 closes it, the same day.**
+
+---
+
+## 12. The sector cap, built 2026-08-23
+
+The last of the six. `risk.max_sector_risk` stays `assumed:DR-006` and unratified for the same
+reason §11 gives about the correlation threshold, and this section records what now enforces it.
+
+### 12.1 The guard landed with the feature, because §8.7 said it had to
+
+The vendor answers `NEAR` — a short-maturity bond fund with no equity sectors at all — as
+**healthcare 100.0%**, every other sector 0.0%. `reference_data/classification.py`'s `look_through`
+refuses a fund look-through in that exact shape and reports `unavailable`. It never consumes it.
+
+**The test is EXACT, and that is a design choice worth stating.** A genuine sector ETF is
+legitimately almost all one sector, so a tolerance would refuse the instruments this cap most needs
+to see; the bond funds §8.7 measured come back at exactly 1 with every other sector at exactly 0,
+while a real single-sector fund carries a remainder elsewhere. Exactness is what separates the
+vendor saying *not applicable* in the only vocabulary it has from the vendor answering correctly.
+
+**The known weakness, recorded rather than discovered later.** `funds_data.asset_classes` on the
+same vendor object reports stock/bond/cash shares directly and would identify a bond fund without
+this inference. It is the better guard, it is not used, and the reason is that it has not been
+measured against this vendor — §8.7 specified the test that had been. A false positive here fails
+toward `unavailable`, which **admits** the candidate unchecked; that is the permissive direction,
+which is why §12.5 carries it as an open item rather than treating it as settled.
+
+### 12.2 Where it lives
+
+| | |
+|---|---|
+| The store | `reference_data/classification.py` — `ClassificationStore`, bitemporal, read as-of |
+| The guard | the same file — `look_through`, pure, applied on the way OUT of the store |
+| The vendor | `market_data/vendor_yahoo.py` — `fetch_classification` |
+| The budget | `trade_management/portfolio.py` — `sector_limit`, `sector_book`, `assess_sector` |
+| The candidate path | `application/pipeline.py`, step 6c, after the correlation cap |
+| The refresh | `tools/refresh_classifications.py`, a separate pass |
+| The display | `presentation/report.py`, a `SECTOR` block, plus a per-candidate line |
+
+**Judged on the way out, not on the way in.** The vendor's answer is stored as given and refused
+when read. Refusing at the fetch boundary would store nothing, and *"we asked and the answer was
+unusable"* would become indistinguishable from *"we never asked"* — two different facts about the
+same instrument, and only one of them is a reason to try again.
+
+**Classification is a separate pass**, for the reason `refresh_universe.py` gives about bars: one
+more vendor round trip per instrument, on a universe of 1152 members, inside a 45-minute evening
+budget (`NFR.md`), to refresh a fact that changes a few times a year.
+
+### 12.3 The arithmetic, and the ETF requirement it discharges
+
+Appendix C's control cell says sector risk must count ETFs and correlations. An ETF therefore
+consumes its **constituents'** sector budget rather than sitting outside it, so a candidate is
+measured through its weights and never by a single label:
+
+- an ordinary share carries its own sector as a single weight of 1;
+- a fund carries its look-through;
+- both are the same quantity, which is what lets the budget add a share to an ETF with no special
+  case anywhere in the arithmetic.
+
+Consequence, and it is the point of the requirement: on a book holding 1.50R of technology, a
+pure-technology candidate asking 1R is refused at 2.50R while the same 1R through a
+30%-technology fund is admitted at 1.80R. Both halves have a test, because either alone is
+satisfied by a cap that ignores weights entirely.
+
+### 12.4 Three ways the answer can be incomplete, and they are not the same
+
+This is the part most likely to be flattened by a later change.
+
+| | What it means | What happens |
+|---|---|---|
+| The **cap** is unset | nobody ruled the number | every candidate refuses, naming the parameter |
+| The **candidate** cannot be classified | the check did not run | admitted **unchecked**, reported `UNAVAILABLE` |
+| A **position** cannot be classified, or its look-through is partial | the split understates | nothing refuses; the report says the split understates |
+
+The second is §3 of this record, verbatim in effect: a check the system was never able to perform
+must not fail closed into a blanket refusal, because that stops the system entirely while looking
+like risk discipline. **Until `tools/refresh_classifications.py` has run, that is every candidate**,
+and the report says so on every run — which makes `unchecked` a coverage number to close rather
+than a verdict to read past.
+
+The third is the quietly dangerous one, because it is silent by nature: an unclassifiable position
+and a partial look-through both make every per-sector figure an **understatement**, and an
+understated sector admits candidates the full picture would have refused. `SectorBook.is_complete`
+exists so that the report can say it out loud, and the block prints the unattributed R next to the
+split rather than under it.
+
+**A partial look-through spends what it reports and no more.** Weights summing to 0.94 put 94% of
+the position's R into sectors and 6% into `unclassified_r`. Normalising to 1 would invent
+composition the vendor did not report; dropping the position would hide exposure that was measured.
+Carrying the remainder visibly is the only option that neither invents nor discards.
+
+### 12.5 What this still does not do
+
+- **The point-in-time sector is still missing, and is now ENCODED rather than described.** The store
+  is read as-of, so a run replayed before the first pull finds nothing and reports `unavailable`. It
+  does not answer a 2016 question with today's classification. §8.4 d is unchanged: that restricts a
+  BACKTEST and does not restrict live admission.
+- **The degeneracy guard should be `asset_classes`, once someone measures it** (§12.1). One vendor
+  call answers it; nobody has made it, and inventing the answer here would be the substitution this
+  record refuses everywhere else.
+- **The classification store starts empty and nothing schedules the refresh.** `swingdesk scan`
+  opens the store, so the cap is wired; `tools/refresh_classifications.py` fills it and is a manual
+  pass, like `refresh_universe.py`. Whether it joins the weekend prep task is an operational
+  decision, not a code one — `docs/runbooks/README.md` §1 carries it.
+- **`risk.max_sector_risk` = 2R was anchored against the 6R book and the anchor moved to 4R** (§8.3)
+  without this number moving with it. At 6R it was one third of the book; at 4R it is half. That may
+  be right — half the book in one theme is still a bound — but it is now a different statement from
+  the one §2 argued, and it is the owner's to rule on. §13 carries it.
+
+---
+
+## 13. Open items added 2026-08-23
+
+- [ ] **The correlation cap REFUSES; the course also names a size adjustment** (§11.3 reading 1).
+      `RISK_SPEC.md` §4 lists *"correlation threshold and its size adjustment"* as one unsupplied
+      input and only the threshold has a value. **Measured in §15**, which supports keeping the
+      refusal and finds the size adjustment unnecessary rather than merely unauthored: refusing
+      costs nothing measurable in return, and halving would keep half of an exposure that gaps
+      together five times more often. Still open — the ruling is the owner's.
+- [ ] **`risk.max_sector_risk` = 2R was one third of a 6R book and is half of a 4R one** (§12.5).
+      Ratified numbers moved around it and it did not move. Owner ruling — **measured in §14, which
+      supports keeping 2R on a different argument from the one §2 made.** Still open: the ruling is
+      the owner's and §14.4 states the case against as well as for.
+- [ ] **The degeneracy guard should read `asset_classes` rather than infer from the weights**
+      (§12.1). One measurement against the vendor decides it. Until then a genuine fund reporting
+      exactly one sector at exactly 100% is refused, which admits it unchecked.
+- [ ] **Nothing schedules `tools/refresh_classifications.py`.** The cap is wired and its input is
+      empty, so today it reports `unavailable` for every candidate — correctly, and uselessly.
+
+---
+
+## 14. Calibrating the sector cap, 2026-08-23
+
+§13 asked whether 2R is still the right sector budget. Owner asked for research rather than a
+ruling on the argument alone. This is it.
+
+Reproduce with:
+
+```bash
+python tools/measure_sector_cap.py --classifications docs/decisions/measurements/sector-classifications-2026-08-23.json --out docs/decisions/measurements/sector-cap-calibration-2026-08-23.json
+```
+
+Both files are in `docs/decisions/measurements/`. Every figure below comes out of the second one;
+none is typed from memory.
+
+### 14.1 The first finding is about the evidence, not the cap
+
+**`PR-005`'s base slice held a median of 20 positions at once, a maximum of 54, and was over four
+on 95.1% of days.** It is a per-instrument backtest with no capital constraint. It never simulated
+a four-position book and **cannot be replayed as one.**
+
+That is worth saying plainly because §8.1 used the same log to move the anchor from 6R to 4R and
+was right to: a per-trade gap loss of −1.692R is concurrency-independent. A sector budget is not.
+So this section does not measure what a capped book would have returned; it measures the
+**population a four-position book would have drawn from**, and samples four names from it. The draw
+is uniform because `rs.ranking_method` is `unset` and §6 rule 4 of `ALLOCATION_SPEC` forbids
+falling back to any order the system happens to have — a uniform draw is the only assumption that
+does not smuggle in the ranking the system refuses to make.
+
+### 14.2 What each candidate cap actually means, in positions
+
+At 0.98R per position — this system's own sizing, shares rounded down — the heaviest sector in a
+four-position book, over 704,200 sampled books:
+
+| | heaviest sector |
+|---|---|
+| median | **1.17R** |
+| p75 | 1.96R |
+| p90 | 2.01R |
+| p95 | 2.21R |
+| p99 | 2.94R |
+| max | 3.92R |
+
+The discrete structure is visible in those numbers and is the clearest way to read the choice:
+0.98R is one position in a sector, 1.96R is two, 2.94R is three, 3.92R is all four. So
+
+| cap | means | refuses |
+|---|---|---|
+| **1.33R** (a third of a 4R book) | at most **one** of four in one theme | **37.9%** of books |
+| **2R** (what the registry carries) | at most **two** of four | **11.3%** of books |
+| **3R** | at most three | **0.6%** of books |
+
+**§4 predicted the last row and it holds.** That section rejected 3R open risk on the grounds that
+*"sector and correlation caps would never bind and the concentration rules would be decorative"*.
+At 0.6% a 3R sector cap is decorative, measured rather than asserted.
+
+### 14.3 The two caps are not redundant, and this is the number that decides it
+
+The obvious objection to any sector cap now that §11 exists: same-sector names are the correlated
+ones, so is the correlation cap already doing this job? Measured over the 59 usable instruments,
+every pair correlated over the ratified 60-session window and split by whether the two share a
+dominant sector:
+
+| | pairs | median r | p90 | at r ≥ 0.70 |
+|---|---|---|---|---|
+| same dominant sector | 230 | **+0.293** | +0.750 | **15.2%** |
+| different sector | 1,481 | +0.118 | +0.438 | **1.6%** |
+
+Two things follow, and they point in opposite directions.
+
+**Sector membership genuinely predicts correlation** — a tenfold lift, 15.2% against 1.6%. The two
+caps are measuring related things, so a sector cap is not noise next to a correlation cap.
+
+**And the correlation cap catches only 15% of same-sector pairs.** The median same-sector pair sits
+at r = 0.29, which is not one bet by any reading of §2. So **85% of what a tight sector cap would
+refuse, the correlation cap does not** — the overlap is weak, and the sector cap is doing
+non-redundant work: bounding names that would fall together on a sector shock without having moved
+together in the last quarter.
+
+### 14.4 What this supports, and it is a recommendation rather than a ruling
+
+**Keep 2R** — but retire §2's justification for it and stand it on this instead.
+
+*"One third of the book"* was true at a 6R anchor and is not true at 4R; repeating it would be
+quoting a sentence whose premise moved. What the measurement supports is different and stronger:
+2R is the cap that binds where concentration is genuinely extreme (the top ~11% of books) while
+1.33R refuses more than a third of all books, and in roughly 85% of those refusals the two names
+were not correlated at all — a lot of refusals earned by a label rather than by a measured
+relationship. With four slots and eleven sectors, "at most one per sector" is close to forcing
+perfect sector diversity on a book that small.
+
+**The ruling is still yours.** The case for 1.33R is not empty: a sector shock is exactly the
+correlated-gap failure §8.2 built the whole block around, and 15.2% of same-sector pairs really do
+move together. Choosing 2R accepts that two positions — **−3.38R at the measured gap loss** — can
+be lost to one theme overnight, which is a fifth of the −15R drawdown pause in a single session.
+
+### 14.5 Three limits on every number above
+
+1. **The sectors are today's, not the ones in force in 2016** (§8.4 d). A name that changed sector
+   is misfiled for its whole history. This is the point-in-time gap, and it bounds this measurement
+   exactly as it bounds any backtest.
+2. **59 usable instruments is a thin cross-section, and it leans heavily financial.** Financial
+   services was the most-represented sector on **57%** of days. A universe with that shape produces
+   more same-sector collisions than a balanced one would, so the refusal rates above are more
+   likely overstated than understated.
+3. **Nine of the 68 are refused by §8.7's guard** and contribute to no sector, so measured
+   concentration is an understatement by whatever they hold. The nine — `FIXD`, `FLTR`, `IAGG`,
+   `NEAR`, `SH`, `TLT`, `UITB`, `VXX`, `WEAT` — are bond, inverse, commodity and volatility
+   products without exception, and **not one genuine equity fund was refused**. That is the first
+   evidence that §12.1's exactness argument holds outside the one case §8.7 measured.
+
+### 14.6 And the research found a defect in §12's own build
+
+**The vendor spells its eleven sectors two ways and the difference is silent.** An equity comes
+back `Financial Services`; a fund look-through comes back `financial_services`; `Real Estate`
+becomes `realestate` with no separator at all. Both vocabularies hold exactly the same eleven
+sectors and nothing else.
+
+Shipped unmapped, a share and an ETF in the same sector would each have received their own budget —
+`LYV` (Communication Services) and `FCOM` (communication_services) counted as two themes — so a
+concentrated book would have reported as a diversified one. **The cap would have failed in the
+permissive direction, silently**, which is the same failure shape §8.7 was written about one layer
+up and the reason that section insists the guard is a precondition rather than a refinement.
+
+`reference_data.classification.canonical_sector` now maps both spellings to one label before
+anything is compared or added, and merges weights that collide. A vendor answer carrying **both**
+spellings of one sector, summing past 100%, is refused rather than clamped: clamping picks a number
+the vendor never gave, on the one input that proves it wrong.
+
+Found only because the calibration ran against real vendor output. It is not reachable from the
+fixtures, and no gate would have caught it.
+
+---
+
+## 15. Calibrating the correlation cap, 2026-08-23
+
+§13 asked whether the correlation cap should RESIZE rather than refuse. Owner asked for the same
+treatment §14 gave the sector budget. Reproduce with:
+
+```bash
+python tools/measure_correlation_cap.py --out docs/decisions/measurements/correlation-cap-calibration-2026-08-23.json
+```
+
+Every correlation below is computed over the 60 sessions ending **strictly before** the candidate's
+entry date, by the same `pearson` the run uses. A calibration correlating over today's window would
+be answering a question the system never gets to ask.
+
+### 15.1 How often the cap actually bites
+
+**On a four-position book — the production number: 20.2% of candidates.** For **56.2%** of
+candidates it is exactly zero, because nothing correlated is held at all. Computed rather than
+sampled: with `n` names held and `k` of them correlated, the chance a three-name book contains at
+least one is `1 - C(n-k,3)/C(n,3)`, and the correlated share of held names averages **9.2%**.
+
+**Do not quote `PR-005`'s own figure of 43.5%.** Its book held a median of **22** names, so a
+candidate had twenty-two chances to collide rather than three. The same trap §14.1 names: that log
+is a per-instrument backtest with no capital constraint, and every figure taken from it has to be
+corrected for a book size it never had.
+
+### 15.2 What refusing would have cost — and the honest answer is *nothing measurable*
+
+| | trades | mean | 95% block CI | median | p5 | loss rate |
+|---|---|---|---|---|---|---|
+| would be refused | 1,660 | **+0.057R** | **[−0.063, +0.169]** | −0.597 | −1.209 | 56.3% |
+| admitted | 2,153 | −0.004R | [−0.080, +0.085] | −1.007 | −1.414 | 60.1% |
+
+The interval is a **block bootstrap resampling whole calendar years**, not a standard error over
+trades: the same trade appears in many co-held pairs and a year's trades share a regime, so a naive
+interval would describe a sample that does not exist. Both intervals **contain zero and overlap
+almost entirely.**
+
+So the refused trades were not worse. They were, if anything, marginally better, and refusing them
+would have forgone **+94.3R** across 1,660 trades — a figure that looks decisive and is not, because
+the interval around it crosses zero. **Refusing costs nothing measurable, and it saves nothing
+measurable either.** Any argument for this cap that rests on return is unsupported here.
+
+Note also what refusing does NOT do: the refused trades have a **shallower** left tail (p5 −1.209
+against −1.414). Removing them does not cut the per-trade downside.
+
+### 15.3 The premise, on two measures that disagree — and the disagreement is the finding
+
+§2 justifies the threshold by asserting that two names sharing about half their variance are one
+bet. Tested rather than repeated, on co-held pairs:
+
+| | pairs | measure | above r ≥ 0.70 | below |
+|---|---|---|---|---|
+| coarse | 8,352 / 74,867 | `P(both lose over the holding period)` | **22.8%** | **24.5%** |
+| precise | 8,352 / 74,867 | **`P(both gapped out on the SAME session)`** | **1.030%** | **0.208%** |
+
+**On the coarse measure the premise fails** — correlated pairs ended up losing together very
+slightly *less* often. That is reported first and in full, because a calibration quoting only the
+supportive measure is how `PR-008`'s strongest sentence passed sixteen gates and was false.
+
+**On the precise measure it holds hard: a lift of 4.94×, 95% block CI [2.32, 7.56].** Resampling
+whole calendar years — the right block, since §8.6 measured 89 sessions holding 52% of all gap
+exits — the interval does not come close to 1.
+
+The two are reconciled by what each asks. Two names can move together every day and still exit
+weeks apart for unrelated reasons, so the holding-period measure washes the effect out. The
+same-session gap is the failure mode §8.2 built this entire block around: the simultaneous
+overnight move a per-trade stop cannot defend against, because the price the stop names does not
+trade between the close and the open. **The cap is not there to improve the average trade. It is
+there to stop two positions from being one overnight event, and on the measure that means that,
+correlation predicts it five-fold.**
+
+### 15.4 What this supports
+
+**Keep the refusal. The size adjustment is unnecessary rather than merely unauthored.**
+
+The reasoning is short because the two measurements above do all the work. Refusing costs nothing
+measurable in return (§15.2). Halving instead would keep half of an exposure that gaps together
+**five times more often** (§15.3), and would buy that by authoring a multiplier this project has no
+basis for — which `AGENTS.md` §3 forbids for exactly this shape of reason. There is nothing to
+trade off: the cheaper rule is also the one with the better-evidenced risk reduction.
+
+This does not make `risk.correlation_threshold` `validated`. A parameter becomes validated by a
+pre-registered study against this universe, and this is a calibration attached to a decision record.
+What it does is retire the reading in §11.3 as *provisional* and replace it with a measured one.
+
+### 15.5 Four limits on every number above
+
+1. **`PR-005`'s strategy is refuted** and its base slice returns about +0.028R per trade. Every
+   expectancy figure in §15.2 is measured on a strategy with no established edge, so "refusing cost
+   nothing" is a statement about *this* population and not a law.
+2. **`PR-005` never simulated a capped book** (§14.1). §15.1 corrects for book size arithmetically;
+   §15.2 and §15.3 are conditional statistics on trades that were actually taken, which is weaker.
+3. **86 same-session gap events above the threshold** is a small count, which is why the lift
+   carries a bootstrapped interval rather than a point estimate.
+4. **68 instruments, one arm, one regime.** The same thin cross-section §14.5 names, and it leans
+   heavily financial. **§16 closes this one at full width, the same day, and it moved both
+   calibrations.**
+
+---
+
+## 16. The wide cross-section, 2026-08-23 — and what it corrected
+
+§14.5 limit 2 and §15.5 limit 4 were the same complaint: 59 usable instruments out of `PR-005`'s
+68-name sample is thin, and it leaned heavily financial, so every refusal rate taken from it
+described that sample rather than the universe a run nominates from.
+
+**That limit is now closed**, because the two structural questions need no trade log — only stored
+bars and stored classifications. `tools/refresh_classifications.py --universe` classified the whole
+admitted universe on 2026-08-23: **1,148 of 1,148, zero vendor failures, 125 unusable** once §8.7's
+guard had judged them (10.9%). Reproduce the rest with:
+
+```bash
+python tools/measure_sector_cap.py --classifications docs/decisions/measurements/sector-classifications-2026-08-23.json --wide
+```
+
+### 16.1 The universe is not financial-heavy. That was the sample.
+
+| sector | share of the admitted universe, by weight |
+|---|---|
+| financial services | 17.2% |
+| technology | 17.1% |
+| healthcare | 14.6% |
+| industrials | 13.5% |
+| consumer cyclical | 10.0% |
+| basic materials · real estate · energy · consumer defensive · utilities · communication services | 3.5–5.6% each |
+
+Five sectors between 10% and 17%, then a tail. **The *"financial services was the most-represented
+sector on 57% of days"* figure in §14.5 is a fact about `PR-005`'s 68 names and nothing else**, and
+carrying it as a property of the universe would have been exactly the kind of borrowed conclusion
+§10.3 of `AGENTS.md` warns about — inside this project rather than from outside it.
+
+### 16.2 The correlation cross-tab holds, and the non-redundancy argument gets stronger
+
+Over 1,023 usable instruments and 522,753 pairs, against the 59-instrument version in §14.3:
+
+| | pairs | median r | p90 | at r ≥ 0.70 |
+|---|---|---|---|---|
+| same dominant sector | 70,553 | +0.207 | +0.618 | **6.38%** |
+| different sector | 452,200 | +0.073 | +0.364 | **0.82%** |
+
+The **lift survives** — 7.8× here against 9.8× on the narrow sample, the same order — so sector
+membership really does predict correlation.
+
+But the absolute rate fell by more than half, from 15.2% to **6.38%**. So **93.6% of same-sector
+pairs are not caught by the correlation cap**, against 85% on the narrow sample. §14.3's conclusion
+that the two caps do non-redundant work is not merely intact; it is stronger than the narrow data
+suggested.
+
+### 16.3 What each cap costs on the real universe — and one figure moved the wrong way
+
+20,000 four-position books drawn uniformly from the admitted universe, both caps scored on the
+**same** draw because that is how step 6 applies them:
+
+| | refuses |
+|---|---|
+| correlation cap (r ≥ 0.70 with any held name) | **4.15%** |
+| sector cap at 1.33R | **49.65%** |
+| sector cap at **2R** | **14.16%** |
+| sector cap at 3R | **0.66%** |
+
+**The correlation cap is far cheaper than §15.1 estimated** — 4.15% against 20.2%. That estimate
+came from `PR-005`'s own book, and those 68 names were markedly more correlated with each other
+than the universe is. The corrected figure makes the cap a rarely-binding rule aimed at a 5× effect,
+which is the best shape a risk control can have.
+
+**The sector cap at 2R is slightly MORE expensive than §14.2 estimated**, not less — 14.16% against
+11.3%. Recorded because the expectation ran the other way: a balanced universe was assumed to
+collide less, and with four draws across eleven roughly-equal sectors it collides more. The
+birthday arithmetic is the whole of it, and guessing the sign of that was a mistake.
+
+**1.33R nearly doubled, to 49.65%.** With four slots and eleven sectors it now refuses **half of
+all books**, which is close to forbidding any repeated sector at all.
+
+### 16.4 What this does to the two recommendations
+
+**Both stand, and both are better supported than they were.**
+
+- **Sector: keep 2R.** §14.4 argued it on the narrow data; the wide data makes the alternative
+  worse rather than the recommendation better. 1.33R refusing half of every book is not a
+  concentration limit, it is a diversification mandate the course never asked for, and §16.2 shows
+  most of what it would refuse is not correlated. 3R remains decorative at 0.66%, twice measured.
+- **Correlation: keep the refusal.** §15.4's argument was that refusing costs nothing measurable
+  while halving would keep half of a five-fold gap exposure. §16.3 adds that the rule fires on only
+  4.15% of books, so what it costs is smaller again — and a size adjustment nobody has authored is
+  being weighed against a rule that rarely triggers.
+
+**Neither ruling is taken here.** §13 still carries both, and both parameters stay `assumed:DR-006`.
+
+### 16.5 What is still narrow, and it is the important half
+
+**Everything about OUTCOMES.** §15.2's expectancy, §15.3's same-session gap lift, and §14.2's
+book-drawn-from-held-positions all need a trade log, and the only trade log this project holds
+covers 68 names from a single arm of `PR-005` — whose registered hypothesis was rejected. The
+structural half is now measured at full width; the behavioural half is not, and no amount of
+classification fixes that. It needs a backtest over a wider sample, which is a study rather than a
+calibration.
+
+`PR-005`'s own sample was 320 symbols, of which the liquidity rule rejected 215, short history
+excluded 28, and the vendor failed on 9 — 68 survivors. **The universe is 1,148 admitted of 3,713
+with bars, out of 13,136 eligible: coverage is 28.3%**, and that, rather than the universe rule, is
+what bounds a wider study today.

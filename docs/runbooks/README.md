@@ -55,6 +55,27 @@ python tools/refresh_universe.py --budget 500
 The report prints the coverage fraction on every run precisely so this is visible before it is
 mistaken for a finding.
 
+**Every candidate reading `admitted UNCHECKED` in the SECTOR block is the same shape of symptom.**
+The sector cap (`DR-006` §2, built 2026-08-23) measures a candidate against the sectors the open
+book already holds, and it can only do that for instruments whose classification has been fetched.
+Classification is a separate pass for the reason bar coverage is — it is one more vendor round trip
+per instrument, on a fact that changes a few times a year:
+
+```bash
+python tools/refresh_classifications.py --budget 200
+```
+
+Until it has run, every candidate is admitted **unchecked** and the report says so on every run.
+That is `DR-006` §3 being obeyed and not a fault: a sector cap that refused every unclassified name
+would refuse the whole universe on the day the store was created, which stops the system while
+looking like risk discipline. What it does mean is that the cap is not protecting anything yet, and
+`unchecked` is a coverage number to close rather than a verdict to read past.
+
+**A candidate can also be unchecked because the vendor lied and was caught.** `DR-006` §8.7: a fund
+whose look-through comes back as one sector at exactly 100% with every other at exactly 0% is a
+bond fund being described in the only vocabulary the vendor has, and it is refused rather than
+consumed. The refresh pass counts these on the way past.
+
 ### 1a. The staleness gate, and the 19:30 second pass — `DR-015`
 
 **What refuses, and why it is not the same as a fetch failure.** A series behind the calendar's last

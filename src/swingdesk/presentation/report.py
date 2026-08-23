@@ -152,6 +152,143 @@ def _capacity_block(result: RunResult) -> list[str]:
     return lines
 
 
+def _correlation_block(result: RunResult) -> list[str]:
+    """The other half of step 6: is this the same bet the book already holds? (`DR-006` §2.)
+
+    Printed apart from BOOK CAPACITY because it fails in a different direction, and a reader who
+    cannot see that distinction cannot use either block. A book cap that has no value refuses
+    everything; a correlation that could not be MEASURED refuses nothing and says so. Folding the
+    two into one "portfolio checks" block would make the second look like the first.
+
+    The counts are derived from the outcomes rather than carried alongside them, so this block can
+    never disagree with the decisions above it - the same rule `_funnel_block` follows.
+    """
+    limit = result.correlation
+    lines = ["", "CORRELATION — the same bet twice? (DR-006 §2)", _RULE]
+
+    if isinstance(limit, Refusal):
+        lines.append(f"  REFUSED  {limit}")
+        lines.append("           no candidate was admitted; the cap itself has no value")
+        return lines
+
+    if limit is None:
+        lines.append("  UNAVAILABLE  the cap was not read this run")
+        return lines
+
+    lines.append(
+        f"  threshold      r >= {limit.threshold} over {limit.lookback} shared session(s)"
+        f"   [{portfolio.CORRELATION_THRESHOLD}]"
+    )
+
+    checked = [
+        outcome.correlation for outcome in result.outcomes if outcome.correlation is not None
+    ]
+    if not checked:
+        if "positions" not in result.steps:
+            lines.append("  UNAVAILABLE  the book was not read this run, so no candidate could be")
+            lines.append("               correlated against it. That is `unavailable`, and it is")
+            lines.append("               not the same claim as `these are independent`.")
+        else:
+            lines.append("  NOT ASSESSED   no candidate reached the correlation check")
+        return lines
+
+    if not checked[0].pairs:
+        lines.append("  no open position, so there was nothing for a candidate to duplicate")
+        return lines
+
+    refused = [check for check in checked if not check.admitted]
+    unmeasurable = [check for check in checked if check.is_unavailable]
+    partial = [check for check in checked if check.unmeasured and not check.is_unavailable]
+
+    lines.append(f"  candidates     {len(checked)} correlated against {len(checked[0].pairs)} "
+                 f"open instrument(s)")
+    lines.append(f"  refused        {len(refused)}   duplicate exposure, Skip/RISK")
+    if unmeasurable:
+        lines.append(
+            f"  UNAVAILABLE    {len(unmeasurable)}   could not be correlated at all and were "
+            f"admitted UNCHECKED"
+        )
+        lines.append(f"                 {unmeasurable[0].reason}")
+    if partial:
+        lines.append(
+            f"  partial        {len(partial)}   cleared the positions that could be measured, "
+            f"with others unchecked"
+        )
+    if not unmeasurable and not partial:
+        lines.append("  every pair was measured; nothing was admitted on an unchecked comparison")
+    return lines
+
+
+def _sector_block(result: RunResult) -> list[str]:
+    """How the open book's risk is spread across sectors, and what it could not place (`DR-006` §2).
+
+    **The unattributed totals are printed next to the split, not under it.** A sector table that
+    showed only what it could place would read as a complete picture of the book, and the two ways
+    it is incomplete both push the same way: an unclassifiable position and a partial look-through
+    each make every sector figure an UNDERSTATEMENT, which admits candidates the full picture would
+    have refused.
+    """
+    limit = result.sector_limit
+    lines = ["", "SECTOR — how much of the book sits in one theme (DR-006 §2)", _RULE]
+
+    if isinstance(limit, Refusal):
+        lines.append(f"  REFUSED  {limit}")
+        lines.append("           no candidate was admitted; the cap itself has no value")
+        return lines
+
+    if limit is None:
+        lines.append("  UNAVAILABLE  the cap was not read this run")
+        return lines
+
+    lines.append(f"  cap            {limit}R in any one sector   [{portfolio.MAX_SECTOR_RISK}]")
+
+    book = result.sector_book
+    if isinstance(book, Refusal):
+        lines.append(f"  REFUSED  {book}")
+        return lines
+    if book is None:
+        if "positions" not in result.steps:
+            lines.append("  UNAVAILABLE  the book was not read this run, so its sector split could")
+            lines.append("               not be computed. That is not `inside the cap`.")
+        else:
+            lines.append("  NOT ASSESSED   no candidate reached the sector check")
+        return lines
+
+    if book.by_sector:
+        for sector, risk in book.by_sector.items():
+            over = "  <- AT OR PAST THE CAP" if risk >= limit else ""
+            lines.append(f"      {sector:<28} {risk:.2f}R{over}")
+    else:
+        lines.append("      (no open risk could be placed in any sector)")
+
+    if book.unclassified_r:
+        lines.append(
+            f"  unattributed   {book.unclassified_r:.2f}R of {book.total_r:.2f}R sits in no "
+            f"sector - partial look-throughs, spent as reported and not normalised"
+        )
+    if book.unmeasured:
+        lines.append(
+            f"  UNCLASSIFIED   {len(book.unmeasured)} open position(s) holding "
+            f"{book.unmeasured_r:.2f}R could not be placed at all"
+        )
+        lines.append(f"                 {book.unmeasured[0].unavailable}")
+    if not book.is_complete:
+        lines.append("  The split above therefore UNDERSTATES every sector it shows.")
+
+    unchecked = [
+        outcome.sector
+        for outcome in result.outcomes
+        if outcome.sector is not None and outcome.sector.is_unavailable
+    ]
+    if unchecked:
+        lines.append(
+            f"  UNAVAILABLE    {len(unchecked)} candidate(s) could not be classified and were "
+            f"admitted UNCHECKED"
+        )
+        lines.append(f"                 {unchecked[0].candidate.unavailable}")
+    return lines
+
+
 def _checklist_block(outcome: InstrumentOutcome) -> list[str]:
     """The pre-trade checklist, with the unanswered items shown rather than summarised away.
 
@@ -251,6 +388,8 @@ def render(result: RunResult) -> str:
 
     lines.extend(_positions_block(result))
     lines.extend(_capacity_block(result))
+    lines.extend(_correlation_block(result))
+    lines.extend(_sector_block(result))
     if result.positions or result.universe is not None:
         lines.extend(["", "CANDIDATES", _RULE])
 
@@ -287,6 +426,16 @@ def render(result: RunResult) -> str:
             lines.append(f"  risk per share       {risk.risk_per_share}")
             lines.append(f"  shares               {risk.shares}   (rounded down)")
             lines.append(f"  planned risk         {risk.planned_risk}   <- R denominator, frozen")
+
+        # Only when the candidate CLEARED it. A refusal already reads out in full on the DECISION
+        # line below, and printing the same sentence twice trains the eye to skip both.
+        concentration = outcome.correlation
+        if concentration is not None and concentration.admitted and concentration.pairs:
+            lines.append(f"  correlation          {concentration.reason}")
+
+        sector = outcome.sector
+        if sector is not None and sector.admitted:
+            lines.append(f"  sector               {sector.reason}")
 
         decision = outcome.decision
         if decision is not None:

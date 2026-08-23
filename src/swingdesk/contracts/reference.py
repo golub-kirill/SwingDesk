@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
+from decimal import Decimal
 from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -50,6 +51,54 @@ class Instrument(BaseModel):
     def vendor_symbol(self) -> str:
         """The symbol Yahoo uses: TSX names carry a .TO suffix."""
         return self.ticker if self.exchange is not Exchange.TSX else f"{self.ticker}.TO"
+
+
+class SectorWeight(BaseModel):
+    """One sector's share of an instrument, as the vendor reports it.
+
+    A fraction, not a percent: 0.374, never 37.4. The vendor serves fractions and converting at the
+    boundary would put two conventions for one quantity into the tree.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    sector: str = Field(min_length=1, description="The vendor's own sector label, not translated.")
+    weight: Decimal = Field(ge=0, le=1)
+
+
+class Classification(BaseModel):
+    """What the vendor says an instrument is made of, at a knowledge time (`DR-006` §8.7).
+
+    **Recorded as the vendor answered, guard applied later and elsewhere.** The vendor answers
+    confidently and wrongly for bond funds - `NEAR` comes back healthcare 100.0% with every other
+    sector at 0.0%, and it is a short-maturity bond fund with no equity sectors at all. Refusing at
+    the fetch boundary would store nothing and make "we asked and the answer was unusable"
+    indistinguishable from "we never asked", which are different facts about the same instrument.
+    `reference_data.classification.look_through` is where the answer is judged.
+
+    An ordinary share carries its own sector as a single weight of 1. That is not a look-through and
+    is not pretending to be one - it is the same quantity, which is what lets the sector budget add a
+    share and an ETF without a special case.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    instrument_id: str
+    quote_type: str = Field(
+        min_length=1,
+        description="The vendor's own instrument kind: EQUITY, ETF, MUTUALFUND, INDEX. Kept "
+                    "verbatim - it is what tells a look-through apart from a direct sector.",
+    )
+    industry: str | None = None
+    weights: tuple[SectorWeight, ...] = ()
+    """Empty means the vendor served no sector at all, which is `unavailable` and not `none`."""
+
+    knowledge_time: datetime = Field(description="When this was learned. Timezone-aware.")
+
+    @property
+    def coverage(self) -> Decimal:
+        """How much of the instrument the reported sectors account for. 1 for a complete answer."""
+        return sum((weight.weight for weight in self.weights), Decimal(0))
 
 
 class ExchangeSession(BaseModel):

@@ -32,7 +32,7 @@ from swingdesk.contracts.observation import ObservationSeries, ParameterUse
 from swingdesk.contracts.position import ActionKind, ManagementAction, Position
 from swingdesk.contracts.reference import Instrument
 from swingdesk.contracts.run import RunManifest, RunMode
-from swingdesk.derived_observations import atr
+from swingdesk.derived_observations import atr, correlation
 from swingdesk.journal_evidence.journal import DecisionRecord, Journal
 from swingdesk.journal_evidence.positions import PositionStore
 from swingdesk.market_data import YAHOO, BarStore, VendorUnavailable, check, vendor_yahoo
@@ -41,6 +41,8 @@ from swingdesk.market_data.completeness import SessionFinding
 from swingdesk.platform.clock import Clock
 from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
 from swingdesk.reference_data import calendar as cal
+from swingdesk.reference_data import classification
+from swingdesk.reference_data.classification import ClassificationStore
 from swingdesk.reference_data.universe import vendor_symbol
 from swingdesk.trade_management import manage, portfolio
 from swingdesk.trade_management.exits import ExitPolicy
@@ -58,6 +60,21 @@ class InstrumentOutcome:
     risk: RiskSnapshot | Refusal | None = None
     decision: DecisionRecord | None = None
     checklist: Checklist | None = None
+
+    correlation: portfolio.Concentration | None = None
+    """Whether this candidate duplicates an open position, and every pair that was looked at.
+
+    `None` means the check was NOT REACHED - the candidate refused earlier, or the run had no
+    position store. That is a third state, distinct from "cleared it" and from "could not measure
+    it", and the report prints all three apart (`DR-006` §3).
+    """
+
+    sector: portfolio.SectorCapacity | None = None
+    """Whether this candidate fits inside the sector budget, and what the book already holds there.
+
+    `None` is the same third state `correlation` describes: not reached, rather than cleared or
+    unmeasurable.
+    """
 
 
 @dataclass
@@ -84,6 +101,26 @@ class RunResult:
     know the book. That is `unavailable`, not `pass`: a gap in the system and a fact about the
     account are different claims, and collapsing them is the error `HANDOFF.md` §7 calls the most
     damaging this product can make. The report prints which of the three it was.
+    """
+
+    correlation: portfolio.CorrelationLimit | Refusal | None = None
+    """The correlation cap in force for this run, or why there was none.
+
+    The LIMIT, not a verdict - each candidate carries its own on `InstrumentOutcome.correlation`,
+    because correlation is a property of a pair and not of the book. Recorded at run level for the
+    one case the per-candidate field cannot express: a threshold or a lookback with no value, which
+    refuses every candidate and must be reported even on a run where nothing reached step 6.
+    """
+
+    sector_limit: Decimal | Refusal | None = None
+    """How much of the book may sit in one sector, or why that has no value."""
+
+    sector_book: portfolio.SectorBook | Refusal | None = None
+    """The open book split by sector - a run-level fact, unlike correlation.
+
+    `None` means it was never computed: no position store, or no candidate reached step 6c. It
+    carries its own unattributed and unclassifiable totals, so a report can say how much of the
+    split it is entitled to trust.
     """
 
     @property
@@ -210,6 +247,47 @@ def _portfolio_caps(registry: ParameterRegistry) -> portfolio.Caps | Refusal:
             "no portfolio cap: how much open risk the book may carry and how many positions may be "
             "held at once are ruled numbers, and admitting a candidate against an unmeasured book "
             "is the silent-default this registry exists to prevent",
+            parameter_id=unset.parameter_id,
+        )
+
+
+def _correlation_limit(registry: ParameterRegistry) -> portfolio.CorrelationLimit | Refusal:
+    """The correlation cap, or a coded refusal naming the parameter that has no value.
+
+    Fourth function of this shape, and the same reasoning: an unset threshold is not a threshold of
+    infinity. Note where this refuses and where it does not - an UNSET parameter refuses every
+    candidate, while a pair that could not be MEASURED admits and is reported `unavailable`
+    (`DR-006` §3). Those look alike from a distance and are opposite obligations: one is the
+    registry failing closed on a number nobody ruled, the other is the system declining to claim a
+    check it could not perform.
+    """
+    try:
+        return portfolio.correlation_limit(registry)
+    except ParameterUnset as unset:
+        return Refusal(
+            "RISK",
+            "no correlation cap: the r at which two names stop being independent bets, and the "
+            "window it is measured over, are both authored numbers, and admitting a candidate "
+            "without them would call an unchecked pair a diversified one",
+            parameter_id=unset.parameter_id,
+        )
+
+
+def _sector_limit(registry: ParameterRegistry) -> Decimal | Refusal:
+    """How much of the book may sit in one sector, or a coded refusal naming the parameter.
+
+    Fifth function of this shape. The same rule applies and the same distinction holds: an UNSET
+    limit refuses every candidate, while an instrument that could not be CLASSIFIED is admitted
+    unchecked and reported `unavailable` (`DR-006` §3).
+    """
+    try:
+        return portfolio.sector_limit(registry)
+    except ParameterUnset as unset:
+        return Refusal(
+            "RISK",
+            "no sector cap: how much of the book may sit in one sector or theme is an authored "
+            "number, and admitting a candidate without it would let a concentrated book look like "
+            "a diversified one",
             parameter_id=unset.parameter_id,
         )
 
@@ -375,6 +453,7 @@ def run(
     lookback: str = "1y",
     fetcher: Fetcher | None = None,
     positions: PositionStore | None = None,
+    classifications: ClassificationStore | None = None,
     exits: ExitPolicy | None = None,
     universe: UniverseSelection | None = None,
 ) -> RunResult:
@@ -450,6 +529,42 @@ def run(
         # no value. An unset limit that nothing happened to reach is still an unset limit.
         result.capacity = caps
 
+    # The correlation cap, read once for the whole run (`DR-006` §2, `RISK_SPEC` §3 step 6). Same
+    # treatment and the same reason as the two above it.
+    correlation_cap = _correlation_limit(registry)
+    result.correlation = correlation_cap
+
+    # And the sector cap. `RISK_SPEC` §3 step 6 names all three in one breath.
+    sector_cap = _sector_limit(registry)
+    result.sector_limit = sector_cap
+
+    # An instrument id to its judged sector composition, memoised per run.
+    #
+    # `look_through` applies `DR-006` §8.7's degeneracy guard, so nothing that reaches the budget
+    # below has been taken from the vendor unexamined. Note the shape of the no-store case: it is an
+    # `Exposure` that is UNAVAILABLE with a reason, not an empty one - a run without a
+    # classification store must report that it could not check, never that there was nothing to
+    # check. Those two render identically if the distinction is dropped here, and only one of them
+    # is true.
+    exposures: dict[str, classification.Exposure] = {}
+
+    def exposure_for(instrument_id: str) -> classification.Exposure:
+        if instrument_id not in exposures:
+            if classifications is None:
+                exposures[instrument_id] = classification.Exposure(
+                    instrument_id=instrument_id,
+                    weights=(),
+                    unavailable=(
+                        "this run was given no classification store, so no instrument could be "
+                        "placed in a sector"
+                    ),
+                )
+            else:
+                exposures[instrument_id] = classification.look_through(
+                    classifications.as_of(instrument_id, started), instrument_id
+                )
+        return exposures[instrument_id]
+
     # Base-currency units per one unit of an instrument's currency, closed over this run's registry.
     # `sizing.to_base_currency` is the ONE place that knows the rule and the one place that refuses
     # when `account.fx_rate_cad` is unset; the portfolio module borrows it rather than owning a
@@ -473,6 +588,13 @@ def run(
     # stronger fact - the store was read and holds nothing - and the caps then bind normally.
     open_positions: list[Position] | None = None
     priced_book: portfolio.Book | Refusal | None = None
+
+    # Daily returns for every instrument the book holds, keyed by instrument id and built ONCE on
+    # the first candidate that reaches step 6. Lazy for the same reason `priced_book` is: a run
+    # where nothing sizes should not pay for reads nothing will consume. Keyed by INSTRUMENT rather
+    # than by position, so two positions in one name are correlated once - which is also why a
+    # candidate already in the book meets itself at r = 1 and is refused.
+    book_returns: dict[str, tuple[correlation.DailyReturn, ...]] | None = None
 
     # --- open positions, BEFORE any candidate -------------------------------------------
     # CHECKLIST_SPEC 4 requires open positions and gaps to be checked first. Not a preference about
@@ -661,6 +783,22 @@ def run(
                 instrument.id, "Skip", caps.code, caps.reason, caps.parameter_id
             )
             continue
+        # An unset correlation threshold or lookback refuses here, OUTSIDE the position-store
+        # branch below, exactly as the book cap does one line up. The reason is the same: a limit
+        # with no value is a fact about the registry, and it holds whether or not this run happens
+        # to know what the book contains. What the branch below governs is the MEASUREMENT, which
+        # genuinely needs a book to measure against.
+        if isinstance(correlation_cap, Refusal):
+            outcome.decision = DecisionRecord(
+                instrument.id, "Skip", correlation_cap.code, correlation_cap.reason,
+                correlation_cap.parameter_id,
+            )
+            continue
+        if isinstance(sector_cap, Refusal):
+            outcome.decision = DecisionRecord(
+                instrument.id, "Skip", sector_cap.code, sector_cap.reason, sector_cap.parameter_id
+            )
+            continue
         if open_positions is not None:
             if priced_book is None:
                 priced_book = portfolio.book(open_positions, rate_for, sized.allowed_risk)
@@ -705,6 +843,59 @@ def run(
                 # distinction that once let 1131 unset-parameter refusals read as a quiet day.
                 outcome.decision = DecisionRecord(
                     instrument.id, "Skip", "RISK", capacity.reason
+                )
+                continue
+
+            # 6b. Correlation, AFTER the book cap and inside the same step (`RISK_SPEC` §3 step 6
+            # names open risk, sector risk, correlation and event exposure together). Second
+            # because a full book is the cheaper and more actionable reason to report: "no room"
+            # is a fact the owner can act on, while "this duplicates a position you hold" is only
+            # worth saying about a candidate that would otherwise have fitted.
+            if book_returns is None:
+                # Read from the STORE, not from the fetch above: a held instrument is refreshed in
+                # the positions phase and may also be a candidate today, and reading the store means
+                # both paths correlate the same bars as of the same knowledge_time. A position whose
+                # instrument has no stored bars yields an empty stream, which `measure` reports as
+                # `unavailable` - it does not refuse, and it does not silently drop the position out
+                # of the check.
+                book_returns = {
+                    position.instrument_id: correlation.daily_returns(
+                        store.as_of(position.instrument_id, Interval.DAY, Series.RAW, started)
+                    )
+                    for position in open_positions
+                }
+            outcome.correlation = portfolio.assess_correlation(
+                correlation.daily_returns(stored), book_returns, correlation_cap
+            )
+            if not outcome.correlation.admitted:
+                # NO `parameter_id`, for the same reason the book cap carries none: a candidate that
+                # duplicates a position is a fact about the ACCOUNT, and both thresholds have
+                # values. An unset one refuses above, where it does name its parameter.
+                outcome.decision = DecisionRecord(
+                    instrument.id, "Skip", "RISK", outcome.correlation.reason
+                )
+                continue
+
+            # 6c. Sector, the last of the three portfolio checks `RISK_SPEC` §3 step 6 names.
+            # The book is split ONCE per run - it is a property of what is held, not of the
+            # candidate - while the verdict is per candidate, because an ETF and a single share
+            # spend that budget in completely different shapes.
+            if result.sector_book is None:
+                result.sector_book = portfolio.sector_book(
+                    open_positions, rate_for, sized.allowed_risk, exposure_for
+                )
+            if isinstance(result.sector_book, Refusal):
+                outcome.decision = DecisionRecord(
+                    instrument.id, "Skip", result.sector_book.code, result.sector_book.reason,
+                    result.sector_book.parameter_id,
+                )
+                continue
+            outcome.sector = portfolio.assess_sector(
+                result.sector_book, sector_cap, exposure_for(instrument.id), requested_r
+            )
+            if not outcome.sector.admitted:
+                outcome.decision = DecisionRecord(
+                    instrument.id, "Skip", "RISK", outcome.sector.reason
                 )
                 continue
 

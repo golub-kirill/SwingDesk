@@ -1,0 +1,860 @@
+{
+  "AEP": {
+    "quote_type": "EQUITY",
+    "industry": "Utilities - Regulated Electric",
+    "weights": {
+      "Utilities": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "AVB": {
+    "quote_type": "EQUITY",
+    "industry": "REIT - Residential",
+    "weights": {
+      "Real Estate": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "BAND": {
+    "quote_type": "EQUITY",
+    "industry": "Software - Infrastructure",
+    "weights": {
+      "Technology": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "BBAX": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {
+      "realestate": "0.074200",
+      "consumer_cyclical": "0.054800",
+      "basic_materials": "0.157000",
+      "consumer_defensive": "0.032500",
+      "technology": "0.002200",
+      "communication_services": "0.024200",
+      "financial_services": "0.467700",
+      "utilities": "0.031200",
+      "industrials": "0.080300",
+      "energy": "0.027500",
+      "healthcare": "0.048700"
+    },
+    "coverage": "1.000300",
+    "usable": true,
+    "unavailable": null
+  },
+  "BBWI": {
+    "quote_type": "EQUITY",
+    "industry": "Specialty Retail",
+    "weights": {
+      "Consumer Cyclical": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "BHRB": {
+    "quote_type": "EQUITY",
+    "industry": "Banks - Regional",
+    "weights": {
+      "Financial Services": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "BPOP": {
+    "quote_type": "EQUITY",
+    "industry": "Banks - Regional",
+    "weights": {
+      "Financial Services": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "CHCO": {
+    "quote_type": "EQUITY",
+    "industry": "Banks - Regional",
+    "weights": {
+      "Financial Services": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "CHRD": {
+    "quote_type": "EQUITY",
+    "industry": "Oil & Gas E&P",
+    "weights": {
+      "Energy": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "CLMT": {
+    "quote_type": "EQUITY",
+    "industry": "Specialty Chemicals",
+    "weights": {
+      "Basic Materials": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "CTRE": {
+    "quote_type": "EQUITY",
+    "industry": "REIT - Healthcare Facilities",
+    "weights": {
+      "Real Estate": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "CTSH": {
+    "quote_type": "EQUITY",
+    "industry": "Information Technology Services",
+    "weights": {
+      "Technology": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "DNLI": {
+    "quote_type": "EQUITY",
+    "industry": "Biotechnology",
+    "weights": {
+      "Healthcare": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "ECL": {
+    "quote_type": "EQUITY",
+    "industry": "Specialty Chemicals",
+    "weights": {
+      "Basic Materials": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "EFA": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {
+      "realestate": "0.016900",
+      "consumer_cyclical": "0.075600",
+      "basic_materials": "0.057300",
+      "consumer_defensive": "0.067900",
+      "technology": "0.109100",
+      "communication_services": "0.044600",
+      "financial_services": "0.261900",
+      "utilities": "0.036500",
+      "industrials": "0.190300",
+      "energy": "0.037700",
+      "healthcare": "0.102200"
+    },
+    "coverage": "1.000000",
+    "usable": true,
+    "unavailable": null
+  },
+  "EFXT": {
+    "quote_type": "EQUITY",
+    "industry": "Oil & Gas Equipment & Services",
+    "weights": {
+      "Energy": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "EVRG": {
+    "quote_type": "EQUITY",
+    "industry": "Utilities - Regulated Electric",
+    "weights": {
+      "Utilities": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "EXP": {
+    "quote_type": "EQUITY",
+    "industry": "Building Materials",
+    "weights": {
+      "Basic Materials": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "EYE": {
+    "quote_type": "EQUITY",
+    "industry": "Specialty Retail",
+    "weights": {
+      "Consumer Cyclical": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "FBNC": {
+    "quote_type": "EQUITY",
+    "industry": "Banks - Regional",
+    "weights": {
+      "Financial Services": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "FCOM": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {
+      "realestate": "0.000800",
+      "consumer_cyclical": "0.002600",
+      "basic_materials": "0.000000",
+      "consumer_defensive": "0.000000",
+      "technology": "0.010100",
+      "communication_services": "0.969800",
+      "financial_services": "0.000000",
+      "utilities": "0.000000",
+      "industrials": "0.016700",
+      "energy": "0.000000",
+      "healthcare": "0.000000"
+    },
+    "coverage": "1.000000",
+    "usable": true,
+    "unavailable": null
+  },
+  "FIXD": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {
+      "realestate": "0.000000",
+      "consumer_cyclical": "0.000000",
+      "basic_materials": "0.000000",
+      "consumer_defensive": "0.000000",
+      "technology": "0.000000",
+      "communication_services": "0.000000",
+      "financial_services": "0.000000",
+      "utilities": "1.000000",
+      "industrials": "0.000000",
+      "energy": "0.000000",
+      "healthcare": "0.000000"
+    },
+    "coverage": "1.000000",
+    "usable": false,
+    "unavailable": "the look-through is degenerate - utilities at exactly 100% and every other sector at exactly 0%, which is how this vendor describes a fund holding no equity at all (DR-006 8.7). Refused rather than consumed"
+  },
+  "FLJP": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {
+      "realestate": "0.029600",
+      "consumer_cyclical": "0.127500",
+      "basic_materials": "0.039000",
+      "consumer_defensive": "0.041400",
+      "technology": "0.194800",
+      "communication_services": "0.074400",
+      "financial_services": "0.178000",
+      "utilities": "0.012200",
+      "industrials": "0.241000",
+      "energy": "0.008600",
+      "healthcare": "0.053500"
+    },
+    "coverage": "1.000000",
+    "usable": true,
+    "unavailable": null
+  },
+  "FLTR": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {},
+    "coverage": "0",
+    "usable": false,
+    "unavailable": "the vendor served no sector for a ETF instrument"
+  },
+  "FN": {
+    "quote_type": "EQUITY",
+    "industry": "Electronic Components",
+    "weights": {
+      "Technology": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "FNDA": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {
+      "realestate": "0.102800",
+      "consumer_cyclical": "0.131900",
+      "basic_materials": "0.045900",
+      "consumer_defensive": "0.039700",
+      "technology": "0.139000",
+      "communication_services": "0.038300",
+      "financial_services": "0.157500",
+      "utilities": "0.026100",
+      "industrials": "0.186600",
+      "energy": "0.052200",
+      "healthcare": "0.080000"
+    },
+    "coverage": "1.000000",
+    "usable": true,
+    "unavailable": null
+  },
+  "FRHC": {
+    "quote_type": "EQUITY",
+    "industry": "Financial Conglomerates",
+    "weights": {
+      "Financial Services": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "FTXL": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {
+      "realestate": "0.000000",
+      "consumer_cyclical": "0.000000",
+      "basic_materials": "0.000000",
+      "consumer_defensive": "0.000000",
+      "technology": "0.996500",
+      "communication_services": "0.000000",
+      "financial_services": "0.000000",
+      "utilities": "0.000000",
+      "industrials": "0.003500",
+      "energy": "0.000000",
+      "healthcare": "0.000000"
+    },
+    "coverage": "1.000000",
+    "usable": true,
+    "unavailable": null
+  },
+  "HBAN": {
+    "quote_type": "EQUITY",
+    "industry": "Banks - Regional",
+    "weights": {
+      "Financial Services": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "HLF": {
+    "quote_type": "EQUITY",
+    "industry": "Packaged Foods",
+    "weights": {
+      "Consumer Defensive": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "IAGG": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {},
+    "coverage": "0",
+    "usable": false,
+    "unavailable": "the vendor served no sector for a ETF instrument"
+  },
+  "IETC": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {
+      "realestate": "0.006500",
+      "consumer_cyclical": "0.051100",
+      "basic_materials": "0.000000",
+      "consumer_defensive": "0.000000",
+      "technology": "0.795300",
+      "communication_services": "0.085400",
+      "financial_services": "0.033500",
+      "utilities": "0.000000",
+      "industrials": "0.026600",
+      "energy": "0.000000",
+      "healthcare": "0.001600"
+    },
+    "coverage": "1.000000",
+    "usable": true,
+    "unavailable": null
+  },
+  "IMTM": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {
+      "realestate": "0.010400",
+      "consumer_cyclical": "0.014900",
+      "basic_materials": "0.084900",
+      "consumer_defensive": "0.022200",
+      "technology": "0.143100",
+      "communication_services": "0.014700",
+      "financial_services": "0.318200",
+      "utilities": "0.053700",
+      "industrials": "0.144300",
+      "energy": "0.103900",
+      "healthcare": "0.089700"
+    },
+    "coverage": "1.000000",
+    "usable": true,
+    "unavailable": null
+  },
+  "IWY": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {
+      "realestate": "0.002100",
+      "consumer_cyclical": "0.077500",
+      "basic_materials": "0.000900",
+      "consumer_defensive": "0.012700",
+      "technology": "0.556700",
+      "communication_services": "0.177400",
+      "financial_services": "0.051100",
+      "utilities": "0.000200",
+      "industrials": "0.072400",
+      "energy": "0.000400",
+      "healthcare": "0.048600"
+    },
+    "coverage": "1.000000",
+    "usable": true,
+    "unavailable": null
+  },
+  "KMB": {
+    "quote_type": "EQUITY",
+    "industry": "Household & Personal Products",
+    "weights": {
+      "Consumer Defensive": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "KNG": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {
+      "realestate": "0.044500",
+      "consumer_cyclical": "0.053800",
+      "basic_materials": "0.095600",
+      "consumer_defensive": "0.236500",
+      "technology": "0.044600",
+      "communication_services": "0.000000",
+      "financial_services": "0.132900",
+      "utilities": "0.055600",
+      "industrials": "0.198100",
+      "energy": "0.028800",
+      "healthcare": "0.109700"
+    },
+    "coverage": "1.000100",
+    "usable": true,
+    "unavailable": null
+  },
+  "KODK": {
+    "quote_type": "EQUITY",
+    "industry": "Specialty Business Services",
+    "weights": {
+      "Industrials": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "LEG": {
+    "quote_type": "EQUITY",
+    "industry": "Furnishings, Fixtures & Appliances",
+    "weights": {
+      "Consumer Cyclical": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "LYV": {
+    "quote_type": "EQUITY",
+    "industry": "Entertainment",
+    "weights": {
+      "Communication Services": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "MSEX": {
+    "quote_type": "EQUITY",
+    "industry": "Utilities - Regulated Water",
+    "weights": {
+      "Utilities": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "NBIX": {
+    "quote_type": "EQUITY",
+    "industry": "Drug Manufacturers - Specialty & Generic",
+    "weights": {
+      "Healthcare": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "NDSN": {
+    "quote_type": "EQUITY",
+    "industry": "Specialty Industrial Machinery",
+    "weights": {
+      "Industrials": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "NEAR": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {
+      "realestate": "0.000000",
+      "consumer_cyclical": "0.000000",
+      "basic_materials": "0.000000",
+      "consumer_defensive": "0.000000",
+      "technology": "0.000000",
+      "communication_services": "0.000000",
+      "financial_services": "0.000000",
+      "utilities": "0.000000",
+      "industrials": "0.000000",
+      "energy": "0.000000",
+      "healthcare": "1.000000"
+    },
+    "coverage": "1.000000",
+    "usable": false,
+    "unavailable": "the look-through is degenerate - healthcare at exactly 100% and every other sector at exactly 0%, which is how this vendor describes a fund holding no equity at all (DR-006 8.7). Refused rather than consumed"
+  },
+  "NEO": {
+    "quote_type": "EQUITY",
+    "industry": "Diagnostics & Research",
+    "weights": {
+      "Healthcare": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "NSP": {
+    "quote_type": "EQUITY",
+    "industry": "Staffing & Employment Services",
+    "weights": {
+      "Industrials": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "ORKA": {
+    "quote_type": "EQUITY",
+    "industry": "Biotechnology",
+    "weights": {
+      "Healthcare": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "PKE": {
+    "quote_type": "EQUITY",
+    "industry": "Aerospace & Defense",
+    "weights": {
+      "Industrials": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "POR": {
+    "quote_type": "EQUITY",
+    "industry": "Utilities - Regulated Electric",
+    "weights": {
+      "Utilities": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "QUAL": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {
+      "realestate": "0.018100",
+      "consumer_cyclical": "0.095200",
+      "basic_materials": "0.018200",
+      "consumer_defensive": "0.043800",
+      "technology": "0.384500",
+      "communication_services": "0.101000",
+      "financial_services": "0.118700",
+      "utilities": "0.020700",
+      "industrials": "0.076200",
+      "energy": "0.032700",
+      "healthcare": "0.091000"
+    },
+    "coverage": "1.000100",
+    "usable": true,
+    "unavailable": null
+  },
+  "RNST": {
+    "quote_type": "EQUITY",
+    "industry": "Banks - Regional",
+    "weights": {
+      "Financial Services": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "SFST": {
+    "quote_type": "EQUITY",
+    "industry": "Banks - Regional",
+    "weights": {
+      "Financial Services": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "SH": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {},
+    "coverage": "0",
+    "usable": false,
+    "unavailable": "the vendor served no sector for a ETF instrument"
+  },
+  "SMFG": {
+    "quote_type": "EQUITY",
+    "industry": "Banks - Diversified",
+    "weights": {
+      "Financial Services": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "SWK": {
+    "quote_type": "EQUITY",
+    "industry": "Tools & Accessories",
+    "weights": {
+      "Industrials": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "TLT": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {},
+    "coverage": "0",
+    "usable": false,
+    "unavailable": "the vendor served no sector for a ETF instrument"
+  },
+  "UITB": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {
+      "realestate": "0.000000",
+      "consumer_cyclical": "0.000000",
+      "basic_materials": "0.000000",
+      "consumer_defensive": "0.000000",
+      "technology": "0.000000",
+      "communication_services": "0.000000",
+      "financial_services": "0.000000",
+      "utilities": "0.000000",
+      "industrials": "0.000000",
+      "energy": "1.000000",
+      "healthcare": "0.000000"
+    },
+    "coverage": "1.000000",
+    "usable": false,
+    "unavailable": "the look-through is degenerate - energy at exactly 100% and every other sector at exactly 0%, which is how this vendor describes a fund holding no equity at all (DR-006 8.7). Refused rather than consumed"
+  },
+  "UTG": {
+    "quote_type": "EQUITY",
+    "industry": "Asset Management",
+    "weights": {
+      "Financial Services": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "UVE": {
+    "quote_type": "EQUITY",
+    "industry": "Insurance - Property & Casualty",
+    "weights": {
+      "Financial Services": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "VBK": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {
+      "realestate": "0.039500",
+      "consumer_cyclical": "0.094400",
+      "basic_materials": "0.030100",
+      "consumer_defensive": "0.022300",
+      "technology": "0.260500",
+      "communication_services": "0.038600",
+      "financial_services": "0.059600",
+      "utilities": "0.010400",
+      "industrials": "0.215800",
+      "energy": "0.037900",
+      "healthcare": "0.190800"
+    },
+    "coverage": "0.999900",
+    "usable": true,
+    "unavailable": null
+  },
+  "VGK": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {
+      "realestate": "0.015500",
+      "consumer_cyclical": "0.070200",
+      "basic_materials": "0.053100",
+      "consumer_defensive": "0.078200",
+      "technology": "0.085700",
+      "communication_services": "0.028600",
+      "financial_services": "0.251800",
+      "utilities": "0.043600",
+      "industrials": "0.198700",
+      "energy": "0.051400",
+      "healthcare": "0.123100"
+    },
+    "coverage": "0.999900",
+    "usable": true,
+    "unavailable": null
+  },
+  "VOE": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {
+      "realestate": "0.057800",
+      "consumer_cyclical": "0.060200",
+      "basic_materials": "0.055000",
+      "consumer_defensive": "0.075500",
+      "technology": "0.078900",
+      "communication_services": "0.018700",
+      "financial_services": "0.194100",
+      "utilities": "0.119000",
+      "industrials": "0.139500",
+      "energy": "0.127100",
+      "healthcare": "0.074100"
+    },
+    "coverage": "0.999900",
+    "usable": true,
+    "unavailable": null
+  },
+  "VSS": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {
+      "realestate": "0.082800",
+      "consumer_cyclical": "0.105500",
+      "basic_materials": "0.124500",
+      "consumer_defensive": "0.044800",
+      "technology": "0.135700",
+      "communication_services": "0.030300",
+      "financial_services": "0.121900",
+      "utilities": "0.027200",
+      "industrials": "0.211700",
+      "energy": "0.048200",
+      "healthcare": "0.067600"
+    },
+    "coverage": "1.000200",
+    "usable": true,
+    "unavailable": null
+  },
+  "VUG": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {
+      "realestate": "0.009800",
+      "consumer_cyclical": "0.115000",
+      "basic_materials": "0.005200",
+      "consumer_defensive": "0.013900",
+      "technology": "0.563200",
+      "communication_services": "0.154500",
+      "financial_services": "0.041400",
+      "utilities": "0.000000",
+      "industrials": "0.048100",
+      "energy": "0.003000",
+      "healthcare": "0.045900"
+    },
+    "coverage": "1.000000",
+    "usable": true,
+    "unavailable": null
+  },
+  "VXX": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {},
+    "coverage": "0",
+    "usable": false,
+    "unavailable": "the vendor served no sector for a ETF instrument"
+  },
+  "WEAT": {
+    "quote_type": "ETF",
+    "industry": null,
+    "weights": {},
+    "coverage": "0",
+    "usable": false,
+    "unavailable": "the vendor served no sector for a ETF instrument"
+  },
+  "WSFS": {
+    "quote_type": "EQUITY",
+    "industry": "Banks - Regional",
+    "weights": {
+      "Financial Services": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "XRAY": {
+    "quote_type": "EQUITY",
+    "industry": "Medical Instruments & Supplies",
+    "weights": {
+      "Healthcare": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  },
+  "YELP": {
+    "quote_type": "EQUITY",
+    "industry": "Internet Content & Information",
+    "weights": {
+      "Communication Services": "1"
+    },
+    "coverage": "1",
+    "usable": true,
+    "unavailable": null
+  }
+}

@@ -1,0 +1,166 @@
+{
+  "classified": 68,
+  "concurrency": {
+    "days": 3616,
+    "days_over_four": 0.9513274336283186,
+    "max": 54,
+    "median": 20.0
+  },
+  "correlation_overlap": {
+    "different_sector": {
+      "at_or_over_threshold": 23,
+      "fraction_over_threshold": 0.015530047265361242,
+      "median_r": 0.1184599912657079,
+      "p90_r": 0.4378631941995914,
+      "pairs": 1481
+    },
+    "instruments": 59,
+    "lookback_sessions": 60,
+    "same_dominant_sector": {
+      "at_or_over_threshold": 35,
+      "fraction_over_threshold": 0.15217391304347827,
+      "median_r": 0.29299472614281247,
+      "p90_r": 0.7495254539467808,
+      "pairs": 230
+    }
+  },
+  "four_position_books": {
+    "books": 704200,
+    "draws_per_day": 200,
+    "heaviest_sector_r": {
+      "max": 3.92,
+      "median": 1.170218,
+      "p75": 1.96,
+      "p90": 2.014096,
+      "p95": 2.206764,
+      "p99": 2.94
+    },
+    "r_per_position": "0.98",
+    "refused_fraction": {
+      "1.33": 0.3794518602669696,
+      "2": 0.11298778756035217,
+      "3": 0.005718545867651236
+    },
+    "seed": 20260823
+  },
+  "measured_on": "2026-08-23",
+  "refused_by_the_guard": [
+    "FIXD",
+    "FLTR",
+    "IAGG",
+    "NEAR",
+    "SH",
+    "TLT",
+    "UITB",
+    "VXX",
+    "WEAT"
+  ],
+  "source": "PR-005-trades.csv, arm NONE, regime 1x",
+  "universe_cross_section": {
+    "admitted": 1148,
+    "classified": 1148,
+    "correlation_cross_section": {
+      "different_sector": {
+        "fraction_over_threshold": 0.008157894736842105,
+        "median_r": 0.0734990463294502,
+        "p90_r": 0.3640846061396193,
+        "pairs": 452200
+      },
+      "instruments": 1023,
+      "same_dominant_sector": {
+        "fraction_over_threshold": 0.06382435899253044,
+        "median_r": 0.20695160993870704,
+        "p90_r": 0.6182180287859376,
+        "pairs": 70553
+      }
+    },
+    "coverage": 0.2827,
+    "eligible": 13136,
+    "four_position_books": {
+      "books": 20000,
+      "correlation_cap_refuses": 0.04155,
+      "sector_cap_refuses": {
+        "1.33": 0.49645,
+        "2": 0.14155,
+        "3": 0.00655
+      },
+      "seed": 20260823
+    },
+    "measured_with_bars": 3713,
+    "sector_mix": {
+      "basic materials": 0.05576720448727668,
+      "communication services": 0.0348215360111265,
+      "consumer cyclical": 0.10042569929924669,
+      "consumer defensive": 0.045216266563675375,
+      "energy": 0.05036856826169251,
+      "financial services": 0.17203006336955723,
+      "healthcare": 0.14644920019968738,
+      "industrials": 0.1345225034899835,
+      "real estate": 0.05399740820886353,
+      "technology": 0.17105831275902394,
+      "utilities": 0.035343237349866684
+    },
+    "usable": 1023
+  },
+  "usable": [
+    "AEP",
+    "AVB",
+    "BAND",
+    "BBAX",
+    "BBWI",
+    "BHRB",
+    "BPOP",
+    "CHCO",
+    "CHRD",
+    "CLMT",
+    "CTRE",
+    "CTSH",
+    "DNLI",
+    "ECL",
+    "EFA",
+    "EFXT",
+    "EVRG",
+    "EXP",
+    "EYE",
+    "FBNC",
+    "FCOM",
+    "FLJP",
+    "FN",
+    "FNDA",
+    "FRHC",
+    "FTXL",
+    "HBAN",
+    "HLF",
+    "IETC",
+    "IMTM",
+    "IWY",
+    "KMB",
+    "KNG",
+    "KODK",
+    "LEG",
+    "LYV",
+    "MSEX",
+    "NBIX",
+    "NDSN",
+    "NEO",
+    "NSP",
+    "ORKA",
+    "PKE",
+    "POR",
+    "QUAL",
+    "RNST",
+    "SFST",
+    "SMFG",
+    "SWK",
+    "UTG",
+    "UVE",
+    "VBK",
+    "VGK",
+    "VOE",
+    "VSS",
+    "VUG",
+    "WSFS",
+    "XRAY",
+    "YELP"
+  ]
+}

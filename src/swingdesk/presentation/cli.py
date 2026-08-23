@@ -24,6 +24,7 @@ from swingdesk.platform.clock import FixedClock, SystemClock
 from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
 from swingdesk.presentation import notify, report
 from swingdesk.reference_data import calendar as cal
+from swingdesk.reference_data.classification import ClassificationStore
 from swingdesk.reference_data.directory import DirectoryStore
 
 # `costs_per_share` was `_costs_per_share` until 2026-08-22 and carried a comment saying it could
@@ -646,6 +647,12 @@ def _scan(args: argparse.Namespace) -> tuple[int, str | None, notify.Outcome]:
         # store outside tests (TODO.md 6b item 1); wiring it in is what stops that being the
         # reason a recorded position could never be evaluated by the scheduled run.
         PositionStore(args.data / "positions.duckdb") as positions,
+        # Sector composition, for `DR-006` §2's sector cap. Opened here for the same reason the
+        # position store is: an empty store makes the cap report `unavailable` on every candidate,
+        # which is the truth, while not opening one at all would leave the cap unreachable from the
+        # only command that runs it. `tools/refresh_classifications.py` is what fills it, and until
+        # that has run every candidate is admitted UNCHECKED and the report says so.
+        ClassificationStore(args.data / "classifications.duckdb") as classifications,
     ):
         if args.universe:
             built = universe_builder.rule_from_registry(registry)
@@ -674,7 +681,7 @@ def _scan(args: argparse.Namespace) -> tuple[int, str | None, notify.Outcome]:
 
         result = run(instruments, clock, registry, store, journal,
                      mode=mode, lookback=args.lookback, universe=selection,
-                     positions=positions, fetcher=fetcher)
+                     positions=positions, classifications=classifications, fetcher=fetcher)
 
         # Only when something failed. DR-015 §6 asks for a measured distribution of fetch failures
         # and observes that nobody has counted one; this is the line that starts counting, into
