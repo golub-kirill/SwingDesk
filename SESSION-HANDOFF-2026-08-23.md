@@ -17,9 +17,12 @@ its other sections were migrated first: the partially-pinned-clock rule is now `
 engineering any more. Two of the four are genuinely the owner's:
 
 - **Should the correlation cap RESIZE rather than refuse?** `RISK_SPEC.md` §4 lists *"correlation
-  threshold and its size adjustment"* as one unsupplied input. Only the threshold has a value, so
-  the build refuses — the fail-closed reading, and the one `TODO.md` planned. Halving a correlated
-  candidate is defensible and needs a number nobody has authored.
+  threshold and its size adjustment"* as one unsupplied input, and only the threshold has a value.
+  **Measured in §15** at the owner's request: the cap bites on **20.2%** of candidates on a
+  four-position book; refusing costs nothing measurable in return (95% block CI on the refused
+  trades crosses zero); and correlated co-held pairs gapped out **on the same session 4.94× more
+  often**, CI [2.32, 7.56]. §15.4 concludes the size adjustment is unnecessary rather than merely
+  unauthored. **The ruling is still open.**
 - **Is `risk.max_sector_risk` still 2R?** §2 argued it as *one third of the book* against a 6R
   anchor. §8.3 moved the anchor to **4R** and this number did not move, so it is now **half** the
   book. **Measured in §14** at the owner's request: 2R means *at most two of your four in one

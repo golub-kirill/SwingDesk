@@ -401,7 +401,15 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       is in `DR-006` §13 — four items, of which two want an owner: whether the correlation cap should
       RESIZE rather than refuse, and whether 2R is still the right sector budget now that the book
       anchor moved from 6R to 4R and 2R went from a third of the book to half of it.**
-      **The sector half is now measured** (`DR-006` §14, owner asked for research before ruling).
+      **BOTH halves are now measured** (`DR-006` §14 and §15, owner asked for research before
+      ruling on each). Derive the correlation figures with
+      `python tools/measure_correlation_cap.py`. Headline: the cap bites on **20.2%** of candidates
+      on a four-position book — never quote `PR-005`'s 43.5%, whose book held a median of 22 —
+      refusing costs nothing measurable in return, and the premise **fails on the coarse measure
+      and holds five-fold on the precise one**: correlated co-held pairs did not end up losing
+      together more often, but they gapped out on the SAME session 4.94× as often, CI [2.32, 7.56].
+      §15.4 concludes the size adjustment is unnecessary rather than merely unauthored.
+      **The sector half is measured too** (`DR-006` §14).
       Derive the figures with `python tools/measure_sector_cap.py`, never from this line. The
       headline: `PR-005` held a median of 20 positions at once and 95% of its days were over four,
       so it never simulated a capped book and cannot be replayed as one — what §14 samples is the

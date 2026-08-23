@@ -1,0 +1,81 @@
+{
+  "bite": {
+    "in_pr005_own_book": {
+      "median_names_held": 22,
+      "refused_fraction": 0.43535274062418045
+    },
+    "on_a_four_position_book": {
+      "candidates": 3788,
+      "mean_correlated_share_of_held": 0.09171266998453172,
+      "mean_refusal_probability": 0.20186491492955386,
+      "never_refused_fraction": 0.5620380147835269
+    }
+  },
+  "bootstrap": {
+    "block": "calendar year",
+    "draws": 2000,
+    "seed": 20260823
+  },
+  "cost": {
+    "admitted": {
+      "block_ci_95": [
+        -0.07958685300989138,
+        0.08521463365782476
+      ],
+      "loss_rate": 0.6014862981885741,
+      "mean_net_r": -0.003821137121288423,
+      "median_net_r": -1.0067867961966994,
+      "p5_net_r": -1.4136563893273197,
+      "total_net_r": -8.226908222133975,
+      "trades": 2153
+    },
+    "refused": {
+      "block_ci_95": [
+        -0.0632555926566889,
+        0.16892544637578907
+      ],
+      "loss_rate": 0.5632530120481928,
+      "mean_net_r": 0.056818824359137335,
+      "median_net_r": -0.5965527512031927,
+      "p5_net_r": -1.2088830220448266,
+      "total_net_r": 94.31924843616798,
+      "trades": 1660
+    }
+  },
+  "lookback_sessions": 60,
+  "measured_on": "2026-08-23",
+  "premise": {
+    "both_gapped_out_on_the_same_session": {
+      "at_or_over_threshold": {
+        "events": 86,
+        "pairs": 8352,
+        "rate": 0.010296934865900383
+      },
+      "lift": 4.941670657726692,
+      "lift_block_ci_95": [
+        2.3214515212123787,
+        7.563695179412831
+      ],
+      "under": {
+        "events": 156,
+        "pairs": 74867,
+        "rate": 0.0020836950859524223
+      }
+    },
+    "both_lose_over_the_holding_period": {
+      "at_or_over_threshold": {
+        "mean_combined_net_r": 0.722525460642837,
+        "p_both_lose": 0.22832854406130268,
+        "pairs": 8352
+      },
+      "under": {
+        "mean_combined_net_r": 0.5747334824979361,
+        "p_both_lose": 0.24519481213351677,
+        "pairs": 74867
+      }
+    }
+  },
+  "source": "PR-005-trades.csv, arm NONE, regime 1x",
+  "threshold": "0.70",
+  "trades": 3813
+}

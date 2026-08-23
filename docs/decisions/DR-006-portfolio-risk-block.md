@@ -624,8 +624,10 @@ Carrying the remainder visibly is the only option that neither invents nor disca
 
 - [ ] **The correlation cap REFUSES; the course also names a size adjustment** (§11.3 reading 1).
       `RISK_SPEC.md` §4 lists *"correlation threshold and its size adjustment"* as one unsupplied
-      input and only the threshold has a value. Halving a correlated candidate rather than refusing
-      it is a defensible alternative and needs a number this record does not have.
+      input and only the threshold has a value. **Measured in §15**, which supports keeping the
+      refusal and finds the size adjustment unnecessary rather than merely unauthored: refusing
+      costs nothing measurable in return, and halving would keep half of an exposure that gaps
+      together five times more often. Still open — the ruling is the owner's.
 - [ ] **`risk.max_sector_risk` = 2R was one third of a 6R book and is half of a 4R one** (§12.5).
       Ratified numbers moved around it and it did not move. Owner ruling — **measured in §14, which
       supports keeping 2R on a different argument from the one §2 made.** Still open: the ruling is
@@ -768,3 +770,102 @@ the vendor never gave, on the one input that proves it wrong.
 
 Found only because the calibration ran against real vendor output. It is not reachable from the
 fixtures, and no gate would have caught it.
+
+---
+
+## 15. Calibrating the correlation cap, 2026-08-23
+
+§13 asked whether the correlation cap should RESIZE rather than refuse. Owner asked for the same
+treatment §14 gave the sector budget. Reproduce with:
+
+```bash
+python tools/measure_correlation_cap.py --out docs/decisions/measurements/correlation-cap-calibration-2026-08-23.json
+```
+
+Every correlation below is computed over the 60 sessions ending **strictly before** the candidate's
+entry date, by the same `pearson` the run uses. A calibration correlating over today's window would
+be answering a question the system never gets to ask.
+
+### 15.1 How often the cap actually bites
+
+**On a four-position book — the production number: 20.2% of candidates.** For **56.2%** of
+candidates it is exactly zero, because nothing correlated is held at all. Computed rather than
+sampled: with `n` names held and `k` of them correlated, the chance a three-name book contains at
+least one is `1 - C(n-k,3)/C(n,3)`, and the correlated share of held names averages **9.2%**.
+
+**Do not quote `PR-005`'s own figure of 43.5%.** Its book held a median of **22** names, so a
+candidate had twenty-two chances to collide rather than three. The same trap §14.1 names: that log
+is a per-instrument backtest with no capital constraint, and every figure taken from it has to be
+corrected for a book size it never had.
+
+### 15.2 What refusing would have cost — and the honest answer is *nothing measurable*
+
+| | trades | mean | 95% block CI | median | p5 | loss rate |
+|---|---|---|---|---|---|---|
+| would be refused | 1,660 | **+0.057R** | **[−0.063, +0.169]** | −0.597 | −1.209 | 56.3% |
+| admitted | 2,153 | −0.004R | [−0.080, +0.085] | −1.007 | −1.414 | 60.1% |
+
+The interval is a **block bootstrap resampling whole calendar years**, not a standard error over
+trades: the same trade appears in many co-held pairs and a year's trades share a regime, so a naive
+interval would describe a sample that does not exist. Both intervals **contain zero and overlap
+almost entirely.**
+
+So the refused trades were not worse. They were, if anything, marginally better, and refusing them
+would have forgone **+94.3R** across 1,660 trades — a figure that looks decisive and is not, because
+the interval around it crosses zero. **Refusing costs nothing measurable, and it saves nothing
+measurable either.** Any argument for this cap that rests on return is unsupported here.
+
+Note also what refusing does NOT do: the refused trades have a **shallower** left tail (p5 −1.209
+against −1.414). Removing them does not cut the per-trade downside.
+
+### 15.3 The premise, on two measures that disagree — and the disagreement is the finding
+
+§2 justifies the threshold by asserting that two names sharing about half their variance are one
+bet. Tested rather than repeated, on co-held pairs:
+
+| | pairs | measure | above r ≥ 0.70 | below |
+|---|---|---|---|---|
+| coarse | 8,352 / 74,867 | `P(both lose over the holding period)` | **22.8%** | **24.5%** |
+| precise | 8,352 / 74,867 | **`P(both gapped out on the SAME session)`** | **1.030%** | **0.208%** |
+
+**On the coarse measure the premise fails** — correlated pairs ended up losing together very
+slightly *less* often. That is reported first and in full, because a calibration quoting only the
+supportive measure is how `PR-008`'s strongest sentence passed sixteen gates and was false.
+
+**On the precise measure it holds hard: a lift of 4.94×, 95% block CI [2.32, 7.56].** Resampling
+whole calendar years — the right block, since §8.6 measured 89 sessions holding 52% of all gap
+exits — the interval does not come close to 1.
+
+The two are reconciled by what each asks. Two names can move together every day and still exit
+weeks apart for unrelated reasons, so the holding-period measure washes the effect out. The
+same-session gap is the failure mode §8.2 built this entire block around: the simultaneous
+overnight move a per-trade stop cannot defend against, because the price the stop names does not
+trade between the close and the open. **The cap is not there to improve the average trade. It is
+there to stop two positions from being one overnight event, and on the measure that means that,
+correlation predicts it five-fold.**
+
+### 15.4 What this supports
+
+**Keep the refusal. The size adjustment is unnecessary rather than merely unauthored.**
+
+The reasoning is short because the two measurements above do all the work. Refusing costs nothing
+measurable in return (§15.2). Halving instead would keep half of an exposure that gaps together
+**five times more often** (§15.3), and would buy that by authoring a multiplier this project has no
+basis for — which `AGENTS.md` §3 forbids for exactly this shape of reason. There is nothing to
+trade off: the cheaper rule is also the one with the better-evidenced risk reduction.
+
+This does not make `risk.correlation_threshold` `validated`. A parameter becomes validated by a
+pre-registered study against this universe, and this is a calibration attached to a decision record.
+What it does is retire the reading in §11.3 as *provisional* and replace it with a measured one.
+
+### 15.5 Four limits on every number above
+
+1. **`PR-005`'s strategy is refuted** and its base slice returns about +0.028R per trade. Every
+   expectancy figure in §15.2 is measured on a strategy with no established edge, so "refusing cost
+   nothing" is a statement about *this* population and not a law.
+2. **`PR-005` never simulated a capped book** (§14.1). §15.1 corrects for book size arithmetically;
+   §15.2 and §15.3 are conditional statistics on trades that were actually taken, which is weaker.
+3. **86 same-session gap events above the threshold** is a small count, which is why the lift
+   carries a bootstrapped interval rather than a point estimate.
+4. **68 instruments, one arm, one regime.** The same thin cross-section §14.5 names, and it leans
+   heavily financial.
