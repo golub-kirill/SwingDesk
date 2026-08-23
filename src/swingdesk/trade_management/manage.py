@@ -14,11 +14,14 @@ this before it looks at a single candidate.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
+from functools import reduce
 from typing import Any
 
-from swingdesk.contracts.market import Bar
+from swingdesk.contracts.market import Bar, CorporateAction, CorporateActionKind
 from swingdesk.contracts.position import ActionKind, ManagementAction, Position
 from swingdesk.contracts.reference import Exchange
 from swingdesk.reference_data import calendar as cal
@@ -153,3 +156,137 @@ def is_expired(
     # The proposal's own session is not elapsed time. A proposal made this morning has seen zero
     # sessions pass, not one - off by one here would expire everything a full day early.
     return max(len(elapsed) - 1, 0) > expiry_days
+
+
+# ------------------------------------------------------------------ the split guard
+
+
+def _ratio(value: Decimal) -> str:
+    """A split ratio as a human would write it: `2`, not `2.000000` and not `2E+0`.
+
+    The store holds `CorporateAction.value` as `DECIMAL(18,6)`, so a ratio that went in as `2`
+    comes back as `2.000000` and a plain format renders every trailing zero. `normalize()` strips
+    them and can produce exponent notation on a round number, which `:f` then undoes - a reason
+    reading "a 1E+2:1 split" would be arithmetically correct and useless to the person acting on it.
+    """
+    return f"{value.normalize():f}"
+
+
+@dataclass(frozen=True, slots=True)
+class SplitAlert:
+    """A split re-denominated this instrument's prices after the position's stop was set.
+
+    **The failure this exists to stop.** Both decision paths read `Series.RAW`, and raw bars are
+    unadjusted - so a split does not restate history, the next bars simply arrive at a different
+    price level. A 2:1 split over a weekend leaves a stored stop of 290 being compared against
+    Monday prices near 145: an instant stop-out that never happened, on a position still held
+    (`DR-015` §4, `DR-016` §7).
+
+    It is the one place in this system where being wrong costs money rather than a skipped
+    candidate, because everything else it could distort produces a wrong `Watch`.
+    """
+
+    splits: tuple[CorporateAction, ...]
+    """Every split effective after the stop was set, oldest first. More than one compounds."""
+
+    stop_before: Decimal
+    """The stop as recorded, denominated in pre-split prices."""
+
+    @property
+    def factor(self) -> Decimal:
+        """What a pre-split price must be multiplied by to compare with a post-split one."""
+        return reduce(lambda total, split: total * split.price_factor, self.splits, Decimal(1))
+
+    @property
+    def stop_after(self) -> Decimal:
+        """What the stop corresponds to now. **Reported, never applied.**
+
+        Adjusting the stop here would be the system rewriting a risk parameter the owner set, on
+        its own authority - `CHARTER.md` A-001 makes the trading decision human-only and
+        `AUDIT_AND_IMMUTABILITY.md` makes a position record immutable. So this number goes in the
+        proposal's reason and the owner moves the stop, or does not.
+        """
+        return self.stop_before * self.factor
+
+    @property
+    def reason(self) -> str:
+        ratios = " and ".join(
+            f"a {_ratio(split.value)}:1 split on {split.effective_date}" for split in self.splits
+        )
+        return (
+            f"{ratios} re-denominated this instrument after the stop was set, so the "
+            f"recorded stop of {self.stop_before} corresponds to {self.stop_after:.4f} now. "
+            f"Management cannot be evaluated against raw prices until the stop is restated - "
+            f"the comparison would read as an immediate stop-out that never happened"
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class SplitGuard:
+    """The guard's verdict for one position, including when it could not run.
+
+    `refreshed` and `stored` are carried apart because zero actions is genuinely ambiguous: an
+    instrument may have had no splits ever, or nobody may have asked. The store cannot record a
+    negative, so the run records whether it successfully ASKED this evening. Without that, an
+    unfed store and a clean instrument render identically - and only one of them is safe.
+    """
+
+    alert: SplitAlert | None
+    refreshed: bool
+    """Actions were successfully re-fetched for this instrument during this run."""
+
+    stored: int
+    """Actions the store held for it, as of the run's knowledge time."""
+
+    @property
+    def is_unavailable(self) -> bool:
+        """Nothing was fetched and nothing is stored, so the question was never answered."""
+        return not self.refreshed and self.stored == 0
+
+    @property
+    def note(self) -> str:
+        if self.alert is not None:
+            return self.alert.reason
+        if self.is_unavailable:
+            return (
+                "UNAVAILABLE - no corporate action is stored for this instrument and none could be "
+                "fetched, so whether a split has re-denominated its prices is unknown. The position "
+                "is still managed; this is a gap in the check, not a fact about the trade"
+            )
+        return f"no split since the stop was set ({self.stored} action(s) on record)"
+
+
+def split_guard(
+    position: Position,
+    actions: Sequence[CorporateAction],
+    *,
+    refreshed: bool,
+) -> SplitGuard:
+    """Has a split invalidated the comparison between this position's stop and raw prices?
+
+    **The reference instant is the position VERSION's `knowledge_time`, not `opened_on`.** A stop
+    moved last week was set against last week's prices, so a split before that move is already
+    reflected in it and a split after it is not. `Position` is append-only and a stop move writes a
+    new version, so the version's own knowledge time is exactly when its `current_stop` became
+    true.
+
+    **Strictly after, and that is an authored reading.** A split effective on the same date the
+    stop was set is treated as already reflected: splits take effect at the open, so a stop set
+    during that session was set against post-split prices. The opposite reading would pause a
+    position for a split the owner had already seen.
+
+    **Dividends are not splits and raise nothing.** `CorporateAction.price_factor` returns 1 for a
+    dividend because the ex-date move is a market reaction rather than a re-denomination, and
+    pausing on one would cry wolf on every dividend-paying holding. Filtered by kind here as well
+    as by factor, so a future action type cannot fall through by having a factor of 1.
+    """
+    since = tuple(
+        action
+        for action in sorted(actions, key=lambda a: a.effective_date)
+        if action.kind is CorporateActionKind.SPLIT
+        and action.effective_date > position.knowledge_time.date()
+    )
+    alert = (
+        SplitAlert(splits=since, stop_before=position.current_stop) if since else None
+    )
+    return SplitGuard(alert=alert, refreshed=refreshed, stored=len(actions))

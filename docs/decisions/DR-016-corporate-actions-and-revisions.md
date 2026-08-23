@@ -4,11 +4,13 @@
 date:            2026-08-18
 status:          proposed — owner ratification required
 parameters:      data.revision_epsilon — scoped to price, and volume taken out of the rule entirely
-components:      none yet — the actions series has no implementation and no contract member
+components:      none - swingdesk.trade_management.manage guards a held position against a split,
+                 swingdesk.market_data.store holds the actions series
 supersedes:      nothing. Supplies the number DATA_QUALITY_SPEC section 4 has always required
-implementation:  none
-still_to_build:  the actions series (splits and dividends), the revision comparison at write time,
-                 and the held-position split guard. This record is the rule they are waiting on.
+implementation:  partial - the actions series (2026-08-18) and the split guard (2026-08-23) are
+                 built and need no threshold; the revision comparison waits on the ruling
+still_to_build:  the revision comparison at write time. That is the only half this record's
+                 parameter gates, and section 8 revised the SCOPE it should carry.
 ```
 
 > **Read §8 before acting on §3.** Re-measured 2026-08-23 under the longer capture window §6 asked
@@ -308,3 +310,83 @@ bounded work the evening run can afford.
 **The window is still short.** Nine sessions of settled revisions is enough to show that the open
 and the close are different populations, and thin for the tail of either. §6's overturning condition
 is unchanged and now has a tool: re-run `measure_revisions.py` in a month.
+
+---
+
+## 9. The split guard, built 2026-08-23
+
+§7 listed three consequences and said the held-position path *"gains a split guard"*. This is that
+guard. **It needed no ruling and was built ahead of one**, because a split either happened or it did
+not — there is no threshold in it, which is precisely what separates it from the revision comparison
+still waiting on §8.
+
+### 9.1 The failure it stops
+
+Both decision paths read `Series.RAW`. Raw bars are unadjusted, so a split does **not** restate
+history — the next bars simply arrive at a different price level. A 2:1 split over a weekend leaves
+a stored stop of 290 being compared against Monday prices near 145, and `manage.evaluate` reads that
+as a stop touched. It would propose `EXIT_NOW` on a stop-out that never happened, confidently, with
+every freshness check passing.
+
+Everything else a split distorts produces a wrong `Watch`. This produces a wrong exit on a position
+the owner actually holds, which is why §7 called it the one place where being wrong costs money.
+
+### 9.2 Where it lives, and what it refuses to do
+
+| | |
+|---|---|
+| The verdict | `trade_management/manage.py` — `split_guard`, `SplitAlert`, `SplitGuard`, pure |
+| The held-position path | `application/pipeline.py`, before the freshness check |
+| The feed | the same path, `actions_fetcher` — **held names only** |
+| The display | `presentation/report.py`, a `splits:` line on the position |
+
+**It pauses; it does not adjust.** `SplitAlert.stop_after` carries the restated number into the
+proposal's reason so the owner can act on it, and nothing writes it anywhere. Adjusting the stop
+would be the system rewriting a risk parameter the owner set on its own authority, which
+`CHARTER.md` A-001 reserves to them and `AUDIT_AND_IMMUTABILITY.md` makes a position record immutable
+to prevent.
+
+**It runs BEFORE the freshness check**, and that ordering is a decision rather than an accident. A
+stale series recovers by itself tomorrow; a split does not, and it is the one condition under which
+evaluating anyway produces a *confident wrong answer* rather than a refusal. A transient staleness
+must not mask it for a day.
+
+### 9.3 Three readings, all authored
+
+1. **The reference instant is the position VERSION's `knowledge_time`, not `opened_on`.** A stop
+   moved last week was set against last week's prices, so a split before that move is already
+   reflected in it. `Position` is append-only and a stop move writes a new version, so the version's
+   own knowledge time is exactly when its `current_stop` became true. Using `opened_on` would
+   re-alert on every split the owner had already handled.
+2. **Strictly after.** A split effective on the same date the stop was set is treated as already
+   reflected: splits take effect at the open, so a stop set during that session was set against
+   post-split prices. Tested from both sides, because an off-by-one here pauses a position for
+   nothing.
+3. **Dividends raise nothing.** `price_factor` already returns 1 for a dividend — the ex-date move
+   is a market reaction rather than a re-denomination — and the guard filters by KIND as well, so a
+   future action type cannot fall through by happening to have a factor of 1. Pausing on a dividend
+   would cry wolf on every dividend-paying holding, which is the failure §5 rejected for volume.
+
+### 9.4 §8.5's empty table now has a caller
+
+The guard is what feeds the actions series. It fetches for **held names only** — at most
+`risk.max_concurrent_positions`, four today — which is what makes it affordable inside the evening
+run and unaffordable across a 1,148-member universe.
+
+**And the fetch is fail-open, exactly as the bar fetch is.** A vendor failure leaves whatever is
+stored standing. What changes is that the run then knows it did not ask: `SplitGuard` carries
+`refreshed` separately from `stored`, because zero actions is genuinely ambiguous — an instrument
+may never have split, or nobody may have asked. The store cannot record a negative, so the run
+records whether it ASKED. Without that, an unfed store and a clean instrument render identically,
+and only one of them is safe.
+
+An unanswered guard **does not pause**. `CHECKLIST_SPEC.md` §4 exists so a data failure cannot lock
+the owner out of managing risk they already carry, so the position is managed and the report says
+the check could not run.
+
+### 9.5 What is still not built
+
+**The revision comparison at write time**, which is the half that needs §8's ruling. The store still
+compares versions at `_PRICE_QUANTUM` — a float-noise quantum, not a fault threshold — and nothing
+raises `DATA_ERR` for a restated raw price. `data.revision_epsilon` stays `unset` and `read_by:
+none` until the owner rules on the scoped form §8.4 recommends.

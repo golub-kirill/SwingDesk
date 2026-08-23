@@ -679,9 +679,15 @@ def _scan(args: argparse.Namespace) -> tuple[int, str | None, notify.Outcome]:
         # `market_data/retry.py` for why an unbounded per-instrument retry is not what DR-015 costed.
         fetcher = RetryingFetcher(vendor_yahoo.fetch)
 
+        # `fetch_actions` is passed UNWRAPPED by the retry, deliberately. `DR-015` §3's 90-second
+        # budget is spent on the bars a decision needs; a corporate-actions fetch that fails leaves
+        # the stored actions standing and the split guard reports `unavailable`, which is a smaller
+        # loss than spending the run's retry budget on it. At most
+        # `risk.max_concurrent_positions` calls an evening (`DR-016` §7).
         result = run(instruments, clock, registry, store, journal,
                      mode=mode, lookback=args.lookback, universe=selection,
-                     positions=positions, classifications=classifications, fetcher=fetcher)
+                     positions=positions, classifications=classifications, fetcher=fetcher,
+                     actions_fetcher=vendor_yahoo.fetch_actions)
 
         # Only when something failed. DR-015 §6 asks for a measured distribution of fetch failures
         # and observes that nobody has counted one; this is the line that starts counting, into

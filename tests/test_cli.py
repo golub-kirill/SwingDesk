@@ -48,9 +48,11 @@ def _fake_run(captured: dict):
     from datetime import UTC, datetime
 
     def run(instruments, clock, registry, store, journal, *, mode, lookback,
-            universe=None, positions=None, classifications=None, exits=None, fetcher=None):
+            universe=None, positions=None, classifications=None, exits=None, fetcher=None,
+            actions_fetcher=None):
         captured["positions"] = positions
         captured["classifications"] = classifications
+        captured["actions_fetcher"] = actions_fetcher
         captured["instruments"] = instruments
         captured["fetcher"] = fetcher
         # Kept so a test can prove they are SHUT by the time the notice is raised.
@@ -89,6 +91,16 @@ def test_scan_opens_a_position_store_and_passes_it_to_run(tmp_path: Path, monkey
     # candidate reports `unavailable` and is admitted unchecked, which is the truth.
     assert captured["classifications"] is not None, "the sector cap must reach run()"
     assert (tmp_path / "classifications.duckdb").exists()
+
+    # And the corporate-actions source, `DR-016` §7. `run()` defaults it to None - which does not
+    # fetch and reads only what is stored - so a `scan` that never passed one would leave the split
+    # guard permanently `unavailable` and the actions table permanently empty. That is exactly the
+    # state §8.5 found it in.
+    from swingdesk.market_data import vendor_yahoo
+
+    assert captured["actions_fetcher"] is vendor_yahoo.fetch_actions, (
+        "the scheduled run must feed the actions series, or the split guard never has an input"
+    )
 
 
 def test_scan_wraps_the_fetcher_in_the_retry_dr_015_ruled(tmp_path: Path, monkeypatch) -> None:

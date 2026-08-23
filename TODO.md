@@ -155,6 +155,22 @@ hands it over by name.
       liquidity $5M proxies. And `universe.min_adtv_20d = $5M` is itself `assumed` and never swept —
       a $3M–$8M sweep would test it and settle whether the six crossers are noise, in one pass.
 
+- [ ] **`[v]` Corporate actions — THE SPLIT GUARD IS BUILT (2026-08-23, `DR-016` §9); the revision
+      comparison is the only half left and it is the only half that needs a ruling.**
+      A split either happened or it did not, so the held-position guard carries no threshold and
+      was built ahead of the ruling. `manage.split_guard` pauses a position when a split took
+      effect after its stop was set, carries the restated stop into the reason, and **never applies
+      it** — `CHARTER.md` A-001 reserves that to the owner. It runs BEFORE the freshness check: a
+      stale series recovers tomorrow, a split does not, and it is the one condition under which
+      evaluating anyway yields a confident wrong `EXIT_NOW` rather than a refusal.
+      **§8.5's empty table now has a caller.** The run fetches actions for HELD names only — at most
+      `risk.max_concurrent_positions` — which is what makes it affordable in the evening pass.
+      Fail-open like the bar fetch, and `SplitGuard` carries `refreshed` apart from `stored`,
+      because zero actions means either "never split" or "nobody asked" and the store cannot record
+      a negative. An unanswered guard reports `unavailable` and does **not** pause.
+      **Still open below: the write-time revision comparison**, which is what `data.revision_epsilon`
+      gates.
+
 - [ ] **`[v]` Corporate actions — DR-016 DRAFTED and its PRECONDITION IS NOW BUILT (2026-08-18).**
       **The actions series exists.** `POINT_IN_TIME_SPEC` §4 named three series and the tree had
       two; `DR-016` named the third as its own blocker. Built: `CorporateAction` on the contract, a
