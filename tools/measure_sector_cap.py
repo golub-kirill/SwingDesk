@@ -48,11 +48,19 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from swingdesk.application import universe as universe_builder
 from swingdesk.contracts.market import Interval, Series
 from swingdesk.contracts.reference import Classification, SectorWeight
 from swingdesk.derived_observations import correlation
 from swingdesk.market_data import BarStore
-from swingdesk.reference_data.classification import Exposure, look_through
+from swingdesk.platform.parameters import ParameterRegistry
+from swingdesk.reference_data.classification import (
+    ClassificationStore,
+    Exposure,
+    look_through,
+)
+from swingdesk.reference_data.directory import DirectoryStore
+from swingdesk.trade_management.sizing import Refusal
 
 REPO = Path(__file__).resolve().parents[1]
 TRADES = REPO / "docs" / "prereg" / "results" / "PR-005-trades.csv"
@@ -73,6 +81,13 @@ CANDIDATE_CAPS = (Decimal("1.33"), Decimal(2), Decimal(3))
 
 SEED = 20260823
 DRAWS_PER_DAY = 200
+
+#: Sessions kept per instrument before the universe-wide correlation cross-tab. `measure` takes the
+#: last 60 sessions a pair SHARES and is O(history) per call, and the universe produces hundreds of
+#: thousands of pairs over streams reaching back decades. Generous slack for holidays and halts; a
+#: pair that cannot find 60 shared sessions inside it is skipped, which is the right answer for a
+#: name that stale.
+RECENT_WINDOW = 200
 
 
 def _exposures(path: Path) -> dict[str, Exposure]:
@@ -95,6 +110,103 @@ def _exposures(path: Path) -> dict[str, Exposure]:
         )
         judged[symbol] = look_through(classification, symbol)
     return judged
+
+
+def _universe_cross_section(data: Path) -> dict[str, object]:
+    """The same two structural questions §14 asked of 68 names, asked of the whole universe.
+
+    §14.5 limit 2 is the reason this exists: 59 usable instruments is a thin cross-section and it
+    leaned heavily financial, so the refusal rates it produced were more likely overstated than
+    understated. The universe is what a run actually nominates from, and it needs no trade log -
+    only stored bars and stored classifications - so it can be measured at full width whenever the
+    classification pass has run.
+
+    What it still CANNOT widen: anything needing trade outcomes. Those are bound to `PR-005`'s
+    68-name sample until a backtest runs over a wider one.
+    """
+    registry = ParameterRegistry.load()
+    built = universe_builder.rule_from_registry(registry)
+    if isinstance(built, Refusal):
+        return {"unavailable": str(built)}
+
+    rule, parameters = built
+    with (
+        BarStore(data / "bars.duckdb") as bars,
+        ClassificationStore(data / "classifications.duckdb") as store,
+        DirectoryStore(data / "directory.duckdb") as directory,
+    ):
+        as_of = bars.latest_knowledge_time()
+        if as_of is None:
+            return {"unavailable": "the bar store holds nothing"}
+        selection = universe_builder.select(
+            directory, bars, rule, as_of, parameters=parameters
+        )
+        members = sorted(selection.members)
+        judged = {
+            symbol: look_through(store.as_of(symbol, as_of), symbol) for symbol in members
+        }
+        usable = {s: e for s, e in judged.items() if e.is_available}
+
+        # Sector MIX of the universe: how much of it sits in each sector, by weight.
+        mix: dict[str, Decimal] = defaultdict(Decimal)
+        for exposure in usable.values():
+            for weight in exposure.weights:
+                mix[weight.sector] += weight.weight
+        total = sum(mix.values()) or Decimal(1)
+
+        # And the correlation cross-tab, at full width.
+        dominant = {
+            symbol: max(exposure.weights, key=lambda weight: weight.weight).sector
+            for symbol, exposure in usable.items()
+        }
+        streams = {}
+        for symbol in sorted(dominant):
+            stream = correlation.daily_returns(
+                bars.as_of(symbol, Interval.DAY, Series.RAW, as_of)
+            )
+            if len(stream) >= 60:
+                # Truncated to the most recent sessions before correlating. `measure` takes the
+                # last 60 the pair SHARES and is O(history) per call otherwise, and there are
+                # hundreds of thousands of pairs over streams reaching back decades. RECENT_WINDOW
+                # leaves generous slack for holidays and halts; a pair that cannot find 60 shared
+                # sessions inside it reports `unavailable` and is skipped, which is the right answer
+                # for a name that stale anyway.
+                streams[symbol] = stream[-RECENT_WINDOW:]
+
+    names = sorted(streams)
+    same: list[float] = []
+    cross: list[float] = []
+    for index, left in enumerate(names):
+        for right in names[index + 1:]:
+            measured = correlation.measure(streams[left], streams[right], 60)
+            if measured.r is None:
+                continue
+            (same if dominant[left] == dominant[right] else cross).append(float(measured.r))
+
+    def summarise(values: list[float]) -> dict[str, float]:
+        over = sum(1 for value in values if value >= 0.70)
+        return {
+            "pairs": len(values),
+            "median_r": statistics.median(values),
+            "p90_r": sorted(values)[int(0.90 * (len(values) - 1))],
+            "fraction_over_threshold": over / len(values),
+        }
+
+    return {
+        "admitted": len(members),
+        "measured_with_bars": selection.measured,
+        "eligible": selection.eligible,
+        "coverage": selection.coverage,
+        "classified": len(judged) - sum(1 for e in judged.values() if e.unavailable
+                                        and "no classification is stored" in e.unavailable),
+        "usable": len(usable),
+        "sector_mix": {sector: float(mix[sector] / total) for sector in sorted(mix)},
+        "correlation_cross_section": {
+            "instruments": len(names),
+            "same_dominant_sector": summarise(same) if same else {},
+            "different_sector": summarise(cross) if cross else {},
+        },
+    }
 
 
 def _open_book_by_day() -> dict[date, set[str]]:
@@ -212,6 +324,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--classifications", type=Path, required=True)
     parser.add_argument("--data", type=Path, default=Path("data"))
     parser.add_argument("--out", type=Path, default=None)
+    parser.add_argument("--wide", action="store_true",
+                        help="also measure the sector mix and the correlation cross-tab over the "
+                             "WHOLE admitted universe, which needs no trade log and closes the "
+                             "thin-cross-section limit in DR-006 14.5")
     args = parser.parse_args(argv)
 
     exposures = _exposures(args.classifications)
@@ -236,6 +352,8 @@ def main(argv: list[str] | None = None) -> int:
         "four_position_books": _simulate(held, exposures),
         "correlation_overlap": _correlation_overlap(exposures, args.data),
     }
+    if args.wide:
+        result["universe_cross_section"] = _universe_cross_section(args.data)
 
     document = json.dumps(result, indent=2, sort_keys=True)
     if args.out:

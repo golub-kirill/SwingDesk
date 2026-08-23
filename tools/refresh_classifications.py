@@ -28,6 +28,7 @@ not live admission (`DR-006` §8.4 d).
 
 Network tool. Never imported by anything in src/, never run in CI (CI_POLICY 4).
 
+    python tools/refresh_classifications.py --universe --budget 1200
     python tools/refresh_classifications.py --budget 200
     python tools/refresh_classifications.py --symbols AAPL SPY --data data
 """
@@ -42,11 +43,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from swingdesk.application import universe as universe_builder
 from swingdesk.contracts.reference import Instrument
 from swingdesk.market_data import BarStore, VendorUnavailable, vendor_yahoo
+from swingdesk.platform.parameters import ParameterRegistry
 from swingdesk.reference_data import universe
 from swingdesk.reference_data.classification import ClassificationStore, look_through
 from swingdesk.reference_data.directory import DirectoryStore
+from swingdesk.trade_management.sizing import Refusal
 
 #: Seconds between vendor calls. The same courtesy `refresh_universe.py` extends to a free tier
 #: this project has no contract with, and the reason a budget exists at all.
@@ -59,6 +63,7 @@ def _queue(
     directory: DirectoryStore,
     as_of: datetime,
     budget: int,
+    admitted: set[str] | None = None,
 ) -> list[Instrument]:
     """Instruments with bars but no classification, oldest gap first, up to `budget`.
 
@@ -66,11 +71,20 @@ def _queue(
     price history buys nothing: it can never be sized, so it can never reach the sector check. The
     universe converges on the rule's answer through `refresh_universe.py`, and this follows it.
 
+    `admitted` narrows it further to the names the liquidity rule actually admits - the ones a run
+    can nominate today. Without it the queue is every symbol with bars in symbol order, which
+    classifies thousands of names no candidate path will ever reach before it finishes the ones it
+    will. Roughly a third of what has bars is admitted, so the difference is most of the work.
+
     Unclassified first, then everything else in symbol order so a re-run is deterministic and the
     coverage gap closes rather than being resampled.
     """
     by_symbol = {entry.symbol: entry for entry in directory.as_of(as_of)}
-    have_bars = [s for s in bars.instrument_ids(as_of) if s in by_symbol]
+    have_bars = [
+        s
+        for s in bars.instrument_ids(as_of)
+        if s in by_symbol and (admitted is None or s in admitted)
+    ]
     classified = set(classifications.instrument_ids(as_of))
 
     missing = sorted(s for s in have_bars if s not in classified)
@@ -85,6 +99,9 @@ def main(argv: list[str] | None = None) -> int:
                         help="how many instruments to classify this pass")
     parser.add_argument("--symbols", nargs="*", default=None,
                         help="classify exactly these symbols, ignoring the queue")
+    parser.add_argument("--universe", action="store_true",
+                        help="queue only the names the liquidity rule admits, not every symbol "
+                             "with bars - the ones a run can actually nominate")
     args = parser.parse_args(argv)
 
     as_of = datetime.now(UTC)
@@ -93,6 +110,26 @@ def main(argv: list[str] | None = None) -> int:
         ClassificationStore(args.data / "classifications.duckdb") as classifications,
         DirectoryStore(args.data / "directory.duckdb") as directory,
     ):
+        admitted: set[str] | None = None
+        if args.universe:
+            built = universe_builder.rule_from_registry(ParameterRegistry.load())
+            if isinstance(built, Refusal):
+                # Fail closed and name the parameter, exactly as `scan --universe` does. A pass
+                # that silently classified everything because the rule had no value would be
+                # doing different work under the same flag.
+                print(f"universe REFUSED  {built}")
+                return 2
+            rule, parameters = built
+            selection = universe_builder.select(directory, bars, rule, as_of,
+                                                parameters=parameters)
+            # `.instrument.id`, not the Membership itself. A set of dataclasses tests nothing
+            # against a string id, so the first run of this flag queued NOTHING and reported
+            # "every instrument already has a classification" - a false clean bill of health,
+            # and exactly the shape of silence AGENTS.md 1 says to check rather than trust.
+            admitted = {member.instrument.id for member in selection.members}
+            print(f"universe: {len(admitted)} admitted of {selection.measured} measured "
+                  f"({selection.coverage:.1%} of {selection.eligible} eligible)")
+
         if args.symbols:
             by_symbol = {entry.symbol: entry for entry in directory.as_of(as_of)}
             queue = [
@@ -102,10 +139,18 @@ def main(argv: list[str] | None = None) -> int:
             if unresolved:
                 print(f"  not in the directory, skipped: {', '.join(unresolved)}")
         else:
-            queue = _queue(bars, classifications, directory, as_of, args.budget)
+            queue = _queue(bars, classifications, directory, as_of, args.budget, admitted)
 
         if not queue:
-            print("nothing to classify: every instrument with bars already has a classification")
+            # Says what it MEASURED, not what it assumes the reason was. This line read "every
+            # instrument with bars already has a classification" and printed exactly that over an
+            # empty store, because a bug upstream had emptied the queue - a false clean bill of
+            # health, from a message asserting a cause it had never checked.
+            print(
+                f"queue is empty: {len(classifications.instrument_ids(as_of))} instrument(s) "
+                f"already classified, {len(bars.instrument_ids(as_of))} have bars"
+                + (f", {len(admitted)} admitted by the rule" if admitted is not None else "")
+            )
             return 0
 
         stored = failed = degenerate = 0
