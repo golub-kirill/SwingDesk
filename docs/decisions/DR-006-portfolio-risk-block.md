@@ -627,9 +627,144 @@ Carrying the remainder visibly is the only option that neither invents nor disca
       input and only the threshold has a value. Halving a correlated candidate rather than refusing
       it is a defensible alternative and needs a number this record does not have.
 - [ ] **`risk.max_sector_risk` = 2R was one third of a 6R book and is half of a 4R one** (§12.5).
-      Ratified numbers moved around it and it did not move. Owner ruling.
+      Ratified numbers moved around it and it did not move. Owner ruling — **measured in §14, which
+      supports keeping 2R on a different argument from the one §2 made.** Still open: the ruling is
+      the owner's and §14.4 states the case against as well as for.
 - [ ] **The degeneracy guard should read `asset_classes` rather than infer from the weights**
       (§12.1). One measurement against the vendor decides it. Until then a genuine fund reporting
       exactly one sector at exactly 100% is refused, which admits it unchecked.
 - [ ] **Nothing schedules `tools/refresh_classifications.py`.** The cap is wired and its input is
       empty, so today it reports `unavailable` for every candidate — correctly, and uselessly.
+
+---
+
+## 14. Calibrating the sector cap, 2026-08-23
+
+§13 asked whether 2R is still the right sector budget. Owner asked for research rather than a
+ruling on the argument alone. This is it.
+
+Reproduce with:
+
+```bash
+python tools/measure_sector_cap.py --classifications docs/decisions/measurements/sector-classifications-2026-08-23.json --out docs/decisions/measurements/sector-cap-calibration-2026-08-23.json
+```
+
+Both files are in `docs/decisions/measurements/`. Every figure below comes out of the second one;
+none is typed from memory.
+
+### 14.1 The first finding is about the evidence, not the cap
+
+**`PR-005`'s base slice held a median of 20 positions at once, a maximum of 54, and was over four
+on 95.1% of days.** It is a per-instrument backtest with no capital constraint. It never simulated
+a four-position book and **cannot be replayed as one.**
+
+That is worth saying plainly because §8.1 used the same log to move the anchor from 6R to 4R and
+was right to: a per-trade gap loss of −1.692R is concurrency-independent. A sector budget is not.
+So this section does not measure what a capped book would have returned; it measures the
+**population a four-position book would have drawn from**, and samples four names from it. The draw
+is uniform because `rs.ranking_method` is `unset` and §6 rule 4 of `ALLOCATION_SPEC` forbids
+falling back to any order the system happens to have — a uniform draw is the only assumption that
+does not smuggle in the ranking the system refuses to make.
+
+### 14.2 What each candidate cap actually means, in positions
+
+At 0.98R per position — this system's own sizing, shares rounded down — the heaviest sector in a
+four-position book, over 704,200 sampled books:
+
+| | heaviest sector |
+|---|---|
+| median | **1.17R** |
+| p75 | 1.96R |
+| p90 | 2.01R |
+| p95 | 2.21R |
+| p99 | 2.94R |
+| max | 3.92R |
+
+The discrete structure is visible in those numbers and is the clearest way to read the choice:
+0.98R is one position in a sector, 1.96R is two, 2.94R is three, 3.92R is all four. So
+
+| cap | means | refuses |
+|---|---|---|
+| **1.33R** (a third of a 4R book) | at most **one** of four in one theme | **37.9%** of books |
+| **2R** (what the registry carries) | at most **two** of four | **11.3%** of books |
+| **3R** | at most three | **0.6%** of books |
+
+**§4 predicted the last row and it holds.** That section rejected 3R open risk on the grounds that
+*"sector and correlation caps would never bind and the concentration rules would be decorative"*.
+At 0.6% a 3R sector cap is decorative, measured rather than asserted.
+
+### 14.3 The two caps are not redundant, and this is the number that decides it
+
+The obvious objection to any sector cap now that §11 exists: same-sector names are the correlated
+ones, so is the correlation cap already doing this job? Measured over the 59 usable instruments,
+every pair correlated over the ratified 60-session window and split by whether the two share a
+dominant sector:
+
+| | pairs | median r | p90 | at r ≥ 0.70 |
+|---|---|---|---|---|
+| same dominant sector | 230 | **+0.293** | +0.750 | **15.2%** |
+| different sector | 1,481 | +0.118 | +0.438 | **1.6%** |
+
+Two things follow, and they point in opposite directions.
+
+**Sector membership genuinely predicts correlation** — a tenfold lift, 15.2% against 1.6%. The two
+caps are measuring related things, so a sector cap is not noise next to a correlation cap.
+
+**And the correlation cap catches only 15% of same-sector pairs.** The median same-sector pair sits
+at r = 0.29, which is not one bet by any reading of §2. So **85% of what a tight sector cap would
+refuse, the correlation cap does not** — the overlap is weak, and the sector cap is doing
+non-redundant work: bounding names that would fall together on a sector shock without having moved
+together in the last quarter.
+
+### 14.4 What this supports, and it is a recommendation rather than a ruling
+
+**Keep 2R** — but retire §2's justification for it and stand it on this instead.
+
+*"One third of the book"* was true at a 6R anchor and is not true at 4R; repeating it would be
+quoting a sentence whose premise moved. What the measurement supports is different and stronger:
+2R is the cap that binds where concentration is genuinely extreme (the top ~11% of books) while
+1.33R refuses more than a third of all books, and in roughly 85% of those refusals the two names
+were not correlated at all — a lot of refusals earned by a label rather than by a measured
+relationship. With four slots and eleven sectors, "at most one per sector" is close to forcing
+perfect sector diversity on a book that small.
+
+**The ruling is still yours.** The case for 1.33R is not empty: a sector shock is exactly the
+correlated-gap failure §8.2 built the whole block around, and 15.2% of same-sector pairs really do
+move together. Choosing 2R accepts that two positions — **−3.38R at the measured gap loss** — can
+be lost to one theme overnight, which is a fifth of the −15R drawdown pause in a single session.
+
+### 14.5 Three limits on every number above
+
+1. **The sectors are today's, not the ones in force in 2016** (§8.4 d). A name that changed sector
+   is misfiled for its whole history. This is the point-in-time gap, and it bounds this measurement
+   exactly as it bounds any backtest.
+2. **59 usable instruments is a thin cross-section, and it leans heavily financial.** Financial
+   services was the most-represented sector on **57%** of days. A universe with that shape produces
+   more same-sector collisions than a balanced one would, so the refusal rates above are more
+   likely overstated than understated.
+3. **Nine of the 68 are refused by §8.7's guard** and contribute to no sector, so measured
+   concentration is an understatement by whatever they hold. The nine — `FIXD`, `FLTR`, `IAGG`,
+   `NEAR`, `SH`, `TLT`, `UITB`, `VXX`, `WEAT` — are bond, inverse, commodity and volatility
+   products without exception, and **not one genuine equity fund was refused**. That is the first
+   evidence that §12.1's exactness argument holds outside the one case §8.7 measured.
+
+### 14.6 And the research found a defect in §12's own build
+
+**The vendor spells its eleven sectors two ways and the difference is silent.** An equity comes
+back `Financial Services`; a fund look-through comes back `financial_services`; `Real Estate`
+becomes `realestate` with no separator at all. Both vocabularies hold exactly the same eleven
+sectors and nothing else.
+
+Shipped unmapped, a share and an ETF in the same sector would each have received their own budget —
+`LYV` (Communication Services) and `FCOM` (communication_services) counted as two themes — so a
+concentrated book would have reported as a diversified one. **The cap would have failed in the
+permissive direction, silently**, which is the same failure shape §8.7 was written about one layer
+up and the reason that section insists the guard is a precondition rather than a refinement.
+
+`reference_data.classification.canonical_sector` now maps both spellings to one label before
+anything is compared or added, and merges weights that collide. A vendor answer carrying **both**
+spellings of one sector, summing past 100%, is refused rather than clamped: clamping picks a number
+the vendor never gave, on the one input that proves it wrong.
+
+Found only because the calibration ran against real vendor output. It is not reachable from the
+fixtures, and no gate would have caught it.

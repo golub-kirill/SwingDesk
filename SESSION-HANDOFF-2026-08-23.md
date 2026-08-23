@@ -22,7 +22,11 @@ engineering any more. Two of the four are genuinely the owner's:
   candidate is defensible and needs a number nobody has authored.
 - **Is `risk.max_sector_risk` still 2R?** §2 argued it as *one third of the book* against a 6R
   anchor. §8.3 moved the anchor to **4R** and this number did not move, so it is now **half** the
-  book. That may still be right; it is a different statement from the one that was argued.
+  book. **Measured in §14** at the owner's request: 2R means *at most two of your four in one
+  theme* and refuses 11.3% of sampled books, 1.33R means *at most one* and refuses 37.9%, and the
+  correlation cap catches only 15% of same-sector pairs — so the two caps are not redundant and
+  1.33R would earn most of its refusals from a label rather than a measured relationship. §14.4
+  recommends keeping 2R on that argument rather than on §2's. **The ruling is still open.**
 
 The other two are engineering and are small: read `asset_classes` instead of inferring degeneracy
 from the weights (one vendor measurement decides it), and decide whether

@@ -401,6 +401,15 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       is in `DR-006` §13 — four items, of which two want an owner: whether the correlation cap should
       RESIZE rather than refuse, and whether 2R is still the right sector budget now that the book
       anchor moved from 6R to 4R and 2R went from a third of the book to half of it.**
+      **The sector half is now measured** (`DR-006` §14, owner asked for research before ruling).
+      Derive the figures with `python tools/measure_sector_cap.py`, never from this line. The
+      headline: `PR-005` held a median of 20 positions at once and 95% of its days were over four,
+      so it never simulated a capped book and cannot be replayed as one — what §14 samples is the
+      POPULATION such a book would have drawn from. §14.4 recommends keeping 2R on a new argument
+      and states the case against. **§14.6 records a real defect the research found in the build
+      itself:** the vendor spells its eleven sectors two ways, so a share and an ETF in one sector
+      would each have got their own budget and a concentrated book would have read as diversified.
+      Fixed the same day; not reachable from the fixtures and no gate would have caught it.
 
 - [x] **`[v]` The book cap is WIRED — built 2026-08-22 (`DR-006` §9).** `risk.max_open_risk` (4R) and
       `risk.max_concurrent_positions` (4) both name a consumer now:

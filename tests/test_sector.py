@@ -176,6 +176,63 @@ def test_a_vendor_answer_with_no_sector_is_unavailable_rather_than_empty() -> No
     assert exposure.unavailable is not None and "INDEX" in exposure.unavailable
 
 
+def test_the_two_vendor_spellings_of_one_sector_become_one_bucket() -> None:
+    """**The vendor spells its eleven sectors two ways and the difference is silent.** Measured
+    across `PR-005`'s 68 instruments on 2026-08-23: an equity comes back `Financial Services`, a
+    fund look-through comes back `financial_services`, and `Real Estate` becomes `realestate` with
+    no separator at all.
+
+    Unmapped, a share and an ETF in the same sector each get their own budget, so a concentrated
+    book reports as a diversified one - the cap failing in the PERMISSIVE direction, silently.
+    """
+    share = look_through(_equity("LYV.1", "Communication Services"), "LYV.1")
+    fund = look_through(
+        _classification("FCOM.1", "ETF", {"communication_services": "0.9", "technology": "0.1"}),
+        "FCOM.1",
+    )
+    assert share.weights[0].sector == fund.weights[0].sector == "communication services"
+
+    # A remainder, not a clean 1.0 - a fund at exactly 100% of one sector is the `NEAR` signature
+    # and is refused by the degeneracy guard before the spelling is ever compared.
+    estate = look_through(
+        _classification("VNQ.1", "ETF", {"realestate": "0.95", "financial_services": "0.05"}),
+        "VNQ.1",
+    )
+    assert estate.is_available
+    assert [w.sector for w in estate.weights] == ["financial services", "real estate"], (
+        "no separator at all is the vendor's third spelling, and the result stays sorted"
+    )
+
+    book = portfolio.sector_book(
+        [_position("LYV.1", index=1), _position("FCOM.1", index=2)],
+        _usd_only, R,
+        lambda instrument_id: share if instrument_id == "LYV.1" else fund,
+    )
+    assert isinstance(book, portfolio.SectorBook)
+    assert book.by_sector["communication services"] == Decimal("3.8"), (
+        "2.00R of the share plus 1.80R of the fund - one bucket, not two"
+    )
+
+
+def test_an_unknown_sector_is_kept_rather_than_dropped() -> None:
+    """The vendor adding a twelfth sector must not fall on the floor. Lowercased and kept: a label
+    this table has never seen is still a better bucket than no bucket."""
+    exposure = look_through(_equity("AAA.1", "Space Logistics"), "AAA.1")
+    assert exposure.is_available
+    assert exposure.weights[0].sector == "space logistics"
+
+
+def test_a_vendor_contradicting_itself_about_one_sector_is_refused() -> None:
+    """Both spellings of one sector in one answer, summing past 100%, means the vendor disagrees
+    with itself. Refused rather than clamped - clamping picks a number it never gave, on the one
+    input that proves it wrong."""
+    exposure = look_through(
+        _classification("ETF.1", "ETF", {"Technology": "0.7", "technology": "0.6"}), "ETF.1"
+    )
+    assert not exposure.is_available
+    assert exposure.unavailable is not None and "contradicts itself" in exposure.unavailable
+
+
 def test_every_sector_at_zero_is_the_same_non_answer_as_no_sector() -> None:
     """The vendor returns the full sector list with every share zeroed more often than it returns
     an empty one. Left as "available with zero coverage" it would place none of the position's risk

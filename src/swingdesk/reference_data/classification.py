@@ -60,6 +60,44 @@ CREATE TABLE IF NOT EXISTS classification_weights (
 #: list that decides which half of the guard an answer is judged by.
 FUND_KINDS = frozenset({"ETF", "MUTUALFUND"})
 
+#: The eleven sectors this vendor uses, keyed by their separator-free lowercase form.
+#:
+#: **The vendor spells them TWO different ways and the difference is silent.** Measured across the
+#: 68 instruments of `PR-005` on 2026-08-23: an equity comes back `Financial Services`, a fund
+#: look-through comes back `financial_services`, and `Real Estate` becomes `realestate` with no
+#: separator at all. Both vocabularies hold exactly these eleven and nothing else.
+#:
+#: Left unmapped, a share and an ETF in the same sector would never add into the same bucket - so
+#: `LYV` (Communication Services) and `FCOM` (communication_services) would each get their own
+#: budget, and a concentrated book would report as a diversified one. That is the cap failing in
+#: the PERMISSIVE direction, silently, which is the failure mode `DR-006` §8.7 was written about
+#: one layer up.
+SECTOR_LABELS = {
+    "basicmaterials": "basic materials",
+    "communicationservices": "communication services",
+    "consumercyclical": "consumer cyclical",
+    "consumerdefensive": "consumer defensive",
+    "energy": "energy",
+    "financialservices": "financial services",
+    "healthcare": "healthcare",
+    "industrials": "industrials",
+    "realestate": "real estate",
+    "technology": "technology",
+    "utilities": "utilities",
+}
+
+
+def canonical_sector(label: str) -> str:
+    """One spelling per sector, whichever of the vendor's two an answer arrived in.
+
+    Separator-free and lowercase for the lookup, so `Real Estate`, `real_estate` and `realestate`
+    are one key. A sector outside the known eleven is lowercased and returned as it came - the
+    vendor adding a twelfth must not be dropped on the floor, and a label this table has never seen
+    is still a better bucket than no bucket.
+    """
+    key = "".join(character for character in label.lower() if character.isalnum())
+    return SECTOR_LABELS.get(key, label.strip().lower())
+
 
 class ClassificationStore:
     """Instrument classifications, appended per pull and read as-of a knowledge time.
@@ -268,8 +306,31 @@ def look_through(classification: Classification | None, instrument_id: str) -> E
             ),
         )
 
+    # ONE spelling per sector before anything is compared or added. The vendor uses two, and a
+    # share and a fund in the same sector would otherwise each get their own budget.
+    merged: dict[str, Decimal] = {}
+    for weight in classification.weights:
+        sector = canonical_sector(weight.sector)
+        merged[sector] = merged.get(sector, Decimal(0)) + weight.weight
+    contradictory = sorted(sector for sector, share in merged.items() if share > 1)
+    if contradictory:
+        # Only reachable when the vendor served BOTH spellings of one sector in one answer, which
+        # would mean it disagrees with itself about the same fund. Refused rather than clamped:
+        # clamping picks a number the vendor never gave, on the one input that proves it is wrong.
+        return Exposure(
+            instrument_id=instrument_id,
+            weights=(),
+            unavailable=(
+                f"the vendor reported more than 100% in {contradictory[0]}, so its own answer "
+                f"about this instrument contradicts itself"
+            ),
+        )
+    canonical = tuple(
+        SectorWeight(sector=sector, weight=merged[sector]) for sector in sorted(merged)
+    )
+
     degenerate = (
-        _degenerate_sector(classification.weights)
+        _degenerate_sector(canonical)
         if classification.quote_type.upper() in FUND_KINDS
         else None
     )
@@ -284,12 +345,9 @@ def look_through(classification: Classification | None, instrument_id: str) -> E
             ),
         )
 
-    return Exposure(
-        instrument_id=instrument_id,
-        # Sorted, because these feed a decision reason and an unordered iteration reaching output is
-        # the named determinism hazard (`DETERMINISM_SPEC` §3.2).
-        weights=tuple(sorted(classification.weights, key=lambda w: w.sector)),
-    )
+    # Already sorted by sector above, because these feed a decision reason and an unordered
+    # iteration reaching output is the named determinism hazard (`DETERMINISM_SPEC` §3.2).
+    return Exposure(instrument_id=instrument_id, weights=canonical)
 
 
 def _degenerate_sector(weights: Sequence[SectorWeight]) -> str | None:
