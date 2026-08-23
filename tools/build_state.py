@@ -265,6 +265,49 @@ def _directory_facts(measured_instruments: int) -> list[tuple[str, str]]:
     ]
 
 
+def _classification_facts() -> list[tuple[str, str]]:
+    """How much of the universe the sector cap can actually see (`DR-006` §12).
+
+    **A coverage number, not a census, and the difference is the point.** The cap admits an
+    unclassifiable candidate UNCHECKED and says so, because §3 forbids a check the system could not
+    perform from refusing everything - so an empty store does not fail anything, it just means the
+    cap protects nothing. That is invisible from the report of any single run and exactly the shape
+    of fact `AGENTS.md` §10.6 says a tool must derive rather than a person remember.
+
+    Two figures because they answer different questions: how many instruments carry a
+    classification at all, and how many survive §8.7's degeneracy guard. A bond fund the vendor
+    describes as healthcare 100% is classified and unusable, and collapsing the two would report
+    coverage the cap does not have.
+
+    Returns nothing at all when the store has never been created - the pass has not been run, which
+    is a different state from a store holding zero and worth not inventing a row for.
+    """
+    if not (DATA / "classifications.duckdb").is_file():
+        return []
+    connection = _connect("classifications.duckdb")
+    try:
+        classified = connection.execute(
+            "SELECT COUNT(DISTINCT instrument_id) FROM classifications"
+        ).fetchone()[0]
+        # Usable is computed HERE in SQL rather than by importing `look_through`, and that is a
+        # deliberate limitation rather than a shortcut: this counts instruments with at least one
+        # non-zero weight, which catches the empty and all-zero answers but NOT the degenerate
+        # look-through. The row says so, so a reader does not take it for the stricter number.
+        with_sectors = connection.execute(
+            "SELECT COUNT(DISTINCT instrument_id) FROM classification_weights WHERE weight > 0"
+        ).fetchone()[0]
+    finally:
+        connection.close()
+    share = f"{with_sectors / classified:.1%}" if classified else "n/a"
+    return [
+        ("Classifications", f"{classified:,} instrument(s) carry a sector · {with_sectors:,} "
+                            f"(**{share}**) report at least one non-zero weight. The stricter "
+                            f"`look_through` count, which also drops a degenerate ETF "
+                            f"look-through (`DR-006` §8.7), is lower - derive it with "
+                            f"`python tools/measure_sector_cap.py --wide`"),
+    ]
+
+
 def _track_a_row() -> tuple[str, str]:
     """The streak, taken from gate 23's own measurement rather than recomputed.
 
@@ -311,7 +354,13 @@ def runtime_rows() -> list[tuple[str, str]] | None:
     if not DATA.is_dir():
         return None
     bar_rows, instruments = _bar_facts()
-    return [*_journal_facts(), *bar_rows, *_directory_facts(instruments), _track_a_row()]
+    return [
+        *_journal_facts(),
+        *bar_rows,
+        *_directory_facts(instruments),
+        *_classification_facts(),
+        _track_a_row(),
+    ]
 
 
 # ----------------------------------------------------------------------------- rendering

@@ -11,6 +11,12 @@ still_to_build:  the actions series (splits and dividends), the revision compari
                  and the held-position split guard. This record is the rule they are waiting on.
 ```
 
+> **Read §8 before acting on §3.** Re-measured 2026-08-23 under the longer capture window §6 asked
+> for: the *value* survives and the *scope* does not. `0.001` over all four price fields would raise
+> about **94 `Critical` faults every evening**; over `close` alone it fires **zero** times in the
+> whole window. §3's four-field scope is superseded by §8.4, which recommends the same number scoped
+> to `close`. The ruling is still the owner's.
+
 ## 1. Why this record exists
 
 `DATA_QUALITY_SPEC.md` §4 specifies the corporate-actions gate in full and has since it was written:
@@ -194,3 +200,111 @@ in place before it exists rather than after.
 - **The candidate path is affected but not endangered.** A split mid-history distorts ATR for that
   instrument on that day, which moves a stop and a share count. Nine universe members in a year, so it
   is real and rare — a wrong `Watch`, not a phantom stop-out.
+
+---
+
+## 8. Re-measured 2026-08-23, and §3's SCOPE does not survive it
+
+§6 named the condition that would overturn this record: *"a longer capture window."* The window is
+now longer, and re-measuring under it does not move the **number** — it moves what the number may
+be applied **to**. Reproduce with:
+
+```bash
+python tools/measure_revisions.py --data data --out docs/decisions/measurements/revisions-2026-08-23.json
+```
+
+Owner asked for research rather than a ruling from intuition. This is it.
+
+### 8.1 §2's table left one column blank, and that is where the defect was
+
+§2 characterised `volume`, `high`, `low` and `close`, and printed **`open | 806 | — | — | — | —`**.
+The open was counted and never described. Measured now, over 7,141 settled version pairs across 9
+sessions:
+
+| field | revised | p50 | p90 | p99 | max |
+|---|---|---|---|---|---|
+| `close` | 122 | 0.0008% | 0.019% | 0.071% | **0.084%** |
+| `low` | 1,966 | 0.013% | 0.107% | 0.495% | 2.45% |
+| `high` | 2,152 | 0.013% | 0.122% | 0.607% | 3.03% |
+| **`open`** | **809** | **0.128%** | **0.772%** | **2.25%** | **5.45%** |
+
+**The open's MEDIAN revision is larger than the threshold §3 proposes.** The close's largest
+revision in the whole window is 0.084%, twelve times *below* it. These are not one population and
+0.001 is not one threshold for them.
+
+### 8.2 What §3 as written would actually do
+
+Fires per session, at the proposed value and around it:
+
+| | >0.05% | **>0.1%** | >0.5% | >1% | >5% |
+|---|---|---|---|---|---|
+| `close` | 0.4 | **0.0** | 0.0 | 0.0 | 0.0 |
+| `low` | 44.6 | 23.6 | 2.1 | 0.6 | 0.0 |
+| `high` | 54.8 | 29.6 | 4.3 | 0.7 | 0.0 |
+| `open` | 62.8 | 49.4 | 15.6 | 6.6 | 0.1 |
+| **all four, as §3 scopes it** | 147.4 | **94.1** | 20.6 | 7.0 | 0.1 |
+
+**`data.revision_epsilon = 0.001` over `open`/`high`/`low`/`close` raises roughly 94 `DATA_ERR` /
+`Critical` faults every evening.**
+
+§5 of this record rejected the volume form of the rule in these words: *"It would raise a Critical
+fault on ~1,150 instruments an evening. A gate that is wrong gets fixed or removed, never ignored —
+and one that cries wolf nightly gets ignored regardless of policy."* **The scoped-to-price form
+makes the same error one field over**, an order of magnitude smaller and still nightly. The record
+diagnosed the disease precisely and then carried it across, because the field that carries it was
+the one its own table did not describe.
+
+### 8.3 The tail has no gap to cut, and that is checked rather than assumed
+
+A wide tail could be a vendor event — a bad afternoon, one instrument, one session — in which case a
+threshold above it would work. It is not. The 44 open revisions above 1% are spread across **44
+distinct instruments and six of the nine sessions**: one apiece, every day. That is what the field
+does, not something that happened to it.
+
+So the same test §3 applied to volume applies here: *"there is no threshold for volume — a parameter
+would assert that there is one."* There is no threshold in the open, high or low either.
+
+### 8.4 What this supports
+
+**Keep 0.001. Scope it to `close`.**
+
+That is §3's own reasoning taken one step further, not a new argument. §3 removed volume because its
+revisions form no population a threshold could separate; `open`, `high` and `low` fail the same test.
+The close passes it cleanly — a tight population ending at 0.084%, a threshold twelve times above it,
+and **zero** firings across the window.
+
+**And the close is the field the decision path reads.** `pipeline.py` takes `entry` from
+`stored.bars[-1].close`, and sizing spends its risk against that entry. A restated close moves the
+entry, the share count and the stop distance together.
+
+**Two corollaries, because §3's wording bundles two different things.**
+
+1. **A revision is always RECORDED; only a close revision past the epsilon is a FAULT.** §3 says
+   *"below it, the row is not written and no alarm is raised"*, which would discard the audit trail
+   for a 5% open restatement. `POINT_IN_TIME_SPEC` §3 requires the version; the epsilon governs the
+   alarm. The store's existing `_PRICE_QUANTUM` already suppresses float noise at write time and is
+   a different mechanism with a different job.
+2. **`high` and `low` still reach a decision through ATR**, and get no fault. That is the same
+   accepted consequence volume already carries through `universe.min_adtv_20d`: a field whose
+   revisions form no separable population does not get a worse threshold, it gets none. Recorded
+   here so it is a known limit rather than an oversight.
+
+### 8.5 A precondition is built and has never been fed
+
+`corporate_actions` holds **zero rows**. The table, the contract, the vendor call and the read path
+all exist — nothing in the scheduled run calls `fetch_actions`, so the series that §6 says would
+explain a large price revision cannot explain anything yet.
+
+This is the third instance of the shape `AGENTS.md` §7 was written for, inside the record that
+closed the previous one. The split guard is what will feed it: it protects held positions, there are
+at most `risk.max_concurrent_positions` of them, and fetching actions for exactly those names is
+bounded work the evening run can afford.
+
+### 8.6 What is still open
+
+**The ruling.** The value does not move; the scope does. `data.revision_epsilon` stays
+`unset` until the owner rules on the scoped form.
+
+**The window is still short.** Nine sessions of settled revisions is enough to show that the open
+and the close are different populations, and thin for the tail of either. §6's overturning condition
+is unchanged and now has a tool: re-run `measure_revisions.py` in a month.

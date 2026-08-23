@@ -168,8 +168,20 @@ hands it over by name.
       the ruling below, so storing an action changes nothing the run decides — which is exactly why
       it was safe to land before the ruling. 11 tests, 5 mutants killed including the look-ahead one
       (an action learned later must be invisible to an earlier read).
+      **RE-MEASURED 2026-08-23 (`DR-016` §8) — the value survives, the SCOPE does not.** §2's table
+      left the `open` column blank, and the open is the widest of the four price fields: its MEDIAN
+      revision (0.128%) is larger than the proposed threshold, while the close's largest revision in
+      the whole window is 0.084%, twelve times below it. At `0.001` over all four fields the gate
+      raises about **94 `Critical` faults per evening**; over `close` alone it fires **zero** times.
+      §5 of that record rejected exactly this for volume and then carried it across one field over.
+      Derive the figures with `python tools/measure_revisions.py`, never from this line.
+      §8.4 recommends the same number scoped to `close`, which is §3's own reasoning taken one step
+      further. **§8.5 also found that `corporate_actions` holds zero rows** — the table, contract,
+      vendor call and read path all exist and nothing ever calls `fetch_actions`, the third instance
+      of the `AGENTS.md` §7 shape inside the record that closed the previous one.
       **What still needs the owner:**
-      `data.revision_epsilon = 0.001`, scoped to price only; volume taken out of §4's
+      `data.revision_epsilon = 0.001`, **scoped to `close`** (§8.4), not to all four price fields as
+      §3 first wrote; volume taken out of §4's
       raw-immutability rule and given no parameter, because the course names no such concept and the
       measured distribution contains no threshold. **Its precondition is `Series.ACTIONS`**, which
       `POINT_IN_TIME_SPEC.md` §4 names and `contracts/market.py` does not implement — the vendor does
