@@ -72,6 +72,17 @@ def registry() -> ParameterRegistry:
         # test records positions into it.
         "risk.max_open_risk": 4,
         "risk.max_concurrent_positions": 4,
+        # The correlation cap (DR-006 2, built 2026-08-23). Real values again, and the same
+        # argument: a fixture that loosened the threshold to keep tests quiet would be testing a
+        # system nobody runs.
+        #
+        # What this makes load-bearing about `make_bars`: every fixture series below walks the SAME
+        # arithmetic path, so any two of them correlate at exactly 1.00. That is convenient for
+        # proving the cap bites and useless for proving it lets anything through, which is why
+        # `alternating_bars` exists next to it - a fixture suite where every pair is identical can
+        # only ever test one side of a threshold.
+        "risk.correlation_threshold": "0.70",
+        "risk.correlation_lookback_sessions": 60,
     }
     return ParameterRegistry(
         {
@@ -86,15 +97,27 @@ def make_bars(
     instrument: Instrument,
     sessions: list[date],
     first_close: Decimal = Decimal("100.00"),
+    zigzag: bool = False,
 ) -> tuple[Bar, ...]:
     """Deterministic synthetic bars: one per session, walking upward by a fixed step.
 
     No randomness anywhere - a fixture that varies between runs cannot support a determinism test.
+
+    `zigzag` alternates the close between two levels instead of walking. It exists because the
+    walking path makes EVERY instrument in this suite correlate at exactly r = 1.00 with every
+    other - the closes are the same arithmetic in both, so the daily returns are identical - and a
+    fixture suite where every pair is identical can only test one side of a correlation threshold.
+    Measured, the two paths correlate at about -0.03 over a year of sessions, which is what "these
+    two are not the same bet" has to look like for `risk.correlation_threshold` to admit anything.
     """
     bars: list[Bar] = []
     close = first_close
     for offset, session in enumerate(sessions):
-        close = first_close + Decimal(offset) * Decimal("0.50")
+        close = (
+            first_close + (Decimal("0.50") if offset % 2 else Decimal(0))
+            if zigzag
+            else first_close + Decimal(offset) * Decimal("0.50")
+        )
         bars.append(
             Bar(
                 instrument_id=instrument.id,
@@ -113,13 +136,15 @@ def make_bars(
     return tuple(bars)
 
 
-def series_for(instrument: Instrument, sessions: list[date]) -> BarSeries:
+def series_for(
+    instrument: Instrument, sessions: list[date], zigzag: bool = False
+) -> BarSeries:
     return BarSeries(
         instrument_id=instrument.id,
         interval=Interval.DAY,
         series=Series.RAW,
         knowledge_time=KNOWLEDGE_TIME,
-        bars=make_bars(instrument, sessions),
+        bars=make_bars(instrument, sessions, zigzag=zigzag),
     )
 
 
@@ -175,8 +200,15 @@ def synthetic_ohlc(
     return highs, lows, closes
 
 
-def fixture_fetcher(sessions_by_instrument: dict[str, list[date]]):
-    """A fetcher that serves recorded sessions instead of calling a vendor."""
+def fixture_fetcher(
+    sessions_by_instrument: dict[str, list[date]],
+    zigzag: frozenset[str] | set[str] = frozenset(),
+):
+    """A fetcher that serves recorded sessions instead of calling a vendor.
+
+    `zigzag` names the instruments that get the alternating path rather than the walking one - the
+    way to put two names in a fixture that are not the same bet. See `make_bars`.
+    """
 
     def _fetch(instrument, interval, knowledge_time, period=None):
         sessions = sessions_by_instrument.get(instrument.id, [])
@@ -184,7 +216,7 @@ def fixture_fetcher(sessions_by_instrument: dict[str, list[date]]):
             from swingdesk.market_data import VendorUnavailable
 
             raise VendorUnavailable(f"no fixture for {instrument.id}")
-        return series_for(instrument, sessions)
+        return series_for(instrument, sessions, zigzag=instrument.id in zigzag)
 
     return _fetch
 

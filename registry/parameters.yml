@@ -244,12 +244,36 @@ parameters:
     unit: correlation coefficient
     value: 0.70
     note: >-
-      Threshold on the correlation of daily returns over a 60-session lookback. The lookback is authored with the threshold and needs a registry entry of its own - see DR-006 section 7.
+      Pearson r on daily returns, measured over risk.correlation_lookback_sessions, above which two
+      names stop counting as independent bets. A candidate at or above this against ANY open
+      position is refused Skip/RISK; the sign is kept, so the test is r >= threshold and not
+      abs(r) >= threshold, because what DR-006 section 2 bounds is duplicate exposure rather than
+      any strong relationship. The size adjustment the course names alongside the threshold
+      (M49-T761) is still unspecified - this refuses rather than resizes, and DR-006 section 11
+      carries that as an open question.
+      This entry carried TWO note keys until 2026-08-23, so the YAML loader kept only the second
+      and the lookback the first one described was not in the loaded registry at all.
     status: assumed
     provenance: "assumed:DR-006"
-    read_by: none
+    read_by: swingdesk.trade_management.portfolio:correlation_limit
     named_in: [M49-T761, M51-T781]
-    note: The size adjustment applied above the threshold is also unspecified.
+    ui_editable: true
+
+  - id: risk.correlation_lookback_sessions
+    unit: sessions
+    value: 60
+    note: >-
+      The window risk.correlation_threshold is measured over: a quarter, long enough to be stable
+      and short enough to notice a regime change (DR-006 section 2). Authored with the threshold and
+      given its own entry on 2026-08-23 - two numbers in one parameter is the shape this registry
+      exists to prevent (DR-006 section 7), and it stayed that way only while nothing computed a
+      correlation. Sessions where BOTH instruments have a return, so a halt on one side shortens
+      neither the window nor the claim; a pair with fewer than this many shared sessions reports
+      unavailable and does not refuse.
+    status: assumed
+    provenance: "assumed:DR-006"
+    read_by: swingdesk.trade_management.portfolio:correlation_limit
+    named_in: [M49-T761, M51-T781]
     ui_editable: true
 
   - id: risk.max_concurrent_positions

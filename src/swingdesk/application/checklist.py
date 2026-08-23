@@ -165,8 +165,10 @@ EVALUATORS: dict[str, Evaluator] = {
         "observable on free data (costs.slippage_model is a MODEL, not a measurement)"
     ),
     "exposure_within_limits": _unavailable(
-        "open risk is computable from the position store; sector, currency and event buckets are "
-        "not - risk.max_sector_risk and friends are unset"
+        "open risk and correlation to the book are both enforced at step 6; the SECTOR, currency "
+        "and event buckets this item also requires are not - there is no sector source, and "
+        "DR-006 8.7 makes the ETF look-through guard a precondition of building one. Half an "
+        "answer is not an answer"
     ),
 }
 

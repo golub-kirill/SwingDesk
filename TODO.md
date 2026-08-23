@@ -334,10 +334,27 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       than random**. The reflex to cut exposure when vol rises would have made this worse. Full
       argument in `DR-006` §8.
 
-- [ ] **`[v]` DR-006's last two: sector and correlation. §3 called them UNEVALUABLE and that is
-      WRONG — both are buildable today.** This is the plan; nothing here is blocked on a ruling.
-      **a. Correlation is not blocked at all.** §3 says "nothing computes a correlation matrix" — a
-      statement about missing CODE, not missing data. Measured 2026-08-22: the full **1152 × 1152**
+- [x] **`[v]` The CORRELATION cap is WIRED — built 2026-08-23 (`DR-006` §11).** Item **a** below is
+      done. A candidate whose daily returns correlate at or above `risk.correlation_threshold` with
+      any OPEN position leaves with `Skip` / `RISK` at step 6b, right after the book cap.
+      `risk.correlation_lookback_sessions` = 60 is a **new parameter**: the window had been prose
+      inside the threshold's own entry, and that entry carried two `note:` keys, so the loader kept
+      the second and the window was not in the loaded registry at all (`DR-006` §7, worse than the
+      item said). Both stay `assumed:DR-006` and **unratified** — §8.4's condition was a ruling on
+      numbers whose checks run, and building the check enables that ruling rather than replacing it.
+      **Four readings are authored and one wants an owner ruling:** it REFUSES rather than resizes,
+      and the size adjustment `RISK_SPEC.md` §4 names alongside the threshold is still unspecified.
+      The other three — sign kept (`r >=`, not `|r| >=`), the window is the last 60 SHARED sessions,
+      and a candidate already in the book refuses at r = 1 — are recorded in §11.3.
+      **Do not confuse the two failure directions**: an unset parameter refuses every candidate; a
+      pair that could not be measured refuses none and reports `UNAVAILABLE`.
+
+- [ ] **`[v]` DR-006's last one: SECTOR. §3 called it UNEVALUABLE and that is WRONG — it is
+      buildable today.** This is the plan; nothing here is blocked on a ruling. Item **a** is done
+      (see above) and is kept for the measurement it carries.
+      **a. Correlation is not blocked at all. DONE 2026-08-23.** §3 says "nothing computes a
+      correlation matrix" — a statement about missing CODE, not missing data. Measured 2026-08-22:
+      the full **1152 × 1152**
       matrix over 60 sessions of daily returns builds from the existing store in **0.09 s**. Of
       662,976 pairs, **1.57% sit at r ≥ 0.70**; median r = 0.091, p99 = **0.759**, so the threshold
       is neither vacuous nor over-broad. **Build:** compute it in the allocation path, refuse a

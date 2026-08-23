@@ -44,7 +44,7 @@ So "candidates exceed capital" almost never means the cash ran out. It means one
 | one position's share of the account | `risk.max_position_value` | 2500 | yes |
 | order size against liquidity | `risk.liquidity_cap_order_to_adtv_pct` | 1.0% | yes |
 | risk concentrated in one sector or theme | `risk.max_sector_risk` | 2R | **no** — no sector source |
-| duplicate economic exposure | `risk.correlation_threshold` | 0.70 | **no** — nothing computes a correlation matrix |
+| duplicate economic exposure | `risk.correlation_threshold` | 0.70 over 60 sessions | yes — **enforced** |
 
 **All six were `unset` when this document was written.** `DR-006-portfolio-risk-block.md` proposed
 values for them on 2026-08-08 (`assumed:DR-006`, awaiting ratification), and that record's §3 carries
@@ -56,6 +56,15 @@ project did not have when §1 of that record was written says a gap exit loses �
 1R, so a whole-book gap session costs 10.15R and the −15R drawdown pause is 1.5 sessions away, not
 the two and a half §1 designed for. Four restores the intent. The two rows still marked **no** are
 `assumed` and unratified; `DR-006` §8.4 shows both are buildable and neither is built.
+
+**Updated 2026-08-23: the correlation row moved to enforced.** A candidate whose daily returns
+correlate at or above `risk.correlation_threshold` with any OPEN position leaves with `Skip` / `RISK`
+(`DR-006` §11). The window it is measured over is now its own parameter,
+`risk.correlation_lookback_sessions` = 60 — it had been prose inside the threshold's registry note,
+where nothing could read it. **The value stays `assumed` and unratified**: §8.4's condition was that
+the owner rules on numbers whose checks actually run, and building the check is what makes that
+ruling possible, not a substitute for it. `risk.max_sector_risk` is the one row still marked **no**,
+and the ETF-look-through degeneracy guard §8.7 names is a precondition of moving it.
 
 Two things follow, and they are different:
 
@@ -203,6 +212,13 @@ directly, with an ETF look-through), and the vendor fabricates that look-through
 degeneracy guard is a precondition rather than a refinement (§8.7). What is genuinely missing is only
 the **point-in-time** sector, which restricts a backtest and not live admission. The bullets are kept
 as written because they are what was believed; neither is a reason the two caps stay unratified.
+
+**And the correlation bullet is now closed, 2026-08-23.** `derived_observations/correlation.py`
+computes it and `trade_management/portfolio.py` spends it, so *"nothing computes one"* is no longer
+true of this tree. Note what it is not: the matrix is never built. A candidate is correlated against
+the OPEN BOOK — at most `risk.max_concurrent_positions` comparisons, not 662,976 — because the pair
+that matters is candidate-to-held, and candidate-to-candidate is a ranking (§6 rule 4). The sector
+bullet stands.
 
 **Allocation is therefore specified ahead of its first use, deliberately** — the same reason the
 intrabar policy in `EXECUTION_MODEL.md` §4 was written before a target existed. Written now it costs

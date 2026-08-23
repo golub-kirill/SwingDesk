@@ -5,9 +5,10 @@ date:       2026-08-08
 status:     accepted — partially ratified by the owner 2026-08-22 (four of six; sector and
             correlation stay proposed, §8.4)
 parameters: risk.max_open_risk, risk.max_concurrent_positions, risk.max_sector_risk,
-            risk.correlation_threshold, risk.max_position_value,
-            risk.liquidity_cap_order_to_adtv_pct
-components: none - swingdesk.trade_management.portfolio enforces the book caps,
+            risk.correlation_threshold, risk.correlation_lookback_sessions,
+            risk.max_position_value, risk.liquidity_cap_order_to_adtv_pct
+components: none - swingdesk.trade_management.portfolio enforces the book and correlation caps,
+            swingdesk.derived_observations.correlation supplies the statistic,
             swingdesk.trade_management.sizing the position-value cap
 implemented_by: src/swingdesk/trade_management/portfolio.py :: risk.max_open_risk
 ```
@@ -408,3 +409,103 @@ caps above: they are the ones §8.2 shows acting on the failure mode that actual
 - [ ] **`risk.liquidity_cap_order_to_adtv_pct` is ratified and still reads nothing.** §2 said it
       would not bind until the account is roughly 20× larger, which is why it was not built here.
       That is a reason to defer it, not a reason for it to be invisible.
+
+---
+
+## 11. The correlation cap, built 2026-08-23
+
+§8.4 established that this constraint was buildable and §9.4 recorded that it was not built. This
+section is that gap closed. **It changes nothing about the parameter's status:**
+`risk.correlation_threshold` is still `assumed:DR-006` and still unratified, because §8.4's
+condition was that the owner rules on numbers *whose checks actually run* — and building the check
+is what makes that ruling possible rather than a substitute for it.
+
+### 11.1 The second number stopped being a note
+
+§7 carried this as an open item: *"the 60-session window it is measured over lives in a note. Two
+numbers in one parameter is the shape this registry exists to prevent."* It was worse than the item
+said. The threshold's entry carried **two `note:` keys**, so PyYAML kept the second and discarded
+the first — the one describing the window. The lookback was not merely unreadable by code; it was
+not in the loaded registry at all.
+
+`risk.correlation_lookback_sessions` = **60**, `assumed:DR-006`, is the fix, and both are read
+together by one function for the reason §1 gives about the book's pair: a threshold measured over an
+unknown window is not a threshold.
+
+### 11.2 Where it lives
+
+| | |
+|---|---|
+| The statistic | `src/swingdesk/derived_observations/correlation.py` — `daily_returns`, `pearson`, `measure` |
+| The verdict | `src/swingdesk/trade_management/portfolio.py` — `correlation_limit`, `assess_correlation` |
+| The candidate path | `application/pipeline.py`, step 6b, immediately after the book cap |
+| The display | `presentation/report.py`, a `CORRELATION` block, plus a per-candidate line |
+
+The statistic sits in **Derived Observations** because that is where the course's own component
+registry files both topics that name it — `M49-T0761` and `M51-T0781` — and a derived observation
+does not own a decision. The verdict is a risk decision and sits with the other one.
+
+**The matrix is never built.** §8.4 measured the full 1152 × 1152 matrix at 0.09 s and that
+measurement is what established the constraint was evaluable; it is not what the run does. A
+candidate is correlated against the OPEN BOOK — at most `risk.max_concurrent_positions` comparisons
+— because the pair that matters is candidate-to-held. Candidate-to-candidate is a ranking, and
+`rs.ranking_method` is `unset` (§9.2 rule 2, reused unchanged).
+
+### 11.3 Four readings this build had to take, all authored
+
+None of these is in the course, and each could have gone the other way.
+
+1. **It refuses; it does not resize.** `RISK_SPEC.md` §4 lists *"correlation threshold and its size
+   adjustment"* as one unsupplied input, and the adjustment is the half nobody has specified. A
+   refusal is the fail-closed reading and it is what `TODO.md` §4 planned. **This is the item most
+   worth an owner ruling** — halving the size of a correlated candidate is a defensible alternative
+   and would need a number this record does not have.
+2. **The sign is kept: `r >= threshold`, not `|r| >= threshold`.** What §2 bounds is *duplicate*
+   exposure. This system is long-only, so a strongly negative r is the opposite arrangement, and
+   refusing it would forbid the one pairing that reduces the exposure the cap exists to bound.
+3. **The window is the last 60 sessions the pair SHARES**, not the last 60 calendar sessions
+   intersected. A halt or a vendor gap on one side removes that session from the pair rather than
+   from the window, so the statistic is always computed on the number of observations it claims. The
+   alternative silently measures 41 sessions and reports a 60-session correlation.
+4. **A candidate already in the book meets itself at r = 1 and is refused.** Adding to a position is
+   the most complete duplicate exposure there is, and the course supplies no pyramiding rule that
+   would tell it apart from a second bet. Recorded as a consequence rather than discovered later.
+
+### 11.4 The two failure directions, which look alike and are opposite
+
+This is the part most likely to be broken by a later change, so it is stated as a rule rather than
+left in the code.
+
+- **An UNSET threshold or lookback refuses every candidate** and names the parameter. That is the
+  registry failing closed on a number nobody ruled (`AGENTS.md` §3), and it happens outside the
+  position-store branch, exactly as the book cap does.
+- **A pair that could not be MEASURED refuses nothing.** Too little overlapping history, or a side
+  that did not move, is a gap in the *system*. §3 of this record is explicit: a check the system was
+  never able to perform must not fail closed into a blanket refusal, because that stops the system
+  entirely while looking like risk discipline. It is recorded, counted, and printed as `UNAVAILABLE`
+  — and a candidate admitted that way is reported as **unchecked**, never as independent.
+
+`pearson` returns `None` rather than `0.0` for a constant series, for the same reason: zero is the
+strongest available claim of independence and a flat series is the weakest available data.
+
+### 11.5 What it cost elsewhere
+
+- **The test fixture had to gain a second price path.** `conftest.make_bars` walks one arithmetic
+  sequence, so every instrument in the suite correlated with every other at exactly **r = 1.00** —
+  which proves the cap bites and cannot prove it admits anything. `make_bars(zigzag=True)` is the
+  alternating path; the two measure about **-0.03** apart over a year, and one test asserts that
+  premise so the admitting tests cannot go green for the wrong reason.
+- **The stored replay case gained both parameters**, re-recorded deliberately. `output_hash` was
+  unchanged at `0a3858a76dbe8d0b` — that case passes no position store, so no candidate reaches the
+  measurement — and only `config_hash` moved. A determinism gate whose hash had moved here would
+  have been reporting a real change; it did not.
+- **Track A is unaffected.** `pipeline.py` is frozen under `DR-015` §3, and this change does move
+  decision output — but the counter restarted on 2026-08-22 and reads from
+  `tools/track_a_streak.py`, never from this document (`AGENTS.md` §10.6).
+
+### 11.6 What is still not built
+
+`risk.max_sector_risk` alone. §8.7's degeneracy guard remains its precondition: the vendor answers
+`NEAR` → healthcare 100.0% for a short-maturity bond fund, confidently and wrongly, and consuming
+that would spend an entire sector budget on a fiction. Nothing in this section makes that closer or
+further away.

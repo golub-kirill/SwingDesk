@@ -50,16 +50,18 @@
     "risk.per_trade_pct": "1.0",
     "data.freshness_window": 2,
     "risk.max_open_risk": 4,
-    "risk.max_concurrent_positions": 4
+    "risk.max_concurrent_positions": 4,
+    "risk.correlation_threshold": "0.70",
+    "risk.correlation_lookback_sessions": 60
   },
   "manifest": {
-    "run_id": "run-20260115T210000Z-6502f1c8",
+    "run_id": "run-20260115T210000Z-11a39aa1",
     "started_at": "2026-01-15T21:00:00Z",
     "mode": "replay",
-    "code_hash": "70c8088",
+    "code_hash": "8706095",
     "code_dirty": true,
-    "config_hash": "269aeb2f9993e9c7",
-    "snapshot_id": "snap-20260115T210000Z-6502f1c8",
+    "config_hash": "2da3f6e0d58705b3",
+    "snapshot_id": "snap-20260115T210000Z-11a39aa1",
     "component_versions": {
       "M18-T0280-v5.0": 1
     },
@@ -71,5 +73,5 @@
     "output_hash": "0a3858a76dbe8d0b",
     "completed_at": "2026-01-15T21:00:00Z"
   },
-  "inputs_digest": "d345d6788b29100c"
+  "inputs_digest": "b92afdfecef719fe"
 }
