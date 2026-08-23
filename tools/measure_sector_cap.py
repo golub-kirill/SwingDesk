@@ -16,19 +16,25 @@ positions open that day, scored against candidate caps.
 rule 4 forbids falling back to any order the system happens to have. A uniform draw is the only
 assumption that does not smuggle in a ranking the system refuses to make.
 
-**Three limitations, stated because they bound every number below.**
+**Three limitations, stated because they bound every trade-log number below.**
 
   1. The sectors are TODAY's, not the ones in force in 2016 (`DR-006` §8.4 d). A name that changed
      sector is misfiled for its whole history.
   2. 59 usable instruments is a thin cross-section, and it leans heavily financial - financial
-     services is the most-represented sector on 57% of days.
+     services is the most-represented sector on 57% of days. **`--wide` answers this one**, by
+     measuring the sector mix and the correlation cross-tab over the whole admitted universe, which
+     needs no trade log at all. Measured that way the universe is NOT financial-heavy: the 57% is a
+     property of these 68 names (`DR-006` §16.1).
   3. Nine of the 68 are refused by §8.7's degeneracy guard and contribute to no sector at all, so
      the measured concentration is an understatement by however much they hold.
 
-Network tool only in the sense that its INPUT came from one: classifications are read from a saved
-file produced by the same vendor path `tools/refresh_classifications.py` uses. Re-run offline.
+**`--wide` cannot fix limitation 1, and cannot touch OUTCOMES at all.** Expectancy and gap
+clustering need a trade log; only a backtest over a wider sample moves those.
 
-    python tools/measure_sector_cap.py \\
+Network tool only in the sense that its INPUT came from one: classifications are read from a saved
+file, or from the store `tools/refresh_classifications.py` fills. Re-run offline.
+
+    python tools/measure_sector_cap.py --wide \\
         --classifications docs/decisions/measurements/sector-classifications-2026-08-23.json \\
         --out docs/decisions/measurements/sector-cap-calibration-2026-08-23.json
 """
@@ -89,6 +95,16 @@ DRAWS_PER_DAY = 200
 #: name that stale.
 RECENT_WINDOW = 200
 
+#: The book this system caps: three held plus the candidate is the fourth.
+BOOK = 3
+
+#: The ratified correlation threshold, as a literal. This measurement is evidence ABOUT that
+#: value and must not silently move when someone edits the registry.
+CORRELATION_THRESHOLD = Decimal("0.70")
+
+#: Books drawn from the universe. Enough that the rarest cap moves in the third decimal.
+UNIVERSE_DRAWS = 20_000
+
 
 def _exposures(path: Path) -> dict[str, Exposure]:
     """Saved vendor classifications, judged by the same guard the run uses."""
@@ -113,16 +129,16 @@ def _exposures(path: Path) -> dict[str, Exposure]:
 
 
 def _universe_cross_section(data: Path) -> dict[str, object]:
-    """The same two structural questions §14 asked of 68 names, asked of the whole universe.
+    """The same questions §14 asked of 68 names, asked of the whole admitted universe.
 
-    §14.5 limit 2 is the reason this exists: 59 usable instruments is a thin cross-section and it
-    leaned heavily financial, so the refusal rates it produced were more likely overstated than
-    understated. The universe is what a run actually nominates from, and it needs no trade log -
-    only stored bars and stored classifications - so it can be measured at full width whenever the
-    classification pass has run.
+    §14.5 limit 2 is why this exists: 59 usable instruments is a thin cross-section and it leaned
+    heavily financial, so every refusal rate it produced was more likely overstated than
+    understated. The universe is what a run actually nominates from, it needs no trade log - only
+    stored bars and stored classifications - and it can therefore be measured at full width as soon
+    as `tools/refresh_classifications.py` has run.
 
-    What it still CANNOT widen: anything needing trade outcomes. Those are bound to `PR-005`'s
-    68-name sample until a backtest runs over a wider one.
+    What this still CANNOT widen: anything needing trade OUTCOMES. Expectancy and the same-session
+    gap stay bound to `PR-005`'s 68-name sample until a backtest runs over a wider one.
     """
     registry = ParameterRegistry.load()
     built = universe_builder.rule_from_registry(registry)
@@ -135,26 +151,36 @@ def _universe_cross_section(data: Path) -> dict[str, object]:
         ClassificationStore(data / "classifications.duckdb") as store,
         DirectoryStore(data / "directory.duckdb") as directory,
     ):
-        as_of = bars.latest_knowledge_time()
-        if as_of is None:
+        if bars.latest_knowledge_time() is None:
             return {"unavailable": "the bar store holds nothing"}
+        # NOW, not the bar store's latest knowledge time.
+        #
+        # Both stores are read as-of, and they are filled by DIFFERENT passes at different
+        # instants: bars by the evening run, classifications by `refresh_classifications.py`
+        # whenever it is run. Reading the classification store at the BAR store's as-of therefore
+        # hides every classification pulled since the last bar refresh - which on a first run is
+        # all of them, and this tool duly reported zero classified over a store holding 1,148. The
+        # live path has it right: `pipeline.py` reads both at the RUN's clock, which is what this
+        # reproduces.
+        as_of = datetime.now(UTC)
         selection = universe_builder.select(
             directory, bars, rule, as_of, parameters=parameters
         )
-        members = sorted(selection.members)
+        members = sorted(member.instrument.id for member in selection.members)
+        stored = {symbol: store.as_of(symbol, as_of) for symbol in members}
         judged = {
-            symbol: look_through(store.as_of(symbol, as_of), symbol) for symbol in members
+            symbol: look_through(classification, symbol)
+            for symbol, classification in stored.items()
         }
-        usable = {s: e for s, e in judged.items() if e.is_available}
+        usable = {symbol: e for symbol, e in judged.items() if e.is_available}
 
-        # Sector MIX of the universe: how much of it sits in each sector, by weight.
+        # The sector MIX of the universe, by weight. What §14.5 limit 2 was really about.
         mix: dict[str, Decimal] = defaultdict(Decimal)
         for exposure in usable.values():
             for weight in exposure.weights:
                 mix[weight.sector] += weight.weight
         total = sum(mix.values()) or Decimal(1)
 
-        # And the correlation cross-tab, at full width.
         dominant = {
             symbol: max(exposure.weights, key=lambda weight: weight.weight).sector
             for symbol, exposure in usable.items()
@@ -165,26 +191,25 @@ def _universe_cross_section(data: Path) -> dict[str, object]:
                 bars.as_of(symbol, Interval.DAY, Series.RAW, as_of)
             )
             if len(stream) >= 60:
-                # Truncated to the most recent sessions before correlating. `measure` takes the
-                # last 60 the pair SHARES and is O(history) per call otherwise, and there are
-                # hundreds of thousands of pairs over streams reaching back decades. RECENT_WINDOW
-                # leaves generous slack for holidays and halts; a pair that cannot find 60 shared
-                # sessions inside it reports `unavailable` and is skipped, which is the right answer
-                # for a name that stale anyway.
                 streams[symbol] = stream[-RECENT_WINDOW:]
 
     names = sorted(streams)
     same: list[float] = []
     cross: list[float] = []
+    #: The pairs the correlation cap would refuse, kept so one draw can be scored against BOTH
+    #: caps - which is how step 6 applies them, one after the other on the same book.
+    hot: set[frozenset[str]] = set()
     for index, left in enumerate(names):
         for right in names[index + 1:]:
             measured = correlation.measure(streams[left], streams[right], 60)
             if measured.r is None:
                 continue
             (same if dominant[left] == dominant[right] else cross).append(float(measured.r))
+            if measured.r >= CORRELATION_THRESHOLD:
+                hot.add(frozenset((left, right)))
 
     def summarise(values: list[float]) -> dict[str, float]:
-        over = sum(1 for value in values if value >= 0.70)
+        over = sum(1 for value in values if value >= float(CORRELATION_THRESHOLD))
         return {
             "pairs": len(values),
             "median_r": statistics.median(values),
@@ -196,9 +221,11 @@ def _universe_cross_section(data: Path) -> dict[str, object]:
         "admitted": len(members),
         "measured_with_bars": selection.measured,
         "eligible": selection.eligible,
-        "coverage": selection.coverage,
-        "classified": len(judged) - sum(1 for e in judged.values() if e.unavailable
-                                        and "no classification is stored" in e.unavailable),
+        "coverage": float(selection.coverage),
+        # Counted from the STORE rather than inferred from a refusal message. Three different
+        # facts, and a reader needs all three apart: admitted by the rule, classified at all, and
+        # usable once `DR-006` §8.7's guard has judged the answer.
+        "classified": sum(1 for value in stored.values() if value is not None),
         "usable": len(usable),
         "sector_mix": {sector: float(mix[sector] / total) for sector in sorted(mix)},
         "correlation_cross_section": {
@@ -206,6 +233,50 @@ def _universe_cross_section(data: Path) -> dict[str, object]:
             "same_dominant_sector": summarise(same) if same else {},
             "different_sector": summarise(cross) if cross else {},
         },
+        "four_position_books": _draw_from_universe(names, usable, hot),
+    }
+
+
+def _draw_from_universe(
+    names: list[str],
+    usable: dict[str, Exposure],
+    hot: set[frozenset[str]],
+) -> dict[str, object]:
+    """Four-position books drawn from the ADMITTED UNIVERSE, scored against both caps.
+
+    The model §14.2 could not use. There the book had to come from `PR-005`'s open positions,
+    because a cap's bite depends on what is held and only the trade log said what was held - but
+    those 68 names are one study's sample, and they proved to be both more correlated with each
+    other and more concentrated by sector than the universe a run actually nominates from.
+
+    Uniform, for the reason §14.1 gives: `rs.ranking_method` is `unset`, and a weighted draw would
+    smuggle in an ordering the system refuses to make.
+
+    **Both caps are scored on the SAME draw**, because that is how step 6 applies them - book, then
+    correlation, then sector. Measuring each on a book of its own would let the two refusal rates
+    be added, and they overlap.
+    """
+    rng = random.Random(SEED)
+    binds = {str(cap): 0 for cap in CANDIDATE_CAPS}
+    correlated = 0
+    for _ in range(UNIVERSE_DRAWS):
+        drawn = rng.sample(names, BOOK + 1)
+        book, candidate = drawn[:BOOK], drawn[BOOK]
+        if any(frozenset((candidate, held)) in hot for held in book):
+            correlated += 1
+        by_sector: dict[str, Decimal] = defaultdict(Decimal)
+        for name in drawn:
+            for weight in usable[name].weights:
+                by_sector[weight.sector] += weight.weight * R_PER_POSITION
+        top = max(by_sector.values()) if by_sector else Decimal(0)
+        for cap in CANDIDATE_CAPS:
+            if top > cap:
+                binds[str(cap)] += 1
+    return {
+        "books": UNIVERSE_DRAWS,
+        "seed": SEED,
+        "correlation_cap_refuses": correlated / UNIVERSE_DRAWS,
+        "sector_cap_refuses": {cap: count / UNIVERSE_DRAWS for cap, count in binds.items()},
     }
 
 

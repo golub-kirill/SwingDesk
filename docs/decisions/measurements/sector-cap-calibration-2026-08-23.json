@@ -56,6 +56,52 @@
     "WEAT"
   ],
   "source": "PR-005-trades.csv, arm NONE, regime 1x",
+  "universe_cross_section": {
+    "admitted": 1148,
+    "classified": 1148,
+    "correlation_cross_section": {
+      "different_sector": {
+        "fraction_over_threshold": 0.008157894736842105,
+        "median_r": 0.0734990463294502,
+        "p90_r": 0.3640846061396193,
+        "pairs": 452200
+      },
+      "instruments": 1023,
+      "same_dominant_sector": {
+        "fraction_over_threshold": 0.06382435899253044,
+        "median_r": 0.20695160993870704,
+        "p90_r": 0.6182180287859376,
+        "pairs": 70553
+      }
+    },
+    "coverage": 0.2827,
+    "eligible": 13136,
+    "four_position_books": {
+      "books": 20000,
+      "correlation_cap_refuses": 0.04155,
+      "sector_cap_refuses": {
+        "1.33": 0.49645,
+        "2": 0.14155,
+        "3": 0.00655
+      },
+      "seed": 20260823
+    },
+    "measured_with_bars": 3713,
+    "sector_mix": {
+      "basic materials": 0.05576720448727668,
+      "communication services": 0.0348215360111265,
+      "consumer cyclical": 0.10042569929924669,
+      "consumer defensive": 0.045216266563675375,
+      "energy": 0.05036856826169251,
+      "financial services": 0.17203006336955723,
+      "healthcare": 0.14644920019968738,
+      "industrials": 0.1345225034899835,
+      "real estate": 0.05399740820886353,
+      "technology": 0.17105831275902394,
+      "utilities": 0.035343237349866684
+    },
+    "usable": 1023
+  },
   "usable": [
     "AEP",
     "AVB",

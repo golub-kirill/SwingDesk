@@ -868,4 +868,109 @@ What it does is retire the reading in §11.3 as *provisional* and replace it wit
 3. **86 same-session gap events above the threshold** is a small count, which is why the lift
    carries a bootstrapped interval rather than a point estimate.
 4. **68 instruments, one arm, one regime.** The same thin cross-section §14.5 names, and it leans
-   heavily financial.
+   heavily financial. **§16 closes this one at full width, the same day, and it moved both
+   calibrations.**
+
+---
+
+## 16. The wide cross-section, 2026-08-23 — and what it corrected
+
+§14.5 limit 2 and §15.5 limit 4 were the same complaint: 59 usable instruments out of `PR-005`'s
+68-name sample is thin, and it leaned heavily financial, so every refusal rate taken from it
+described that sample rather than the universe a run nominates from.
+
+**That limit is now closed**, because the two structural questions need no trade log — only stored
+bars and stored classifications. `tools/refresh_classifications.py --universe` classified the whole
+admitted universe on 2026-08-23: **1,148 of 1,148, zero vendor failures, 125 unusable** once §8.7's
+guard had judged them (10.9%). Reproduce the rest with:
+
+```bash
+python tools/measure_sector_cap.py --classifications docs/decisions/measurements/sector-classifications-2026-08-23.json --wide
+```
+
+### 16.1 The universe is not financial-heavy. That was the sample.
+
+| sector | share of the admitted universe, by weight |
+|---|---|
+| financial services | 17.2% |
+| technology | 17.1% |
+| healthcare | 14.6% |
+| industrials | 13.5% |
+| consumer cyclical | 10.0% |
+| basic materials · real estate · energy · consumer defensive · utilities · communication services | 3.5–5.6% each |
+
+Five sectors between 10% and 17%, then a tail. **The *"financial services was the most-represented
+sector on 57% of days"* figure in §14.5 is a fact about `PR-005`'s 68 names and nothing else**, and
+carrying it as a property of the universe would have been exactly the kind of borrowed conclusion
+§10.3 of `AGENTS.md` warns about — inside this project rather than from outside it.
+
+### 16.2 The correlation cross-tab holds, and the non-redundancy argument gets stronger
+
+Over 1,023 usable instruments and 522,753 pairs, against the 59-instrument version in §14.3:
+
+| | pairs | median r | p90 | at r ≥ 0.70 |
+|---|---|---|---|---|
+| same dominant sector | 70,553 | +0.207 | +0.618 | **6.38%** |
+| different sector | 452,200 | +0.073 | +0.364 | **0.82%** |
+
+The **lift survives** — 7.8× here against 9.8× on the narrow sample, the same order — so sector
+membership really does predict correlation.
+
+But the absolute rate fell by more than half, from 15.2% to **6.38%**. So **93.6% of same-sector
+pairs are not caught by the correlation cap**, against 85% on the narrow sample. §14.3's conclusion
+that the two caps do non-redundant work is not merely intact; it is stronger than the narrow data
+suggested.
+
+### 16.3 What each cap costs on the real universe — and one figure moved the wrong way
+
+20,000 four-position books drawn uniformly from the admitted universe, both caps scored on the
+**same** draw because that is how step 6 applies them:
+
+| | refuses |
+|---|---|
+| correlation cap (r ≥ 0.70 with any held name) | **4.15%** |
+| sector cap at 1.33R | **49.65%** |
+| sector cap at **2R** | **14.16%** |
+| sector cap at 3R | **0.66%** |
+
+**The correlation cap is far cheaper than §15.1 estimated** — 4.15% against 20.2%. That estimate
+came from `PR-005`'s own book, and those 68 names were markedly more correlated with each other
+than the universe is. The corrected figure makes the cap a rarely-binding rule aimed at a 5× effect,
+which is the best shape a risk control can have.
+
+**The sector cap at 2R is slightly MORE expensive than §14.2 estimated**, not less — 14.16% against
+11.3%. Recorded because the expectation ran the other way: a balanced universe was assumed to
+collide less, and with four draws across eleven roughly-equal sectors it collides more. The
+birthday arithmetic is the whole of it, and guessing the sign of that was a mistake.
+
+**1.33R nearly doubled, to 49.65%.** With four slots and eleven sectors it now refuses **half of
+all books**, which is close to forbidding any repeated sector at all.
+
+### 16.4 What this does to the two recommendations
+
+**Both stand, and both are better supported than they were.**
+
+- **Sector: keep 2R.** §14.4 argued it on the narrow data; the wide data makes the alternative
+  worse rather than the recommendation better. 1.33R refusing half of every book is not a
+  concentration limit, it is a diversification mandate the course never asked for, and §16.2 shows
+  most of what it would refuse is not correlated. 3R remains decorative at 0.66%, twice measured.
+- **Correlation: keep the refusal.** §15.4's argument was that refusing costs nothing measurable
+  while halving would keep half of a five-fold gap exposure. §16.3 adds that the rule fires on only
+  4.15% of books, so what it costs is smaller again — and a size adjustment nobody has authored is
+  being weighed against a rule that rarely triggers.
+
+**Neither ruling is taken here.** §13 still carries both, and both parameters stay `assumed:DR-006`.
+
+### 16.5 What is still narrow, and it is the important half
+
+**Everything about OUTCOMES.** §15.2's expectancy, §15.3's same-session gap lift, and §14.2's
+book-drawn-from-held-positions all need a trade log, and the only trade log this project holds
+covers 68 names from a single arm of `PR-005` — whose registered hypothesis was rejected. The
+structural half is now measured at full width; the behavioural half is not, and no amount of
+classification fixes that. It needs a backtest over a wider sample, which is a study rather than a
+calibration.
+
+`PR-005`'s own sample was 320 symbols, of which the liquidity rule rejected 215, short history
+excluded 28, and the vendor failed on 9 — 68 survivors. **The universe is 1,148 admitted of 3,713
+with bars, out of 13,136 eligible: coverage is 28.3%**, and that, rather than the universe rule, is
+what bounds a wider study today.

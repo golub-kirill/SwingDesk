@@ -50,16 +50,17 @@ so PyYAML kept the second and silently discarded the first — the one describin
 window. `DR-006` §7 had asked for the window to get its own entry on principle. It turned out not to
 be a principle: the number was not in the loaded registry at all.
 
-**The one thing that changes for a fresh session: the sector cap's input starts EMPTY.**
-`swingdesk scan` opens `data/classifications.duckdb`, and nothing fills it until
+**The classification store is POPULATED as of 2026-08-23**: 1,148 of 1,148 admitted names, zero
+vendor failures, 125 unusable once §8.7's guard had judged them. So the sector cap is live on 89.1%
+of the universe rather than reporting `unavailable` for everything. Top it up after coverage grows:
 
 ```bash
-python tools/refresh_classifications.py --budget 200
+python tools/refresh_classifications.py --universe --budget 1200
 ```
 
-has run. Until then every candidate is admitted **unchecked** and the report says so on every run.
-That is `DR-006` §3 being obeyed rather than a fault — but the cap protects nothing yet, and
-`unchecked` in the SECTOR block is a coverage number to close, not a verdict to read past.
+It is incremental — unclassified names queue first — so a re-run costs only the new ones. A
+candidate still reporting `admitted UNCHECKED` in the SECTOR block is a coverage number to close,
+not a verdict to read past.
 
 ## 3. Four things a fresh session must not get wrong
 
@@ -86,6 +87,24 @@ That is `DR-006` §3 being obeyed rather than a fault — but the cap protects n
   refuse genuine sector ETFs, which are the instruments this cap most needs to see. The known
   weakness is written down in `DR-006` §12.1: a false positive fails toward `unavailable`, which
   ADMITS.
+
+## 3a. The measurements were widened, and one figure moved the wrong way
+
+`DR-006` §16. Both calibrations were first taken on `PR-005`'s 68-name sample; the structural half
+is now measured over the whole admitted universe, which needs no trade log.
+
+- **The universe is not financial-heavy.** Five sectors sit between 10% and 17%. The *"57% of
+  days"* figure §14.5 carried is a property of those 68 names.
+- **The correlation cap is far cheaper than first measured**: it refuses **4.15%** of
+  universe-drawn books, not the 20.2% `PR-005`'s own book suggested — its names were much more
+  correlated with each other than the universe is.
+- **The sector cap at 2R is slightly MORE expensive than first measured**, 14.16% against 11.3%.
+  Recorded because the expectation ran the other way. 1.33R nearly doubled to **49.65%**, which is
+  half of every book.
+- **What is still narrow is the important half.** Everything about OUTCOMES — expectancy, the
+  same-session gap lift — needs a trade log, and the only trade log this project holds is 68 names
+  from a single arm of `PR-005`, whose registered hypothesis was rejected. Coverage is **28.3%**,
+  and that is what bounds a wider one.
 
 ## 4. Still on the owner
 
