@@ -196,13 +196,22 @@ Pre-registrations in `prereg/`, results in `prereg/results/`, decision records i
 |---|---|---|
 | `PR-001` | Do the trend definitions select the same instruments? | **REJECT** — overlaps as low as 0.30 |
 | `PR-005` | Do their different populations then behave differently? | **REJECT** — every arm inside the ungated interval |
-| `PR-002` | Does a regime label carry decision-relevant information? | **ACCEPT** — and ~2% of trades missing at −2R would erase it |
+| `PR-002` | Does a regime label carry decision-relevant information? | ~~**ACCEPT**~~ → **INCONCLUSIVE**, corrected 2026-08-16 — §6 permits `accept` only on both countries, and ~2% of trades missing at −2R would erase the effect anyway |
+| `PR-008`, `PR-010` | Is the spread level obtainable from daily OHLC? | **REJECT** — three estimators, all reading less on the universe than on nothing |
 
-Three refuted hypotheses and one fragile positive, from seven pre-registrations. A fourth analysis —
-the survivorship bound in `results/PR-002-report.md` — is **post-hoc and carries no verdict**; it is
-counted as a study run and never as a hypothesis tested. `screen.trend_definition` is closed by evidence;
-`regime.classifier_rule` is the first `validated` parameter and carries its bound in the registry
-note. Planning follows in `08-pm/ROADMAP.md`.
+The census is not written here. Derive it with `python tools/verify_study_summary.py`;
+`HANDOFF.md` §2 owns every measured count (`AGENTS.md` §10.5), and this paragraph carried a
+spelled-out study count that gate 14 could not see — it matches digits, and a count spelled in
+words is invisible to it. Gate 3f caught it instead, on the day a new study was filed.
+
+**Two claims here were stale until 2026-08-24 and both overstated the evidence.** `PR-002`'s verdict
+was corrected to `INCONCLUSIVE` on 2026-08-16 and this table still read `ACCEPT`; with it,
+`regime.classifier_rule` went from `validated` to **`assumed:PR-002`**. So the sentence calling it
+*"the first `validated` parameter"* was false, and **this project has zero `validated` parameters** —
+which is the single most important thing this page could have got wrong. The survivorship bound in
+`results/PR-002-report.md` remains **post-hoc and carries no verdict**: counted as a study run, never
+as a hypothesis tested. `screen.trend_definition` stays closed by evidence. Planning follows in
+`08-pm/ROADMAP.md`.
 
 ## Verification
 

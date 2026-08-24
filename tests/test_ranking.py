@@ -250,3 +250,14 @@ def test_the_path_form_locates_the_benchmark_by_SESSION_not_by_its_last_bar() ->
         "ZIG beats the flat benchmark on 3 of the 4 sessions in the window and ABC on 1. A window "
         "ending anywhere but the decision session ties them at 0.5 and the id order takes over."
     )
+
+
+def test_always_eligible_offers_every_bar_past_warmup_and_none_before() -> None:
+    """The trigger a cross-sectional family needs. `None` before warmup, not `False` - a name whose
+    score cannot be computed yet has nothing to answer with, and `run_book` counts that apart from
+    a rejection."""
+    from swingdesk.validation.backtest import AlwaysEligible
+
+    series = _series("AAA", ["100"] * 6)
+    trigger = AlwaysEligible(warmup=3)
+    assert [trigger(series, i) for i in range(6)] == [None, None, None, True, True, True]

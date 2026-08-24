@@ -24,6 +24,7 @@ from swingdesk.validation.backtest.book import (
 )
 from swingdesk.validation.backtest.costs import CostModel
 from swingdesk.validation.backtest.engine import (
+    AlwaysEligible,
     ArmResult,
     BacktestConfig,
     BreakoutHigh,
@@ -39,6 +40,7 @@ from swingdesk.validation.backtest.ranking import (
 )
 
 __all__ = [
+    "AlwaysEligible",
     "ArmResult",
     "BacktestConfig",
     "BookResult",
