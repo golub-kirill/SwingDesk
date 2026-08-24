@@ -98,12 +98,33 @@ def main() -> int:
             )
 
     # --- the index against the manifest -----------------------------------------------
-    indexed = {m.group(1) for line in README.read_text(encoding="utf-8").splitlines()
-               if (m := ROW.match(line))}
-    for number in sorted(indexed - seen_numbers):
+    indexed: dict[str, str] = {}
+    for line in README.read_text(encoding="utf-8").splitlines():
+        if m := ROW.match(line):
+            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            indexed[m.group(1)] = cells[-1] if cells else ""
+    for number in sorted(set(indexed) - seen_numbers):
         failures.append(f"docs/README.md: row {number!r} has no manifest entry")
-    for number in sorted(seen_numbers - indexed):
+    for number in sorted(seen_numbers - set(indexed)):
         failures.append(f"manifest: document {number!r} has no row in docs/README.md")
+
+    # The index's STATUS CELL against the manifest's copy of it. This gate's own docstring lists
+    # `REGIME_SPEC` / `EVENT_SPEC` / `CHART_SPEC` reading `planned` while all three existed as one
+    # of the four drifts it was written for - and it caught that only through each document's OWN
+    # header, which the manifest tracks. The index cell itself went unchecked, so on 2026-08-24 all
+    # three still read `planned` in `docs/README.md`, sixteen days after the manifest recorded
+    # `drafting`. A gate that names a defect in its docstring and does not test for it is the same
+    # shape as a hand-kept count (`AGENTS.md` §10.6): findable, and not true.
+    for doc in documents:
+        declared = doc.get("readme_status_text")
+        row_status = indexed.get(doc["display_number"])
+        if declared is None or row_status is None:
+            continue
+        if row_status != declared:
+            failures.append(
+                f"{doc['id']}: docs/README.md row {doc['display_number']!r} reads "
+                f"{row_status!r} but the manifest says {declared!r}"
+            )
 
     # --- every document is accounted for ----------------------------------------------
     catalogued = {doc["path"] for doc in documents if doc.get("path")}

@@ -70,14 +70,25 @@ point-in-time membership is not used, though `reference_data.universe.members()`
 studies do not call it. Direction and magnitude of the resulting bias are unknown. Tracked in
 `TODO.md` §5.
 
-## 6. Two ratified criteria are inert
+## 6. ~~Two ratified criteria are inert~~ One is, for two independent reasons
 
-`k.strategy_rejected` cannot fire — Track B evaluates on journalled trades only, and its benchmark
-comparison is not commensurable. See `HANDOFF.md` §5.
+`k.strategy_rejected` cannot fire, and **both blockers must clear before it ever can**
+(`EXPECTATION_MODEL.md` §9b): `criteria.yml` v1.1.0 settles that Track B evaluates on **journalled
+trades only**, so no backtest can fire it whatever else is true — and its benchmark comparison is
+**not commensurable**, because a per-trade R expectancy and a buy-and-hold return need a horizon and
+an exposure assumption to be compared at all.
 
-**UNRESOLVED:** this sentence says *two* and names *one*. Every other source in the tree means two
-*reasons*, not two criteria. Carried forward unchanged rather than silently corrected, because a
-migration preserves the record; the wording defect is tracked in `TODO.md` §3.
+**Resolved 2026-08-24. The heading was a wording defect and the count was the wrong noun.** It said
+*two* and named *one*; every other source in the tree means two *reasons*. Checked against the
+second candidate before concluding: `k.drawdown_pause` was the project's other inert gate — ratified
+against `validation.max_allowable_drawdown` while that parameter was `unset`, so its verdict was
+invariant across every input the system could produce — and `DR-007` gave it a value on 2026-08-08.
+`RULE_SPEC.md` §7 states the result exactly: **"The gate went from unable to fail to untested, which
+is progress and is not the same as working."** Untested is not inert, so it does not belong in this
+count, and nothing else in the tree does either.
+
+Struck through rather than rewritten, per `AGENTS.md` §10.5's own convention: a heading that stood
+for weeks and was wrong is worth more visible than absent.
 
 ## 7. Reaching v1 with no validated edge is a success, not a failure
 

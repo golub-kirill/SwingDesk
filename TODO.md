@@ -346,8 +346,19 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       v7.0's 7 (`RECONCILIATION_PLAN.md` §5). Ties to `USER_STORIES.md`:304 (US-004 unsatisfiable
       while `regime.classifier_rule` is contested).
 - [ ] **`[c]` G-3 next timebox.**
-- [ ] **`[c]` Test logon-mode behaviour.** Needs a log-out before 18:30 one evening, then read
-      `Last Run Time` against the trigger. Settles `AGENTS.md` §10.4's marked conjecture.
+- [ ] **`[v]` Test LOGON-mode behaviour — still open; the SLEEP half is now measured and the
+      answer is `lost`.** Needs a log-out before 18:30 one evening, then read `Last Run Time`
+      against the trigger. That half settles `AGENTS.md` §10.4's marked conjecture and a sleep does
+      not settle it: they are different mechanisms.
+      **What was measured, 2026-08-24, from the Windows event log** (`HANDOFF.md` §5): the machine
+      slept over the 2026-08-20 18:30 trigger and woke at 19:01 local, the task carries
+      `StartWhenAvailable=true`, and **no 18:30 entry exists in `data/daily_run.log` for that day**
+      while the 19:30 pass ran. A missed pass is dropped, not deferred.
+      **No code change came out of it**, and that was checked rather than assumed:
+      `tools/track_a_streak.py` reads 18:30 ± 30 min, so a day carrying only the 19:30 pass is
+      already `None` and already breaks the streak. The finding is operational —
+      **`a.run_completes` can be reset by the machine sleeping**, and the evidence for it is an
+      absence rather than an error.
 - [ ] **`[c]` Re-measure universe coverage.** 28.3% is ~10 days stale. New number goes to
       `HANDOFF.md` §2 only — `DR-005` is append-only.
 
@@ -389,12 +400,45 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       *evaluated against*, and the day it failed on batteries.
 - [ ] **`[c]` SPEC_GAP §32/§33** still read `DEFERRED`; `COVERAGE_AUDIT.md` says charter amendment
       A-001 makes them `MISSING, not OUT_OF_SCOPE`.
-- [ ] **`[c]` `HANDOFF.md`:124** says "Two ratified criteria are inert" and names only
-      `k.strategy_rejected`. Every other source means two *reasons*. Likely a wording defect.
+- [x] **`[v]` "Two ratified criteria are inert" — RESOLVED 2026-08-24. It is one criterion and two
+      reasons, and the claim had MOVED before it was resolved.** The item said `HANDOFF.md`:124; §3
+      of that file sent the standing account to `docs/08-pm/EVIDENCE_SUMMARY.md` on 2026-08-15 and
+      the sentence went with it, carrying its own `UNRESOLVED` note. So the item pointed at a line
+      that no longer existed — worth knowing before the next audit chases one.
+      **The second candidate was checked rather than assumed.** `k.drawdown_pause` was this
+      project's other inert gate — ratified while `validation.max_allowable_drawdown` was `unset`,
+      so its verdict was invariant across every input — and `DR-007` gave it a value on 2026-08-08.
+      `RULE_SPEC.md` §7: *"The gate went from unable to fail to untested."* Untested is not inert.
+      Corrected with a strikethrough in `EVIDENCE_SUMMARY.md` §6, per `AGENTS.md` §10.5's own
+      convention.
+      **A second stale claim fell out of it, and it is the spelled-out-count hole again.**
+      `EXPECTATION_MODEL.md` §9c read *"One parameter is `validated`"*. The registry holds
+      **none** — it has since `PR-002`'s verdict was corrected on 2026-08-16 — and gate 14 could
+      not see it twice over: the count is spelled in words, and "parameter is" sits between the
+      number and the backticked status its pattern anchors on. Rewritten to name the command.
+      **Gate 14 was deliberately NOT extended to match word-numbers**, and the reason is its own
+      design note: people write censuses in digits and local statements in words (*"two tests pin
+      this"*), so matching words would fire mostly on the second kind — and `CI_POLICY` §3's
+      "a noisy gate gets bypassed" is the failure that costs more than the drift.
 - [ ] **`[c]` `k.project_timebox`** is `owner-set` in YAML, described as `met` in ROADMAP and
       RISK_REGISTER.
-- [ ] **`[c]` `docs/README.md` drift** — says 21 stories (22 exist); marks REGIME_SPEC / EVENT_SPEC /
-      CHART_SPEC as planned though all three are written.
+- [x] **`[v]` `docs/README.md` drift — FIXED AT THE GATE 2026-08-24, not at the instance.**
+      Both halves were real: row 06 said 21 stories where 22 exist, and rows 22/23/24 marked
+      `REGIME_SPEC` / `EVENT_SPEC` / `CHART_SPEC` `planned` while all three exist and declare
+      `drafting` in their own headers.
+      **Gate 15's docstring already NAMED this exact drift as one of the four it was written for**
+      — and the gate only ever compared a document's own `**Status:**` header against the manifest,
+      never the index's Status CELL. So `registry/project_manifest.yml` carried
+      `readme_status_text: drafting` for all three while `docs/README.md` went on printing
+      `planned` for sixteen days, with the gate green. A gate that names a defect in its docstring
+      and does not test for it is a hand-kept count wearing a gate's clothes (`AGENTS.md` §10.6).
+      **The check now compares them**, and it found two more the moment it ran: row 02 carried a
+      stale `criteria.yml` v1.1.0 reference and a *"time box proposed 2026-08-08"* clause that
+      v1.1.1 has since settled, and row 58's manifest entry held the document's Content sentence in
+      the status field. One test, whose assertion fails if only the pre-existing document-header
+      check fires.
+      The 21 was **dropped rather than corrected** — a count in a document that does not own it is
+      the next stale copy (`AGENTS.md` §10.5).
 
 ## 4. Pending decisions
 

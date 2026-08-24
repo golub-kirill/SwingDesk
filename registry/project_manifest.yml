@@ -703,7 +703,7 @@ documents:
   path: docs/08-pm/SPEC_GAP_ANALYSIS.md
   document_status: drafting
   status_source: document
-  readme_status_text: Authored — measured against the tree
+  readme_status_text: drafting
   generated: false
   file_expected: true
 - id: DOC-59

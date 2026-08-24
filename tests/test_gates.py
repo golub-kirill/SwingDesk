@@ -302,6 +302,33 @@ def test_manifest_gate_catches_an_index_row_with_no_entry(tmp_path: Path) -> Non
     assert "row '02' has no manifest entry" in out
 
 
+def test_manifest_gate_catches_an_index_status_cell_that_drifted(tmp_path: Path) -> None:
+    """The drift the gate NAMED and did not check: the index's own Status cell.
+
+    Three Tier-2 specifications read `planned` in `docs/README.md` while the manifest and their own
+    headers said `drafting` - which is one of the four defects this gate's docstring was written
+    about. It caught it only through the document header, so the index cell went on saying `planned`
+    for sixteen days after the manifest was corrected. This is the missing half.
+    """
+    root = _manifest_tree(tmp_path)
+    readme = root / "docs" / "README.md"
+    readme.write_text(
+        readme.read_text(encoding="utf-8").replace(
+            "| Owner | drafting |", "| Owner | planned |"
+        ),
+        encoding="utf-8",
+    )
+
+    code, out = run_gate("verify_project_manifest.py", root)
+
+    assert code == 1
+    assert "reads 'planned' but the manifest says 'drafting'" in out
+    assert "declares" not in out, (
+        "the document header is untouched, so only the index check may fire - otherwise this test "
+        "would pass on the check that already existed"
+    )
+
+
 def test_manifest_gate_passes_a_consistent_tree(tmp_path: Path) -> None:
     """The other half of the pair. A gate that only ever fails is not discriminating either."""
     code, out = run_gate("verify_project_manifest.py", _manifest_tree(tmp_path))

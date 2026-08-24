@@ -21,7 +21,7 @@ Frozen first. Amendments are dated records appended to the file, never edits in 
 | # | File | Freezes | Source | Status |
 |---|---|---|---|---|
 | 01 | `CHARTER.md` | Purpose, 8 non-goals, the v1 finish line, 5 standing properties | Owner | **finish line ratified 2026-08-01** |
-| 02 | `SUCCESS_AND_KILL_CRITERIA.md` | 19 criteria: 7 Track A (system), 6 Track B (edge), 6 kill. Data in `registry/criteria.yml` v1.1.0 | Owner | **frozen 2026-08-02**; v1.1.0 Track A time box proposed 2026-08-08 |
+| 02 | `SUCCESS_AND_KILL_CRITERIA.md` | 19 criteria: 7 Track A (system), 6 Track B (edge), 6 kill. Data in `registry/criteria.yml`, which carries its own version and amendment history | Owner | **frozen 2026-08-02** |
 | 03 | `CONSTRAINTS.md` | Markets, timeframes, 9 owner decisions, measured data depths | `verbatim` appendix covers + owner | drafting — budget owner-pending |
 | 04 | `GLOSSARY.md` | 35 terms, verbatim | `verbatim` Appendix A + Production Rules §3.9 | drafting |
 
@@ -30,7 +30,7 @@ Frozen first. Amendments are dated records appended to the file, never edits in 
 | # | File | Freezes | Source | Status |
 |---|---|---|---|---|
 | 05 | `BRD.md` | 16 capabilities, 12 non-negotiable business rules, priority ordering | Owner + course | drafting |
-| 06 | `USER_STORIES.md` | 21 stories with Gherkin criteria, grouped by the course's four playbooks; covers Track A completely | Course playbooks (M80–83, M32/M33, M71–76, M67/M68) | drafting |
+| 06 | `USER_STORIES.md` | Stories with Gherkin criteria, grouped by the course's four playbooks; covers Track A completely | Course playbooks (M80–83, M32/M33, M71–76, M67/M68) | drafting |
 | 07 | `FRD.md` | **463 requirements** keyed by course component id, grouped by layer and module | **Generated** by `tools/build_frd.py` | generated |
 | 08 | `NFR.md` | ~20M bar rows, ≤45 min daily run, byte-identical re-runs, $0/mo, revision-delta storage | Engineering + owner | drafting |
 | 09 | `PRODUCT_SURFACES.md` | 4 surfaces, what each owns, notification matrix, what none may do | Owner decisions D3/D6 | drafting |
@@ -55,12 +55,12 @@ Mostly transcription. This is the cheapest, highest-value tier — do it early.
 | 19 | `STRATEGY_CARD_SPEC.md` | The strategy definition record + the three condition kinds (required / confirming / prohibiting) | `verbatim` Appendix I (21 fields) + M71 (17) + §3.6 | drafting |
 | 20 | `EXIT_MODEL_SPEC.md` | 4-slot exit model (protective/profit/contextual/time + quantity + order) over 92 M52–M58 topics | `verbatim` M52–M58 + `registry/` | drafting |
 | 21 | `SCREENER_SPEC.md` | 16 filters, 8 candidate-card fields, 9-step pipeline, 6 watchlist partitions | `verbatim` M32, M33 + `registry/` | drafting |
-| 22 | `REGIME_SPEC.md` | 11 regimes, classifier inputs, regime→strategy→risk matrix | `verbatim` M30/M31/Appendix L; **classifier authored** | planned |
-| 23 | `EVENT_SPEC.md` | 20 event types with per-type field schemas | `verbatim` M34 decision tables | planned |
+| 22 | `REGIME_SPEC.md` | 11 regimes, classifier inputs, regime→strategy→risk matrix | `verbatim` M30/M31/Appendix L; **classifier authored** | drafting |
+| 23 | `EVENT_SPEC.md` | 20 event types with per-type field schemas | `verbatim` M34 decision tables | drafting |
 | 22a | `ALLOCATION_SPEC.md` | Ranking when candidates exceed capacity: admissibility vs preference, what binds first (open risk, not cash), the allocation record, and the alphabetical-bias trap in truncating an id-sorted list | ТЗ §31; the course's two ordering topics are **both `Untested Hypothesis`** | drafting |
 | 23a | `TRANSITION_SPEC.md` | The discrete-change object (ТЗ §16, renamed to end the collision with 23): one envelope, the three-part test, observed vs inferred, who may emit. **6 kinds of transition are not recorded at all**, two irrecoverably | ТЗ §16; audited against the journal and stores | drafting |
 | 23b | `ENTITY_MAP.md` | The specification's 24 object types against this tree: 12 built, 2 deferred by decision, 3 specified with zero instances. **Mapped against a second-hand source**, with the 22-vs-24 discrepancy disclosed | ТЗ §7 via `dee8f37` | drafting |
-| 24 | `CHART_SPEC.md` | Every chart to render: panels, overlays, levels, units | `verbatim` chart metadata (867 chart topics) | planned |
+| 24 | `CHART_SPEC.md` | Every chart to render: panels, overlays, levels, units | `verbatim` chart metadata (867 chart topics) | drafting |
 
 ## Tier 3 — Data · `03-data/`, `contracts/`, `adr/`
 

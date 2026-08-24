@@ -46,7 +46,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | | |
 |---|---|
 | Merge gates | **32**, one command: `python tools/check_gates.py` |
-| Tests | **803**, fully offline |
+| Tests | **804**, fully offline |
 | Docs | 117 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 459 registered · 5 `specified` · **1 `active`** |
 | Parameters | 105 - 60 `unset`, 34 `assumed`, 11 `owner`, **0 `validated`** |
@@ -246,8 +246,23 @@ a report.
 
 **`Logon Mode: Interactive only`** — the task runs only while the user is logged on, and changing
 that needs stored credentials. Whether `StartWhenAvailable` makes a logged-out 18:30 *late* rather
-than *lost* is **untested here and marked conjecture** (`AGENTS.md` §10.4). One evening settles it:
-log out before 18:30, log back in, and read `Last Run Time` against the trigger time.
+than *lost* is **still untested and still conjecture** (`AGENTS.md` §10.4) — a logout and a sleep
+are different mechanisms. One evening settles it: log out before 18:30, log back in, and read
+`Last Run Time` against the trigger time.
+
+**The SLEEP case is no longer conjecture, and the answer is *lost*.** Measured 2026-08-24 from the
+Windows event log, not argued: on **2026-08-20** the machine slept from 2026-08-19T20:01 local
+through **2026-08-20T19:01 local** — straight over that day's 18:30 trigger — and
+`data/daily_run.log` has **no 18:30 entry for 08-20 at all**, while the 19:30 pass ran normally at
+19:30:01. The 18:30 task carries `<StartWhenAvailable>true</StartWhenAvailable>`, so it *should*
+have run late on the 19:01 wake, and it did not. **A missed pass is not deferred, it is dropped —
+and it leaves no trace anywhere except an absence.**
+
+`tools/track_a_streak.py` already reads that absence correctly: its window is 18:30 ± 30 min, so a
+day on which only the 19:30 pass ran is `None` — missing — and breaks the streak. Nothing needed
+fixing there. What is worth knowing is the failure MODE: **`a.run_completes` can be reset by the
+machine being asleep at 18:30**, and the log will say nothing rather than something wrong.
+(Only one such day exists in the 08-10 → 08-21 window; every other wake landed before 18:30 local.)
 
 ~~**The directory pull still does not run, and it is the most time-sensitive item in the project.**
 `DR-008` was ratified 2026-08-10 and its collector was never built — `tools/fetch_directory.py` has
