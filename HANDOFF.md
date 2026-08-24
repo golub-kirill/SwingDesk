@@ -8,8 +8,9 @@ rules that were each paid for, and §12, traps that each cost real time — then
 **A branch holds a session's work and is NOT merged.** `claude/swingdesk-tasks-cl-perf-707e67`,
 worktree at `.claude/worktrees/swingdesk-tasks-cl-perf-707e67`. **Nothing in it is on `master`**,
 so `master` still runs the slow pipeline, still has fewer gates than §2 reports for this tree, and
-still carries the documentation defects that branch corrected. §5's *In flight* block is what it contains and why it is safe to
-merge; **read that before doing anything that touches `src/`, `tools/` or the study record.**
+still carries the documentation defects that branch corrected. §5's *In flight* block says what
+it contains and why it is safe to merge; **read that before touching `src/`, `tools/` or the
+study record.** §5's *What to pick up* ranks everything else.
 
 No pull request was opened — the owner had not asked for one. Opening it is the first decision, not
 the first action.
@@ -200,6 +201,81 @@ parked, not killed**: `PR-002`'s own survivorship bound puts it on its kill line
 1.6–2.3% missing rate, and it is revivable only as a portfolio participation gate — never a
 per-signal entry filter, which is closed by evidence (§7).
 
+### In flight — `claude/swingdesk-tasks-cl-perf-707e67`, not merged
+
+**The daily run was breaching a ratified NFR budget by 4x and nothing measured it.**
+`NFR.md` §3 budgets the **decision path at ≤ 5 minutes**; measured on 2026-08-24 before any
+change it was **20.2 minutes** — 19.0 of pipeline compute plus 71.9 s of universe selection —
+and it is **2.7 minutes** now. The breach was invisible because the same table's end-to-end
+budget (≤ 45 min) was comfortably met at ~24 min, and nothing in this tree measured any of
+those budgets — the run log gives a total and no split, and **the requirement lives in the
+split**. `tools/measure_latency.py` measures the decision path now and reads its threshold
+out of `NFR.md` rather than carrying a copy; the refresh and report-generation budgets are
+still unmeasured and neither is close to binding. Three hot spots and a
+quadratic: `completeness.check` was O(bars x sessions) over each instrument's whole stored extent,
+`application/universe.py`'s selection read 3.57 million bars to answer a count, a last close and a
+twenty-session average, `calendar.sessions` read a pandas frame with `iterrows` against a cache running at a 2%
+hit rate, and `checklist` re-parsed its registry per candidate.
+
+**Byte-identity is the reason to trust it, and it was measured five times**, most usefully by
+`tools/verify_reproducible.py` reproducing `50e1646b933a4a9d` over the full 1,141-instrument
+universe — the hash recorded on `master` before the change — and by `tools/run_pr005_replay.py`
+reproducing all 20 of PR-005's cells through the backtest engine instead of the pipeline. So it
+moves no decision output and spends no `a.run_completes` counter, and none of it touches a frozen
+file.
+
+**Two gates came with it**, 28 (a document may not state a parameter status the registry
+contradicts) and 29 (a pre-registration id is reserved once, including across unmerged branches).
+`TODO.md` §3 is empty for the first time.
+
+**Two owner rulings landed on it late in the day and both are live work, not notes.**
+
+**The AI may advise on an OPEN position** — `AI_AUTHORITY_MODEL.md` §3a, amended and ratified
+2026-08-24. §3 is untouched; entry stays closed; the decision vocabulary, the MANAGEMENT vocabulary
+(`HOLD`/`MOVE_STOP`/`PARTIAL_EXIT`/`EXIT_NOW`/`PAUSE`) and originating a number all stay forbidden.
+Checked against the charter first: A-001 asks for "synthesis, not authority", advice is not
+authority, and none of its six prohibitions is engaged — so this is not a charter amendment. **A-001's
+standing condition is NOT discharged**: nothing may be implemented until the two vocabularies are
+mechanically guarded, and they are still prose.
+
+**`PR-013` measures the signal instead of the book** — registered, runner built, exploratory by
+declaration. The owner's constraint is what drove it: four positions held twenty sessions is ~50
+entries a year, the ratified sample floor is 100 closed trades, and the horizon is six months — so
+**25 live trades**, and live evidence inside the horizon is arithmetically impossible without moving
+a ratified value. The 2026-08-16 research suspension was overridden by the owner for this study and no
+other, and `TODO.md` §2 records both the override and the fact that the suspension's own exit
+condition can never be met.
+
+**One thing on it needs the owner and is not an agent's to take:** PR-005's published trade log no
+longer matches a fresh replay, because seven bars arrived three hours after it was published.
+`TODO.md` §5 states the three options; `docs/prereg/results/` was not touched.
+
+**Re-index the code graph after this merges** — `src/` and `tools/` both changed (`AGENTS.md` §9
+rule 3). It is deliberately NOT re-indexed now: the index is named `swingdesk` and rooted at the
+main checkout, and pointing it at an unmerged branch would make it describe code `master` does not
+have.
+
+### What to pick up, ranked — 2026-08-24
+
+1. **Decide about the branch in §0.** Everything below assumes it either merges or does not, and
+   the two worlds differ. Opening a pull request is the owner's call and was not made.
+2. **`a.run_completes` and gate 26.** The outage that began 2026-08-18 was a schema drift, the
+   repair is verified, and the evening pass is what proves it in production. Read
+   `python tools/track_a_streak.py` before anything else operational.
+3. **The AI guard, which `CHARTER.md` A-001 makes a PRECONDITION.** §3a permits advice on an open
+   position; A-001 says nothing may be implemented before the authority model is *gated*, and
+   `AI_AUTHORITY_MODEL.md` §11 records that its prohibitions are prose. The two vocabularies —
+   decisions and management actions — are mechanically checkable and nothing checks them. **This is
+   the next build, not the AI itself.**
+4. **The `PR-005` trade log needs an owner ruling** — the published CSV no longer matches a fresh
+   replay because seven bars arrived three hours after it was published. Three options in
+   `TODO.md` §5; `docs/prereg/results/` was deliberately not touched.
+5. **The next pre-registration, if there is one.** `PR-013` looked at one lookback and one horizon
+   and found nothing at that pair; it did not refute the family. Whoever writes the next one owes it
+   a decision rule with a branch for *both arm and control are losing*, which `PR-013`'s lacked.
+6. **Everything owner-pending is in `TODO.md` §4** — the trial budget, `account.fx_rate_cad`,
+   `data.staleness_action_threshold`, the successor timebox, `DR-016`/`DR-017`.
+
 ### The clock, and the freeze that protects it
 
 `a.run_completes` counts **consecutive** trading days, and a silent failure resets it without
@@ -269,60 +345,6 @@ permanent: a day on which every candidate refused identically and a day that eva
 different facts, and the exit code alone cannot tell them apart. **It does not change what
 `a.run_completes` measures**, which stays exactly its ratified text — the run completes and produces
 a report.
-
-### In flight — `claude/swingdesk-tasks-cl-perf-707e67`, not merged
-
-**The daily run was breaching a ratified NFR budget by 4x and nothing measured it.**
-`NFR.md` §3 budgets the **decision path at ≤ 5 minutes**; measured on 2026-08-24 before any
-change it was **20.2 minutes** — 19.0 of pipeline compute plus 71.9 s of universe selection —
-and it is **2.7 minutes** now. The breach was invisible because the same table's end-to-end
-budget (≤ 45 min) was comfortably met at ~24 min, and nothing in this tree measured any of
-those budgets — the run log gives a total and no split, and **the requirement lives in the
-split**. `tools/measure_latency.py` measures the decision path now and reads its threshold
-out of `NFR.md` rather than carrying a copy; the refresh and report-generation budgets are
-still unmeasured and neither is close to binding. Three hot spots and a
-quadratic: `completeness.check` was O(bars x sessions) over each instrument's whole stored extent,
-`application/universe.py`'s selection read 3.57 million bars to answer a count, a last close and a
-twenty-session average, `calendar.sessions` read a pandas frame with `iterrows` against a cache running at a 2%
-hit rate, and `checklist` re-parsed its registry per candidate.
-
-**Byte-identity is the reason to trust it, and it was measured five times**, most usefully by
-`tools/verify_reproducible.py` reproducing `50e1646b933a4a9d` over the full 1,141-instrument
-universe — the hash recorded on `master` before the change — and by `tools/run_pr005_replay.py`
-reproducing all 20 of PR-005's cells through the backtest engine instead of the pipeline. So it
-moves no decision output and spends no `a.run_completes` counter, and none of it touches a frozen
-file.
-
-**Two gates came with it**, 28 (a document may not state a parameter status the registry
-contradicts) and 29 (a pre-registration id is reserved once, including across unmerged branches).
-`TODO.md` §3 is empty for the first time.
-
-**Two owner rulings landed on it late in the day and both are live work, not notes.**
-
-**The AI may advise on an OPEN position** — `AI_AUTHORITY_MODEL.md` §3a, amended and ratified
-2026-08-24. §3 is untouched; entry stays closed; the decision vocabulary, the MANAGEMENT vocabulary
-(`HOLD`/`MOVE_STOP`/`PARTIAL_EXIT`/`EXIT_NOW`/`PAUSE`) and originating a number all stay forbidden.
-Checked against the charter first: A-001 asks for "synthesis, not authority", advice is not
-authority, and none of its six prohibitions is engaged — so this is not a charter amendment. **A-001's
-standing condition is NOT discharged**: nothing may be implemented until the two vocabularies are
-mechanically guarded, and they are still prose.
-
-**`PR-013` measures the signal instead of the book** — registered, runner built, exploratory by
-declaration. The owner's constraint is what drove it: four positions held twenty sessions is ~50
-entries a year, the ratified sample floor is 100 closed trades, and the horizon is six months — so
-**25 live trades**, and live evidence inside the horizon is arithmetically impossible without moving
-a ratified value. The 2026-08-16 research suspension was overridden by the owner for this study and no
-other, and `TODO.md` §2 records both the override and the fact that the suspension's own exit
-condition can never be met.
-
-**One thing on it needs the owner and is not an agent's to take:** PR-005's published trade log no
-longer matches a fresh replay, because seven bars arrived three hours after it was published.
-`TODO.md` §5 states the three options; `docs/prereg/results/` was not touched.
-
-**Re-index the code graph after this merges** — `src/` and `tools/` both changed (`AGENTS.md` §9
-rule 3). It is deliberately NOT re-indexed now: the index is named `swingdesk` and rooted at the
-main checkout, and pointing it at an unmerged branch would make it describe code `master` does not
-have.
 
 ### The schema repair holds — checked 2026-08-24, before the run rather than after it
 
