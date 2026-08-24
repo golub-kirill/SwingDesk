@@ -130,6 +130,19 @@ Also open and unchanged: `account.fx_rate_cad` (needs a source and an as-of) and
 4. **Bar coverage is still under a third of the directory.** `tools/refresh_universe.py` is pure
    throughput and resets nothing. The admitted universe now carries ten years; the rest does not.
 
+## 5b. Where the session stopped, so the next one does not re-derive it
+
+**Everything is merged.** `master` is at the merge of `#47`, the working trees are clean, and
+**31 of 32 gates pass** — gate 26 being the one §1 is about. Nothing is half-landed and no branch
+holds work that is not on `master`.
+
+**The stores are free.** Both long jobs finished before the session ended, and every store opens:
+nothing this session started can collide with tonight's 18:30 and 19:30 passes. That was checked
+rather than assumed, because a refresh pass holding `bars.duckdb` at 18:30 would have cost the
+outage another day.
+
+**The code graph is re-indexed** at `master`, under the name `swingdesk`.
+
 ## 6. Before you start
 
 ```bash
