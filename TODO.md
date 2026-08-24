@@ -52,6 +52,22 @@ hands it over by name.
       naming it.
       **The base rate is now 1 of 11, not 3.** The sole survivor is `calendar.sessions_behind`,
       below.
+      **RE-MEASURED 2026-08-23: that last survivor is dead too, and the survivor count is 0 of 11.**
+      `DR-015` gave `sessions_behind` a caller (`market_data/freshness.py`), and with it the two
+      mutations that matter now die loudly — returning a constant 0 takes **11** tests with it, and
+      an off-by-one takes **7**. Wiring dead code is what killed the mutant; nobody wrote a test
+      against it.
+      **One mutation still survives and is EQUIVALENT, which is a different thing from a gap.**
+      `if last_bar >= latest.session_date` → `>` changes nothing: at equality the long path computes
+      a one-session window and returns 0 by the other route. Recorded so the next audit does not
+      chase it.
+      **But DELETING that early return is not equivalent, and nothing covered it.** A bar dated
+      after the last completed session then calls the calendar with `start > end`, which raises
+      `ValueError` — the freshness check stops answering and one such bar takes the whole run down
+      instead of refusing one candidate. `AGENTS.md` §12 records 296 stored bars whose
+      `knowledge_time` predated their own session close, so the input is not hypothetical.
+      `test_a_bar_dated_AFTER_the_last_completed_session_is_fresh_and_does_not_raise` closes it and
+      is the only one of the twenty in that file that the deletion turns red.
       **A conclusion that rested on this and no longer stands:** "a wrong R could be why the base
       strategy is negative" — R was never wrong, it was merely unasserted, so there is no prior
       result to re-derive. **The entry-filter family stays closed.**
@@ -155,6 +171,22 @@ hands it over by name.
       liquidity $5M proxies. And `universe.min_adtv_20d = $5M` is itself `assumed` and never swept —
       a $3M–$8M sweep would test it and settle whether the six crossers are noise, in one pass.
 
+- [ ] **`[v]` Corporate actions — THE SPLIT GUARD IS BUILT (2026-08-23, `DR-016` §9); the revision
+      comparison is the only half left and it is the only half that needs a ruling.**
+      A split either happened or it did not, so the held-position guard carries no threshold and
+      was built ahead of the ruling. `manage.split_guard` pauses a position when a split took
+      effect after its stop was set, carries the restated stop into the reason, and **never applies
+      it** — `CHARTER.md` A-001 reserves that to the owner. It runs BEFORE the freshness check: a
+      stale series recovers tomorrow, a split does not, and it is the one condition under which
+      evaluating anyway yields a confident wrong `EXIT_NOW` rather than a refusal.
+      **§8.5's empty table now has a caller.** The run fetches actions for HELD names only — at most
+      `risk.max_concurrent_positions` — which is what makes it affordable in the evening pass.
+      Fail-open like the bar fetch, and `SplitGuard` carries `refreshed` apart from `stored`,
+      because zero actions means either "never split" or "nobody asked" and the store cannot record
+      a negative. An unanswered guard reports `unavailable` and does **not** pause.
+      **Still open below: the write-time revision comparison**, which is what `data.revision_epsilon`
+      gates.
+
 - [ ] **`[v]` Corporate actions — DR-016 DRAFTED and its PRECONDITION IS NOW BUILT (2026-08-18).**
       **The actions series exists.** `POINT_IN_TIME_SPEC` §4 named three series and the tree had
       two; `DR-016` named the third as its own blocker. Built: `CorporateAction` on the contract, a
@@ -168,8 +200,20 @@ hands it over by name.
       the ruling below, so storing an action changes nothing the run decides — which is exactly why
       it was safe to land before the ruling. 11 tests, 5 mutants killed including the look-ahead one
       (an action learned later must be invisible to an earlier read).
+      **RE-MEASURED 2026-08-23 (`DR-016` §8) — the value survives, the SCOPE does not.** §2's table
+      left the `open` column blank, and the open is the widest of the four price fields: its MEDIAN
+      revision (0.128%) is larger than the proposed threshold, while the close's largest revision in
+      the whole window is 0.084%, twelve times below it. At `0.001` over all four fields the gate
+      raises about **94 `Critical` faults per evening**; over `close` alone it fires **zero** times.
+      §5 of that record rejected exactly this for volume and then carried it across one field over.
+      Derive the figures with `python tools/measure_revisions.py`, never from this line.
+      §8.4 recommends the same number scoped to `close`, which is §3's own reasoning taken one step
+      further. **§8.5 also found that `corporate_actions` holds zero rows** — the table, contract,
+      vendor call and read path all exist and nothing ever calls `fetch_actions`, the third instance
+      of the `AGENTS.md` §7 shape inside the record that closed the previous one.
       **What still needs the owner:**
-      `data.revision_epsilon = 0.001`, scoped to price only; volume taken out of §4's
+      `data.revision_epsilon = 0.001`, **scoped to `close`** (§8.4), not to all four price fields as
+      §3 first wrote; volume taken out of §4's
       raw-immutability rule and given no parameter, because the course names no such concept and the
       measured distribution contains no threshold. **Its precondition is `Series.ACTIONS`**, which
       `POINT_IN_TIME_SPEC.md` §4 names and `contracts/market.py` does not implement — the vendor does
@@ -466,10 +510,24 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       finish before `DR-015`'s own 19:30 pass. §7 of the record carries the argument.
       **The question: 90 seconds per run, or the full three attempts for every instrument whatever
       the total?** Nothing else is blocked on the answer.
-      **b. Register the 19:30 task.** One `schtasks` line, on the machine that runs the schedule — a
-      repository cannot create it. `docs/runbooks/README.md` §1a has the command and the check.
-      **Until it exists the retry inside the run is live and the second pass is not**; the two halves
-      of §3 are independent.
+      **b. Register the 19:30 task — DONE 2026-08-18, and this item was FALSE for five days.**
+      Confirmed against the machine 2026-08-23: the task exists, is `Enabled`, and has been running
+      since it was created. `AGENTS.md` §12 already described the 19:30 pass running and failing —
+      *"both passes, once the 19:30 task was registered"* — so two documents here disagreed about a
+      fact neither could check, and the stale one was the one being acted on. The owner was handed
+      a `schtasks /Create` line for a task that already existed and was one keystroke from replacing
+      a working registration.
+      **Gate 26 (`tools/verify_schedule.py`) now asks the machine**, per `AGENTS.md` §12's own habit:
+      when you find a stale claim, add a gate rather than fixing the instance. Advisory, and
+      `UNAVAILABLE` anywhere but the scheduling machine.
+      **It is RED as of 2026-08-23 and correctly so:** both passes last ran 2026-08-21 and both
+      exited 1 on the schema drift `AGENTS.md` §12 records. `positions.duckdb` carries
+      `initial_costs_per_share` again, so **Monday 2026-08-24 is the first run that can get past it
+      — and the repair is unverified in production until then.**
+      **Two machine settings the verbose query shows and nothing else does:** both tasks are
+      `Logon Mode: Interactive only`, and the second pass alone carries
+      `Power Management: No Start On Batteries`. Neither is fixable from this repository; both make
+      an evening with no log line a different event from a run that decided nothing.
 
 **ADRs — all four unratified.**
 

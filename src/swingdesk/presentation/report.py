@@ -97,6 +97,13 @@ def _positions_block(result: RunResult) -> list[str]:
             f"  {position.instrument_id:<12} {position.shares:>5} sh @ {position.entry_price}"
             f"  stop {position.current_stop}  open risk {position.open_risk}{flag}"
         )
+        # The split guard's own line, and only when it has something to say. A clean check on an
+        # instrument with actions on record is the ordinary case and printing it every evening
+        # would train the eye past the two lines that matter (`DR-016` §7).
+        guard = outcome.split
+        if guard is not None and (guard.alert is not None or guard.is_unavailable):
+            lines.append(f"      splits:   {guard.note}")
+
         if outcome.action is not None:
             action = outcome.action
             marker = "NEEDS YOUR APPROVAL" if action.is_actionable else "no action"

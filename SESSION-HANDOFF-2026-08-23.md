@@ -115,7 +115,11 @@ Unchanged from yesterday except that `DR-006` has moved off the list and onto §
   `TODO.md` §1 still ranks this the one to read.
 - **`DR-017`** — the ADTV lag, 3 sessions. Proposed.
 - **`account.fx_rate_cad`** — needs a source and an as-of. Not a value an agent may draft.
-- **Register the 19:30 task** — one `schtasks` line, `docs/runbooks/README.md` §1a.
+- **~~Register the 19:30 task~~ — it was already registered, on 2026-08-18.** This item was false
+  for five days while `AGENTS.md` §12 described the 19:30 pass running. Gate 26
+  (`tools/verify_schedule.py`) now asks the machine. **It is red:** both passes last ran 2026-08-21
+  and exited 1 on the schema drift, and **Monday 2026-08-24 is the first run that can get past the
+  repair** — which is therefore unverified in production until then.
 - **`data.staleness_action_threshold`** — still `unset`, still read by nothing.
 - **`DR-006` §13** — the four above.
 

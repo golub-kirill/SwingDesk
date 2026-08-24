@@ -27,7 +27,7 @@ from swingdesk.application import checklist as checklist_builder
 from swingdesk.application.universe import UniverseSelection
 from swingdesk.contracts.checklist import Checklist
 from swingdesk.contracts.market import BarSeries as BarSeriesLike
-from swingdesk.contracts.market import Interval, Series
+from swingdesk.contracts.market import CorporateAction, Interval, Series
 from swingdesk.contracts.observation import ObservationSeries, ParameterUse
 from swingdesk.contracts.position import ActionKind, ManagementAction, Position
 from swingdesk.contracts.reference import Instrument
@@ -84,6 +84,14 @@ class PositionOutcome:
     position: Position
     action: ManagementAction | None = None
     stale: bool = False
+
+    split: manage.SplitGuard | None = None
+    """Whether a split has re-denominated prices under this position's stop (`DR-016` §7).
+
+    `None` means the guard did not run at all - there is no position store, so there was no
+    position to guard. Its own `is_unavailable` covers the different case where the guard ran and
+    could not answer.
+    """
 
 
 @dataclass
@@ -442,6 +450,26 @@ class Fetcher(Protocol):
     ) -> BarSeriesLike: ...
 
 
+class ActionsFetcher(Protocol):
+    """What the run needs from a corporate-actions source (`DR-016` §7).
+
+    Separate from `Fetcher` because a split is not a bar and the vendor serves it from a different
+    endpoint - the same boundary `vendor_yahoo.fetch_actions` draws.
+
+    **Injected and defaulting to nothing.** A run given no actions fetcher does not fetch, and the
+    split guard then reads whatever the store already holds. That keeps the suite offline by
+    construction (CI_POLICY 4) rather than by every test remembering to stub a second vendor, and
+    it makes the production wiring an explicit line in `cli.py` that a gate can be pointed at.
+    """
+
+    def __call__(
+        self,
+        instrument: Instrument,
+        knowledge_time: datetime,
+        period: str = "max",
+    ) -> tuple[CorporateAction, ...]: ...
+
+
 def run(
     instruments: list[Instrument],
     clock: Clock,
@@ -452,6 +480,7 @@ def run(
     mode: RunMode,
     lookback: str = "1y",
     fetcher: Fetcher | None = None,
+    actions_fetcher: ActionsFetcher | None = None,
     positions: PositionStore | None = None,
     classifications: ClassificationStore | None = None,
     exits: ExitPolicy | None = None,
@@ -625,6 +654,30 @@ def run(
             else:
                 store.write(refreshed.bars, started)
 
+            # Corporate actions for a HELD name, and only for a held name (`DR-016` §7, §8.5).
+            #
+            # Bounded work: `risk.max_concurrent_positions` is 4, so this is at most four extra
+            # vendor calls an evening - which is what makes it affordable here and unaffordable
+            # across a 1,148-member universe. §8.5 found the actions table holding zero rows with
+            # every part of the path built; this is the caller that feeds it.
+            #
+            # Fail-open, exactly as the bar fetch above is: a vendor failure leaves whatever is
+            # stored standing. What changes is that the run then knows it did not ask, and
+            # `split_guard` reports `unavailable` rather than a clean bill of health.
+            actions_refreshed = False
+            if actions_fetcher is not None:
+                try:
+                    store.write_actions(actions_fetcher(instrument, started), started)
+                except VendorUnavailable:
+                    pass
+                else:
+                    actions_refreshed = True
+            managed.split = manage.split_guard(
+                position,
+                store.actions_as_of(position.instrument_id, started),
+                refreshed=actions_refreshed,
+            )
+
             held = store.as_of(position.instrument_id, Interval.DAY, Series.RAW, started)
             if not held.bars:
                 # No bars for a position we hold. Recorded as stale rather than skipped: the owner
@@ -634,6 +687,24 @@ def run(
                     position_id=position.position_id, proposed_at=started,
                     kind=ActionKind.PAUSE, reason_code="DATA",
                     reason="no bars available for an open position; management cannot be evaluated",
+                    old_stop=position.current_stop,
+                )
+            elif managed.split.alert is not None:
+                # BEFORE freshness, and that ordering is the decision worth stating. A stale series
+                # recovers by itself tomorrow; a split does not, and it is the one condition here
+                # under which evaluating anyway produces a CONFIDENT wrong answer rather than a
+                # refusal - `manage.evaluate` would read the pre-split stop as breached and propose
+                # `EXIT_NOW` on a stop-out that never happened. A transient staleness must not mask
+                # that for a day.
+                #
+                # PAUSE, and the stop is NOT adjusted. `stop_after` travels in the reason so the
+                # owner can act on it; applying it here would rewrite a risk parameter they set,
+                # which `CHARTER.md` A-001 reserves to them.
+                managed.stale = True
+                managed.action = ManagementAction(
+                    position_id=position.position_id, proposed_at=started,
+                    kind=ActionKind.PAUSE, reason_code="DATA",
+                    reason=managed.split.alert.reason,
                     old_stop=position.current_stop,
                 )
             elif isinstance(freshness_window, Refusal):

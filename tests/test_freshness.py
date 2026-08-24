@@ -59,6 +59,29 @@ def test_a_series_level_with_the_last_completed_session_is_fresh() -> None:
     assert assessment.verdict is Verdict.FRESH
 
 
+def test_a_bar_dated_AFTER_the_last_completed_session_is_fresh_and_does_not_raise() -> None:
+    """The early return in `calendar.sessions_behind` is load-bearing, and nothing tested it.
+
+    **Found by mutation, 2026-08-23**, and the useful part is which mutation. Changing
+    `if last_bar >= latest.session_date` to `>` leaves the suite green and is **equivalent**: at
+    equality the long path computes a one-session window and returns 0 by the other route, and above
+    it both take the early return. Nothing to fix there.
+
+    **Deleting the early return is not equivalent.** Without it, a bar dated *after* the last
+    completed session calls `sessions(exchange, start, end)` with `start > end`, which the calendar
+    library rejects with `ValueError` - so the freshness check raises instead of answering, and a
+    single such bar takes the whole run down rather than refusing one candidate. Confirmed: this
+    test is the only one of the twenty here that goes red under that deletion.
+
+    **The input is not hypothetical.** `CALENDAR_SPEC` §5 forbids using the unclosed current bar and
+    `AGENTS.md` §12 records 296 stored bars whose `knowledge_time` predated their own session close,
+    so a bar dated ahead of the last completed session has existed in this store.
+    """
+    ahead = assess(Exchange.NYSE, date(2026, 2, 2), AS_OF, WINDOW)
+    assert ahead.sessions_behind == 0
+    assert ahead.verdict is Verdict.FRESH
+
+
 def test_friday_to_monday_is_one_session_not_three_days() -> None:
     """The case the owner raised, and the one the window is most likely to be misread on.
 
