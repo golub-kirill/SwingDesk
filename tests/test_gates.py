@@ -1467,3 +1467,107 @@ def test_the_track_a_row_reads_the_same_clock_the_streak_counts_against(monkeypa
     monkeypatch.setenv("SWINGDESK_NOW", f"{latest}T23:00:00")
     _label, after = state._track_a_row()
     assert str(latest) in after and "deliberate restart" in after
+
+
+# ------------------------------------------------------------------- gate 27: strategy cards
+
+
+def _cards_tree(tmp_path: Path, card: str, name: str = "cards") -> Path:
+    """A tree holding one card, the two registries it references, and its document.
+
+    `name` exists so one test can build two trees - the both-directions cases below need a
+    clean tree per assertion, and reusing the path silently tests the first one twice.
+    """
+    root = tmp_path / name
+    (root / "registry").mkdir(parents=True)
+    (root / "docs").mkdir(parents=True)
+    (root / "docs" / "CARD.md").write_text("# card\n", encoding="utf-8")
+    (root / "registry" / "cards.yml").write_text(card, encoding="utf-8")
+    (root / "registry" / "components.yml").write_text(
+        "components:\n"
+        "  - component: M01-T0001-v1.0\n"
+        "    activation: registered\n",
+        encoding="utf-8",
+    )
+    (root / "registry" / "parameters.yml").write_text(
+        "parameters:\n"
+        "  - id: rs.lookback\n"
+        "    status: unset\n"
+        "  - id: exit.max_holding_period\n"
+        "    status: assumed\n",
+        encoding="utf-8",
+    )
+    return root
+
+
+_MINIMAL = """cards:
+  - card: CARD-001
+    version: 1
+    status: Untested
+    document: docs/CARD.md
+    scope:
+      holding_horizon: exit.max_holding_period
+    components: [M01-T0001-v1.0]
+    evidence: null
+"""
+
+
+def test_a_card_whose_references_resolve_passes(tmp_path: Path) -> None:
+    code, out = run_gate("verify_cards.py", _cards_tree(tmp_path, _MINIMAL))
+    assert code == 0, out
+
+
+def test_a_card_naming_a_component_that_does_not_exist_fails(tmp_path: Path) -> None:
+    """`STRATEGY_CARD_SPEC` §5 rule 1: a card REFERENCES components. A reference nobody can follow
+    is the failure gate 1 catches for `read_by` and gate 20 for `implemented_by`."""
+    card = _MINIMAL.replace("[M01-T0001-v1.0]", "[M99-T9999-v1.0]")
+    code, out = run_gate("verify_cards.py", _cards_tree(tmp_path, card))
+    assert code == 1
+    assert "does not resolve in components.yml" in out
+
+
+def test_a_card_citing_an_unset_input_must_declare_it_blocked(tmp_path: Path) -> None:
+    """The rule that matters most. An unset parameter makes its component refuse - that is the
+    design working - but a card depending on one while claiming to be runnable is the
+    'specified, wired to nothing' shape one layer up."""
+    card = _MINIMAL.replace(
+        "    components:", "    selection:\n      lookback: rs.lookback\n    components:")
+    code, out = run_gate("verify_cards.py", _cards_tree(tmp_path, card))
+    assert code == 1
+    assert "declares no `blocked_by`" in out
+
+    declared = card.replace(
+        "    evidence: null", "    blocked_by:\n      - id: unset-selection\n        what: it is\n"
+                              "    evidence: null")
+    code, out = run_gate("verify_cards.py", _cards_tree(tmp_path, declared, "declared"))
+    assert code == 0, out
+
+
+def test_a_card_cannot_carry_evidence_without_being_validated(tmp_path: Path) -> None:
+    """And cannot be `Validated` without evidence. Both directions, because a status and its
+    warrant drifting apart is how something looks more validated than it is."""
+    claimed = _MINIMAL.replace("    evidence: null", "    evidence: PR-999")
+    code, out = run_gate("verify_cards.py", _cards_tree(tmp_path, claimed))
+    assert code == 1
+    assert "carries evidence" in out
+
+    bare = _MINIMAL.replace("status: Untested", "status: Validated")
+    code, out = run_gate("verify_cards.py", _cards_tree(tmp_path, bare, "bare"))
+    assert code == 1
+    assert "requires an evidence id" in out
+
+
+def test_a_card_whose_document_is_missing_fails(tmp_path: Path) -> None:
+    """A card is a reviewable artefact. Half of it living nowhere is not reviewable."""
+    card = _MINIMAL.replace("docs/CARD.md", "docs/NOT_THERE.md")
+    code, out = run_gate("verify_cards.py", _cards_tree(tmp_path, card))
+    assert code == 1
+    assert "is not a file" in out
+
+
+def test_no_cards_file_is_not_a_failure(tmp_path: Path) -> None:
+    """A tree with no cards is a tree before P5, not a broken one."""
+    root = tmp_path / "empty"
+    (root / "registry").mkdir(parents=True)
+    code, out = run_gate("verify_cards.py", root)
+    assert code == 0, out

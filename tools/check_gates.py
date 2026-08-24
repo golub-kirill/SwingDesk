@@ -160,6 +160,8 @@ def main() -> int:
                             [python, "tools/build_state.py", "--check-only"], "24 state block"),
         "26 schedule": _run("the scheduled tasks exist and last succeeded (advisory)",
                             [python, "tools/verify_schedule.py"], "26 schedule"),
+        "27 strategy cards": _run("a card's references resolve and it claims no more than it has",
+                                  [python, "tools/verify_cards.py"]),
     }
 
     print("\n" + "=" * 62)

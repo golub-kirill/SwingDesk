@@ -1,0 +1,159 @@
+# Strategy card registry.
+#
+# A card is the unit that gets versioned, tested and accepted (STRATEGY_CARD_SPEC 1). This file is
+# the MACHINE-READABLE half; the reasoning for each card lives beside it in docs/02-domain/, the
+# same split components.yml and COMPONENT_REGISTRY_SPEC.md already use.
+#
+# Two binding rules from STRATEGY_CARD_SPEC 5, and both are enforced by tools/verify_cards.py:
+#
+#   1. A card REFERENCES components; it does not restate their formulas. `components` holds ids
+#      that must resolve in components.yml. Copying a formula here would be the one-logic-in-two-
+#      places failure master TZ section 8 forbids.
+#   2. A card is versioned AS A WHOLE. Changing any field creates a new version and RESETS any
+#      validation claim that depended on the earlier frozen definition (Production Rules 3.7).
+#
+# status is one of:
+#   Untested   - declared, never tested. The only honest status for a new card.
+#   Testing    - a pre-registration exists and is running.
+#   Validated  - a reported study cleared the Track B criteria. NOTHING is Validated today, and
+#                `criteria.yml` v1.1.0 requires journalled trades for that, not a backtest.
+#   Retired    - superseded or killed. Never deleted.
+#
+# `blocked_by` is not a defect list. A card that names what stops it from running is doing the job
+# a card exists for: it converts "what should we build?" into a list somebody can close. ROADMAP G6
+# is defined as "every component a live strategy card needs is active", and until this file existed
+# that criterion had no denominator.
+
+cards:
+
+  - card: CARD-001
+    version: 1
+    name: Cross-sectional relative strength
+    status: Untested
+    owner_selected: 2026-08-24
+    document: docs/02-domain/CARD-001-cross-sectional-relative-strength.md
+
+    rationale: >-
+      Rank the admitted universe by strength relative to its index and hold the strongest few,
+      rather than timing each name on its own history. The economic claim is cross-sectional
+      momentum: recent relative winners continue to outperform recent relative losers over a swing
+      horizon. THE COURSE FLAGS THIS AS AN UNTESTED HYPOTHESIS ITSELF - M31-T0465 carries
+      claim_type "Untested Hypothesis" - so this card inherits Untested and cannot be argued from
+      the course's authority. It is a different FAMILY from the time-series breakout PR-005
+      refuted, which is the reason it was chosen first.
+
+    scope:
+      markets: [US]
+      instruments: [equity, etf]
+      timeframe: daily
+      excluded: >-
+        Canada. DR-003 gap 1 - the NASDAQ Trader files cover US venues only and this project cannot
+        enumerate .TO instruments, so the Canadian universe is a list rather than a rule. BR-9
+        requires results per country, so this card is a US-only card until that is solved.
+      allowed_regimes: unset
+      holding_horizon: exit.max_holding_period
+
+    universe:
+      rule: DR-003
+      parameters: [universe.min_price, universe.min_adtv_20d, universe.min_bar_history]
+
+    # The selection rule IS the family. All three inputs are unset, so the card refuses rather than
+    # ranking by whatever order the system happens to have - ALLOCATION_SPEC 6 rule 4.
+    selection:
+      measure: relative strength against the index
+      lookback: rs.lookback
+      method: rs.ranking_method
+      cutoff: screen.relative_strength_rule
+
+    # STRATEGY_CARD_SPEC 2: required must hold, confirming may be absent, prohibiting is
+    # NON-COMPENSATORY and can never be outvoted by any number of confirming conditions.
+    conditions:
+      required:
+        - admitted by the DR-003 liquidity rule on the decision date
+        - ranked inside the selection cutoff on the decision date
+        - a stop can be placed below the entry (exit.atr_stop_multiple x ATR(14))
+      confirming: []
+      prohibiting:
+        - the instrument's series is stale (DR-015 freshness gate)
+        - a split took effect after the position's stop was set (DR-016 split guard)
+        - the candidate would breach any DR-006 portfolio cap
+
+    entry:
+      trigger: >-
+        Membership of the selection set at the close of the decision session. There is no separate
+        price trigger, and that is a property of the family rather than an omission - a
+        cross-sectional rule selects, it does not wait for a level.
+      method: next session's open
+      maximum_entry: unset
+
+    invalidation:
+      initial_stop: exit.atr_stop_multiple
+      cancellation: falls out of the selection cutoff before the entry fill
+
+    sizing:
+      rule: risk.per_trade_pct
+      portfolio_constraints:
+        - risk.max_open_risk
+        - risk.max_concurrent_positions
+        - risk.max_sector_risk
+        - risk.correlation_threshold
+        - risk.max_position_value
+        - risk.liquidity_cap_order_to_adtv_pct
+
+    exits:
+      stop: exit.atr_stop_multiple
+      time: exit.max_holding_period
+      targets: unset
+      trailing: unset
+      partials: unset
+
+    data:
+      requires: [daily RAW bars, index bars for the relative measure, sector classification]
+      on_missing: refuse with a coded DATA skip; never guess (FAIL_CLOSED_POLICY 3)
+      on_stale: DR-015
+      on_revised: DR-016
+
+    # Every one is `registered`. None is `active`. That is exactly what G6 measures, and this list
+    # is the first denominator it has ever had.
+    components:
+      - M31-T0464-v5.0   # Relative strength против индекса - the measure
+      - M31-T0465-v5.0   # Long strongest / short weakest - the hypothesis, flagged by the course
+      - M33-T0487-v5.0   # Фильтр по относительной силе - the screen
+      - M77-T1138-v4.0   # Relative strength - the setup-stage observation
+
+    evidence: null
+    validation_status: Untested
+
+    # What stops this card running. Each is a real, checkable obstacle - not a wish list.
+    blocked_by:
+      - id: unset-selection
+        what: rs.lookback, rs.ranking_method and screen.relative_strength_rule are all unset
+        why: >-
+          The card refuses rather than defaulting. ALLOCATION_SPEC 3 says an ordering adopted from
+          the course does not inherit its authority and needs a PRE-REGISTRATION before it selects
+          a trade - so these get values from a study, never from a decision record.
+      - id: no-portfolio-in-the-backtest
+        what: >-
+          validation/backtest runs ONE instrument at a time with unlimited capital. Nothing in
+          src/swingdesk/validation/ references portfolio, max_concurrent_positions or
+          max_open_risk - verified 2026-08-24 by search and by the code graph.
+        why: >-
+          "Hold the strongest N of the universe at once" is a PORTFOLIO CONSTRUCTION rule. A
+          per-instrument engine would enter every name that was ever ranked in the top N,
+          independently and without a cap, which measures a different strategy from the one this
+          card declares. The 2026-08-24 EntryTrigger seam does not reach this: it made the entry
+          RULE injectable and left the engine single-instrument.
+      - id: no-index-series
+        what: no index bars are stored; the measure is relative TO something
+        why: >-
+          M31-T0464 measures strength against the index. The bar store holds instruments from the
+          NASDAQ Trader directory; whether an index proxy ETF is an adequate stand-in for the index
+          is itself a choice this card does not get to make silently.
+      - id: components-not-active
+        what: all four components above are `registered`
+        why: COMPONENT_REGISTRY_SPEC 3 - active needs values, verification and real code.
+
+    kill_criteria:
+      - k.programme_exhausted
+      - k.strategy_rejected
+      - b.deflated_sharpe
