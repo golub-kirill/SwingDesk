@@ -72,11 +72,11 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 
 | | |
 |---|---|
-| Journal | 22 runs, 7 incomplete · **12 run(s) recorded against a dirty tree** and therefore not replayable from their SHA |
-| Decisions | 11240 recorded · 0 uncoded refusals (`a.no_uncoded_failures` requires 0) |
-| Bar store | 3,596,209 rows across 3,743 instruments |
+| Journal | 23 runs, 7 incomplete · **12 run(s) recorded against a dirty tree** and therefore not replayable from their SHA |
+| Decisions | 12381 recorded · 0 uncoded refusals (`a.no_uncoded_failures` requires 0) |
+| Bar store | 3,597,265 rows across 3,743 instruments |
 | PIT integrity | **CLEAN** - bars whose `event_time` postdates their `knowledge_time`: 0 |
-| Directory | **17 pulls** · **7 confirmed** against the response's own `Last-Modified` (`source_session_date`); the rest predate the field and stay permanently unattributed (`DR-008` c3) |
+| Directory | **18 pulls** · **8 confirmed** against the response's own `Last-Modified` (`source_session_date`); the rest predate the field and stay permanently unattributed (`DR-008` c3) |
 | Universe coverage | bars stored for 3,743 of 13,169 listed symbols - **28.4%** |
 | Classifications | 1,148 instrument(s) carry a sector · 1,046 (**91.1%**) report at least one non-zero weight. The stricter `look_through` count, which also drops a degenerate ETF look-through (`DR-006` §8.7), is lower - derive it with `python tools/measure_sector_cap.py --wide` |
 | Track A clock | **0/20** consecutive clean sessions · counting from a **deliberate restart on 2026-08-22**, not an outage - `python tools/track_a_streak.py` prints why · `a.run_completes`, computed by `tools/track_a_streak.py` |
@@ -146,9 +146,13 @@ Four things a fresh session must not get wrong, each argued there:
 
 **And a fifth, added 2026-08-24 because a session summary got it wrong out loud.** *"The first
 strategy card exists"* is true and reads like *"a strategy runs"*, which is false in a way the
-numbers settle: **the system has recorded 11,240 decisions and not one of them is a `Trade`.** 6,727
-`Watch`, 4,513 `Skip`, zero `Trade`, zero `Pause`, zero positions ever opened, zero fills, zero
-management proposals. `pipeline.py`'s terminal state for a candidate that passes every check is the
+record settles: **every decision this system has ever taken is a `Watch` or a `Skip`. Not one is a
+`Trade`.** No `Pause` either, no position ever opened, no fill, no management proposal. The tallies
+move every evening and §2 owns them — derive the split with
+`python tools/build_state.py`, and the per-verdict breakdown from `data/journal.duckdb` directly.
+(This paragraph carried three counts for six hours until the 18:30 run moved all three, which is
+the drift `AGENTS.md` §10.5 exists to stop and it happened inside the document that states the
+rule.) `pipeline.py`'s terminal state for a candidate that passes every check is the
 literal `"Watch"` with the reason *"sized; awaiting a trigger"* — and **there is no trigger in the
 live path**, so `"Trade"` is in the decision vocabulary and is emitted by nothing in `src/`.
 `REQUIREMENTS.md` `REQ-VALIDATION-002`, `ALLOCATION_SPEC.md` §7, `EXECUTION_MODEL.md` §7 and
@@ -346,7 +350,27 @@ different facts, and the exit code alone cannot tell them apart. **It does not c
 `a.run_completes` measures**, which stays exactly its ratified text — the run completes and produces
 a report.
 
-### The schema repair holds — checked 2026-08-24, before the run rather than after it
+### The schema repair held, and the outage is closed — measured 2026-08-24 after the run
+
+**`exit 0`.** The 18:30 pass ran 18:30:00.82 → 18:49:59.38 — **19 min 59 s** — and completed. The
+fault that killed every evening from 2026-08-18 was `positions.open_as_of` binding a column the
+table on disk did not have; `positions.duckdb` carries it again and the run proves it in production.
+
+**Gate 26 was still red immediately afterwards and correctly so**: it reads BOTH tasks, and the
+19:30 second pass had last run 2026-08-21 with `exit 1`. That pass is what closes the gate.
+`tools/track_a_streak.py` also still read 0 straight after, because it does not count a session
+until its 18:30 ± 30 min window has closed — after 19:00 the day becomes countable. Neither is a
+fault; both are the tools declining to answer early.
+
+**Twenty minutes is what `master` costs, and it breaches a ratified budget.** `NFR.md` §3 budgets
+the decision path at ≤ 5 minutes; measured this morning `master` needs 20.2 (19.0 of compute plus
+71.9 s of universe selection) before the vendor. This was the **first full pass since the store was
+deepened to ten years** — the last one to complete was 2026-08-17 at 11m45s against a median of 510
+bars rather than 2,512, and every evening between died in 45 seconds. The branch in §0 takes it to
+about six minutes a pass; on `master` the margin to the 19:30 second pass is forty minutes and
+shrinks as coverage grows, and both passes hold the same single-writer stores.
+
+### What was checked BEFORE the run, and why that was worth doing
 
 The outage that began 2026-08-18 was `positions.open_as_of` binding a column the table on disk did
 not have. **`positions.duckdb` carries `initial_costs_per_share` again, and the query that killed
