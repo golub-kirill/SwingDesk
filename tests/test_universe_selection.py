@@ -195,6 +195,64 @@ def test_the_universe_is_read_as_of_not_as_now(stores) -> None:
     assert builder.select(directory, bars, RULE, AS_OF).eligible == 1
 
 
+# ------------------------------------------------- the bulk read the selection is built on
+
+def test_a_tail_agrees_with_the_full_read_and_reports_the_whole_length(stores) -> None:
+    """`tails` is `as_of` for everyone at once, cut to the last `count` bars.
+
+    Selection reads three things - a bar count, a last close and a twenty-session average - and
+    read a full history per instrument to get them (3.57 million bars and 73 seconds on the real
+    store). The tail must be the same bars the full read ends with, and the count must be the
+    length of the series it was cut from, or `min_history` is answered by the cut.
+    """
+    _, bars = stores
+    bars.write(_bars("TEST1", 40, Decimal("100"), 100_000), AS_OF)
+    bars.write(_bars("TEST2", 7, Decimal("50"), 1_000), AS_OF)
+
+    tails = bars.tails(Interval.DAY, Series.RAW, AS_OF, 20)
+
+    total, tail = tails["TEST1"]
+    full = bars.as_of("TEST1", Interval.DAY, Series.RAW, AS_OF)
+    assert total == 40, "the count is the stored series' length, not the tail's"
+    assert tail.bars == full.bars[-20:]
+
+    short_total, short_tail = tails["TEST2"]
+    assert (short_total, len(short_tail.bars)) == (7, 7), (
+        "an instrument with fewer bars than the window returns all of them, not a padded window"
+    )
+
+
+def test_a_tail_is_read_as_of_and_takes_the_latest_revision(stores) -> None:
+    """The look-ahead guard, restated for the bulk read.
+
+    `as_of` picks the best value per `event_time` known at `knowledge_time`; a second query
+    answering the same question differently is how look-ahead gets in through a side door.
+    """
+    _, bars = stores
+    original = _bars("TEST1", 40, Decimal("100"), 100_000)
+    bars.write(original, AS_OF)
+    later = AS_OF + timedelta(days=1)
+    # All four price fields, because a close moved on its own leaves the bar outside its own range.
+    restated = dict.fromkeys(("open", "high", "low", "close"), Decimal("200"))
+    revised = [bar.model_copy(update=restated) for bar in original[-5:]]
+    bars.write(revised, later)
+
+    at_the_time = bars.tails(Interval.DAY, Series.RAW, AS_OF, 20)["TEST1"][1]
+    afterwards = bars.tails(Interval.DAY, Series.RAW, later, 20)["TEST1"][1]
+
+    assert at_the_time.bars[-1].close == Decimal("100"), "a later revision was visible earlier"
+    assert afterwards.bars[-1].close == Decimal("200"), "the latest revision did not win"
+    assert len(afterwards.bars) == 20, "a revision must not double a bar in the window"
+
+
+def test_a_tail_of_nothing_is_refused_rather_than_returned_empty(stores) -> None:
+    """A window of zero sessions is a caller defect, not a liquidity answer."""
+    _, bars = stores
+    bars.write(_bars("TEST1", 40, Decimal("100"), 100_000), AS_OF)
+    with pytest.raises(ValueError):
+        bars.tails(Interval.DAY, Series.RAW, AS_OF, 0)
+
+
 def test_an_empty_directory_yields_an_empty_universe_rather_than_everything(stores) -> None:
     """Fail-closed at the top of the funnel: an unfetched directory must not admit the whole store."""
     directory, bars = stores

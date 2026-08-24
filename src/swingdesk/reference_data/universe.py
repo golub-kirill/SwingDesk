@@ -211,9 +211,24 @@ class LiquidityRule:
     adtv_window: int
     min_history: int
 
-    def admits(self, series: BarSeries, as_of_index: int | None = None) -> bool:
+    def admits(
+        self, series: BarSeries, as_of_index: int | None = None, *, history: int | None = None
+    ) -> bool:
+        """Whether the rule admits `series`, judged at `as_of_index` (default: its last bar).
+
+        `history` overrides the bar count the `min_history` test reads, and exists for exactly one
+        caller: `BarStore.tails` hands back the last twenty bars of a much longer stored series
+        together with that series' true length, because reading the whole history to count it cost
+        73 seconds a run. The count is the only thing a tail cannot answer for itself. Everything
+        else - the ADTV window, the last close - is read off the bars either way, so both callers
+        run this one test on the same numbers rather than a second implementation of it.
+
+        Leave it `None` and the count is the series' own length, which is what every other caller
+        means and what this did before the parameter existed.
+        """
         end = len(series.bars) - 1 if as_of_index is None else as_of_index
-        if end + 1 < self.min_history:
+        total = end + 1 if history is None else history
+        if total < self.min_history:
             return False
         adtv = average_dollar_volume(series, self.adtv_window, end)
         if adtv is None:
