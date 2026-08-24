@@ -160,10 +160,9 @@ Measured over the stored window:
 
 ## 5. Known gaps, recorded rather than quietly deferred
 
-1. **Sector-relative strength is not measured.** `M31-T0460`, `M31-T0461` and `M31-T0462` are the
-   other way out of §1's identity — a per-name denominator is not a common factor. The
-   classification store holds 1,148 classified names, so this is checkable and it is the next check
-   rather than a guess.
+1. **Sector-relative strength — MEASURED 2026-08-24, see §7.** Gap closed the same day it was
+   opened. It was the other way out of §1's identity and it does reorder; §7 has the numbers and
+   the reading that is easy to get wrong.
 2. **The path form measured here is one of many.** "Share of sessions beating the benchmark" was
    chosen because it is the simplest measure that is provably not a monotone transform of the
    endpoint return. It is **not a proposal**; a pre-registration picks the form.
@@ -183,3 +182,64 @@ Measured over the stored window:
   rather than of the indexes, the choice matters less than §2 suggests.
 - **An adjusted series arriving.** The drag in §3 is the argument for treating raw-price relative
   strength as biased; correcting it changes the comparison and every number above with it.
+
+
+---
+
+## 7. Sector-relative strength, measured 2026-08-24
+
+§5 gap 1 named this as the other way out of §1's identity and refused to guess. This closes it.
+
+```bash
+python tools/measure_sector_relative.py --data data     --out docs/decisions/measurements/sector-relative-2026-08-24.json
+```
+
+A **sector** benchmark varies by name, so it is not a common factor and §1's proof does not apply to
+it. Over **1,023** admitted names carrying a dominant sector across all **11** sectors, each name
+measured against the equal-weighted mean of its own sector's admitted members:
+
+| lookback | ρ vs raw return | ρ vs market point-to-point |
+|---|---|---|
+| 63 | **0.750** | 0.750 |
+| 126 | **0.814** | 0.814 |
+| 252 | **0.819** | 0.819 |
+
+**The second column is a control, not a comparison, and its agreeing with the first is the point.**
+§1 proved the market point-to-point form ranks identically to raw return, so the two columns *must*
+be equal — the tool fails the run if they ever are not. It is §1 restated on a second dataset.
+
+**So sector-relative strength is a genuine cross-sectional signal** where market-relative strength
+in the same form is not.
+
+### 7a. The reading that is easy to get wrong
+
+**It reorders LESS than the market path form does.** §2 measured that at ρ ≈ 0.6 against raw return;
+this reads 0.75–0.82.
+
+**Further from raw return is not better.** Both departures are real, neither is evidence of
+anything, and which — if either — predicts is a question only a pre-registration answers. Recorded
+because the tempting inference runs the other way and would put a number on a preference.
+
+### 7b. Three authored readings, stated rather than defaulted
+
+1. **The sector return is EQUAL-WEIGHTED** across its admitted members. Not capitalisation-weighted:
+   this project has no point-in-time float-adjusted market cap, the same constraint `DR-003` records
+   for index membership and `DR-017` for the ADTV rule's shape.
+2. **A name takes its DOMINANT sector** by `look_through`. **130 of 1,153** admitted names have no
+   usable look-through — mostly the bond, inverse, commodity and volatility products `DR-006` §8.7's
+   degeneracy guard refuses — and contribute to no sector.
+3. **A name is included in its own sector's mean.** Sectors run 26 to 215 members, so the
+   self-inclusion bias is small and symmetric; removing it per name would make the denominator
+   depend on the numerator, which is worse.
+
+### 7c. What it does not settle
+
+**Whether the sector signal predicts anything.** This measures that the denominator changes the
+order, not that the order is better. It also uses **today's** sectors rather than point-in-time ones
+— `DR-006` §14.5's limit, unchanged — so a name that changed sector is misfiled for its whole
+history.
+
+**And it does not choose the card's measure.** `rs.benchmark_form` stays `unset`: market or sector,
+point-to-point or path, all four combinations are now characterised and none is ratified. That is
+`ALLOCATION_SPEC` §3's rule, and having four measured options rather than one guessed one is what
+this record was for.
