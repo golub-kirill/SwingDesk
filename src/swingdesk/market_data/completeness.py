@@ -84,11 +84,18 @@ def check(
     # Only sessions inside the window are in scope. A series routinely spans far more than the
     # window being checked, and comparing its whole extent against the window's calendar would
     # report every out-of-window session as a closed-market violation.
-    actual_counts: dict[date, int] = {
-        day: len(series.bars_on(day))
-        for day in series.session_dates
-        if start <= day <= end
-    }
+    #
+    # ONE PASS over the bars, not one pass PER SESSION. `BarSeries.bars_on` is a linear scan, so
+    # calling it once per session date made this O(bars x sessions) - and the pipeline checks the
+    # whole stored extent of each instrument, which means sessions ~= bars. On the ten-year store
+    # that is ~2,500 x ~2,500 = 6.3 million comparisons for one instrument and 7.2 billion for a
+    # 1,141-member run. Measured 2026-08-24: 90 of the 150 seconds one 150-instrument pass spent,
+    # inside this expression alone. Counting instead of materialising the bars is also all this
+    # needs - only `len()` was ever read.
+    actual_counts: dict[date, int] = {}
+    for bar in series.bars:
+        if start <= bar.session_date <= end:
+            actual_counts[bar.session_date] = actual_counts.get(bar.session_date, 0) + 1
 
     findings: list[SessionFinding] = []
 

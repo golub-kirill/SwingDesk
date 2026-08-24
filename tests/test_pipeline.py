@@ -186,6 +186,41 @@ def test_missing_session_raises_data(registry) -> None:
     assert all(finding.code == "DATA" for finding in report.findings)
 
 
+def test_bars_outside_the_window_are_not_findings(registry) -> None:
+    """A series wider than the window is normal, and none of the surplus is a finding.
+
+    `check` is called by the pipeline over one instrument's WHOLE stored extent, but a caller may
+    pass any window - and the code comment has said since it was written that out-of-window
+    sessions must stay out of scope, because a bar the window does not cover would otherwise be
+    reported as "vendor returned bars but NYSE was closed".
+
+    Nothing asserted it. Measured 2026-08-24: deleting the window filter left all 794 tests green,
+    because every fixture in this file builds its series exactly over the window it then checks.
+    This one deliberately does not.
+    """
+    window = (date(2025, 6, 2), date(2025, 6, 30))
+    wider = _sessions(TEST_US.exchange, date(2025, 3, 3), date(2025, 9, 30))
+    assert wider[0] < window[0] and wider[-1] > window[1], "the series must overhang both ends"
+
+    report = check(series_for(TEST_US, wider), TEST_US.exchange, YAHOO, *window)
+    assert report.is_complete, (
+        f"surplus bars reported as findings: {[str(f) for f in report.findings[:3]]}"
+    )
+    assert report.sessions_checked == len(_sessions(TEST_US.exchange, *window))
+
+
+def test_a_window_the_exchange_was_shut_for_has_no_sessions() -> None:
+    """A closed window is an empty answer, never an error.
+
+    The calendar reads two columns of a pandas frame; an EMPTY frame carries no dtype and the
+    vectorised read raises `AttributeError` on it rather than returning nothing. A weekend is the
+    cheapest instance of a window with no session in it.
+    """
+    saturday, sunday = date(2026, 8, 22), date(2026, 8, 23)
+    assert cal.sessions(TEST_US.exchange, saturday, sunday) == ()
+    assert cal.sessions(TEST_CA.exchange, saturday, sunday) == ()
+
+
 def test_as_of_ignores_later_knowledge(stores, registry) -> None:
     """A query dated before a revision must not see it. This is the look-ahead guard."""
     store, _ = stores

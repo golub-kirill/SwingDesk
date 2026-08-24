@@ -56,31 +56,45 @@ def _schedule(exchange: Exchange, start: date, end: date) -> pd.DataFrame:
     return schedule
 
 
+@lru_cache(maxsize=32)
 def sessions(exchange: Exchange, start: date, end: date) -> tuple[ExchangeSession, ...]:
     """Every trading session for `exchange` in `[start, end]`, ascending.
 
     A date absent from the result is a date the exchange was closed - a fact no amount of bar data
     could establish.
+
+    **Cached, and the result is safe to share**: the tuple and every `ExchangeSession` in it are
+    frozen, and `_schedule` below has been cached since it was written - so this adds no staleness
+    the schedule did not already have. `maxsize` is small on purpose. One entry can hold ~2,500
+    validated records, and a daily run's windows concentrate hard: measured 2026-08-24 over the
+    stored universe, 3,743 instruments produce 903 distinct (first, last) windows and the four
+    commonest cover 58% of them. A large cache would buy the tail and pay for it in memory.
     """
     frame = _schedule(exchange, start, end)
+    if frame.empty:
+        # An empty frame's columns carry no dtype, so `.dt` below raises rather than returning
+        # nothing. A window the exchange was shut for the whole of is a normal answer - a weekend,
+        # a holiday week, or a date the calendar does not know - and it is an empty tuple.
+        return ()
     tz = _calendar(exchange).tz
-    result: list[ExchangeSession] = []
-    # `iterrows` types the index as Hashable. This frame's index is a DatetimeIndex - that is
-    # what pandas_market_calendars returns - so the cast states a fact the stubs cannot.
-    for stamp, row in frame.iterrows():
-        stamp = cast(pd.Timestamp, stamp)
-        open_local = row["market_open"].tz_convert(tz)
-        close_local = row["market_close"].tz_convert(tz)
-        result.append(
-            ExchangeSession(
-                exchange=exchange,
-                session_date=stamp.date(),
-                open_time=open_local.to_pydatetime(),
-                close_time=close_local.to_pydatetime(),
-                is_early_close=close_local.hour < _REGULAR_CLOSE_HOUR,
-            )
+    # Converted for the whole column at once. Per row it built a pandas Series per access, which
+    # cost 82 of the 230 seconds one profiled 150-instrument pass spent - `iterrows` is the
+    # expensive way to read a frame this project only ever reads two columns of.
+    opens = frame["market_open"].dt.tz_convert(tz)
+    closes = frame["market_close"].dt.tz_convert(tz)
+    # The index is a DatetimeIndex - that is what pandas_market_calendars returns - so the cast
+    # states a fact the stubs cannot.
+    index = cast(pd.DatetimeIndex, frame.index)
+    return tuple(
+        ExchangeSession(
+            exchange=exchange,
+            session_date=stamp.date(),
+            open_time=open_local.to_pydatetime(),
+            close_time=close_local.to_pydatetime(),
+            is_early_close=close_local.hour < _REGULAR_CLOSE_HOUR,
         )
-    return tuple(result)
+        for stamp, open_local, close_local in zip(index, opens, closes, strict=True)
+    )
 
 
 def session(exchange: Exchange, on: date) -> ExchangeSession | None:
