@@ -689,6 +689,56 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       (a study, not a decision record), the benchmark FORM is unset (`DR-018`, below), and all four
       components are `registered`.
 
+- [ ] **`[v]` `a.reproducible` HAS NEVER BEEN MEASURED ON THE REAL UNIVERSE, and the reason is
+      not the one `HANDOFF.md` gives.** Found 2026-08-24 by reading `journal.duckdb` rather than the
+      documents.
+      Gate 9 checks it on `golden/replay/daily-three-instruments` — real, and **three instruments**.
+      Determinism defects live where iteration order, set membership and dictionary insertion have
+      room to differ, and three names give them almost none.
+      **The sharper finding:** `HANDOFF.md` says the 12 dirty-tree journalled runs hold this
+      criterion short. Measured: of 22 runs, 12 carry `code_dirty` — but **not one of the ten CLEAN
+      ones was recorded at the code this repository now runs.** So replaying any stored manifest
+      today mismatches on `code_hash`, correctly and uninformatively. The criterion is about a
+      re-run at the SAME code, so no stored run could demonstrate it whatever its dirty flag says.
+      Also measured: **every scheduled run from 2026-08-17 onward is clean**; the dirty ones are
+      2026-08-02 → 08-14 plus one manual run on 08-22. The dirty-tree era is over and its records
+      are immutable, so nothing there is fixable — only supersedable by a clean demonstration.
+      **BUILT: `tools/verify_reproducible.py`.** Runs the pipeline twice at one pinned clock over
+      the stored universe and compares output hashes. Same code, same snapshot, same parameters, so
+      **nothing pinned CAN change** — which makes a mismatch here a stronger signal than one in gate
+      9. Both passes journal into a **throwaway** database: a determinism check that wrote to
+      `data/journal.duckdb` would add two runs to the evidence record every time anyone asked, and
+      `a.run_completes` counts journalled runs.
+      Reports `UNAVAILABLE` (exit 4) rather than a traceback when a store is held by another
+      process — `ADR-0004` makes them single-writer, so a refresh pass holding one is the design
+      working.
+      **NOT YET RUN against the full universe.** A ten-year deepening pass held the bar store when
+      it was written. Run it, and if it passes, `a.reproducible` has its first production
+      measurement; if it fails with nothing pinned differing, that is non-determinism in the
+      decision path and it is the case the check exists to catch.
+
+- [ ] **`[v]` `M31-T0464` IS `specified` — 2026-08-24, and the gate caught the shortcut.**
+      `derived_observations/relative_strength.py` computes the RS line: the ratio of an
+      instrument's close to `rs.benchmark`'s, rebased to 1.0 at their first SHARED session. An
+      `ALGORITHM_SPEC` record in the docstring, seven property tests, no parameters.
+      **Parameter-free on purpose.** The ratio is the OBSERVATION; a change in it over a lookback is
+      a READING of it, and `rs.lookback` belongs to whatever measures the change. A component with
+      no unset parameter can never refuse for want of a value.
+      **The docstring states what it cannot do**, because the misuse is natural: ranking a
+      cross-section by this value is identical to ranking by raw return (`DR-018` §1). The RS line
+      is a legitimate thing to look at and a decorative thing to sort by.
+      **Gate 11 refused the first version.** It claimed `M31-T0464` AND `M77-T1138` — the same
+      measure at the Setup stage — reasoning that one implementation beats two. **Production Rules
+      3.8 forbids two components sharing one definition**, and the rule is about what a catalogue
+      row MEANS rather than about duplicated code. `M77-T1138` stays `registered` until someone
+      reads the source PDFs and can say whether it names something distinct; those PDFs are not in
+      this repository.
+      **Still `specified`, not `active`.** It declares no parameters and could activate on
+      verification alone — it is held because activation is a decision (`ROADMAP` §9), the same
+      reason ATR and SMA are held.
+      **Open:** `M31-T0465` (the hypothesis) and `M33-T0487` (the screen) are still `registered`,
+      and both need `PR-012`'s values.
+
 - [ ] **`[v]` THE BENCHMARK EXISTS NOW, AND POINT-TO-POINT RELATIVE STRENGTH IS DECORATIVE** —
       `DR-018`, written 2026-08-24, `proposed`. Derive every figure with
       `python tools/measure_benchmark.py`, never from this line.

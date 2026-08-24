@@ -159,8 +159,19 @@ cards:
           different signal - and there the index choice bites, SPY against QQQ at 0.616. So the
           form is a strategy choice and ALLOCATION_SPEC 3 sends it to a pre-registration.
       - id: components-not-active
-        what: all four components above are `registered`
-        why: COMPONENT_REGISTRY_SPEC 3 - active needs values, verification and real code.
+        what: >-
+          M31-T0464 is `specified` as of 2026-08-24 - derived_observations/relative_strength.py
+          implements the RS line with an ALGORITHM_SPEC record and property tests. The other three
+          are `registered`.
+        why: >-
+          COMPONENT_REGISTRY_SPEC 3 - `active` needs parameter VALUES, and this card's selection
+          inputs come from PR-012. M31-T0464 itself declares no parameters and could activate on
+          verification alone; it is held at `specified` because activation is a decision
+          (ROADMAP section 9), not because an artefact is missing.
+          M77-T1138 is the same measure at the Setup stage and is deliberately NOT claimed by the
+          same function: Production Rules 3.8 forbids two components sharing one definition and
+          gate 11 enforces it. Whether that row names something distinct needs the source PDFs,
+          which are not in this repository.
 
     kill_criteria:
       - k.programme_exhausted
