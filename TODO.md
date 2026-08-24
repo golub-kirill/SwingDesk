@@ -37,7 +37,22 @@ do, and the trap is now in `AGENTS.md` §12. The 2026-08-11 freeze lifted on 202
 closed — the R denominator by re-measurement, the staleness gate by `DR-015` being built — and what
 follows them is open work rather than a blocker. **Corporate actions is the one to read**: it is the
 last of the three "specified, implemented, wired to nothing" findings still open, and `DR-015` §4
-hands it over by name.
+hands it over by name. *Half of it closed 2026-08-23 — the write-time revision comparison is built
+and `data.revision_epsilon` is ruled; what is left is the item directly below.*
+
+- [ ] **`[v]` A restated close is detected and printed, and nothing REFUSES on it** (`DR-016`
+      §10.4). `market_data/store.py:close_revision` reports every close restated past
+      `data.revision_epsilon` and `tools/refresh_universe.py` prints them; the decision path never
+      sees one. Making it a `DATA_ERR` / `Critical` is an `application/pipeline.py` change, and
+      that file is **frozen** under `DR-015` §3 — a change moving decision output resets
+      `a.run_completes`, which `SESSION-HANDOFF` §1 names the slowest thing on the board.
+      **It also needs a decision nobody has taken:** does the run refuse the INSTRUMENT or the
+      SESSION? A close restated 5% invalidates that instrument's entry, share count and stop
+      together; it says nothing about the other 1,147.
+      **Not urgent, and that is measured rather than assumed.** `DR-016` §8.2 read the scoped form
+      firing **zero** times across the whole capture window, so nothing is being missed while this
+      waits. Spending a counter reset on a path that has never fired is the worse trade — land it
+      alongside the next change that touches `pipeline.py` for its own reasons.
 
 - [x] **`[v]` The R denominator was asserted by nothing — CLOSED 2026-08-18 by re-measurement, not
       by work.** On the morning of 08-17, `planned_risk` could be replaced with the constant
@@ -168,8 +183,29 @@ hands it over by name.
       unusable.
       **Still open and NOT decided by DR-017:** is backfilled volume executable? The fill-in is
       overwhelmingly upward; if it is late off-exchange prints then settled ADTV overstates the very
-      liquidity $5M proxies. And `universe.min_adtv_20d = $5M` is itself `assumed` and never swept —
-      a $3M–$8M sweep would test it and settle whether the six crossers are noise, in one pass.
+      liquidity $5M proxies.
+      **THE FLOOR IS SWEPT NOW, 2026-08-23 — and `DR-003`'s PLATEAU DOES NOT EXIST** (`DR-003`
+      addendum, `tools/measure_liquidity_floor.py`; derive the figures with that command, never
+      from this line). The record chose 5M because *"the choice is insensitive anywhere on the
+      5M–25M plateau"*, argued from *"two instruments out of 115"* over the 5M→10M doubling — 5.3%
+      of that sample's admitted set. Over the measured population the same step costs **12.9%**,
+      and **a third of the universe is gone by 25M**. There is no break in the distribution
+      anywhere: the sweep's cheapest step costs 7.0% of members per doubling and its dearest 33.5%.
+      **The sample was good and wrong in exactly one place.** Five of six ADTV percentiles replicate
+      within ×0.96–×1.18. The sixth is **p75, high by ×1.77** — and p75 is the single number the
+      plateau argument was built on. Gap 3 of that record predicted this in the right words and was
+      recorded as a limitation rather than treated as one.
+      **No threshold moves.** The 2026-08-18 quality-proxy argument above is untouched and is now
+      the ONLY argument the floor has. What dies is *"it sits on a plateau"*, which was the reason
+      of record for three weeks — a future argument for moving the floor gains nothing from this,
+      and a future argument for keeping it has lost its stated reason.
+      **What a $3M–$8M sweep would now be testing** is therefore the level of a measure whose form
+      is unvalidated (above) **and** whose value the distribution does not select. Any floor is a
+      choice on a continuum and has to be argued from what the screen is FOR.
+      **The one thing that could still overturn it:** coverage past roughly half the directory
+      moving p75. The stored set is an alphabetical prefix — 99.0% of measured names sit in the
+      directory's first half — and p75 is where sample and population already disagree. Cheap to
+      re-check after more `tools/refresh_universe.py --budget 500` passes.
 
 - [ ] **`[v]` Corporate actions — THE SPLIT GUARD IS BUILT (2026-08-23, `DR-016` §9); the revision
       comparison is the only half left and it is the only half that needs a ruling.**
@@ -184,8 +220,13 @@ hands it over by name.
       Fail-open like the bar fetch, and `SplitGuard` carries `refreshed` apart from `stored`,
       because zero actions means either "never split" or "nobody asked" and the store cannot record
       a negative. An unanswered guard reports `unavailable` and does **not** pause.
-      **Still open below: the write-time revision comparison**, which is what `data.revision_epsilon`
-      gates.
+      **The write-time revision comparison is BUILT too, 2026-08-23** (`DR-016` §10.2), once the
+      owner ruled. `market_data/store.py:close_revision` is the rule, `BarStore.write` takes the
+      epsilon, `WriteResult.close_revisions` reports, and `tools/refresh_universe.py` reads the
+      registry and prints. Three properties are pinned by tests: the epsilon governs the ALARM and
+      never the record, `None` means NOT CHECKED rather than clean, and the comparison is relative
+      so a cent means what it should at $5 and at $500.
+      **What is left is one item and it is below:** surfacing the fault in the decision path.
 
 - [ ] **`[v]` Corporate actions — DR-016 DRAFTED and its PRECONDITION IS NOW BUILT (2026-08-18).**
       **The actions series exists.** `POINT_IN_TIME_SPEC` §4 named three series and the tree had
@@ -211,7 +252,16 @@ hands it over by name.
       further. **§8.5 also found that `corporate_actions` holds zero rows** — the table, contract,
       vendor call and read path all exist and nothing ever calls `fetch_actions`, the third instance
       of the `AGENTS.md` §7 shape inside the record that closed the previous one.
-      **What still needs the owner:**
+      **RULED 2026-08-23, as §8.4 recommended: keep `0.001`, scope it to `close`.**
+      `data.revision_epsilon` moves `unset` → **`owner`**, its unit narrows from *"relative
+      tolerance per series"* to *"relative tolerance on the close"* — the old wording is what let
+      one number span four fields whose distributions are an order of magnitude apart — and its
+      `read_by` moves from `none` to `swingdesk.market_data.store:close_revision`. The comparison
+      is built with it (`DR-016` §10), because a ratified decision reaching no code is a decision
+      that did not happen and this record had already produced two of that shape.
+      **It does not touch `application/pipeline.py`**, which is frozen under `DR-015` §3, so no
+      counter was spent on a path §8.2 measured firing **zero** times.
+      The original wording of the ask, kept because it is what was ruled on:
       `data.revision_epsilon = 0.001`, **scoped to `close`** (§8.4), not to all four price fields as
       §3 first wrote; volume taken out of §4's
       raw-immutability rule and given no parameter, because the course names no such concept and the
@@ -413,9 +463,19 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **The point-in-time gap is now ENCODED**: read as-of, so a replay before the first pull finds
       nothing rather than answering an older question with today's classification.
 
-- [ ] **`[v]` DR-006's last one: SECTOR. §3 called it UNEVALUABLE and that is WRONG — it is
+- [x] **`[v]` DR-006's last one: SECTOR. §3 called it UNEVALUABLE and that is WRONG — it is
       buildable today. DONE 2026-08-23 — see the entry above.** Kept for the measurements; every
       item in it is discharged.
+      **CLOSED 2026-08-23: both rulings taken, and `DR-006` is fully ratified** (§17). Sector cap
+      **keeps 2R** and `risk.max_sector_risk` moves `assumed:DR-006` → **`owner`**; §2's *"one third
+      of the book"* justification is **retired** because §8.3 moved the anchor to 4R without moving
+      the number, so 2R is half the book and the old sentence quotes a premise that has gone. The
+      correlation cap **keeps the refusal** and the size-adjustment question §11 has carried since
+      2026-08-08 is **closed as unnecessary rather than unauthored**.
+      **`risk.correlation_threshold` stays `assumed` on purpose.** The ruling settles the SHAPE of
+      the rule, not the number; 0.70 becomes `validated` through a pre-registered study and nothing
+      else. `risk.correlation_lookback_sessions` stays `assumed` too — nobody was asked about 60
+      sessions and nothing measures it.
       **a. Correlation is not blocked at all. DONE 2026-08-23.** §3 says "nothing computes a
       correlation matrix" — a statement about missing CODE, not missing data. Measured 2026-08-22:
       the full **1152 × 1152**
@@ -497,8 +557,14 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       cost-inclusive variant at the call site would put a second definition of open risk in the tree.
       Needs a domain answer, not an implementation one.
 
-- [ ] **`[c]` DR-009** · **`[c]` DR-001 / DR-002 / DR-003 / DR-005** — proposed since 08-02, used as
+- [ ] **`[c]` DR-009** · **`[c]` DR-001 / DR-002 / DR-005** — proposed since 08-02, used as
       working fact throughout.
+      **`DR-003` left this list 2026-08-23: RATIFIED**, on the population measurement and on the
+      quality-proxy argument, after the same measurement refuted the plateau argument it had been
+      standing on since 08-02. Only `universe.min_adtv_20d` moves `assumed` → `owner`;
+      `universe.min_price` and `universe.min_bar_history` were not part of the ruling and stay
+      `assumed:DR-003`, following `DR-006`'s precedent that an accepted record and an owner-set
+      value are different claims.
 
 - [ ] **`[v]` DR-015 is BUILT (2026-08-18), and left two things for the owner.**
       **a. The retry's per-run ceiling is an implementation reading, not a ruling.** §3 states two

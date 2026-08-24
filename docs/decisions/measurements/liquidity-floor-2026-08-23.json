@@ -1,0 +1,187 @@
+{
+  "adtv_percentile_ratio_to_dr003_sample": {
+    "p10": 1.175,
+    "p25": 0.959,
+    "p5": 1.093,
+    "p50": 1.183,
+    "p75": 0.566,
+    "p90": 0.967
+  },
+  "adtv_percentiles_usd_per_day": {
+    "p10": 36739.19,
+    "p25": 183470.5849501,
+    "p5": 14180.324,
+    "p50": 1468739.02119765,
+    "p75": 19263238.88994,
+    "p90": 106741516.706,
+    "p95": 254822400.76231086,
+    "p99": 1143401332.5276034
+  },
+  "adtv_sweep": [
+    {
+      "admitted": 2199,
+      "etfs": 860,
+      "lost_vs_previous_floor": null,
+      "min_adtv": 100000,
+      "share_lost_per_doubling": null,
+      "share_of_measured": 0.6193
+    },
+    {
+      "admitted": 1997,
+      "etfs": 747,
+      "lost_vs_previous_floor": 202,
+      "min_adtv": 250000,
+      "share_lost_per_doubling": 0.0695,
+      "share_of_measured": 0.5624
+    },
+    {
+      "admitted": 1800,
+      "etfs": 642,
+      "lost_vs_previous_floor": 197,
+      "min_adtv": 500000,
+      "share_lost_per_doubling": 0.0986,
+      "share_of_measured": 0.5069
+    },
+    {
+      "admitted": 1616,
+      "etfs": 540,
+      "lost_vs_previous_floor": 184,
+      "min_adtv": 1000000,
+      "share_lost_per_doubling": 0.1022,
+      "share_of_measured": 0.4551
+    },
+    {
+      "admitted": 1419,
+      "etfs": 424,
+      "lost_vs_previous_floor": 197,
+      "min_adtv": 2000000,
+      "share_lost_per_doubling": 0.1219,
+      "share_of_measured": 0.3996
+    },
+    {
+      "admitted": 1148,
+      "etfs": 288,
+      "lost_vs_previous_floor": 271,
+      "min_adtv": 5000000,
+      "share_lost_per_doubling": 0.1445,
+      "share_of_measured": 0.3233
+    },
+    {
+      "admitted": 1000,
+      "etfs": 228,
+      "lost_vs_previous_floor": 148,
+      "min_adtv": 10000000,
+      "share_lost_per_doubling": 0.1289,
+      "share_of_measured": 0.2816
+    },
+    {
+      "admitted": 761,
+      "etfs": 134,
+      "lost_vs_previous_floor": 239,
+      "min_adtv": 25000000,
+      "share_lost_per_doubling": 0.1808,
+      "share_of_measured": 0.2143
+    },
+    {
+      "admitted": 555,
+      "etfs": 80,
+      "lost_vs_previous_floor": 206,
+      "min_adtv": 50000000,
+      "share_lost_per_doubling": 0.2707,
+      "share_of_measured": 0.1563
+    },
+    {
+      "admitted": 369,
+      "etfs": 43,
+      "lost_vs_previous_floor": 186,
+      "min_adtv": 100000000,
+      "share_lost_per_doubling": 0.3351,
+      "share_of_measured": 0.1039
+    }
+  ],
+  "adtv_window": 20,
+  "as_of": "2026-08-22T09:46:16.227661-05:00",
+  "close_percentiles_usd": {
+    "p10": 2.84,
+    "p25": 10.48,
+    "p5": 1.31,
+    "p50": 25.030001,
+    "p75": 46.672001,
+    "p90": 94.43,
+    "p95": 153.240005,
+    "p99": 390.279999
+  },
+  "directory_eligible": 13136,
+  "held_fixed": {
+    "min_bar_history": 250,
+    "min_price": 5.0
+  },
+  "history_alone_admits": 2987,
+  "measurable": 3551,
+  "not_measured": "effective spread per liquidity tier - PR-010 measured EDGE flat across ADTV thirds and HANDOFF section 7 closes the spread level from daily OHLC by evidence",
+  "plateau_check": {
+    "admitted_at_10m": 1000,
+    "admitted_at_25m": 761,
+    "admitted_at_5m": 1148,
+    "cheapest_step_min_adtv": 250000,
+    "cheapest_step_share_lost_per_doubling": 0.06948935928510144,
+    "claim": "DR-003: the choice is insensitive anywhere on the 5M-25M plateau",
+    "dearest_step_min_adtv": 100000000,
+    "dearest_step_share_lost_per_doubling": 0.33513513513513515,
+    "range_is_flat_as_claimed": false,
+    "sample_read_per_doubling": 0.053,
+    "share_lost_per_doubling_5m_to_10m": 0.1289,
+    "share_lost_per_doubling_5m_to_25m": 0.1452,
+    "share_of_5m_membership_lost_by_25m": 0.3371
+  },
+  "price_sweep": [
+    {
+      "admitted": 1222,
+      "lost_vs_previous_floor": null,
+      "min_price": 0.0
+    },
+    {
+      "admitted": 1214,
+      "lost_vs_previous_floor": 8,
+      "min_price": 1.0
+    },
+    {
+      "admitted": 1207,
+      "lost_vs_previous_floor": 7,
+      "min_price": 2.0
+    },
+    {
+      "admitted": 1148,
+      "lost_vs_previous_floor": 59,
+      "min_price": 5.0
+    },
+    {
+      "admitted": 1086,
+      "lost_vs_previous_floor": 62,
+      "min_price": 10.0
+    },
+    {
+      "admitted": 941,
+      "lost_vs_previous_floor": 145,
+      "min_price": 20.0
+    }
+  ],
+  "ratified_rule_admits": 1148,
+  "representativeness": {
+    "behind_newest_session": 3546,
+    "directory_rank_percentiles": {
+      "p10": 386.0,
+      "p25": 968.0,
+      "p5": 193.0,
+      "p50": 1934.0,
+      "p75": 2883.0,
+      "p90": 3447.0,
+      "p95": 3628.0,
+      "p99": 5829.0
+    },
+    "last_session_max": "2026-08-21",
+    "last_session_min": "2026-07-30",
+    "share_in_directory_first_half": 0.9904
+  },
+  "stored_with_bars": 3738
+}

@@ -2,8 +2,8 @@
 
 ```
 date:       2026-08-08
-status:     accepted — partially ratified by the owner 2026-08-22 (four of six; sector and
-            correlation stay proposed, §8.4)
+status:     accepted — fully ratified by the owner: four of six 2026-08-22 (§8.4), the sector cap
+            and the correlation cap 2026-08-23 (§17)
 parameters: risk.max_open_risk, risk.max_concurrent_positions, risk.max_sector_risk,
             risk.correlation_threshold, risk.correlation_lookback_sessions,
             risk.max_position_value, risk.liquidity_cap_order_to_adtv_pct
@@ -974,3 +974,64 @@ calibration.
 excluded 28, and the vendor failed on 9 — 68 survivors. **The universe is 1,148 admitted of 3,713
 with bars, out of 13,136 eligible: coverage is 28.3%**, and that, rather than the universe rule, is
 what bounds a wider study today.
+
+---
+
+## 17. Both remaining rulings, taken 2026-08-23
+
+§16.4 put two recommendations to the owner and said *"neither ruling is taken here."* Both are taken
+now, both as recommended, and this record moves from partially to fully ratified. **No threshold
+moves.** What changes is that two parameters stop being provisional and one of them stops resting on
+a premise that had already gone.
+
+### 17.1 `risk.max_sector_risk` — keep 2R, on the measured argument and not §2's
+
+**Ruled: keep 2R.** Status moves `assumed:DR-006` → **`owner`**.
+
+And §14.4's other half is ruled with it: **§2's justification is retired.** *"One third of the
+book"* was true against a 6R anchor; §8.3 moved the anchor to 4R without moving this number, so 2R
+is now half the book and the old sentence quotes a premise that no longer holds. Repeating it would
+be the proxy failure `AGENTS.md` §12 names — answering from a document that once said the right
+thing rather than from the artefact that owns the claim.
+
+What the ruling stands on instead, from §14.2 and §16.4:
+
+- 2R binds where concentration is genuinely extreme — the top ~11% of books — while **1.33R refuses
+  more than a third of all books**, and in roughly **85%** of those refusals the two names were not
+  correlated at all. Those are refusals earned by a label rather than by a measured relationship.
+- With four slots and eleven sectors, *"at most one per sector"* is close to forcing perfect sector
+  diversity on a book that small.
+
+**The cost is named rather than argued away.** Two positions — **−3.38R** at the measured gap loss —
+can be lost to one theme overnight, which is a fifth of the −15R drawdown pause in a single session.
+§14.4 put that case for 1.33R honestly and the ruling accepts it with its eyes open.
+
+### 17.2 The correlation cap — keep the refusal; the size adjustment is closed
+
+**Ruled: refuse, do not resize.** The open question §11 has carried since this record was written is
+**closed**, and closed as *unnecessary* rather than *unauthored* — which is the stronger of the two
+and the one §15.4 argued.
+
+The reasoning is §15.4's and §16.3's, and it needs no expansion: refusing costs nothing measurable
+in return, the rule fires on only **4.15%** of books, and halving instead would retain half of an
+exposure that gaps together **five times more often** while requiring a multiplier nothing in this
+project supports. There was no trade-off to make — the cheaper rule is also the one with the better
+evidence behind it.
+
+**`risk.correlation_threshold` stays `assumed:DR-006` and that is deliberate.** The ruling settles
+the SHAPE of the rule, not the number. 0.70 becomes `validated` through a pre-registered study
+against this universe and through nothing else — not through a calibration attached to a decision
+record, and not through an owner ruling about whether to refuse or resize. §15.4 said so before the
+ruling existed and it is worth repeating after it.
+
+### 17.3 What this ruling does not touch
+
+- **`risk.correlation_lookback_sessions`** stays `assumed:DR-006`. Nobody was asked about 60
+  sessions and nothing above measures it.
+- **Every limit in §14.5, §15.5 and §16.5 stands.** Today's sectors rather than point-in-time ones,
+  a thin behavioural sample from one arm of a refuted study, and the nine products §8.7's guard
+  refuses. A ruling is a decision about what to do under uncertainty; it does not reduce the
+  uncertainty, and §16.5's *"everything about OUTCOMES"* is unchanged.
+- **`DR-014` still makes this paper-only**, so neither cap is spending real money today. That is why
+  neither was blocking, and it is also why leaving them provisional had a cost worth ending: a
+  parameter that reads `assumed` forever is one nobody ever has to defend.

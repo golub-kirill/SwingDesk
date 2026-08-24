@@ -14,6 +14,7 @@ event (POINT_IN_TIME_SPEC 3).
 from __future__ import annotations
 
 from collections.abc import Iterable
+from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -67,8 +68,10 @@ CREATE TABLE IF NOT EXISTS snapshots (
 
 #: Relative tolerance below which two vendor values are the same number.
 #: Exact comparison produces phantom revisions from float noise on every fetch
-#: (DATA_QUALITY_SPEC 4). Until data.revision_epsilon is set in the registry, the store refuses to
-#: guess and callers must pass one explicitly.
+#: (DATA_QUALITY_SPEC 4). This is a WRITE-time noise floor and it is not `data.revision_epsilon`:
+#: the quantum decides whether a row is stored at all, the epsilon decides whether a stored
+#: revision is a FAULT. DR-016 section 8.4 corollary 1 keeps them apart deliberately - a revision is
+#: always recorded, and only a close restated past the epsilon is raised.
 _PRICE_QUANTUM = Decimal("0.000001")
 
 
@@ -217,12 +220,20 @@ class BarStore:
 
     # ----------------------------------------------------------------- writes
 
-    def write(self, incoming: Iterable[Bar], knowledge_time: datetime) -> WriteResult:
+    def write(self, incoming: Iterable[Bar], knowledge_time: datetime,
+              revision_epsilon: Decimal | None = None) -> WriteResult:
         """Insert only genuinely new or changed bars.
 
         Returns what was actually written, so the caller can report revision volume rather than
         fetch volume - the two differ by orders of magnitude on a normal day, and only the first is
         informative.
+
+        `revision_epsilon` is `data.revision_epsilon` and it changes **nothing about what is
+        stored**. Every revision is written either way (`DR-016` section 8.4 corollary 1); passing
+        the epsilon only makes the write REPORT which restated closes exceed it, so a caller can
+        raise a fault. `None` means the caller did not supply one, and the write then reports no
+        faults rather than assuming a tolerance - the store does not guess a threshold it was not
+        given.
         """
         incoming = list(incoming)
         if not incoming:
@@ -237,6 +248,7 @@ class BarStore:
         }
 
         new_rows: list[tuple[Any, ...]] = []
+        revisions: list[CloseRevision] = []
         unchanged = 0
         revised = 0
         unclosed = 0
@@ -257,6 +269,10 @@ class BarStore:
                 continue
             if existing is not None:
                 revised += 1
+                if revision_epsilon is not None:
+                    fault = close_revision(existing, bar, revision_epsilon)
+                    if fault is not None:
+                        revisions.append(fault)
             new_rows.append(
                 (
                     bar.instrument_id, bar.interval.value, bar.series.value,
@@ -276,7 +292,8 @@ class BarStore:
                 new_rows,
             )
         return WriteResult(inserted=len(new_rows) - revised, revised=revised,
-                           unchanged=unchanged, unclosed=unclosed)
+                           unchanged=unchanged, unclosed=unclosed,
+                           close_revisions=tuple(revisions))
 
     # ------------------------------------------------------- corporate actions
 
@@ -385,9 +402,10 @@ class BarStore:
 class WriteResult:
     """What a write actually changed."""
 
-    __slots__ = ("inserted", "revised", "unchanged", "unclosed")
+    __slots__ = ("close_revisions", "inserted", "revised", "unchanged", "unclosed")
 
-    def __init__(self, inserted: int, revised: int, unchanged: int, unclosed: int = 0) -> None:
+    def __init__(self, inserted: int, revised: int, unchanged: int, unclosed: int = 0,
+                 close_revisions: tuple[CloseRevision, ...] = ()) -> None:
         self.inserted = inserted
         self.revised = revised
         self.unchanged = unchanged
@@ -398,6 +416,13 @@ class WriteResult:
         a fact the caller should be able to report, and `vendor_yahoo` already uses the same shape
         for rows that fail validation.
         """
+        self.close_revisions = close_revisions
+        """Restated closes exceeding `data.revision_epsilon`, when the caller supplied one.
+
+        A SUBSET of `revised`, never a substitute for it: every revision is stored and counted, and
+        these are the ones that also warrant a fault. Empty when no epsilon was passed, which means
+        "not checked" rather than "none found" - the caller knows which of the two it asked for.
+        """
 
     @property
     def written(self) -> int:
@@ -405,7 +430,8 @@ class WriteResult:
 
     def __repr__(self) -> str:
         return (f"WriteResult(inserted={self.inserted}, revised={self.revised}, "
-                f"unchanged={self.unchanged}, unclosed={self.unclosed})")
+                f"unchanged={self.unchanged}, unclosed={self.unclosed}, "
+                f"close_revisions={len(self.close_revisions)})")
 
 
 def _unclosed_sessions(
@@ -487,3 +513,53 @@ def _same_bar(existing: Bar, incoming: Bar) -> bool:
 
 def _close_enough(a: Decimal, b: Decimal) -> bool:
     return abs(a - b) < _PRICE_QUANTUM
+
+
+@dataclass(frozen=True, slots=True)
+class CloseRevision:
+    """A stored close a later fetch restated by more than `data.revision_epsilon`.
+
+    `relative` is `None` when the stored close was zero: the change is real and its MAGNITUDE is
+    undefined, which is not the same as small. Reporting it with an invented ratio would be the
+    `unavailable`-becomes-a-number collapse this project refuses everywhere else.
+    """
+
+    instrument_id: str
+    session_date: date
+    stored: Decimal
+    restated: Decimal
+    relative: Decimal | None
+
+
+def close_revision(existing: Bar, incoming: Bar, epsilon: Decimal) -> CloseRevision | None:
+    """A close restated past `epsilon`, or None. `DR-016` section 8.4, owner ruling 2026-08-23.
+
+    **Scoped to `close` alone, and the scope IS the ruling.** `DR-016` section 8.1 measured the four
+    price fields as different populations: the close's largest revision across the whole capture
+    window is 0.084% and the open's MEDIAN is 0.128%, larger than the threshold itself. At 0.001
+    over all four fields the rule raises roughly 94 faults an evening; over `close` alone it fired
+    zero times. Section 5 of that record had already rejected the volume form of the rule for
+    crying wolf nightly, and the scoped-to-price form made the same error one field over.
+
+    **The close is also the field the decision path reads.** `pipeline.py` takes `entry` from the
+    last stored close, and sizing spends its risk against that entry, so a restated close moves the
+    entry, the share count and the stop distance together. `high` and `low` still reach a decision
+    through ATR and get no fault - the accepted limit section 8.4 corollary 2 records, because a
+    field whose revisions form no separable population does not get a worse threshold, it gets none.
+
+    Relative, not absolute: a one-cent restatement means something different at $5 and at $500.
+    """
+    if existing.close == incoming.close:
+        return None
+    if not existing.close:
+        return CloseRevision(
+            instrument_id=incoming.instrument_id, session_date=incoming.session_date,
+            stored=existing.close, restated=incoming.close, relative=None,
+        )
+    relative = abs(incoming.close - existing.close) / abs(existing.close)
+    if relative <= epsilon:
+        return None
+    return CloseRevision(
+        instrument_id=incoming.instrument_id, session_date=incoming.session_date,
+        stored=existing.close, restated=incoming.close, relative=relative,
+    )
