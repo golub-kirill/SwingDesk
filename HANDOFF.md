@@ -247,8 +247,8 @@ a report.
 **The daily run's compute was cut roughly tenfold and nothing it decides moved.** ~24 min a pass to
 ~6, of which the remaining ~4 min is the vendor rather than this code. Three hot spots and a
 quadratic: `completeness.check` was O(bars x sessions) over each instrument's whole stored extent,
-`universe.select` read 3.57 million bars to answer a count, a last close and a twenty-session
-average, `calendar.sessions` read a pandas frame with `iterrows` against a cache running at a 2%
+`application/universe.py`'s selection read 3.57 million bars to answer a count, a last close and a
+twenty-session average, `calendar.sessions` read a pandas frame with `iterrows` against a cache running at a 2%
 hit rate, and `checklist` re-parsed its registry per candidate.
 
 **Byte-identity is the reason to trust it, and it was measured five times**, most usefully by
