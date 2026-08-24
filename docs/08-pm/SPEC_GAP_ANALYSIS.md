@@ -47,11 +47,11 @@ keeping wholesale.
 | 11 | Терминология | FULL | `GLOSSARY.md` gained both sections (2026-08-08) — 10 ambiguous terms, each a collision this tree has already hit and paid for, plus the discouraged synonyms |
 | 12 | Требования к данным, время | **PARTIAL** | `POINT_IN_TIME_SPEC.md`, `DATA_QUALITY_SPEC.md`, `CALENDAR_SPEC.md`. **2 of 8 time types** |
 | 13 | Feature / Indicator Spec | FULL | `COMPONENT_REGISTRY_SPEC.md`, `registry/components.yml` (465), 25 golden vectors, gates 3c/7b/11 |
-| 14 | Parameter Registry | FULL | `PARAMETER_REGISTRY.md`, `registry/parameters.yml` (96), gate 1 |
+| 14 | Parameter Registry | FULL | `PARAMETER_REGISTRY.md`, `registry/parameters.yml`, gate 1. How many parameters it holds is `HANDOFF.md` §2's — this row said 96 until 2026-08-24 |
 | 15 | Rule Specification | PARTIAL | `RULE_SPEC.md` (2026-08-08) freezes the form and audits the eight rules that exist. **No object carries `scope`, `evidence_status` or a declared effect class**, and no rule links to its own tests |
 | 16 | Event Specification | PARTIAL | `TRANSITION_SPEC.md` (2026-08-08) — the object, renamed to end the collision with the market-event catalogue in `EVENT_SPEC.md`. `from_state` now recorded on decisions; **no common envelope across the four shapes**, and six kinds of transition are still not recorded at all, two of them irrecoverably |
 | 17 | State / State Machine | PARTIAL | `DECISION_STATE_MACHINE.md` covers candidate decisions; no instrument state machine, no hysteresis policy |
-| 18 | Market Regime | FULL | `REGIME_SPEC.md`, `derived_observations/regime.py`, **PR-002 validated** |
+| 18 | Market Regime | **PARTIAL** | `REGIME_SPEC.md`, `derived_observations/regime.py`. ~~**PR-002 validated**~~ — **that verdict was CORRECTED to `inconclusive` on 2026-08-16** and `regime.classifier_rule` is `assumed:PR-002`, so the row's only stated evidence for FULL was withdrawn eight days before anyone noticed. Reclassified 2026-08-24 on this document's own standard — grading the document rather than the discharge is how a coverage matrix starts lying: the classifier's `read_by` is **`none`**, so the regime is specified, implemented and **wired into no decision** |
 | 19 | Setup / Trigger / Strategy | PARTIAL | `STRATEGY_CARD_SPEC.md`, `SCREENER_SPEC.md`; no separate Setup and Trigger objects with expiration |
 | 20 | Constraint Model | PARTIAL | `CODES.md` (12 skip + 12 error codes), `FAIL_CLOSED_POLICY.md`; no constraint object with `priority` / `override_policy` |
 | 21 | Outcome Definition | PARTIAL | `contracts/trade.py`, `BACKTEST_PROTOCOL.md`; the intrabar ambiguity policy is now stated (`EXECUTION_MODEL.md` §4) and **`Trade` carries no ambiguity flag to record it** |
@@ -63,10 +63,10 @@ keeping wholesale.
 | 27 | Backtest Semantics | PARTIAL | `BACKTEST_PROTOCOL.md`, `validation/backtest/engine.py`; intrabar policy specified in `EXECUTION_MODEL.md` §4 and not yet enforceable — nothing can violate it while no target exists |
 | 28 | Execution Model | PARTIAL | `EXECUTION_MODEL.md` (2026-08-08) — fills, gaps, the intrabar policy and the costs. **No target exists, so the policy is stated ahead of its first use**; the live path sizes from a different price than the backtest fills at |
 | 29 | Order Management SM | DEFERRED | D1 — the system never places orders |
-| 30 | Risk Engine | PARTIAL | `RISK_SPEC.md`, `trade_management/sizing.py`; **no portfolio layer** — correlation, sector and open-risk caps all `unset` |
-| 31 | Capital Allocation / Ranking | PARTIAL | `ALLOCATION_SPEC.md` (2026-08-08) — admissibility vs preference, the allocation record, the id-order trap. `DR-006` proposes the six portfolio constraints; **two of them cannot be evaluated** (no sector source, no correlation matrix) and `rs.ranking_method` is `unset`, so nothing ranks yet |
-| 32 | AI Decision Agent | DEFERRED | `CHARTER.md` §3 non-goal for v1 |
-| 33 | LLM / Model Governance | DEFERRED | follows §32 |
+| 30 | Risk Engine | PARTIAL | `RISK_SPEC.md`, `trade_management/sizing.py`, `trade_management/portfolio.py`. ~~**no portfolio layer** — correlation, sector and open-risk caps all `unset`~~ — **the portfolio layer exists since 2026-08-22/23** (`DR-006` §9, §11, §12) and all five caps carry a value and name a consumer. Remaining shortfall: `risk.liquidity_cap_order_to_adtv_pct` is `owner`-set and `read_by` **`none`**, `account.fx_rate_cad` is `unset` so a CAD candidate refuses, and the book's R excludes round-trip costs while 1R includes them (`DR-006` §10) |
+| 31 | Capital Allocation / Ranking | PARTIAL | `ALLOCATION_SPEC.md` (2026-08-08) — admissibility vs preference, the allocation record, the id-order trap. ~~`DR-006` proposes the six portfolio constraints; **two of them cannot be evaluated** (no sector source, no correlation matrix)~~ — **`DR-006` is fully ratified and all six reach code** (2026-08-23): the sector source is the bar vendor's own look-through and the full correlation matrix builds from the store. **The shortfall is unchanged and is the ranking**: `rs.ranking_method` is `unset` and `rs.benchmark_form` is `unset` by `DR-018`, so nothing ranks yet |
+| 32 | AI Decision Agent | **PARTIAL** | ~~DEFERRED — `CHARTER.md` §3 non-goal for v1~~. **Charter amendment A-001 (2026-08-08) put this contour IN scope** — outside the ratified v1 finish line, which is a different claim — and `AI_AUTHORITY_MODEL.md` was written for it the same day. `COVERAGE_AUDIT.md` §4 states it in as many words: *"The coverage status is `MISSING`, not `OUT_OF_SCOPE`"*, and its §3 row grades the contour `PARTIALLY_COVERED`. Shortfall, quoted from there: the model's §3 boundary is authored and wants owner ratification, and **none of its prohibitions are gated** |
+| 33 | LLM / Model Governance | DEFERRED | ~~follows §32~~ — §32 is no longer deferred, so the reason had to move: `COVERAGE_AUDIT.md` §5 rules `AI_MODEL_GOVERNANCE_AND_EVALUATION` **not yet**, because model, prompt and schema versioning matter once an agent exists and *"follows the authority model, does not precede it"*. Place in the ontology fixed |
 | 34 | Decision Record | FULL | `JOURNAL_SCHEMA.md`, `AUDIT_AND_IMMUTABILITY.md`, `journal_evidence/journal.py` |
 | 35 | System Modes | PARTIAL | `SYSTEM_MODES.md` (2026-08-08) — six modes, four running, `mode` required on `RunManifest` and on `pipeline.run` since 2026-08-08. **`PAPER` and `SHADOW` do not exist**, so two of the six are definitions without a runtime |
 | 36 | System Architecture | FULL | `ARCHITECTURE.md`, `DEPENDENCY_LAW.md`, `CONCURRENCY_MODEL.md` |
@@ -80,7 +80,7 @@ keeping wholesale.
 | 44 | Learning Engine | PARTIAL | `DRIFT_AND_LEARNING.md` (2026-08-08) §1 — the promotion path is **M69's acceptance enum**, transcribed since 2026-08-01 and connected to nothing. **Nothing consumes it**, and the post-trade loop it needs is out of contour under D1 |
 | 45 | Drift Monitoring | PARTIAL | `DRIFT_AND_LEARNING.md` (2026-08-08) §3 — five families, **four computable today and none computed**; expectation drift needs executed fills and is structurally blocked |
 | 46 | Knowledge Graph | PARTIAL | `KNOWLEDGE_GRAPH.md` (2026-08-08) specifies the projection. **10 of 11 edge types are already gate-enforced**; specified and deliberately not built until phase 3 grows the tree |
-| 47 | Документационный комплект | FULL | `docs/README.md` — 61-document plan, different structure, same function |
+| 47 | Документационный комплект | FULL | `docs/README.md`, indexed by `registry/project_manifest.yml` and checked by gate 15 — different structure, same function. The document total is `HANDOFF.md` §2's; this row said 61 until 2026-08-24 |
 | 48 | Формат документации | FULL | `docs/README.md`; enforced by gates 2 and 3e |
 | 49 | Рабочий процесс агента | FULL | `AGENTS.md`, `tools/build_*.py` |
 | 50 | MVP / вертикальный срез | **FULL** | **G5 closed 2026-08-02** — walking skeleton green, replay is a merge gate |
@@ -95,10 +95,10 @@ keeping wholesale.
 
 | Coverage | Count |
 |---|---|
-| FULL | **30** |
-| PARTIAL | 24 |
+| FULL | **29** |
+| PARTIAL | 26 |
 | ABSENT | **0** |
-| DEFERRED | 3 |
+| DEFERRED | 2 |
 
 **57 rows, §0 through §56.** These four numbers are **recounted from the table above by gate 3e**,
 not maintained by hand. They were maintained by hand until 2026-08-08 and had drifted to 31/22 — the
@@ -108,6 +108,21 @@ is now checked rather than corrected.
 **Over half the specification is met.** That is the finding the parallel analysis could not reach,
 and it changed the plan: the work was never building 48 documents. What is left is twenty-four named
 shortfalls, each stated in its own row.
+
+**Movement 2026-08-24, and both directions are represented.** §32 left DEFERRED: charter
+amendment A-001 put the AI contour **in scope** on 2026-08-08 — outside the ratified v1 finish line,
+which is a different claim — and `AI_AUTHORITY_MODEL.md` was written for it the same day, so the row
+had been citing a non-goal that the charter had already amended. §18 left FULL in the other
+direction: its only stated evidence was *"PR-002 validated"*, and that verdict was corrected to
+`inconclusive` on 2026-08-16 while the row went on asserting the strongest word this project has.
+Two more rows kept their class and lost a stale shortfall — §30 and §31 both said the portfolio
+constraints could not be evaluated, and all six have reached code since 2026-08-23.
+
+**What that pass says about this table's failure mode.** Nothing here rots by being wrong when
+written; it rots when a *cited* fact moves and the citation stays. Gate 3e checks that a cited
+document exists and that the summary matches the table — neither of which can see a withdrawn study
+verdict or an amended charter. The habit that catches it is `AGENTS.md` §12's: read the artefact
+that owns the claim, and this table's rows are dense with claims it does not own.
 
 **Movement since the first pass (2026-08-04 → 2026-08-08).** §15, §28, §35 and §16 — the top four of
 the nine — moved from ABSENT to PARTIAL when `RULE_SPEC.md`, `EXECUTION_MODEL.md`,

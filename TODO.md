@@ -425,8 +425,30 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       The date is 2026-08-09 (`tools/track_a_streak.py`'s own `SCHEDULING_STARTED` constant, which
       cites this same date), not 08-10 — 08-10 is the first NYSE session the schedule was
       *evaluated against*, and the day it failed on batteries.
-- [ ] **`[c]` SPEC_GAP §32/§33** still read `DEFERRED`; `COVERAGE_AUDIT.md` says charter amendment
-      A-001 makes them `MISSING, not OUT_OF_SCOPE`.
+- [x] **`[v]` SPEC_GAP §32/§33 — RESOLVED 2026-08-24, and reading the row pulled three more with
+      it.** §32 leaves `DEFERRED` for **PARTIAL**: A-001 put the AI contour in scope on 2026-08-08
+      — outside the ratified v1 finish line, which is a different claim — and
+      `AI_AUTHORITY_MODEL.md` was written for it the same day, so the row was citing a non-goal the
+      charter had already amended. `COVERAGE_AUDIT.md` §3 grades the contour `PARTIALLY_COVERED`
+      and its §4 says *"the coverage status is `MISSING`, not `OUT_OF_SCOPE`"*. §33 stays
+      `DEFERRED` and its reason moves to `COVERAGE_AUDIT.md` §5, which rules model governance
+      *"not yet"* because it follows the authority model rather than §32.
+      **§18 left FULL in the other direction, and it is the one that mattered.** Its only stated
+      evidence was **"PR-002 validated"** — that verdict was corrected to `inconclusive` on
+      2026-08-16, `regime.classifier_rule` is `assumed:PR-002`, and its `read_by` is **`none`**.
+      A Tier-8 table asserted the strongest word this project has, eight days after the study that
+      supplied it was withdrawn. `AGENTS.md` §3: *nothing looks more validated than it is.*
+      **Two more rows kept their class and lost a stale shortfall.** §30 said *"no portfolio layer
+      — correlation, sector and open-risk caps all `unset`"* and §31 said two of `DR-006`'s six
+      constraints *"cannot be evaluated"*; all six reach code as of 2026-08-23 and every cap names
+      a consumer. Two counts outside their owner went too: §14's `(96)` parameters against 105, and
+      §47's *"61-document plan"*.
+      **Census: FULL 29 · PARTIAL 26 · ABSENT 0 · DEFERRED 2**, recounted by gate 3e — which was
+      proven to fail on a wrong summary before the new one was trusted. `HANDOFF.md` §2's hand-kept
+      row carries it.
+      **The failure mode is worth carrying beyond this row:** nothing in that table rots by being
+      wrong when written. It rots when a *cited* fact moves and the citation stays, and gate 3e can
+      see neither a withdrawn verdict nor an amended charter.
 - [x] **`[v]` "Two ratified criteria are inert" — RESOLVED 2026-08-24. It is one criterion and two
       reasons, and the claim had MOVED before it was resolved.** The item said `HANDOFF.md`:124; §3
       of that file sent the standing account to `docs/08-pm/EVIDENCE_SUMMARY.md` on 2026-08-15 and

@@ -83,7 +83,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | CI | 2026-08-17 | `gates`, windows-latest. Exactly **four** `UNAVAILABLE`, verified against run `32093559374`: gates 2 and 3 need the course PDFs, which are not in the repo; gates 23 and 24 need `data/`. Everything else must be green |
 | Daily run | 2026-08-24 | **SCHEDULED** — Windows Task Scheduler, `SwingDesk daily run`, weekdays 18:30 local, wrapper `tools/daily_run.cmd`, log `data/daily_run.log`. **~6 min per pass** over 1,141 members, of which ~2 min is compute and ~4 min is 1,141 sequential vendor fetches — measured 2026-08-24 by `tools/verify_reproducible.py`, which ran two full passes in 11m40s. It was ~24 min that morning; the row read ~5 min and had been right on 2026-08-09 |
 | Costs | 2026-08-09 | slippage **measured** — 25bps per side (`DR-005`); commission still assumed |
-| ТЗ coverage | 2026-08-13 | FULL 30 · PARTIAL 24 · ABSENT 0 · DEFERRED 3 — recounted from `SPEC_GAP_ANALYSIS.md` §3 by gate 3e |
+| ТЗ coverage | 2026-08-24 | FULL 29 · PARTIAL 26 · ABSENT 0 · DEFERRED 2 — recounted from `SPEC_GAP_ANALYSIS.md` §3 by gate 3e. Two rows moved: §32 out of DEFERRED because charter amendment A-001 put the AI contour in scope, and §18 out of FULL because `PR-002`'s verdict — its only stated evidence — was corrected to `inconclusive` |
 | Project gates | 2026-08-10 | G0, G4, G5 closed · G1, G2, G3, G6, G7 open |
 
 ```bash
