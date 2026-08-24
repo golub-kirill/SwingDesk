@@ -4,7 +4,7 @@
 id:            PR-013
 date:          2026-08-24
 author:        owner (direction), agent (drafting)
-status:        registered
+status:        reported
 ```
 
 **Read §0b before anything else. This study is EXPLORATORY by declaration**, not by accident, and

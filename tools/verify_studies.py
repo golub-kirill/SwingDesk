@@ -65,7 +65,14 @@ def _reports() -> dict[str, str]:
     for path in sorted(RESULTS.glob("PR-*-report.md")):
         header = _header(path.read_text(encoding="utf-8"))
         study = (header.get("prereg") or "").split()[0] if header.get("prereg") else ""
-        verdict = (header.get("verdict") or "").split()[0].rstrip(",.")
+        # An ABSENT `verdict:` field gives `None or "" -> "".split() -> []`, and indexing that
+        # raised `IndexError` rather than reporting a malformed header. Found 2026-08-24 by a report
+        # whose header used markdown bold instead of the fenced key/value block every other one
+        # uses, so the field was missing entirely: the gate crashed with a traceback where its whole
+        # job was to name the defect. The `prereg` line one above already guarded for this; the
+        # verdict line did not. A gate that cannot read its subject says so.
+        tokens = (header.get("verdict") or "").split()
+        verdict = tokens[0].rstrip(",.") if tokens else ""
         if not study:
             print(f"  {path.name}: header has no `prereg:` field naming the study")
             continue
