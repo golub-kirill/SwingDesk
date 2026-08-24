@@ -365,18 +365,21 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       strikethrough-and-append convention. All 29 gates pass.
 - [ ] **`[c]` G0 status.** `CONSTRAINTS.md`:150 says ratifying the remaining `criteria.yml` values
       "closes G0"; `HANDOFF.md` §2 says G0 is closed.
-- [ ] **`[v]` `PREREG_TEMPLATE.md` §6 carries as OPEN two things `criteria.yml` RATIFIED.** Found
-      2026-08-24 while pricing `b.deflated_sharpe`. The template says the multiple-testing
-      correction is *"None is adopted yet"* and asks *"whether the trial count … is per component,
-      per strategy, or project-wide"*. `criteria.yml` settled both on 2026-08-08 — the method is
+- [x] **`[v]` `PREREG_TEMPLATE.md` §6 carried as OPEN two things `criteria.yml` RATIFIED — FIXED
+      2026-08-24.** Found while pricing `b.deflated_sharpe`. The template said the multiple-testing
+      correction was *"None is adopted yet"* and asked *"whether the trial count … is per component,
+      per strategy, or project-wide"*. `criteria.yml` settled both on **2026-08-08** — the method is
       the deflated Sharpe and the denominator is cumulative across the programme — and
-      `EVIDENCE_RECORD_SPEC.md` §1 then states it as fact.
-      **`criteria.yml` wins:** a ratified criterion is a commitment, a template's open-items list is
-      a working note. **The fix is to correct the template forward**, and it was deliberately NOT
-      made inside `TRIAL_BUDGET.md` — `PREREG_TEMPLATE.md` governs how every study is written and
+      `EVIDENCE_RECORD_SPEC.md` §1 then states it as fact. **It had been closed for sixteen days
+      before anyone noticed.**
+      Corrected forward with strikethrough per `AGENTS.md` §10.5's own convention, in its own change
+      rather than from inside `TRIAL_BUDGET.md`: the template governs how every study is written and
       editing it from a budget document is the wrong blast radius.
-      Live cost: a session writing a new pre-registration reads the template, believes no correction
-      is adopted, and omits the accounting a ratified criterion requires.
+      **The section now also states what a new study OWES it:** how many configurations it will
+      evaluate, declared before it runs. An undeclared trial inflates the true denominator while the
+      reported one stays flat.
+      Live cost avoided: a session writing a pre-registration would have read that no correction was
+      adopted and omitted the accounting a ratified criterion requires.
 - [x] **`[c]→[v]` The 120-day Track A clock — resolved by the v1.1.1 amendment above.**
       `SUCCESS_AND_KILL_CRITERIA.md`:154's "has not started" is now struck through and corrected.
       Checked `HANDOFF.md` §4 for a third copy before closing this: it already says "reversed

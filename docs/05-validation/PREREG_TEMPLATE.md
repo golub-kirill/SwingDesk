@@ -144,13 +144,26 @@ definition.
 
 ## 6. Open items
 
-- [ ] **Multiple-testing correction.** Running many studies against one dataset inflates the chance
-      that one passes. Candidate approaches from the literature: White's Reality Check, the deflated
-      Sharpe ratio (Bailey & López de Prado), and the multiple-testing adjustments argued for in
-      Harvey & Liu. None is adopted yet, and none comes from the course — this is an authored
-      import and must be marked as one when it lands.
-- [ ] Whether the trial count for such a correction is per component, per strategy, or project-wide.
-      Project-wide is the honest denominator and the harshest one.
+- [x] ~~**Multiple-testing correction.** … None is adopted yet …~~ **CLOSED — and it had been
+      closed for sixteen days before anyone noticed.** `registry/criteria.yml` ratified
+      `b.deflated_sharpe` on **2026-08-08**: *"Deflated Sharpe computed on the CUMULATIVE trial
+      count across the whole programme"*, status `ratified`. `EVIDENCE_RECORD_SPEC.md` §1 then
+      states it as settled fact. This list went on carrying it as open, and a session writing a new
+      pre-registration would have read here that no correction was adopted and omitted the
+      accounting a ratified criterion requires.
+      **The method is the deflated Sharpe** (Bailey & López de Prado 2014). It is an **authored
+      import** and marked as one wherever it lands, per `AGENTS.md` §10.3 — the course supplies no
+      multiple-testing correction and this project did not derive it.
+- [x] ~~Whether the trial count is per component, per strategy, or project-wide.~~ **CLOSED by the
+      same ratification: PROJECT-WIDE.** *"The trial count carries forward across every
+      pre-registration."*
+      **And a trial is a CONFIGURATION EVALUATED, not a pre-registration filed** — a study that
+      fits four variants and keeps one has taken four shots. `docs/08-pm/TRIAL_BUDGET.md` is the
+      accounting and `python tools/trial_budget.py` derives the count; never quote a number for it
+      from here.
+      **What a new study owes this section:** state how many configurations it will evaluate,
+      before it runs. An undeclared trial inflates the true denominator while the reported one
+      stays flat, which is the one direction that manufactures significance.
 - [ ] Where pre-registrations live once there are dozens. A directory works to about thirty; an index
       generated from their front matter is the obvious next step, alongside the component registry.
 - [ ] Whether an abandoned pre-registration stays in the repository. It should: a study abandoned
