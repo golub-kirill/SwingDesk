@@ -138,3 +138,60 @@ python tools/run_pr012.py --data data --verify-sample 200
 Deterministic given the store: the window comes from a rule, the bootstrap is seeded
 (`BOOTSTRAP_SEED = 20260824`), and the runner refuses to start if its pinned constants no longer
 match what §5 declared.
+
+
+---
+
+## Appended 2026-08-24: the split cost the sample and bought nothing, and saying so is now expensive
+
+Appended rather than edited — a reported result is corrected forward (`AGENTS.md` §11 rule 2). No
+number above changes.
+
+### The holdout protected against a risk this study did not carry
+
+`WALKFORWARD_SPEC.md` §1 states what a split is for: *"Walk-forward separates tuning from subsequent
+checking in time. It fails when the choice saw the data it is later judged on."* §2 makes the
+mechanism explicit — parameters are **fitted** on train, **selected** on validation, and **judged**
+on test.
+
+**This study fits nothing and selects nothing.** §5 says so in its own words: *"NOTHING is selected
+from the data. All three arms and the single lookback are fixed here, before the run. There is no
+parameter search."*
+
+So train and validation are empty by construction, and the 70/30 split discarded **70% of the
+window from the judged sample in exchange for a protection there was nothing to protect.** Roughly
+600 trades per arm became roughly 185, which is the entire reason §8's floor was missed. The routes
+listed above — a longer window, a shorter holding period, more positions, a lower `b.min_sample` —
+were all answers to the wrong question.
+
+### And the honest fix is not available to whoever notices it
+
+The obvious redesign is the same three arms over the full window with no split. **It cannot be run
+as a confirmatory study now**, and the reason is `PREREG_TEMPLATE.md` rule 3: *"An amendment made
+after seeing data downgrades the study to exploratory."* The numbers above are seen. A
+pre-registration written by someone who has read them is not a pre-registration in the sense that
+makes one worth anything, whatever its commit timestamp says.
+
+**This is a real cost and it is recorded rather than worked around.** The choices are:
+
+| | |
+|---|---|
+| run it and label it **exploratory** | honest, and it cannot advance any validation status or set `rs.benchmark_form` |
+| have someone who has not seen these numbers design it | the only route to a confirmatory result on this window |
+| register a **different** question | the split's cost does not transfer, but the trials do |
+
+**None of these is free, and the cheapest-looking one is the trap.** Running the pooled version and
+quietly treating its verdict as confirmatory is exactly the data-snooping the whole
+pre-registration discipline exists to make detectable, and it would be undetectable here because
+the file would look correct.
+
+### What this says about the discipline rather than about the study
+
+**A split is a cost, not a virtue, and it should be priced before it is imposed.** This
+pre-registration copied a 70/30 holdout from `PR-005`, which had five gate arms and a genuine
+selection problem. Carried into a study with no selection at all, the same structure looked like
+rigour and behaved like a 70% sample cut.
+
+`PREREG_TEMPLATE.md` §5 asks for a `split` and a `selection rule` as separate fields. It does not
+ask what the split is *for* when the selection rule is "nothing". That is the gap this study fell
+into, and it is a template question rather than a study one — carried to `TODO.md`.
