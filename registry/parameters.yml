@@ -838,6 +838,47 @@ parameters:
     named_in: [M31-T0465]
     ui_editable: false
 
+  - id: rs.benchmark
+    unit: instrument id
+    value: SPY
+    status: assumed
+    provenance: "assumed:DR-018"
+    read_by: none
+    named_in: [M31-T0454, M31-T0464]
+    note: >-
+      What relative strength is measured AGAINST. The course names three indexes as Definitions -
+      S&P 500 (M31-T0454), Nasdaq-100 (M31-T0455), Russell 2000 (M31-T0456) - and does not say
+      which applies to a candidate. This project has no index series, so the value is an ETF proxy:
+      SPY, chosen because CARD-001 declares a broad US universe and the other two indexes are
+      sector-tilted and size-tilted subsets that would import a tilt nobody chose. The PROXY choice
+      is measured insensitive - SPY, IVV and VOO rank the universe at Spearman 0.973 to 0.990 of
+      each other - while the INDEX choice is not: SPY against QQQ reads 0.616 at a 63-session
+      lookback. Derive the figures with tools/measure_benchmark.py, never from this note. read_by is
+      none because no code consumes it yet: the form that would consume it is rs.benchmark_form,
+      which is unset pending a pre-registration.
+    ui_editable: true
+
+  - id: rs.benchmark_form
+    unit: rule
+    value: null
+    status: unset
+    provenance: null
+    read_by: none
+    named_in: [M31-T0464]
+    note: >-
+      HOW a candidate is compared to rs.benchmark, and it decides whether the benchmark means
+      anything at all. Measured 2026-08-24: the usual point-to-point form (1+own)/(1+benchmark) is a
+      strictly monotone transform of the name's own return on any single cross-section, because the
+      benchmark's return is one constant for every name - so it ranks EXACTLY as raw return does,
+      Spearman 1.000000 across 15 benchmark x lookback pairs over 1148 names. Point-to-point
+      relative strength is momentum with a decorative denominator. A path-dependent form - for
+      instance the share of sessions the name beat the benchmark - is not such a transform and reads
+      about 0.6 against raw return, which is a genuinely different signal. Unset because
+      ALLOCATION_SPEC section 3 requires a pre-registration for an ordering adopted from the course,
+      never a decision record: DR-018 fixes the denominator and deliberately refuses to fix the
+      formula.
+    ui_editable: false
+
   # ---- statistics conventions (docs/02-domain/STATISTICS_SPEC.md §7) ----
   - id: stats.sharpe_convention
     unit: rule

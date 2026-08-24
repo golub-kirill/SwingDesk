@@ -100,6 +100,7 @@ is expected to be superseded when a study says so. Different lifetimes, differen
 | `DR-015` | **How old may data be before we refuse to decide on it?** | Two sessions is too stale to decide on; a failed fetch retries 3x30s then once more at 19:30 | `data.freshness_window` | **accepted — ruled 2026-08-18** |
 | `DR-016` | **When is a changed bar a fault rather than a revision?** | A raw PRICE that changes is a critical fault; a raw VOLUME that changes is Tuesday | `data.revision_epsilon`, scoped to price; volume taken out of the rule and given no parameter | proposed — owner ratification required |
 | `DR-017` | **How settled must volume be before it admits an instrument?** | The ADTV window is lagged three sessions, because volume is still being written for two | a new lag on the ADTV window; it enters the registry on ratification | proposed — owner ratification required |
+| `DR-018` | **What is relative strength measured AGAINST — and can that choice matter?** | The course names three indexes and this project has none, so the benchmark is an ETF proxy; but on one cross-section the usual point-to-point form ranks exactly as raw return does, so the benchmark is decorative until the FORM makes it otherwise | `rs.benchmark` = SPY; `rs.benchmark_form` deliberately left `unset` for a pre-registration | proposed — owner ratification required |
 
 **The middle column is the one to read first.** A record's own title states its *conclusion*, which
 is the least useful thing about it to someone who has not read it - `DR-006` is "the portfolio risk

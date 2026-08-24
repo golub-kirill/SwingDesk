@@ -82,12 +82,30 @@ answer the same question when they should.
 **What remains is that no study runner calls it.** The engine can express this card's family; nothing
 has run it, because running it needs the ranking rule, which needs a pre-registration.
 
-### 3b. There is no index to be strong relative to
+### 3b. There was no index to be strong relative to — and the fix found something worse
 
-`M31-T0464` measures strength **against the index**. The bar store holds instruments from the NASDAQ
-Trader directory; no index series is stored. Whether a proxy ETF is an adequate stand-in is a choice
-this card must not make silently — a relative measure against the wrong denominator is wrong in a way
-that looks fine.
+`M31-T0464` measures strength **against the index**. No index series was stored: the bar store holds
+instruments from the NASDAQ Trader directory, and the proxies were absent only because coverage is
+an **alphabetical prefix** that had not reached the letter S. Fetched 2026-08-24 — `SPY`, `QQQ`,
+`IWM`, `IVV`, `VOO`, five years each — and settled in [`DR-018`](../decisions/DR-018-relative-strength-benchmark.md).
+
+**The measurement that record ran changed the question.** On a single cross-section the usual
+point-to-point relative strength, `(1 + own) / (1 + benchmark)`, is a **strictly monotone transform
+of the name's own return** — the benchmark's return is one constant for every name that day, so
+dividing by it reorders nothing. Measured as a control that must return exactly 1: **15 of 15**
+benchmark × lookback pairs give ρ = **1.000000** against a ranking on raw return alone, over 1,148
+names.
+
+**So point-to-point relative strength is momentum with a decorative denominator**, and a card
+declaring it would be declaring the family it was chosen to avoid.
+
+A **path-dependent** form escapes the identity — share of sessions the name beat the benchmark reads
+ρ ≈ 0.6 against raw return, a genuinely different signal — and there the index choice bites: SPY
+against QQQ at **0.616** on 63 sessions, while SPY against IVV (same index, different fund) reads
+**0.973**. **The index is the decision; the proxy is not.**
+
+`rs.benchmark` is therefore `SPY` and `rs.benchmark_form` is **`unset`**, because the form decides
+what this card actually trades and `ALLOCATION_SPEC.md` §3 sends that to a pre-registration.
 
 ### 3c. G6 has a denominator for the first time
 
