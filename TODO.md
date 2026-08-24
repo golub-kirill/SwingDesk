@@ -649,6 +649,39 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 5. Studies
 
+- [x] **`[v]` `ROADMAP` P5 — THE FIRST STRATEGY CARD EXISTS, 2026-08-24.** Load-bearing since
+      2026-08-02 and untouched until now. Family chosen by the owner: **cross-sectional relative
+      strength** — deliberately not the time-series breakout `PR-005` refuted.
+      `registry/cards.yml` (machine-readable) +
+      `docs/02-domain/CARD-001-cross-sectional-relative-strength.md` (the reasoning) +
+      **gate 27** `tools/verify_cards.py`, which checks every component and parameter reference
+      resolves, that a card is `Validated` only with an evidence id and carries one only if it is,
+      and that a card citing an `unset` input declares it in `blocked_by`.
+      **Status `Untested`, and §2 of the card is why it must stay there.** `M31-T0465` carries
+      `claim_type: Untested Hypothesis` in the COURSE's own taxonomy, so `ALLOCATION_SPEC` §3
+      applies: the ordering needs a pre-registration before it selects a trade, never a decision
+      record. All three selection inputs are `unset` and the card refuses — the design working.
+      **G6 finally has a denominator: 4, not 465.** `ROADMAP` §3 defines it as "every component a
+      live strategy card needs is `active`", and demand-driven coverage had no meaning with no card
+      to create the demand. This card needs four components and gate 27 prints how many are active.
+      **What the card revealed by existing — see the item below.**
+
+- [ ] **`[v]` THE BACKTEST HAS NO PORTFOLIO, and it blocks CARD-001.** Found 2026-08-24 by writing
+      the card, which is the argument for P5 in one line. Verified two ways: nothing in
+      `src/swingdesk/validation/` references `portfolio`, `risk.max_concurrent_positions` or
+      `risk.max_open_risk`, and the code graph shows `run_arm`'s callees are the cost model and the
+      exit policy and nothing else.
+      **"Hold the strongest N of the universe at once" is a portfolio construction rule.** A
+      per-instrument engine enters every name ever ranked inside the cutoff, independently and
+      uncapped — a different strategy from the one the card declares. `measure_sector_cap.py`
+      records the symptom from the other side: `PR-005`'s base slice held a median of 20 positions
+      at once against a ratified cap of 4.
+      **The 2026-08-24 `EntryTrigger` seam does NOT reach this.** It made the entry rule injectable
+      and left the engine single-instrument. The two look alike from a distance and only one is done.
+      Three more blockers are declared in `registry/cards.yml`: the selection inputs are unset (a
+      study, not a decision record), **no index series is stored** to be strong relative to, and all
+      four components are `registered`.
+
 - [x] **`[v]` The backtest engine expressed ONE strategy family, and it was the refuted one — FIXED
       2026-08-24.** `run_arm` called `breakout_high` directly and the `gate` argument was a per-bar
       FILTER over that call rather than the trigger itself, so the engine was long-only time-series
