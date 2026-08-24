@@ -265,11 +265,19 @@ def main() -> int:
         results[arm] = {}
         for period in ("primary", "holdout"):
             values = spreads[arm][period]
-            if not values:
-                results[arm][period] = {"dates": 0}
+            interval = bootstrap_interval(values, BOOTSTRAP_SEED, BOOTSTRAP_RESAMPLES)
+            if not values or interval is None:
+                # `bootstrap_interval` returns None below two observations. A period with one
+                # formation date has no interval, and reporting a point estimate without one would
+                # be the false precision the whole study is trying to avoid.
+                results[arm][period] = {"dates": len(values)}
                 continue
+            # The bootstrap returns (mean, low, high) and its mean is a float. The reported mean is
+            # the Decimal one computed here - same value, exact arithmetic - and the interval is the
+            # bootstrap's. Taking the mean from one place and the bounds from another is deliberate
+            # rather than sloppy: this project's money and returns are Decimal by rule.
+            _, low, high = interval
             mean = sum(values, Decimal(0)) / len(values)
-            low, high = bootstrap_interval(values, BOOTSTRAP_SEED, BOOTSTRAP_RESAMPLES)
             results[arm][period] = {
                 "dates": len(values), "mean_net": str(mean),
                 "ci_low": str(low), "ci_high": str(high),

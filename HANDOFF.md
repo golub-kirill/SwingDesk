@@ -302,9 +302,9 @@ mechanically guarded, and they are still prose.
 declaration. The owner's constraint is what drove it: four positions held twenty sessions is ~50
 entries a year, the ratified sample floor is 100 closed trades, and the horizon is six months — so
 **25 live trades**, and live evidence inside the horizon is arithmetically impossible without moving
-a ratified value. The 2026-08-16 research suspension was overridden by the owner for this one study,
-and `TODO.md` §2 records both the override and the fact that the suspension's own exit condition can
-never be met.
+a ratified value. The 2026-08-16 research suspension was overridden by the owner for this study and no
+other, and `TODO.md` §2 records both the override and the fact that the suspension's own exit
+condition can never be met.
 
 **One thing on it needs the owner and is not an agent's to take:** PR-005's published trade log no
 longer matches a fresh replay, because seven bars arrived three hours after it was published.
