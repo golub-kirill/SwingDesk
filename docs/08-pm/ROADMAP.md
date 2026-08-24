@@ -123,7 +123,7 @@ Recording these stops them being re-proposed.
 The v1 finish line is a machinery target and needs no profitable strategy — that was the point of
 ratifying it that way. Everything in §2, §3 and §4 lands it.
 
-Track B is different. Five reported studies produced one fragile positive, on a base strategy
+Track B is different. The reported studies produced one fragile positive, on a base strategy
 measured as flat at 1x costs and negative under stress — both figures net, because gross is never
 reported (`DR-004` consequence 1). `DR-005` then measured slippage at 25bp per side against the
 assumed 5, which makes the negative column the operative one. Nothing in this roadmap fixes that,
@@ -148,7 +148,7 @@ itself the pattern that made the reconciliation necessary. Dispositioned:
 
 | | Question | Disposition |
 |---|---|---|
-| `UDR-001` | Lessons incomplete, so domain extraction cannot finish | **OPEN and genuinely new.** The 116-PDF course *is* fully extracted — 1379 topics, 465 components, five studies run. This entry refers to a **forthcoming book** the owner is still writing. That is new information and it changes nothing structural: the catalogues fill from it when it arrives |
+| `UDR-001` | Lessons incomplete, so domain extraction cannot finish | **OPEN and genuinely new.** The 116-PDF course *is* fully extracted — 1379 topics, 465 components, the reported studies run. This entry refers to a **forthcoming book** the owner is still writing. That is new information and it changes nothing structural: the catalogues fill from it when it arrives |
 | `UDR-002` | Which graph database for the Knowledge Graph projection | **OPEN, owner input needed.** Low urgency — §46 ranks last of nine absent sections, and the logical schema does not depend on the engine |
 | `UDR-003` | Scope of the execution and broker layer | **CLOSED.** Owner decision D1, `CHARTER.md` — the system never places orders. §29 is `DEFERRED` with its ontology slot fixed |
 | `UDR-004` | Canonical regime ontology | **OPEN, and sharper than recorded.** The ТЗ suggests eight regimes; the course names **eleven** (`REGIME_SPEC.md` §2) and they are a vocabulary, not a partition. PR-002 validated a classifier on one axis of three. The real question is whether the ТЗ list or the course list is canonical — and only the course list has evidence behind it |
@@ -177,7 +177,7 @@ settling a question, and that is stated where it arises.
 ### What the plan gets right, and it is not the obvious thing
 
 **Research last is normally a mistake, and here it is defensible.** Calibrating before the machinery
-is trustworthy is how a project fits noise, and this one has the evidence: three of five studies
+is trustworthy is how a project fits noise, and this one has the evidence: three of the reported studies
 refuted, and the one positive is erased by a survivorship exposure that free data cannot close. The
 instinct — do not tune until the thing being tuned can be trusted — matches what PR-005 found rather
 than fighting it. §7's honest risk still stands, and this ordering does not make it worse.
@@ -226,7 +226,7 @@ It cannot run without a scheduled daily run, and scheduling is deferred (below).
 begins, or it stands and Track A remains unreachable — but the choice is made on a date the plan
 names, rather than by drift.
 
-### D. One of five reported studies belongs before maximum coverage
+### D. One of the reported studies belongs before maximum coverage
 
 The base strategy measured **+0.028R before costs and −0.123R at 3× costs**, so the sign of the only
 result this project owns sits inside an assumed 5bps. Corwin–Schultz (2012) and Abdi–Ranaldo (2017)

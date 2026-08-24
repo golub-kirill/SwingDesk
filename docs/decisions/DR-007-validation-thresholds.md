@@ -51,7 +51,7 @@ are marked. The rest are authored, and §3 says how weak each is.
 | `validation.stress_cost_multiplier` | **3×** both cost components | **used by PR-005**, and already stated in `DR-004-cost-model.md` |
 | `validation.monte_carlo_runs` | **10,000** resamples | **used by PR-005**; PR-002's 1000-partition null stands as reported |
 | `validation.backtest_min_trades` | **200** per arm in the primary period, **60** in the holdout | **used by PR-005** §8, and every arm cleared it |
-| `validation.backtest_period` | **2016-08-01 → present**, or all available history if shorter | the window all five studies used, bounded by the free tier's depth |
+| `validation.backtest_period` | **2016-08-01 → present**, or all available history if shorter | the window every study to that date used, bounded by the free tier's depth |
 | `validation.walkforward_window` | train **756** · test **252** · step **252** trading days | authored; derived in §3.1 |
 | `validation.embargo` | **21** trading days | authored; derived in §3.2 |
 | `validation.parameter_stability_tolerance` | **verdict invariance** under ±1 grid step; report fragile if the statistic moves >0.5× its own magnitude | authored; §3.3 |

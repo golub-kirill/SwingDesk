@@ -56,7 +56,7 @@ Measured, not planned.
 
 | Mode | Exists | Entry point | Notes |
 |---|---|---|---|
-| `RESEARCH` | **yes** | `tools/run_pr001.py`, `tools/run_pr002.py`, `tools/run_pr005.py`, `tools/run_pr008.py` | five studies reported; each pins its own parameters and reads no registry |
+| `RESEARCH` | **yes** | `tools/run_pr001.py`, `tools/run_pr002.py`, `tools/run_pr005.py`, `tools/run_pr008.py` | the reported studies reported; each pins its own parameters and reads no registry |
 | `BACKTEST` | **yes** | `validation/backtest/engine.py` | invoked only from a study — there is no `swingdesk backtest` command, and that is correct |
 | `REPLAY` | **yes** | `tools/replay.py`, `validation/replay.py` | the only mode with a merge gate (gate 9) |
 | `PAPER` | **no** | — | needs the scheduled run plus recording of misses and delays; see §5 |

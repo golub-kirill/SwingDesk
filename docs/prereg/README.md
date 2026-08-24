@@ -22,9 +22,9 @@ has to happen first, not the thing that has to happen last.
 | `PR-009` | Is a −15R drawdown limit distinguishable from ordinary sequence luck? | **registered** | a trade log — none exists |
 | `PR-010` | Does EDGE resolve the spread level Corwin-Schultz and Abdi-Ranaldo could not? | **reported — REJECT** | — |
 | `PR-011` | Should instrument classes that cannot hold a stop be screened out? | not written | — id reserved 2026-08-22, see `TODO.md` §5 |
-| `PR-012` | Does a cross-sectional ranking beat plain momentum on a capacity-constrained book? | **registered** 2026-08-24 | `CARD-001`; needs `run_book` and a deepened universe |
+| `PR-012` | Does a cross-sectional ranking beat plain momentum on a capacity-constrained book? | **reported — REFUSED** 2026-08-24, the minimum sample is not met on two of three arms | `CARD-001`; the capacity cap caps the sample, and both caps are ratified |
 
-**Three ids collided on 2026-08-09 and five studies moved.** Three efforts registered studies without
+**Three ids collided on 2026-08-09 and several studies moved.** Three efforts registered studies without
 seeing each other. `RECONCILIATION_PLAN.md` D-R4 awards a contested id to the earliest commit
 timestamp, so:
 

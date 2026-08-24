@@ -89,7 +89,7 @@ study, every trade log, and the entire cost model calibration describes that one
 whole programme**. That is the correct rule. It also means **every hypothesis tested raises the bar
 for every other one**.
 
-Measured throughput: 5 reported studies in 23 calendar days. The trial budget is therefore small and
+Measured throughput: the reported studies in 23 calendar days. The trial budget is therefore small and
 each trial is expensive by construction — and no document says how many trials the programme intends
 to spend, or on what. Without that, deflated Sharpe is a trap rather than a control.
 

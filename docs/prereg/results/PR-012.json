@@ -1,0 +1,169 @@
+{
+  "classified": 1013,
+  "country": "US",
+  "holdout_from": "2023-10-12",
+  "instruments": 1140,
+  "parameters": {
+    "atr_stop_multiple": "2.0",
+    "benchmark": "SPY",
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 20260824,
+    "commission_per_share": "0.005",
+    "lookback": 126,
+    "max_holding_bars": 20,
+    "max_open_risk": "4",
+    "max_positions": 4,
+    "min_names_for_window_start": 200,
+    "min_trades_per_arm": 200,
+    "risk_per_trade": "1000",
+    "slippage_bps": "25",
+    "stress_multiple": "3"
+  },
+  "perturbations": {
+    "considered_not_registered": [
+      "lookback_sweep",
+      "capacity_sweep"
+    ],
+    "recorded": "2026-08-24, from PR-012 section 5. The cost stress is a SENSITIVITY on the same configurations rather than a separate arm - TRIAL_BUDGET.md: a cost stress is not a new shot at the data - so it costs no additional trial.",
+    "registered": [
+      "cost_stress_3x"
+    ],
+    "run": [
+      "cost_stress_3x"
+    ]
+  },
+  "prereg": "PR-012",
+  "results": {
+    "1x/MARKET": {
+      "deferred": 2108690,
+      "holdout": {
+        "ci_high": 0.35643942465289524,
+        "ci_low": -0.12474692823913669,
+        "mean_net_r": 0.10601423654966188,
+        "meets_minimum": true,
+        "trades": 203
+      },
+      "max_concurrent": 4,
+      "primary": {
+        "ci_high": 0.19510475691453202,
+        "ci_low": -0.08464883246931848,
+        "mean_net_r": 0.05158878536001766,
+        "meets_minimum": true,
+        "trades": 432
+      },
+      "signals": 2115679,
+      "trades": 635
+    },
+    "1x/MOMENTUM": {
+      "deferred": 2108696,
+      "holdout": {
+        "ci_high": 0.43502419082410276,
+        "ci_low": -0.03615312749570536,
+        "mean_net_r": 0.19354732567573574,
+        "meets_minimum": false,
+        "trades": 184
+      },
+      "max_concurrent": 4,
+      "primary": {
+        "ci_high": 1.1579635378388387,
+        "ci_low": -0.059006570065492675,
+        "mean_net_r": 0.38856036052503795,
+        "meets_minimum": true,
+        "trades": 413
+      },
+      "signals": 2115641,
+      "trades": 597
+    },
+    "1x/SECTOR": {
+      "deferred": 2108690,
+      "holdout": {
+        "ci_high": 0.38027867913406893,
+        "ci_low": -0.05389756839182318,
+        "mean_net_r": 0.1605871018196384,
+        "meets_minimum": false,
+        "trades": 181
+      },
+      "max_concurrent": 4,
+      "primary": {
+        "ci_high": 1.2578183599324186,
+        "ci_low": -0.30716675453185543,
+        "mean_net_r": 0.34454531088349,
+        "meets_minimum": true,
+        "trades": 409
+      },
+      "signals": 2115634,
+      "trades": 590
+    },
+    "3x/MARKET": {
+      "deferred": 2108690,
+      "holdout": {
+        "ci_high": 0.13170576392449082,
+        "ci_low": -0.3055181847132806,
+        "mean_net_r": -0.09405219930162854,
+        "meets_minimum": true,
+        "trades": 219
+      },
+      "max_concurrent": 4,
+      "primary": {
+        "ci_high": -0.09087924914740268,
+        "ci_low": -0.343778541670953,
+        "mean_net_r": -0.21808569068339928,
+        "meets_minimum": true,
+        "trades": 478
+      },
+      "signals": 2115741,
+      "trades": 697
+    },
+    "3x/MOMENTUM": {
+      "deferred": 2108694,
+      "holdout": {
+        "ci_high": 0.2541525958053303,
+        "ci_low": -0.2048060322117023,
+        "mean_net_r": 0.017971569898171703,
+        "meets_minimum": false,
+        "trades": 199
+      },
+      "max_concurrent": 4,
+      "primary": {
+        "ci_high": 1.227164292490603,
+        "ci_low": -0.150725251677189,
+        "mean_net_r": 0.3456441485885257,
+        "meets_minimum": true,
+        "trades": 430
+      },
+      "signals": 2115673,
+      "trades": 629
+    },
+    "3x/SECTOR": {
+      "deferred": 2108690,
+      "holdout": {
+        "ci_high": 0.27637918786652954,
+        "ci_low": -0.14390949086881966,
+        "mean_net_r": 0.06551292084827327,
+        "meets_minimum": false,
+        "trades": 189
+      },
+      "max_concurrent": 4,
+      "primary": {
+        "ci_high": 1.3298462277947678,
+        "ci_low": -0.09542395237581108,
+        "mean_net_r": 0.42723042625569285,
+        "meets_minimum": true,
+        "trades": 415
+      },
+      "signals": 2115648,
+      "trades": 604
+    }
+  },
+  "run_at": "2026-08-24T15:52:36.341471+00:00",
+  "sessions": 2388,
+  "snapshot": "2026-08-24T07:15:39.144611-05:00",
+  "survivorship": "absent - today's directory, so every figure is biased upward",
+  "trials": 3,
+  "verdict": "REFUSED",
+  "verdict_reason": "section 8's minimum of 200 holdout trades is not met on MOMENTUM 184, SECTOR 181 - and one of them is the CONTROL, so the comparison does not exist",
+  "window": [
+    "2017-02-22",
+    "2026-08-21"
+  ]
+}

@@ -482,7 +482,8 @@ the words are as fragile as the numerals; the fix is to stop counting in prose a
   that clock — including the ones that only print.** A half-pinned tool is a tool whose tests measure
   the calendar.
 - **Hand-maintained counts drift, every time.** Six have now been caught: the study verdicts
-  (`5 studies, 3 refuted` in five documents), the gate total, the specification coverage summary
+  (a study census and its refutation count, wrong in five documents at once), the gate total, the
+  specification coverage summary
   (31/22 against a table saying 30/24), a component-activation claim in
   `COMPONENT_REGISTRY_SPEC.md`, and — 2026-08-15, after §10.5 had supposedly closed this — the Track
   A streak and the directory pull census, both inside their own single owner. Each read as correct.
