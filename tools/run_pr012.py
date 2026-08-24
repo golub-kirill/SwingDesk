@@ -59,6 +59,7 @@ from swingdesk.validation.backtest.ranking import (
     ByMarketPathStrength,
     ByRawReturn,
     BySectorRelativeStrength,
+    daily_returns,
 )
 
 RESULT = REPO / "docs" / "prereg" / "results" / "PR-012.json"
@@ -151,15 +152,9 @@ def _beat_prefix(series: BarSeries, benchmark_by_session: dict[date, Decimal],
     return out
 
 
-def _daily_returns_by_session(series: BarSeries) -> dict[date, Decimal]:
-    out: dict[date, Decimal] = {}
-    for index in range(1, len(series.bars)):
-        previous = series.bars[index - 1].close
-        if previous > 0:
-            out[series.bars[index].session_date] = (
-                (series.bars[index].close - previous) / previous
-            )
-    return out
+#: The reference's own helper, re-exported rather than reimplemented. A second copy of "the
+#: benchmark's daily returns" is exactly the divergence the fast path already had to be caught for.
+_daily_returns_by_session = daily_returns
 
 
 def bootstrap_interval(values: list[Decimal], seed: int,
@@ -457,11 +452,7 @@ def _reference_score(reference: object, candidate: Candidate, clipped: dict[str,
     if isinstance(reference, ByRawReturn):
         return _window_return(series, candidate.index, LOOKBACK)
     if isinstance(reference, ByMarketPathStrength):
-        by_session = {bar.session_date: i for i, bar in enumerate(benchmark.bars)}
-        index = by_session.get(candidate.session_date)
-        if index is None:
-            return None
-        return _beat_share(series, candidate.index, LOOKBACK, benchmark, index)
+        return _beat_share(series, candidate.index, LOOKBACK, daily_returns(benchmark))
     own = _window_return(series, candidate.index, LOOKBACK)
     mean = means.get(sector_of.get(candidate.instrument_id, ""))
     if own is None or mean is None or mean == -1:
