@@ -1,9 +1,22 @@
 # HANDOFF — start here in a fresh session
 
-Written 2026-08-04; **brought current 2026-08-11**, after a session that set the two parameters
-sizing was blocked on, put the gates on CI, protected `master`, activated the first component, and
-found that a ratified decision had never been built. Read this, then `AGENTS.md` — especially §10,
-rules that were each paid for — then `docs/README.md`.
+Written 2026-08-04; **brought current 2026-08-24**. Read this, then `AGENTS.md` — especially §10,
+rules that were each paid for, and §12, traps that each cost real time — then `docs/README.md`.
+
+## 0. The first thing, and it is not code
+
+**A branch holds a session's work and is NOT merged.** `claude/swingdesk-tasks-cl-perf-707e67`,
+worktree at `.claude/worktrees/swingdesk-tasks-cl-perf-707e67`. **Nothing in it is on `master`**,
+so `master` still runs the slow pipeline, still has fewer gates than §2 reports for this tree, and
+still carries the documentation defects that branch corrected. §5's *In flight* block is what it contains and why it is safe to
+merge; **read that before doing anything that touches `src/`, `tools/` or the study record.**
+
+No pull request was opened — the owner had not asked for one. Opening it is the first decision, not
+the first action.
+
+**Everything else is committed.** `master` is protected on `github.com/golub-kirill/SwingDesk`
+(public) and requires the `gates` check, so it only ever advances to a commit CI has already
+passed.
 
 Everything below is measured from the tree, not remembered. **§2 is the only place a measured count
 lives** (`AGENTS.md` §10.5); a figure here that disagrees with `python tools/check_gates.py` is this
@@ -12,10 +25,6 @@ document being wrong, not the gate.
 That rule has one hole worth knowing: gate 14 matches digits, so a count spelled in words is
 invisible to it. This paragraph replaced *"Twenty-two gates"*, which had been wrong since the gate
 count reached 24 and no gate could see it.
-
-**Everything is committed and pushed** on `github.com/golub-kirill/SwingDesk` (public). `master` is
-protected and requires the `gates` check, so it only ever advances to a commit CI has already
-passed.
 
 ---
 
