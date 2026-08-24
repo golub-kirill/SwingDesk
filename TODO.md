@@ -350,9 +350,21 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       inside it with room.
       **Why nobody saw it.** The same table budgets the END-TO-END run at ≤ 45 min, and
       end-to-end was ~24 min — comfortable. The breach was in a row that only an instrumented
-      run can measure, and **nothing in this tree measures any of `NFR.md` §3's budgets.**
-      That gap is still open: `data/daily_run.log` gives end-to-end duration and no split, and
-      the split is where the requirement lives.
+      run can measure, and nothing in this tree measured any of `NFR.md` §3's budgets:
+      `data/daily_run.log` gives end-to-end duration and no split, and **the requirement
+      lives in the split.**
+      **`tools/measure_latency.py` closes that half of it**, built the same day: it replays
+      the vendor from the store, times universe selection and the pipeline separately, and
+      compares the total against the budget **read out of `NFR.md`** rather than a copy —
+      a tool asserting its own ratified threshold is the drift §10.5 exists to stop, and it
+      refuses rather than assuming five minutes if the row cannot be parsed. That one
+      coupling is pinned by a test, because reformatting §3's table would otherwise disarm
+      the tool silently. Reads **160.5 s, 139 s to spare**.
+      **Two budgets are still unmeasured** and are named rather than quietly dropped: the
+      incremental refresh (≤ 20 min, I/O-bound and explicitly a place concurrency applies)
+      and report generation (≤ 30 s). Neither is close to binding today; both would need the
+      run itself to record a split, which `application/pipeline.py` being frozen makes a
+      sequencing question rather than a coding one.
       **Not asserted about earlier runs.** The last run to complete was 2026-08-17 at 11m45s
       end-to-end, before the universe was deepened to ten years; its decision-path share was
       never recorded and is not reconstructible.

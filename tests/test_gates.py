@@ -249,6 +249,37 @@ def _manifest_tree(tmp_path: Path, *, status: str = "drafting", number: str = "0
     return tmp_path
 
 
+# -------------------------------------- not a gate: the NFR latency budget's one coupling
+
+
+def test_the_nfr_decision_path_budget_is_readable_and_says_five_minutes() -> None:
+    """`tools/measure_latency.py` reads its threshold out of `NFR.md` rather than carrying a copy.
+
+    That is the right design — a second copy of a ratified number is the drift `AGENTS.md` §10.5
+    exists to stop — and it buys one coupling: reformatting §3's table silently disarms the tool.
+    So the coupling is pinned here. The measurement itself is not a gate; it runs the whole decision
+    path over the stored universe and needs `data/`.
+    """
+    import measure_latency
+
+    assert measure_latency._budget_minutes() == 5
+
+
+def test_the_latency_tool_refuses_rather_than_assuming_a_budget(tmp_path: Path) -> None:
+    """A tool that guessed five minutes when it could not read the row would be asserting its own
+    threshold, which is the thing reading it from the document avoids."""
+    import measure_latency
+
+    missing = tmp_path / "NOT_NFR.md"
+    missing.write_text("# no table here\n", encoding="utf-8")
+    original = measure_latency.NFR
+    try:
+        measure_latency.NFR = missing
+        assert measure_latency._budget_minutes() is None
+    finally:
+        measure_latency.NFR = original
+
+
 # ------------------------------------------------------ gate 29: pre-registration ids
 
 

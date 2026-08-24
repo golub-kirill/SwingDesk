@@ -46,7 +46,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | | |
 |---|---|
 | Merge gates | **34**, one command: `python tools/check_gates.py` |
-| Tests | **817**, fully offline |
+| Tests | **819**, fully offline |
 | Docs | 117 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 459 registered · 5 `specified` · **1 `active`** |
 | Parameters | 105 - 60 `unset`, 34 `assumed`, 11 `owner`, **0 `validated`** |
@@ -248,8 +248,11 @@ a report.
 `NFR.md` §3 budgets the **decision path at ≤ 5 minutes**; measured on 2026-08-24 before any
 change it was **20.2 minutes** — 19.0 of pipeline compute plus 71.9 s of universe selection —
 and it is **2.7 minutes** now. The breach was invisible because the same table's end-to-end
-budget (≤ 45 min) was comfortably met at ~24 min, and **nothing in this tree measures any of
-those budgets**. That gap is still open: the run log gives a total and no split. Three hot spots and a
+budget (≤ 45 min) was comfortably met at ~24 min, and nothing in this tree measured any of
+those budgets — the run log gives a total and no split, and **the requirement lives in the
+split**. `tools/measure_latency.py` measures the decision path now and reads its threshold
+out of `NFR.md` rather than carrying a copy; the refresh and report-generation budgets are
+still unmeasured and neither is close to binding. Three hot spots and a
 quadratic: `completeness.check` was O(bars x sessions) over each instrument's whole stored extent,
 `application/universe.py`'s selection read 3.57 million bars to answer a count, a last close and a
 twenty-session average, `calendar.sessions` read a pandas frame with `iterrows` against a cache running at a 2%
