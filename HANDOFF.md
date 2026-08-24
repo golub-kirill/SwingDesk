@@ -134,6 +134,25 @@ Four things a fresh session must not get wrong, each argued there:
 - **there is no legal source of probability in this system today.** Any probability displayed would
   be manufactured.
 
+**And a fifth, added 2026-08-24 because a session summary got it wrong out loud.** *"The first
+strategy card exists"* is true and reads like *"a strategy runs"*, which is false in a way the
+numbers settle: **the system has recorded 11,240 decisions and not one of them is a `Trade`.** 6,727
+`Watch`, 4,513 `Skip`, zero `Trade`, zero `Pause`, zero positions ever opened, zero fills, zero
+management proposals. `pipeline.py`'s terminal state for a candidate that passes every check is the
+literal `"Watch"` with the reason *"sized; awaiting a trigger"* — and **there is no trigger in the
+live path**, so `"Trade"` is in the decision vocabulary and is emitted by nothing in `src/`.
+`REQUIREMENTS.md` `REQ-VALIDATION-002`, `ALLOCATION_SPEC.md` §7, `EXECUTION_MODEL.md` §7 and
+`SYSTEM_MODES.md` §4 all say so; what was missing was saying it here, in the file a session reads
+first.
+
+**`CARD-001` is `Untested` and REFUSES**, which is the card doing its job: four selection inputs are
+`unset`, the study that would have set them refused a verdict for want of sample, and all four of
+its components are `registered`. A card is a list of what blocks a strategy, not a strategy.
+
+**The absence of an AI is a ratified decision, not a gap.** Charter amendment A-001: the final
+trading decision is human-only, and an AI may never decide, size, override a veto or originate a
+number. Nobody should go looking for the missing recommender.
+
 Do not write anything implying more confidence than that. `UX_COPY.md` §3 carries the standing
 warning verbatim.
 

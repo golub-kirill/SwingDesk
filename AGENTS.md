@@ -135,6 +135,24 @@ amendment means here. Editing a ratified row is never the move.
 
 ## 5. Conventions
 
+- **Say the name, not the code — owner instruction, 2026-08-24.** *"Я хер знает что такое NFR. Не
+  знаю, что такое PR-012, DR-012, DR-018, ранбук."* Every identifier in this repository is opaque
+  to the person the project is for, and a status report built out of them is unreadable however
+  correct it is.
+  **The rule: an identifier gets a plain-language name the first time it appears in anything the
+  owner reads** — a chat reply, a report, a summary, a commit subject. `NFR.md` is *the
+  non-functional requirements — speed, storage and determinism budgets*. `PR-012` is *the study of
+  whether ranking by relative strength beats plain momentum*. `DR-012` is *the ruling that set the
+  stop distance and the maximum holding period*. `DR-018` is *the ruling that chose the benchmark
+  index*. `run_book` is *the backtest that walks a whole portfolio instead of one instrument at a
+  time*. After the first mention the short id is fine — it is the anchor, not the explanation.
+  **The ids themselves stay.** They are citation targets: roughly fifty references point at them,
+  gates 3e, 20, 25 and 29 resolve them, and renaming a `DR-NNN` would break an append-only record
+  (§11 rule 2). What changes is that a bare id is never the whole sentence.
+  **The owner deferred the sweep** — *"по-хорошему, пиши нормальные имена, но потом"* — so existing
+  documents are corrected as they are touched rather than in one pass. `TODO.md` §3 carries the
+  item.
+
 - **English throughout** — docs, code, UI. The course's controlled vocabulary (`Trade`/`Watch`/
   `Skip`/`Pause`, the skip and error codes, `STAGE`/`LAYER`/`CLAIM TYPE`) is used verbatim and never
   translated.

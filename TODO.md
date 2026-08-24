@@ -465,6 +465,15 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
 - [ ] **`[c]` UDR-004 — regime ontology.** Three candidate lists now: ТЗ's 8, course v5.0's 11,
       v7.0's 7 (`RECONCILIATION_PLAN.md` §5). Ties to `USER_STORIES.md`:304 (US-004 unsatisfiable
       while `regime.classifier_rule` is contested).
+- [ ] **`[v]` Plain names for the opaque ids — owner instruction 2026-08-24, sweep DEFERRED by the
+      owner.** *"Я хер знает что такое NFR. Не знаю, что такое PR-012, DR-012, DR-018, ранбук."*
+      The rule is in `AGENTS.md` §5 and applies from now on: an identifier gets a plain-language
+      name the first time it appears in anything the owner reads, and the bare id is never the whole
+      sentence. **The ids themselves stay** — roughly fifty references point at them, four gates
+      resolve them, and renaming a `DR-NNN` would edit an append-only record.
+      **What is deferred is the sweep of existing documents** (*"по-хорошему, пиши нормальные имена,
+      но потом"*). Correct them as they are touched rather than in one pass; a pass over every
+      document that cites an id is the blast radius §11 rule 3 warns about.
 - [ ] **`[c]` G-3 next timebox.**
 - [ ] **`[v]` Test LOGON-mode behaviour — still open; the SLEEP half is now measured and the
       answer is `lost`.** Needs a log-out before 18:30 one evening, then read `Last Run Time`
