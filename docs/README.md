@@ -168,6 +168,7 @@ second surface inventing synonyms later.
 | 62 | `RECONCILIATION_PLAN.md` | Three branches, two `DR-005`s, two `PR-007`s and three incompatible `criteria.yml` v1.1.0 — every collision, the rule that resolves it, and the order | owner-pending |
 | 64 | `08-pm/plans/2026-08-11-evidence-foundation.md` | Four gates and a collector: stop losing survivorship evidence, and close the holes that let a ratified decision ship unimplemented | owner-pending |
 | 65 | `08-pm/plans/2026-08-12-complex-code-audit.md` | A snapshot-pinned, adversarial audit of any local Git ref, with independent oracles, non-compensatory verdicts, research-integrity checks, and reproducible evidence | owner-pending |
+| 67 | `08-pm/plans/2026-08-24-from-machinery-to-evidence.md` | The v1 machinery line was reached on day two; this sequences what actually answers the profitability question inside the ratified timebox, and corrects three claims it would otherwise rest on | owner-pending |
 | 66 | `08-pm/EVIDENCE_SUMMARY.md` | What the reported studies actually support: the base strategy negative at measured costs, the spread level unobtainable from daily OHLC, the one positive finding fragile, and no legal source of probability | drafting |
 
 ---
