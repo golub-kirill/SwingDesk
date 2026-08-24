@@ -387,6 +387,37 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       agree on **250 of 251 bars** for every one of 20 names, and the only disagreement is the
       CURRENT unclosed session, which `BarStore.write` refuses by construction. So whoever picks
       concurrency up does not have to re-establish equality, only decide about the vendor.
+- [ ] **`[v]` PR-005'S PUBLISHED TRADE LOG NO LONGER MATCHES A FRESH REPLAY — and the reason is
+      seven bars that arrived three hours after it was published. Found 2026-08-24; needs an owner
+      decision, and NOTHING under `docs/prereg/results/` was touched.**
+      Run it yourself: `PYTHONPATH=$PWD/src python tools/run_pr005_replay.py --data <store>`.
+      **The measurement.** A replay against the current store reproduces `PR-005.json` **exactly in
+      all 20 cells** — trade counts and mean R to six decimals. The published provenance beside the
+      log records something different: `1x/A/holdout` off by 0.000326 and `1x/D/holdout` by
+      0.000520, 16 of 20 exact. Both are true of their own vintage.
+      **What moved, named precisely.** `PR-005-trades.csv` was generated at series knowledge_times
+      of **2026-08-17T15:58**. The scheduled run at **18:30:46 the same evening** wrote **7 bars
+      inside the study window** that the replay had not seen: `LEG` and `NDSN` for 2026-07-21,
+      07-22 and 07-31, and `KMB` for 07-22. With those present the two single-margin gates — A
+      turns on one threshold, D on exact pivot extremes — land where `PR-005` had them. Verified as
+      a fact about the STORE, not about this branch: the same replay at pre-change `master`
+      (`65e2165`) gives the same 20 exact cells, and the in-window `knowledge_time` maximum is
+      2026-08-17 18:30, so nothing since has touched this sample.
+      **A recorded standing fact is FALSE and should stop being repeated.** §2 of this file says
+      *"`LEG` and `NDSN` have no 2026-07-31 bar and the vendor does not supply one … a standing
+      data-quality fact about this source."* The store holds both — `LEG` close 9.80, `NDSN` close
+      297.78 — fetched by the ordinary evening pass **three hours after** that sentence was
+      written. It was vendor LAG, not vendor absence, and the difference is the whole claim.
+      **And the provenance's `why_not` is falsified in its practical implication.** It reads *"the
+      bytes the study read no longer exist anywhere and cannot be recovered by refetching."* The
+      bytes may not be recoverable; the RESULT was, by the next scheduled run.
+      **The owner decision, and it is not an agent's to take.** The published CSV is a protected
+      record (`AGENTS.md` §11 rule 2) and re-publishing it rewrites the research record. Three
+      options: leave it and note the vintage; re-publish with `--write --accept-drift` so the log
+      matches a replay anyone can reproduce today; or publish the new one alongside. **`PR-009` is
+      what turns on the answer** — it was told to register against *"this replay's vintage, not
+      PR-005's published aggregate … they are now known not to be the same thing"*, and on the
+      current store they ARE the same thing while the CSV on disk is not.
 - [ ] **`[c]` UDR-004 — regime ontology.** Three candidate lists now: ТЗ's 8, course v5.0's 11,
       v7.0's 7 (`RECONCILIATION_PLAN.md` §5). Ties to `USER_STORIES.md`:304 (US-004 unsatisfiable
       while `regime.classifier_rule` is contested).
