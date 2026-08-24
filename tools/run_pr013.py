@@ -48,6 +48,7 @@ from run_pr012 import (
     LOOKBACK,
     MIN_SECTOR_MEMBERS,
     SLIPPAGE_BPS,
+    STRESS_MULTIPLE,
     _beat_prefix,
     _daily_returns_by_session,
     _window_returns,
@@ -255,12 +256,13 @@ def main() -> int:
                 if arm == "MOMENTUM":
                     thin += 1
                 continue
-            spreads[arm][period].append(value - cost)
+            spreads[arm][period].append(value)  # GROSS; costs are applied at reporting time
 
     print(f"formation dates too thin to decile ({MIN_NAMES_PER_DATE} names): {thin}")
 
     results: dict[str, dict[str, dict[str, object]]] = {}
-    print(f"\n{'arm':10} {'period':9} {'dates':>6} {'mean net spread':>17} {'95% CI':>28}")
+    print(f"\n{'arm':10} {'period':9} {'dates':>6} {'mean gross':>13} {'mean net':>13} "
+          f"{'95% CI (net)':>26} {'net @3x cost':>13}")
     for arm in ARMS:
         results[arm] = {}
         for period in ("primary", "holdout"):
@@ -277,14 +279,31 @@ def main() -> int:
             # bootstrap's. Taking the mean from one place and the bounds from another is deliberate
             # rather than sloppy: this project's money and returns are Decimal by rule.
             _, low, high = interval
-            mean = sum(values, Decimal(0)) / len(values)
+            gross = sum(values, Decimal(0)) / len(values)
+            # GROSS beside NET, which section 4 requires and the first run omitted. Costs enter as
+            # ONE constant per formation date, so every cost figure is an exact shift of the same
+            # estimate rather than a second one - which is also what makes section 5's registered
+            # 3x stress a sensitivity that spends no trial.
+            #
+            # Gross is the figure that answers "does the ordering carry information at all". Net
+            # cannot separate that from "is it harvestable at this rebalance frequency", and at a
+            # five-session rebalance the second question dominates by construction.
             results[arm][period] = {
-                "dates": len(values), "mean_net": str(mean),
-                "ci_low": str(low), "ci_high": str(high),
+                "dates": len(values),
+                "mean_gross": str(gross),
+                "ci_low_gross": str(low), "ci_high_gross": str(high),
+                "mean_net": str(gross - cost),
+                "ci_low": str(Decimal(str(low)) - cost),
+                "ci_high": str(Decimal(str(high)) - cost),
+                "mean_net_stress_3x": str(gross - cost * STRESS_MULTIPLE),
+                "ci_low_stress_3x": str(Decimal(str(low)) - cost * STRESS_MULTIPLE),
+                "ci_high_stress_3x": str(Decimal(str(high)) - cost * STRESS_MULTIPLE),
                 "meets_minimum": len(values) >= MIN_DATES_HOLDOUT,
             }
-            print(f"{arm:10} {period:9} {len(values):6d} {float(mean):17.6f} "
-                  f"{'[' + format(float(low), '.6f') + ', ' + format(float(high), '.6f') + ']':>28}")
+            span = f"[{float(low) - float(cost):.6f}, {float(high) - float(cost):.6f}]"
+            print(f"{arm:10} {period:9} {len(values):6d} {float(gross):13.6f} "
+                  f"{float(gross - cost):13.6f} {span:>26} "
+                  f"{float(gross - cost * STRESS_MULTIPLE):13.6f}")
 
     holdout_dates = results["MOMENTUM"]["holdout"].get("dates", 0)
     if not isinstance(holdout_dates, int) or holdout_dates < MIN_DATES_HOLDOUT:
@@ -322,6 +341,17 @@ def main() -> int:
             "bootstrap_resamples": BOOTSTRAP_RESAMPLES, "bootstrap_seed": BOOTSTRAP_SEED,
         },
         "survivorship": "absent - today's directory, so every figure is biased upward",
+        "country": "US",
+        "perturbations": {
+            "registered": ["cost_stress_3x"],
+            "run": ["cost_stress_3x"],
+            "considered_not_registered": [
+                "lookback_sweep", "horizon_sweep", "decile_width_sweep", "execution_delay",
+            ],
+            "note": "section 5. Costs enter as one constant per formation date, so the stress is "
+                    "an exact shift of the same estimates rather than a new shot at the data - "
+                    "TRIAL_BUDGET.md: a cost stress spends no trial.",
+        },
         "trials": 3,
         "results": results,
         "verdict": outcome,
