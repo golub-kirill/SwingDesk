@@ -23,6 +23,7 @@ has to happen first, not the thing that has to happen last.
 | `PR-010` | Does EDGE resolve the spread level Corwin-Schultz and Abdi-Ranaldo could not? | **reported — REJECT** | — |
 | `PR-011` | Should instrument classes that cannot hold a stop be screened out? | not written | — id reserved 2026-08-22, see `TODO.md` §5 |
 | `PR-012` | Does a cross-sectional ranking beat plain momentum on a capacity-constrained book? | **reported — REFUSED** 2026-08-24, the minimum sample is not met on two of three arms | `CARD-001`; the capacity cap caps the sample, and both caps are ratified |
+| `PR-013` | Does relative strength separate forward returns **at all**, measured on names rather than on a four-position book? | **registered** 2026-08-24, **exploratory by declaration** — the drafter has seen `PR-012`'s numbers and says so in §0b | Owner direction 2026-08-24: the book caps the sample at ~50 entries a year and there are six months, so the question moves to the signal and capacity becomes a separate one |
 
 **Three ids collided on 2026-08-09 and several studies moved.** Three efforts registered studies without
 seeing each other. `RECONCILIATION_PLAN.md` D-R4 awards a contested id to the earliest commit
