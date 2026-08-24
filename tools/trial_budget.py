@@ -67,6 +67,15 @@ def _configurations(path: Path) -> tuple[int, str] | None:
     data = json.loads(path.read_text(encoding="utf-8"))
     study = data.get("prereg")
 
+    # A study that DECLARED its spend is counted from its own declaration. `PREREG_TEMPLATE`
+    # section 6 now requires that declaration - "state how many configurations it will evaluate,
+    # before it runs" - so a rule inferred here would be a second opinion about a number the study
+    # already committed to. The per-study rules below are for the studies that predate the
+    # convention, and they exist because those results cannot be re-declared retroactively.
+    declared = data.get("trials")
+    if isinstance(declared, int):
+        return declared, f"declared by the study: {declared} configuration(s)"
+
     if study == "PR-001":
         names = data["definitions"]
         return len(names), ", ".join(names)
@@ -87,7 +96,8 @@ NO_SPEND = {
     "PR-010": "same - EDGE against its own zero-spread floor, a cost input rather than an edge",
 }
 
-#: The rule each counted study's number comes from, printed beside it.
+#: The rule each counted study's number comes from, printed beside it. A study carrying its own
+#: `trials` field needs no row here - it declared, and the declaration is the rule.
 RULES = {
     "PR-001": "one per trend definition tested (`definitions`); the 6 pairwise comparisons are "
               "readings of those 4, not 6 further shots",

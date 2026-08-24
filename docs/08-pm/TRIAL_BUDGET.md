@@ -70,9 +70,11 @@ taken four shots, not one.
 | `PR-008` | 0 | measures a spread ESTIMATOR, not a return — no Sharpe to deflate |
 | `PR-010` | 0 | same |
 
-**The plan's §2c reads the census as the budget** — *"5 reported studies in 23 calendar days. The
-trial budget is therefore small."* The census is 5 and the spend is **13**. Counting filings instead
-of configurations understates the search by about a factor of three, in the flattering direction.
+**The plan's §2c read the census as the budget**, concluding from a handful of reported studies in
+three weeks that *"the trial budget is therefore small."* It is not the same quantity: the spend is
+**13** against a census barely a third of that. Counting filings instead of configurations
+understates the search by about a factor of three, in the flattering direction. Derive both with
+`python tools/trial_budget.py` and `python tools/verify_study_summary.py`.
 
 The counting rule is printed per study by the tool rather than hidden inside a total, so a reader
 can disagree with the rule instead of having to trust the number.

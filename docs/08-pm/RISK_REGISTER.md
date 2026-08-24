@@ -47,11 +47,11 @@ aesthetic.
 
 | ID | Risk | Rating | Control |
 |---|---|---|---|
-| E-1 | **The strategy has no edge.** PR-005 measured the base trigger at +0.028R ungated and −0.123R under cost stress; two of five reported studies refuted their hypothesis | **high / this is the project's central risk** | None available — this is what the validation programme is *for*. `k.programme_exhausted` is the named kill criterion, and reaching it is a legitimate outcome |
+| E-1 | **The strategy has no edge.** PR-005 measured the base trigger at +0.028R ungated and −0.123R under cost stress; two of the reported studies refuted their hypothesis | **high / this is the project's central risk** | None available — this is what the validation programme is *for*. `k.programme_exhausted` is the named kill criterion, and reaching it is a legitimate outcome |
 | E-2 | **Parameter invention** — a guessed number acquiring the authority of a measurement | **was high, now controlled** | Every parameter carries provenance; `unset` yields a coded refusal, never a default; `assumed` requires a citation; only pre-registered evidence reaches `validated`; a cited `DR-NNN` must resolve to a real file |
 | E-3 | **Cross-study data snooping** — testing variants of a refuted idea until one passes | **medium** | `PREREG_TEMPLATE` §0 requires a refutation-*family* check, not an exact-lever check. Weak: it depends on the author searching honestly |
 | E-4 | **Clustered trades inflate significance.** Dozens of instruments fire on the same session; a trade-level permutation understates the null | **realised in PR-002** | Date-block permutation added post-hoc, and it discriminates — one variant passed the weak null and failed the strong one. **Not yet part of any registered decision rule** |
-| E-5 | **Multiple comparisons.** Five studies plus a post-hoc bound, several arms each, no correction applied | **medium** | Stability requirements (cost stress, holdout, second null) instead of an adjusted p-value. Defensible and not equivalent; `PREREG_TEMPLATE` §6 records the debt |
+| E-5 | **Multiple comparisons.** The reported studies plus a post-hoc bound, several arms each, no correction applied | **medium** | Stability requirements (cost stress, holdout, second null) instead of an adjusted p-value. Defensible and not equivalent; `PREREG_TEMPLATE` §6 records the debt |
 | E-6 | **One test window, one regime mixture.** PR-002's test period is 755 sessions of a mostly rising market | **medium** | Stated in the report. No control; more history would need instruments with longer histories, which biases toward survivors |
 
 ### Build

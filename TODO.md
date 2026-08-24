@@ -689,6 +689,34 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       (a study, not a decision record), the benchmark FORM is unset (`DR-018`, below), and all four
       components are `registered`.
 
+- [ ] **`[v]` PR-012 RAN AND REFUSED A VERDICT — and the reason is structural, not fixable by
+      data.** 2026-08-24. `docs/prereg/results/PR-012-report.md`; derive every figure with
+      `python tools/run_pr012.py`, never from this line.
+      **The sample rule fired.** §8 fixed a minimum of 200 holdout trades per arm and said what
+      happens if it is not met: *"the study reports the measurement and refuses a verdict."* Two of
+      three arms are under it and **one of those is the CONTROL**, so the comparison does not exist.
+      That is a REFUSAL, not an `inconclusive` — the first says there was not enough data to look
+      with, the second says the study looked and could not tell.
+      **§8 predicted this exact failure mode before the run**, and the arithmetic is now measured: a
+      four-position book held at most 20 sessions is a ceiling of about 50 entries a year, so a
+      2.9-year holdout supplies roughly 145 trades at best. **The universe was deepened for this
+      study** — median 510 bars to 2,512 — **and the ceiling did not move**, because the binding
+      constraint is `risk.max_concurrent_positions` against `exit.max_holding_period` and BOTH ARE
+      RATIFIED. Every route out changes something ratified or the study's shape; the report lists
+      them with what each costs.
+      **Observations, which are not evidence:** every holdout interval straddles zero, and neither
+      ranking arm beat the momentum control. So even at an adequate sample §6's `accept` branch
+      could not have fired.
+      **Three trials spent.** A refused study still spends them — `b.deflated_sharpe` deflates by
+      shots taken at the data, not by shots that produced an answer.
+      **Two gates could not represent an honest outcome, and both are fixed.** Gate 3f's verdict
+      vocabulary had no `REFUSED`, so the first study to hit `PREREG_TEMPLATE` §8 failed the gate
+      for obeying the template. And `trial_budget.py` counted PR-012 as **0** trials because it had
+      no per-study rule — it now reads a study's own declared `trials`, which is what §6 of the
+      template requires a study to state before it runs.
+      **Open:** pooling the primary window is the honest route to a sample, and §5 fixed the split
+      before the run, so it needs a NEW pre-registration rather than an amendment.
+
 - [ ] **`[v]` `a.reproducible` HAS NEVER BEEN MEASURED ON THE REAL UNIVERSE, and the reason is
       not the one `HANDOFF.md` gives.** Found 2026-08-24 by reading `journal.duckdb` rather than the
       documents.

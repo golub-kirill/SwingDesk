@@ -184,3 +184,91 @@ def test_the_study_constants_match_what_the_pre_registration_declared() -> None:
     assert run_pr012.MIN_TRADES_PER_ARM == 200
     assert run_pr012.HOLDOUT_FRACTION == Decimal("0.30")
     assert run_pr012.MIN_NAMES_FOR_WINDOW_START == 200
+
+
+# ------------------------------------------------------- the decision rule, all four branches
+
+
+def _holdout(trades: int, low: float, high: float, mean: float) -> dict[str, object]:
+    return {"holdout": {"trades": trades, "mean_net_r": mean, "ci_low": low, "ci_high": high,
+                        "meets_minimum": trades >= run_pr012.MIN_TRADES_PER_ARM}}
+
+
+def _cells(momentum, market, sector) -> dict[str, dict[str, object]]:
+    return {"1x/MOMENTUM": momentum, "1x/MARKET": market, "1x/SECTOR": sector}
+
+
+def test_a_thin_arm_REFUSES_rather_than_returning_inconclusive() -> None:
+    """`PR-012` §8: *"the study reports the measurement and refuses a verdict"*.
+
+    `REFUSED` is not `INCONCLUSIVE`. The first says there was not enough data to look with; the
+    second says the study looked and could not tell. `AGENTS.md` §12 calls collapsing those the most
+    damaging error this product can make, and this is that rule at study level."""
+    decided, reason = run_pr012.verdict(_cells(
+        _holdout(184, -0.036, 0.435, 0.194),
+        _holdout(203, -0.125, 0.356, 0.106),
+        _holdout(181, -0.054, 0.380, 0.161),
+    ))
+    assert decided == "REFUSED"
+    assert "MOMENTUM 184" in reason and "SECTOR 181" in reason
+    assert "CONTROL" in reason, "a thin CONTROL is worse than a thin arm and must be said"
+
+
+def test_a_full_sample_that_clears_nothing_is_INCONCLUSIVE() -> None:
+    """The same numbers with an adequate sample. `inconclusive` is a first-class outcome and the
+    only one available when every interval straddles zero."""
+    decided, _ = run_pr012.verdict(_cells(
+        _holdout(400, -0.036, 0.435, 0.194),
+        _holdout(400, -0.125, 0.356, 0.106),
+        _holdout(400, -0.054, 0.380, 0.161),
+    ))
+    assert decided == "INCONCLUSIVE"
+
+
+def test_ACCEPT_needs_BOTH_zero_and_the_control_to_be_cleared() -> None:
+    """§6 fixed two conditions and either alone is not enough: a positive interval that does not
+    beat momentum is momentum, and beating momentum while straddling zero is noise."""
+    above_zero_only = _cells(
+        _holdout(400, -0.036, 0.435, 0.194),
+        _holdout(400, 0.01, 0.15, 0.08),      # clears 0, does NOT clear the control's 0.194
+        _holdout(400, -0.054, 0.380, 0.161),
+    )
+    assert run_pr012.verdict(above_zero_only)[0] == "INCONCLUSIVE"
+
+    clears_both = _cells(
+        _holdout(400, -0.036, 0.435, 0.194),
+        _holdout(400, 0.50, 0.90, 0.70),
+        _holdout(400, -0.054, 0.380, 0.161),
+    )
+    decided, reason = run_pr012.verdict(clears_both)
+    assert decided == "ACCEPT"
+    assert "MARKET" in reason
+
+
+def test_REJECT_needs_EVERY_arm_below_zero() -> None:
+    """Including the control. One positive arm means the strategy family was not refuted, whatever
+    the others did."""
+    all_negative = _cells(
+        _holdout(400, -0.9, -0.2, -0.5),
+        _holdout(400, -0.8, -0.1, -0.4),
+        _holdout(400, -0.7, -0.3, -0.5),
+    )
+    assert run_pr012.verdict(all_negative)[0] == "REJECT"
+
+    one_positive = _cells(
+        _holdout(400, -0.9, 0.2, -0.3),
+        _holdout(400, -0.8, -0.1, -0.4),
+        _holdout(400, -0.7, -0.3, -0.5),
+    )
+    assert run_pr012.verdict(one_positive)[0] == "INCONCLUSIVE"
+
+
+def test_a_missing_arm_REFUSES_rather_than_deciding_on_what_survived() -> None:
+    """Two arms are not this study. Deciding on the survivors would be the scope shortfall gate 25
+    was written for, one layer up."""
+    decided, reason = run_pr012.verdict({
+        "1x/MOMENTUM": _holdout(400, -0.1, 0.4, 0.2),
+        "1x/MARKET": _holdout(400, 0.5, 0.9, 0.7),
+    })
+    assert decided == "REFUSED"
+    assert "every arm" in reason

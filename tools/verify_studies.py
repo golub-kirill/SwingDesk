@@ -30,10 +30,22 @@ REPO = Path(__file__).resolve().parents[1]
 PREREG = REPO / "docs" / "prereg"
 RESULTS = PREREG / "results"
 
-#: A study either fails to refute its hypothesis, refutes it, or cannot say. `inconclusive` is
-#: first-class here (PREREG_TEMPLATE) - a study that cannot reach a verdict is a result, not a
-#: failed run, and collapsing it into either of the others is how a null gets reported as a win.
-VERDICTS = ("ACCEPT", "REJECT", "INCONCLUSIVE")
+#: A study either fails to refute its hypothesis, refutes it, cannot say, or could not look.
+#: `inconclusive` is first-class here (PREREG_TEMPLATE) - a study that cannot reach a verdict is a
+#: result, not a failed run, and collapsing it into either of the others is how a null gets
+#: reported as a win.
+#:
+#: `REFUSED` was added 2026-08-24, when PR-012's sample rule fired and the vocabulary had no word
+#: for it. PREREG_TEMPLATE section 8 has always required it - "the study reports the measurement and
+#: REFUSES a verdict" when the minimum sample is not met - and this gate could not represent the
+#: outcome its own template mandates, so the first study to hit it failed the gate for being honest.
+#:
+#: It is NOT a synonym for `inconclusive`, and the difference is the one AGENTS.md section 12 calls
+#: the most damaging error this product can make. `inconclusive` is a fact about the TRADE: the
+#: study looked and the statistic did not discriminate. `REFUSED` is a gap in the DATA: there was
+#: not enough to look with, so no statistic was computed. Folding the second into the first reports
+#: an unmeasured question as a measured one.
+VERDICTS = ("ACCEPT", "REJECT", "INCONCLUSIVE", "REFUSED")
 
 HEADER_FIELD = re.compile(r"^\s*(prereg|status|verdict|id):\s*(.+?)\s*$", re.MULTILINE)
 INDEX_ROW = re.compile(r"^\|\s*`(PR-\d+[a-z]?)`\s*\|([^|]*)\|([^|]*)\|", re.MULTILINE)

@@ -176,6 +176,64 @@ def bootstrap_interval(values: list[Decimal], seed: int,
     return mean, means[int(0.025 * resamples)], means[int(0.975 * resamples) - 1]
 
 
+def verdict(results: dict[str, dict[str, object]]) -> tuple[str, str]:
+    """The pre-registration's own decision rule, in code. Returns (verdict, reason).
+
+    Sections 6 and 8 of `PR-012` fix this before the run, and computing it here rather than reading
+    it off a table is what makes the verdict a consequence of the numbers rather than of whoever
+    looked at them.
+
+    **The sample rule comes FIRST and it produces a fourth verdict.** Section 8: *"the study reports
+    the measurement and refuses a verdict"* when the minimum is not met. `REFUSED` is not
+    `INCONCLUSIVE` - the first says there was not enough data to look with, the second says the
+    study looked and could not tell. Collapsing them reports an unmeasured question as a measured
+    one, which `AGENTS.md` section 12 calls the most damaging error this product can make.
+    """
+    measured = {
+        arm: results[f"1x/{arm}"]["holdout"] for arm in ("MOMENTUM", "MARKET", "SECTOR")
+        if f"1x/{arm}" in results
+    }
+    if len(measured) < 3:
+        return "REFUSED", "not every arm produced a holdout cell"
+
+    thin = sorted(
+        arm for arm, cell in measured.items()
+        if not (isinstance(cell, dict) and cell.get("meets_minimum"))
+    )
+    if thin:
+        counts = ", ".join(
+            f"{arm} {measured[arm]['trades']}" for arm in thin  # type: ignore[index]
+        )
+        return "REFUSED", (
+            f"section 8's minimum of {MIN_TRADES_PER_ARM} holdout trades is not met on {counts}"
+            + (" - and one of them is the CONTROL, so the comparison does not exist"
+               if "MOMENTUM" in thin else "")
+        )
+
+    control = measured["MOMENTUM"]
+    assert isinstance(control, dict)
+    for arm in ("MARKET", "SECTOR"):
+        cell = measured[arm]
+        assert isinstance(cell, dict)
+        low, mean = cell["ci_low"], control["mean_net_r"]
+        if low is not None and mean is not None and low > 0 and low > mean:
+            return "ACCEPT", (
+                f"{arm}'s holdout interval lies entirely above 0 and its lower bound {low:.6f} "
+                f"exceeds the control's mean {mean:.6f}"
+            )
+
+    highs = [
+        cell["ci_high"] for cell in measured.values()
+        if isinstance(cell, dict) and cell["ci_high"] is not None
+    ]
+    if highs and all(h < 0 for h in highs):  # type: ignore[operator]
+        return "REJECT", "every arm's holdout interval lies entirely below 0 at measured costs"
+
+    return "INCONCLUSIVE", (
+        "no ranking arm's interval clears both 0 and the control, and not every arm is negative"
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="run_pr012")
     parser.add_argument("--data", type=Path, default=Path("data"))
@@ -357,6 +415,10 @@ def main() -> int:
                   f"{'n/a' if mean is None else f'[{block['ci_low']:.6f}, {block['ci_high']:.6f}]':>28} "
                   f"{block['meets_minimum']!s:>7}")
 
+    decided, reason = verdict(results)
+    print(f"\nVERDICT: {decided}")
+    print(f"  {reason}")
+
     payload = {
         "prereg": "PR-012",
         "run_at": clock.isoformat(),
@@ -380,7 +442,24 @@ def main() -> int:
             "min_names_for_window_start": MIN_NAMES_FOR_WINDOW_START,
         },
         "trials": 3,
+        # Gate 25 condition 4: a reported study DECLARES what it registered and what it ran. An
+        # empty `registered` is a legitimate declaration; an absent block is indistinguishable from
+        # nobody having looked. Section 5 registered ONE perturbation and named the two it
+        # deliberately does not spend a trial on - those are recorded as `considered_not_registered`
+        # so the distinction between "not registered" and "registered and skipped" survives.
+        "perturbations": {
+            "registered": ["cost_stress_3x"],
+            "run": ["cost_stress_3x"],
+            "considered_not_registered": ["lookback_sweep", "capacity_sweep"],
+            "recorded": (
+                "2026-08-24, from PR-012 section 5. The cost stress is a SENSITIVITY on the same "
+                "configurations rather than a separate arm - TRIAL_BUDGET.md: a cost stress is not "
+                "a new shot at the data - so it costs no additional trial."
+            ),
+        },
         "results": results,
+        "verdict": decided,
+        "verdict_reason": reason,
     }
     if args.write:
         RESULT.parent.mkdir(parents=True, exist_ok=True)

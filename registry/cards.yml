@@ -129,22 +129,29 @@ cards:
     # What stops this card running. Each is a real, checkable obstacle - not a wish list.
     blocked_by:
       - id: unset-selection
-        what: rs.lookback, rs.ranking_method and screen.relative_strength_rule are all unset
+        what: >-
+          rs.lookback, rs.ranking_method, rs.benchmark_form and screen.relative_strength_rule are
+          all unset. PR-012 was the study that would have set them and it REFUSED a verdict on
+          2026-08-24 for want of sample, so they stay unset.
         why: >-
           The card refuses rather than defaulting. ALLOCATION_SPEC 3 says an ordering adopted from
           the course does not inherit its authority and needs a PRE-REGISTRATION before it selects
-          a trade - so these get values from a study, never from a decision record.
-      - id: no-study-runs-the-book
+          a trade - so these get values from a study, never from a decision record. A refused study
+          sets nothing: it reports the measurement and declines the verdict, which is the design
+          working.
+      - id: the-capacity-cap-caps-the-sample
         what: >-
-          CLOSED in part 2026-08-24. validation/backtest/book.py:run_book walks a SESSION axis over
-          many instruments, lets them compete for a bounded number of slots, and enforces
-          max_positions and max_open_risk. What remains is that no study runner calls it - the
-          engine can express this card's family and nothing has run it.
+          CLOSED 2026-08-24: validation/backtest/book.py:run_book exists and PR-012 ran three arms
+          through it over 2,388 sessions. What that RUN found is a new blocker, and a harder one -
+          a four-position book held at most 20 sessions produces about 50 entries a year, so a
+          2.9-year holdout can supply roughly 145 trades against b.min_sample's doubled floor of
+          200. PR-012 observed 181 to 203 and refused a verdict.
         why: >-
-          The original blocker was that a per-instrument engine would enter every name ever ranked
-          inside the cutoff, independently and uncapped, measuring a different strategy from the one
-          this card declares. That is fixed. Running it needs the ranking rule below, which needs a
-          pre-registration, so the two close in order rather than together.
+          No amount of universe deepening fixes this - the study already deepened the store from a
+          median of 510 bars to 2,512 and the ceiling did not move, because the binding constraint
+          is risk.max_concurrent_positions against exit.max_holding_period and BOTH ARE RATIFIED.
+          Every route out changes something ratified or the study's shape; PR-012's report section
+          "Why the sample is structurally short" lists them with what each costs.
       - id: benchmark-form-unset
         what: >-
           CLOSED in part 2026-08-24 by DR-018. SPY, QQQ, IWM, IVV and VOO are stored, five years

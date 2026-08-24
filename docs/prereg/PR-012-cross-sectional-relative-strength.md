@@ -4,7 +4,7 @@
 id:            PR-012
 date:          2026-08-24
 author:        Claude (agent), for the owner
-status:        registered
+status:        reported
 card:          CARD-001
 trials:        3 configurations (see §5)
 ```
@@ -176,3 +176,19 @@ what this study asks about the two forms that escape that proof.
 
 None. Appended, dated, never edited in place; an amendment after data is seen downgrades this to
 exploratory.
+
+## 11. Reported 2026-08-24 — REFUSED for want of sample
+
+`results/PR-012-report.md`. §8's minimum of 200 holdout trades per arm is not met on two of three,
+and one of the two is the **control** — so §8's *"reports the measurement and refuses a verdict"*
+fires, and it is a refusal rather than an `inconclusive` because a comparison whose control is
+under-sampled is not a comparison.
+
+**§8 named this failure mode before the run**, and the arithmetic under it is now measured: four
+concurrent positions held at most 20 sessions is a ceiling of about 50 entries a year, so a
+2.9-year holdout can produce roughly 145 trades at best. The observed 181–203 is **at** that
+ceiling. No amount of universe deepening fixes it — the binding constraint is the capacity cap
+against the holding period, and both are ratified.
+
+The three trials are spent. A refused study still spends them: `b.deflated_sharpe` deflates by
+shots taken at the data, not by shots that produced an answer.
