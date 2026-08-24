@@ -356,7 +356,8 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       last close and a twenty-session average - one full history per instrument, 3,720 queries, 73
       seconds, 99.4% discarded. `BarStore.tails` answers all three in one query.
       **Measured end to end: ~24 min -> ~6 min a pass, and the remaining time is the VENDOR**, not
-      this code: ~2 min compute against ~4 min of 1,141 sequential fetches. The compute halves that
+      this code: **136 s of compute over the full 1,141**, measured directly rather than
+      extrapolated, against ~4 min of 1,141 sequential fetches. The compute halves that
       were fixed are 150.2 s -> 15.4 s for 150 instruments (9.8x) and 71.9 s -> 1.7 s for selection
       (41x).
       **Byte-identity was proven, not assumed, four times:** the same `output_hash` before and
