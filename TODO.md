@@ -52,6 +52,22 @@ hands it over by name.
       naming it.
       **The base rate is now 1 of 11, not 3.** The sole survivor is `calendar.sessions_behind`,
       below.
+      **RE-MEASURED 2026-08-23: that last survivor is dead too, and the survivor count is 0 of 11.**
+      `DR-015` gave `sessions_behind` a caller (`market_data/freshness.py`), and with it the two
+      mutations that matter now die loudly — returning a constant 0 takes **11** tests with it, and
+      an off-by-one takes **7**. Wiring dead code is what killed the mutant; nobody wrote a test
+      against it.
+      **One mutation still survives and is EQUIVALENT, which is a different thing from a gap.**
+      `if last_bar >= latest.session_date` → `>` changes nothing: at equality the long path computes
+      a one-session window and returns 0 by the other route. Recorded so the next audit does not
+      chase it.
+      **But DELETING that early return is not equivalent, and nothing covered it.** A bar dated
+      after the last completed session then calls the calendar with `start > end`, which raises
+      `ValueError` — the freshness check stops answering and one such bar takes the whole run down
+      instead of refusing one candidate. `AGENTS.md` §12 records 296 stored bars whose
+      `knowledge_time` predated their own session close, so the input is not hypothetical.
+      `test_a_bar_dated_AFTER_the_last_completed_session_is_fresh_and_does_not_raise` closes it and
+      is the only one of the twenty in that file that the deletion turns red.
       **A conclusion that rested on this and no longer stands:** "a wrong R could be why the base
       strategy is negative" — R was never wrong, it was merely unasserted, so there is no prior
       result to re-derive. **The entry-filter family stays closed.**

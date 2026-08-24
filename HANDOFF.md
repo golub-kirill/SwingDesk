@@ -46,7 +46,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | | |
 |---|---|
 | Merge gates | **31**, one command: `python tools/check_gates.py` |
-| Tests | **723**, fully offline |
+| Tests | **724**, fully offline |
 | Docs | 111 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 460 registered · 4 `specified` · **1 `active`** |
 | Parameters | 103 - 60 `unset`, 35 `assumed`, 8 `owner`, **0 `validated`** |
@@ -71,7 +71,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | Classifications | 1,148 instrument(s) carry a sector · 1,046 (**91.1%**) report at least one non-zero weight. The stricter `look_through` count, which also drops a degenerate ETF look-through (`DR-006` §8.7), is lower - derive it with `python tools/measure_sector_cap.py --wide` |
 | Track A clock | **0/20** consecutive clean sessions · counting from a **deliberate restart on 2026-08-22**, not an outage - `python tools/track_a_streak.py` prints why · `a.run_completes`, computed by `tools/track_a_streak.py` |
 
-*Measured from `data/` on 2026-08-23.*
+*Measured from `data/` on 2026-08-24.*
 
 <!-- END GENERATED: state:runtime -->
 
