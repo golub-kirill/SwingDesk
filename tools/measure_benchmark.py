@@ -35,8 +35,9 @@ adjusted series, so the drag is uncorrected; it is measured here rather than ass
 **Actions are read at the RUN's clock, not the bar store's.** The two stores are filled by different
 passes, and reading actions at the bar store's knowledge time hides every action fetched since the
 last bar refresh - which on the first run is all of them. That is the same trap
-`SESSION-HANDOFF-2026-08-24` §3 records for the classification store, and this tool tripped it: the
-first run reported "0 payments" for five funds holding 101 dividends between them.
+the classification store hit on 2026-08-23 - a tool reading it at the bar store's clock reported
+zero classified over a store holding 1,148 - and this tool tripped the same wire: its first run
+reported "0 payments" for five funds holding 101 dividends between them.
 
     python tools/measure_benchmark.py --data C:/PycharmProjects/SwingDesk/data \\
         --out docs/decisions/measurements/benchmark-2026-08-24.json

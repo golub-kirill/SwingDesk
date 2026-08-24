@@ -1,109 +1,127 @@
 # Session handoff — 2026-08-24
 
-**Read `HANDOFF.md` first, then `TODO.md`.** This covers only what changed in the session that built
-the sector and correlation caps, the split guard, and two calibrations. Delete it once §1 is
-actioned.
+**Read `HANDOFF.md` first, then `TODO.md`.** This covers only what changed in the session that
+ratified the liquidity floor, applied three owner rulings, opened the backtest engine to more than
+one strategy family, gave it a portfolio, priced the trial budget, and wrote the project's first
+strategy card. **Delete it once §1 is actioned.**
 
-**It replaces `SESSION-HANDOFF-2026-08-23.md`**, deleted rather than edited as its own header
-instructed. Nothing in it lived only there: the partially-pinned-clock rule went to `AGENTS.md` §12
-when the 08-22 file was retired, and everything else is in `DR-006`, `DR-016` or `TODO.md`.
+**It replaces the earlier `SESSION-HANDOFF-2026-08-24.md`**, deleted rather than edited as its own
+header instructed. Nothing in it lived only there: its §1 is restated below and still live, its §2
+inventory is in `DR-006` and `DR-016`, its §4 rulings are all taken, and its §5 sequence is the plan
+that this session executed.
 
 ---
 
-## 1. The first thing to check, and it is not code
+## 1. The first thing to check, and it is still not code
 
-**Did the scheduled run survive Monday 2026-08-24?**
+**Did the scheduled run survive Monday evening?**
 
 ```bash
 python tools/verify_schedule.py
 ```
 
-That is gate 26, added 2026-08-23. It was **red** when this was written: both passes last ran
-2026-08-21 and both exited 1 on the `initial_costs_per_share` schema drift `AGENTS.md` §12 records.
-`positions.duckdb` carries the column again, so **Monday's 18:30 and 19:30 passes are the first that
-can get past it — the repair is unverified in production until then.**
+Gate 26. It was **red** when this was written, and for a reason that has not changed since Friday:
+both passes last ran **2026-08-21** and both exited 1 on the `initial_costs_per_share` schema drift.
+`positions.duckdb` carries the column again, so **Monday 2026-08-24's 18:30 and 19:30 passes are the
+first that can get past it.** At the time of writing they had not yet run.
 
-- **Green** → the four-day outage is genuinely closed and `a.run_completes` starts counting for real.
-- **Still red** → read `data/daily_run.log`; the gate exists so this is visible instead of being a
-  stack trace nobody opens between sessions.
+- **Green** → the outage that began 08-18 is genuinely closed and `a.run_completes` starts counting.
+- **Still red** → read `data/daily_run.log` before anything else.
 
-**This matters more than any remaining code.** `a.run_completes` needs **20 consecutive clean
-sessions** and stands at 0/20. Everything else on the v1 finish line is a session or two of work;
-twenty sessions cannot be hurried.
+**`a.run_completes` stands at 0/20 and the owner ruled on 2026-08-24 to leave the threshold at 20.**
+The question *"can we just fetch the missing 20 days?"* was put and answered with the run history:
+
+| sessions | outcome |
+|---|---|
+| 08-09 → 08-17, 7 trading days | all `exit 0` |
+| 08-18 → 08-21, 4 trading days | **all `exit 1`** |
+
+**The best this system has ever done is 7 consecutive clean days, and its most recent record is a
+four-day unbroken failure nobody noticed.** Twenty days is not a waiting period; it is a test that
+has never been passed. Backfilling is also impossible by the criterion's own text — *"produces a
+report **before the next session open**"* — so a replay run tonight for a July session cannot
+satisfy it.
+
+**The 20 days cost nothing, because nothing waits on them.** Track A runs in parallel with Track B
+(`HANDOFF.md` §4). The binding constraint is **not the calendar but the freeze**: the counter has
+reset three times from changes to decision output, never from a fault. **Sequence work to protect
+it** — `validation/` is not frozen and `application/pipeline.py` is.
 
 ## 2. What was built, in one place
 
-All six of `DR-006`'s portfolio constraints now reach code, and the corporate-actions gate is half
-built. Full records in `DR-006` §11–§16 and `DR-016` §8–§9.
+Six merged pull requests, [#33](https://github.com/golub-kirill/SwingDesk/pull/33) through
+[#38](https://github.com/golub-kirill/SwingDesk/pull/38). Full records in the decision documents.
 
 | | |
 |---|---|
-| Correlation cap | `derived_observations/correlation.py` + `portfolio.assess_correlation`, step 6b |
-| Sector cap | `reference_data/classification.py` + `portfolio.assess_sector`, step 6c |
-| Split guard | `manage.split_guard`, in the held-position path **before** the freshness check |
-| Gate 26 | `tools/verify_schedule.py` — asks the machine about the scheduled tasks |
-| Calibrations | `tools/measure_sector_cap.py`, `measure_correlation_cap.py`, `measure_revisions.py` |
+| Liquidity floor | `DR-003` **ratified**; its plateau argument refuted. `tools/measure_liquidity_floor.py` |
+| Three owner rulings | `data.revision_epsilon` scoped to `close`, `risk.max_sector_risk` 2R, correlation cap refuses. `DR-006` **fully ratified**, `DR-016` §10 |
+| Entry rule injectable | `EntryTrigger` protocol; `BacktestConfig.trigger` with **no default** |
+| The book | `validation/backtest/book.py` — a session axis, competing candidates, bounded capacity |
+| Trial budget | `docs/08-pm/TRIAL_BUDGET.md` + `tools/trial_budget.py`, **owner-pending** |
+| The first strategy card | `registry/cards.yml`, `CARD-001`, **gate 27** |
+| The benchmark | `DR-018`; `SPY`/`QQQ`/`IWM`/`IVV`/`VOO` stored; `tools/measure_benchmark.py` |
 
-**The classification store is populated**: 1,148 of 1,148 admitted names, zero vendor failures.
-Top it up after bar coverage grows — the pass is incremental, unclassified names queue first:
+One new merge gate landed — **27**, the strategy-card contract. Derive every count with
+`python tools/check_gates.py`; `HANDOFF.md` §2 owns the census and no other document states it.
 
-```bash
-python tools/refresh_classifications.py --universe --budget 1200
-```
+## 3. Five things a fresh session must not get wrong
 
-## 3. Four things a fresh session must not get wrong
+- **Point-to-point relative strength cannot use a benchmark.** `(1 + own) / (1 + benchmark)` on one
+  cross-section is a strictly monotone transform of the name's own return — the benchmark's return
+  is one constant for every name that day. Measured as a control that must return exactly 1:
+  **15 of 15** pairs give Spearman 1.000000 over 1,148 names. **It is momentum with a decorative
+  denominator.** A path-dependent form escapes the identity (ρ ≈ 0.6 against raw return) and there
+  the index choice bites — SPY against QQQ at 0.616. The **index** is the decision; the **proxy**
+  is not (SPY against IVV: 0.973).
+- **A trial is a CONFIGURATION EVALUATED, not a pre-registration filed.** 13 are spent against a
+  study census that reads 5. And the hurdle grows logarithmically, so rationing trials late buys
+  almost nothing — what buys the control is declaring and counting them.
+- **The backtest still has no sector or correlation cap, deliberately.** `run_book` enforces
+  position count and open risk. The other four `DR-006` caps need point-in-time classification a
+  backtest does not have, and admitting them would let a cap **appear to have been tested** when it
+  was not.
+- **Two stores, two clocks.** Bars and corporate actions are filled by different passes. Reading
+  actions at the bar store's knowledge time hides every action fetched since the last bar refresh —
+  on a first run, all of them. This session's benchmark tool tripped exactly that wire and reported
+  "0 payments" for five funds holding 101 dividends.
+- **Coverage is an ALPHABETICAL PREFIX, not a sample.** 99.0% of measured names sit in the
+  directory's first half. It is liquidity-neutral — a seeded random sample of 115 and the prefix
+  agree on five of six ADTV percentiles — but it is why `SPY` was missing while `DIA` was present.
 
-- **An UNSET parameter and an UNMEASURABLE input fail in opposite directions.** Unset refuses every
-  candidate and names the parameter; a pair that could not be correlated, an instrument that could
-  not be classified, or a split that could not be checked all **admit** and report `unavailable`.
-  `DR-006` §3 forbids the second from becoming the first. Both test files keep them apart on
-  purpose; if a change makes them behave alike, the tests are what will say so.
-- **`conftest.make_bars` gives every instrument the SAME closes**, so any two fixture instruments
-  correlate at exactly **r = 1.00**. `make_bars(zigzag=True)` is the second path and the two measure
-  about **-0.03** apart. A test about capacity or ordering that puts a held name on the walking path
-  is testing correlation instead, whatever its name says.
-- **`actions_fetcher` defaults to None**, which reads the store without fetching. That is what keeps
-  the suite offline; production wires `vendor_yahoo.fetch_actions` in `cli.py` and a test asserts it.
-- **Both stores are read as-of and filled by DIFFERENT passes.** Reading the classification store at
-  the bar store's knowledge time hides every classification pulled since the last bar refresh — on a
-  first run, all of them. `pipeline.py` reads both at the RUN's clock; a tool that did otherwise
-  reported zero classified over a store holding 1,148.
+## 4. On the owner — what is pending
 
-## 4. On the owner — three rulings, all with measurements under them
+None of these blocks anything. `DR-014` keeps the project paper-only.
 
-None is blocking, and all three are fine left `assumed`: `DR-014` makes this paper-only, so nothing
-they govern is spending real money today.
+| | recommendation |
+|---|---|
+| `TRIAL_BUDGET.md` | 25 trials total, 12 remaining (+0.29 sd(SR) for the whole remainder) |
+| `DR-018` | ratify `rs.benchmark = SPY`; leave `rs.benchmark_form` unset for a pre-registration |
+| `DR-003` | `min_price` and `min_bar_history` are still `assumed` — only the ADTV floor was ruled |
 
-| | recommendation | where |
-|---|---|---|
-| `data.revision_epsilon` | keep 0.001, **scope it to `close`** — over all four price fields it raises ~94 `Critical` per evening, over `close` alone it fires zero times | `DR-016` §8.4 |
-| correlation cap | keep the refusal; the size adjustment is unnecessary rather than unauthored | `DR-006` §15.4 |
-| `risk.max_sector_risk` | keep 2R; 1.33R would refuse half of every book | `DR-006` §14.4, §16.4 |
+Also open and unchanged: `DR-017` (ADTV lag), `account.fx_rate_cad`,
+`data.staleness_action_threshold`, and `DR-016` / `DR-017` remain `proposed`.
 
-Also open and unchanged: `DR-017` (ADTV lag), `account.fx_rate_cad` (needs a source and an as-of),
-`data.staleness_action_threshold` (a ruling or an explicit retirement).
+## 5. What the next session should pick up
 
-## 5. What the next session should pick up — read the plan first
+The plan is
+[`docs/08-pm/plans/2026-08-24-from-machinery-to-evidence.md`](docs/08-pm/plans/2026-08-24-from-machinery-to-evidence.md).
+**Its steps 1 through 4 are done.** What remains is step 5 — spend the budget on families — and
+`CARD-001` names exactly what stands between here and there, in `registry/cards.yml` `blocked_by`:
 
-**[`docs/08-pm/plans/2026-08-24-from-machinery-to-evidence.md`](docs/08-pm/plans/2026-08-24-from-machinery-to-evidence.md)**,
-written this session and `owner-pending`. It supersedes the informal ordering that used to sit here,
-and its §0 corrects three claims an earlier draft of this handoff got wrong — including that the v1
-finish line is "close". **It is reached, 2026-08-02** (`ROADMAP.md` §2).
+1. **Sector-relative strength.** The *other* way out of §3's identity: a per-name denominator is not
+   a common factor. The classification store holds 1,148 classified names, so this is measurable
+   today, and it decides whether the card's measure is market-relative or sector-relative.
+2. **The first pre-registration for the selection rule** — `rs.benchmark_form`, `rs.lookback`,
+   `rs.ranking_method` and `screen.relative_strength_rule` all come from a study.
+   `ALLOCATION_SPEC` §3 forbids a decision record here.
+3. **A study runner that calls `run_book`.** The engine can express the family; nothing has run it.
+4. **Activate the four components** `CARD-001` needs. G6's denominator is **four**, not 465.
 
-Short version of its sequence:
-
-1. **The first strategy card** — `ROADMAP.md`'s own P5, named load-bearing on 2026-08-02 and still
-   not done. `STRATEGY_CARD_SPEC.md` exists; no card does. Phase 3 cannot start without it.
-2. **The liquidity floor as a decision record.** `universe.min_adtv_20d` is `assumed` and decides
-   the achievable edge class before any strategy is chosen. Fully measurable from what is on disk.
-   *If only one thing gets done, this one.*
-3. **The trial budget**, because `b.deflated_sharpe` accumulates across the whole programme.
-4. **Generalise the backtest engine past breakout.** `run_arm` hardcodes `breakout_high`; the
-   `gate` is a filter, not a trigger. One family is expressible today and it is the refuted one.
-
-Still open and unchanged, but below the four above: the write-time revision comparison (`DR-016`,
-waits on §4's first ruling), the 12 dirty-tree journalled runs holding `a.reproducible` short, and
-bar coverage at 28.3% — pure throughput, `tools/refresh_universe.py --budget 500`, repeatedly.
+Below those, unchanged: the write-time revision fault does not reach the decision path (a frozen
+`pipeline.py` change — sequence it against §1's counter), the 12 dirty-tree journalled runs hold
+`a.reproducible` short, and bar coverage is under a third — `tools/refresh_universe.py --budget 500`,
+repeatedly, is pure throughput and resets nothing.
 
 ## 6. Before you start
 
@@ -112,9 +130,12 @@ git worktree list && git branch -a
 ```
 
 Run the gates with `PYTHONPATH=$PWD/src`. From a worktree, gates 23, 24 and 26 correctly report
-`UNAVAILABLE`; point them at the real stores with
-`SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data` when you need the runtime figures.
+`UNAVAILABLE`; point them at the real stores with `SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data`
+when you need the runtime figures.
 
-**Track A restarted 2026-08-22 and this session moved decision output again** — `pipeline.py` is
-frozen under `DR-015` §3, so the counter resets, and it already read 0. Derive it with
-`python tools/track_a_streak.py` from the MAIN checkout, never from a line in a document.
+**Re-index the code graph** — `src/` changed in three of this session's merges. Pass
+`name="swingdesk"`; omitting it creates a duplicate project, which this session did and had to
+delete.
+
+**Nothing this session touched `application/pipeline.py`**, so no counter reset was spent. Keep it
+that way until §1 is green and the streak is worth protecting.
