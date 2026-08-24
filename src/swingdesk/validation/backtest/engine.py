@@ -234,7 +234,7 @@ def run_arm(
             position["mae"] = min(position["mae"], low_r)
 
             if decision.exited and decision.price is not None and decision.reason is not None:
-                result.trades.append(_close(position, bar, decision.price, decision.reason, config))
+                result.trades.append(close_position(position, bar, decision.price, decision.reason, config))
                 position = None
             continue
 
@@ -289,13 +289,21 @@ def run_arm(
         # dropped - a dropped open position is a silently removed outcome, and open positions at
         # the end of a window are not randomly distributed.
         last = bars[-1]
-        result.trades.append(_close(position, last, last.close, ExitReason.END_OF_DATA, config))
+        result.trades.append(close_position(position, last, last.close, ExitReason.END_OF_DATA, config))
 
     return result
 
 
-def _close(position: dict[str, Any], bar: Bar, quoted: Decimal, reason: ExitReason,
-           config: BacktestConfig) -> Trade:
+def close_position(position: dict[str, Any], bar: Bar, quoted: Decimal, reason: ExitReason,
+                   config: BacktestConfig) -> Trade:
+    """Turn an open position into a Trade at `quoted`, charging the exit fill and commission.
+
+    Public because `book.py` closes positions the same way and there must be ONE definition of
+    what a closed trade costs. Copying it would be the one-logic-in-two-places failure, and
+    importing it under a leading underscore would leave a caller invisible to anyone
+    refactoring this file - the same reasoning DR-006 recorded when the book cap made two
+    sizing helpers public.
+    """
     exit_price = config.costs.sell_fill(quoted)
     return Trade(
         instrument_id=position["instrument_id"],

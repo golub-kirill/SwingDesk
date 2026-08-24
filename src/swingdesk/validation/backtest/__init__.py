@@ -14,6 +14,14 @@ Two properties are structural rather than tested-for:
 """
 
 from swingdesk.trade_management.exits import ExitPolicy
+from swingdesk.validation.backtest.book import (
+    BookResult,
+    Candidate,
+    Capacity,
+    Ranking,
+    by_instrument_id,
+    run_book,
+)
 from swingdesk.validation.backtest.costs import CostModel
 from swingdesk.validation.backtest.engine import (
     ArmResult,
@@ -28,11 +36,17 @@ from swingdesk.validation.backtest.engine import (
 __all__ = [
     "ArmResult",
     "BacktestConfig",
+    "BookResult",
     "BreakoutHigh",
+    "Candidate",
+    "Capacity",
     "CloseBelowLow",
     "CostModel",
     "EntryTrigger",
     "ExitPolicy",
+    "Ranking",
     "Skipped",
+    "by_instrument_id",
     "run_arm",
+    "run_book",
 ]

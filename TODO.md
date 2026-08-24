@@ -666,21 +666,25 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       to create the demand. This card needs four components and gate 27 prints how many are active.
       **What the card revealed by existing — see the item below.**
 
-- [ ] **`[v]` THE BACKTEST HAS NO PORTFOLIO, and it blocks CARD-001.** Found 2026-08-24 by writing
-      the card, which is the argument for P5 in one line. Verified two ways: nothing in
-      `src/swingdesk/validation/` references `portfolio`, `risk.max_concurrent_positions` or
-      `risk.max_open_risk`, and the code graph shows `run_arm`'s callees are the cost model and the
-      exit policy and nothing else.
-      **"Hold the strongest N of the universe at once" is a portfolio construction rule.** A
-      per-instrument engine enters every name ever ranked inside the cutoff, independently and
-      uncapped — a different strategy from the one the card declares. `measure_sector_cap.py`
-      records the symptom from the other side: `PR-005`'s base slice held a median of 20 positions
-      at once against a ratified cap of 4.
-      **The 2026-08-24 `EntryTrigger` seam does NOT reach this.** It made the entry rule injectable
-      and left the engine single-instrument. The two look alike from a distance and only one is done.
-      Three more blockers are declared in `registry/cards.yml`: the selection inputs are unset (a
-      study, not a decision record), **no index series is stored** to be strong relative to, and all
-      four components are `registered`.
+- [x] **`[v]` THE BACKTEST HAD NO PORTFOLIO — BUILT 2026-08-24, `validation/backtest/book.py`.**
+      Found by writing the card, which is the argument for P5 in one line. Verified two ways before
+      building: nothing in `src/swingdesk/validation/` referenced `portfolio`,
+      `risk.max_concurrent_positions` or `risk.max_open_risk`, and the code graph showed `run_arm`'s
+      callees were the cost model and the exit policy and nothing else.
+      **`run_book` walks a SESSION axis**, not an instrument's bars, so instruments compete. Four
+      properties pinned by tests proven to fail without them: `deferred` is a separate outcome from
+      `Skip` (`ALLOCATION_SPEC` §5), a slot freed by today's exit is available to today's candidates
+      (`CHECKLIST_SPEC` §4), the ranking is injected with **no default**, and `risk.max_open_risk`
+      binds independently of the position count. A one-name book with spare capacity reproduces
+      `run_arm`'s trades exactly.
+      **`engine._close` became `close_position`** so both engines share one definition of what a
+      closed trade costs — the `DR-006` precedent, not a new pattern. `PR-005` still replays
+      **byte-identically** after the rename; measured, not assumed.
+      **What is left is that no study runner calls it**, and that needs the ranking rule, which
+      needs a pre-registration. Carried in the card's `blocked_by` as `no-study-runs-the-book`.
+      **Three blockers remain, declared in `registry/cards.yml`:** the selection inputs are unset
+      (a study, not a decision record), **no index series is stored** to be strong relative to, and
+      all four components are `registered`.
 
 - [x] **`[v]` The backtest engine expressed ONE strategy family, and it was the refuted one — FIXED
       2026-08-24.** `run_arm` called `breakout_high` directly and the `gate` argument was a per-bar
