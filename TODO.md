@@ -365,10 +365,28 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       `tools/verify_reproducible.py` reproducing `50e1646b933a4a9d` - the hash recorded on `master`
       before the change - over the full universe. So it moves no decision output and spends no
       `a.run_completes` counter.
+      **A fourth hot spot, found by measuring my own fix:** the calendar cache was thrashing at a
+      **2% hit rate** — `_schedule` ran 9 hits against 415 misses over the full universe, and the
+      cause is structural rather than a `maxsize` set too low. The windows asked for are each
+      instrument's stored extent, and 3,743 instruments produce 903 distinct ones, so any
+      exact-window cache saturates. Quantising the ends to whole years collapses them to **36**
+      spans; `sessions` slices its own window out of a cached span. 159.0 s -> 136.2 s over 1,141.
+      Equivalence measured against the previous implementation over **886 windows, 0 mismatches**.
       **What it found that was NOT performance:** deleting the window filter in
       `completeness.check` left all 794 tests green, because every fixture in that file builds its
       series exactly over the window it then checks. The rule the code comment had always stated
       was asserted by nothing. Closed with a test that overhangs both ends.
+      **BATCHING THE VENDOR IS NOT THE NEXT LEVER — measured 2026-08-24, so nobody spends a session
+      on it.** With compute cut, the vendor is now the majority of the run, and one HTTP request per
+      instrument looks like the obvious target. `yf.download` over 20 tickers at once returns in
+      **144 ms each against 167 ms one at a time — 1.2x**, because that call is a convenience
+      wrapper over the same per-symbol endpoint rather than a batch endpoint. The lever would be
+      CONCURRENCY, not batching, and that means parallel requests against an unofficial scrape of a
+      consumer site (`ADR-0001`) on a free tier — a different kind of decision from a refactor.
+      **The data half is already measured and it came out clean:** batch and single-ticker returns
+      agree on **250 of 251 bars** for every one of 20 names, and the only disagreement is the
+      CURRENT unclosed session, which `BarStore.write` refuses by construction. So whoever picks
+      concurrency up does not have to re-establish equality, only decide about the vendor.
 - [ ] **`[c]` UDR-004 — regime ontology.** Three candidate lists now: ТЗ's 8, course v5.0's 11,
       v7.0's 7 (`RECONCILIATION_PLAN.md` §5). Ties to `USER_STORIES.md`:304 (US-004 unsatisfiable
       while `regime.classifier_rule` is contested).
