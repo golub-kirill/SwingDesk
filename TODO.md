@@ -373,12 +373,19 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       timed two whole passes end to end at **11m40s**. The compute halves that
       were fixed are 150.2 s -> 15.4 s for 150 instruments (9.8x) and 71.9 s -> 1.7 s for selection
       (41x).
-      **Byte-identity was proven, not assumed, four times:** the same `output_hash` before and
-      after at every step on a 150-instrument pass, all 1,141 selection members identical member
-      for member against the pre-change loop written out verbatim, and
-      `tools/verify_reproducible.py` reproducing `50e1646b933a4a9d` - the hash recorded on `master`
-      before the change - over the full universe. So it moves no decision output and spends no
-      `a.run_completes` counter.
+      **Byte-identity was proven, not assumed, SIX times, and the last two go through code paths
+      the pipeline never touches:** the same `output_hash` before and after at every step on a
+      150-instrument pass; all 1,141 selection members identical member for member against the
+      pre-change loop written out verbatim; `tools/verify_reproducible.py` reproducing
+      `50e1646b933a4a9d` - the hash recorded on `master` before the change - over the full universe;
+      **`tools/run_pr005_replay.py` reproducing all 20 of PR-005's cells** through the backtest
+      engine; and **`tools/run_pr012.py` reproducing all 12 of PR-012's cells** - trade counts,
+      deferred counts, mean net R and both CI bounds - through `run_book`, the ranking and the
+      classification store, ending on the same `REFUSED` for the same reason. So it moves no
+      decision output and spends no `a.run_completes` counter.
+      **Two run times worth knowing before a session waits on one:** `run_pr012.py` is **13m37s**
+      and `verify_reproducible.py` is **11m40s** for both passes. They are now the two most
+      expensive tools in the tree.
       **A fourth hot spot, found by measuring my own fix — and the fix for it was BUILT AND THEN
       REMOVED THE SAME DAY, which is the part worth carrying.** The calendar cache thrashes: the
       windows asked for are each instrument's stored extent, 372 distinct ones over the admitted
