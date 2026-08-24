@@ -1888,13 +1888,13 @@ components:
     stage: Context
     claim_type: Derived Observation
     validation: Not Applicable
-    activation: registered
-    implements: null
+    activation: specified
+    implements: "swingdesk.derived_observations.relative_strength:compute"
     parameters: []
-    consumers: []
-    owner: null
-    verification: null
-    spec: null
+    consumers: [M31-T0465-v5.0, M33-T0487-v5.0]
+    owner: owner
+    verification: property test
+    spec: src/swingdesk/derived_observations/relative_strength.py
 
   - component: M31-T0465-v5.0
     name: Long strongest / short weakest

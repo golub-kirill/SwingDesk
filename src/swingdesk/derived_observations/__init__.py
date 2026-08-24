@@ -4,6 +4,6 @@ Pure functions. No I/O, no clock, no journal - this is the purity boundary (ARCH
 CI greps this package for wall-clock calls.
 """
 
-from swingdesk.derived_observations import atr
+from swingdesk.derived_observations import atr, relative_strength
 
-__all__ = ["atr"]
+__all__ = ["atr", "relative_strength"]
