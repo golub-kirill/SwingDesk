@@ -342,6 +342,33 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       is required and writes the cell-by-cell comparison beside the log. **`PR-009` must register
       against this replay's vintage, not against PR-005's published aggregate** — they are now
       known not to be the same thing, and the provenance file says so in the artifact itself.
+- [x] **`[v]` THE DAILY RUN TOOK 24 MINUTES AND ~19 OF THEM WERE ARITHMETIC NOBODY NEEDED —
+      FIXED 2026-08-24.** Derive the figures with the commands named below, never from this line.
+      **Three hot spots, none of them in a frozen file, and the biggest was quadratic.**
+      `completeness.check` asked `BarSeries.bars_on` - a linear scan - once per session date, and
+      the pipeline checks each instrument's WHOLE stored extent, so sessions ≈ bars: ~2,500 x
+      ~2,500 per instrument, 7.2 billion comparisons a run. Affordable at the old median of 510
+      bars and not at ten years, which is why the run had crept from ~5 min to ~12 before the
+      deepening and to ~24 after it. `calendar.sessions` read a pandas frame with `iterrows`, which
+      builds a Series per row, for two columns. `checklist._load_items` re-parsed the checklist
+      registry per candidate.
+      **And `universe.select` read 3.57 MILLION bars to answer three numbers** - a bar count, a
+      last close and a twenty-session average - one full history per instrument, 3,720 queries, 73
+      seconds, 99.4% discarded. `BarStore.tails` answers all three in one query.
+      **Measured end to end: ~24 min -> ~6 min a pass, and the remaining time is the VENDOR**, not
+      this code: ~2 min compute against ~4 min of 1,141 sequential fetches. The compute halves that
+      were fixed are 150.2 s -> 15.4 s for 150 instruments (9.8x) and 71.9 s -> 1.7 s for selection
+      (41x).
+      **Byte-identity was proven, not assumed, four times:** the same `output_hash` before and
+      after at every step on a 150-instrument pass, all 1,141 selection members identical member
+      for member against the pre-change loop written out verbatim, and
+      `tools/verify_reproducible.py` reproducing `50e1646b933a4a9d` - the hash recorded on `master`
+      before the change - over the full universe. So it moves no decision output and spends no
+      `a.run_completes` counter.
+      **What it found that was NOT performance:** deleting the window filter in
+      `completeness.check` left all 794 tests green, because every fixture in that file builds its
+      series exactly over the window it then checks. The rule the code comment had always stated
+      was asserted by nothing. Closed with a test that overhangs both ends.
 - [ ] **`[c]` UDR-004 — regime ontology.** Three candidate lists now: ТЗ's 8, course v5.0's 11,
       v7.0's 7 (`RECONCILIATION_PLAN.md` §5). Ties to `USER_STORIES.md`:304 (US-004 unsatisfiable
       while `regime.classifier_rule` is contested).
@@ -810,8 +837,16 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       iteration order, set membership and dictionary insertion have every chance to bite, and gate
       9's three-instrument case gives them almost none. It does **not** establish that a stored
       manifest replays: no journalled run was recorded at this code, and that remains true.
-      **It is slow — about twenty minutes a pass** on the deepened store, so it is a deliberate
-      check rather than a merge gate.
+      ~~**It is slow — about twenty minutes a pass** on the deepened store, so it is a deliberate
+      check rather than a merge gate.~~
+      **RE-MEASURED 2026-08-24 after the performance work in §2: 11m40s for BOTH passes**, so
+      about six minutes each including 1,141 live vendor fetches. Still a deliberate check rather
+      than a merge gate - it touches the network, which `CI_POLICY` §4 forbids a gate to do - but
+      the reason is no longer the clock.
+      **And it re-established the criterion at the NEW code, which is the point:** both passes
+      produced `50e1646b933a4a9d`, byte-identical to the hash this same tool recorded on `master`
+      before any of the changes. Same decision output over the full production universe, from
+      different code.
 
 - [ ] **`[v]` `M31-T0464` IS `specified` — 2026-08-24, and the gate caught the shortcut.**
       `derived_observations/relative_strength.py` computes the RS line: the ratio of an

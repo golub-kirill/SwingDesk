@@ -157,5 +157,7 @@ point them at the real stores with `SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/
 deleted.
 
 **Two long jobs are worth knowing about**: the ten-year universe deepening took about two and a
-quarter hours, and `verify_reproducible.py` takes about twenty minutes a pass. Both hold the bar
-store, and both are worth running in the background rather than waiting on.
+quarter hours, and ~~`verify_reproducible.py` takes about twenty minutes a pass~~ —
+**corrected 2026-08-24: it is about six minutes a pass now**, 11m40s for both, after the daily
+run's compute was cut roughly tenfold (`TODO.md` §2). Both hold the bar store, and both are
+worth running in the background rather than waiting on.

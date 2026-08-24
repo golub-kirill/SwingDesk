@@ -98,9 +98,16 @@ _LEAD = r"(?<![-\w.§~])"
 
 CHECKS: tuple[tuple[str, str, str | None], ...] = (
     # The bare "N parameters" form is deliberately NOT checked: "9 parameters carry assumed values"
-    # is a true statement about the assumed subset, and a pattern that cannot tell it from a total
+    # is a legal statement about the assumed subset, and a pattern that cannot tell it from a total
     # produces exactly the noise that gets a gate bypassed. The backticked status forms below are
     # unambiguous, and a census line carries them anyway.
+    #
+    # The example is not hypothetical and it did not age well. That exact sentence was
+    # `RISK_REGISTER.md` row G-2, and by 2026-08-24 the registry held 34 `assumed` parameters
+    # against its 9 - so the line quoted here to justify not checking had itself become the drift.
+    # The decision stands and the reason is unchanged; what the instance shows is that this gate's
+    # blind spot is real rather than theoretical, and that the way out is the one `AGENTS.md` §10.5
+    # already gives - the document names the command instead of the number, which G-2 now does.
     (_LEAD + r"(\d+)\s+`unset`", "parameters:unset", None),
     (_LEAD + r"(\d+)\s+`assumed`", "parameters:assumed", None),
     (_LEAD + r"(\d+)\s+`owner`", "parameters:owner", None),
