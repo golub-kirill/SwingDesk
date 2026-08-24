@@ -249,6 +249,86 @@ def _manifest_tree(tmp_path: Path, *, status: str = "drafting", number: str = "0
     return tmp_path
 
 
+def _claims_tree(tmp_path: Path, prose: str, *, where: str = "docs/02-domain/SPEC.md") -> Path:
+    """A registry with one set and one unset parameter, and one document making `prose`."""
+    (tmp_path / "registry").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "registry" / "parameters.yml").write_text(
+        "parameters:\n"
+        "  - id: risk.max_open_risk\n    value: 4\n    provenance: owner\n"
+        "  - id: exit.atr_stop_multiple\n    value: 2.0\n    provenance: assumed:DR-012\n"
+        "  - id: account.fx_rate_cad\n    value:\n    provenance:\n",
+        encoding="utf-8",
+    )
+    target = tmp_path / where
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(f"# Spec\n\n{prose}\n", encoding="utf-8")
+    return tmp_path
+
+
+# ------------------------------------------------------- gate 28: parameter claims in prose
+
+
+def test_claims_gate_catches_a_parameter_called_unset_that_has_a_value(tmp_path: Path) -> None:
+    """The drift this gate exists for, in its commonest form.
+
+    `UX_TASK_FLOWS.md` said the risk budget needs `risk.max_open_risk` "and friends, all `unset`"
+    two days after `DR-006` ratified them, and `GO_LIVE_GATES.md` called
+    `validation.max_allowable_drawdown` `unset` sixteen days after `DR-007` gave it a value.
+    """
+    root = _claims_tree(tmp_path, "The book cap needs `risk.max_open_risk`, which is `unset`.")
+    code, out = run_gate("verify_parameter_claims.py", root)
+    assert code == 1
+    assert "says `risk.max_open_risk` is `unset`; the registry has `owner`" in out
+
+
+def test_claims_gate_reads_provenance_before_its_citation(tmp_path: Path) -> None:
+    """`assumed:DR-012` is `assumed`; what follows the colon is the evidence, not the status."""
+    root = _claims_tree(tmp_path, "`exit.atr_stop_multiple` is `assumed` and read by the pipeline.")
+    code, out = run_gate("verify_parameter_claims.py", root)
+    assert code == 0, out
+
+
+def test_claims_gate_leaves_history_and_transitions_alone(tmp_path: Path) -> None:
+    """Rewriting a dated statement to match today falsifies the record (`AGENTS.md` §10.5).
+
+    All four forms in one tree, because suppressing the wrong one is how this gate would become
+    noise: a strikethrough, a ruling word, a move between two statuses, and a denial.
+    """
+    root = _claims_tree(
+        tmp_path,
+        "- `risk.max_open_risk` was `unset` before the ruling.\n"
+        "- ~~`risk.max_open_risk` is `unset`~~\n"
+        "- RULED 2026-08-22: `risk.max_open_risk` is `unset` no longer.\n"
+        "- `risk.max_open_risk` moves from `unset` to owner-set.\n"
+        "- This does not make `risk.max_open_risk` `unset`.\n",
+    )
+    code, out = run_gate("verify_parameter_claims.py", root)
+    assert code == 0, out
+
+
+def test_claims_gate_does_not_police_the_append_only_stores(tmp_path: Path) -> None:
+    """A decision record states what was true when it was accepted and may not be edited.
+
+    `AGENTS.md` §11 rule 2. A gate demanding `docs/decisions/` track today's registry would be
+    demanding the one thing that store forbids.
+    """
+    root = _claims_tree(
+        tmp_path,
+        "`risk.max_open_risk` is `unset`, so sizing refuses.",
+        where="docs/decisions/DR-999-probe.md",
+    )
+    code, out = run_gate("verify_parameter_claims.py", root)
+    assert code == 0, out
+
+
+def test_claims_gate_still_reads_an_unset_parameter_as_unset(tmp_path: Path) -> None:
+    """The other half of the pair. A gate that only ever fails is not discriminating either."""
+    root = _claims_tree(tmp_path, "`account.fx_rate_cad` is `unset`, so a CAD candidate refuses.")
+    code, out = run_gate("verify_parameter_claims.py", root)
+    assert code == 0, out
+    assert "0 failure(s)" in out
+
+
 def _study_tree(tmp_path: Path, claim: str, *, verdicts: tuple[str, ...] = ("reject",)) -> Path:
     """A tree with `len(verdicts)` reported studies and a document making `claim`."""
     results = tmp_path / "docs" / "prereg" / "results"

@@ -237,8 +237,8 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       that enum would mean inventing five empty fields and the first component to read one would
       get numbers back. It is its own record with its own table, which is what "with their own
       `knowledge_time`" in the spec's own row requires.
-      **Wired into no decision.** The gate needs `data.revision_epsilon`, which is `unset` pending
-      the ruling below, so storing an action changes nothing the run decides — which is exactly why
+      **Wired into no decision when this landed.** The gate needs `data.revision_epsilon`, which
+      was `unset` pending the ruling below, so storing an action changed nothing the run decides — which is exactly why
       it was safe to land before the ruling. 11 tests, 5 mutants killed including the look-ahead one
       (an action learned later must be invisible to an earlier read).
       **RE-MEASURED 2026-08-23 (`DR-016` §8) — the value survives, the SCOPE does not.** §2's table
@@ -277,7 +277,7 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       stop-out that never happened, on a position still held.
       `DATA_QUALITY_SPEC.md` §4 specifies the gate in full, including the `DATA_ERR`/`Critical`
       case for a changed raw bar. **Nothing is implemented** — no mention of splits or dividends
-      anywhere in `src/` — and `data.revision_epsilon` is `unset`. Needs its own record, same shape
+      anywhere in `src/` — and `data.revision_epsilon` was `unset`. Needs its own record, same shape
       as `DR-015`. **Stale data makes the system decide on old information, which is now refused.
       An unhandled split makes it decide on *wrong* information while every freshness check
       passes.**
@@ -1183,7 +1183,7 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       Candidates Skip with the parameter named; open positions PAUSE rather than being managed on an
       invented stop. Old behaviour `pipeline.py`:289 and :369 both use
       `exits or ExitPolicy(Decimal("2.0"), 20)` — a hard-coded constant with no registry read and no
-      provenance, while `exit.atr_stop_multiple` and `exit.max_holding_period` are both `unset`.
+      provenance, while `exit.atr_stop_multiple` and `exit.max_holding_period` were both `unset`.
       This is a no-silent-default violation sitting in the production path. **Was a frozen file
       queued behind the freeze; the freeze lifted 2026-08-17 and PR #9 merged the same evening.**
 - [x] **`[v]` Sizing stop and exit policy disagreed — fixed 2026-08-16.** One policy for the whole

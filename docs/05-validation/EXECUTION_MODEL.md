@@ -137,7 +137,8 @@ PR-005's stored skip counts were produced before these counters existed, so a re
 `POSITION_OPEN` and `unevaluable_bars` that the record does not contain. The reports are records of
 what ran and are not being edited.
 
-This is what `validation.missed_trade_rate` is for, and it is `unset`. A forward test measures misses
+This is what `validation.missed_trade_rate` is for. `DR-007` gave it a value on 2026-08-08 and it is
+`assumed:DR-007`, read by nothing. A forward test measures misses
 against a live schedule (`VALIDATION_PROGRAM.md` §2); a backtest can only measure them against its
 own ledger, and that requires the ledger to be complete. It now is.
 
@@ -233,7 +234,8 @@ is the specific defect this document exists to make impossible to introduce quie
       indistinguishable from unambiguous.
 - [x] ~~**`POSITION_OPEN` is never counted**~~ — **done 2026-08-08** (§5), with `unevaluable_bars`
       alongside it. Two counters, one new test, no trade moved.
-- [ ] **`validation.execution_delay` is `unset` and read by nothing.** It is not unclaimed:
+- [ ] **`validation.execution_delay` is `assumed:DR-007` and read by nothing** — it was `unset` when
+      this item was written, and gaining a value did not gain it a consumer. It is not unclaimed:
       `WALKFORWARD_SPEC.md` §4 makes it perturbation 6 of the robustness suite — *execute later than
       the signal* — so the execution model owes it a definition even though the perturbation is what
       consumes it. Under D1 the delay is real and human-sized: the owner reads a report and acts

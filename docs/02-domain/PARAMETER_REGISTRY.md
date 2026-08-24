@@ -133,7 +133,7 @@ recounted.
 | `exit.*` | 15 | every ATR/Chandelier/Donchian/percentage/holding parameter, plus slot resolution order |
 | `validation.*` | 15 | IS/OOS split, walk-forward window, embargo, forward-test minimums, go-live |
 | `stats.*` | 8 | Sharpe/Sortino/Recovery conventions, breakeven win rate, both scales |
-| `regime.*` / `rs.*` | 7 | includes `regime.classifier_rule`, the one `validated` entry — see below |
+| `regime.*` / `rs.*` | 7 | includes `regime.classifier_rule`, which was the one `validated` entry until 2026-08-16 and is `assumed:PR-002` now — see below |
 | `data.*` | 6 | freshness, staleness, revision tolerance |
 | `universe.*` | 3 | the DR-003 liquidity rule: price floor, ADTV floor, history floor |
 | `account.*` · `costs.*` · `pivot.*` · `atr.*` | 7 | equity and currency; commission and slippage model; pivot left/right; ATR period |

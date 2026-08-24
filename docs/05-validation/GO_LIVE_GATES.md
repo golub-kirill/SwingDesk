@@ -122,8 +122,8 @@ not a gate.
 | Condition | Measurable from | Status |
 |---|---|---|
 | no critical violations | error codes in the journal (`CODES.md`) | **computable today** — the twelve error codes are transcribed |
-| stable process score | `stats.process_score_scale` | `unset` — the course names the concept and no scale |
-| acceptable drawdown | `validation.max_allowable_drawdown` | `unset` |
+| stable process score | `stats.process_score_scale` | `assumed:DR-002`, read by nothing — the course names the concept and no scale, so the value is authored rather than taken |
+| acceptable drawdown | `validation.max_allowable_drawdown` | `owner`, read by nothing — `DR-007` gave it a value on 2026-08-08 and `RULE_SPEC.md` §7 states what that bought: *"the gate went from unable to fail to untested"* |
 | live/test execution compatible | recorded slippage vs modelled slippage | needs `costs.slippage_model` |
 | technical readiness | run success rate, alert delivery, journal completeness | Track A criteria |
 

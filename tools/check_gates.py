@@ -162,6 +162,8 @@ def main() -> int:
                             [python, "tools/verify_schedule.py"], "26 schedule"),
         "27 strategy cards": _run("a card's references resolve and it claims no more than it has",
                                   [python, "tools/verify_cards.py"]),
+        "28 parameter claims": _run("no document states a parameter status the registry contradicts",
+                                    [python, "tools/verify_parameter_claims.py"]),
     }
 
     print("\n" + "=" * 62)
