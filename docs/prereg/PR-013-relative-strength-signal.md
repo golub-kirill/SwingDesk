@@ -201,6 +201,35 @@ on a sweep, stated here rather than discovered in the report.
 
 ## 10. Amendments
 
-None. Appended, dated, never edited in place. An amendment after data is seen is recorded as such —
-and this study is already exploratory by §0b, so an amendment cannot downgrade it further and must
-still be recorded.
+Appended, dated, never edited in place. An amendment after data is seen is recorded as such — and
+this study is already exploratory by §0b, so an amendment cannot downgrade it further and must still
+be recorded either way.
+
+### A-1 · 2026-08-24 · BEFORE THE RUN — commission is excluded and the exclusion is a known bias
+
+§5 said the net figure subtracts the slippage **plus the commission model**. Commission is
+`0.005 per SHARE` (`assumed:DR-010`) and this study's unit is a decile of names with **no position
+size** — expressing it would require inventing a share count, which `CHARTER.md` A-001 forbids in
+the AI context and which this project forbids generally as originating a number.
+
+**So the net figure subtracts slippage only: 4 × 25 bps per formation date**, two sides on each of
+two legs. Commission is omitted, **the omission biases the net figure UPWARD**, and it is recorded
+here rather than discovered in the report. Nothing else in §5 changes.
+
+No data had been seen when this was written; the runner did not exist.
+
+### A-2 · 2026-08-24 · BEFORE THE RUN — admission is evaluated at each formation date
+
+§4 says the universe is the `DR-003` rule as of each formation date. That is what the runner does,
+and it is worth stating what it can and cannot remove.
+
+`LiquidityRule.admits(series, as_of_index)` is evaluated **at each formation date's own bar index**,
+so a name that did not meet the price, ADTV or history floor on that date is not ranked on it. This
+removes the admission look-ahead that `PR-012` carried — that study admitted once at the snapshot
+and used the set throughout.
+
+**It does not remove survivorship**, and nothing in this repository can: the directory is today's,
+so a name delisted in 2019 is absent from every formation date. §4's `survivorship: ABSENT` stands
+unchanged and every figure remains biased upward.
+
+No data had been seen when this was written; the runner did not exist.
