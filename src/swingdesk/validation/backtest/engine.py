@@ -121,6 +121,31 @@ class CloseBelowLow:
 
 
 @dataclass(frozen=True, slots=True)
+class AlwaysEligible:
+    """Every bar past `warmup` is a candidate. The trigger a CROSS-SECTIONAL family needs.
+
+    **This is not "no trigger", it is a different shape of family.** A time-series rule asks *is this
+    one ready yet*; a cross-sectional rule asks *which of these*, and the selection happens in the
+    RANKING and the capacity cap rather than at a price level. `CARD-001` §1 says exactly that, and
+    without this the only way to express it would be a trigger that lies about being a filter.
+
+    `warmup` still returns `None` rather than `False`, because a name whose ranking score cannot be
+    computed yet has nothing to answer with - the same distinction `run_arm` counts as
+    `unevaluable_bars`. Set it to the ranking's lookback: a candidate the ranking would score
+    `UNSCORED` is one this should never have offered.
+    """
+
+    warmup: int
+
+    def __call__(self, series: BarSeries, index: int) -> bool | None:  # noqa: ARG002 - protocol
+        # `series` is unused and must stay in the signature: EntryTrigger is a protocol and a
+        # narrower one here would make this the only trigger a caller has to special-case.
+        if index < self.warmup:
+            return None
+        return True
+
+
+@dataclass(frozen=True, slots=True)
 class BacktestConfig:
     """Everything the engine needs, all of it pinned by the study.
 
