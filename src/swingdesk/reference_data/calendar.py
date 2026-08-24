@@ -69,10 +69,14 @@ def sessions(exchange: Exchange, start: date, end: date) -> tuple[ExchangeSessio
     **Answered from a whole-YEAR span and sliced.** Windows here are the stored extent of an
     instrument, and those are almost all distinct: measured 2026-08-24, 3,743 instruments produce
     903 distinct (first, last) windows, so an exact-window cache saturates and thrashes - it ran at
-    a 81% hit rate against `_schedule`'s 2%, and every miss rebuilt ~2,500 validated records.
-    Quantising the ends to whole years collapses those 903 windows into about a dozen spans per
-    exchange, which fit. The slice is exact: a schedule is a function of the date, not of the range
-    it was asked for, so a session inside `[start, end]` is the same object either way.
+    an 81% hit rate against `_schedule`'s 2%, and every miss rebuilt ~2,500 validated records.
+    Quantising the ends to whole years collapses those 903 windows into **36** spans across both
+    exchanges, which fit. The slice is exact: a schedule is a function of the date, not of the
+    range it was asked for, so a session inside `[start, end]` is the same object either way.
+
+    This function keeps a small cache of its own anyway. It cannot hold the 903 windows and is not
+    meant to - what it saves is the repeated slice for the windows that do recur, which was 1,858
+    of 2,282 calls on the measured run. A miss here is now a filter over a cached tuple.
     """
     if start > end:
         # Delegated rather than reimplemented. An inverted window is a caller defect and the
