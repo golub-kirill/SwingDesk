@@ -301,6 +301,20 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       card, not a study). Resume research once one real end-to-end cycle — proposal → owner sees it
       → position opened → managed → approved → applied → filled — has actually run. See §6b for the
       gap analysis that prompted this and the build order now underway.
+      **OVERRIDDEN BY THE OWNER 2026-08-24 for one study, and the override is recorded rather than
+      assumed.** `PR-013` was registered on owner direction while this suspension stood. A council
+      is advisory and the owner is not, so the direction governs — but two things are worth having
+      in writing.
+      **First, the resume condition as written can never be met.** It waits on one real end-to-end
+      cycle, and measured the same day: the system has recorded 11,240 decisions and **not one
+      `Trade`**, the live path's terminal state is `Watch — sized; awaiting a trigger`, and there is
+      no trigger in it. A suspension whose exit condition is unreachable is a permanent stop, which
+      is not what the council voted for.
+      **Second, the owner's reason is a constraint the council did not have.** Six months, and at
+      four concurrent positions held twenty sessions that is 25 live trades against a ratified floor
+      of 100. Waiting for the cycle and waiting for the evidence are the same wait, and it is longer
+      than the horizon.
+      **Still suspended:** everything else on the list above. This override is one study, named.
 - [x] **`[v]` Gate 16 was RED — fixed 2026-08-15.** Both undeclared worktrees are now named in
       `HANDOFF.md` §2. `python tools/verify_branches.py` exits 0.
 - [x] **`[v]` `HANDOFF.md` §2's stale rows — fixed at the mechanism, 2026-08-15.** §2 is now
