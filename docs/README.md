@@ -185,7 +185,7 @@ second surface inventing synonyms later.
 | G3 Data | 25–29 | Vendor decided by ADR; point-in-time model settled |
 | ~~G4 Architecture~~ | 39–43, 47 | **CLOSED** — 4 import contracts compile; determinism replay runs as a gate |
 | ~~G5 Walking skeleton~~ | one end-to-end vertical slice | **CLOSED 2026-08-02** — 9 gates green from `python tools/check_gates.py`; ATR active with golden vectors |
-| G6 Catalog build-out | 14–16, 22–24, 34–38 | Components registered in bulk; activation gated per component. **34–38 written 2026-08-02**; 7 components implemented, 4 with golden vectors |
+| G6 Catalog build-out | 14–16, 22–24, 34–38 | Components registered in bulk; activation gated per component. **34–38 written 2026-08-02.** How many are implemented, activated or carry golden vectors is `HANDOFF.md` §2's — derive it with `python tools/verify_counts.py`. ~~7 components implemented, 4 with golden vectors~~, which read as live and had been wrong since the counts moved. **`ROADMAP.md` §3 owns what closes this gate** and it is not a count: *every component a live strategy card needs is `active`*, which `CARD-001` gave a denominator of four on 2026-08-24 |
 | G7 Web + Telegram + push | 49–54 | A UI parameter edit versions the component and resets its validation |
 
 ## Studies
