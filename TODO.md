@@ -966,6 +966,34 @@ is for where no gate can reach.
       separate fields and never relates them, so a split copied from a study of a different shape
       looks like rigour and behaves like a sample cut.
 
+- [ ] **`[v]` PR-013 RAN, THE SAMPLE RULE WAS MET, AND THE ORDERING CARRIES NOTHING BEFORE COSTS.**
+      2026-08-24, owner direction (variant C). `docs/prereg/results/PR-013-report.md`; derive every
+      figure with `python tools/run_pr013.py --data <store>`, never from this line.
+      **The sample problem is solved and that is the structural result.** 142 holdout formation
+      dates against a minimum of 100 — `PR-012` could reach only 181–203 trades against its own 200
+      and refused. What bought it was the HORIZON, not the unit: five-session formation gives five
+      times as many independent dates as a twenty-session hold permits trades to be opened. Ranking
+      names rather than trades buys nothing by itself — every name ranked on one date shares that
+      date's market move, so a cross-section is ONE observation. That correction was made while
+      designing and is the transferable part.
+      **The finding is in the GROSS column and it is stronger than the verdict.** All six gross
+      intervals include zero, in both periods and all three arms. Largest point estimate +0.24% over
+      five sessions, interval −0.15% to +0.61%. The three forms do not separate from each other
+      either. Survivorship biases every figure UPWARD, so a measurement inclined to find an edge
+      found none.
+      **The net column is arithmetic, not a finding:** 100 bps per formation date at a five-session
+      rebalance is ~50% a year, larger than every point estimate, so every net interval is below
+      zero by construction.
+      **The registered decision rule has a gap, disclosed rather than patched.** An arm whose CI
+      sits wholly BELOW zero landed in `inconclusive`, because §6's reject clauses are "CI includes
+      zero" or "at or below the control" and neither fires when both arm and control are losing.
+      Confirmed by calling the registered function. **The next pre-registration needs a branch for
+      *both arms and control are negative*** — comparing two losers on which loses less is not a
+      finding. Fixing it now would be the redesign rule 3 downgrades.
+      **3 trials spent.** Exploratory by declaration (§0b), so it advances no validation status and
+      sets none of `CARD-001`'s four `unset` inputs.
+      **It does not refute the family** (§9): one lookback and one horizon, neither searched, and
+      that was deliberate to avoid spending trials on a sweep.
 - [ ] **`[v]` PR-012 RAN AND REFUSED A VERDICT — and the reason is structural, not fixable by
       data.** 2026-08-24. `docs/prereg/results/PR-012-report.md`; derive every figure with
       `python tools/run_pr012.py`, never from this line.

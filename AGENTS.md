@@ -553,6 +553,27 @@ the words are as fragile as the numerals; the fix is to stop counting in prose a
   study, the criterion, the gate number — before considering the change landed. It is the same
   move §10.2 asks for across branches, aimed at documents instead.
 
+- **Migrated 2026-08-24 from `SESSION-HANDOFF-2026-08-24.md` §3, before that file was deleted.**
+  Four traps that lived only there, which is why they are here now — a habit stored in a document
+  whose own header says to delete it is a habit with an expiry date.
+  **`REFUSED` is not `INCONCLUSIVE`.** One says there was not enough data to look with; the other
+  says the study looked and could not tell. Gate 3f had no `REFUSED` in its vocabulary, so the
+  first study to obey `PREREG_TEMPLATE` §8 failed a gate for obeying it.
+  **A refused study still spends its trials.** `b.deflated_sharpe` deflates by shots taken at the
+  data, not by shots that produced an answer. `trial_budget.py` counted such a study as **0** until
+  it was taught to read a study's own declared count.
+  **Coverage is an ALPHABETICAL PREFIX, not a sample.** It is why `SPY` was missing while `DIA` was
+  present, and why a percentile taken from stored coverage is defensible only because a seeded
+  random sample and the prefix were checked against each other and agreed.
+  **Two stores, two clocks.** Bars, corporate actions and classifications are filled by different
+  passes, so reading one at another's `knowledge_time` hides everything learned since. Hit twice in
+  a single session before it was written down.
+  **The stores are SINGLE-WRITER (`ADR-0004`), and the right response to a held one is
+  `UNAVAILABLE`, never a traceback.** Demonstrated again 2026-08-24 at 18:31, against the real
+  scheduled 18:30 pass: `tools/build_state.py` raised `duckdb.IOException` where it should have
+  reported that it could not measure and left the block alone. A long refresh pass blocks every
+  tool that reads the stores, and that is the design working rather than a fault.
+
 **The habits:**
 
 - **Name the owner before making the claim.** One sentence, in your own head, before you assert
