@@ -712,10 +712,17 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       Reports `UNAVAILABLE` (exit 4) rather than a traceback when a store is held by another
       process — `ADR-0004` makes them single-writer, so a refresh pass holding one is the design
       working.
-      **NOT YET RUN against the full universe.** A ten-year deepening pass held the bar store when
-      it was written. Run it, and if it passes, `a.reproducible` has its first production
-      measurement; if it fails with nothing pinned differing, that is non-determinism in the
-      decision path and it is the case the check exists to catch.
+      **RUN 2026-08-24, AND IT PASSES.** Both passes over the full **1,141**-instrument universe
+      produced output hash `50e1646b933a4a9d`. **`a.reproducible` has its first production
+      measurement**, and it is one of the four Track A criteria `k.track_a_timebox`'s kill trigger
+      counts. Derive it with `python tools/verify_reproducible.py --data …`, never from this line.
+      **What it does and does not establish.** It establishes that the decision path is
+      deterministic over 1,141 real instruments carrying a median of 2,512 bars each — where
+      iteration order, set membership and dictionary insertion have every chance to bite, and gate
+      9's three-instrument case gives them almost none. It does **not** establish that a stored
+      manifest replays: no journalled run was recorded at this code, and that remains true.
+      **It is slow — about twenty minutes a pass** on the deepened store, so it is a deliberate
+      check rather than a merge gate.
 
 - [ ] **`[v]` `M31-T0464` IS `specified` — 2026-08-24, and the gate caught the shortcut.**
       `derived_observations/relative_strength.py` computes the RS line: the ratio of an
