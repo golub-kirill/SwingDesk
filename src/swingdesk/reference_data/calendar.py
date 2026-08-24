@@ -56,7 +56,7 @@ def _schedule(exchange: Exchange, start: date, end: date) -> pd.DataFrame:
     return schedule
 
 
-@lru_cache(maxsize=32)
+@lru_cache(maxsize=4)
 def sessions(exchange: Exchange, start: date, end: date) -> tuple[ExchangeSession, ...]:
     """Every trading session for `exchange` in `[start, end]`, ascending.
 
@@ -64,43 +64,31 @@ def sessions(exchange: Exchange, start: date, end: date) -> tuple[ExchangeSessio
     could establish.
 
     **Cached, and the result is safe to share**: the tuple and every `ExchangeSession` in it are
-    frozen, so a caller cannot disturb the next one.
+    frozen, and `_schedule` below has been cached since it was written, so this adds no staleness
+    that was not already there.
 
-    **Answered from a whole-YEAR span and sliced.** Windows here are the stored extent of an
-    instrument, and those are almost all distinct: measured 2026-08-24, 3,743 instruments produce
-    903 distinct (first, last) windows, so an exact-window cache saturates and thrashes - it ran at
-    an 81% hit rate against `_schedule`'s 2%, and every miss rebuilt ~2,500 validated records.
-    Quantising the ends to whole years collapses those 903 windows into **36** spans across both
-    exchanges, which fit. The slice is exact: a schedule is a function of the date, not of the
-    range it was asked for, so a session inside `[start, end]` is the same object either way.
+    **`maxsize` is 4 because the fifth entry buys almost nothing.** Windows here are each
+    instrument's stored extent, and the shape of that distribution decides the cache, not intuition:
+    over the 1,141-member admitted universe there are **372 distinct windows**, of which two cover
+    **669 instruments** and most of the rest appear once. Simulated over the run's actual window
+    sequence, an LRU of 4 hits **58.7%** and an LRU of 64 hits **63.6%** - sixteen times the memory
+    for five points. One entry can hold ~2,500 validated records at ~1.2 kB each, so the size is a
+    memory decision.
 
-    This function keeps a small cache of its own anyway. It cannot hold the 903 windows and is not
-    meant to - what it saves is the repeated slice for the windows that do recur, which was 1,858
-    of 2,282 calls on the measured run. A miss here is now a filter over a cached tuple.
+    **A whole-year span cache was built here and removed the same day.** Quantising the ends to
+    whole years collapses those 372 windows into 36 spans and cuts the full-universe pass from
+    159 s to 136 s - and retains **228 MB**, measured, because the saving comes precisely from
+    keeping ~199,000 built `ExchangeSession` objects alive. `NFR.md` §3 budgets the decision path at
+    **5 minutes** and it now runs in about 2.6, so the 23 seconds bought nothing any requirement
+    asks for while the memory was real. Recorded rather than deleted: the numbers are what a future
+    session needs to revisit it, and the cheaper route is a lighter `ExchangeSession` rather than a
+    bigger cache.
     """
-    if start > end:
-        # Delegated rather than reimplemented. An inverted window is a caller defect and the
-        # calendar library has always rejected it with `ValueError`; `tests/test_freshness.py`
-        # documents a real defect that surfaced through exactly that raise. Quantising to whole
-        # years would otherwise turn it into a silent empty answer, which is the worse outcome.
-        _schedule(exchange, start, end)
-    span = _span(exchange, start.year, end.year)
-    return tuple(s for s in span if start <= s.session_date <= end)
-
-
-@lru_cache(maxsize=48)
-def _span(exchange: Exchange, first_year: int, last_year: int) -> tuple[ExchangeSession, ...]:
-    """Every session from `first_year`-01-01 to `last_year`-12-31, built once and sliced above.
-
-    `maxsize` has headroom rather than a fitted value: one full daily run over the stored universe
-    asks for **36** distinct spans across both exchanges, and a cache sized exactly to that would
-    start evicting the moment coverage reached one more listing year.
-    """
-    frame = _schedule(exchange, date(first_year, 1, 1), date(last_year, 12, 31))
+    frame = _schedule(exchange, start, end)
     if frame.empty:
         # An empty frame's columns carry no dtype, so `.dt` below raises rather than returning
-        # nothing. A span the exchange was shut for the whole of is a normal answer - and for a
-        # single date it is a weekend, a holiday, or a date the calendar does not know.
+        # nothing. A window the exchange was shut for the whole of is a normal answer - a weekend,
+        # a holiday week, or a date the calendar does not know - and it is an empty tuple.
         return ()
     tz = _calendar(exchange).tz
     # Converted for the whole column at once. Per row it built a pandas Series per access, which

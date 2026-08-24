@@ -209,13 +209,15 @@ def test_bars_outside_the_window_are_not_findings(registry) -> None:
     assert report.sessions_checked == len(_sessions(TEST_US.exchange, *window))
 
 
-def test_a_window_is_sliced_to_its_own_ends_and_spans_a_year_boundary() -> None:
-    """The calendar answers from a cached whole-YEAR span and slices, so the slice must be exact.
+def test_a_window_is_exact_at_both_ends_and_spans_a_year_boundary() -> None:
+    """Both bounds are inclusive, and a window crossing a New Year keeps both sides.
 
-    Quantising the ends is what stops a per-instrument window cache from thrashing — a run over the
-    stored universe asks for 903 distinct windows and only 36 distinct year spans. Two things can go
-    wrong and neither is visible in a total: an inclusive bound read as exclusive silently drops the
-    endpoints, and consulting one year's span drops the other side of a New Year.
+    Two things can go wrong here and neither is visible in a total: an inclusive bound read as
+    exclusive silently drops the endpoints, and any scheme that answers from a coarser unit than
+    the window — a whole year, a quarter — drops the other side of a boundary. One such scheme was
+    built and removed on 2026-08-24 (`reference_data/calendar.py` records why), and this test is
+    what caught its off-by-one. It is kept because the property is the calendar's, not that
+    scheme's.
     """
     start, end = date(2026, 3, 2), date(2026, 3, 31)
     march = cal.sessions(TEST_US.exchange, start, end)
@@ -229,12 +231,12 @@ def test_a_window_is_sliced_to_its_own_ends_and_spans_a_year_boundary() -> None:
     assert {s.session_date.year for s in crossing} == {2025, 2026}
 
 
-def test_an_inverted_window_still_raises_rather_than_answering_empty() -> None:
+def test_an_inverted_window_raises_rather_than_answering_empty() -> None:
     """A caller defect must stay loud. `test_freshness.py` records a real one found through it.
 
-    The year-span slice would answer an inverted window with an empty tuple, which reads exactly
-    like "the exchange was shut all week" — so the inverted case is handed to the calendar library,
-    which has always rejected it.
+    `start > end` reaches the calendar library, which rejects it. Anything that answered it with an
+    empty tuple would read exactly like "the exchange was shut all week", and a bar dated after the
+    last completed session is how the inverted window actually arises.
     """
     with pytest.raises(ValueError):
         cal.sessions(TEST_US.exchange, date(2026, 8, 24), date(2026, 8, 10))

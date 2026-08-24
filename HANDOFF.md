@@ -81,7 +81,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 |---|---|---|
 | `master` | 2026-08-10 | **protected** — required check `gates`, admins included, no force-push. A new merge commit is refused until its check reports; fast-forward a green commit, or use a PR |
 | CI | 2026-08-24 | `gates`, windows-latest. **Five** `UNAVAILABLE`, verified against run `32757431015`: gates 2 and 3 need the course PDFs, which are not in the repo; gates 23, 24 and **26** need `data/` or the scheduling machine. Everything else must be green. ~~Exactly **four** … verified against run `32093559374`~~ — that row was written 2026-08-17 and gate 26 landed on the 18th, so it asserted four for six days while CI reported five. Gates 28 and 29 were added after this run and both execute in CI; **29's cross-branch half cannot**, and prints that it did not run rather than passing for a check it never made |
-| Daily run | 2026-08-24 | **SCHEDULED** — Windows Task Scheduler, `SwingDesk daily run`, weekdays 18:30 local, wrapper `tools/daily_run.cmd`, log `data/daily_run.log`. **~6 min per pass** over 1,141 members, of which **136 s** is compute and ~4 min is 1,141 sequential vendor fetches — measured 2026-08-24 by `tools/verify_reproducible.py`, which ran two full passes in 11m40s. It was ~24 min that morning; the row read ~5 min and had been right on 2026-08-09 |
+| Daily run | 2026-08-24 | **SCHEDULED** — Windows Task Scheduler, `SwingDesk daily run`, weekdays 18:30 local, wrapper `tools/daily_run.cmd`, log `data/daily_run.log`. **~6 min per pass** over 1,141 members, of which **160 s** is compute and ~3 min is 1,141 sequential vendor fetches — measured 2026-08-24 by `tools/verify_reproducible.py`, which ran two full passes in 11m40s. It was ~24 min that morning; the row read ~5 min and had been right on 2026-08-09 |
 | Costs | 2026-08-09 | slippage **measured** — 25bps per side (`DR-005`); commission still assumed |
 | ТЗ coverage | 2026-08-24 | FULL 29 · PARTIAL 26 · ABSENT 0 · DEFERRED 2 — recounted from `SPEC_GAP_ANALYSIS.md` §3 by gate 3e. Two rows moved: §32 out of DEFERRED because charter amendment A-001 put the AI contour in scope, and §18 out of FULL because `PR-002`'s verdict — its only stated evidence — was corrected to `inconclusive` |
 | Project gates | 2026-08-10 | G0, G4, G5 closed · G1, G2, G3, G6, G7 open |
@@ -244,8 +244,12 @@ a report.
 
 ### In flight — `claude/swingdesk-tasks-cl-perf-707e67`, not merged
 
-**The daily run's compute was cut roughly tenfold and nothing it decides moved.** ~24 min a pass to
-~6, of which the remaining ~4 min is the vendor rather than this code. Three hot spots and a
+**The daily run was breaching a ratified NFR budget by 4x and nothing measured it.**
+`NFR.md` §3 budgets the **decision path at ≤ 5 minutes**; measured on 2026-08-24 before any
+change it was **20.2 minutes** — 19.0 of pipeline compute plus 71.9 s of universe selection —
+and it is **2.7 minutes** now. The breach was invisible because the same table's end-to-end
+budget (≤ 45 min) was comfortably met at ~24 min, and **nothing in this tree measures any of
+those budgets**. That gap is still open: the run log gives a total and no split. Three hot spots and a
 quadratic: `completeness.check` was O(bars x sessions) over each instrument's whole stored extent,
 `application/universe.py`'s selection read 3.57 million bars to answer a count, a last close and a
 twenty-session average, `calendar.sessions` read a pandas frame with `iterrows` against a cache running at a 2%

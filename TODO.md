@@ -342,8 +342,20 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       is required and writes the cell-by-cell comparison beside the log. **`PR-009` must register
       against this replay's vintage, not against PR-005's published aggregate** — they are now
       known not to be the same thing, and the provenance file says so in the artifact itself.
-- [x] **`[v]` THE DAILY RUN TOOK 24 MINUTES AND ~19 OF THEM WERE ARITHMETIC NOBODY NEEDED —
+- [x] **`[v]` THE DAILY RUN WAS BREACHING A RATIFIED NFR BUDGET BY 4x AND NOTHING MEASURED IT —
       FIXED 2026-08-24.** Derive the figures with the commands named below, never from this line.
+      **`NFR.md` §3 budgets the DECISION PATH at ≤ 5 minutes.** Measured on 2026-08-24 before
+      any change: 19.0 min of pipeline compute over the 1,141-member universe plus 71.9 s of
+      universe selection — **20.2 minutes, four times the budget.** After: **2.7 minutes**,
+      inside it with room.
+      **Why nobody saw it.** The same table budgets the END-TO-END run at ≤ 45 min, and
+      end-to-end was ~24 min — comfortable. The breach was in a row that only an instrumented
+      run can measure, and **nothing in this tree measures any of `NFR.md` §3's budgets.**
+      That gap is still open: `data/daily_run.log` gives end-to-end duration and no split, and
+      the split is where the requirement lives.
+      **Not asserted about earlier runs.** The last run to complete was 2026-08-17 at 11m45s
+      end-to-end, before the universe was deepened to ten years; its decision-path share was
+      never recorded and is not reconstructible.
       **Three hot spots, none of them in a frozen file, and the biggest was quadratic.**
       `completeness.check` asked `BarSeries.bars_on` - a linear scan - once per session date, and
       the pipeline checks each instrument's WHOLE stored extent, so sessions ≈ bars: ~2,500 x
@@ -356,8 +368,9 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       last close and a twenty-session average - one full history per instrument, 3,720 queries, 73
       seconds, 99.4% discarded. `BarStore.tails` answers all three in one query.
       **Measured end to end: ~24 min -> ~6 min a pass, and the remaining time is the VENDOR**, not
-      this code: **136 s of compute over the full 1,141**, measured directly rather than
-      extrapolated, against ~4 min of 1,141 sequential fetches. The compute halves that
+      this code: **160 s of compute over the full 1,141**, measured directly rather than
+      extrapolated, against ~3 min of 1,141 sequential fetches — and `tools/verify_reproducible.py`
+      timed two whole passes end to end at **11m40s**. The compute halves that
       were fixed are 150.2 s -> 15.4 s for 150 instruments (9.8x) and 71.9 s -> 1.7 s for selection
       (41x).
       **Byte-identity was proven, not assumed, four times:** the same `output_hash` before and
@@ -366,13 +379,23 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       `tools/verify_reproducible.py` reproducing `50e1646b933a4a9d` - the hash recorded on `master`
       before the change - over the full universe. So it moves no decision output and spends no
       `a.run_completes` counter.
-      **A fourth hot spot, found by measuring my own fix:** the calendar cache was thrashing at a
-      **2% hit rate** — `_schedule` ran 9 hits against 415 misses over the full universe, and the
-      cause is structural rather than a `maxsize` set too low. The windows asked for are each
-      instrument's stored extent, and 3,743 instruments produce 903 distinct ones, so any
-      exact-window cache saturates. Quantising the ends to whole years collapses them to **36**
-      spans; `sessions` slices its own window out of a cached span. 159.0 s -> 136.2 s over 1,141.
-      Equivalence measured against the previous implementation over **886 windows, 0 mismatches**.
+      **A fourth hot spot, found by measuring my own fix — and the fix for it was BUILT AND THEN
+      REMOVED THE SAME DAY, which is the part worth carrying.** The calendar cache thrashes: the
+      windows asked for are each instrument's stored extent, 372 distinct ones over the admitted
+      1,141, so no exact-window cache can hold them. Quantising the ends to whole years collapses
+      them to **36** spans and cuts the pass **159 s -> 136 s** — equivalence measured over 886
+      windows, 0 mismatches.
+      **It retains 228 MB, measured**, because the saving comes precisely from keeping ~199,000
+      built `ExchangeSession` objects alive at ~1.2 kB each. `NFR.md` §3 budgets the decision path
+      at **5 minutes** and it now runs in **2.7**, so those 23 seconds bought nothing any
+      requirement asks for while the memory was real. Removed, and `sessions`' own cache dropped
+      from 32 entries to **4** on a second measurement: simulated over the run's actual window
+      sequence an LRU of 4 hits 58.7% and an LRU of 64 hits 63.6%, because two windows cover 669
+      of the 1,141 instruments and most of the rest appear once. Sixteen times the memory for five
+      points.
+      **The cheaper route, for whoever revisits it:** a lighter `ExchangeSession` — it is a
+      pydantic model at ~1.2 kB and a frozen slotted dataclass would be a fraction of that — not a
+      bigger cache.
       **What it found that was NOT performance:** deleting the window filter in
       `completeness.check` left all 794 tests green, because every fixture in that file builds its
       series exactly over the window it then checks. The rule the code comment had always stated
