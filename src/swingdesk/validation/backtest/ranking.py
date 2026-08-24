@@ -55,39 +55,54 @@ def _window_return(series: BarSeries, index: int, lookback: int) -> Decimal | No
     return (series.bars[index].close - first) / first
 
 
+def daily_returns(series: BarSeries) -> dict[date, Decimal]:
+    """Every session's return against the previous STORED bar, keyed by session.
+
+    Public because the benchmark's map is built once per ranking call rather than once per
+    candidate, and because `PR-012`'s prefix-sum optimisation must build the same thing to be
+    comparable with the reference below.
+    """
+    out: dict[date, Decimal] = {}
+    for index in range(1, len(series.bars)):
+        previous = series.bars[index - 1].close
+        if previous > 0:
+            out[series.bars[index].session_date] = (
+                (series.bars[index].close - previous) / previous
+            )
+    return out
+
+
 def _beat_share(series: BarSeries, index: int, lookback: int,
-                benchmark: BarSeries, benchmark_index: int) -> Decimal | None:
-    """Share of sessions in the window whose daily return beat the benchmark's. Path-dependent.
+                benchmark_daily: Mapping[date, Decimal]) -> Decimal | None:
+    """Share of the name's last `lookback` sessions whose return beat the benchmark's.
 
     **Not a function of the endpoint return**, which is the whole point: it is the form `DR-018`
     section 2 measured escaping the identity that makes a point-to-point market comparison
     decorative.
 
-    Both series are walked over their OWN indices, so a name that did not trade on a session the
-    benchmark did is compared over the sessions they share rather than being silently misaligned.
+    **The window is the NAME's, and that is a decision.** An earlier version also required the
+    benchmark to hold `lookback` bars of its own and intersected the two positional windows, so a
+    gappy benchmark shrank or erased a candidate's score. That makes the score depend on the
+    benchmark's bar count, which is not a property of the candidate and not what `rs.lookback`
+    means. Found 2026-08-24 by `tests/test_run_pr012.py`, which set the fast path against this
+    function on deliberately gappy series and caught them disagreeing.
+
+    A session with no benchmark return is not counted - neither as a win nor as a loss. It is
+    unanswerable, and folding it into either would be the `UNKNOWN`-becomes-a-verdict collapse.
     """
-    if index - lookback < 0 or benchmark_index - lookback < 0:
+    if index - lookback < 0 or index >= len(series.bars):
         return None
-    by_session: dict[date, Decimal] = {}
+    wins = 0
+    compared = 0
     for offset in range(index - lookback + 1, index + 1):
         previous = series.bars[offset - 1].close
         if previous <= 0:
             return None
-        by_session[series.bars[offset].session_date] = (
-            (series.bars[offset].close - previous) / previous
-        )
-    wins = 0
-    compared = 0
-    for offset in range(benchmark_index - lookback + 1, benchmark_index + 1):
-        previous = benchmark.bars[offset - 1].close
-        if previous <= 0:
-            return None
-        session = benchmark.bars[offset].session_date
-        own = by_session.get(session)
-        if own is None:
+        benchmark = benchmark_daily.get(series.bars[offset].session_date)
+        if benchmark is None:
             continue
         compared += 1
-        if own > (benchmark.bars[offset].close - previous) / previous:
+        if (series.bars[offset].close - previous) / previous > benchmark:
             wins += 1
     if compared == 0:
         return None
@@ -138,16 +153,15 @@ class ByMarketPathStrength:
     lookback: int
 
     def __call__(self, candidates: list[Candidate]) -> list[Candidate]:
-        by_session = {bar.session_date: index for index, bar in enumerate(self.benchmark.bars)}
+        # Built once per call rather than once per candidate. The benchmark is one series and every
+        # candidate compares against the same map.
+        benchmark_daily = daily_returns(self.benchmark)
         scored: list[tuple[Decimal, Candidate]] = []
         for candidate in candidates:
             series = self.series.get(candidate.instrument_id)
-            benchmark_index = by_session.get(candidate.session_date)
             value = None
-            if series is not None and benchmark_index is not None:
-                value = _beat_share(
-                    series, candidate.index, self.lookback, self.benchmark, benchmark_index
-                )
+            if series is not None:
+                value = _beat_share(series, candidate.index, self.lookback, benchmark_daily)
             scored.append((UNSCORED if value is None else value, candidate))
         return _ordered(scored)
 
@@ -196,4 +210,5 @@ __all__ = [
     "ByMarketPathStrength",
     "ByRawReturn",
     "BySectorRelativeStrength",
+    "daily_returns",
 ]
