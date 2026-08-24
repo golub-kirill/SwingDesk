@@ -288,6 +288,24 @@ file.
 contradicts) and 29 (a pre-registration id is reserved once, including across unmerged branches).
 `TODO.md` §3 is empty for the first time.
 
+**Two owner rulings landed on it late in the day and both are live work, not notes.**
+
+**The AI may advise on an OPEN position** — `AI_AUTHORITY_MODEL.md` §3a, amended and ratified
+2026-08-24. §3 is untouched; entry stays closed; the decision vocabulary, the MANAGEMENT vocabulary
+(`HOLD`/`MOVE_STOP`/`PARTIAL_EXIT`/`EXIT_NOW`/`PAUSE`) and originating a number all stay forbidden.
+Checked against the charter first: A-001 asks for "synthesis, not authority", advice is not
+authority, and none of its six prohibitions is engaged — so this is not a charter amendment. **A-001's
+standing condition is NOT discharged**: nothing may be implemented until the two vocabularies are
+mechanically guarded, and they are still prose.
+
+**`PR-013` measures the signal instead of the book** — registered, runner built, exploratory by
+declaration. The owner's constraint is what drove it: four positions held twenty sessions is ~50
+entries a year, the ratified sample floor is 100 closed trades, and the horizon is six months — so
+**25 live trades**, and live evidence inside the horizon is arithmetically impossible without moving
+a ratified value. The 2026-08-16 research suspension was overridden by the owner for this one study,
+and `TODO.md` §2 records both the override and the fact that the suspension's own exit condition can
+never be met.
+
 **One thing on it needs the owner and is not an agent's to take:** PR-005's published trade log no
 longer matches a fresh replay, because seven bars arrived three hours after it was published.
 `TODO.md` §5 states the three options; `docs/prereg/results/` was not touched.
