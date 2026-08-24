@@ -488,9 +488,32 @@ the words are as fragile as the numerals; the fix is to stop counting in prose a
   A streak and the directory pull census, both inside their own single owner. Each read as correct.
   **None was reachable by review** — only recomputation caught them, which is why gates 3f, 3g, 3ci,
   the gap-summary check in 3e, and now gate 24 exist.
+- **Answering from a PROXY instead of from the artifact that owns the claim.** Five of these in one
+  session, 2026-08-23/24, and they are one move rather than five mistakes:
+  *"v1 is close"* — inferred from `HANDOFF.md` §2's open project gates, while `ROADMAP.md` §2 lists
+  all six of `CHARTER.md` §4's capabilities as **done since 2026-08-02**. Two different ladders.
+  *"1 of 465 components active is the largest finish-line gap"* — inferred from a count instead of
+  reading the six capabilities, none of which asks for it.
+  *"The backtest engine only needs a parameterised front end"* — inferred from the **signature**
+  `run_arm(series, gate, atr, config)`; the body hardcodes `breakout_high`, so the engine expresses
+  one strategy family and it is the refuted one.
+  *"The 19:30 task is not registered"* — trusted `TODO.md` over the machine; it had been registered
+  five days earlier, and `AGENTS.md` §12 said so in this same file.
+  *"`DR-006` §10.3"* — cited from memory; it is §10.3 of this file.
+  **§10.5 gave every measured COUNT one owner. Nothing does that for a STATUS**, so a status claim
+  gets answered by whichever document mentions it first. The rule that closes it:
+  **a claim about state is read from the artifact that owns that state, and the owner is named
+  before the claim is made.** `CHARTER.md` §4 and `ROADMAP.md` §2 own "is v1 done". `criteria.yml`
+  owns "is this criterion met". The machine owns "is this task registered" — gate 26 asks it. The
+  function BODY owns "does this code support X"; a signature is a proxy and reads as an answer.
 
 **The habits:**
 
+- **Name the owner before making the claim.** One sentence, in your own head, before you assert
+  anything about state: *which artifact owns this, and have I opened it?* It costs a read and it is
+  the only thing that catches the proxy trap above, because a proxy answer feels exactly like a
+  checked one. Gates cannot help here — every one of those five claims was about something no gate
+  can see, which is why this is a habit and not a check.
 - **Verify before asserting.** When you find a stale claim, **add a gate rather than fixing the
   instance.** Gates 3f, 3g, 3ci, 3e's gap-summary check, 24 and 25 all exist because of it, and
   every one has since caught something. Gate 25 is the clearest case: nothing bound a study's runner
