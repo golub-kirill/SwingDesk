@@ -403,7 +403,8 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **Three things it measured first, and two were not what the plan assumed:**
       `b.deflated_sharpe` is **ratified and nothing counted its only input** — no parameter, no
       registry field, no code — so a criterion ratified 2026-08-08 could not have fired on any day
-      since. Fourth instance of the `AGENTS.md` §7 shape.
+      since. The `AGENTS.md` §7 shape again - named, not numbered, because a tally in prose is the
+      thing §12 says to stop keeping.
       **13 trials are already spent, against a census that reads 5.** A trial is a CONFIGURATION
       EVALUATED, not a pre-registration filed: `PR-001` tried 4 definitions, `PR-002` fitted 4
       variants and kept 1, `PR-005` ran 5 gate arms. `PR-008` and `PR-010` spend none — a spread

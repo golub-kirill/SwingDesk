@@ -30,7 +30,10 @@ no study has needed it yet.
 **What was not expected: nothing counts the trials.** Not a parameter, not a registry field, not a
 line of code. The criterion's only input did not exist anywhere, so a criterion ratified on
 2026-08-08 could not have fired on any day since. This is the shape `AGENTS.md` §7 was written for,
-and it is the fourth instance this repository has found.
+and it is not the first this repository has found - `AGENTS.md` §7 names the family and
+`DR-016` §8.5 is the most recent, an empty `corporate_actions` table discovered inside the
+record that closed the previous one. Counting the instances in prose is the trap §12 names,
+so this one is named rather than numbered.
 
 `tools/trial_budget.py`, added with this document, supplies the input. It deliberately does **not**
 compute the deflated Sharpe — see §4.
