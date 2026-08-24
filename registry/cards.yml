@@ -132,17 +132,17 @@ cards:
           The card refuses rather than defaulting. ALLOCATION_SPEC 3 says an ordering adopted from
           the course does not inherit its authority and needs a PRE-REGISTRATION before it selects
           a trade - so these get values from a study, never from a decision record.
-      - id: no-portfolio-in-the-backtest
+      - id: no-study-runs-the-book
         what: >-
-          validation/backtest runs ONE instrument at a time with unlimited capital. Nothing in
-          src/swingdesk/validation/ references portfolio, max_concurrent_positions or
-          max_open_risk - verified 2026-08-24 by search and by the code graph.
+          CLOSED in part 2026-08-24. validation/backtest/book.py:run_book walks a SESSION axis over
+          many instruments, lets them compete for a bounded number of slots, and enforces
+          max_positions and max_open_risk. What remains is that no study runner calls it - the
+          engine can express this card's family and nothing has run it.
         why: >-
-          "Hold the strongest N of the universe at once" is a PORTFOLIO CONSTRUCTION rule. A
-          per-instrument engine would enter every name that was ever ranked in the top N,
-          independently and without a cap, which measures a different strategy from the one this
-          card declares. The 2026-08-24 EntryTrigger seam does not reach this: it made the entry
-          RULE injectable and left the engine single-instrument.
+          The original blocker was that a per-instrument engine would enter every name ever ranked
+          inside the cutoff, independently and uncapped, measuring a different strategy from the one
+          this card declares. That is fixed. Running it needs the ranking rule below, which needs a
+          pre-registration, so the two close in order rather than together.
       - id: no-index-series
         what: no index bars are stored; the measure is relative TO something
         why: >-

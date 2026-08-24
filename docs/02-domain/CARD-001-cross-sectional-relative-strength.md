@@ -66,9 +66,21 @@ and without a cap — which measures a different strategy from the one this card
 `tools/measure_sector_cap.py` already records the symptom from the other side: `PR-005`'s base slice
 held a **median of 20 positions at once, maximum 54**, on a book whose ratified cap is **4**.
 
-**The 2026-08-24 `EntryTrigger` seam does not reach this.** That change made the entry *rule*
+**The 2026-08-24 `EntryTrigger` seam did not reach this.** That change made the entry *rule*
 injectable and left the engine single-instrument. Worth stating plainly because the two look alike
-from a distance and only one of them is done.
+from a distance.
+
+**BUILT the same day: `validation/backtest/book.py`.** `run_book` walks a **session** axis rather
+than an instrument's bars, asks every instrument what it wants on each session, and lets the
+survivors compete for a bounded number of slots. Four properties are pinned by tests that provably
+fail without them: `deferred` is a separate outcome from `Skip` (`ALLOCATION_SPEC` §5), a slot freed
+by today's exit is available to today's candidates (`CHECKLIST_SPEC` §4), the ranking is **injected**
+with no default, and `risk.max_open_risk` binds independently of the position count. A one-name book
+with capacity to spare reproduces `run_arm`'s trades exactly, which is what makes the two engines
+answer the same question when they should.
+
+**What remains is that no study runner calls it.** The engine can express this card's family; nothing
+has run it, because running it needs the ranking rule, which needs a pre-registration.
 
 ### 3b. There is no index to be strong relative to
 

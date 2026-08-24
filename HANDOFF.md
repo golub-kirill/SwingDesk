@@ -46,7 +46,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | | |
 |---|---|
 | Merge gates | **32**, one command: `python tools/check_gates.py` |
-| Tests | **751**, fully offline |
+| Tests | **761**, fully offline |
 | Docs | 114 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 460 registered · 4 `specified` · **1 `active`** |
 | Parameters | 103 - 59 `unset`, 33 `assumed`, 11 `owner`, **0 `validated`** |
@@ -110,7 +110,7 @@ once did).
 
 - `claude/swingdesk-session-handoff-cfd0c4`
 - `claude/handoff-2026-08-24`
-- `claude/first-strategy-card`
+- `claude/backtest-portfolio`
 - `claude/swingdesk-session-continuation-39adaa`
 
 *Tip and merge state deliberately absent - both move under this document's own feet. `python tools/verify_branches.py` prints them.*
