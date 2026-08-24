@@ -83,20 +83,27 @@ they govern is spending real money today.
 Also open and unchanged: `DR-017` (ADTV lag), `account.fx_rate_cad` (needs a source and an as-of),
 `data.staleness_action_threshold` (a ruling or an explicit retirement).
 
-## 5. What the next engineering session could pick up
+## 5. What the next session should pick up — read the plan first
 
-Ranked by what actually moves the finish line rather than by size.
+**[`docs/08-pm/plans/2026-08-24-from-machinery-to-evidence.md`](docs/08-pm/plans/2026-08-24-from-machinery-to-evidence.md)**,
+written this session and `owner-pending`. It supersedes the informal ordering that used to sit here,
+and its §0 corrects three claims an earlier draft of this handoff got wrong — including that the v1
+finish line is "close". **It is reached, 2026-08-02** (`ROADMAP.md` §2).
 
-1. **The write-time revision comparison** — the only half of `DR-016` still unbuilt, and the only
-   half its parameter gates. Waits on §4's first ruling.
-2. **Component activation.** `CHARTER.md` §4 requires every displayed number to trace to a
-   registered component with a validation status, and **1 of 465** is `active`. Six are `specified`
-   and awaiting activation (`TODO.md` §6). This is the largest single gap on the ratified finish
-   line.
-3. **The 12 journalled runs recorded against a dirty tree**, which cannot be replayed from their SHA
-   and therefore hold `a.reproducible` short of its own definition.
-4. **Bar coverage at 28.3%.** It bounds any wider study, and it is the one item that is pure
-   throughput — `tools/refresh_universe.py --budget 500`, repeatedly.
+Short version of its sequence:
+
+1. **The first strategy card** — `ROADMAP.md`'s own P5, named load-bearing on 2026-08-02 and still
+   not done. `STRATEGY_CARD_SPEC.md` exists; no card does. Phase 3 cannot start without it.
+2. **The liquidity floor as a decision record.** `universe.min_adtv_20d` is `assumed` and decides
+   the achievable edge class before any strategy is chosen. Fully measurable from what is on disk.
+   *If only one thing gets done, this one.*
+3. **The trial budget**, because `b.deflated_sharpe` accumulates across the whole programme.
+4. **Generalise the backtest engine past breakout.** `run_arm` hardcodes `breakout_high`; the
+   `gate` is a filter, not a trigger. One family is expressible today and it is the refuted one.
+
+Still open and unchanged, but below the four above: the write-time revision comparison (`DR-016`,
+waits on §4's first ruling), the 12 dirty-tree journalled runs holding `a.reproducible` short, and
+bar coverage at 28.3% — pure throughput, `tools/refresh_universe.py --budget 500`, repeatedly.
 
 ## 6. Before you start
 
