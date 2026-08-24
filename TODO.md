@@ -444,6 +444,24 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
 
 Each of these is a silent wrong-answer generator: a session reads one, acts, and is wrong.
 
+**EMPTY as of 2026-08-24 — every item below is closed, and four of them were not what they
+said.** Kept for the reasoning, because the reasoning is the transferable part:
+
+- **`G0 status` and `k.project_timebox` were never disagreements.** One was a stale open item whose
+  parenthesis had been wrong from the day it was written; the other was two different fields being
+  read as one claim. `AGENTS.md` §12's habit — name the artefact that owns the status before making
+  the claim — resolved both, and no gate could have.
+- **`HANDOFF.md`:124 pointed at a line that had MOVED**, to `EVIDENCE_SUMMARY.md`, five days before
+  anyone tried to resolve it. An audit item carrying a file and a line number ages faster than the
+  claim it describes.
+- **`docs/README.md` drift and `SPEC_GAP §32/§33` were real, and both got a gate rather than a
+  fix** — 15's missing half and 28, which found six more of the same shape on its first run.
+
+**The one pattern under all of it:** nothing here rotted by being wrong when it was written. It
+rotted when a *cited* fact moved — a study verdict withdrawn, a charter amended, a parameter given a
+value — and the citation stayed. That is what gates 28 and 29 are aimed at, and it is what the habit
+is for where no gate can reach.
+
 - [x] **`[v]` `registry/criteria.yml`:222's stale note — fixed 2026-08-15 via v1.1.1 amendment.**
       Council-reviewed (5 advisors + peer review); one response's recommendation was flagged by the
       safety layer for arguing to edit the ratified note in place, and 3 of 5 peer reviewers
@@ -452,8 +470,15 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       the verified correction with its evidence. Same fix applied to
       `docs/00-charter/SUCCESS_AND_KILL_CRITERIA.md`:154 via `AGENTS.md` §10.5's own
       strikethrough-and-append convention. All 29 gates pass.
-- [ ] **`[c]` G0 status.** `CONSTRAINTS.md`:150 says ratifying the remaining `criteria.yml` values
-      "closes G0"; `HANDOFF.md` §2 says G0 is closed.
+- [x] **`[v]` G0 status — RESOLVED 2026-08-24, and it was not a disagreement about G0.**
+      `docs/README.md` §Gates owns gate status and records **G0 CLOSED 2026-08-02**; `ROADMAP.md`
+      §1 and `HANDOFF.md` §2 both agree with it. What `CONSTRAINTS.md` §9 held was a stale OPEN
+      ITEM — *"ratify the remaining `criteria.yml` values (one confirmation; closes G0)"* — whose
+      precondition was met on 2026-08-08 and whose parenthesis was wrong when it was written: G0
+      closed on the finish line being ratified and the criteria frozen at v1.0.0, six days before
+      the remaining values were ruled. Ticked with its date, per `AGENTS.md` §10.5's convention.
+      **The habit that resolved it is §12's:** name the artefact that owns the status before making
+      the claim. Three documents "disagreed" and only one of them was answering the question.
 - [x] **`[v]` `PREREG_TEMPLATE.md` §6 carried as OPEN two things `criteria.yml` RATIFIED — FIXED
       2026-08-24.** Found while pricing `b.deflated_sharpe`. The template said the multiple-testing
       correction was *"None is adopted yet"* and asked *"whether the trial count … is per component,

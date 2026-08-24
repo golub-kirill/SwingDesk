@@ -149,4 +149,11 @@ opened deliberately per component.
 ## 9. Still open
 
 - [ ] **Hardware**: whether backtests run on this machine or elsewhere. Not urgent until G6.
-- [ ] Ratify the remaining `registry/criteria.yml` values (one confirmation; closes G0).
+- [x] ~~Ratify the remaining `registry/criteria.yml` values (one confirmation; closes G0).~~
+      **DONE 2026-08-08**, amended 2026-08-15. Every criterion in `registry/criteria.yml`
+      now carries a settled status and the file itself reads `status: ratified` at v1.1.1.
+      **And the parenthesis was wrong about G0 either way** — `docs/README.md` §Gates owns
+      that status and records **G0 CLOSED 2026-08-02**, on the finish line being ratified
+      and the criteria frozen at v1.0.0. Ratifying the remaining *values* six days later
+      did not close a gate that was already shut, and this line read as though G0 were
+      still open for thirteen days after it was not.
