@@ -110,7 +110,7 @@ once did).
 
 - `claude/swingdesk-session-handoff-cfd0c4`
 - `claude/handoff-2026-08-24`
-- `claude/session-handoff-2026-08-24`
+- `claude/sector-relative`
 - `claude/swingdesk-session-continuation-39adaa`
 
 *Tip and merge state deliberately absent - both move under this document's own feet. `python tools/verify_branches.py` prints them.*

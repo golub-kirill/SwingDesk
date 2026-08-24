@@ -710,9 +710,17 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       two differently-taxed series. The store holds **no adjusted series at all**.
       **`corporate_actions` is no longer empty** — `DR-016` §8.5's finding gets its first caller
       outside the held-position split guard: 101 dividend records for the five funds.
-      **Open next, and named rather than guessed:** sector-relative strength (`M31-T0460/0461/0462`)
-      is the OTHER way out of the identity, because a per-name denominator is not a common factor.
-      The classification store holds 1,148 classified names, so it is checkable.
+      **Sector-relative strength — MEASURED the same day** (`DR-018` §7,
+      `tools/measure_sector_relative.py`). It was the other way out of the identity and it DOES
+      reorder: over 1,023 admitted names carrying a dominant sector across all 11 sectors, rho
+      against raw return runs **0.750 to 0.819**, where the market point-to-point form gives exactly
+      1.0. The tool prints that second column as a CONTROL and fails the run if the two ever differ.
+      **The reading that is easy to get wrong: it reorders LESS than the market PATH form does**
+      (about 0.6). **Further from raw return is not better.** Both departures are real, neither is
+      evidence, and which one predicts is a question only a pre-registration answers.
+      **Four measured options now exist** — market or sector, point-to-point or path — and none is
+      ratified. `rs.benchmark_form` stays `unset` on purpose: having four characterised options
+      rather than one guessed one is what `DR-018` was for.
 
 - [x] **`[v]` The backtest engine expressed ONE strategy family, and it was the refuted one — FIXED
       2026-08-24.** `run_arm` called `breakout_high` directly and the `gate` argument was a per-bar

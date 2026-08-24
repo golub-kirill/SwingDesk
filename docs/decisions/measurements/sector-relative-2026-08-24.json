@@ -1,0 +1,51 @@
+{
+  "admitted": 1153,
+  "bars_as_of": "2026-08-23T23:45:31.225499-05:00",
+  "classifications_as_of": "2026-08-24T11:49:02.391960+00:00",
+  "classified": 1023,
+  "market_benchmark": "SPY",
+  "min_sector_members": 10,
+  "no_usable_look_through": 130,
+  "not_measured": "whether the sector signal PREDICTS anything. This measures that the denominator changes the order, not that the order is better. That needs a pre-registration.",
+  "readings": [
+    "sector return is the EQUAL-WEIGHTED mean of admitted members - no point-in-time float-adjusted market cap exists here, the same constraint DR-003 records",
+    "a name takes its DOMINANT sector by look_through; a refused look-through contributes to no sector (DR-006 section 8.7)",
+    "a name is included in its own sector's mean; removing it would make the denominator depend on the numerator"
+  ],
+  "results": [
+    {
+      "lookback": 63,
+      "names": 1023,
+      "sectors_used": 11,
+      "spearman_vs_market_relative": 0.749912,
+      "spearman_vs_raw_return": 0.749912
+    },
+    {
+      "lookback": 126,
+      "names": 1023,
+      "sectors_used": 11,
+      "spearman_vs_market_relative": 0.81386,
+      "spearman_vs_raw_return": 0.81386
+    },
+    {
+      "lookback": 252,
+      "names": 1023,
+      "sectors_used": 11,
+      "spearman_vs_market_relative": 0.819012,
+      "spearman_vs_raw_return": 0.819012
+    }
+  ],
+  "sector_sizes": {
+    "basic materials": 50,
+    "communication services": 26,
+    "consumer cyclical": 89,
+    "consumer defensive": 40,
+    "energy": 44,
+    "financial services": 199,
+    "healthcare": 141,
+    "industrials": 134,
+    "real estate": 53,
+    "technology": 215,
+    "utilities": 32
+  }
+}
