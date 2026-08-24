@@ -416,7 +416,8 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       pydantic model at ~1.2 kB and a frozen slotted dataclass would be a fraction of that — not a
       bigger cache.
       **What it found that was NOT performance:** deleting the window filter in
-      `completeness.check` left all 794 tests green, because every fixture in that file builds its
+      `completeness.check` left the whole suite green as it stood that morning, because every
+      fixture in that file builds its
       series exactly over the window it then checks. The rule the code comment had always stated
       was asserted by nothing. Closed with a test that overhangs both ends.
       **BATCHING THE VENDOR IS NOT THE NEXT LEVER — measured 2026-08-24, so nobody spends a session
@@ -483,6 +484,25 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       so the coverage figure is recomputed on every run and cannot be ~10 days stale again. Derive
       it with that command; this line deliberately does not repeat it (`AGENTS.md` §10.5).
 
+### Measured and deliberately NOT built: gate 14 over `TODO.md`
+
+**`AGENTS.md` §10.7 says this file never holds a measured count, and nothing enforces it.** Gate 14
+reads `docs/**` plus exactly three root files — `README.md`, `AGENTS.md`, `HANDOFF.md` — so the rule
+that governs this document is the one rule it cannot see. Probed 2026-08-24 by adding `TODO.md` to
+that list: **15 hits, and after marking the six genuinely historical census lines, 8 remain and all
+8 are false.**
+
+They are all one shape, and it is the shape the gate's own comment already names for parameters:
+*"11 tests, 5 mutants killed"* and *"an engine ignoring the injected trigger takes 17 tests with
+it"* are statements about what a change ADDED, not about the suite. The clinching one is
+`gate 25's condition 4 gates` — where **"gates" is a verb**.
+
+**So it stays out of scope, and the gap is recorded rather than papered over.** `CI_POLICY` §3's
+"a noisy gate gets bypassed" costs more than this drift does, and the drift here is bounded: a
+count in a closed `[x]` item is history that only reads wrong, while the same count in `HANDOFF.md`
+§2 would be acted on. The six historical lines are now marked with `DONE` and a date, per §10.5's
+own convention.
+
 ## 3. Contradictions — two documents disagree
 
 Each of these is a silent wrong-answer generator: a session reads one, acts, and is wrong.
@@ -512,7 +532,7 @@ is for where no gate can reach.
       byte-for-byte untouched; a comment (not a data field) points to the v1.1.1 entry, which carries
       the verified correction with its evidence. Same fix applied to
       `docs/00-charter/SUCCESS_AND_KILL_CRITERIA.md`:154 via `AGENTS.md` §10.5's own
-      strikethrough-and-append convention. All 29 gates pass.
+      strikethrough-and-append convention. Every gate passed, DONE 2026-08-15.
 - [x] **`[v]` G0 status — RESOLVED 2026-08-24, and it was not a disagreement about G0.**
       `docs/README.md` §Gates owns gate status and records **G0 CLOSED 2026-08-02**; `ROADMAP.md`
       §1 and `HANDOFF.md` §2 both agree with it. What `CONSTRAINTS.md` §9 held was a stale OPEN
@@ -1171,7 +1191,8 @@ is for where no gate can reach.
       and `is_reconciled` checked in the render (not asserted in the pure module) so a broken
       invariant is seen, not raised mid-run. Prints on a run with zero candidates too — zero stated,
       not silence. 4 new tests against the story's own gherkin, `verify_docs.py` gate 3e passes
-      (citing US-022 without checking it was live). All 29 gates pass, 407 tests.
+      (citing US-022 without checking it was live). Every gate and every test passed, DONE
+      2026-08-11.
 - [ ] **`[v]` MEASURED 2026-08-17: 3 of 11 mutants survive the entire test suite.** The council's
       own flip condition, turned from an assumption into a number. Method: patch one computed
       quantity per module in committed source, run the **whole** suite, restore, record whether
@@ -1181,7 +1202,7 @@ is for where no gate can reach.
       existing 480 needs real mutants.
       **The three survivors, and they are not one kind:**
       • `sizing.py` — `planned_risk` replaced with the constant `Decimal('42')`. **The R denominator
-      the entire validation programme is expressed in.** 480 tests green.
+      the entire validation programme is expressed in.** Suite green, DONE 2026-08-13.
       • `sizing.py` — `risk_per_share = entry - stop + costs` → `entry - stop`. Green.
       • `calendar.py:112` — `sessions_behind` returning `max(0, len(window) - 1)`. Green, **and for a
       different reason: the function has no caller anywhere in `src/`** while
@@ -1375,7 +1396,8 @@ means. **It has not run with owner capital and will not** (`DR-014`).
 
 
 Traced end to end 2026-08-16, not just the pipeline internals: `daily_run.cmd` → `cli.py scan` →
-`report.py`. **BUILT and gated** (30/30 gates, 435 tests): candidate screening, sizing, exit-policy
+`report.py`. **BUILT and gated** — every gate and every test green, DONE 2026-08-12: candidate
+screening, sizing, exit-policy
 computation, checklist generation, report rendering, journal evidence, replay/determinism. **NOT
 built or wired**, despite the pure logic mostly existing and being unit-tested in isolation — this
 is the gap the council's suspend-research call (§1) is about, and the build order it recommended:
