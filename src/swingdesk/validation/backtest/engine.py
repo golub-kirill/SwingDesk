@@ -9,6 +9,18 @@ through this function that reads a bar it has not reached, because the only inde
 
 The `Skips` stage is the other one this file owns: skipped signals are counted with a reason, never
 dropped. A signal discarded silently is a survivorship filter applied to the signal set.
+
+**The entry rule is injected (`EntryTrigger`), and until 2026-08-24 it was not.** `run_arm` called
+`breakout_high` directly and the `gate` argument was a per-bar FILTER over that call rather than the
+trigger itself - so the engine expressed exactly one strategy family, long-only time-series breakout
+with a boolean regime filter, and that is the family `PR-005` refuted. Every study, every trade log
+and the whole cost-model calibration describes it. A cross-sectional ranking rule or a
+mean-reversion rule could not be run at all.
+
+What did NOT change is the loop: entry still fills at `bars[i + 1].open`, an unevaluable bar is
+still counted apart from a rejected one, and a trigger still sees only `bars[:i + 1]`. Measured
+rather than asserted - the pre-change and post-change engines, run over the same store at the same
+instant, emit a byte-identical `PR-005` trade log.
 """
 
 from __future__ import annotations
@@ -17,7 +29,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import StrEnum
-from typing import Any
+from typing import Any, Protocol
 
 from swingdesk.contracts.market import Bar, BarSeries
 from swingdesk.contracts.observation import ObservationSeries
@@ -42,19 +54,89 @@ class Skipped(StrEnum):
     ZERO_SHARES = "zero_shares"          # risk budget bought nothing
 
 
+class EntryTrigger(Protocol):
+    """Whether the entry condition fired at `index` - or that it could not be answered.
+
+    **Three states, and the third is the one that makes this a protocol worth having.** `True` and
+    `False` are a fired and an unfired signal; `None` is *the rule had nothing to answer with*,
+    which every trigger with a lookback window returns for its first bars. `run_arm` counts those
+    bars separately as `unevaluable_bars` rather than folding them into "did not trigger", because
+    collapsing them removes bars from the denominator without saying so - the `UNKNOWN`-becomes-
+    `FALSE` collapse `RULE_SPEC.md` section 4 forbids.
+
+    A trigger reads `series.bars[:index + 1]` and nothing beyond it. The engine cannot enforce that
+    - it hands over the whole series - so it is a contract a trigger keeps, and the reason every
+    implementation here takes `index` rather than a pre-sliced window is that slicing per bar over
+    26,000 trades costs more than the rule does.
+
+    Triggers are dataclasses rather than closures so a study can RECORD what it ran: a `repr` naming
+    the family and its parameters goes into the result, and a closure's does not.
+    """
+
+    def __call__(self, series: BarSeries, index: int) -> bool | None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class BreakoutHigh:
+    """Close above the highest high of the prior `lookback` sessions.
+
+    **The family `PR-005` tested and refuted**, and until 2026-08-24 it was the only family this
+    engine could express - `run_arm` called `breakout_high` directly and the `gate` argument was a
+    per-bar filter over that call rather than the trigger itself. Extracted unchanged: the same
+    comparison, the same window, the same `None` on a short window, so a study pinned to this
+    trigger replays byte for byte.
+    """
+
+    lookback: int = 20
+
+    def __call__(self, series: BarSeries, index: int) -> bool | None:
+        threshold = breakout_high(series, index, self.lookback)
+        if threshold is None:
+            return None
+        return series.bars[index].close > threshold
+
+
+@dataclass(frozen=True, slots=True)
+class CloseBelowLow:
+    """Close below the lowest low of the prior `lookback` sessions. Long side, buying weakness.
+
+    **This is not a proposed strategy and it has no pre-registration.** It exists so the injection
+    point above has a second family running through it end to end, which is what makes
+    `EntryTrigger` a seam rather than a rename. `AGENTS.md` section 8 governs proposing a rule, and
+    nothing here proposes one: no card declares it, no study registers it, and running it as
+    research needs both.
+
+    Structurally the mirror of `BreakoutHigh` and deliberately so - same window, same `None` on a
+    short one, opposite comparison - because a second family that shared no machinery would prove
+    the seam works for a rule shaped exactly like the first.
+    """
+
+    lookback: int = 20
+
+    def __call__(self, series: BarSeries, index: int) -> bool | None:
+        floor = lowest_low(series, index, self.lookback)
+        if floor is None:
+            return None
+        return series.bars[index].close < floor
+
+
 @dataclass(frozen=True, slots=True)
 class BacktestConfig:
     """Everything the engine needs, all of it pinned by the study.
 
     Nothing here is read from the registry. PR-005 fixes these values before the run and records
     them with the result, so the study cannot change meaning when a parameter is ratified later.
+
+    **`trigger` has no default, and that is the point of it.** It replaced `trigger_lookback: int =
+    20` on 2026-08-24, which defaulted the engine to the one family `PR-005` refuted. A study now
+    names the family it is running, because a default here is a strategy choice nobody made.
     """
 
     arm: str
     exits: ExitPolicy
     costs: CostModel
+    trigger: EntryTrigger
     risk_per_trade: Decimal = Decimal(1000)
-    trigger_lookback: int = 20
 
 
 @dataclass
@@ -96,6 +178,18 @@ def breakout_high(series: BarSeries, index: int, lookback: int) -> Decimal | Non
     return max(bar.high for bar in series.bars[index - lookback: index])
 
 
+def lowest_low(series: BarSeries, index: int, lookback: int) -> Decimal | None:
+    """Lowest low of the `lookback` sessions BEFORE `index`. The mirror of `breakout_high`.
+
+    Excludes the current bar for the same reason and returns `None` on the same short window, so
+    the two windows are the same window read two ways rather than two nearly-identical rules that
+    could drift apart.
+    """
+    if index < lookback:
+        return None
+    return min(bar.low for bar in series.bars[index - lookback: index])
+
+
 def run_arm(
     series: BarSeries,
     gate: list[bool | None],
@@ -121,8 +215,8 @@ def run_arm(
         # The trigger is evaluated on every bar, including bars spent holding. A signal that could
         # not be acted on is an EXCLUSION from the trade set, and an unrecorded exclusion is a
         # survivorship filter applied to the signal set regardless of intent (Appendix J, Skips stage).
-        threshold = breakout_high(series, index, config.trigger_lookback)
-        triggered = threshold is not None and bar.close > threshold
+        verdict = config.trigger(series, index)
+        triggered = verdict is True
 
         # --- manage an open position first (CHECKLIST_SPEC 4: open positions before candidates)
         if position is not None:
@@ -145,10 +239,11 @@ def run_arm(
             continue
 
         # --- look for a new signal
-        if threshold is None:
-            # No lookback window yet. NOT a rejection - the rule had nothing to answer with, and
-            # collapsing it into "did not trigger" removes these bars from the denominator without
-            # saying so. The first `trigger_lookback` bars of every instrument land here.
+        if verdict is None:
+            # The trigger had nothing to answer with. NOT a rejection - collapsing it into "did not
+            # trigger" removes these bars from the denominator without saying so. For a rule with a
+            # lookback window that is its first `lookback` bars; what makes a bar unevaluable is
+            # the trigger's business, and the engine only has to keep the answer distinct.
             result.unevaluable_bars += 1
             continue
         if not triggered:

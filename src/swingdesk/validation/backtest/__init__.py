@@ -15,6 +15,24 @@ Two properties are structural rather than tested-for:
 
 from swingdesk.trade_management.exits import ExitPolicy
 from swingdesk.validation.backtest.costs import CostModel
-from swingdesk.validation.backtest.engine import ArmResult, BacktestConfig, Skipped, run_arm
+from swingdesk.validation.backtest.engine import (
+    ArmResult,
+    BacktestConfig,
+    BreakoutHigh,
+    CloseBelowLow,
+    EntryTrigger,
+    Skipped,
+    run_arm,
+)
 
-__all__ = ["ArmResult", "BacktestConfig", "CostModel", "ExitPolicy", "Skipped", "run_arm"]
+__all__ = [
+    "ArmResult",
+    "BacktestConfig",
+    "BreakoutHigh",
+    "CloseBelowLow",
+    "CostModel",
+    "EntryTrigger",
+    "ExitPolicy",
+    "Skipped",
+    "run_arm",
+]

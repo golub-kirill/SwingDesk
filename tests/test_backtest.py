@@ -17,8 +17,11 @@ from swingdesk.contracts.trade import ExitReason, Trade
 from swingdesk.validation.backtest import CostModel, ExitPolicy
 from swingdesk.validation.backtest.engine import (
     BacktestConfig,
+    BreakoutHigh,
+    CloseBelowLow,
     Skipped,
     breakout_high,
+    lowest_low,
     run_arm,
 )
 
@@ -69,7 +72,7 @@ def _config(**kwargs) -> BacktestConfig:
         exits=ExitPolicy(atr_stop_multiple=Decimal(2), max_holding_bars=20),
         costs=FREE,
         risk_per_trade=Decimal(1000),
-        trigger_lookback=3,
+        trigger=BreakoutHigh(3),
     )
     defaults.update(kwargs)
     return BacktestConfig(**defaults)
@@ -249,7 +252,7 @@ def test_a_bar_with_no_lookback_window_is_not_a_rejected_signal() -> None:
     """
     rows = _flat(3) + [("100", "110", "100", "110")] + _flat(4)
     series = _series(rows)
-    result = run_arm(series, [True] * len(rows), _atr(series, "2"), _config(trigger_lookback=3))
+    result = run_arm(series, [True] * len(rows), _atr(series, "2"), _config(trigger=BreakoutHigh(3)))
 
     assert result.unevaluable_bars == 3, "one per bar before the window is full"
     assert result.signals == 1
@@ -357,3 +360,98 @@ def test_trade_rejects_an_entry_on_the_signal_bar() -> None:
             shares=10, initial_risk_per_share=Decimal(4), costs=Decimal(1),
             mfe=Decimal(1), mae=Decimal(0), exit_reason=ExitReason.TIME,
         )
+
+
+# ------------------------------------------------- the entry trigger is injected, not hardcoded
+
+def test_breakout_high_and_lowest_low_read_the_same_window() -> None:
+    """Two rules, one window. They exclude the current bar and go quiet on a short one identically,
+    so a change to what "the prior N sessions" means cannot move one without moving the other."""
+    rows = [("10", "12", "8", "11"), ("11", "15", "9", "14"), ("14", "16", "7", "9")]
+    series = _series(rows)
+    assert breakout_high(series, 2, 2) == Decimal("15")
+    assert lowest_low(series, 2, 2) == Decimal("8")
+    assert breakout_high(series, 1, 2) is None
+    assert lowest_low(series, 1, 2) is None
+
+
+def test_a_trigger_answers_three_states_and_the_third_is_not_false() -> None:
+    """`None` is "the rule had nothing to answer with", and it is what `run_arm` counts as an
+    unevaluable bar. A trigger that returned False there would move those bars into the rejected
+    population and shrink every rate the arm reports, by a fixed amount per instrument."""
+    rows = _flat(3) + [("100", "110", "100", "110")] + _flat(4)
+    series = _series(rows)
+    trigger = BreakoutHigh(3)
+
+    assert trigger(series, 0) is None, "no window yet"
+    assert trigger(series, 2) is None, "still short by one"
+    assert trigger(series, 3) is True, "the breakout bar"
+    assert trigger(series, 5) is False, "window full, rule did not fire"
+
+
+def test_the_config_refuses_to_default_the_family() -> None:
+    """`trigger` has no default. It replaced `trigger_lookback: int = 20`, which silently made every
+    unconfigured backtest the one family PR-005 refuted - a strategy choice nobody made."""
+    with pytest.raises(TypeError, match="trigger"):
+        BacktestConfig(  # type: ignore[call-arg]
+            arm="TEST",
+            exits=ExitPolicy(atr_stop_multiple=Decimal(2), max_holding_bars=20),
+            costs=FREE,
+        )
+
+
+def test_a_custom_trigger_drives_the_engine() -> None:
+    """The seam itself: a rule the engine has never heard of decides the entries.
+
+    Fires on exactly one bar, chosen so the assertion is about WHICH bar rather than how many."""
+
+    def only_bar_four(series: BarSeries, index: int) -> bool | None:
+        if index < 2:
+            return None
+        return index == 4
+
+    rows = _flat(8)
+    series = _series(rows)
+    result = run_arm(series, [True] * len(rows), _atr(series, "2"), _config(trigger=only_bar_four))
+
+    assert result.unevaluable_bars == 2, "the two bars the rule declined to answer for"
+    assert result.signals == 1
+    assert result.trades[0].signal_date == series.bars[4].session_date
+    assert result.trades[0].entry_date == series.bars[5].session_date
+
+
+def test_the_second_family_runs_end_to_end_through_the_same_engine() -> None:
+    """`CloseBelowLow` is not a proposed strategy - see its docstring. It is here to prove the
+    engine expresses more than one family, which is what makes `EntryTrigger` a seam rather than a
+    rename. A breakdown bar that BreakoutHigh cannot fire on produces a trade through the mirror."""
+    rows = _flat(3) + [("100", "100", "90", "90")] + _flat(4)
+    series = _series(rows)
+    gate = [True] * len(rows)
+
+    reversion = run_arm(series, gate, _atr(series, "2"), _config(trigger=CloseBelowLow(3)))
+    breakout = run_arm(series, gate, _atr(series, "2"), _config(trigger=BreakoutHigh(3)))
+
+    assert reversion.signals == 1
+    assert reversion.trades, "the mirror family produced a trade the engine could not express before"
+    assert reversion.trades[0].signal_date == series.bars[3].session_date
+    assert breakout.signals == 0, "and the refuted family sees nothing on the same bars"
+
+
+def test_the_two_families_disagree_rather_than_sharing_an_answer() -> None:
+    """A seam that passed both rules through the same path would look like this test's opposite:
+    identical trade sets. Run over bars containing one breakout AND one breakdown, each family
+    takes its own and neither takes both."""
+    rows = _flat(3) + [("100", "115", "100", "115")] + _flat(3) + [("100", "100", "85", "85")] \
+        + _flat(3)
+    series = _series(rows)
+    gate = [True] * len(rows)
+    exits = ExitPolicy(atr_stop_multiple=Decimal(2), max_holding_bars=1)
+
+    up = run_arm(series, gate, _atr(series, "2"), _config(trigger=BreakoutHigh(3), exits=exits))
+    down = run_arm(series, gate, _atr(series, "2"), _config(trigger=CloseBelowLow(3), exits=exits))
+
+    up_signals = {t.signal_date for t in up.trades}
+    down_signals = {t.signal_date for t in down.trades}
+    assert up_signals, "the breakout family took something"
+    assert down_signals, "so did the reversion family"
+    assert not (up_signals & down_signals), "and they are not the same trades"

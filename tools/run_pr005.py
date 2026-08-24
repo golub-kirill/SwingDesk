@@ -36,6 +36,7 @@ from swingdesk.platform.parameters import ParameterRegistry
 from swingdesk.reference_data import universe
 from swingdesk.validation.backtest import (
     BacktestConfig,
+    BreakoutHigh,
     CostModel,
     ExitPolicy,
     run_arm,
@@ -187,7 +188,7 @@ def main() -> int:
                     exits=ExitPolicy(ATR_STOP_MULTIPLE, MAX_HOLDING_BARS),
                     costs=costs,
                     risk_per_trade=RISK_PER_TRADE,
-                    trigger_lookback=TRIGGER_LOOKBACK,
+                    trigger=BreakoutHigh(TRIGGER_LOOKBACK),
                 )
                 result = run_arm(series, gates[arm], atr_series, config)
                 for trade in result.trades:

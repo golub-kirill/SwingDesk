@@ -57,11 +57,21 @@ from run_pr005 import (
 from swingdesk.contracts.market import BarSeries, Interval, Series
 from swingdesk.derived_observations import atr as atr_component
 from swingdesk.market_data import BarStore
-from swingdesk.validation.backtest import BacktestConfig, CostModel, ExitPolicy, run_arm
+from swingdesk.validation.backtest import (
+    BacktestConfig,
+    BreakoutHigh,
+    CostModel,
+    ExitPolicy,
+    run_arm,
+)
 
 RESULT = REPO / "docs" / "prereg" / "results" / "PR-005.json"
 TRADES = REPO / "docs" / "prereg" / "results" / "PR-005-trades.csv"
 PROVENANCE = REPO / "docs" / "prereg" / "results" / "PR-005-trades-provenance.json"
+#: Default bar store. `--data` overrides it, and it has to: `data/` lives only in the main
+#: checkout, so a worktree replaying this study reads nothing without being pointed at the real
+#: store (`AGENTS.md` section 12). The guard rail this tool IS - PR-005 must replay unchanged -
+#: is worth nothing if it can only be run from the one checkout that cannot commit the fix.
 DATA = REPO / "data" / "bars.duckdb"
 
 #: Parameters the recorded result names, mapped to the runner constant that must still equal them.
@@ -126,7 +136,11 @@ def main() -> int:
                         help="publish even though cells disagree. Requires --write, and writes the "
                              "full cell-by-cell comparison beside the log so the disagreement "
                              "travels WITH the artifact instead of living in someone's memory")
+    parser.add_argument("--data", type=Path, default=None,
+                        help="directory holding bars.duckdb; defaults to this checkout's data/, "
+                             "which a worktree does not have")
     args = parser.parse_args()
+    store_path = (args.data / "bars.duckdb") if args.data else DATA
 
     recorded = json.loads(RESULT.read_text(encoding="utf-8"))
     instruments = recorded["instruments"]
@@ -143,12 +157,12 @@ def main() -> int:
               "question and blame the data for it.")
         return 2
 
-    if not DATA.is_file():
-        print(f"\nUNAVAILABLE: no bar store at {DATA}. `data/` is gitignored operational state "
-              f"and lives only in the main checkout.")
+    if not store_path.is_file():
+        print(f"\nUNAVAILABLE: no bar store at {store_path}. `data/` is gitignored operational "
+              f"state and lives only in the main checkout - point --data at it from a worktree.")
         return 4
 
-    with BarStore(DATA) as store:
+    with BarStore(store_path) as store:
         loaded = {i: s for i in instruments if (s := _load(store, i, window)) is not None}
     missing = sorted(set(instruments) - set(loaded))
     print(f"loaded {len(loaded)} of {len(instruments)} from the local store"
@@ -182,7 +196,7 @@ def main() -> int:
                 config = BacktestConfig(
                     arm=arm, exits=ExitPolicy(ATR_STOP_MULTIPLE, MAX_HOLDING_BARS),
                     costs=costs, risk_per_trade=RISK_PER_TRADE,
-                    trigger_lookback=TRIGGER_LOOKBACK,
+                    trigger=BreakoutHigh(TRIGGER_LOOKBACK),
                 )
                 for trade in run_arm(series, gates[arm], atr_series, config).trades:
                     period = "holdout" if trade.entry_date >= boundary else "primary"
