@@ -64,7 +64,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 |---|---|
 | Journal | 22 runs, 7 incomplete · **12 run(s) recorded against a dirty tree** and therefore not replayable from their SHA |
 | Decisions | 11240 recorded · 0 uncoded refusals (`a.no_uncoded_failures` requires 0) |
-| Bar store | 1,926,325 rows across 3,743 instruments |
+| Bar store | 3,596,209 rows across 3,743 instruments |
 | PIT integrity | **CLEAN** - bars whose `event_time` postdates their `knowledge_time`: 0 |
 | Directory | **17 pulls** · **7 confirmed** against the response's own `Last-Modified` (`source_session_date`); the rest predate the field and stay permanently unattributed (`DR-008` c3) |
 | Universe coverage | bars stored for 3,743 of 13,169 listed symbols - **28.4%** |
@@ -110,7 +110,7 @@ once did).
 
 - `claude/swingdesk-session-handoff-cfd0c4`
 - `claude/handoff-2026-08-24`
-- `claude/pr012-fastpath-tests`
+- `claude/pr012-run`
 - `claude/swingdesk-session-continuation-39adaa`
 
 *Tip and merge state deliberately absent - both move under this document's own feet. `python tools/verify_branches.py` prints them.*
