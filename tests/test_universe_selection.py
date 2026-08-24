@@ -133,6 +133,29 @@ def test_a_symbol_the_store_has_never_seen_is_not_measured_and_not_admitted(stor
     assert selection.coverage == Decimal("0.5")
 
 
+def test_bars_at_another_interval_are_not_a_measurement(stores) -> None:
+    """The rule reads DAILY bars, so a symbol the store holds only hourly bars for is unmeasured.
+
+    It used to be counted as measured and then rejected, because the store was asked whether it
+    held ANY bar for the symbol. That reports coverage the rule cannot actually deliver, and
+    `coverage` is the number this module's docstring calls its honest part.
+    """
+    directory, bars = stores
+    directory.record([_entry("TEST1"), _entry("TEST2")], AS_OF, "fixture")
+    bars.write(_bars("TEST1", 40, Decimal("100"), 100_000), AS_OF)
+    hourly = [
+        bar.model_copy(update={"interval": Interval.HOUR})
+        for bar in _bars("TEST2", 40, Decimal("100"), 100_000)
+    ]
+    bars.write(hourly, AS_OF)
+
+    selection = builder.select(directory, bars, RULE, AS_OF)
+
+    assert selection.measured == 1, "an hourly-only symbol is not a daily measurement"
+    assert [m.instrument.id for m in selection.members] == ["TEST1"]
+    assert selection.is_partial
+
+
 def test_a_complete_universe_is_not_partial(stores) -> None:
     directory, bars = stores
     directory.record([_entry("TEST1")], AS_OF, "fixture")
