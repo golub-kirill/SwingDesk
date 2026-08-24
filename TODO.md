@@ -689,6 +689,23 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       (a study, not a decision record), the benchmark FORM is unset (`DR-018`, below), and all four
       components are `registered`.
 
+- [ ] **`[v]` THE 70/30 SPLIT COST PR-012 ITS SAMPLE AND BOUGHT NOTHING** — found 2026-08-24 after
+      the refusal, appended to that study's report rather than edited into it.
+      `WALKFORWARD_SPEC` §1–§2: a split separates **tuning** from checking, and parameters are
+      fitted on train, selected on validation, judged on test. **PR-012 fits nothing and selects
+      nothing** — §5 says so in its own words. So train and validation were empty by construction
+      and the split discarded **70% of the judged sample for a protection there was nothing to
+      protect**: roughly 600 trades per arm became roughly 185, which is the whole reason §8's floor
+      was missed.
+      **The obvious fix is not available to whoever noticed it.** `PREREG_TEMPLATE` rule 3
+      downgrades a redesign made after seeing the data to **exploratory**, and the numbers are seen.
+      A pooled re-run can be honest or confirmatory, not both. The three real options and their
+      costs are in the report; the cheapest-looking one — running it and treating the verdict as
+      confirmatory — is undetectable data snooping and is the trap.
+      **The template gap is filed with it:** §2's form asks for `split` and `selection rule` as
+      separate fields and never relates them, so a split copied from a study of a different shape
+      looks like rigour and behaves like a sample cut.
+
 - [ ] **`[v]` PR-012 RAN AND REFUSED A VERDICT — and the reason is structural, not fixable by
       data.** 2026-08-24. `docs/prereg/results/PR-012-report.md`; derive every figure with
       `python tools/run_pr012.py`, never from this line.

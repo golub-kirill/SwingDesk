@@ -164,6 +164,17 @@ definition.
       **What a new study owes this section:** state how many configurations it will evaluate,
       before it runs. An undeclared trial inflates the true denominator while the reported one
       stays flat, which is the one direction that manufactures significance.
+- [ ] **What a `split` is FOR when the `selection rule` is "nothing".** §2's form asks for both as
+      separate fields and never relates them. `PR-012` copied a 70/30 holdout from `PR-005` - which
+      had five arms and a genuine selection problem - into a study that fits nothing and selects
+      nothing, so train and validation were empty by construction and the split discarded **70% of
+      the judged sample in exchange for a protection there was nothing to protect**. It is the
+      entire reason that study missed §8's minimum and refused a verdict.
+      **A split is a cost, not a virtue.** The form should make a study say what its split buys, so
+      that copying one from a study with a different shape stops looking like rigour.
+      And the fix is not available to whoever notices it: rule 3 downgrades a redesign made after
+      seeing the data to exploratory, so the cost is paid either way. `PR-012`'s report has the
+      full accounting.
 - [ ] Where pre-registrations live once there are dozens. A directory works to about thirty; an index
       generated from their front matter is the obvious next step, alongside the component registry.
 - [ ] Whether an abandoned pre-registration stays in the repository. It should: a study abandoned
