@@ -32,12 +32,20 @@ from swingdesk.validation.backtest.engine import (
     Skipped,
     run_arm,
 )
+from swingdesk.validation.backtest.ranking import (
+    ByMarketPathStrength,
+    ByRawReturn,
+    BySectorRelativeStrength,
+)
 
 __all__ = [
     "ArmResult",
     "BacktestConfig",
     "BookResult",
     "BreakoutHigh",
+    "ByMarketPathStrength",
+    "ByRawReturn",
+    "BySectorRelativeStrength",
     "Candidate",
     "Capacity",
     "CloseBelowLow",
