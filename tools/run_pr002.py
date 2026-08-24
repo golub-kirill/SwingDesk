@@ -35,6 +35,7 @@ from swingdesk.platform.parameters import ParameterRegistry
 from swingdesk.reference_data import universe
 from swingdesk.validation.backtest import (
     BacktestConfig,
+    BreakoutHigh,
     CostModel,
     ExitPolicy,
     run_arm,
@@ -224,7 +225,8 @@ def main() -> int:
         for cost_name, costs in regimes_of_cost.items():
             config = BacktestConfig(
                 arm="NONE", exits=ExitPolicy(ATR_STOP_MULTIPLE, MAX_HOLDING_BARS),
-                costs=costs, risk_per_trade=RISK_PER_TRADE, trigger_lookback=TRIGGER_LOOKBACK,
+                costs=costs, risk_per_trade=RISK_PER_TRADE,
+                trigger=BreakoutHigh(TRIGGER_LOOKBACK),
             )
             trades_by_cost[cost_name].extend(run_arm(series, gate, atr_series, config).trades)
         if count % 20 == 0:

@@ -611,6 +611,30 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 5. Studies
 
+- [x] **`[v]` The backtest engine expressed ONE strategy family, and it was the refuted one — FIXED
+      2026-08-24.** `run_arm` called `breakout_high` directly and the `gate` argument was a per-bar
+      FILTER over that call rather than the trigger itself, so the engine was long-only time-series
+      breakout with a boolean regime filter and nothing else. Every study, every trade log and the
+      whole cost-model calibration describes that one family. A cross-sectional ranking rule or a
+      mean-reversion rule **could not be run at all**.
+      **The claim that hid it was a SIGNATURE.** `run_arm(series, gate, atr, config)` reads like a
+      parameterised engine; the body is what owns "does this code support X" (`AGENTS.md` §12).
+      **What changed:** `EntryTrigger` is a protocol answering `True` / `False` / `None`, the third
+      being "the rule had nothing to answer with" — the state `unevaluable_bars` counts and the one
+      a boolean return would silently fold into a rejection. `BacktestConfig.trigger` replaced
+      `trigger_lookback: int = 20`, and **has no default on purpose**: the old default quietly made
+      every unconfigured backtest the refuted family, which is a strategy choice nobody made.
+      **The guard rail was run, not assumed.** The pre-change and post-change engines, over the same
+      store at the same instant, emit a **byte-identical** `PR-005` trade log — established by
+      stashing the refactor and re-running, because "a trigger refactor cannot move an exit date" is
+      a plausible sentence and not a measurement. Two mutants die: an engine ignoring the injected
+      trigger takes 17 tests with it, and one collapsing `None` into `False` takes 2.
+      **`tools/run_pr005_replay.py` gained `--data`** so the guard rail can be run from a worktree
+      at all; it hardcoded a path that exists only in the main checkout.
+      **Still open, and it is the point of the change:** nothing has been RUN through the second
+      family. `CloseBelowLow` exists to prove the seam and is **not a proposed strategy** — no card
+      declares it and no study registers it. Spending a trial on a family needs `ROADMAP` P5 first.
+
 - [ ] **`[c]` PR-007** registered, unreported.
 - [ ] **`[c]` PR-009** registered, blocked on Task 8.
 - [ ] **`[c]` Four prereg ids unwritten:** PR-001b (unblocked, writable now) · PR-003 (needs a daily
