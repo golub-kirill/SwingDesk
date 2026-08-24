@@ -508,6 +508,33 @@ the words are as fragile as the numerals; the fix is to stop counting in prose a
   owns "is this criterion met". The machine owns "is this task registered" — gate 26 asks it. The
   function BODY owns "does this code support X"; a signature is a proxy and reads as an answer.
 
+- **A citation that was CORRECT when written, still standing after the fact it cites moved.** Nine
+  of these in one session, 2026-08-24, and they are one failure rather than nine. Nothing here
+  rotted by being wrong on the day it was written; each rotted when a *cited* fact changed
+  underneath it — a study verdict withdrawn, a charter amended, a parameter given a value, a gate
+  added — and the sentence stayed.
+  `SPEC_GAP_ANALYSIS.md` graded a section **FULL** on the evidence *"PR-002 validated"* eight days
+  after that verdict was corrected to `inconclusive`, which is `AGENTS.md` §3's *nothing looks more
+  validated than it is* being violated in a Tier-8 table.
+  `UX_TASK_FLOWS.md` said the risk budget's parameters were *"all `unset`"* two days after `DR-006`
+  ratified them; `GO_LIVE_GATES.md` said the same of `validation.max_allowable_drawdown` sixteen
+  days after `DR-007` gave it a value — and that one is the project's own inert gate, so the stale
+  line was the exact claim a reader would act on.
+  `docs/README.md` marked three specifications `planned` while all three existed and declared
+  `drafting`; `HANDOFF.md` §2 said CI reports *four* `UNAVAILABLE` six days after gate 26 made it
+  five; `RISK_REGISTER.md` said *"9 parameters carry assumed values"* against 34 — and that exact
+  sentence is quoted in `verify_counts.py`'s own comment as the example justifying why the gate does
+  not check that form.
+  **Two things follow, and they are different.** The mechanical half is gate-able and now gated:
+  **28** refuses a document stating a parameter status the registry contradicts, **15** now compares
+  the index's Status cell against the manifest, and **29** refuses a pre-registration id claimed
+  twice. The other half is not: no gate can see that a study verdict was withdrawn or a charter
+  amended, and every one of those citations was internally consistent.
+  **So the habit is a re-read rather than a check: when a fact changes, the thing to search for is
+  not the file you changed but everything that CITED it.** `git grep` the id — the parameter, the
+  study, the criterion, the gate number — before considering the change landed. It is the same
+  move §10.2 asks for across branches, aimed at documents instead.
+
 **The habits:**
 
 - **Name the owner before making the claim.** One sentence, in your own head, before you assert
