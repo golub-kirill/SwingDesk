@@ -209,6 +209,37 @@ def test_bars_outside_the_window_are_not_findings(registry) -> None:
     assert report.sessions_checked == len(_sessions(TEST_US.exchange, *window))
 
 
+def test_a_window_is_sliced_to_its_own_ends_and_spans_a_year_boundary() -> None:
+    """The calendar answers from a cached whole-YEAR span and slices, so the slice must be exact.
+
+    Quantising the ends is what stops a per-instrument window cache from thrashing — a run over the
+    stored universe asks for 903 distinct windows and only 36 distinct year spans. Two things can go
+    wrong and neither is visible in a total: an inclusive bound read as exclusive silently drops the
+    endpoints, and consulting one year's span drops the other side of a New Year.
+    """
+    start, end = date(2026, 3, 2), date(2026, 3, 31)
+    march = cal.sessions(TEST_US.exchange, start, end)
+    assert march[0].session_date == start, "the first session of the window was sliced off"
+    assert march[-1].session_date == end, "the last session of the window was sliced off"
+    assert all(start <= s.session_date <= end for s in march)
+    year = cal.sessions(TEST_US.exchange, date(2026, 1, 1), date(2026, 12, 31))
+    assert len(march) < len(year), "the window was not sliced out of the span at all"
+
+    crossing = cal.sessions(TEST_US.exchange, date(2025, 12, 29), date(2026, 1, 5))
+    assert {s.session_date.year for s in crossing} == {2025, 2026}
+
+
+def test_an_inverted_window_still_raises_rather_than_answering_empty() -> None:
+    """A caller defect must stay loud. `test_freshness.py` records a real one found through it.
+
+    The year-span slice would answer an inverted window with an empty tuple, which reads exactly
+    like "the exchange was shut all week" — so the inverted case is handed to the calendar library,
+    which has always rejected it.
+    """
+    with pytest.raises(ValueError):
+        cal.sessions(TEST_US.exchange, date(2026, 8, 24), date(2026, 8, 10))
+
+
 def test_a_window_the_exchange_was_shut_for_has_no_sessions() -> None:
     """A closed window is an empty answer, never an error.
 
