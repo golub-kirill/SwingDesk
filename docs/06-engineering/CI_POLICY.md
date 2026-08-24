@@ -48,6 +48,7 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 26 | `verify_schedule.py` | a scheduled task missing, disabled, or last exiting non-zero. Advisory, and `UNAVAILABLE` off the scheduling machine — **added after `TODO.md` carried "register the 19:30 task" for five days after it was registered** |
 | 27 | `verify_cards.py` | a strategy card claiming more than it has: a component or parameter reference that does not resolve, `Validated` without an evidence id, or an `unset` input missing from `blocked_by` |
 | 28 | `verify_parameter_claims.py` | a document stating a parameter status the registry contradicts — **six live on the day it was written, every one a parameter that gained a value while the prose still called it `unset`** |
+| 29 | `verify_prereg_ids.py` | a study document missing from its own index, an id reserved by reference only, or two **unmerged** branches numbering different studies the same — `AGENTS.md` §10.2 as a check rather than a habit |
 
 ### Three states, not two
 
@@ -111,6 +112,7 @@ Not busywork — each maps to a specific way this project could quietly go wrong
 | 26 | a claim about the machine that no gate could check. Two documents here disagreed for five days about whether a scheduled task existed, and the stale one was the one being acted on |
 | 27 | a card that reads as runnable while depending on a value nothing has set — the "specified, wired to nothing" shape one layer up from the components it cites |
 | 28 | prose drifting from the registry. Gate 1 checks the registry against itself and against the code; nothing checked the SENTENCES, and a stale `unset` is the exact claim a reader acts on |
+| 29 | two efforts numbering different studies the same. `POSTMORTEM-2026-08-09.md` root cause A: each tree was internally consistent, so nothing in either could see it |
 
 ## 3. Merge rules
 

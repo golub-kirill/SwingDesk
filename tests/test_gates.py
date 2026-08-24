@@ -249,6 +249,99 @@ def _manifest_tree(tmp_path: Path, *, status: str = "drafting", number: str = "0
     return tmp_path
 
 
+# ------------------------------------------------------ gate 29: pre-registration ids
+
+
+def _prereg_tree(tmp_path: Path, *, index: str, documents: tuple[str, ...] = (),
+                 elsewhere: str = "") -> Path:
+    """A prereg directory, its index, and optionally a document that merely REFERENCES an id."""
+    (tmp_path / "docs" / "prereg" / "results").mkdir(parents=True)
+    (tmp_path / "docs" / "prereg" / "README.md").write_text(index, encoding="utf-8")
+    for name in documents:
+        (tmp_path / "docs" / "prereg" / name).write_text("# study\n", encoding="utf-8")
+    if elsewhere:
+        (tmp_path / "docs" / "08-pm").mkdir(parents=True, exist_ok=True)
+        (tmp_path / "docs" / "08-pm" / "NOTE.md").write_text(elsewhere, encoding="utf-8")
+    return tmp_path
+
+
+def test_prereg_gate_catches_a_study_missing_from_its_own_index(tmp_path: Path) -> None:
+    root = _prereg_tree(tmp_path, index="# Pre-registrations\n\n- PR-001 trend definition\n",
+                        documents=("PR-001-trend-definition.md", "PR-002-regime-classifier.md"))
+    code, out = run_gate("verify_prereg_ids.py", root)
+    assert code == 1
+    assert "PR-002 has a document in docs/prereg/ and no row" in out
+
+
+def test_prereg_gate_catches_an_id_reserved_by_reference_only(tmp_path: Path) -> None:
+    """The `PR-006` case, and the one the index itself says nothing could find.
+
+    An id named inside a decision record with no file behind it leaves no artefact for any other
+    check in this tree to notice, and reserving an id is how a debt becomes visible.
+    """
+    root = _prereg_tree(tmp_path, index="# Pre-registrations\n\n- PR-001 trend definition\n",
+                        documents=("PR-001-trend-definition.md",),
+                        elsewhere="Overturning this needs PR-006, which is reserved.\n")
+    code, out = run_gate("verify_prereg_ids.py", root)
+    assert code == 1
+    assert "PR-006 is reserved by reference" in out
+
+
+def test_prereg_gate_does_not_read_a_report_as_a_reservation(tmp_path: Path) -> None:
+    """`results/PR-001-report.md` is a study's output, not a second claim on the number.
+
+    Reading it as one made every reported study collide with itself - measured, on the first run.
+    """
+    root = _prereg_tree(tmp_path, index="# Pre-registrations\n\n- PR-001 trend definition\n",
+                        documents=("PR-001-trend-definition.md",))
+    (root / "docs" / "prereg" / "results" / "PR-001-report.md").write_text("# r\n", encoding="utf-8")
+    code, out = run_gate("verify_prereg_ids.py", root)
+    assert code == 0, out
+    assert "0 failure(s)" in out
+
+
+def test_prereg_gate_says_when_the_cross_branch_half_could_not_run(tmp_path: Path) -> None:
+    """A shallow clone has no other branches, and a gate that cannot measure says so.
+
+    `AGENTS.md` §10.6 rule 2. Returning green for a check that never ran is how gate 16 and gate 23
+    both went wrong before this one was written.
+    """
+    root = _prereg_tree(tmp_path, index="# Pre-registrations\n\n- PR-001 trend definition\n",
+                        documents=("PR-001-trend-definition.md",))
+    code, out = run_gate("verify_prereg_ids.py", root)
+    assert code == 0, out
+    assert "cross-branch check DID NOT RUN" in out
+
+
+def test_prereg_gate_catches_two_live_branches_claiming_one_id(tmp_path: Path) -> None:
+    """`POSTMORTEM-2026-08-09.md` root cause A, as a check rather than a habit.
+
+    Two efforts numbered different studies `PR-007`, and nothing could see it because each tree was
+    internally consistent. Merged branches are excluded on purpose - their old filenames are
+    correct statements about a commit, and this repository's two real collisions are both merged.
+    """
+    root = _prereg_tree(tmp_path, index="# Pre-registrations\n\n- PR-007 base strategy\n",
+                        documents=("PR-007-base-strategy.md",))
+    def git(*args: str) -> None:
+        subprocess.run(["git", "-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t", *args],
+                       capture_output=True, check=True)
+    git("init", "-b", "master")
+    git("add", "-A")
+    git("commit", "-m", "master")
+    git("checkout", "-b", "sibling")
+    (root / "docs" / "prereg" / "PR-007-base-strategy.md").unlink()
+    (root / "docs" / "prereg" / "PR-007-effective-spread.md").write_text("# s\n", encoding="utf-8")
+    git("add", "-A")
+    git("commit", "-m", "sibling numbers a different study PR-007")
+    git("checkout", "master")
+
+    code, out = run_gate("verify_prereg_ids.py", root)
+
+    assert code == 1
+    assert "PR-007 names two different studies across live branches" in out
+    assert "effective-spread on sibling" in out
+
+
 def _claims_tree(tmp_path: Path, prose: str, *, where: str = "docs/02-domain/SPEC.md") -> Path:
     """A registry with one set and one unset parameter, and one document making `prose`."""
     (tmp_path / "registry").mkdir(parents=True, exist_ok=True)
