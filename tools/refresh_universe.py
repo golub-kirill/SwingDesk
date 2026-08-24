@@ -43,7 +43,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from swingdesk.contracts.market import Interval
 from swingdesk.contracts.reference import Instrument
-from swingdesk.market_data import BarStore, VendorUnavailable, vendor_yahoo
+from swingdesk.market_data import BarStore, CloseRevision, VendorUnavailable, vendor_yahoo
+from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
 from swingdesk.reference_data import universe
 from swingdesk.reference_data.directory import DirectoryStore
 
@@ -117,7 +118,17 @@ def main() -> int:
             print(f"eligible {len(entries)} · stored {len(stored)} · "
                   f"never fetched {len(never)} · this pass {len(queue)}")
 
+        # `data.revision_epsilon`, scoped to `close` by the owner ruling of 2026-08-23 (DR-016
+        # section 8.4). Unset means the store reports no faults rather than assuming a tolerance -
+        # the same fail-closed shape the universe rule uses, applied to a check instead of a filter.
+        try:
+            epsilon, _ = ParameterRegistry.load().decimal_value("data.revision_epsilon")
+        except ParameterUnset:
+            epsilon = None
+            print("data.revision_epsilon is unset - restated closes are stored but not checked")
+
         fetched = failed = 0
+        faults: list[CloseRevision] = []
         for index, instrument in enumerate(queue, start=1):
             try:
                 series = vendor_yahoo.fetch(instrument, Interval.DAY, as_of, period=args.period)
@@ -126,7 +137,7 @@ def main() -> int:
                 if failed <= 10:
                     print(f"  {instrument.id}: {type(error).__name__}")
             else:
-                store.write(series.bars, as_of)
+                faults.extend(store.write(series.bars, as_of, epsilon).close_revisions)
                 fetched += 1
             if args.pause:
                 time.sleep(args.pause)
@@ -134,6 +145,17 @@ def main() -> int:
                 print(f"  [{index}/{len(queue)}] fetched={fetched} failed={failed}")
 
         print(f"\nfetched {fetched}, failed {failed}")
+        if faults:
+            # Printed, not raised. This pass widens coverage; it makes no decision, so a restated
+            # close here is evidence for the next run rather than a reason to stop this one.
+            print(f"{len(faults)} close(s) restated past data.revision_epsilon:")
+            for fault in faults[:20]:
+                magnitude = "undefined - stored close was zero" if fault.relative is None \
+                    else f"{fault.relative:.4%}"
+                print(f"  {fault.instrument_id} {fault.session_date}: "
+                      f"{fault.stored} -> {fault.restated} ({magnitude})")
+            if len(faults) > 20:
+                print(f"  ... and {len(faults) - 20} more")
         if fixed_mode:
             covered = len(set(store.instrument_ids(as_of)) & {i.id for i in queue})
             print(f"coverage of the resolved sample: {covered}/{len(queue)}")

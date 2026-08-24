@@ -390,3 +390,80 @@ the check could not run.
 compares versions at `_PRICE_QUANTUM` — a float-noise quantum, not a fault threshold — and nothing
 raises `DATA_ERR` for a restated raw price. `data.revision_epsilon` stays `unset` and `read_by:
 none` until the owner rules on the scoped form §8.4 recommends.
+
+---
+
+## 10. The ruling, 2026-08-23 — and the half of §9.5 it unblocks
+
+§8.6 said the value does not move and the scope does, and left the ruling open. **The owner ruled
+on §8.4 as written: keep `0.001`, scope it to `close`.**
+
+### 10.1 What the registry now says
+
+`data.revision_epsilon` moves from `unset` to **`owner` / `0.001`**, with its unit narrowed from
+*"relative tolerance per series"* to *"relative tolerance on the close"*. The unit change is not
+cosmetic — the old wording is what let §3 scope a single number across four fields whose revision
+distributions §8.1 then measured an order of magnitude apart.
+
+The parameter's `read_by` moves from `none` to `swingdesk.market_data.store:close_revision`, which
+is the point of this section. **A ratified decision that reaches no code is a decision that did not
+happen** (`AGENTS.md` §7), and this record has now produced two of that shape in a row — §8.5's
+empty `corporate_actions` table was the first, and it was found inside the record that closed the
+previous one.
+
+### 10.2 What was built
+
+`§9.5` named the missing half: *"The revision comparison at write time … nothing raises `DATA_ERR`
+for a restated raw price."* The comparison exists now.
+
+| | |
+|---|---|
+| The rule | `market_data/store.py` — `close_revision`, `CloseRevision`, pure |
+| The write | `BarStore.write(bars, knowledge_time, revision_epsilon=None)` |
+| The report | `WriteResult.close_revisions` |
+| A caller | `tools/refresh_universe.py`, which reads the epsilon from the registry and prints faults |
+
+**Three properties, each of them a decision:**
+
+1. **The epsilon governs the alarm and never the record.** §8.4 corollary 1 in code: every revision
+   is written whether or not it faults, `close_revisions` is a *subset* of `revised`, and the store
+   test asserts both the fault and the stored row. Suppressing a row would discard the audit trail
+   `POINT_IN_TIME_SPEC` §3 requires, which is precisely what corollary 1 was written to forbid.
+2. **`None` means NOT CHECKED, not clean.** A caller that passes no epsilon gets an empty tuple
+   because nothing was asked. The store does not fall back to a tolerance it was not given —
+   `unavailable` is not `pass`, applied to a write.
+3. **The comparison is relative.** A one-cent restatement is 0.2% of a $5 stock and 0.002% of a
+   $500 one, and `universe.min_price` admits names at exactly $5.
+
+**It does not touch `application/pipeline.py`.** That file is frozen under `DR-015` §3 and a change
+to it that moves decision output resets `a.run_completes`. Nothing here needed it: the rule, the
+write and a live caller are all outside the freeze, so this lands without spending a counter that
+`SESSION-HANDOFF` §1 says is the slowest thing on the board.
+
+### 10.3 The tests are scoped tests, and the first version of them was not
+
+`tests/test_revision_epsilon.py`. Worth recording because the failure was invisible and is the exact
+shape §8.1's blank column was:
+
+The three "the other price fields raise nothing" cases originally held the close **identical** while
+moving `open`, `high` or `low`. They passed — and they passed against a deliberately mutated version
+that faulted on all four fields, because an unchanged close returns early before scope is consulted.
+**A test that cannot fail is not evidence**, and these were testing the early return while reading
+as though they tested the scope.
+
+Fixed by moving the close 0.05% — under the threshold on its own — while moving the other field far
+past it. Measured: the four-field form now fails six assertions where it previously failed three,
+and the three new ones are the scope cases.
+
+### 10.4 What is still open
+
+**Surfacing the fault in the decision path.** `refresh_universe.py` prints; nothing refuses. A
+restated close past the epsilon should reach the run as a `DATA_ERR` / `Critical`, and that is a
+`pipeline.py` change, which is frozen, resets the counter, and needs its own decision about what the
+run does — refuse the instrument, or refuse the session. **Deliberately not decided here.** §8.2
+measured the scoped form firing **zero** times across the capture window, so nothing is being missed
+while this waits, and spending a counter reset on a path that has never fired is the worse trade.
+
+**The window is still short**, unchanged from §8.6: nine sessions of settled revisions is enough to
+separate the open from the close and thin for the tail of either. Re-run `measure_revisions.py` in a
+month; §6's overturning condition stands.

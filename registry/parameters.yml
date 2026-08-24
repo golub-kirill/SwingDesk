@@ -72,16 +72,27 @@ parameters:
   - id: universe.min_adtv_20d
     unit: USD per day
     value: 5000000
-    status: assumed
-    provenance: "assumed:DR-003"
+    status: owner
+    provenance: owner
     read_by: swingdesk.application.universe:rule_from_registry
     named_in: [M33-T0481, Appendix A - Dollar volume]
     note: >-
       20-day average dollar volume. Chosen as the A-tier membership rule because it is computable
       from our own bars and needs no index constituent data - which no free source provides
-      point-in-time, and which would stack a second survivorship bias on the delisting one. The
-      measured distribution has a gap between the median (~1.2M) and p75 (~34M): membership moves by
-      2 instruments in 115 between 5M and 10M, so the value sits on a plateau rather than a cliff.
+      point-in-time, and which would stack a second survivorship bias on the delisting one.
+      Ratified by the owner 2026-08-23 at this value, and the argument under it CHANGED on the same
+      day. The plateau reading this entry used to carry - "membership moves by 2 instruments in 115
+      between 5M and 10M, so the value sits on a plateau rather than a cliff" - is REFUTED over the
+      measured population: the same doubling costs 12.9% of members, a third of the universe is gone
+      by 25M, and the sweep's sensitivity runs from 7.0% to 33.5% of members per doubling with no
+      break anywhere. Five of six ADTV percentiles from the original 115-name sample replicate within
+      x0.96-x1.18; the sixth is p75, high by x1.77, and p75 was the single number the plateau
+      argument rested on. What the value now stands on is the quality-proxy argument of 2026-08-18:
+      the screen does not constrain execution at this account size by about 200x, so what it buys is
+      a tighter spread and real price discovery, standing in for a spread level PR-010 showed is not
+      obtainable from daily OHLC. Derive the figures with tools/measure_liquidity_floor.py, never
+      from this note. Any argument for moving the floor is a strategy argument - the distribution
+      selects no value.
     ui_editable: true
 
   - id: universe.min_bar_history
@@ -243,8 +254,18 @@ parameters:
       because a check the system could not perform must not stop the system (DR-006 section 3).
       Point-in-time sector is still missing: the vendor serves today's classification, which
       restricts a backtest and not live admission.
-    status: assumed
-    provenance: "assumed:DR-006"
+      Owner ruling 2026-08-23, on the recommendation DR-006 section 14.4 left open: KEEP 2R, and
+      retire section 2's justification for it. "One third of the book" was true against a 6R anchor
+      and section 8.3 moved that anchor to 4R without moving this number, so the old sentence quotes
+      a premise that has gone. What the calibration supports instead: 2R binds where concentration
+      is genuinely extreme - the top ~11% of books - while 1.33R refuses more than a third of all
+      books, and in roughly 85% of those refusals the two names were not correlated at all. With
+      four slots and eleven sectors, "at most one per sector" is close to forcing perfect sector
+      diversity on a book that small. The ruling accepts a named cost: two positions, -3.38R at the
+      measured gap loss, can be lost to one theme overnight, which is a fifth of the -15R drawdown
+      pause in a single session.
+    status: owner
+    provenance: owner
     read_by: swingdesk.trade_management.portfolio:sector_limit
     named_in: [M51-T782, M93-T1327]
     ui_editable: true
@@ -258,8 +279,14 @@ parameters:
       position is refused Skip/RISK; the sign is kept, so the test is r >= threshold and not
       abs(r) >= threshold, because what DR-006 section 2 bounds is duplicate exposure rather than
       any strong relationship. The size adjustment the course names alongside the threshold
-      (M49-T761) is still unspecified - this refuses rather than resizes, and DR-006 section 11
-      carries that as an open question.
+      (M49-T761) is CLOSED by owner ruling 2026-08-23 on DR-006 section 15.4: this refuses and does
+      not resize, and the adjustment is unnecessary rather than merely unauthored. Refusing costs
+      nothing measurable in return; halving instead would keep half of an exposure that gaps
+      together five times more often, and would buy that by authoring a multiplier nothing here
+      supports. The cheaper rule is also the one with the better-evidenced risk reduction, so there
+      was no trade-off to make. The VALUE 0.70 is untouched by that ruling and stays assumed - a
+      threshold becomes validated through a pre-registered study, never through a calibration
+      attached to a decision record.
       This entry carried TWO note keys until 2026-08-23, so the YAML loader kept only the second
       and the lookback the first one described was not in the loaded registry at all.
     status: assumed
@@ -926,15 +953,26 @@ parameters:
     ui_editable: true
 
   - id: data.revision_epsilon
-    unit: relative tolerance per series
-    value: null
-    status: unset
-    provenance: null
-    read_by: none
+    unit: relative tolerance on the close
+    value: 0.001
+    status: owner
+    provenance: owner
+    read_by: swingdesk.market_data.store:close_revision
     named_in: [POINT_IN_TIME_SPEC 3 - revision deltas]
     note: >-
-      Without a tolerance, vendor float noise produces phantom revisions on every fetch. Price,
-      volume and adjusted series need different values.
+      Owner ruling 2026-08-23 on the form DR-016 section 8.4 recommended: keep 0.001, and scope it
+      to CLOSE alone. The four price fields are different populations, measured over 7,141 settled
+      version pairs - the close's largest revision in the window is 0.084%, twelve times below this
+      threshold, while the open's MEDIAN revision is 0.128%, larger than the threshold itself. Over
+      all four fields the rule raises roughly 94 faults an evening and over close alone it fired
+      zero times, so the wide form repeats the crying-wolf failure DR-016 section 5 already rejected
+      for volume. The close is also the field the decision path reads: entry comes from the last
+      stored close and sizing spends its risk against that entry, so a restated close moves entry,
+      share count and stop distance together. high and low still reach a decision through ATR and
+      get no fault - a field whose revisions form no separable population gets none rather than a
+      worse one. This tolerance governs the ALARM, never the record: every revision is stored either
+      way, and the store's own _PRICE_QUANTUM is a separate write-time noise floor with a different
+      job. Unset in a caller means restated closes are stored unchecked, never assumed clean.
     ui_editable: false
 
   - id: data.volume_ratio_outlier_factor

@@ -85,7 +85,18 @@ def test_the_shipped_registry_builds_the_dr003_rule() -> None:
     assert {p.id for p in parameters} == {
         "universe.min_price", "universe.min_adtv_20d", "universe.min_bar_history"
     }
-    assert all(p.is_assumed for p in parameters), "DR-003 values are assumed, and must say so"
+
+    # Provenance is asserted PER PARAMETER, not across the set. It stopped being uniform when the
+    # owner ratified the ADTV floor on 2026-08-23 and left the other two alone - `DR-003`'s own
+    # ratification section says why, and `DR-006` set the precedent that an accepted record and an
+    # owner-set value are different claims. `is_assumed` drives the report's "ASSUMED, not
+    # evidence" flag, so a value that quietly gained or lost it would change what the owner is
+    # shown beside a number.
+    by_id = {p.id: p for p in parameters}
+    assert by_id["universe.min_adtv_20d"].provenance == "owner"
+    assert not by_id["universe.min_adtv_20d"].is_assumed
+    assert by_id["universe.min_price"].is_assumed
+    assert by_id["universe.min_bar_history"].is_assumed
 
 
 # ------------------------------------------------------------------ selection

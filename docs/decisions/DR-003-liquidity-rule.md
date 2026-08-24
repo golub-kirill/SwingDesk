@@ -2,10 +2,13 @@
 
 ```
 date:       2026-08-02
-status:     proposed
+status:     accepted — ratified by the owner 2026-08-23 on the population measurement, and on the
+            quality-proxy argument rather than the plateau one, which the same measurement refuted
 parameters: universe.min_price, universe.min_adtv_20d, universe.min_bar_history
 components: none - swingdesk.reference_data.universe implements the rule; this record sets its inputs
 evidence:   measurements/liquidity-sample.json (seed 20260802, 115 instruments measured)
+            measurements/liquidity-floor-2026-08-23.json (the population, 3,551 measured)
+implemented_by: src/swingdesk/reference_data/universe.py :: LiquidityRule
 ```
 
 The owner decision of 2026-08-01 fixed the *shape*: A-tier is a liquidity rule computed from our own
@@ -217,3 +220,157 @@ index membership unusable in the first place (see the head of this record). So t
 well be the only implementable one here. What changes is that the choice is now **recorded as a
 constraint rather than assumed to be the standard**, and `DR-017` §5's proposed $3M–$8M sweep is
 known to be testing the level of a measure whose *form* is also unvalidated.
+
+---
+
+## The plateau does not exist, measured 2026-08-23
+
+Appended, not edited. This record's reasoning is history (`AGENTS.md` §3) and the 2026-08-18 section
+above set the precedent. **No threshold moves here.** What moves is the argument under one of them,
+and that is worth more than a number because the argument is what the next revision would reuse.
+
+Consequence 5 above named this check: *"The plateau was located on 115 instruments and should be
+re-checked on the population."* Known gap 3 named its own limit: the sample *"is not adequate for
+tail percentiles."* Both were right, and the second is why the first mattered.
+
+```bash
+python tools/measure_liquidity_floor.py --data data \
+    --out docs/decisions/measurements/liquidity-floor-2026-08-23.json
+```
+
+Offline, read at the bar store's own latest knowledge time so a re-run over an unchanged store
+returns the same answer. Admission uses `average_dollar_volume` and the same three comparisons
+`LiquidityRule.admits` makes, so this is the rule's membership rather than a second implementation
+of it. Cross-check: the ratified values admit **1,148**, which is the figure the 2026-08-17 run
+sized.
+
+### The claim, and what the population says about it
+
+The record above chose 5M from one sentence: *"From 5M to 10M — a doubling — membership changes by
+**two instruments out of 115**."* Two of the 38 that sample admitted is **5.3%**.
+
+| | 115-name sample | 3,551 measured names |
+|---|---|---|
+| 5M → 10M, share of membership lost per doubling | 5.3% | **12.9%** |
+| 5M → 25M, share of membership lost | not computed | **33.7%** (1,148 → 761) |
+
+**A third of the universe is gone by 25M.** The range this record called a plateau — *"the choice is
+insensitive anywhere on the 5M–25M plateau"* — costs 387 of 1,148 names. That is not insensitivity,
+and no reading of the population makes it one.
+
+The whole sweep is smooth and its sensitivity rises with the floor: **7.0%** of members lost per
+doubling at the cheapest step (ending at 250k) against **33.5%** at the dearest (ending at 100M).
+There is one 1.5-point dip, at the 5M → 10M step, and it is the entire empirical basis the plateau
+ever had. A dip of that size inside a curve costing 13–18% per doubling through the same region is
+not a flat stretch; it is noise on a slope.
+
+### The sample was good, and it was wrong in exactly one place
+
+This is the part worth carrying forward, because it is not "the sample was too small" — the sample
+was mostly excellent:
+
+| | sample | population | ratio |
+|---|---|---|---|
+| p5 | 12,974 | 14,180 | ×1.09 |
+| p10 | 31,265 | 36,739 | ×1.18 |
+| p25 | 191,371 | 183,471 | ×0.96 |
+| p50 | 1,241,658 | 1,468,739 | ×1.18 |
+| **p75** | **34,056,034** | **19,263,239** | **×0.57** |
+| p90 | 110,426,657 | 106,741,517 | ×0.97 |
+
+Five of six percentiles land within ×0.96–×1.18. **The sixth is p75, high by a factor of 1.77 — and
+p75 is the single number the plateau argument was built on**: *"between the median (~1.2M) and p75
+(~34M) there is very little."* The gap was an artefact of one order statistic on 115 draws, and the
+argument that rested on it inherited the artefact whole.
+
+Gap 3 predicted this in advance and in the right words. It was recorded as a limitation and then not
+treated as one, because the tail figure had already been spent on a conclusion three paragraphs
+earlier in the same document.
+
+### What this changes, and what it deliberately does not
+
+**It does not move `universe.min_adtv_20d`.** The value's *original* justification is refuted; its
+*current* one is not, and they are different arguments. The 2026-08-18 section above establishes that
+the screen does not constrain execution at this account size by a factor of about two hundred, and
+that what it actually buys is a **quality proxy** for a spread whose level `PR-010` has since shown
+is not obtainable from daily OHLC. Nothing measured here touches that.
+
+So the honest statement of the rule's standing is now:
+
+1. **5M is a choice on a continuum, not a point the data selects.** There is no break in this
+   distribution and therefore no floor the population recommends. Any value has to be argued from
+   what the screen is *for*.
+2. **What it is for is a quality proxy** (2026-08-18), and the proxy argument neither prefers 5M to
+   2M nor to 10M. It bounds the class of instrument, not the digit.
+3. **"It sits on a plateau" must not be reused.** It was the reason of record for three weeks and it
+   is now measured false. A future argument for moving the floor gains nothing from this measurement
+   and a future argument for keeping it loses its stated reason.
+
+**The price floor is nearly free on the population too, as this record claimed.** 5.00 costs 59 of
+1,207 names against a 2.00 floor — the same order as the *"roughly four names in this sample"* the
+record recorded, and the cost-side justification stands unchanged.
+
+### What bounds every number above
+
+- **Coverage is 28.5%** — 3,738 of 13,136 eligible symbols have bars, 3,551 with a full 20-bar
+  window. Derive the current figure with `python tools/build_state.py`; do not quote this one later.
+- **The stored set is an alphabetical prefix, not a draw.** `tools/refresh_universe.py` queues
+  never-fetched symbols in directory order and the directory is sorted by symbol, so **99.0%** of
+  measured names sit in the directory's first half (a uniform draw reads 50.0%). *The check that
+  this does not bias the result is the percentile table above*: a seeded random sample of 115 and an
+  alphabetical prefix of 3,551 agree on five of six percentiles, which is what a liquidity-neutral
+  sampling frame looks like. Ticker spelling carries no dollar volume. This is a check rather than a
+  conjecture (`AGENTS.md` §10.4), and it is the only reason the population figures may be read as
+  statements about the directory at all.
+- **Gap 2's systematic absence is unchanged.** Warrants, units and rights fetch as nothing, so they
+  are missing here as they are missing everywhere.
+- **99.9% of measured names carry a last stored session behind the newest one**, spanning 2026-07-30
+  to 2026-08-21. Each instrument's ADTV is its own last 20 stored bars, which is what the daily run
+  reads; it is not a common-date cross-section, and a name refreshed three weeks ago is measured
+  over a three-week-old window.
+- **Spread per liquidity tier is absent on purpose.** `PR-010` measured EDGE across ADTV thirds at
+  25.45 / 27.90 / 24.02 bp — flat, most liquid third lowest — and `HANDOFF.md` §7 closes the spread
+  level from daily OHLC by evidence. Sweeping modelled spread against the floor would re-run a
+  refuted measurement in new clothes. **The admitted population is measurable; the spread it would
+  pay is not.**
+
+### What would overturn this
+
+Coverage past roughly half the directory changing the p75 materially. That is the one figure the
+prefix could still be wrong about, because it is where the sample and the population already
+disagree, and it is cheap to re-check: re-run the command above after
+`tools/refresh_universe.py --budget 500` has been run enough times. Nothing else here depends on a
+single order statistic.
+
+### Ratified 2026-08-23, and on which argument
+
+The owner ratified **`universe.min_adtv_20d = $5,000,000` as it stands**. The header moves from
+`proposed` to `accepted`.
+
+**What it is ratified ON matters more than the digit**, because the digit did not move and one of
+its two arguments did:
+
+- **Dead:** *"it sits on a plateau"* — measured false above, and it was the reason of record from
+  2026-08-02 to 2026-08-23.
+- **Alive, and now the only one:** the quality-proxy argument of 2026-08-18. The screen does not
+  constrain execution at this account size by a factor of about two hundred; what it buys is a
+  tighter spread, real price discovery and not-a-shell, standing in for a spread whose level
+  `PR-010` showed is not obtainable from daily OHLC. Nothing measured on 2026-08-23 touches it, and
+  no amount of further coverage will — the population measurement killed the plateau claim and left
+  the proxy claim exactly where it was.
+
+**Anyone re-opening this floor argues from what the screen is FOR.** The distribution selects no
+value; every floor on it is a choice on a continuum. There is a live argument for lowering it —
+inefficiency plausibly lives in the corner this rule excludes by construction — and it is a
+**strategy** question rather than a data one, so it belongs beside the first strategy card, not
+here.
+
+**The other two parameters are NOT ratified by this and stay `assumed:DR-003`.**
+`universe.min_price` and `universe.min_bar_history` were not part of the ruling; only
+`min_adtv_20d` moves to `owner`. This follows `DR-006`'s precedent exactly — that record is fully
+ratified and `risk.correlation_threshold` still reads `assumed` — because **an accepted record and
+an owner-set value are different claims**, and collapsing them would record a decision nobody made.
+
+The price floor's own evidence is unchanged and favourable: 5.00 costs 59 of 1,207 names against a
+2.00 floor, the same order as the *"roughly four names in this sample"* recorded above, and its
+justification was always the cost side rather than the population side.
