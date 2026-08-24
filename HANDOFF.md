@@ -242,6 +242,35 @@ different facts, and the exit code alone cannot tell them apart. **It does not c
 `a.run_completes` measures**, which stays exactly its ratified text — the run completes and produces
 a report.
 
+### In flight — `claude/swingdesk-tasks-cl-perf-707e67`, not merged
+
+**The daily run's compute was cut roughly tenfold and nothing it decides moved.** ~24 min a pass to
+~6, of which the remaining ~4 min is the vendor rather than this code. Three hot spots and a
+quadratic: `completeness.check` was O(bars x sessions) over each instrument's whole stored extent,
+`universe.select` read 3.57 million bars to answer a count, a last close and a twenty-session
+average, `calendar.sessions` read a pandas frame with `iterrows` against a cache running at a 2%
+hit rate, and `checklist` re-parsed its registry per candidate.
+
+**Byte-identity is the reason to trust it, and it was measured five times**, most usefully by
+`tools/verify_reproducible.py` reproducing `50e1646b933a4a9d` over the full 1,141-instrument
+universe — the hash recorded on `master` before the change — and by `tools/run_pr005_replay.py`
+reproducing all 20 of PR-005's cells through the backtest engine instead of the pipeline. So it
+moves no decision output and spends no `a.run_completes` counter, and none of it touches a frozen
+file.
+
+**Two gates came with it**, 28 (a document may not state a parameter status the registry
+contradicts) and 29 (a pre-registration id is reserved once, including across unmerged branches).
+`TODO.md` §3 is empty for the first time.
+
+**One thing on it needs the owner and is not an agent's to take:** PR-005's published trade log no
+longer matches a fresh replay, because seven bars arrived three hours after it was published.
+`TODO.md` §5 states the three options; `docs/prereg/results/` was not touched.
+
+**Re-index the code graph after this merges** — `src/` and `tools/` both changed (`AGENTS.md` §9
+rule 3). It is deliberately NOT re-indexed now: the index is named `swingdesk` and rooted at the
+main checkout, and pointing it at an unmerged branch would make it describe code `master` does not
+have.
+
 ### The schema repair holds — checked 2026-08-24, before the run rather than after it
 
 The outage that began 2026-08-18 was `positions.open_as_of` binding a column the table on disk did
