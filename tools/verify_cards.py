@@ -46,6 +46,8 @@ VALID_STATUS = ("Untested", "Testing", "Validated", "Retired")
 #: Fields whose values are parameter ids, by the shape they take in the card.
 PARAMETER_FIELDS = (
     ("universe", "parameters"),
+    ("selection", "benchmark"),
+    ("selection", "form"),
     ("selection", "lookback"),
     ("selection", "method"),
     ("selection", "cutoff"),

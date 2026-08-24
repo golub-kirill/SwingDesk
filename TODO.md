@@ -683,8 +683,36 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **What is left is that no study runner calls it**, and that needs the ranking rule, which
       needs a pre-registration. Carried in the card's `blocked_by` as `no-study-runs-the-book`.
       **Three blockers remain, declared in `registry/cards.yml`:** the selection inputs are unset
-      (a study, not a decision record), **no index series is stored** to be strong relative to, and
-      all four components are `registered`.
+      (a study, not a decision record), the benchmark FORM is unset (`DR-018`, below), and all four
+      components are `registered`.
+
+- [ ] **`[v]` THE BENCHMARK EXISTS NOW, AND POINT-TO-POINT RELATIVE STRENGTH IS DECORATIVE** —
+      `DR-018`, written 2026-08-24, `proposed`. Derive every figure with
+      `python tools/measure_benchmark.py`, never from this line.
+      **The blocker was cheap and the fix found something expensive.** No index series was stored
+      only because coverage is an ALPHABETICAL PREFIX that had not reached the letter S; `SPY`,
+      `QQQ`, `IWM`, `IVV` and `VOO` were already eligible ETF rows. Fetched, five years each.
+      **The finding: on ONE cross-section a benchmark cannot change a ranking.** The usual
+      `(1 + own) / (1 + benchmark)` is a strictly monotone transform of the name's own return,
+      because the benchmark's return is one constant for every name that day. Measured as a control
+      that must return exactly 1: **15 of 15** benchmark x lookback pairs give Spearman
+      **1.000000** against ranking on raw return alone, over 1,148 names. So point-to-point relative
+      strength is **momentum with a decorative denominator**, and a card declaring it would be
+      declaring the family `CARD-001` was chosen to avoid.
+      **A PATH-dependent form escapes the identity** — share of sessions the name beat the benchmark
+      reads about **0.6** against raw return — and there the index choice bites: SPY against QQQ at
+      **0.616** on 63 sessions, while SPY against IVV (same index, different fund) reads **0.973**.
+      **The INDEX is the decision; the PROXY is not.**
+      `rs.benchmark` = `SPY` (`assumed:DR-018`); `rs.benchmark_form` **`unset`**, because the form
+      decides what the card trades and `ALLOCATION_SPEC` §3 sends that to a pre-registration.
+      **The RAW-price dividend bias is measured too**, and it survives every choice above: SPY
+      **1.52%** a year against QQQ's **0.68%**, so a benchmark comparison that ignores it compares
+      two differently-taxed series. The store holds **no adjusted series at all**.
+      **`corporate_actions` is no longer empty** — `DR-016` §8.5's finding gets its first caller
+      outside the held-position split guard: 101 dividend records for the five funds.
+      **Open next, and named rather than guessed:** sector-relative strength (`M31-T0460/0461/0462`)
+      is the OTHER way out of the identity, because a per-name denominator is not a common factor.
+      The classification store holds 1,148 classified names, so it is checkable.
 
 - [x] **`[v]` The backtest engine expressed ONE strategy family, and it was the refuted one — FIXED
       2026-08-24.** `run_arm` called `breakout_high` directly and the `gate` argument was a per-bar

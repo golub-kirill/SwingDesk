@@ -1,0 +1,353 @@
+{
+  "actions_as_of": "2026-08-24T11:02:59.732616+00:00",
+  "admitted_names": 1148,
+  "bars_as_of": "2026-08-23T23:45:31.225499-05:00",
+  "dividend_drag": {
+    "IVV": {
+      "annualised_pct": 1.6015,
+      "cash_paid": 35.95,
+      "dividends_in_window": 20,
+      "share_of_opening_price": 0.080033,
+      "window": [
+        "2021-08-23",
+        "2026-08-21"
+      ]
+    },
+    "IWM": {
+      "annualised_pct": 1.1713,
+      "cash_paid": 12.855,
+      "dividends_in_window": 20,
+      "share_of_opening_price": 0.058533,
+      "window": [
+        "2021-08-23",
+        "2026-08-21"
+      ]
+    },
+    "QQQ": {
+      "annualised_pct": 0.6843,
+      "cash_paid": 12.764,
+      "dividends_in_window": 21,
+      "share_of_opening_price": 0.034199,
+      "window": [
+        "2021-08-23",
+        "2026-08-21"
+      ]
+    },
+    "SPY": {
+      "annualised_pct": 1.524,
+      "cash_paid": 34.062,
+      "dividends_in_window": 20,
+      "share_of_opening_price": 0.076157,
+      "window": [
+        "2021-08-23",
+        "2026-08-21"
+      ]
+    },
+    "VOO": {
+      "annualised_pct": 1.5938,
+      "cash_paid": 32.752,
+      "dividends_in_window": 20,
+      "share_of_opening_price": 0.079646,
+      "window": [
+        "2021-08-23",
+        "2026-08-21"
+      ]
+    }
+  },
+  "identity_control": [
+    {
+      "benchmark": "IVV",
+      "lookback": 63,
+      "names": 1148,
+      "spearman_vs_raw_return": 1.0
+    },
+    {
+      "benchmark": "IWM",
+      "lookback": 63,
+      "names": 1148,
+      "spearman_vs_raw_return": 1.0
+    },
+    {
+      "benchmark": "QQQ",
+      "lookback": 63,
+      "names": 1148,
+      "spearman_vs_raw_return": 1.0
+    },
+    {
+      "benchmark": "SPY",
+      "lookback": 63,
+      "names": 1148,
+      "spearman_vs_raw_return": 1.0
+    },
+    {
+      "benchmark": "VOO",
+      "lookback": 63,
+      "names": 1148,
+      "spearman_vs_raw_return": 1.0
+    },
+    {
+      "benchmark": "IVV",
+      "lookback": 126,
+      "names": 1148,
+      "spearman_vs_raw_return": 1.0
+    },
+    {
+      "benchmark": "IWM",
+      "lookback": 126,
+      "names": 1148,
+      "spearman_vs_raw_return": 1.0
+    },
+    {
+      "benchmark": "QQQ",
+      "lookback": 126,
+      "names": 1148,
+      "spearman_vs_raw_return": 1.0
+    },
+    {
+      "benchmark": "SPY",
+      "lookback": 126,
+      "names": 1148,
+      "spearman_vs_raw_return": 1.0
+    },
+    {
+      "benchmark": "VOO",
+      "lookback": 126,
+      "names": 1148,
+      "spearman_vs_raw_return": 1.0
+    },
+    {
+      "benchmark": "IVV",
+      "lookback": 252,
+      "names": 1148,
+      "spearman_vs_raw_return": 1.0
+    },
+    {
+      "benchmark": "IWM",
+      "lookback": 252,
+      "names": 1148,
+      "spearman_vs_raw_return": 1.0
+    },
+    {
+      "benchmark": "QQQ",
+      "lookback": 252,
+      "names": 1148,
+      "spearman_vs_raw_return": 1.0
+    },
+    {
+      "benchmark": "SPY",
+      "lookback": 252,
+      "names": 1148,
+      "spearman_vs_raw_return": 1.0
+    },
+    {
+      "benchmark": "VOO",
+      "lookback": 252,
+      "names": 1148,
+      "spearman_vs_raw_return": 1.0
+    }
+  ],
+  "not_measured": "sector-relative strength (M31-T0460/0461/0462), which gives different names different denominators and is the other way out of the single-cross-section identity. It needs the classification store and is the next check, not a guess.",
+  "path_form_across_benchmarks": [
+    {
+      "left": "SPY",
+      "lookback": 63,
+      "names": 1148,
+      "right": "QQQ",
+      "spearman": 0.616174
+    },
+    {
+      "left": "SPY",
+      "lookback": 63,
+      "names": 1148,
+      "right": "IWM",
+      "spearman": 0.763687
+    },
+    {
+      "left": "QQQ",
+      "lookback": 63,
+      "names": 1148,
+      "right": "IWM",
+      "spearman": 0.560184
+    },
+    {
+      "left": "SPY",
+      "lookback": 63,
+      "names": 1148,
+      "right": "IVV",
+      "spearman": 0.973281
+    },
+    {
+      "left": "SPY",
+      "lookback": 126,
+      "names": 1148,
+      "right": "QQQ",
+      "spearman": 0.775565
+    },
+    {
+      "left": "SPY",
+      "lookback": 126,
+      "names": 1148,
+      "right": "IWM",
+      "spearman": 0.800518
+    },
+    {
+      "left": "QQQ",
+      "lookback": 126,
+      "names": 1148,
+      "right": "IWM",
+      "spearman": 0.702748
+    },
+    {
+      "left": "SPY",
+      "lookback": 126,
+      "names": 1148,
+      "right": "IVV",
+      "spearman": 0.983955
+    },
+    {
+      "left": "SPY",
+      "lookback": 252,
+      "names": 1148,
+      "right": "QQQ",
+      "spearman": 0.874562
+    },
+    {
+      "left": "SPY",
+      "lookback": 252,
+      "names": 1148,
+      "right": "IWM",
+      "spearman": 0.830137
+    },
+    {
+      "left": "QQQ",
+      "lookback": 252,
+      "names": 1148,
+      "right": "IWM",
+      "spearman": 0.783671
+    },
+    {
+      "left": "SPY",
+      "lookback": 252,
+      "names": 1148,
+      "right": "IVV",
+      "spearman": 0.989921
+    }
+  ],
+  "path_form_vs_raw_return": [
+    {
+      "benchmark": "IVV",
+      "lookback": 63,
+      "measure": "share of sessions beating the benchmark",
+      "names": 1148,
+      "spearman_vs_raw_return": 0.583774
+    },
+    {
+      "benchmark": "IWM",
+      "lookback": 63,
+      "measure": "share of sessions beating the benchmark",
+      "names": 1148,
+      "spearman_vs_raw_return": 0.599737
+    },
+    {
+      "benchmark": "QQQ",
+      "lookback": 63,
+      "measure": "share of sessions beating the benchmark",
+      "names": 1148,
+      "spearman_vs_raw_return": 0.464642
+    },
+    {
+      "benchmark": "SPY",
+      "lookback": 63,
+      "measure": "share of sessions beating the benchmark",
+      "names": 1148,
+      "spearman_vs_raw_return": 0.587254
+    },
+    {
+      "benchmark": "VOO",
+      "lookback": 63,
+      "measure": "share of sessions beating the benchmark",
+      "names": 1148,
+      "spearman_vs_raw_return": 0.58124
+    },
+    {
+      "benchmark": "IVV",
+      "lookback": 126,
+      "measure": "share of sessions beating the benchmark",
+      "names": 1148,
+      "spearman_vs_raw_return": 0.598532
+    },
+    {
+      "benchmark": "IWM",
+      "lookback": 126,
+      "measure": "share of sessions beating the benchmark",
+      "names": 1148,
+      "spearman_vs_raw_return": 0.603192
+    },
+    {
+      "benchmark": "QQQ",
+      "lookback": 126,
+      "measure": "share of sessions beating the benchmark",
+      "names": 1148,
+      "spearman_vs_raw_return": 0.597641
+    },
+    {
+      "benchmark": "SPY",
+      "lookback": 126,
+      "measure": "share of sessions beating the benchmark",
+      "names": 1148,
+      "spearman_vs_raw_return": 0.597373
+    },
+    {
+      "benchmark": "VOO",
+      "lookback": 126,
+      "measure": "share of sessions beating the benchmark",
+      "names": 1148,
+      "spearman_vs_raw_return": 0.591904
+    },
+    {
+      "benchmark": "IVV",
+      "lookback": 252,
+      "measure": "share of sessions beating the benchmark",
+      "names": 1148,
+      "spearman_vs_raw_return": 0.614464
+    },
+    {
+      "benchmark": "IWM",
+      "lookback": 252,
+      "measure": "share of sessions beating the benchmark",
+      "names": 1148,
+      "spearman_vs_raw_return": 0.642134
+    },
+    {
+      "benchmark": "QQQ",
+      "lookback": 252,
+      "measure": "share of sessions beating the benchmark",
+      "names": 1148,
+      "spearman_vs_raw_return": 0.62525
+    },
+    {
+      "benchmark": "SPY",
+      "lookback": 252,
+      "measure": "share of sessions beating the benchmark",
+      "names": 1148,
+      "spearman_vs_raw_return": 0.619612
+    },
+    {
+      "benchmark": "VOO",
+      "lookback": 252,
+      "measure": "share of sessions beating the benchmark",
+      "names": 1148,
+      "spearman_vs_raw_return": 0.612912
+    }
+  ],
+  "proxies": {
+    "Nasdaq-100": "QQQ",
+    "Russell 2000": "IWM",
+    "S&P 500": "SPY"
+  },
+  "same_index_funds": [
+    "SPY",
+    "IVV",
+    "VOO"
+  ]
+}

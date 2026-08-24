@@ -61,6 +61,8 @@ cards:
     # ranking by whatever order the system happens to have - ALLOCATION_SPEC 6 rule 4.
     selection:
       measure: relative strength against the index
+      benchmark: rs.benchmark
+      form: rs.benchmark_form
       lookback: rs.lookback
       method: rs.ranking_method
       cutoff: screen.relative_strength_rule
@@ -108,7 +110,7 @@ cards:
       partials: unset
 
     data:
-      requires: [daily RAW bars, index bars for the relative measure, sector classification]
+      requires: [daily RAW bars, benchmark bars (rs.benchmark), sector classification]
       on_missing: refuse with a coded DATA skip; never guess (FAIL_CLOSED_POLICY 3)
       on_stale: DR-015
       on_revised: DR-016
@@ -143,12 +145,19 @@ cards:
           inside the cutoff, independently and uncapped, measuring a different strategy from the one
           this card declares. That is fixed. Running it needs the ranking rule below, which needs a
           pre-registration, so the two close in order rather than together.
-      - id: no-index-series
-        what: no index bars are stored; the measure is relative TO something
+      - id: benchmark-form-unset
+        what: >-
+          CLOSED in part 2026-08-24 by DR-018. SPY, QQQ, IWM, IVV and VOO are stored, five years
+          each, and rs.benchmark is SPY. What remains unset is rs.benchmark_form - HOW a candidate
+          is compared to it.
         why: >-
-          M31-T0464 measures strength against the index. The bar store holds instruments from the
-          NASDAQ Trader directory; whether an index proxy ETF is an adequate stand-in for the index
-          is itself a choice this card does not get to make silently.
+          The form decides whether the benchmark means anything at all. Measured: the usual
+          point-to-point ratio is a strictly monotone transform of the name's own return on any one
+          cross-section, so it ranks EXACTLY as raw return does (Spearman 1.000000 across 15
+          benchmark x lookback pairs over 1148 names) and the benchmark is decorative. A
+          path-dependent form is not such a transform and reads about 0.6 against raw return - a
+          different signal - and there the index choice bites, SPY against QQQ at 0.616. So the
+          form is a strategy choice and ALLOCATION_SPEC 3 sends it to a pre-registration.
       - id: components-not-active
         what: all four components above are `registered`
         why: COMPONENT_REGISTRY_SPEC 3 - active needs values, verification and real code.
