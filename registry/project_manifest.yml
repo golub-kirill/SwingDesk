@@ -866,3 +866,13 @@ documents:
   readme_status_text: owner-pending
   generated: false
   file_expected: true
+- id: DOC-68
+  display_number: '68'
+  tier_ref: TIER-8
+  artifact_class: PRIMARY_DELIVERABLE
+  path: docs/08-pm/TRIAL_BUDGET.md
+  document_status: owner-pending
+  status_source: document
+  readme_status_text: owner-pending
+  generated: false
+  file_expected: true

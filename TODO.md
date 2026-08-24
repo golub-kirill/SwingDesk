@@ -365,6 +365,18 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       strikethrough-and-append convention. All 29 gates pass.
 - [ ] **`[c]` G0 status.** `CONSTRAINTS.md`:150 says ratifying the remaining `criteria.yml` values
       "closes G0"; `HANDOFF.md` §2 says G0 is closed.
+- [ ] **`[v]` `PREREG_TEMPLATE.md` §6 carries as OPEN two things `criteria.yml` RATIFIED.** Found
+      2026-08-24 while pricing `b.deflated_sharpe`. The template says the multiple-testing
+      correction is *"None is adopted yet"* and asks *"whether the trial count … is per component,
+      per strategy, or project-wide"*. `criteria.yml` settled both on 2026-08-08 — the method is
+      the deflated Sharpe and the denominator is cumulative across the programme — and
+      `EVIDENCE_RECORD_SPEC.md` §1 then states it as fact.
+      **`criteria.yml` wins:** a ratified criterion is a commitment, a template's open-items list is
+      a working note. **The fix is to correct the template forward**, and it was deliberately NOT
+      made inside `TRIAL_BUDGET.md` — `PREREG_TEMPLATE.md` governs how every study is written and
+      editing it from a budget document is the wrong blast radius.
+      Live cost: a session writing a new pre-registration reads the template, believes no correction
+      is adopted, and omits the accounting a ratified criterion requires.
 - [x] **`[c]→[v]` The 120-day Track A clock — resolved by the v1.1.1 amendment above.**
       `SUCCESS_AND_KILL_CRITERIA.md`:154's "has not started" is now struck through and corrected.
       Checked `HANDOFF.md` §4 for a third copy before closing this: it already says "reversed
@@ -384,6 +396,31 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 ## 4. Pending decisions
 
 **Decision records** — DR-007 / DR-008 / DR-010 / **DR-012 / DR-013 / DR-014** are accepted.
+
+- [ ] **`[v]` THE TRIAL BUDGET — `docs/08-pm/TRIAL_BUDGET.md`, written 2026-08-24, `owner-pending`.**
+      The number is the owner's. Derive every figure with `python tools/trial_budget.py`, never from
+      this line.
+      **Three things it measured first, and two were not what the plan assumed:**
+      `b.deflated_sharpe` is **ratified and nothing counted its only input** — no parameter, no
+      registry field, no code — so a criterion ratified 2026-08-08 could not have fired on any day
+      since. Fourth instance of the `AGENTS.md` §7 shape.
+      **13 trials are already spent, against a census that reads 5.** A trial is a CONFIGURATION
+      EVALUATED, not a pre-registration filed: `PR-001` tried 4 definitions, `PR-002` fitted 4
+      variants and kept 1, `PR-005` ran 5 gate arms. `PR-008` and `PR-010` spend none — a spread
+      estimator has no Sharpe to deflate. Counting filings understates the search by about 3×, in
+      the flattering direction.
+      **The hurdle grows logarithmically, which inverts the plan's §2c.** 1 → 5 trials costs 1.19
+      sd(SR); 5 → 50 costs only 1.08 more. The expensive trials are the first ones and they are
+      already spent, so rationing late buys almost nothing — **what buys the control is declaring
+      and counting trials, not having few of them.** An undeclared trial inflates the true N while
+      the reported N stays flat, which is the direction that manufactures significance.
+      **Proposed: 25 total, 12 remaining** (+0.29 sd(SR) for the whole remainder), split 4
+      cross-sectional / 4 mean-reversion / 2 liquidity corner / 2 reserve.
+      **Named, not glossed:** trials are NOT independent, so the table is a conservative upper bound
+      rather than a measurement; `sd(SR)` is unknown so the hurdle is in units of it, and converting
+      needs journalled trades, of which there are none.
+      **Deliberately NOT built: the deflated Sharpe itself.** It cannot be evaluated and building it
+      would suggest it can. What was missing was the count, and that now exists.
 
 - [x] **`[v]` DR-012 — ratified by the owner 2026-08-17.** `exit.atr_stop_multiple = 2.0` and
       `exit.max_holding_period = 20` are in the registry carrying `assumed:DR-012`. Provenance argued
