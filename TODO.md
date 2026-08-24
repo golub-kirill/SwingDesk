@@ -447,8 +447,13 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       design note: people write censuses in digits and local statements in words (*"two tests pin
       this"*), so matching words would fire mostly on the second kind — and `CI_POLICY` §3's
       "a noisy gate gets bypassed" is the failure that costs more than the drift.
-- [ ] **`[c]` `k.project_timebox`** is `owner-set` in YAML, described as `met` in ROADMAP and
-      RISK_REGISTER.
+- [x] **`[v]` `k.project_timebox` — NOT a contradiction. Closed 2026-08-24 by reading the two
+      fields.** `status: owner-set` in `criteria.yml` says how the criterion came to exist; `met`
+      in `ROADMAP.md` §8 and `RISK_REGISTER.md` G-3 says whether its condition was satisfied
+      (G5 closed 2026-08-02, inside a two-month box). Two fields, two questions, no disagreement.
+      **What IS open is the successor**, and it is already tracked: `ROADMAP.md` §8 and
+      `RISK_REGISTER.md` G-3 both say no next timebox has been set, and `TODO.md` §2 carries it as
+      `G-3 next timebox`. That is an owner decision, not a documentation defect.
 - [x] **`[v]` `docs/README.md` drift — FIXED AT THE GATE 2026-08-24, not at the instance.**
       Both halves were real: row 06 said 21 stories where 22 exist, and rows 22/23/24 marked
       `REGIME_SPEC` / `EVENT_SPEC` / `CHART_SPEC` `planned` while all three exist and declare
