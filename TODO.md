@@ -1656,6 +1656,24 @@ is for where no gate can reach.
       `SWINGDESK_ROOT`; `verify_studies` did not, and now does.
       Every defect test has a positive control on the same fixture, so a red result cannot come from
       a broken fixture instead of the planted defect.
+- [x] **`[v]` GATE 32 — a checklist item's stated blocker must still be blocking. Built 2026-08-25.**
+      `plans/2026-08-24-the-trade-flow.md` §3 stage 4 opens by asking for each `_unavailable` reason
+      to be re-checked *"since two were suspected stale and a third may be by the time this is
+      worked"* — eight prose strings, read by hand, with no mechanism and no record that the reading
+      had happened.
+      **The direction of the failure is what makes it expensive.** A reason that outlives its
+      blocker keeps a pre-trade item `UNAVAILABLE` after the thing blocking it was supplied, so
+      Appendix E goes on returning `Research` and `Trade` stays unreachable for a cause that no
+      longer exists.
+      **Written for the instance that is about to happen.** `entry.maximum_entry_atr` is `unset` by
+      `DR-020` §3 and two items wait on it — `E08` and `E09`, the two of the eight that gate
+      *existence* rather than quality. Ratifying `DR-020` is item 1 on `HANDOFF.md` §5's ranked list.
+      Before the gate, neither sentence even named the parameter.
+      Nine pins across six of the eight items; `E03` and `E05` rest on a missing capability with no
+      registry row to pin and are named on every run rather than passed over.
+      ```bash
+      PYTHONPATH=$PWD/src python tools/verify_checklist_blockers.py
+      ```
 - [ ] **`[c]` Gate 10** (traceability) — unblocked now that ATR is active, still to build.
 - [ ] **`[c]` Gate 22** + `DR-008`'s remaining machinery · **Gate 14's word-number hole.**
 - [ ] **`[c]` 6 specified components awaiting activation** — pivots (M12-T0201, M12-T0202), moving
