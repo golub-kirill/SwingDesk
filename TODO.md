@@ -1854,6 +1854,16 @@ is for where no gate can reach.
       requirement paired with the test or gate that enforces it, or an honest "nothing does", the
       way `INVARIANTS.md` §1 already does for its nine. **That artefact is the work; the gate is the
       easy part after it.**
+- [x] **`[v]` `CI_POLICY.md` LISTED A GATE THAT HAS NEVER RUN — retired 2026-08-25.** Row **12**
+      pointed at `verify_criteria.py` and read **exists**. `check_gates.py` has never registered a
+      12: the 2026-08-09 reconciliation found *three* things claiming that number — two tool
+      docstrings and this row — resolved it to **3e** and **3g**, and fixed both docstrings. **The
+      policy row survived the resolution and said "exists" for seventeen days.** The inventory is
+      what a reader counts gates from, and it counted one that is not there.
+      Struck rather than deleted, and its TradAlert reasoning — *"an R:R gate was
+      `if is_long: return True` and passed seven audits"* — merged into 3g's row rather than lost
+      (`AGENTS.md` §11 rule 3: consolidate only with a migration).
+      **Row 10 is the honest comparison**: it also has no runner and it says **to build**.
 - [ ] **`[c]` Gate 22** + `DR-008`'s remaining machinery · **Gate 14's word-number hole.**
 - [ ] **`[c]` 6 specified components awaiting activation** — pivots (M12-T0201, M12-T0202), moving
       average (M25-T0382), regime (M30-T0450), breadth (M31-T0459), trend (M33-T0485). All have real
