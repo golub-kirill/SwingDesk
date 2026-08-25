@@ -1,6 +1,8 @@
 # TODO — the single open-work list
 
-**Status:** working document · **Owner:** shared · **Last reconciled:** 2026-08-17
+**Status:** working document · **Owner:** shared · **Last reconciled:** 2026-08-25
+
+**Provenance marks are a claim about THIS file, so the reconciliation date is too.** Items touched on 2026-08-24/25 carry `[v]` on the strength of a check made then; everything older kept the mark it had. A `[c]` is an *unverified* item, not a smaller one, and promoting it means checking it rather than retyping it.
 
 This is the **only** place open and pending work is listed. If a task is not here, it is not tracked.
 Sessions add and close items here; nowhere else keeps a parallel list.
