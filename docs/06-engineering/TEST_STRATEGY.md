@@ -164,6 +164,20 @@ The fail-closed paths must be *tested*, not assumed. One scenario per row of the
 The last one matters disproportionately: a data failure must never lock the owner *out* of managing
 risk on positions already open.
 
+**Audited 2026-08-25, because "must be tested, not assumed" was itself an assumption.** Five of the
+six are covered and the sixth has no subject to cover:
+
+| Scenario | What covers it |
+|---|---|
+| vendor returns nothing | `test_missing_vendor_data_skips_with_a_code`, and `test_a_vendor_failure_leaves_the_position_managed_and_the_guard_honest` for the half that matters more |
+| truncated session | `test_a_bar_captured_before_its_session_closed_is_refused` · `test_a_partial_bar_cannot_overwrite_a_good_one` |
+| two sources disagree | **nothing, and there is no second source to disagree with.** `data.source_conflict_tolerance` is `unset` and read by nothing; `VENDOR_COMPARISON.md` records that Yahoo is the only adopted source. The row is a requirement waiting for a subject, not a gap in the suite |
+| a required parameter is unset | `test_unset_parameter_refuses_and_names_itself`, plus the five sizing refusals added 2026-08-25 and gate 34's mutation of the same invariant |
+| screener crashes mid-run | **structural, not tested, and that is stronger.** `scan TICKERS` and `scan --universe` are separate branches of the CLI, so a screener failure cannot reach the manual path — the same argument `INVARIANTS.md` §2 makes about invariant 4 |
+| stale data on an open position | `test_a_position_on_stale_bars_pauses_instead_of_being_managed` · `test_a_stale_position_is_never_dropped_from_the_run` · `test_a_stale_candidate_is_refused_instead_of_sized` |
+
+Gate 35 keeps this table honest: a test named here that stops existing is a failure.
+
 ## 7. What is deliberately not tested
 
 - Vendor availability. Not ours, and testing it makes the suite flaky.
