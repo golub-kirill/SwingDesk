@@ -1919,6 +1919,26 @@ is for where no gate can reach.
 - [ ] **4,486 of 4,510 recorded Skips are `RISK / risk.per_trade_pct`** — unset-parameter refusals,
       i.e. a system fault rather than market judgment. That parameter was set 2026-08-11. Any
       statistic over the decision history must segment these out first.
+- [x] **`[v]` EVERY DECISION THE LIVE PATH CAN EMIT IS NOW ACCOUNTED FOR — measured 2026-08-25.**
+      `REQ-VALIDATION-001` asks after every gate, veto and filter; gate 34 covers five of them by
+      mutation. This is the complementary question and it is answerable exactly: **which of
+      `pipeline.py`'s `DecisionRecord` construction sites does the suite ever execute?**
+      **17 sites. 15 executed, 2 never.** Both are defensive branches and **both are now explained
+      in the file** rather than one of them being explained and the other looking like a gap:
+      - the FX branch already said *"unreachable while `size_long` refuses the same instrument for
+        the same reason, and handled anyway"*;
+      - the **sector-book refusal did not**, and it is unreachable for a provable reason:
+        `portfolio.book` and `portfolio.sector_book` refuse on identical preconditions — a
+        non-positive 1R, or a held position whose currency has no rate — over the same positions
+        with the same `rate_for` and `allowed_risk`, and `book` is priced first, so a candidate
+        that reaches the sector split has already cleared them. Its `book` twin **is** tested
+        (`test_a_cad_position_in_the_book_refuses_every_candidate`).
+      **Method, so it can be repeated without adding a dependency:** `sys.settrace` scoped to
+      `pipeline.py` alone while the suite runs, ~3 minutes. `coverage` is not a declared dependency
+      and adding one to answer a question once would be the wrong trade (gates 17, 18).
+      **What it does NOT establish:** that each site is exercised for the right REASON. A line
+      executed is not a branch asserted, and the two are the same distance apart as gate 8 and gate
+      34.
 - [ ] **Tests cover the safe branch of the risky code, three times over.** See §8.
 
 ## 6b. The operational chain — what a full cycle needs

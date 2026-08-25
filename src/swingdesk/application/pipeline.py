@@ -956,6 +956,15 @@ def run(
                     open_positions, rate_for, sized.allowed_risk, exposure_for
                 )
             if isinstance(result.sector_book, Refusal):
+                # Unreachable while the risk book above is priced first, and handled anyway - the
+                # same shape as the FX branch a few lines up. `book` and `sector_book` refuse on
+                # identical preconditions (a non-positive 1R, or a held position whose currency has
+                # no rate) over the same positions with the same `rate_for` and the same
+                # `allowed_risk`, and `book` is called first, so a run that reaches here has already
+                # priced the book. Measured 2026-08-25: this and the FX branch are the only two of
+                # seventeen `DecisionRecord` sites the suite never executes, and both are defensive.
+                # Left in place because the two functions are independent and a caller that ever
+                # asks for the sector split without pricing the book must not sum currencies.
                 outcome.decision = DecisionRecord(
                     instrument.id, "Skip", result.sector_book.code, result.sector_book.reason,
                     result.sector_book.parameter_id,
