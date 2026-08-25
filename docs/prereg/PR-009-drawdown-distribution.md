@@ -153,5 +153,49 @@ reproduction yields materially fewer trades, §4's mismatch rule applies before 
 
 ## 10. Amendments
 
-None. Any amendment after the data is drawn downgrades this to exploratory
-(`PREREG_TEMPLATE.md` §3).
+~~None.~~ Any amendment after the data is drawn downgrades this to exploratory
+(`PREREG_TEMPLATE.md` §3). **No data has been drawn — this study has never run** — so the amendment
+below is a correction to the registration rather than a downgrade.
+
+---
+
+**2026-08-25, first amendment — the threshold this study is named after is not the one in force,
+and both of §4's blockers have moved.**
+
+**1. `validation.max_allowable_drawdown` has never been −15R.** §1 says it *"is set to −15R with
+provenance `assumed:DR-007`"*. The registry holds **20, unit percent of equity, provenance
+`owner`** and has held that since 2026-08-08 — the day this study was registered. `DR-007` §3.7
+proposed −15R and called it *"the weakest of the fifteen"* and *"the one to argue with"*; the owner
+had already argued it, and the 2026-08-09 reconciliation ruled that `owner` outranks
+`assumed:DR-007` on this registry's provenance ladder, so §3.7 is **superseded**
+(`docs/decisions/README.md`, `RECONCILIATION_PLAN.md` §4 item 3).
+
+Fourteen of `DR-007`'s fifteen were adopted as proposed, and this study quotes three of them
+correctly — `validation.monte_carlo_runs`, `validation.stress_cost_multiplier` and
+`validation.backtest_min_trades` all match the registry today. **The one it got wrong is the one it
+is about**, and it is the one `DR-007` itself invited an argument over.
+
+**2. What that costs the design, stated rather than waved at.** §7's statistic is *"maximum
+peak-to-trough decline of the cumulative net-R curve, in R"*. The live threshold is in **percent of
+equity**, which needs an account-equity concept the store does not hold — `TODO.md` §1 records that
+fills are recorded per position and nothing aggregates them. So the two are not the same measurement
+in general.
+
+**Today they coincide exactly, and that is worth knowing before anyone redesigns this.**
+`risk.per_trade_pct` is 1.0 percent of equity and `account.equity` is a static registry value that
+nothing recomputes from realised P&L, so 1R **is** 1 percent of equity and the pause sits at **20R**.
+The method survives with the threshold restated; the title, §1, §3's table row and §6's branches all
+name −15R and would need to name 20R. That is a registration change, not a run.
+
+**3. §4's stated blocker is discharged.** *"The trade log does not exist"* — it does:
+`docs/prereg/results/PR-005-trades.csv`, 26,351 trades, published 2026-08-16 with its provenance
+beside it. **A different blocker replaced it and is not resolved:** that published log no longer
+reproduces from a fresh replay, because seven bars arrived three hours after publication. `TODO.md`
+§5 states the three options and they are the owner's.
+
+**4. This study still may not run**, for a reason neither §4 nor this amendment is about: new
+research is suspended by the 2026-08-16 council ruling, overridden by the owner for `PR-013` and no
+other study.
+
+**Nothing here is a result, a value or a verdict.** The registration is corrected forward because a
+study named after a superseded threshold would measure something nobody uses.

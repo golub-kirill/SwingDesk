@@ -1040,8 +1040,13 @@ is for where no gate can reach.
       the whole open risk, so about 6R … two and a half such days reach the drawdown pause". Measured
       over PR-005's 26,351 trades: a gap exit loses **−1.692R**, not 1R (clean stop −1.070R, worst
       single gap **−11.78R**, 35% of gaps worse than −1.5R). So a whole-book gap session costs
-      **10.15R** and −15R is **1.5 sessions** away, not 2.5. Four positions restores the record's own
-      intent: 4 × 1.692 = 6.77R → **2.2 sessions**.
+      **10.15R** and ~~−15R is **1.5 sessions** away, not 2.5. Four positions restores the record's
+      own intent: 4 × 1.692 = 6.77R → **2.2 sessions**.~~
+      **Corrected 2026-08-25: the pause is not −15R.** The registry holds 20 percent of equity,
+      `owner`; `DR-007` §3.7's −15R was superseded on 2026-08-09. 1R is exactly 1 percent of equity
+      today, so the pause is **20R**: six positions are **2.0** sessions away and the ratified four
+      are **3.0**. The ratification is unaffected and the error ran conservative — §1's target was
+      two and a half sessions and four gives three. Full working in `DR-006` §18.
       **Ratified, provenance `owner`:** `risk.max_open_risk` **4R** · `risk.max_concurrent_positions`
       **4** · `risk.max_position_value` **2,500** · `risk.liquidity_cap_order_to_adtv_pct` **1.0%**.
       Free consistency: 4 × 2,500 = 10,000 = `account.equity`, so four max-size positions is exactly
@@ -1479,7 +1484,22 @@ is for where no gate can reach.
       declares it and no study registers it. Spending a trial on a family needs `ROADMAP` P5 first.
 
 - [ ] **`[c]` PR-007** registered, unreported.
-- [ ] **`[c]` PR-009** registered, blocked on Task 8.
+- [ ] **`[v]` PR-009 — ~~blocked on Task 8~~. TASK 8 IS DONE, AND THE STUDY IS NAMED AFTER A
+      SUPERSEDED THRESHOLD.** Re-checked 2026-08-25.
+      **Its title and §1 say −15R.** The registry holds `validation.max_allowable_drawdown` = **20,
+      percent of equity, `owner`**, and has since 2026-08-08 — the day PR-009 was registered.
+      `DR-007` §3.7 proposed −15R, called it *"the weakest of the fifteen"* and *"the one to argue
+      with"*, and the 2026-08-09 reconciliation superseded it because `owner` outranks
+      `assumed:DR-007`. **Fourteen of DR-007's fifteen were adopted as proposed and PR-009 quotes
+      three of them correctly; the one it got wrong is the one it is about.**
+      **Today the units coincide exactly**: `risk.per_trade_pct` is 1.0 percent and `account.equity`
+      is static, so 1R is 1 percent of equity and the pause sits at **20R**. The method survives with
+      the threshold restated — the title, §1, §3 and §6 all name −15R. That is a registration change.
+      **Task 8's blocker is discharged and a different one replaced it**: the trade log exists
+      (`docs/prereg/results/PR-005-trades.csv`) and no longer reproduces (§5 above, owner's call).
+      New research is also suspended, overridden for `PR-013` only.
+      Corrected forward in `PR-009` §10, `prereg/README.md`, `DR-006` §18, `ALLOCATION_SPEC.md`,
+      `GO_LIVE_GATES.md` and `CI_POLICY.md`.
 - [ ] **`[c]` Four prereg ids unwritten:** PR-001b (unblocked, writable now) · PR-003 (needs a daily
       return series) · PR-004 (needs ~100 journalled trades) · PR-006 (needs a forward test).
 - [ ] **`[v]` `PR-011` — screening out the instrument classes that cannot hold a stop — IS NOT

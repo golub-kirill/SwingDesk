@@ -19,7 +19,7 @@ has to happen first, not the thing that has to happen last.
 | `PR-006` | Does measured live slippage match the modelled figure? | not written | a forward test — id reserved by `DR-004`, 2026-08-02 |
 | `PR-007` | Does the base strategy have positive expectancy net of **measured** costs? | **registered** | — (re-fetch done 2026-08-13, all 68 instruments; see its own §10) |
 | `PR-008` | Is the assumed 5bp slippage an understatement of the spread this universe pays? | **reported — INCONCLUSIVE**, then corrected | — |
-| `PR-009` | Is a −15R drawdown limit distinguishable from ordinary sequence luck? | **registered** | a trade log — none exists |
+| `PR-009` | Is a −15R drawdown limit distinguishable from ordinary sequence luck? | **registered**, and its subject moved — see its §10 first amendment, 2026-08-25: the live threshold is 20 percent of equity and has never been −15R | ~~a trade log — none exists~~ **it exists** (`results/PR-005-trades.csv`, 2026-08-16). Blocked instead on that log no longer reproducing (`TODO.md` §5) and on the research suspension |
 | `PR-010` | Does EDGE resolve the spread level Corwin-Schultz and Abdi-Ranaldo could not? | **reported — REJECT** | — |
 | `PR-011` | Should instrument classes that cannot hold a stop be screened out? | not written | — id reserved 2026-08-22, see `TODO.md` §5 |
 | `PR-012` | Does a cross-sectional ranking beat plain momentum on a capacity-constrained book? | **reported — REFUSED** 2026-08-24, the minimum sample is not met on two of three arms | `CARD-001`; the capacity cap caps the sample, and both caps are ratified |

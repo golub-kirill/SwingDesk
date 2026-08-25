@@ -53,8 +53,29 @@ the evaluability column above.
 **Updated 2026-08-22.** The owner ratified four of the six with provenance `owner` (`DR-006` §8.3),
 and the first two moved: the anchor is **4R and 4 positions**, not 6R and 6. The trade log this
 project did not have when §1 of that record was written says a gap exit loses −1.692R rather than
-1R, so a whole-book gap session costs 10.15R and the −15R drawdown pause is 1.5 sessions away, not
-the two and a half §1 designed for. Four restores the intent. The two rows still marked **no** are
+1R, so a whole-book gap session costs 10.15R and ~~the −15R drawdown pause is 1.5 sessions away, not
+the two and a half §1 designed for~~. Four restores the intent.
+
+**Corrected 2026-08-25 — the pause is not −15R and never was.** `DR-007` §3.7 proposed −15R and the
+2026-08-09 reconciliation **superseded it**: the owner had already set
+`validation.max_allowable_drawdown` directly to **20 percent of equity**, and `owner` outranks
+`assumed:DR-007` on this registry's provenance ladder (`docs/decisions/README.md`). The registry has
+never held −15R. **The arithmetic above is `DR-006` §1's and it inherited the superseded number.**
+
+Redone against the live threshold. `risk.per_trade_pct` is 1.0 percent of equity and `account.equity`
+is a static registry value, so **1R is exactly 1 percent of equity today and the pause sits at 20R**
+— the two units are interchangeable only while nothing recomputes equity from realised P&L, which
+`TODO.md` §1 records that nothing does:
+
+| book | whole-book gap session | sessions to the pause at 15R | at the real 20R |
+|---|---|---|---|
+| 6 positions | 6 × 1.692 = **10.15R** | 1.5 | **2.0** |
+| **4 positions (ratified)** | 4 × 1.692 = **6.77R** | 2.2 | **3.0** |
+
+**The ratified 4R and 4 positions are unaffected, and the error ran in the safe direction.** §1's
+design target was two and a half sessions; against the real threshold the ratified anchor gives
+three rather than the 2.2 the record claims, so the cap is more conservative than its own stated
+intent rather than less. Nothing in the live path changes. The two rows still marked **no** are
 `assumed` and unratified; `DR-006` §8.4 shows both are buildable and neither is built.
 
 **Updated 2026-08-23: the correlation row moved to enforced.** A candidate whose daily returns

@@ -1035,3 +1035,55 @@ ruling existed and it is worth repeating after it.
 - **`DR-014` still makes this paper-only**, so neither cap is spending real money today. That is why
   neither was blocking, and it is also why leaving them provisional had a cost worth ending: a
   parameter that reads `assumed` forever is one nobody ever has to defend.
+
+## 18. Correction, 2026-08-25: the ratio in section 1 was computed against a superseded threshold
+
+**The ratified values do not move, and the error ran in the safe direction.** This section is
+appended rather than editing anything above, per `AGENTS.md` section 11 rule 2.
+
+Section 1 anchors the book cap on a ratio: *"the pause should fire on a pattern, not on one bad
+day"*, computed against **`validation.max_allowable_drawdown` = -15R (`DR-007`)**. Sections 9 and
+200 repeat it, and `ALLOCATION_SPEC.md` quoted it forward.
+
+**The registry has never held -15R.** `DR-007` section 3.7 proposed it and called it *"the weakest
+of the fifteen"* and *"the one to argue with"*. The owner had already argued it: the parameter was
+set directly to **20 percent of equity**, provenance `owner`, and the 2026-08-09 reconciliation ruled
+that `owner` outranks `assumed:DR-007` on this registry's provenance ladder, so section 3.7 is
+superseded (`docs/decisions/README.md`; `RECONCILIATION_PLAN.md` section 4 item 3). That ruling
+predates this record by thirteen days and this record did not see it.
+
+**The two units are exactly interchangeable today, and only today.** `risk.per_trade_pct` is 1.0
+percent of equity and `account.equity` is a static registry value that nothing recomputes from
+realised P&L, so 1R is 1 percent of equity and the pause sits at **20R**. If equity ever becomes
+dynamic the conversion stops being exact, and the R figure becomes a lower bound - each successive R
+is smaller as equity falls, so reaching a 20 percent decline takes more than 20 R-units.
+
+Redone at the measured gap exit of -1.692R:
+
+| book | whole-book gap session | sessions to the pause at 15R | at the real 20R |
+|---|---|---|---|
+| 6 positions | 6 x 1.692 = **10.15R** | 1.5 | **2.0** |
+| **4 positions, ratified section 8.3** | 4 x 1.692 = **6.77R** | 2.2 | **3.0** |
+
+**What this changes and what it does not.**
+
+- **The ratified 4R and four positions stand.** Section 1's design target was two and a half
+  sessions; against the real threshold the ratified anchor gives three rather than the 2.2 recorded,
+  so the cap is **more** conservative than its own stated intent. Nothing in the live path changes
+  and no candidate is decided differently.
+- **The original 6R/6 anchor was less wrong than section 9 concluded** - 2.0 sessions rather than
+  1.5. It was still short of the target, so the move to four was correct, and the argument for it
+  was arithmetically overstated.
+- **Section 13's trigger stands and now has a live instance.** It lists *"any change to
+  `validation.max_allowable_drawdown`"* as a reason to revisit section 1's ratio. The value did not
+  change; the record was written against a value that had already been superseded, which is the same
+  event arriving from the other direction.
+- **Nothing is re-ratified here.** Section 17's rulings are the owner's and are untouched.
+
+**Why it survived thirteen days.** The supersession was recorded in `docs/decisions/README.md` and
+in the reconciliation plan, and nothing linked either to the citations. Two probes were built and
+measured on 2026-08-25 to see whether a gate could have caught it - one matching a backticked
+parameter id against a numeric claim, one matching it against a cited `DR-NNN` - and **both were
+rejected as too sparse to be worth the noise**: 21 and 15 pairings across the whole tree, with one
+and two live disagreements respectively, every one of them a false positive. `CI_POLICY.md` section
+3 is what a noisy gate costs. Recorded so the next session does not re-derive the same negative.
