@@ -1392,16 +1392,28 @@ is for where no gate can reach.
       5 tests; the three that assert a *failure* confirmed red against the pre-fix check, the two
       positive controls confirmed green. Restored from a file copy, never `git checkout` — see the
       process note under proposal expiry.
-- [ ] **`[v]` Six gates have never been proven able to fail.** `tests/test_gates.py`'s own docstring
-      sets the bar — *"A gate that has never been seen red proves nothing"* — and these have zero
-      references in it: `verify_parameters` (1), `verify_transcription` (2), `verify_docs` (3e),
-      `verify_studies` (3f), `verify_criteria` (3g), `verify_components` (11).
-      Measured 2026-08-16 while auditing for the failure mode that bit three times this session
-      (gate 23 blind, `build_state` v1, gate 25 v1). **They are not blind in that sense** — every one
-      reports what it examined, which is the existing honesty mechanism, and 3f demonstrably caught
-      real defects during the PR-002 correction. What is missing is proof that their conditions can
-      fire, which is a different and weaker gap than the one already fixed. Fixture-and-assert tests,
-      one defect each, in the pattern the file already uses.
+- [x] **`[v]` ~~Six gates have never been proven able to fail.~~ CLOSED 2026-08-24 — and it was six
+      only on the day it was written.** `tests/test_gates.py`'s own docstring sets the bar: *"A gate
+      that has never been seen red proves nothing"*.
+      **Re-measured before working it, by asking the test file rather than this entry.**
+      `verify_parameters` (1) and `verify_components` (11) got tests on 2026-08-18 and this item was
+      never updated — so the list of things this repository has not caught yet had itself gone stale,
+      which is the shape the whole file exists to catch. Derive the current answer, never from this
+      line: grep `tests/` for each `tools/verify_*.py` name.
+      **The remaining four are done**: 3g (a ratified criterion resting on an `unset` parameter, and
+      one naming a parameter absent from the registry), 3e (a dangling citation, an absent parameter,
+      a status off the ladder, a gap summary disagreeing with a recount of its own table), 3f (a
+      refuted study validating a parameter — the `PR-002` defect, which gate 3e cannot see because
+      every reference resolves; plus an index disagreeing with its report, and a verdict token
+      outside the vocabulary being named rather than counted), and 2 (a declared source that cannot
+      be resolved, and an enum member that has left the document defining it — both need no PDF, so
+      they run where CI reports gate 2 `UNAVAILABLE`).
+      **What kept them last was structural, not neglect.** Each one's subject is the real tree, so
+      planting a defect meant either editing the repository — which this suite must never do — or
+      giving the gate a fixture root. `verify_docs` and `verify_criteria` already honoured
+      `SWINGDESK_ROOT`; `verify_studies` did not, and now does.
+      Every defect test has a positive control on the same fixture, so a red result cannot come from
+      a broken fixture instead of the planted defect.
 - [ ] **`[c]` Gate 10** (traceability) — unblocked now that ATR is active, still to build.
 - [ ] **`[c]` Gate 22** + `DR-008`'s remaining machinery · **Gate 14's word-number hole.**
 - [ ] **`[c]` 6 specified components awaiting activation** — pivots (M12-T0201, M12-T0202), moving
