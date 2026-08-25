@@ -72,9 +72,29 @@ The run report ends with this, and it is not boilerplate to be softened:
 > Every setup in this system is Untested. A decision here means the components computed what their
 > specs say — not that the trade has an edge.
 
-It is accurate: **zero of 1379 course topics carry a tested validation status**, and one parameter in
-96 is `validated`. Any copy that makes the product sound more confident than that is wrong on the
-facts, not merely over-enthusiastic.
+It is accurate: **zero of 1379 course topics carry a tested validation status**, and **no parameter
+in the registry carries a `validated` status at all** — `HANDOFF.md` §2 owns that count and
+`python tools/verify_parameters.py` derives it. Any copy that makes the product sound more confident
+than that is wrong on the facts, not merely over-enthusiastic.
+
+**Corrected 2026-08-25, and the direction is what makes it worth a paragraph.** This line read *"one
+parameter in 96 is `validated`"*. Both halves were true when written and both rotted: the registry
+grew past 96, and the one `validated` assignment this project has ever made —
+`regime.classifier_rule`, which is `assumed` now — lost that status on **2026-08-16** when `PR-002`'s
+verdict was corrected to `INCONCLUSIVE`. So for nine days the document whose whole subject is *not
+overstating confidence* claimed one more validated parameter than exists, in the sentence that
+justifies the standing warning.
+
+**No gate could have caught the old wording in any spelling.** Gate 14 matches a number adjacent to a
+backticked status; *"one parameter in 96 is `validated`"* puts four words between them and spells the
+count out. Widening that pattern to words was built, measured and reverted on 2026-08-25 for good
+reason — 19 hits, zero real drift.
+
+**And the replacement deliberately does not restate the number either.** Writing `0` here made gate
+14 go red for the right reason: `AGENTS.md` §10.5 gives a measured count exactly one owner, and a
+second copy in an owner-facing document is the next thing to rot. The sentence names the source
+instead. What IS gated is the specific claim — `regime.classifier_rule` is `assumed`, which gate 28
+checks against the registry on every run.
 
 ## 4. Russian in an English product
 
