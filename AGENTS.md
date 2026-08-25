@@ -508,3 +508,47 @@ The rules:
 
 **The goal is the result, by any legitimate means.** Where a route is legal, honest and reachable,
 "we cannot" needs a measurement behind it before it is written down.
+
+## 16. The course is a requirements source, not an evidence source — owner instruction, 2026-08-24
+
+> *"Чек-листам не верь. Их писал не профессионал, любитель такой, как я. Лучше researchить интернет,
+> трейдерские форумы, то, о чём реально успешные люди говорят... В книги, техническую научную
+> литературу нам стоило бы отсылаться больше. У нас полный интернет информации, и мы не должны
+> опираться только на наши бумажечки."*
+
+**What does not change.** The course is still what this system is specified FROM. The component
+catalogue, the controlled vocabulary, the checklists, `CHARTER.md` and gate 2's verbatim discipline
+all rest on it, and none of that is weakened by this section. Transcribing it accurately still
+matters exactly as much — an inaccurate copy of a weak source is worse than an accurate one.
+
+**What changes is what a course sentence licenses.** A rule appearing in the course is an
+`Operational Course Rule` — the vocabulary already has that claim type, alongside
+`Untested Hypothesis` and `Empirical Result`. It is **not** an `Empirical Result`, and the fact that
+it is written down here does not raise it. Appendix E's items are a competent amateur's list, and
+their authority is that they name what to look at, never that looking there works.
+
+**§10.3 said to search the outside world before AUTHORING. This extends it to ACCEPTING.** The
+existing rule covers inventing an estimator; it never covered adopting a course rule as a design
+constraint, which is how most of this system's shape was actually decided.
+
+The rules:
+
+1. **Before a course rule becomes a design constraint, look for what the literature says about it.**
+   Journals, books, practitioners with a verifiable record. Cite what you find where it lands, the
+   way §10.3 already requires for a borrowed method.
+2. **Rank the source and say which rank you used.** Peer-reviewed or a published dataset outranks a
+   practitioner with a track record, which outranks a forum post, which outranks an anonymous claim.
+   A finding that rests on the bottom rank is marked as resting on it.
+3. **§10.3's boundary is unchanged and it is the load-bearing half.** External work supplies
+   *method*, *calibration* and *known limitations*. It is **not** evidence about this system's
+   parameters: only a pre-registered study against this universe makes one `validated`. A famous
+   trader's rule is a hypothesis here, exactly like the course's.
+4. **Where the course and the literature disagree, record both and say which the system follows.**
+   The disagreement is information; silently picking one and moving on destroys it.
+5. **A checklist item with no external support is still worth keeping** — it costs a line and names
+   something to look at. What it may not do is stand as the reason a threshold has its value.
+
+**The asymmetry that makes this worth a section, and it is §15's.** Treating the course as evidence
+costs nothing visible: every gate stays green, because the gates check that we copied it correctly,
+not that it is true. There is no mechanism anywhere in this repository that can notice a faithfully
+transcribed rule that does not work.
