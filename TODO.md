@@ -334,6 +334,56 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
 
 ## 2. Picked work
 
+### AUDIT THE IMPOSSIBILITY CLAIMS — owner instruction, 2026-08-24, and `AGENTS.md` §15 is the rule
+
+**The ask:** *"Мы очень часто верим, что у нас нет возможности или не получается, и зарубаем на
+корню, не проверяя. Это уже не первый раз... Плюс, в планах у нас бы сделать аудит всего
+пройденного, потому что вот на таких моментах мы могли уже попадаться в других исследованиях."*
+
+**Derive the surface, never quote it from here** — every `cannot`, `no free source`, `not
+obtainable`, `impossible`, `will never`, `not the lever` in a governed document:
+
+```bash
+git ls-files '*.md' | xargs grep -nEi "cannot be|can never|is not obtainable|no free source|not possible|impossible|there is no legal|is not the (next )?lever|will never|no way to"
+```
+
+**What this is NOT.** An owner decision is not an impossibility claim. `D1` (no orders), `D10` (no
+paid data) and `CHARTER.md` §3's non-goals are *chosen*, and §15 rule 5 keeps them closed. The
+target is a sentence asserting something about the WORLD that nobody tested.
+
+**Ranked by what the claim is load-bearing for, sharpest first:**
+
+- [ ] **`[v]` "No free source serves delisted history."** `VENDOR_COMPARISON.md` §7 and
+      `EVIDENCE_SUMMARY.md` — and it is the load-bearing premise under the survivorship bound that
+      erases `PR-002`, the one positive finding this project has. **The project has already named a
+      candidate route and parked it:** the EDGAR delisting backfill, deferred in the 2026-08-11
+      plan and named as unblocked in the entry below. So the claim and a possible refutation of it
+      have coexisted in this repository without anyone testing one against the other. Test EDGAR
+      against a handful of known delistings before anything else on this list.
+- [ ] **`[v]` "A fourth estimator is the same family."** `HANDOFF.md` §7's spread row. Three
+      estimators were measured and that part is evidence; the fourth-estimator clause is a
+      **prediction** and it closes the search (§15 rule 3). Either name the property that makes it
+      true of the family, or demote it from the `do not re-open` table to a prior.
+- [ ] **`[v]` "Batching the vendor is not the next lever."** Measured and correct about batching -
+      and it then names CONCURRENCY as the real lever and stops, calling it *"a different kind of
+      decision"*. §15 rule 4 and §14: that is a question for the owner, not a parking space. The
+      equality half is already measured, so whoever asks does not have to re-establish it.
+- [ ] **`[c]` "There is no legal source of probability in this system today."** Likely sound - it is
+      a statement about this system's own evidence rather than about the world - but it is the
+      single strongest closure in the tree and has never been stated with a test beside it.
+- [ ] **`[c]` Everything else the command above returns**, read once and marked: tested, untested,
+      or an owner decision. A claim that survives with a test named beside it is worth more than one
+      that was merely never challenged.
+
+**Widen it past documents when the document pass is done.** The same shape lives in code comments
+and in study scope sections - `PR-002`'s report alone carries several - and a study that narrowed
+its own scope on an untested "cannot" is the most expensive instance of this there could be.
+
+**Already overturned, 2026-08-24, and it is why this exists.** The evening run refused a block of
+candidates reading *"a refetch did not bring it current"*. Re-asking the same vendor the same
+evening returned every one of those sessions, clean. The owner asked; nobody had checked.
+
+
 - [x] **`[v]` Task 8 — PR-005 trade-log replay. Done 2026-08-16.**
       `tools/run_pr005_replay.py` + `docs/prereg/results/PR-005-trades.csv` (26,351 trades) +
       `PR-005-trades-provenance.json`. **PR-009, the exit card and the EDGAR backfill are

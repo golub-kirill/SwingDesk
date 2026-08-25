@@ -470,3 +470,41 @@ Two things follow, and they are the enforceable part:
 The general form: **when the owner asks for something whose right answer is theirs to give, the
 helpful move is the question, not the guess.** Do the parts that do not depend on the answer, then
 ask — do not silently pick a default and proceed.
+
+## 15. An impossibility is a claim — owner instruction, 2026-08-24
+
+> *"Мы очень часто верим, что у нас нет возможности или не получается, и зарубаем на корню, не
+> проверяя."*
+
+**A sentence saying something cannot be done is the one kind of claim this repository does not
+check.** Everything else is disciplined: a measured count has one owner (§10.5) and a generator
+(§10.6), a causal claim in a report names a check (§10.4), a parameter names the code that reads it
+(§7). *"The vendor does not have it"*, *"no free source serves this"*, *"a fourth estimator would be
+the same family"* — each passes every gate, and each permanently closes a search.
+
+**The asymmetry is what makes this a section.** A wrong positive costs one wasted check. A wrong
+impossibility costs everything downstream of it, silently, and is then cited as settled — the rows
+in `HANDOFF.md` §7 exist specifically to stop work.
+
+**What paid for it, 2026-08-24.** The evening run refused a block of candidates with *"a refetch did
+not bring it current"*, which reads as *the vendor is late*. Re-asking the same vendor the same
+evening, with the run's own request shape, returned every one of those sessions, clean. The refusal
+was right and the explanation was wrong, and nothing had tested it because it read as a fact rather
+than as a claim. The owner asked the question that found it.
+
+The rules:
+
+1. **An impossibility claim names the test that established it, or is marked untested.** §10.4's
+   shape, aimed at *cannot* instead of *because*.
+2. **A claim about what a SOURCE holds is tested against the source**, never inferred from what our
+   code received. Those are different statements, and the second is a proxy (§12).
+3. **A prediction is not a closure.** *"A fourth estimator would be the same family"* forecloses a
+   search nobody ran. That belongs in the record as a prior, not as a `do not re-open` row.
+4. **"Not the lever" is a measurement about ONE lever, never about the space.** Naming a better
+   lever and stopping is how a lever gets parked without a decision — §14 says ask.
+5. **A constraint that comes from the owner is a decision and stays closed.** D1, D10 and the
+   charter non-goals are not impossibility claims and this section does not reopen them. The
+   difference: a decision is *chosen*, an impossibility is *asserted about the world*.
+
+**The goal is the result, by any legitimate means.** Where a route is legal, honest and reachable,
+"we cannot" needs a measurement behind it before it is written down.
