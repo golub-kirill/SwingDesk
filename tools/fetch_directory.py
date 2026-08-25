@@ -33,10 +33,12 @@ recorded nothing left the store unable to tell "declined" from "never ran".
 from __future__ import annotations
 
 import argparse
+import itertools
 import json
 import re
 import sys
 import urllib.request
+from collections.abc import Sequence
 from datetime import UTC, date, datetime, timedelta
 from email.utils import parsedate_to_datetime
 from pathlib import Path
@@ -143,6 +145,33 @@ def _corroborated_session_date(text: str, last_modified: str | None) -> date | N
     if abs(trailer.astimezone(UTC) - modified.astimezone(UTC)) > _CORROBORATION_TOLERANCE:
         return None
     return trailer.date()
+
+
+def gap_severity(gaps: Sequence[date]) -> str | None:
+    """`DR-008`: one consecutive miss is a `WARNING`; two or more are an `ERROR`.
+
+    **Consecutive is the word that matters** and it is about a RUN, not a total. Eight isolated
+    single misses over two months are eight recoverable evenings; two in a row means whatever
+    stopped the collector was still stopping it the next day, and the departure record has a hole no
+    later run can fill. Returns `None` when there is nothing to say, because a collector that
+    announced "0 gaps" every evening would train its reader to skip the line.
+    """
+    if not gaps:
+        return None
+    ordered = sorted(gaps)
+    longest = run = 1
+    for earlier, later in itertools.pairwise(ordered):
+        # Consecutive SESSIONS, not consecutive dates - a Friday and the Monday after it are
+        # adjacent here, and treating the weekend as a gap would report one every week.
+        run = run + 1 if _adjacent_sessions(earlier, later) else 1
+        longest = max(longest, run)
+    return "ERROR" if longest >= 2 else "WARNING"
+
+
+def _adjacent_sessions(earlier: date, later: date) -> bool:
+    """True when no NYSE session sits strictly between the two."""
+    between = cal.sessions(Exchange.NYSE, earlier, later)
+    return len(between) == 2
 
 
 def main() -> int:
@@ -296,6 +325,25 @@ def main() -> int:
             if len(gone) > 20:
                 print(f"    ... and {len(gone) - 20} more")
             print("\nA departure is an observation, not a delisting - a ticker change looks the same.")
+
+        # `DR-008`: gaps are recorded, never backdated, and research claiming continuous coverage
+        # must disclose them. Reported over the ATTRIBUTED window only - before the first attributed
+        # pull there is no session to be missing from, and calling that a gap would report ten
+        # phantom ones.
+        attributed = store.attributed_sessions()
+        if attributed:
+            window = [s.session_date for s in cal.sessions(Exchange.NYSE, attributed[0], attributed[-1])]
+            gaps = store.gaps(window)
+            severity = gap_severity(gaps)
+            if severity is None:
+                print(f"coverage: {len(attributed)} attributed session(s), "
+                      f"{attributed[0]} to {attributed[-1]}, no gaps")
+            else:
+                print(f"{severity}: {len(gaps)} session(s) with no attributed pull inside "
+                      f"{attributed[0]}..{attributed[-1]}: "
+                      + ", ".join(str(g) for g in gaps[:10])
+                      + (f" and {len(gaps) - 10} more" if len(gaps) > 10 else ""))
+                print("A gap is permanent - the vendor publishes current state, not an archive.")
 
     return _finish(
         "RECORDED", requests=2, attempts=1, received=received, snapshot=knowledge_time,

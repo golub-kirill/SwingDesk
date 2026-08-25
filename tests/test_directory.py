@@ -491,3 +491,79 @@ def test_the_superseded_pull_remains_stored_and_the_note_is_appended(store) -> N
     # supersession evidence rather than a rewrite.
     assert {e.symbol for e in store.as_of(MONDAY)} == {"AAA"}
     assert {e.symbol for e in store.as_of(later)} == {"AAA", "BBB"}
+
+
+# ------------------------------------------- DR-008's gap record and its severities (2026-08-25)
+#
+# "Subsequent missing NYSE sessions are recorded as gaps, never backdated observations. One
+# consecutive miss is a log WARNING; two or more are ERROR. Research claiming continuous
+# survivorship coverage must query and disclose those gaps."
+#
+# A gaps() built on knowledge_time was written and withdrawn on 2026-08-12 for misattributing
+# evening pulls that cross UTC midnight. source_session_date is what makes a correct one possible.
+
+
+def test_only_an_ATTRIBUTED_pull_counts_as_coverage(store) -> None:
+    """An unattributed pull is a real snapshot and an unknown session. It cannot fill a gap.
+
+    DR-008 c3 forbids backfilling a date a pull never stored, so counting one here would manufacture
+    exactly the coverage the record refuses to claim.
+    """
+    store.record([_entry("AAA")], MONDAY, "src", None)
+    assert store.attributed_sessions() == ()
+
+    later = MONDAY + timedelta(days=1)
+    store.record([_entry("AAA")], later, "src", date(2026, 8, 24))
+    assert store.attributed_sessions() == (date(2026, 8, 24),)
+
+
+def test_gaps_are_the_expected_sessions_no_pull_is_attributed_to(store) -> None:
+    store.record([_entry("AAA")], MONDAY, "src", date(2026, 8, 24))
+    expected = [date(2026, 8, 24), date(2026, 8, 25), date(2026, 8, 26)]
+    assert store.gaps(expected) == (date(2026, 8, 25), date(2026, 8, 26))
+
+
+def test_gaps_asks_the_caller_for_the_sessions_and_never_a_calendar(store) -> None:
+    """The store must not learn about exchanges - the layer contract, and the reason the withdrawn
+    version was wrong. Passing an empty window yields no gaps rather than inventing a calendar."""
+    store.record([_entry("AAA")], MONDAY, "src", date(2026, 8, 24))
+    assert store.gaps([]) == ()
+
+
+def test_one_isolated_miss_is_a_WARNING_and_two_in_a_ROW_are_an_ERROR() -> None:
+    """`DR-008` says CONSECUTIVE, and consecutive is about a run rather than a total.
+
+    Eight isolated misses are eight recoverable evenings. Two in a row means whatever stopped the
+    collector was still stopping it the next day.
+    """
+    import fetch_directory
+
+    assert fetch_directory.gap_severity([]) is None
+    assert fetch_directory.gap_severity([date(2026, 8, 17)]) == "WARNING"
+    assert fetch_directory.gap_severity([date(2026, 8, 17), date(2026, 8, 20)]) == "WARNING"
+    assert fetch_directory.gap_severity([date(2026, 8, 17), date(2026, 8, 18)]) == "ERROR"
+
+
+def test_a_friday_and_the_monday_after_it_are_CONSECUTIVE_sessions() -> None:
+    """The subtlety that decides whether this rule is usable at all.
+
+    Counting calendar days would call every weekend a two-day gap and report an ERROR every Monday.
+    Counting them as non-adjacent would miss a genuine two-session outage across a weekend, which is
+    the most likely shape of one. Sessions, not days.
+    """
+    import fetch_directory
+
+    friday, monday = date(2026, 8, 21), date(2026, 8, 24)
+    assert fetch_directory.gap_severity([friday, monday]) == "ERROR"
+
+
+def test_a_weekend_is_never_itself_a_gap(store) -> None:
+    """Saturday is not a missing session, and a window built from the calendar never offers one."""
+    from swingdesk.contracts.reference import Exchange
+    from swingdesk.reference_data import calendar as cal
+
+    store.record([_entry("AAA")], MONDAY, "src", date(2026, 8, 21))
+    later = MONDAY + timedelta(days=1)
+    store.record([_entry("AAA")], later, "src", date(2026, 8, 24))
+    window = [s.session_date for s in cal.sessions(Exchange.NYSE, date(2026, 8, 21), date(2026, 8, 24))]
+    assert store.gaps(window) == ()

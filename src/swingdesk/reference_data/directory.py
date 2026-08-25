@@ -285,6 +285,38 @@ class DirectoryStore:
         ).fetchone()
         return row[0] if row else None
 
+    def attributed_sessions(self) -> tuple[date, ...]:
+        """Every session a pull is attributed to, ascending and deduplicated.
+
+        **Only an ATTRIBUTED pull can be placed on a session**, which is why this is not simply the
+        pull list. A pull whose trailer and `Last-Modified` did not corroborate is a real snapshot
+        of a directory and an unknown answer to "which session was this" - `DR-008` c3 forbids
+        backfilling one. Coverage therefore starts at the first attributed pull, never at the first
+        pull.
+        """
+        return tuple(
+            row[0] for row in self._connection.execute(
+                "SELECT DISTINCT source_session_date FROM directory_pulls "
+                "WHERE source_session_date IS NOT NULL ORDER BY source_session_date"
+            ).fetchall()
+        )
+
+    def gaps(self, expected: Iterable[date]) -> tuple[date, ...]:
+        """Sessions in `expected` that no pull is attributed to (`DR-008`).
+
+        **The caller supplies the sessions**, so this store never learns about exchanges or
+        calendars - the layer contract, and also the reason the withdrawn version was wrong. A
+        `gaps()` built on `knowledge_time` was written and removed on 2026-08-12 for misattributing
+        evening pulls that cross UTC midnight; `source_session_date` is the vendor's own claim about
+        which session its file describes, corroborated twice before it is stored, and it is the only
+        field that can answer this.
+
+        *"Research claiming continuous survivorship coverage must query and disclose those gaps"* -
+        this is that query.
+        """
+        recorded = set(self.attributed_sessions())
+        return tuple(session for session in expected if session not in recorded)
+
     def pulls(self) -> tuple[tuple[datetime, str, int, date | None], ...]:
         """Every recorded pull, oldest first: (knowledge_time, source, rows, source_session_date)."""
         return tuple(

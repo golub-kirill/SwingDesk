@@ -824,14 +824,27 @@ decision names an implementer, never that the implementer implements the decisio
       and staleness levels live in one committed machine-readable policy and are merge-gated."*
       They are Python literals in `tools/fetch_directory.py`; `registry/` holds no such file and no
       gate reads one.
-      • **Exact HEADER validation** — row shape IS checked and refuses the whole file, which is
-      right. The header line is `splitlines()[1:]`-ed away without being compared to anything, so a
-      vendor that reordered columns would be parsed silently by position.
-      • **Gap recording, and its severities** — *"Subsequent missing NYSE sessions are recorded as
-      gaps ... One consecutive miss is a log `WARNING`; two or more are `ERROR`."* Nothing records
-      gaps. A `gaps()` built on `knowledge_time` was written and withdrawn on 2026-08-12 for
-      misattributing evening pulls; `source_session_date` now makes a correct one possible, and it
-      has not been built.
+      • ~~**Exact HEADER validation**~~ **BUILT 2026-08-25.** Row shape was checked from the start
+      and refuses a short row; the header was `splitlines()[1:]`-ed away without being compared to
+      anything, so a vendor that reordered its columns would have been parsed silently **by
+      position** — `parts[6]` read as `ETF` while holding something else. `otherlisted.txt` is why
+      this is not hypothetical: it carries BOTH an `ACT Symbol` and a `NASDAQ Symbol` column, and
+      `parse_other_listed`'s own docstring already warned that reading the wrong one produces a
+      universe of symbols that fetch empty. The read positions are now a named mapping the header is
+      checked against, so `parts[6]` says what it is; a TRAILING column the vendor adds is accepted,
+      because a column nothing reads cannot change an answer, and `NextShares` was appended once
+      already. Four tests, **all confirmed red** with the check removed.
+      • ~~**Gap recording, and its severities**~~ **BUILT 2026-08-25.** `attributed_sessions()` and
+      `gaps(expected)`; the caller supplies the sessions so the store never learns about exchanges,
+      which is the layer contract *and* the reason the withdrawn version was wrong.
+      **Measured on the live store: zero gaps inside the attributed window** — 8 sessions,
+      2026-08-13 to 2026-08-24, every one present. **Coverage starts at the first ATTRIBUTED pull,
+      not the first pull**: 8 NYSE sessions between 2026-08-03 and 2026-08-13 are covered only by
+      pulls that could not be placed on a session, and `DR-008` c3 forbids backfilling them.
+      The severity rule turns on one subtlety worth keeping: **a Friday and the Monday after it are
+      CONSECUTIVE sessions.** Counting calendar days would report an `ERROR` every Monday; counting
+      them as non-adjacent would miss a two-session outage across a weekend, which is the most
+      likely shape of one.
       • **"After the latest session has completed"** — eligibility checks `cal.is_open(NYSE, today)`
       only, so a scheduled run at 09:00 would be eligible. Not reachable today because the task
       fires at 18:30, which is why this is recorded rather than ranked.
