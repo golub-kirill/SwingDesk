@@ -1891,3 +1891,287 @@ def test_no_named_status_can_collide_with_a_wrapper_exit_code() -> None:
         assert code not in literals
         assert code not in verify_schedule.CLEAN_RESULTS
         assert int(code) > 255, "every documented exit code in this project fits in a byte"
+
+
+# ------------------------- gates 2, 3e, 3f and 3g: four gates that had never been seen red
+#
+# `TODO.md` section 6 carried this as six gates, measured 2026-08-16. Two of them -
+# `verify_parameters` (1) and `verify_components` (11) - got tests on 2026-08-18 and the item was
+# never re-measured, which is the stale-claim shape this whole file exists to catch, committed by
+# the list of things it has not caught yet. The remaining four are below.
+#
+# They are the registry and transcription gates, and their common property is why they were last:
+# each one's subject is the real tree, so planting a defect meant either editing the repository -
+# which this suite must never do - or giving the gate a fixture root. Three already honoured
+# `SWINGDESK_ROOT`; `verify_studies` did not, and that one-line change came with these.
+
+
+def _root_docs(root: Path) -> None:
+    """The three repo-root documents these gates read by name. A missing one raises, not fails."""
+    for name in ("README.md", "AGENTS.md", "HANDOFF.md"):
+        (root / name).write_text(f"# {name}\n", encoding="utf-8")
+
+
+# ------------------------------------------------------- gate 3g: a criterion that cannot fire
+
+
+def _criteria_tree(root: Path, *, status: str, value: str) -> None:
+    """One ratified criterion whose trigger names one parameter. `status`/`value` are the defect."""
+    (root / "registry").mkdir(parents=True, exist_ok=True)
+    (root / "registry" / "criteria.yml").write_text(
+        "kill:\n"
+        "  - id: k.drawdown_pause\n"
+        "    status: ratified\n"
+        "    criterion: Realised drawdown\n"
+        "    trigger: Realised drawdown exceeds validation.max_allowable_drawdown\n",
+        encoding="utf-8",
+    )
+    (root / "registry" / "parameters.yml").write_text(
+        "parameters:\n"
+        "  - id: validation.max_allowable_drawdown\n"
+        f"    status: {status}\n"
+        f"    value: {value}\n",
+        encoding="utf-8",
+    )
+
+
+def test_a_ratified_criterion_resting_on_an_unset_parameter_is_a_failure(tmp_path: Path) -> None:
+    """`REQ-VALIDATION-001` in its narrow form: a gate whose verdict is invariant across inputs.
+
+    This is the instance the tool's own docstring records finding by hand on 2026-08-03 - which is
+    exactly the detection method the requirement says does not scale.
+    """
+    _criteria_tree(tmp_path, status="unset", value="null")
+    code, out = run_gate("verify_criteria.py", tmp_path)
+    assert code == 1, out
+    assert "k.drawdown_pause" in out
+    assert "unset" in out and "cannot fire" in out
+
+
+def test_a_criterion_naming_a_parameter_that_does_not_exist_is_a_failure(tmp_path: Path) -> None:
+    """A dangling reference and an unset value are different defects and must read differently."""
+    _criteria_tree(tmp_path, status="owner", value="0.2")
+    criteria = tmp_path / "registry" / "criteria.yml"
+    criteria.write_text(
+        criteria.read_text(encoding="utf-8").replace(
+            "validation.max_allowable_drawdown", "validation.invented_threshold"
+        ),
+        encoding="utf-8",
+    )
+    code, out = run_gate("verify_criteria.py", tmp_path)
+    assert code == 1, out
+    assert "absent from the registry" in out
+
+
+def test_a_ratified_criterion_whose_parameter_is_set_passes(tmp_path: Path) -> None:
+    """The positive control. Without it the two rows above only prove the gate can print."""
+    _criteria_tree(tmp_path, status="owner", value="0.2")
+    code, out = run_gate("verify_criteria.py", tmp_path)
+    assert code == 0, out
+    assert "0 failure(s)" in out
+
+
+# -------------------------------------------------- gate 3e: a citation that does not resolve
+
+
+def _docs_tree(root: Path) -> Path:
+    """A minimal tree gate 3e passes on, returned with the one document the tests perturb."""
+    _root_docs(root)
+    (root / "registry").mkdir(parents=True, exist_ok=True)
+    (root / "registry" / "parameters.yml").write_text(
+        "parameters:\n  - id: risk.per_trade\n", encoding="utf-8")
+    (root / "registry" / "course_index.yml").write_text(
+        "topics:\n  - component: M01-T0001-v1\n", encoding="utf-8")
+    (root / "docs" / "08-pm").mkdir(parents=True, exist_ok=True)
+    # The gap analysis keeps a coverage table and a summary of it in the same document. That summary
+    # is the third hand-kept count in this repository to drift, and the reason 3e recounts it.
+    (root / "docs" / "08-pm" / "SPEC_GAP_ANALYSIS.md").write_text(
+        "# gap\n\n| section | note | coverage |\n|---|---|---|\n"
+        "| 1 | a | FULL |\n| 2 | b | PARTIAL |\n\n"
+        "| coverage | count |\n|---|---|\n| FULL | 1 |\n| PARTIAL | 1 |\n",
+        encoding="utf-8",
+    )
+    subject = root / "docs" / "00-charter" / "CHARTER.md"
+    subject.parent.mkdir(parents=True, exist_ok=True)
+    subject.write_text("**Status:** frozen\n\nCites `risk.per_trade` and M01-T0001.\n",
+                       encoding="utf-8")
+    return subject
+
+
+def test_a_document_citing_a_file_that_does_not_exist_is_a_failure(tmp_path: Path) -> None:
+    """The headline case: a `FOO_SPEC.md` in backticks that nothing in the tree answers to."""
+    subject = _docs_tree(tmp_path)
+    subject.write_text("**Status:** frozen\n\nSee `NEVER_WRITTEN_SPEC.md`.\n", encoding="utf-8")
+    code, out = run_gate("verify_docs.py", tmp_path)
+    assert code == 1, out
+    assert "NEVER_WRITTEN_SPEC.md" in out and "does not exist" in out
+
+
+def test_a_document_citing_a_parameter_absent_from_the_registry_is_a_failure(tmp_path: Path) -> None:
+    subject = _docs_tree(tmp_path)
+    subject.write_text("**Status:** frozen\n\nBounded by `risk.invented_cap`.\n", encoding="utf-8")
+    code, out = run_gate("verify_docs.py", tmp_path)
+    assert code == 1, out
+    assert "risk.invented_cap" in out and "absent from the registry" in out
+
+
+def test_a_status_outside_the_ladder_is_a_failure(tmp_path: Path) -> None:
+    """The ladder is a closed set. A status nobody defined reads as a state the document earned."""
+    subject = _docs_tree(tmp_path)
+    subject.write_text("**Status:** ratified\n", encoding="utf-8")
+    code, out = run_gate("verify_docs.py", tmp_path)
+    assert code == 1, out
+    assert "outside the ladder" in out
+
+
+def test_a_gap_summary_that_disagrees_with_its_own_table_is_a_failure(tmp_path: Path) -> None:
+    """31/22 against a table saying 30/24 - recounted here rather than corrected again."""
+    _docs_tree(tmp_path)
+    gap = tmp_path / "docs" / "08-pm" / "SPEC_GAP_ANALYSIS.md"
+    gap.write_text(gap.read_text(encoding="utf-8").replace("| FULL | 1 |", "| FULL | 7 |"),
+                   encoding="utf-8")
+    code, out = run_gate("verify_docs.py", tmp_path)
+    assert code == 1, out
+    assert "summary says FULL 7, the table has 1" in out
+
+
+def test_a_tree_whose_references_all_resolve_passes(tmp_path: Path) -> None:
+    """The positive control for the four rows above."""
+    _docs_tree(tmp_path)
+    code, out = run_gate("verify_docs.py", tmp_path)
+    assert code == 0, out
+    assert "0 failure(s)" in out
+
+
+# ------------------------------------------ gate 3f: a refuted study validating a parameter
+
+
+def _studies_tree(root: Path, *, verdict: str, provenance: str, indexed: str) -> None:
+    """One registered study, one report, one parameter citing it, and the index over all three."""
+    _root_docs(root)
+    (root / "registry").mkdir(parents=True, exist_ok=True)
+    (root / "registry" / "parameters.yml").write_text(
+        f"parameters:\n  - id: screen.trend_definition\n    provenance: {provenance}\n",
+        encoding="utf-8",
+    )
+    prereg = root / "docs" / "prereg"
+    (prereg / "results").mkdir(parents=True, exist_ok=True)
+    (prereg / "PR-001-trend-definition.md").write_text("id: PR-001\n", encoding="utf-8")
+    (prereg / "results" / "PR-001-report.md").write_text(
+        f"prereg: PR-001\nverdict: {verdict}\n", encoding="utf-8")
+    (prereg / "README.md").write_text(
+        f"| study | question | status |\n|---|---|---|\n| `PR-001` | does it | {indexed} |\n",
+        encoding="utf-8",
+    )
+
+
+def test_a_refuted_study_cannot_validate_a_parameter(tmp_path: Path) -> None:
+    """The defect behind the PR-002 correction, in its most direct form.
+
+    Gate 3e cannot see this - every reference resolves. Only recomputing from the reports catches it.
+    """
+    _studies_tree(tmp_path, verdict="REJECT", provenance="validated:PR-001",
+                  indexed="reported REJECT")
+    code, out = run_gate("verify_studies.py", tmp_path)
+    assert code == 1, out
+    assert "validated:PR-001" in out and "REJECT" in out
+
+
+def test_an_index_that_disagrees_with_the_report_is_a_failure(tmp_path: Path) -> None:
+    """The index is what a reader sees first, which is what makes it worth recomputing."""
+    _studies_tree(tmp_path, verdict="REJECT", provenance="assumed:PR-001",
+                  indexed="reported ACCEPT")
+    code, out = run_gate("verify_studies.py", tmp_path)
+    assert code == 1, out
+    assert "indexed as" in out and "report says REJECT" in out
+
+
+def test_a_verdict_outside_the_vocabulary_is_named_rather_than_counted(tmp_path: Path) -> None:
+    """`REFUSED` was added because a study was honest and the gate had no word for it.
+
+    A verdict token the vocabulary does not contain must be named, never folded into the counts -
+    the `unavailable is not fail and not pass` habit, applied to a study record.
+    """
+    _studies_tree(tmp_path, verdict="PROMISING", provenance="assumed:PR-001",
+                  indexed="reported PROMISING")
+    _code, out = run_gate("verify_studies.py", tmp_path)
+    assert "PROMISING" in out and "is not one of" in out
+    assert "0 reported" in out, "an unreadable verdict must not be counted as a reported study"
+
+
+def test_a_study_record_that_agrees_with_itself_passes(tmp_path: Path) -> None:
+    """The positive control."""
+    _studies_tree(tmp_path, verdict="REJECT", provenance="assumed:PR-001",
+                  indexed="reported REJECT")
+    code, out = run_gate("verify_studies.py", tmp_path)
+    assert code == 0, out
+    assert "0 failure(s)" in out
+
+
+# ------------------------------------------------ gate 2: the transcription checks that need no PDF
+#
+# The quote check needs `pdftotext` and the course, neither of which is in the repository - CI
+# reports this gate `UNAVAILABLE` for exactly that reason. Two of its three checks need neither: a
+# declared source that cannot be resolved, and the enumerations. Both are exercised at the function
+# rather than through the CLI, whose entry branch depends on whether the course happens to be on
+# the machine running the test.
+
+import verify_transcription  # noqa: E402  - `sys.path` is extended at the top of this module
+
+
+def test_a_declared_source_that_cannot_be_resolved_is_a_failure(tmp_path: Path) -> None:
+    """Gate 2 only checks documents that OPT IN. A declaration nobody can follow is worse than none.
+
+    The fixture name is deliberately not a plausible course file: `resolve_source` also searches a
+    hard-coded directory on the owner's desktop, so a realistic name would make this test's result
+    depend on whose machine it ran on.
+    """
+    doc = tmp_path / "TRANSCRIBED.md"
+    doc.write_text(
+        "<!-- verbatim-sources: SWINGDESK-TEST-FIXTURE-NO-SUCH-SOURCE.pdf -->\n\n"
+        "> a quotation\n",
+        encoding="utf-8",
+    )
+    failures, checked, _skipped = verify_transcription.check_document(doc, tmp_path / "course")
+    assert any("declared source not found" in f for f in failures), failures
+    assert checked == 0, "no source resolved, so nothing was compared - that must not read as clean"
+
+
+def test_a_document_that_does_not_opt_in_is_not_checked(tmp_path: Path) -> None:
+    """The gate's one known weakness, pinned so it stays a known one rather than a surprise."""
+    doc = tmp_path / "PLAIN.md"
+    doc.write_text("> a quotation with no declaration above it\n", encoding="utf-8")
+    assert verify_transcription.check_document(doc, tmp_path / "course") == ([], 0, 0)
+
+
+def test_an_enum_member_missing_from_its_defining_document_is_a_failure(tmp_path: Path) -> None:
+    """`Trade`/`Watch`/`Skip`/`Pause` is controlled vocabulary, used verbatim and never translated.
+
+    A member that quietly leaves the document defining it leaves nothing else behind.
+    """
+    label = "candidate decision"
+    relative, members = verify_transcription.ENUMS[label]
+    doc = tmp_path / relative
+    doc.parent.mkdir(parents=True, exist_ok=True)
+    doc.write_text(" ".join(members[:-1]), encoding="utf-8")
+    failures = verify_transcription.check_enums(tmp_path)
+    assert any(label in f and members[-1] in f for f in failures), failures
+
+
+def test_a_missing_defining_document_is_not_silently_clean(tmp_path: Path) -> None:
+    """An absent document has none of the members and must not be reported as having them all."""
+    failures = verify_transcription.check_enums(tmp_path)
+    assert failures, "an empty tree defines no enumeration and cannot pass"
+    assert all("defining document missing" in f for f in failures)
+
+
+def test_a_complete_set_of_enum_documents_passes(tmp_path: Path) -> None:
+    """The positive control for the two rows above."""
+    members_by_document: dict[str, list[str]] = {}
+    for relative, members in verify_transcription.ENUMS.values():
+        members_by_document.setdefault(relative, []).extend(members)
+    for relative, members in members_by_document.items():
+        doc = tmp_path / relative
+        doc.parent.mkdir(parents=True, exist_ok=True)
+        doc.write_text(" ".join(members), encoding="utf-8")
+    assert verify_transcription.check_enums(tmp_path) == []
