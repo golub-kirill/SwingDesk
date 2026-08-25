@@ -294,12 +294,11 @@ longer matches a fresh replay, because seven bars arrived three hours after it w
 
 ### The session of 2026-08-25 (afternoon): a ratified record was half unimplemented
 
-**`DR-008` is ratified and roughly half of it had never been built**, and `TODO.md` §2 now carries
-the clause-by-clause audit `HANDOFF.md` §5 had left open. Built this session: the per-invocation
-audit row, `--emergency-repull --reason`, the already-recorded-session guard, and the append-only
-supersession record. Still absent and each verified rather than assumed: the process lock,
-checksums, the 60-second retry, the committed machine-readable policy, exact HEADER validation, and
-gap recording with its `WARNING`/`ERROR` severities.
+**`DR-008` was ratified 2026-08-10 and roughly half of it had never been built. Every clause reaches
+code now**, and `TODO.md` §2 carries the audit clause by clause — see §5 for the full list of what
+landed. One item in that audit turned out to be a misreading of the record rather than a gap: *"it
+**may** retry one failed attempt"* is a ceiling, not an obligation, so retrying zero times is
+compliant.
 
 **Gate 20 exists BECAUSE of `DR-008` — its own docstring says so — and passed the whole time.** It
 checks that a record NAMES an implementer, not that the implementer implements the record. That is
@@ -530,9 +529,31 @@ also the exact failure §2 exists to prevent, surviving in the one part of this 
 generate — hand-written prose next to a generated table that already contradicted it.
 
 **What remains true:** 2026-08-10's departures are lost permanently, and 2026-08-11 was captured by
-hand (six departures). Whether every clause of `DR-008` (gating, calendar eligibility, response cap,
-audit) is implemented has **not** been re-verified here — only that the collector runs and records.
-That check is open, and it is a different claim from the one struck above.
+hand (six departures).
+
+~~Whether every clause of `DR-008` (gating, calendar eligibility, response cap, audit) is implemented
+has **not** been re-verified here — only that the collector runs and records. That check is open.~~
+
+**CLOSED 2026-08-25, and the answer was that roughly half of it had never been built.** The audit is
+in `TODO.md` §2, clause by clause against the code. Built the same day: the per-invocation audit
+row, `--emergency-repull --reason`, the already-recorded-session guard, the append-only supersession
+record, response checksums, exact header validation, gap recording with its `WARNING`/`ERROR`
+severities, the committed network policy (`registry/directory_pull_policy.yml` + **gate 22**), the
+process lock, and eligibility *after the latest session has completed* rather than merely on a
+trading date. **Every clause now reaches code.**
+
+**Gate 20 exists BECAUSE of `DR-008` — its own docstring says so — and passed the whole time**, because
+it checks that a record NAMES an implementer, not that the implementer implements the record
+(`AGENTS.md` §17). What finally found it was **gate 31**, from a completely different direction: the
+record's emergency command named two argparse flags that had never existed, and a command block was
+the one mechanically checkable sentence in an otherwise prose record.
+
+**One measured cost, so the guard is not taken on faith:** 3 of the 18 stored pulls were same-session
+duplicates — 2026-08-13 22:09 and the 19:30 second passes of 08-18 and 08-19 — each spending two
+requests and storing a ~13,000-row snapshot that was then stripped of its session date. `DR-008` says
+zero requests. **Coverage measured at the same time: zero gaps inside the attributed window** (8
+sessions, 08-13 to 08-24), and coverage starts at the first ATTRIBUTED pull rather than the first
+pull, so the 8 NYSE sessions between 08-03 and 08-13 stay uncountable — c3 forbids backfilling them.
 
 ## 6. Open — the owner's, not mine
 
