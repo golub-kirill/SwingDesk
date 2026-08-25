@@ -126,6 +126,20 @@ def main() -> int:
                 f"{row_status!r} but the manifest says {declared!r}"
             )
 
+    # --- exactly one handoff file (owner ruling, 2026-08-24) ---------------------------
+    # `AGENTS.md` §10.7. Seven dated `SESSION-HANDOFF-*.md` files were created and four deleted in
+    # six days; four traps lived only inside one of them and were rescued hours before it went, and
+    # `DR-016` still cites one that was deleted on 2026-08-23 - an append-only record pointing at
+    # nothing, which §11 rule 2 forbids repairing. Gate 14 never scanned them either, so their
+    # counts drifted unchecked. One file, updated in place.
+    for path in sorted(REPO.glob("*HANDOFF*.md")):
+        if path.name != "HANDOFF.md":
+            failures.append(
+                f"{path.name}: there is exactly one handoff file and it is HANDOFF.md "
+                f"(AGENTS.md §10.7, owner ruling 2026-08-24). Fold this into HANDOFF.md, or into "
+                f"TODO.md if it is open work and AGENTS.md §12 if it is a habit, then delete it."
+            )
+
     # --- every document is accounted for ----------------------------------------------
     catalogued = {doc["path"] for doc in documents if doc.get("path")}
     for doc in documents:

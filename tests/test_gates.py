@@ -533,6 +533,32 @@ def test_manifest_gate_catches_an_index_status_cell_that_drifted(tmp_path: Path)
     )
 
 
+def test_manifest_gate_refuses_a_second_handoff_file(tmp_path: Path) -> None:
+    """Owner ruling 2026-08-24: exactly one handoff file, `HANDOFF.md`.
+
+    Seven dated variants were created and four deleted in six days. Four traps lived only inside
+    one of them; `DR-016` still cites one that was deleted, which `AGENTS.md` §11 rule 2 forbids
+    repairing; and gate 14 never scanned them, so their counts drifted unchecked.
+    """
+    root = _manifest_tree(tmp_path)
+    (root / "SESSION-HANDOFF-2026-08-24.md").write_text("# dump\n", encoding="utf-8")
+
+    code, out = run_gate("verify_project_manifest.py", root)
+
+    assert code == 1
+    assert "there is exactly one handoff file" in out
+
+
+def test_manifest_gate_leaves_the_one_handoff_alone(tmp_path: Path) -> None:
+    """The other half of the pair — the rule is one file, not zero."""
+    root = _manifest_tree(tmp_path)
+    (root / "HANDOFF.md").write_text("# handoff\n", encoding="utf-8")
+
+    code, out = run_gate("verify_project_manifest.py", root)
+
+    assert code == 0, out
+
+
 def test_manifest_gate_passes_a_consistent_tree(tmp_path: Path) -> None:
     """The other half of the pair. A gate that only ever fails is not discriminating either."""
     code, out = run_gate("verify_project_manifest.py", _manifest_tree(tmp_path))

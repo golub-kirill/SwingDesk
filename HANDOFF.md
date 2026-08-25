@@ -69,7 +69,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | | |
 |---|---|
 | Merge gates | **34**, one command: `python tools/check_gates.py` |
-| Tests | **819**, fully offline |
+| Tests | **821**, fully offline |
 | Docs | 119 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 459 registered · 5 `specified` · **1 `active`** |
 | Parameters | 105 - 60 `unset`, 34 `assumed`, 11 `owner`, **0 `validated`** |
@@ -383,21 +383,12 @@ bars rather than 2,512, and every evening between died in 45 seconds. The branch
 about six minutes a pass; on `master` the margin to the 19:30 second pass is forty minutes and
 shrinks as coverage grows, and both passes hold the same single-writer stores.
 
-### What was checked BEFORE the run, and why that was worth doing
+### The estimate that preceded it, kept because it was right
 
-The outage that began 2026-08-18 was `positions.open_as_of` binding a column the table on disk did
-not have. **`positions.duckdb` carries `initial_costs_per_share` again, and the query that killed
-four evenings now runs**: opened against a copy of the live store, `open_as_of` returns cleanly
-(0 open positions). So tonight's 18:30 pass clears that fault or fails on something else — which is
-a different and much shorter list than it was this morning.
-
-**One thing nobody has measured yet, and it is a new risk rather than an old one.** The last run to
-complete was 2026-08-17 at **11m45s**, before the universe was deepened to ten years. Every evening
-since died in 45 seconds, so **tonight is the first pass ever to walk the deepened store end to
-end** — and on `master` that is about **24 minutes** (measured 2026-08-24; the branch that cuts it
-to ~6 is not merged). 18:30 + 24 min still clears the 19:30 second pass, but the margin is now
-about half an hour, and both passes hold the same single-writer stores. Worth watching rather than
-assuming.
+Both facts above were established **before** the pass ran, against a copy of the live store rather
+than by waiting: `open_as_of` was shown to bind again, and `master`'s decision path was measured at
+20.2 minutes. The run then took **19m59s** and exited 0. Recorded because the habit is the
+transferable part — the alternative was to wait four hours and learn the same two things afterwards.
 
 ### Long jobs, and the one rule about them
 

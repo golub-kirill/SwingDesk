@@ -410,6 +410,17 @@ the analysis, not the task list (`TODO.md`), not the habit guide (this file), an
 history (`git log`). Anything in it that a fresh session would not need in its first ten minutes
 belongs somewhere else, and §10.6 governs every number that remains.
 
+**THERE IS EXACTLY ONE HANDOFF FILE — owner ruling, 2026-08-24.** `HANDOFF.md` at the repository
+root. A session does **not** write `SESSION-HANDOFF-<date>.md` or any other dated variant, and gate
+15 fails on one. Update the single file; if what you have will not fit in it, that content belongs
+in `TODO.md` (open work) or in §12 here (a habit), which is where it was going to end up anyway.
+
+**What paid for it: seven created and four deleted in six days.** Four traps lived only inside one
+of them and were rescued hours before it was deleted. `DR-016`:441 still cites one — an append-only
+record pointing at a file removed on 2026-08-23, which §11 rule 2 forbids editing to repair. And
+gate 14 never scanned them, so the numbers inside drifted unchecked; the last one claimed
+*"everything is merged"* on a day it was not.
+
 ## 11. Before removing or retiring anything
 
 `docs/06-engineering/CHANGE_MANAGEMENT.md` §5 is canonical. The operational rules are:
