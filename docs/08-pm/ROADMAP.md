@@ -99,8 +99,12 @@ Named so they are not rediscovered as ideas.
 
 - **Web admin panel, Telegram approvals, Firebase push** (owner decisions D3/D6). G7. The CLI must
   be complete first — a second surface built on an incomplete first one duplicates the gap.
-- **Canada.** Blocked on enumerating a `.TO` universe (`DR-003` gap 1). Until then every result is
-  single-market and says so.
+- **Canada.** ~~Blocked on enumerating a `.TO` universe (`DR-003` gap 1).~~ **The enumeration
+  blocker is gone, refuted 2026-08-25** — TMX serves its own listed-company directory free, no
+  account, no key (`python tools/probe_canada.py --full`; `DR-003` *"Gap 1 is closed"*). What is
+  left is **bar coverage**: the Canadian half of the store is empty, so this is now a fetch nobody
+  has run rather than a source nobody has. Until it is filled every result is single-market and
+  says so, which is unchanged.
 - **A second exit model.** `PR-005` tested two of the course's four exit slots. Its sharpest
   limitation, and the cheapest genuinely new question available.
 - **`PR-001b`** — sweep the ADX threshold rather than pick one.

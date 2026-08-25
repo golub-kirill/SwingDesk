@@ -182,3 +182,48 @@ forty. Sessions where neither could answer contribute no observation rather than
 
 This is a clarification of §5, not a change of question — but it changes numbers, so it is recorded
 here rather than absorbed into the code.
+
+---
+
+**2026-08-25, third amendment — long after the study reported, and it changes no result.** The
+second amendment's point 2 said the Canadian instruments *"cannot be **enumerated**"*. **They can.**
+TMX serves its own listed-company directory free, no account and no key
+(`python tools/probe_canada.py --full`; `DR-003` *"Gap 1 is closed"*, 2026-08-25).
+
+**What is being corrected is a qualifier, not a fact about this study.** `DR-003` wrote *"no free
+symbol directory **in hand** … cannot **presently** enumerate"* — which says nobody had one, not
+that none exists. `PR-001`, `PR-002`, `PR-005` and `PR-008` all narrowed to a US-only universe on
+that record, citing it eight times between their registrations and their reports. **Five keep the
+qualifier** — this registration's own line above, `PR-002`'s third amendment, and the country rows
+of this study's report, `PR-005`'s and `PR-008`'s, all say *"in hand"*. **Three drop it into an
+unqualified "cannot":** the sentence above, and `PR-002`'s report twice, once in its limitations
+table and once where it paraphrases its own amendment as *"records that Canada cannot be
+enumerated"* — an amendment that says *"in hand"*.
+
+Derive the split rather than trusting this paragraph. It counts the citations that existed **before**
+this amendment; the command below also returns this amendment's own quotations and the matching
+correction appended to `PR-002`'s report the same day, so subtract those to reconcile:
+
+```bash
+git grep -nEi "in hand|cannot be \*?enumerat|cannot presently" -- 'docs/prereg/*.md' 'docs/prereg/results/*.md'
+```
+
+**The sharpest instance is in this file, and it is one sentence long.** The paragraph above keeps
+`DR-003`'s qualifier in its first clause and drops it in its second: *"no free symbol directory in
+hand — the rule applies to `.TO` identically but the instruments cannot be enumerated."* Citation
+rot did not need a second document or a second week; it happened across a dash. That is why
+`AGENTS.md` §15 asks for an impossibility to be treated as a claim, and it is worth more than the
+refutation itself.
+
+**This repairs nothing and is not an invitation to re-run.** The endpoint serves **today's**
+directory; applying it to the 2015-2024 window this study measured is survivorship bias with extra
+steps, which is the objection `DR-003`'s own alternatives table already raises against index
+membership. Bar coverage is a further and separate question — the Canadian half of the store is
+empty. **The verdict, the sample and every number in the report are untouched**, and this study's
+finding was negative in any case, so a wider universe could only have widened a refutation.
+
+**What it does change** is the standing of the sentence *"rerunning on Canada when enumeration is
+solved is a separate run"*: enumeration is solved, so that separate run is now blocked on stored
+bars rather than on a source that does not exist.
+
+No other section changed.

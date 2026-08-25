@@ -222,6 +222,36 @@ one of three registered robustness checks, which weakens the finding independent
 condition. That is a separate defect needing a separate run, tracked in `TODO.md` §5 — recorded here
 so this correction cannot be read as a relabelling exercise.
 
+## Second correction, 2026-08-25 — a cited premise was refuted, and the verdict does not move
+
+Two lines above assert that **"Canada cannot be enumerated (`DR-003`)"**. That is false, and it was
+already an over-statement of what `DR-003` said when it was written.
+
+**Measured, not argued.** TMX serves its own listed-company directory free, no account and no key -
+`python tools/probe_canada.py --full`, and `DR-003` carries the refutation as *"Gap 1 is closed"*.
+`DR-003`'s own wording was *"no free symbol directory **in hand** … cannot **presently** enumerate"*,
+which says nobody had one rather than that none exists. The qualifier did not survive the citation.
+
+**The verdict, the sample and every number in this report stand untouched, and the single-market
+handling was correct then and is correct now.** Three reasons, and none of them is generosity:
+
+1. The endpoint serves **today's** directory. Applying it to this study's 2023-07-28 → 2026-07-31
+   window is survivorship bias with extra steps - the objection `DR-003`'s own alternatives table
+   raises against index membership.
+2. **No `.TO` bars are stored.** Enumeration and coverage are different problems and only the first
+   is solved.
+3. §6's inconclusive branch is reached by a single-market result whatever the reason for it, and the
+   `INCONCLUSIVE` verdict of 2026-08-16 already rests on that branch.
+
+**What changes is what a reader may conclude from this report about the future.** The two-country
+requirement is no longer unmeetable in principle - it is blocked on stored bars, which is a fetch
+nobody has run. A next study in this family may carry the requirement instead of declaring it
+impossible, and `RISK_REGISTER.md` D-3 now says so.
+
+**Corrected here rather than silently**, because the sentence is a claim about the world that nobody
+had tested (`AGENTS.md` §15) and it sits in the file a reader opens to learn why this study could not
+reach an affirmative verdict.
+
 ## Reproducing
 
 ```bash
