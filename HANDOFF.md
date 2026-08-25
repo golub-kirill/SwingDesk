@@ -81,9 +81,9 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 
 | | |
 |---|---|
-| Journal | 23 runs, 7 incomplete · **12 run(s) recorded against a dirty tree** and therefore not replayable from their SHA |
-| Decisions | 12381 recorded · 0 uncoded refusals (`a.no_uncoded_failures` requires 0) |
-| Bar store | 3,597,265 rows across 3,743 instruments |
+| Journal | 24 runs, 7 incomplete · **12 run(s) recorded against a dirty tree** and therefore not replayable from their SHA |
+| Decisions | 13522 recorded · 0 uncoded refusals (`a.no_uncoded_failures` requires 0) |
+| Bar store | 3,597,267 rows across 3,743 instruments |
 | PIT integrity | **CLEAN** - bars whose `event_time` postdates their `knowledge_time`: 0 |
 | Directory | **18 pulls** · **8 confirmed** against the response's own `Last-Modified` (`source_session_date`); the rest predate the field and stay permanently unattributed (`DR-008` c3) |
 | Universe coverage | bars stored for 3,743 of 13,169 listed symbols - **28.4%** |
@@ -129,7 +129,7 @@ once did).
 
 - `claude/handoff-2026-08-24`
 - `claude/handoff-final`
-- `claude/swingdesk-agents-handoff-8d4d71`
+- `claude/state-block-after-the-evening`
 - `claude/swingdesk-tasks-cl-perf-707e67`
 
 *Tip and merge state deliberately absent - both move under this document's own feet. `python tools/verify_branches.py` prints them.*
