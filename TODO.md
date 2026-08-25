@@ -2039,12 +2039,24 @@ is for where no gate can reach.
       nothing could resolve it either way.
       Blocks any historical edge claim; does not block Track-A-only PAPER. **Changes the daily-run
       path — behind the freeze.**
-- [ ] **11 of 13 journalled runs carry `code_dirty = true`.** `a.reproducible` requires a
+- [ ] **Half the journalled runs carry `code_dirty = true`.** `a.reproducible` requires a
       byte-identical re-run from a stored manifest; a manifest pointing at a dirty tree cannot be
-      replayed from its SHA.
-- [ ] **4,486 of 4,510 recorded Skips are `RISK / risk.per_trade_pct`** — unset-parameter refusals,
+      replayed from its SHA. **`HANDOFF.md` §2 owns the count** — this line read ~~11 of 13~~ until
+      2026-08-25, which was true when written and is a second copy of a figure §2 generates
+      (`AGENTS.md` §10.5). The dirty era ended on 2026-08-17 and its records are immutable, so the
+      share falls only by adding clean runs.
+- [ ] **Almost every recorded `Skip` is `RISK / risk.per_trade_pct`** — unset-parameter refusals,
       i.e. a system fault rather than market judgment. That parameter was set 2026-08-11. Any
       statistic over the decision history must segment these out first.
+      ~~4,486 of 4,510~~ **— corrected 2026-08-25, and the numerator is the half that cannot move.**
+      No such skip has been recorded since the parameter was set, so the count of them is frozen
+      while the denominator grows with every evening; quoting the pair makes the ratio look worse
+      than it is and it was already stale. Derive both from `data/journal.duckdb`, which
+      `HANDOFF.md` §3 names as their owner:
+      ```sql
+      SELECT reason_code, parameter_id, COUNT(*) FROM decisions WHERE decision = 'Skip'
+      GROUP BY 1, 2 ORDER BY 3 DESC;
+      ```
 - [x] **`[v]` EVERY DECISION THE LIVE PATH CAN EMIT IS NOW ACCOUNTED FOR — measured 2026-08-25.**
       `REQ-VALIDATION-001` asks after every gate, veto and filter; gate 34 covers five of them by
       mutation. This is the complementary question and it is answerable exactly: **which of
