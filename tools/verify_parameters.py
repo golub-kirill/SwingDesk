@@ -70,6 +70,30 @@ def decision_record_exists(reference: str) -> bool:
     return any(DECISIONS_DIR.glob(f"{reference}-*.md"))
 
 
+#: The `status:` line of a decision record's header block.
+DECISION_STATUS = re.compile(r"^status:\s*(?P<status>\S+)", re.MULTILINE)
+
+
+def status_from_text(text: str) -> str | None:
+    """The first word of a decision record's `status:`, or None when it has no such line.
+
+    Only the first word: the accepted ones carry a ratification clause after it ("accepted -
+    ratified by the owner 2026-08-08") and the distinction that matters here is `proposed` against
+    everything else. Split out from the file read so it can be tested on a string.
+    """
+    match = DECISION_STATUS.search(text)
+    return match.group("status").rstrip(",;") if match else None
+
+
+def decision_record_status(reference: str) -> str | None:
+    """The status of `DR-NNN`, or None when there is no such record."""
+    for path in sorted(DECISIONS_DIR.glob(f"{reference}-*.md")):
+        status = status_from_text(path.read_text(encoding="utf-8"))
+        if status is not None:
+            return status
+    return None
+
+
 def numerically_read_ids() -> set[str]:
     """Every parameter id the code asks for as a Decimal."""
     return {
@@ -294,6 +318,36 @@ def main() -> int:
                   f"therefore cannot fire:")
             for parameter_id in blocked:
                 print(f"    {parameter_id}  <- {', '.join(cited[parameter_id])}")
+
+    # A second standing measurement, added 2026-08-25: a value whose only authority is a record
+    # nobody ratified.
+    #
+    # Gate 1 check 5 already requires an `assumed:DR-NNN` citation to RESOLVE to a file. Nothing
+    # asked whether that file was ever accepted, and `TODO.md` §4 records the shape in prose - four
+    # records "proposed since 08-02, used as evidence". A proposed record constrains nothing, which
+    # is the reasoning `DR-020` states about its own status, so a parameter resting on one is
+    # carrying a number with no owner behind it.
+    #
+    # Reported rather than failed, deliberately. Ratifying a record is the owner's act and no agent
+    # may take it (`AGENTS.md` §14), so a gate that went red here would demand a decision it cannot
+    # get and would be bypassed - `CI_POLICY.md` §3. The same reasoning gate 1 already applies to
+    # the orphan block above: a measurement that was invisible until it was printed.
+    unratified: list[tuple[str, str, str]] = []
+    for entry in entries:
+        provenance = str(entry.get("provenance") or "")
+        if not provenance.startswith("assumed:"):
+            continue
+        for reference in DECISION_REF.findall(provenance):
+            status = decision_record_status(reference)
+            if status is not None and status.startswith("proposed"):
+                unratified.append((str(entry["id"]), reference, status))
+    if unratified:
+        print("")
+        print(f"{len(unratified)} parameter(s) rest on a decision record still `proposed` - a value "
+              f"whose only authority is a record nobody ratified.")
+        print("Not a failure; ratifying is the owner's act. A standing measurement:")
+        for parameter_id, reference, _ in sorted(unratified):
+            print(f"  {parameter_id:45s} <- {reference}")
 
     unset = by_status.get("unset", 0)
     if unset:

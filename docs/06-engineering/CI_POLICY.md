@@ -13,7 +13,7 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 
 | # | Gate | Catches | Status |
 |---|---|---|---|
-| 1 | `verify_parameters.py` | a value without provenance; `assumed` without a citation; a parameter with no course reference | **exists** |
+| 1 | `verify_parameters.py` | a value without provenance; `assumed` without a citation; a parameter with no course reference; a `read_by` that does not resolve | **exists**. Prints two standing measurements it does not fail on: values no code reads, and — added 2026-08-25 — **values resting on a decision record still `proposed`**. Check 5 required the citation to RESOLVE; nothing asked whether the record was ever accepted, and both halves of the cost model were on the second list |
 | 2 | `verify_transcription.py` | a `verbatim` block that no longer matches its source; an enum drifting from its spec | **exists** |
 | 3 | `build_course_index.py --check-only` | the course index no longer extracting to its known shape | **exists** |
 | 3b | `build_frd.py --check-only` | the FRD drifting from the registry it is generated from | **exists** |

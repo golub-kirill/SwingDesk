@@ -1194,6 +1194,20 @@ is for where no gate can reach.
       cost-inclusive variant at the call site would put a second definition of open risk in the tree.
       Needs a domain answer, not an implementation one.
 
+- [ ] **`[v]` VALUES RESTING ON AN UNRATIFIED RECORD ARE COUNTED NOW, not described — 2026-08-25.**
+      Gate 1 check 5 required an `assumed:DR-NNN` citation to **resolve to a file**; nothing asked
+      whether that file had ever been accepted, and this entry carried the shape in prose for
+      twenty-three days. Gate 1 prints the subset on every run — derive it, never from here:
+      ```bash
+      PYTHONPATH=$PWD/src python tools/verify_parameters.py
+      ```
+      **Reported, not failed, and that is deliberate.** Ratifying is the owner's act (`AGENTS.md`
+      §14), so a gate that went red here would demand a decision it cannot get and would be
+      bypassed — the same reasoning gate 1 already applies to its orphan block.
+      **The one to read first is the cost model.** Both of its halves are on the list, so every
+      net-of-costs figure this project has published is denominated in two records nobody ratified —
+      including `HANDOFF.md` §2's *"slippage **measured** — 25bps per side (`DR-005`)"*, where
+      *measured* is true of the number and not of the record's standing.
 - [ ] **`[c]` DR-009** · **`[c]` DR-001 / DR-002 / DR-005** — proposed since 08-02, used as
       working fact throughout.
       **`DR-003` left this list 2026-08-23: RATIFIED**, on the population measurement and on the

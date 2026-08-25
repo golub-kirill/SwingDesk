@@ -2782,3 +2782,39 @@ def test_cited_test_gate_does_not_police_the_append_only_stores(tmp_path: Path) 
     )
     code, out = run_gate("verify_cited_tests.py", tmp_path)
     assert code == 0, out
+
+
+# ------ gate 1: a value whose only authority is a decision record nobody ratified, added 2026-08-25
+#
+# Check 5 already required an `assumed:DR-NNN` citation to RESOLVE. Nothing asked whether the record
+# it resolved to had ever been accepted, and six parameters rested on one that had not — including
+# both halves of the cost model, which every net-of-costs study is denominated in.
+
+
+def _status(text: str):
+    import sys
+    sys.path.insert(0, str(TOOLS))
+    from verify_parameters import status_from_text
+
+    return status_from_text(text)
+
+
+def test_a_proposed_record_reads_as_proposed() -> None:
+    assert _status("```\ndate:   2026-08-05\nstatus: proposed\n```\n") == "proposed"
+
+
+def test_a_ratification_clause_does_not_hide_the_status() -> None:
+    """The accepted records carry the ratification inline; only the first word decides."""
+    assert _status("status:     accepted - ratified by the owner 2026-08-08\n") == "accepted"
+
+
+def test_a_supersession_clause_does_not_hide_a_proposed_status() -> None:
+    """`DR-004`'s real header: proposed, with the superseded component named after it."""
+    assert _status(
+        "status: proposed - slippage component superseded by DR-005 on 2026-08-05\n"
+    ) == "proposed"
+
+
+def test_a_record_with_no_status_line_is_unknown_rather_than_accepted() -> None:
+    """None, not a default. An absent status must not read as ratified."""
+    assert _status("# DR-999\n\nSome prose about a decision.\n") is None
