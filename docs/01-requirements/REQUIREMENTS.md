@@ -20,6 +20,9 @@ justified deviation, **MAY** is an option.
 
 ## 1. The register
 
+**Status is what is true; §7 is what would go red if it stopped being true.** The two are different
+claims and this document carried only the first until 2026-08-25.
+
 | id | Requirement | Status in this tree |
 |---|---|---|
 | `REQ-DATA-001` | The event calendar MUST be a point-in-time dataset with the same bitemporal semantics as market data. **No event date may appear as a literal in executable code.** Every record carries `source_id`, `known_from`, `checksum`. | **partially met** — the date-literal clause is **enforced by gate 7** since 2026-08-25 and reads zero across all 70 modules in `src/`; ~~verified~~ once by hand before that, on a MUST with no mechanism. No event calendar exists at all (`EVENT_SPEC.md` §4) |
@@ -142,5 +145,44 @@ The ТЗ's vocabulary, mapped to what runs here:
 - [ ] `REQ-EVIDENCE-001` is met by practice and not by a check. Gate 11 already verifies that an
       `active` component has `verification`; the analogous check for `validated` parameters does not
       exist.
-- [ ] These nine are not yet linked to `USER_STORIES.md` or to tests. That linkage is CI gate 10
-      (traceability), still unwired — it would pass vacuously today with zero `active` components.
+- [x] ~~These nine are not yet linked to `USER_STORIES.md` or to tests.~~ **Half done 2026-08-25:
+      §7 links each requirement to the test or gate that would go red if it broke, or states that
+      nothing would.** Six of nine have something; three have nothing, correctly, and say why. The
+      `USER_STORIES.md` half is untouched.
+      **Gate 10 is still not wired, and §7 says what it should and should not check.** The
+      "vacuously" clause above rested on zero `active` components; derive the current count from
+      `HANDOFF.md` §2 rather than from this line.
+
+## 7. What enforces each — the linkage §6 has been waiting for
+
+**Written 2026-08-25.** §6's last item records that these nine are *"not yet linked to
+`USER_STORIES.md` or to tests"*, and names CI gate 10 as the linkage. This is the half that has to
+exist first: for each requirement, the executable thing that would go red if it broke, **or the
+honest statement that nothing would**. `INVARIANTS.md` §1 is the same artefact for the nine
+invariants, and it is the one that found a named test which could not fail.
+
+**Six of nine have something. Three have nothing, and each says why.**
+
+| id | Enforced by | Kind |
+|---|---|---|
+| `REQ-DATA-001` | **gate 7** (`verify_no_wall_clock.py`) for the date-literal clause — zero across all 70 modules in `src/`. **Nothing for the rest**: no event calendar exists, so its bitemporal semantics and its `source_id` / `known_from` / `checksum` fields have no subject (`EVENT_SPEC.md` §4) | gate, partial |
+| `REQ-DATA-002` | `test_unset_parameter_refuses_and_names_itself` plus gate 1's registry contract for the *unset* half; `test_a_stale_candidate_is_refused_instead_of_sized` for the *stale* half — a candidate past the freshness window leaves with `Skip` / `DATA` rather than being sized. **Both are mutation-checked by gate 34** | test ×2, mutation-checked |
+| `REQ-VALIDATION-001` | **gate 3g** (a criterion's inputs exist) and **gate 34** (a veto's verdict can be flipped, five of them). **Not covered:** ratified criteria — `k.drawdown_pause` has no verdict to flip, which is §2's remaining half | gate ×2, partial |
+| `REQ-VALIDATION-002` | **nothing, and structurally so** — §3. Two independently written code paths exist and no divergence test can be written until the live path has a trigger. The cheap window is open now | nothing, by construction |
+| `REQ-OUTPUT-001` | `test_atr_carries_provenance_and_status` at the component boundary and `test_an_assumed_parameter_is_flagged_as_not_evidence` at the display boundary. **Neither is mutation-checked**, and the first covers one component | test ×2 |
+| `REQ-EVIDENCE-001` | **gate 3f**, in part: a `validated:` parameter may only cite a study that ACCEPTed. **Not covered:** the *"actually executed in an automated pipeline"* clause — nothing distinguishes a validation run that ran from one that was written | gate, partial |
+| `REQ-RISK-001` | **nothing, and there is nothing to check** — no control in this tree carries an `enabled` flag (§4). It becomes checkable the moment one does, and the ADR is then required in the same commit | not applicable |
+| `REQ-AI-001` | deliberately not stated here — see `AI_AUTHORITY_MODEL.md` §11. `application/ai_guard.py` was changing on a parallel branch on the day this table was written, and two trees answering one question differently is `POSTMORTEM-2026-08-09.md` root cause A | see the model |
+| `REQ-AI-002` | as above | see the model |
+
+**What this makes possible, and what it does not.** Gate 10 can now be written against this column
+rather than against nothing. It still should not demand a test for every requirement: three of the
+nine have none *correctly*, and a gate that reddened on those would be demanding a test for a
+capability that does not exist. The check worth having is narrower — **a row here naming a test or a
+gate that no longer exists** — which is the failure this table will acquire the moment something is
+renamed.
+
+**Two things this table asserts that the register did not.** `REQ-OUTPUT-001` reads *"largely met"*
+above and rests on two example tests, one of them over a single component; and `REQ-EVIDENCE-001`'s
+§6 open item said the check analogous to gate 11 *"does not exist"* — gate 3f is that check for the
+half it covers, and the half it does not is the *"executed in a pipeline"* clause.
