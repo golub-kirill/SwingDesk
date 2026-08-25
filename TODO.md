@@ -566,9 +566,27 @@ target is a sentence asserting something about the WORLD that nobody tested.
       the world that nobody tested — and the honest position is that it has been sampled, not
       swept. Re-derive with the command above; a claim that survives with a test named beside it is
       worth more than one that was merely never challenged.
-- [ ] **`[c]` Widen it past documents.** Code comments and study scope sections carry the same
-      shape, and `PR-002`'s report alone carries several. A study that narrowed its own scope on an
-      untested "cannot" is the most expensive instance there could be.
+- [x] **`[v]` FIRST INSTANCE PAST DOCUMENTS: "none of that is mechanically detectable" — AUDITED
+      AND REFUTED FOR HALF OF WHAT IT NAMES, 2026-08-25.** `AI_AUTHORITY_MODEL.md` §11 and
+      `application/ai_guard.py` both said none of §3a clause 1's six routes — synonym, paraphrase,
+      translation, colour, emoji, score — is mechanically detectable. **Three of them are finite
+      sets and one was never open.** Closed: translation, emoji, colour-as-a-phrase. Never open:
+      the numeric form of a score, already refused by clause 3's numeral rule. Genuinely
+      undetectable and still the real limitation: paraphrase and open-ended synonym.
+      **The sharpest part is what the TEST said.** The case recording the translation hole was
+      called *"a translated decision word passes too"* and **contained no translated decision
+      word** — it was the paraphrase case in Russian. So the route had never been exercised, and
+      when it finally was the guard failed it outright: `_tokens` matched `[A-Za-z_]+`, so Cyrillic
+      was never tokenised at all. **A limitation can be documented and untested at the same time**,
+      and a test named after a hole is not the same thing as a test of it.
+      **A-001's standing condition is still NOT discharged** and the guard is still necessary and
+      not sufficient. What changed is where a fresh session should look: paraphrase, not
+      "everything".
+      Drift is guarded the way the vocabularies are — every enum member must carry a translation,
+      **confirmed red** by removing one entry from each table.
+- [ ] **`[c]` Widen it past documents — the rest.** Code comments and study scope sections carry the
+      same shape, and `PR-002`'s report alone carries several. A study that narrowed its own scope
+      on an untested "cannot" is the most expensive instance there could be.
 
 **Widen it past documents when the document pass is done.** The same shape lives in code comments
 and in study scope sections - `PR-002`'s report alone carries several - and a study that narrowed
