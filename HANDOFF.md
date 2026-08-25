@@ -370,11 +370,17 @@ deliberately built no value into a threshold and took no decision that was the o
    **refuted the hypothesis it was built to test** — confirmation does not spend the entry budget,
    the drift is negative at every setting — so one argument that would have been made from a false
    premise is gone. No value moved.
-3. **`k.drawdown_pause` needs a measurement, and the measurement needs owner decisions.** Realised
-   drawdown requires an account-equity concept the store does not hold: fills are recorded per
-   position and nothing aggregates them. Starting capital, mark-to-market versus realised-only, and
-   per-account versus per-strategy are definitions, not implementation details. `TODO.md` §1 states
-   why inventing one to green a gate would be the wrong move.
+3. **`k.drawdown_pause` needs a measurement, and the measurement needs ONE owner ruling — not
+   three.** ~~Starting capital, mark-to-market versus realised-only, and per-account versus
+   per-strategy are definitions, not implementation details.~~ **Narrowed 2026-08-25 by testing each
+   rather than accepting the list.** Peak-relative comes from `GLOSSARY.md`, transcribed from the
+   course; starting capital is `account.equity`, owner-set, with `DR-014` ruling paper-only;
+   per-account versus per-strategy has no subject while the position store holds zero positions.
+   **What is left is one question and it is sharp:** `k.drawdown_pause` says *"Realised drawdown"*,
+   which reads as closed-trades-only — and `PR-009` uses *realised* throughout to mean the drawdown
+   that actually occurred rather than a permuted one. The same word does different work in a
+   ratified criterion and a registered study. `TODO.md` §1 states what becomes computable the day it
+   is ruled, and why it is not urgent: the store is empty, so either reading reports 0.00% today.
 4. **The `PR-005` trade log** — the published CSV no longer matches a fresh replay because seven
    bars arrived three hours after publication. Three options in `TODO.md`; `docs/prereg/results/`
    was deliberately not touched.

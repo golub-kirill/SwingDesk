@@ -63,6 +63,30 @@ retyping it.
       the measurement, and inventing an equity definition to satisfy a criterion would be the
       `AGENTS.md` §3 failure - a thing looking more validated than it is.
 
+      **NARROWED 2026-08-25 — the blocker was tested rather than accepted, and it is ONE question,
+      not three.** The paragraph above lists starting capital, mark-to-market versus realised-only,
+      and per-account versus per-strategy. Checked one at a time against the artefacts that own them:
+      - **Peak-relative is not open at all and was never listed as such.** `GLOSSARY.md` transcribes
+        the course: `Drawdown` = *"снижение капитала от предыдущего пика"* - a decline from the
+        previous peak. So the denominator is the running peak, from the requirements source.
+      - **Starting capital has an owner.** `account.equity` is `owner`-set and `DR-014` rules paper
+        only, no owner capital. There is a number and somebody set it.
+      - **Per-account versus per-strategy has no subject today.** `positions.strategy` and
+        `strategy_version` are columns on the store, so either is computable the moment one matters;
+        measured 2026-08-25 the store holds **zero** positions across zero strategies.
+      - **Mark-to-market versus realised-only is genuinely open, and the criterion's own word does
+        not settle it.** `k.drawdown_pause` says *"Realised drawdown"*, which reads as closed-trades
+        only - but `PR-009` uses *realised* throughout in the other sense, the drawdown that actually
+        occurred as against the permuted ones. **The same word is doing different work in a ratified
+        criterion and a registered study**, and only the owner can say which one the kill switch means.
+      **What is computable the day that lands, stated so the ruling is worth taking.** The
+      realised-only reading needs nothing new: `fills` carries `filled_on`, `shares`, `price` and
+      `commission`, and `positions` carries `entry_price`, `shares` and `initial_costs_per_share`.
+      The mark-to-market reading additionally needs a daily valuation of open positions, which is a
+      bar read the store already serves.
+      **And it is not urgent, which is measured rather than assumed:** the position store is empty
+      on every table, so either definition reports 0.00% today.
+
 - [ ] **`[c]` `risk.liquidity_cap_order_to_adtv_pct` is owner-set at 1.0 and read by nothing.**
       The second owner-set orphan. Measured context from `DR-003`'s addendum: at the current account
       size a position is a median 0.0026% of one session's dollar volume, so the cap is nowhere near
