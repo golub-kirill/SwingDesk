@@ -85,9 +85,27 @@ that among the four authored, load-bearing things. So `E08`/`E09` need a decisio
 citation, or a pre-registration. **Not a guess, and not this plan's to pick.**
 
 **Stage 4 — wire what is already built**, re-checking each `_unavailable` reason first, since two
-were suspected stale and a third may be by the time this is worked. Then `Trade` becomes reachable,
-and a reachability gate over every controlled vocabulary stops the class of defect rather than the
-instance.
+were suspected stale and a third may be by the time this is worked. Then `Trade` becomes reachable.
+
+~~and a reachability gate over every controlled vocabulary stops the class of defect rather than the
+instance.~~ **Withdrawn 2026-08-25, having been measured.** The gate is not buildable without noise,
+and `CI_POLICY.md` §3 records what happens to a noisy gate.
+
+Two things kill it. **First, "reachable" is ambiguous and a naive check gets it backwards**: a
+text search for `"Trade"` across the live layers finds `funnel.py`'s `by_decision.get("Trade", 0)`
+and reports the token reachable — that is a READ of a decision, not a construction of one. The
+sharper measurement, counting `DecisionRecord` constructions in `pipeline.py`, is what found the
+gap, and it is specific to how decisions are made rather than generic over vocabularies.
+**Second, most of `CODES.md` is not the pipeline's to emit at all.** Twenty of its twenty-four
+tokens are absent from the live path, and they should be: `REVENGE`, `HINDSIGHT`, `PSYCH`, `CHASE`
+and `AVG_DOWN` are journal codes describing a HUMAN's discipline, recorded by the person reviewing
+their own trading. A gate flagging those would fire on correct design every run.
+
+**What survives the idea** is much narrower and worth stating for whoever revisits it: the four
+CANDIDATE decision states have exactly one construction site, `pipeline.py`, and three of them
+should be constructible there (`Pause` is account-wide by the state machine's §1). That is a check
+about one file, not a rule about vocabularies — and the gap it would find is already recorded, so it
+would ship green and prove nothing until something regresses.
 
 ## 4. The sample constraint this must be designed against
 
