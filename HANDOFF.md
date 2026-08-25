@@ -5,28 +5,24 @@ rules that were each paid for, and §12, traps that each cost real time — then
 
 ## 0. The first thing, and it is not code
 
-**A branch holds a session's work and is NOT merged.** `claude/swingdesk-tasks-cl-perf-707e67`,
-worktree at `.claude/worktrees/swingdesk-tasks-cl-perf-707e67`. **Nothing in it is on `master`**,
-so `master` still runs the slow pipeline, still has fewer gates than §2 reports for this tree, and
-still carries the documentation defects that branch corrected. §5's *In flight* block says what
-it contains and why it is safe to merge; **read that before touching `src/`, `tools/` or the
-study record.** §5's *What to pick up* ranks everything else.
+**That branch merged.** `claude/swingdesk-tasks-cl-perf-707e67` landed on 2026-08-24 as pull
+request #49, `master` is `55dcfe5`, and both `gates` runs were green in CI before it went in. So
+`master` now runs the six-minute pipeline rather than the twenty-minute one, has the gate count
+§2 reports, and no longer carries the documentation defects that branch corrected. §5's *What it
+carried* says what landed. **The main checkout was fast-forwarded to it**, so the next scheduled
+evening runs the fast path.
 
-No pull request was opened — the owner had not asked for one. Opening it is the first decision, not
-the first action.
+**The code graph was re-indexed against the merge** (`AGENTS.md` §9 rule 3) and describes `master`.
 
-**And one thing is still unresolved from the evening of 2026-08-24, in ten seconds:**
+**Three superseded branches were deleted the same day**, local and on `origin`, on the owner's
+instruction: `claude/correctness-fx-and-r-denominator` (`c0f10a6`), `claude/open-position-command`
+(`309621e`), `claude/full-cycle-trade-dev-c6b1f1` (`a01aaeb`). Each was 81–86 commits behind, and
+its content was verified present in `master` marker by marker before anything was removed — merging
+any of them would have **resurrected the dated session-handoff files that the same day's owner ruling
+deleted**. The SHAs are written here because that is all it takes to bring one back.
 
-```bash
-PYTHONPATH=$PWD/src SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data python tools/verify_schedule.py
-PYTHONPATH=$PWD/src SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data python tools/track_a_streak.py
-```
-
-The **18:30 pass completed, `exit 0`** — the outage that began 2026-08-18 is closed for it, and
-`a.run_completes` started counting at **1/20**. The **19:30 second pass had not run yet** when this
-session ended, and it is what closes gate 26: that gate reads BOTH tasks, and the second one last
-ran 2026-08-21 with `exit 1`. So gate 26 red on your first run is expected if the second pass has
-not happened; red *after* it has is a real finding and `data/daily_run.log` is where it lives.
+**Both scheduled passes ran on 2026-08-24 and decided identically.** 18:30 `exit 0`, 19:30 `exit 0`,
+same `output_hash`, both against a clean tree. §5 has what that establishes and what it does not.
 
 **Everything else is committed.** `master` is protected on `github.com/golub-kirill/SwingDesk`
 (public) and requires the `gates` check, so it only ever advances to a commit CI has already
@@ -219,7 +215,7 @@ parked, not killed**: `PR-002`'s own survivorship bound puts it on its kill line
 1.6–2.3% missing rate, and it is revivable only as a portfolio participation gate — never a
 per-signal entry filter, which is closed by evidence (§7).
 
-### In flight — `claude/swingdesk-tasks-cl-perf-707e67`, not merged
+### What it carried — `claude/swingdesk-tasks-cl-perf-707e67`, merged 2026-08-24 as #49
 
 **The daily run was breaching a ratified NFR budget by 4x and nothing measured it.**
 `NFR.md` §3 budgets the **decision path at ≤ 5 minutes**; measured on 2026-08-24 before any
@@ -268,35 +264,32 @@ condition can never be met.
 longer matches a fresh replay, because seven bars arrived three hours after it was published.
 `TODO.md` §5 states the three options; `docs/prereg/results/` was not touched.
 
-**Re-index the code graph after this merges** — `src/` and `tools/` both changed (`AGENTS.md` §9
-rule 3). It is deliberately NOT re-indexed now: the index is named `swingdesk` and rooted at the
-main checkout, and pointing it at an unmerged branch would make it describe code `master` does not
-have.
+**The code graph was re-indexed once it merged** — `src/` and `tools/` both changed (`AGENTS.md`
+§9 rule 3). It is named `swingdesk`, rooted at the main checkout, and now describes `master`.
 
 ### What to pick up, ranked — 2026-08-24
+
+**Two items closed on 2026-08-24 and are gone from this list**: the branch decision (merged, #49)
+and the `a.run_completes` / gate 26 question (both passes ran, counter at 1/20, and gate 26's
+mid-run false red is fixed). What is left:
 
 1. **Slim `AGENTS.md` — owner instruction, briefed and ready to start.** `TODO.md` §3 carries the
    measurement and the cutting rule. The one thing not to get wrong: **153 references point at its
    section numbers and 16 sit in files that may not be edited**, so headings and numbers stay
    exactly as they are and only the narrative inside them is cut. Target roughly half of 7,146
    words.
-2. **Decide about the branch in §0.** Everything below assumes it either merges or does not, and
-   the two worlds differ. Opening a pull request is the owner's call and was not made.
-3. **`a.run_completes` and gate 26.** The outage that began 2026-08-18 was a schema drift, the
-   repair is verified, and the evening pass is what proves it in production. Read
-   `python tools/track_a_streak.py` before anything else operational.
-4. **The AI guard, which `CHARTER.md` A-001 makes a PRECONDITION.** §3a permits advice on an open
+2. **The AI guard, which `CHARTER.md` A-001 makes a PRECONDITION.** §3a permits advice on an open
    position; A-001 says nothing may be implemented before the authority model is *gated*, and
    `AI_AUTHORITY_MODEL.md` §11 records that its prohibitions are prose. The two vocabularies —
    decisions and management actions — are mechanically checkable and nothing checks them. **This is
    the next build, not the AI itself.**
-5. **The `PR-005` trade log needs an owner ruling** — the published CSV no longer matches a fresh
+3. **The `PR-005` trade log needs an owner ruling** — the published CSV no longer matches a fresh
    replay because seven bars arrived three hours after it was published. Three options in
    `TODO.md` §5; `docs/prereg/results/` was deliberately not touched.
-6. **The next pre-registration, if there is one.** `PR-013` looked at one lookback and one horizon
+4. **The next pre-registration, if there is one.** `PR-013` looked at one lookback and one horizon
    and found nothing at that pair; it did not refute the family. Whoever writes the next one owes it
    a decision rule with a branch for *both arm and control are losing*, which `PR-013`'s lacked.
-7. **Everything owner-pending is in `TODO.md` §4** — the trial budget, `account.fx_rate_cad`,
+5. **Everything owner-pending is in `TODO.md` §4** — the trial budget, `account.fx_rate_cad`,
    `data.staleness_action_threshold`, the successor timebox, `DR-016`/`DR-017`.
 
 ### The clock, and the freeze that protects it
@@ -375,11 +368,30 @@ a report.
 fault that killed every evening from 2026-08-18 was `positions.open_as_of` binding a column the
 table on disk did not have; `positions.duckdb` carries it again and the run proves it in production.
 
-**Gate 26 was still red immediately afterwards and correctly so**: it reads BOTH tasks, and the
-19:30 second pass had last run 2026-08-21 with `exit 1`. That pass is what closes the gate.
-`tools/track_a_streak.py` also still read 0 straight after, because it does not count a session
-until its 18:30 ± 30 min window has closed — after 19:00 the day becomes countable. Neither is a
-fault; both are the tools declining to answer early.
+**The 19:30 second pass then ran, 19:30:00.77 → 19:49:56.92, `exit 0`, and gate 26 is green.**
+`tools/track_a_streak.py` reads **1/20** — it had read 0 straight after the 18:30 pass because it
+does not count a session until its 18:30 ± 30 min window has closed, which is the tool declining to
+answer early rather than a fault.
+
+**Gate 26 called that healthy pass a crash while it was mid-run, and that is now fixed.** At 19:39
+it reported *"last run 7:30:00 PM exited 267009"*. `267009` is `SCHED_S_TASK_RUNNING` — the Task
+Scheduler puts its own STATUS in `Last Result` while a run is in flight, and the gate was reading
+that column as an exit code unconditionally. `267011` (has not run yet) was already special-cased;
+this is the same kind of value. A task with no completed run to judge is now reported and **not**
+judged, and the summary line names how many tasks it could not judge instead of printing a bare
+`PASS` over both.
+
+**The two passes agreed exactly**, which is the first live observation of a property `DR-015` §3
+only asserted: same `output_hash` (`0b104d2cb42e3100`), same `code_hash`, both `code_dirty` false,
+an hour apart on the real universe. **The second pass rescued nothing** — `changed 0`, and the log
+records no fetch failure for it to retry, so it did its job correctly and moved nothing. One evening
+is not a verdict about whether it earns its twenty minutes; it is the first data point.
+
+**87 of 1,141 admitted candidates left with `Skip`/`DATA`, one session behind** — last bar Friday
+2026-08-21 against a last completed session of Monday 08-24, and neither refetch brought them
+current. That is 7.6%, against `DR-015`'s own 2026-08-17 measurement of 67 of 1,152 (5.8%). Before
+that gate existed every one of them would have been sized and left on `Watch` against a Friday
+close.
 
 **Twenty minutes is what `master` costs, and it breaches a ratified budget.** `NFR.md` §3 budgets
 the decision path at ≤ 5 minutes; measured this morning `master` needs 20.2 (19.0 of compute plus
