@@ -78,6 +78,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"probe_canada: {len(EXCHANGES)} exchange(s) x {len(letters)} leading character(s)\n")
 
     totals: dict[str, set[str]] = {exchange: set() for exchange in EXCHANGES}
+    capped: list[str] = []
     stamps: set[int] = set()
     first = True
     for exchange in EXCHANGES:
@@ -88,6 +89,14 @@ def main(argv: list[str] | None = None) -> int:
             payload = fetch(exchange, letter)
             if payload is None:
                 return 1
+            # A capped response would make every total a floor quoted as a count. The endpoint
+            # reports its own `length` beside the rows, so the two are compared rather than trusted:
+            # the first full run summed to exactly 3000 on TSX, which is round enough to deserve a
+            # check, and the per-query counts turned out to vary naturally with no cap.
+            declared = payload.get("length")
+            returned = len(payload.get("results", []))
+            if declared is not None and int(declared) != returned:
+                capped.append(f"{exchange}/{letter}: declared {declared}, returned {returned}")
             for row in payload.get("results", []):
                 for instrument in row.get("instruments") or [row]:
                     symbol = instrument.get("symbol")
@@ -104,6 +113,13 @@ def main(argv: list[str] | None = None) -> int:
     if stamps:
         newest = time.strftime("%Y-%m-%d %H:%M", time.localtime(max(stamps)))
         print(f"  the endpoint stamps its own freshness: last_updated {newest}")
+
+    if capped:
+        print("\n  TRUNCATION DETECTED - the totals above are FLOORS, not counts:")
+        for line in capped:
+            print(f"    {line}")
+    else:
+        print("  no query returned fewer rows than it declared, so the totals are counts")
 
     print("\nENUMERATION is settled - free, no account, no key.")
     print("POINT-IN-TIME membership is NOT: this is today's directory, and applying it to old data")
