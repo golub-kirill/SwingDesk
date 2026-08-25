@@ -269,27 +269,24 @@ longer matches a fresh replay, because seven bars arrived three hours after it w
 
 ### What to pick up, ranked — 2026-08-24
 
-**Two items closed on 2026-08-24 and are gone from this list**: the branch decision (merged, #49)
-and the `a.run_completes` / gate 26 question (both passes ran, counter at 1/20, and gate 26's
-mid-run false red is fixed). What is left:
+**Three items closed on 2026-08-24 and are gone from this list**: the branch decision (merged,
+#49), the `a.run_completes` / gate 26 question (both passes ran, counter started, and gate 26's
+mid-run false red is fixed), and the `AGENTS.md` cut — every heading byte-identical, every section
+reference still resolving, §13's owner block untouched, and the owner ruling on 2026-08-24 that the
+result stands rather than being cut further. What is left:
 
-1. **Slim `AGENTS.md` — owner instruction, briefed and ready to start.** `TODO.md` §3 carries the
-   measurement and the cutting rule. The one thing not to get wrong: **153 references point at its
-   section numbers and 16 sit in files that may not be edited**, so headings and numbers stay
-   exactly as they are and only the narrative inside them is cut. Target roughly half of 7,146
-   words.
-2. **The AI guard, which `CHARTER.md` A-001 makes a PRECONDITION.** §3a permits advice on an open
+1. **The AI guard, which `CHARTER.md` A-001 makes a PRECONDITION.** §3a permits advice on an open
    position; A-001 says nothing may be implemented before the authority model is *gated*, and
    `AI_AUTHORITY_MODEL.md` §11 records that its prohibitions are prose. The two vocabularies —
    decisions and management actions — are mechanically checkable and nothing checks them. **This is
    the next build, not the AI itself.**
-3. **The `PR-005` trade log needs an owner ruling** — the published CSV no longer matches a fresh
+2. **The `PR-005` trade log needs an owner ruling** — the published CSV no longer matches a fresh
    replay because seven bars arrived three hours after it was published. Three options in
    `TODO.md` §5; `docs/prereg/results/` was deliberately not touched.
-4. **The next pre-registration, if there is one.** `PR-013` looked at one lookback and one horizon
+3. **The next pre-registration, if there is one.** `PR-013` looked at one lookback and one horizon
    and found nothing at that pair; it did not refute the family. Whoever writes the next one owes it
    a decision rule with a branch for *both arm and control are losing*, which `PR-013`'s lacked.
-5. **Everything owner-pending is in `TODO.md` §4** — the trial budget, `account.fx_rate_cad`,
+4. **Everything owner-pending is in `TODO.md` §4** — the trial budget, `account.fx_rate_cad`,
    `data.staleness_action_threshold`, the successor timebox, `DR-016`/`DR-017`.
 
 ### The clock, and the freeze that protects it
