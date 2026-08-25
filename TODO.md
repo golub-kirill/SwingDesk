@@ -27,11 +27,18 @@ retyping it.
 
 ## 1. Blocking now
 
-**`master` went RED on its own, 2026-08-22, and it is fixed in this branch.** Four tests in
-`test_cli.py` seeded a proposal dated 2026-08-16 and let `pending` / `respond` read the wall clock;
+~~**`master` went RED on its own, 2026-08-22, and it is fixed in this branch.**~~ **CLOSED
+2026-08-22** — merged as `7f3568a` and verified on `master` 2026-08-24. Four tests in `test_cli.py`
+seeded a proposal dated 2026-08-16 and let `pending` / `respond` read the wall clock;
 `management.proposal_expiry_days` is 3 sessions, so on 2026-08-20 the window closed and gate 8 began
 failing on an untouched tree. Fixed by pinning `--as-of` the way the file's own expiry tests already
-do, and the trap is now in `AGENTS.md` §12. The 2026-08-11 freeze lifted on 2026-08-17.
+do, and the trap is in `AGENTS.md` §12. Kept struck through rather than deleted because it stood at
+the head of "Blocking now" for two days after it stopped blocking anything, which is its own small
+lesson about where a closed item goes.
+
+**The 2026-08-11 freeze lifted on 2026-08-17.** `application/pipeline.py`,
+`trade_management/sizing.py` and `tools/daily_run.cmd` are still the frozen files, and a merge to
+one that moves decision output still resets `a.run_completes` (`HANDOFF.md` §5).
 
 **What blocks the next thing worth doing.** The two items that stood here on 2026-08-18 are both
 closed — the R denominator by re-measurement, the staleness gate by `DR-015` being built — and what

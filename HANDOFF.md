@@ -79,9 +79,9 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | Directory | **18 pulls** · **8 confirmed** against the response's own `Last-Modified` (`source_session_date`); the rest predate the field and stay permanently unattributed (`DR-008` c3) |
 | Universe coverage | bars stored for 3,743 of 13,169 listed symbols - **28.4%** |
 | Classifications | 1,148 instrument(s) carry a sector · 1,046 (**91.1%**) report at least one non-zero weight. The stricter `look_through` count, which also drops a degenerate ETF look-through (`DR-006` §8.7), is lower - derive it with `python tools/measure_sector_cap.py --wide` |
-| Track A clock | **0/20** consecutive clean sessions · counting from a **deliberate restart on 2026-08-22**, not an outage - `python tools/track_a_streak.py` prints why · `a.run_completes`, computed by `tools/track_a_streak.py` |
+| Track A clock | **1/20** consecutive clean sessions (2026-08-24 to 2026-08-24) · counting from a **deliberate restart on 2026-08-22**, not an outage - `python tools/track_a_streak.py` prints why · `a.run_completes`, computed by `tools/track_a_streak.py` |
 
-*Measured from `data/` on 2026-08-24.*
+*Measured from `data/` on 2026-08-25.*
 
 <!-- END GENERATED: state:runtime -->
 
