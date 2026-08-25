@@ -402,6 +402,38 @@ this repository.
       (`docs/08-pm/plans/2026-08-24-the-trade-flow.md` §2).
 
 
+### THE MOST EXPENSIVE IMPOSSIBILITY IN THE AUDIT: "Canada cannot be enumerated" — REFUTED 2026-08-25
+
+- [x] **`[v]` It can be enumerated. Free, no account, no key.** `python tools/probe_canada.py --full`.
+      TMX's own listed-company directory is backed by a JSON endpoint — one call per leading
+      character per exchange, returning symbol and name, and stamping its own `last_updated`.
+      **How the claim hardened, which is the transferable part.** `DR-003` gap 1 was careful and
+      honest: *"Canada has no free symbol directory **in hand** … this project **cannot presently**
+      enumerate them."* That says nobody had one, not that none exists. `PR-002`'s report then cites
+      it as *"Canada cannot be enumerated (`DR-003`)"* — unqualified — and **drops §6's requirement
+      of significance in both countries independently**, which is the requirement whose failure is
+      why `PR-002` could not reach an affirmative verdict.
+      **A qualified "not in hand" became an unqualified "cannot", and a study lost half its scope
+      to it.** Nothing was dishonest at any step; the qualifier simply did not survive the citation.
+      That is `AGENTS.md` §15 in one example, and §12's citation trap in another.
+- [ ] **`[v]` What this does NOT settle, stated before anyone over-reads it.**
+      **Point-in-time membership is untouched.** The endpoint serves TODAY's directory, and applying
+      it to old data is survivorship bias with extra steps — the same objection `DR-003`'s own table
+      raises against index membership. So this does not retroactively repair `PR-002`.
+      **Bar coverage is a separate question.** Whether the vendor serves usable history for a given
+      `.TO` symbol is not asked here, and the Canadian half of the store is empty today.
+      **It is an unofficial endpoint on a consumer site**, exactly like the bar source (`ADR-0001`),
+      and carries the same caveat: undocumented, unversioned, free to change without notice.
+- [ ] **`[v]` What it DOES unblock, and this is the reason it matters.** `DR-003` gap 1 says the
+      liquidity rule *"applies to `.TO` instruments identically"* and that the Canadian universe is
+      *"a list rather than a rule"* only because it could not be enumerated. With enumeration the
+      universe becomes a RULE on both sides, which is what `BR-9` and `AGENTS.md` §3's
+      never-merge non-negotiable both assume. A future study CAN carry a two-country requirement
+      instead of declaring it unmeetable.
+      **Needs an owner decision before anything is built**: adding a second directory source is a
+      change to what the daily run does, and `DR-008` governs how a directory is pulled, attributed
+      and audited. This entry records the refutation, not a plan.
+
 ### AUDIT THE IMPOSSIBILITY CLAIMS — owner instruction, 2026-08-24, and `AGENTS.md` §15 is the rule
 
 **The ask:** *"Мы очень часто верим, что у нас нет возможности или не получается, и зарубаем на

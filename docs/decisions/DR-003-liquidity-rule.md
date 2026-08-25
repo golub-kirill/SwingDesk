@@ -374,3 +374,41 @@ an owner-set value are different claims**, and collapsing them would record a de
 The price floor's own evidence is unchanged and favourable: 5.00 costs 59 of 1,207 names against a
 2.00 floor, the same order as the *"roughly four names in this sample"* recorded above, and its
 justification was always the cost side rather than the population side.
+
+## Gap 1 is closed on the half it was about, measured 2026-08-25
+
+**"Known gaps" gap 1 reads: *"Canada has no free symbol directory in hand … this project cannot
+presently enumerate them, so the Canadian universe is a list rather than a rule."* It can be
+enumerated.** `tools/probe_canada.py` reaches TMX's own listed-company directory through the JSON
+endpoint that backs it — one call per leading character per exchange, symbol and name, stamping its
+own `last_updated`. Free, no account, no key. Derive the population with
+`python tools/probe_canada.py --full`, never from this paragraph.
+
+**The record's wording was careful and the citation of it was not, and that is worth more than the
+finding.** *"In hand"* and *"cannot presently"* say nobody had a directory, not that none exists.
+`PR-002`'s report then cites this gap as *"Canada cannot be enumerated (`DR-003`)"* — unqualified —
+and drops §6's requirement of significance in both countries independently, the requirement whose
+failure is why that study could not reach an affirmative verdict. **A qualified "not in hand" became
+an unqualified "cannot", and a study lost half its scope to it.** Nothing was dishonest at any step;
+the qualifier simply did not survive the citation, which is the trap `AGENTS.md` §12 records and §15
+turns into a rule.
+
+**What this does NOT do, stated so the addendum cannot be over-read.**
+
+- **Point-in-time membership is untouched.** The endpoint serves today's directory, and applying it
+  to old data is survivorship bias with extra steps — the objection this record's own alternatives
+  table already raises against index membership. **It does not retroactively repair `PR-002`.**
+- **Bar coverage is a separate question.** Whether the vendor serves usable history for a given
+  `.TO` symbol is not asked here, and the Canadian half of the store is empty today.
+- **It is an unofficial endpoint on a consumer site**, exactly as the bar source is (`ADR-0001`),
+  and inherits the same caveat: undocumented, unversioned, free to change without notice.
+
+**What it does do.** This record states that the rule *"applies to `.TO` instruments identically"*
+and that the Canadian universe is a list rather than a rule **only** because it could not be
+enumerated. That reason is gone, so the universe can be a RULE on both sides — which is what `BR-9`
+and the never-merge non-negotiable both assume. A future study can carry a two-country requirement
+instead of declaring it unmeetable.
+
+**Nothing is built on this.** Adding a second directory source changes what the daily run does and
+`DR-008` governs how a directory is pulled, attributed and audited. This addendum records a
+refutation, not a plan.
