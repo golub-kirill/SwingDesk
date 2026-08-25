@@ -126,3 +126,59 @@ evidence programme rests on and no artefact held it, which is why it is written 
   exits expressible — and exits are the one lever never varied, which is why the 2026-08-11 council
   funded exactly that card. The flow is machinery. `HANDOFF.md` §3 still governs what the evidence
   supports.
+
+## 6. Stage 2 delivered: what the graph demands, measured against the registry
+
+`DR-020` authored the graph, so its edges can now be intersected with what exists. Derived
+2026-08-24 from `registry/components.yml` and `registry/parameters.yml` — every implemented
+component, its activation, and what blocks it:
+
+| Component | What | Activation | Blocked by | Demanded by the graph? |
+|---|---|---|---|---|
+| `M18-T0280` | ATR | **active** | — | yes — sizing, the stop, and `entry.maximum_entry_atr`'s unit |
+| `M12-T0201/0202` | swing high / low | `specified` | `pivot.left`, `pivot.right` | **yes — the trigger breaks a prior swing high** |
+| `M30-T0450` | regime | `registered` | `regime.breadth_cutoffs` | **yes — `E04` gates `Watch → Ready`** |
+| `M31-T0459` | breadth | `specified` | `regime.pct_above_ma_period` | transitively, via regime's `BREADTH_MEDIAN` rule |
+| `M25-T0382` | moving average | `specified` | **nothing** | **no** |
+| `M31-T0464` | relative strength | `specified` | **nothing** | **no** |
+| `M33-T0485` | trend | `registered` | `screen.trend_definition` (refuted family) | **no** |
+
+**The result is the opposite of what availability suggests.** The two components that could activate
+today — moving average and relative strength — are exactly the two nothing in the flow demands.
+`HANDOFF.md` §4 already rules on that case: no card consumes it, so it stays `registered`, which
+costs nothing. Activating them because they are ready would be supply-driven, and this plan is
+demand-driven by construction.
+
+**Trend stays out on evidence, not on convenience.** `PR-001` and `PR-005` both refuted the
+trend-definition family, `screen.trend_definition` stays `unset`, and the graph needs no trend
+filter to reach `Trade`.
+
+**So the demanded set is two families, and both are blocked by `unset` parameters:**
+
+1. **Pivots** — `pivot.left` and `pivot.right`. The course marks a pivot as *"зона или структура"*
+   and never says how wide the neighbourhood is.
+2. **Regime** — `regime.breadth_cutoffs`, and behind it `regime.pct_above_ma_period`. The course
+   defines eleven regimes and names the inputs, and **no rule produces the label**;
+   `regime.classifier_rule` is `assumed:PR-002`, whose verdict was corrected to `inconclusive`.
+
+### `pivot.right` is a look-ahead lag, and that makes it the sharpest of the four
+
+The registry states it plainly: a pivot is emitted at `P + right`, **never at `P`**. So `right` is
+not a smoothing knob — it decides how late the structure a trigger breaks becomes known. Raising it
+makes structure more reliable and later; lowering it makes the trigger earlier and the level less
+certain.
+
+**That trade-off is measurable on stored bars and nobody had measured it**, which made it the
+cheapest real progress available on the flow: no vendor call, no new data, and no owner ruling to
+*measure* — only to decide afterwards.
+
+**MEASURED 2026-08-24, and the reasoning above was wrong where it mattered.** This paragraph argued
+that confirmation spends the entry budget, so a small `entry.maximum_entry_atr` would leave the
+trigger permanently `Late`. It does not: the drift is **negative** at every setting, because a swing
+high is confirmed precisely by the following bars failing to exceed it. `DR-020` §7 carries the
+table and what the measurement does and does not establish. Left standing rather than rewritten,
+because a claim that read as a fact and was not is exactly what `AGENTS.md` §15 asks to be visible.
+
+**Regime is the harder of the two and should not be rushed.** Its classifier rests on a study whose
+verdict was withdrawn, so setting `regime.breadth_cutoffs` would put a number on top of an
+inconclusive result. `AGENTS.md` §3: *nothing looks more validated than it is.*

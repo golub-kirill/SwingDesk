@@ -172,3 +172,54 @@ of the system from its own structure, rather than describing an aspiration.
 - **Whether the thresholds differ by instrument type.** The nine states are instrument-agnostic and
   this graph does not split them. Whether an ETF and a single name need different edge values is a
   question for a study, not an assumption (`plans/2026-08-24-the-trade-flow.md` §5).
+
+## 7. Measured 2026-08-24, and it refuted the hypothesis this record was built around
+
+`tools/measure_pivots.py`, 400 instruments with at least 300 stored sessions,
+`docs/decisions/measurements/pivots-2026-08-24.json`. Descriptive only: it evaluates no strategy,
+compares no arms and reports no return, so it spends no trial.
+
+| left | right | pivots / 252 sessions | confirmation drift, ATR (p50) | broke within 5 | within 20 |
+|---:|---:|---:|---:|---:|---:|
+| 2 | 2 | 34.1 | −1.08 | 0.44 | 0.69 |
+| 3 | 2 | 28.7 | −1.10 | 0.44 | 0.69 |
+| 3 | 3 | 24.0 | −1.31 | 0.37 | 0.64 |
+| 5 | 3 | 19.1 | −1.34 | 0.37 | 0.63 |
+| 5 | 5 | 15.1 | −1.72 | 0.29 | 0.56 |
+| 10 | 5 | 11.0 | −1.77 | 0.29 | 0.55 |
+| 10 | 10 | 7.8 | −2.44 | 0.19 | 0.43 |
+
+**THE HYPOTHESIS THIS WAS BUILT TO TEST WAS WRONG, and wrong by construction.** The plan reasoned
+that confirmation would *spend the entry budget* — that by the time a level is knowable, price has
+already run past it, so a small `entry.maximum_entry_atr` would leave the trigger permanently
+`Late`. **The drift is negative at every setting.** At confirmation the close sits 1.1 to 2.4 ATR
+**below** the level, and it must: a swing high is confirmed precisely because the following `right`
+bars failed to exceed it. The two parameters do not compete for the same budget.
+
+That is recorded rather than quietly dropped because the reasoning was stated as *"the sharpest of
+the four"* before it was checked, which is the shape `AGENTS.md` §15 exists to catch — an assertion
+about the world that reads as a fact.
+
+**What the measurement does establish.**
+
+- **Density is not the binding constraint.** Even the widest neighbourhood yields about eight
+  confirmed highs per instrument-year, and the admitted universe is over a thousand names. There is
+  no setting on this grid at which the flow starves for levels.
+- **The real trade-off is level significance against how often it is tested.** Widening the
+  neighbourhood roughly halves the number of levels and roughly halves how often they break —
+  0.69 → 0.43 within twenty sessions. A wider pivot is a rarer, stronger level that is exceeded less.
+- **The estimates are stable.** A 40-instrument run and a 400-instrument run agree to about 0.01 on
+  every column, so sample SIZE is not what limits this. The alphabetical-prefix bias
+  (`AGENTS.md` §12) is untouched by that and still stands.
+
+**What it emphatically does NOT establish, and the number most likely to be misread.** *"Broke
+within 20 sessions: 0.69"* is **not an edge and not a win rate.** It says only that price exceeded a
+recent high at some point in the following month. It says nothing about what happened next, nothing
+about the stop, and nothing about costs — and `HANDOFF.md` §3 records that the base strategy is
+negative at measured costs. A trigger's firing rate and a trigger's profitability are different
+quantities, and this measures the first.
+
+**Consequence for the graph.** `entry.maximum_entry_atr` is not constrained from below by
+confirmation drift, so it is free to be small. Which value it takes remains a study or a ruling, and
+this section moves it no closer to either — it only removes an argument that would have been made
+from a false premise.

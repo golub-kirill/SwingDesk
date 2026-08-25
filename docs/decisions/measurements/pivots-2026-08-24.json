@@ -1,0 +1,104 @@
+{
+  "instruments": 400,
+  "grid": [
+    {
+      "left": 2,
+      "right": 2,
+      "pivots_per_252_sessions": 34.11,
+      "confirmation_drift_atr": {
+        "p10": -2.3952,
+        "p50": -1.0843,
+        "p90": -0.3696,
+        "mean": -1.3059,
+        "n": 62254
+      },
+      "breakout_rate_5": 0.4412,
+      "breakout_rate_20": 0.6934
+    },
+    {
+      "left": 3,
+      "right": 2,
+      "pivots_per_252_sessions": 28.65,
+      "confirmation_drift_atr": {
+        "p10": -2.4333,
+        "p50": -1.0984,
+        "p90": -0.3746,
+        "mean": -1.3251,
+        "n": 52289
+      },
+      "breakout_rate_5": 0.4393,
+      "breakout_rate_20": 0.6893
+    },
+    {
+      "left": 3,
+      "right": 3,
+      "pivots_per_252_sessions": 23.98,
+      "confirmation_drift_atr": {
+        "p10": -2.9505,
+        "p50": -1.3122,
+        "p90": -0.4521,
+        "mean": -1.5848,
+        "n": 43760
+      },
+      "breakout_rate_5": 0.3735,
+      "breakout_rate_20": 0.6374
+    },
+    {
+      "left": 5,
+      "right": 3,
+      "pivots_per_252_sessions": 19.1,
+      "confirmation_drift_atr": {
+        "p10": -3.0075,
+        "p50": -1.3361,
+        "p90": -0.4599,
+        "mean": -1.6133,
+        "n": 34858
+      },
+      "breakout_rate_5": 0.3697,
+      "breakout_rate_20": 0.6334
+    },
+    {
+      "left": 5,
+      "right": 5,
+      "pivots_per_252_sessions": 15.07,
+      "confirmation_drift_atr": {
+        "p10": -3.7744,
+        "p50": -1.7152,
+        "p90": -0.5957,
+        "mean": -2.0375,
+        "n": 27501
+      },
+      "breakout_rate_5": 0.29,
+      "breakout_rate_20": 0.5588
+    },
+    {
+      "left": 10,
+      "right": 5,
+      "pivots_per_252_sessions": 10.97,
+      "confirmation_drift_atr": {
+        "p10": -3.8989,
+        "p50": -1.7733,
+        "p90": -0.619,
+        "mean": -2.1102,
+        "n": 20017
+      },
+      "breakout_rate_5": 0.2864,
+      "breakout_rate_20": 0.5509
+    },
+    {
+      "left": 10,
+      "right": 10,
+      "pivots_per_252_sessions": 7.79,
+      "confirmation_drift_atr": {
+        "p10": -5.3756,
+        "p50": -2.4419,
+        "p90": -0.875,
+        "mean": -2.896,
+        "n": 14212
+      },
+      "breakout_rate_5": 0.1927,
+      "breakout_rate_20": 0.4319
+    }
+  ],
+  "atr_period": 14
+}
