@@ -1,9 +1,11 @@
 # AGENTS.md — working guide for SwingDesk
 
-Read this before changing anything. It is short on purpose.
+Rules, conventions and traps. Read it before changing anything.
 
-**Starting a fresh session?** Read `HANDOFF.md` first — measured state, what is closed by evidence,
-and what to do next in ranked order.
+**Fresh session?** Read `HANDOFF.md` first — measured state and what to do next, ranked.
+
+**Every rule here was paid for**, and each carries one clause saying what by. Full accounts are in
+`git log -p AGENTS.md`; a rule with no price reads as arbitrary and gets ignored.
 
 ### The four documents, and which question each answers
 
@@ -18,15 +20,12 @@ Keeping them apart is the point; §10.7 is the rule and this is the map.
 
 ### How this file is numbered, and why it looks odd
 
-**Section numbers here are citation targets and are therefore frozen.** Roughly fifty references
-point at them from across the repository, and some sit in files that may not be edited at all —
-accepted decision records, a published study report, a postmortem. Renumbering to tidy the sequence
-would mean rewriting ratified documents to chase a heading, which §11 rule 2 forbids for good reason.
+**Section numbers are citation targets and are frozen.** References across the repository point at
+them and some sit in files that may not be edited, so renumbering means rewriting ratified documents
+to chase a heading — which §11 rule 2 forbids.
 
-So one oddity is permanent and worth naming rather than repeatedly rediscovering: **§10.5, §10.6 and
-§10.7 are independent rules, not sub-rules of §10.** They are `##` headings like §10 itself, and §10
-means what its title says — the four rules of 2026-08-09, which are §10.1–§10.4. The decimals on the
-later three record only that they arrived after §10 and before §11.
+**§10.5, §10.6 and §10.7 are independent rules, not sub-rules of §10.** They are `##` headings like
+§10 itself; §10 is the four rules of 2026-08-09, which are §10.1–§10.4.
 
 ---
 
@@ -37,38 +36,30 @@ orders.** See `README.md`, then `docs/README.md` for the document set and gates.
 
 ### If you were told this is a documentation-only project, read this first
 
-**`docs/` is canonical** (owner decision, 2026-08-04). So is `src/`, `tests/`, `registry/` and
-`tools/` — the merge gates run from `python tools/check_gates.py` and they are what keep the
-documents honest.
+**`docs/` is canonical** (owner decision, 2026-08-04), and so are `src/`, `tests/`, `registry/` and
+`tools/` — the gates in `python tools/check_gates.py` keep the documents honest.
 
-A second effort briefly built a parallel tree at the repo root: ten numbered documents
-(`00_…`–`46_…`) written to master-ТЗ v1.0 §47, plus `schemas/`, `catalogs/`, `examples/`, `adr/`.
-It was written without sight of `docs/` or `src/`, so its build plan scheduled roughly ten
-specification sections as future work that was already done here — architecture, NFR, testing,
-observability, security, evidence, research governance, backtest semantics, market regime, and the
-acceptance gates.
+**Do not rebuild the numbered tree.** A second effort once built a parallel set of numbered
+documents at the repo root without sight of `docs/` or `src/`, scheduling as future work
+specification sections that already existed here. It is preserved verbatim in commit `dee8f37`; the
+master ТЗ is applied as a gap analysis in `docs/08-pm/SPEC_GAP_ANALYSIS.md`, the way its own §56
+asks, and §8 of that specification forbids maintaining one logic in two places.
 
-That material is **preserved, not discarded** (commit `dee8f37`, verbatim). The master ТЗ is being
-applied the way its own §56 asks — as a gap analysis against what exists — in
-`docs/08-pm/SPEC_GAP_ANALYSIS.md`. Do not rebuild the numbered tree; §8 of that same specification
-forbids maintaining one logic in two places, and for a while this repo was doing exactly that.
-
-**Before writing any new specification, check whether `docs/` already holds it.** Reported studies
-include refuted hypotheses — derive the current census with `python tools/verify_study_summary.py`.
-Re-deriving them is not neutral; it risks contradicting evidence that already exists.
+**Before writing any new specification, check whether `docs/` already holds it** — reported studies
+include refuted hypotheses, so re-deriving one risks contradicting evidence that already exists.
+Derive the census with `python tools/verify_study_summary.py`.
 
 ## 1. Trust discipline — the rule that matters most
 
 **Never trust a document's claim about the code, or the code's claim about the course, without
 checking.** Verify before asserting.
 
-- A `verbatim` block is only trustworthy because a script re-extracts the PDF and diffs it. When
-  you change one, **run the checker** — it has already caught two real transcription errors and two
-  undeclared sources.
-- A docstring saying something is wired is not evidence that it is. Check the graph (§9), then open
-  the file. The graph tells you where to look; the file is what is true.
-- Silence is usually a feature deciding not to act. Before "restoring" anything, establish that it
-  ever worked: check git history, then the data, then the logs — in that order.
+- A `verbatim` block is trustworthy only because a script re-extracts the PDF and diffs it, so when
+  you change one, **run the checker** — it has caught real transcription errors.
+- A docstring saying something is wired is not evidence that it is. The graph (§9) says where to
+  look; the file is what is true.
+- Silence is usually a feature deciding not to act. Before "restoring" anything, establish it ever
+  worked: git history, then the data, then the logs, in that order.
 
 ## 2. Verify before you commit
 
@@ -77,9 +68,7 @@ python tools/verify_transcription.py && python tools/build_course_index.py --che
 ```
 
 Gates 1–3 of `docs/06-engineering/CI_POLICY.md`. The first two are stdlib-only; the third needs
-PyYAML.
-
-A gate that is wrong gets **fixed or removed, never skipped**.
+PyYAML. A gate that is wrong gets **fixed or removed, never skipped**.
 
 ## 3. Non-negotiables
 
@@ -118,54 +107,31 @@ src/               one package per bounded context under src/swingdesk/
 tools/             generators, checkers, probes
 ```
 
-**Documents go in a tier, never in a directory named after the tool that made them.** The
-`writing-plans` skill defaults to `docs/superpowers/plans/`; that path was followed once, on
-2026-08-11, and produced a top-level directory named after a skill plugin holding 12% of all
-documentation. Plans are Tier 8. A tool's default is not this repository's structure - check
-§4 before creating a directory, the same way §1 says to check before asserting.
-
-**`docs/adr/` and `docs/decisions/` are different stores and neither is a home for the other.** An
-ADR is structural and rarely revisited; a `DR-NNN` is a value or a definition the domain needs and is
-expected to be superseded when a study says so. `docs/decisions/README.md` §4 draws the line, and §9
-rule 2 below is the same rule aimed at a tool that offers to blur it.
-
-`registry/course_index.yml` is **generated** — never hand-edit it. `registry/criteria.yml` is
-**frozen**; v1.1.0 appends the Track A time box without touching v1.0.0's content, which is what an
-amendment means here. Editing a ratified row is never the move.
+- **Documents go in a tier, never in a directory named after the tool that made them.** Following
+  the `writing-plans` skill's default once produced a top-level directory named after a plugin.
+- **`docs/adr/` and `docs/decisions/` are different stores and neither is a home for the other.** An
+  ADR is structural and rarely revisited; a `DR-NNN` is a value or definition expected to be
+  superseded when a study says so. `docs/decisions/README.md` §4 draws the line.
+- **`registry/course_index.yml` is generated — never hand-edit it.** `registry/criteria.yml` is
+  **frozen**: an amendment appends without touching ratified content.
 
 ## 5. Conventions
 
-- **Say the name, not the code — owner instruction, 2026-08-24.** *"Я хер знает что такое NFR. Не
-  знаю, что такое PR-012, DR-012, DR-018, ранбук."* Every identifier in this repository is opaque
-  to the person the project is for, and a status report built out of them is unreadable however
-  correct it is.
-  **The rule: an identifier gets a plain-language name the first time it appears in anything the
-  owner reads** — a chat reply, a report, a summary, a commit subject. `NFR.md` is *the
-  non-functional requirements — speed, storage and determinism budgets*. `PR-012` is *the study of
-  whether ranking by relative strength beats plain momentum*. `DR-012` is *the ruling that set the
-  stop distance and the maximum holding period*. `DR-018` is *the ruling that chose the benchmark
-  index*. `run_book` is *the backtest that walks a whole portfolio instead of one instrument at a
-  time*. After the first mention the short id is fine — it is the anchor, not the explanation.
-  **The ids themselves stay.** They are citation targets: roughly fifty references point at them,
-  gates 3e, 20, 25 and 29 resolve them, and renaming a `DR-NNN` would break an append-only record
-  (§11 rule 2). What changes is that a bare id is never the whole sentence.
-  **The owner deferred the sweep** — *"по-хорошему, пиши нормальные имена, но потом"* — so existing
-  documents are corrected as they are touched rather than in one pass. `TODO.md` §3 carries the
-  item.
-
+- **Say the name, not the code — owner instruction, 2026-08-24.** An identifier gets a
+  plain-language name the first time it appears in anything the owner reads: `NFR.md` is *the speed,
+  storage and determinism budgets*. After that the bare id is fine. **The ids themselves stay** —
+  gates resolve them and renaming one breaks an append-only record. Paid for by a status report
+  built out of opaque ids, unreadable however correct it was.
 - **English throughout** — docs, code, UI. The course's controlled vocabulary (`Trade`/`Watch`/
   `Skip`/`Pause`, the skip and error codes, `STAGE`/`LAYER`/`CLAIM TYPE`) is used verbatim and never
   translated.
-- **No Russian in code.** Comments, docstrings, messages and generated output are English, including
-  where they cite the course — render the meaning and cite the topic id instead. This is not only
-  style: gate 2 verifies `verbatim` blocks in `docs/` against the PDFs and **cannot see a quotation
-  in a docstring**, so Russian in code is an unverified copy of the source, which §6 rule 1 forbids
-  for exactly that reason. The course's own words belong in `docs/`, where they are checked.
-  **One exception, and it is data rather than prose:** `tools/build_course_index.py`'s
-  `TOPIC_HEADING` pattern matches the heading as it appears in the source PDFs. It is marked in
-  place. Removing its Cyrillic stops the extraction rather than tidying it.
+- **No Russian in code**, including where it cites the course — render the meaning and cite the
+  topic id. Gate 2 checks `verbatim` blocks in `docs/` against the PDFs and **cannot see a quotation
+  in a docstring**, so Russian in code is an unverified copy of the source. **One exception, data
+  rather than prose:** `tools/build_course_index.py`'s `TOPIC_HEADING` pattern matches the heading
+  as it appears in the PDFs, and removing its Cyrillic stops the extraction.
 - The documents call the master specification the **ТЗ**; code and generated output write it in
-  Latin script. Same source, and worth knowing before someone "fixes" one of them.
+  Latin script — worth knowing before someone "fixes" one.
 - **Comments document what and how to use it.** No `Phase N`, no ticket refs, no narrative.
 - **Test instruments are `TEST.1`, `TEST.2`** — never real tickers.
 - **Money is exact** — integer minor units or `Decimal`, never binary float.
@@ -181,37 +147,30 @@ amendment means here. Editing a ratified row is never the move.
 3. Quote with `>` blockquotes, or use a ` ```verbatim ` fence with one source cell per line.
 4. Run the checker.
 
-Gate 2 only checks documents that **opt in** via that declaration. A transcribed document without it
-is silently unchecked — that is the one known weakness of the gate.
+Gate 2 only checks documents that **opt in** via that declaration — a transcribed document without
+it is silently unchecked, and that is the one known weakness of the gate.
 
 ## 7. Adding a parameter
 
-Every threshold the course does not supply goes in `registry/parameters.yml` with `named_in` citing
-where the course mentions the concept. A parameter with no course reference is either invented scope
-or a missing citation; the linter rejects both.
+Every threshold the course does not supply goes in `registry/parameters.yml`. Three fields answer
+three different questions and the linter rejects a miss on any:
 
-`assumed` requires a citation. `validated` requires an evidence id. `unset` means the component
-refuses.
+- **`named_in`** — where the course mentions the concept. No course reference means invented scope
+  or a missing citation.
+- **`provenance`** — where the value came from. `assumed` needs a citation, `validated` an evidence
+  id, `unset` means the component refuses.
+- **`read_by`** — the code that CONSUMES the value, as `module:symbol` resolved by gate 1, or the
+  explicit `none`.
 
-**And `read_by` names the code that CONSUMES the value** — `module:symbol`, imported and looked up
-by gate 1, or the explicit `none`. Three fields, three different questions, and the third was
-missing until 2026-08-18: `named_in` says where the course mentions the concept, `provenance` says
-where the value came from, `read_by` says whether anything acts on it.
-
-**What paid for it:** 23 parameters carried a value that no line of code read, fourteen of them from
-`DR-007` alone. Three findings in one week — the exit policy, the staleness gate, the
-corporate-actions gate — were all the same shape: specified, sometimes implemented, wired to
-nothing. **A ratified decision that reaches no code is a decision that did not happen**, and nothing
-in the registry could see it.
-
-`none` is honest and is not a loophole — many parameters legitimately precede their consumer. It is
-**counted and printed on every gate run**, broken down by provenance, so the number stops being a
-discovery and starts being a line in a report.
+**What paid for `read_by`:** parameters carried values no line of code read, and three findings in
+one week — the exit policy, the staleness gate, the corporate-actions gate — were the same shape.
+**A ratified decision that reaches no code is a decision that did not happen**, and nothing in the
+registry could see it. `none` is honest rather than a loophole, and is printed on every gate run.
 
 ## 8. Before proposing a threshold or a rule
 
 Check whether the course actually specifies it. Usually it does not — that is the project's central
-fact, not an oversight. Then it needs a pre-registration, not a guess.
+fact, not an oversight — and then it needs a pre-registration, not a guess.
 
 Four things are authored and load-bearing, so treat proposals near them with care: the regime
 classifier, the definitions of trend / breakout / pullback / contraction, the Sharpe convention, and
@@ -219,9 +178,9 @@ the per-strategy exit mapping. The course names all of them and quantifies none.
 
 ## 9. Finding things in the code
 
-The repository is indexed into a code knowledge graph, exposed through the `codebase-memory` MCP
-tools. Use it **first** for structural questions; it answers in hundreds of tokens what a grep sweep
-answers in tens of thousands, and it knows about call edges that no text search can see.
+The repository is indexed into a code knowledge graph via the `codebase-memory` MCP tools. Use it
+**first** for structural questions: it answers in hundreds of tokens what a grep sweep answers in
+tens of thousands, and it knows call edges no text search can see.
 
 ```
 list_projects                    is this tree indexed? the project is `swingdesk`
@@ -233,8 +192,6 @@ get_architecture(aspects=[...])  packages, layers, entry points, clusters
 detect_changes()                 map an uncommitted diff onto affected symbols
 ```
 
-**What it is good for, and what it is not.**
-
 | Use the graph | Use Grep / Glob / Read |
 |---|---|
 | who calls this, what does this call | anything in `docs/`, `registry/`, YAML, Markdown |
@@ -242,29 +199,25 @@ detect_changes()                 map an uncommitted diff onto affected symbols
 | dead code, fan-in, fan-out | the actual contents of a file you are about to edit |
 | impact of a change before making it | anything you are going to assert as fact |
 
-**§1 still applies to the graph itself.** It is an index built at a point in time, not a source of
-truth: it can be stale, and it does not know that `criteria.yml` is frozen or that a parameter is
-`unset`. Treat a graph result as a pointer to a file, and read the file before asserting anything
-about it. A null result is only evidence once a positive control shows the query works.
+**§1 applies to the graph itself.** It is an index built at a point in time: it can be stale, and it
+does not know that `criteria.yml` is frozen or that a parameter is `unset`. Treat a result as a
+pointer and read the file. A null result is evidence only once a positive control shows the query
+works.
 
 **Three local rules.**
 
-1. **Never pass `persistence: true`.** It writes `.codebase-memory/graph.db.zst` into the working
-   tree, and that path is not in `.gitignore` — it would dirty a clean repository. Add the ignore
-   line first if the index is ever to be shared.
-2. **Do not create an ADR through `manage_adr`.** The indexer offers it; this project already has
-   `docs/adr/` and `docs/decisions/`, both append-only and canonical. A second decision store is
-   exactly the one-logic-in-two-places failure that master ТЗ §8 forbids and that cost this
-   repository a day on 2026-08-04.
-3. **Re-index after a merge that touches `src/` or `tools/`.** ~13.5k lines index in seconds. An
-   index that silently describes the previous branch is worse than no index.
+1. **Never pass `persistence: true`.** It writes into the working tree at a path that is not
+   ignored, dirtying a clean repository.
+2. **Do not create an ADR through `manage_adr`.** This project has `docs/adr/` and
+   `docs/decisions/`, both append-only and canonical; a second decision store cost a day on
+   2026-08-04.
+3. **Re-index after a merge that touches `src/` or `tools/`.** It takes seconds, and an index that
+   silently describes the previous branch is worse than no index.
 
 ## 10. Four rules added 2026-08-09, each paid for
 
-Three efforts branched from one commit, none knew about the others, and two of them measured the
-same quantity and reported opposite answers. `docs/08-pm/POSTMORTEM-2026-08-09.md` takes it to root
-causes. These four rules are what came out of it. Every one is cheap; every one would have prevented
-a specific, expensive thing that actually happened.
+Three efforts branched from one commit, none knew about the others, and two measured the same
+quantity and reported opposite answers. `docs/08-pm/POSTMORTEM-2026-08-09.md` has the root causes.
 
 ### 10.1 You are probably not the only effort. Check.
 
@@ -272,13 +225,9 @@ a specific, expensive thing that actually happened.
 git worktree list && git branch -a
 ```
 
-Run it **before starting** and again **before merging**. `HANDOFF.md` §2 carries the census and
-gate 16 fails if a worktree is missing from it — but the gate was written after the accident, so
-confirm it ran rather than assuming it did.
-
-`HANDOFF.md` says it is measured from the tree, and it is. That is exactly the trap: a sibling
-worktree is not in the tree, so an accurate document can be silently incomplete about the one thing
-most likely to waste your session.
+Run it **before starting** and again **before merging**. `HANDOFF.md` §2 carries the census and gate
+16 fails if a worktree is missing — but a sibling worktree is not in your tree, so an accurate
+document can be silently incomplete about the thing most likely to waste your session.
 
 ### 10.2 Before a study, search the other branches for the same question
 
@@ -288,334 +237,194 @@ for b in $(git branch --format='%(refname:short)'); do
 done | sort -u
 ```
 
-`PR-008` was registered, implemented, run, reported, merged and pushed before anyone noticed another
-branch had answered the same question a day earlier and reached the opposite conclusion. Both had
-followed the pre-registration discipline correctly. **Neither had looked sideways.**
-
-The refutation-family check in `PREREG_TEMPLATE.md` §0 asks whether this lever has already been
-refuted *here*. Read "here" as the repository, not the worktree.
+`PR-008` was registered, run, reported and pushed before anyone noticed another branch had answered
+the same question a day earlier and reached the opposite conclusion. Both followed the discipline
+correctly; **neither had looked sideways.** `PREREG_TEMPLATE.md` §0's refutation-family check means
+the repository, not the worktree.
 
 ### 10.3 Search the outside world before authoring anything
 
-The course supplies no numeric thresholds, so this project authors them — and it is easy to slide
-from *authoring a threshold* into *reinventing a method*. Before implementing an estimator, a
-statistic, or a correction: look for published work and for an open-source implementation. GitHub,
-CRAN, PyPI, SSRN, the journals.
+This project authors its thresholds, and it is easy to slide from *authoring a threshold* into
+*reinventing a method*. Before implementing an estimator, a statistic or a correction, look for
+published work and an open-source implementation.
 
-**The case that bought this rule.** Two efforts independently implemented Corwin-Schultz (2012) and
-Abdi-Ranaldo (2017) from the papers, disagreed about the result, and spent a session resolving it.
-The literature already contained the answer to the disagreement — the documented bias of these
-estimators *is* dependence on realised volatility, and their cross-sectional correlation with the
-true spread falls from ~70% in small caps to ~18% in large caps, which is precisely the pathology
-both efforts rediscovered by hand. And `EDGE` (Ardia, Guidotti & Kroencke, *JFE* 2024) is a newer
-OHLC estimator built to fix exactly those biases, with a tested open-source implementation
-(`pip install bidask`, github.com/eguidotti/bidask).
+**What paid for it:** two efforts implemented Corwin-Schultz (2012) and Abdi-Ranaldo (2017) from the
+papers, disagreed, and spent a session resolving what the literature already answered — while `EDGE`
+(Ardia, Guidotti & Kroencke, *JFE* 2024) exists to fix exactly those biases, with a tested
+implementation (`pip install bidask`).
 
-**What external work is and is not.** It is a source of *method*, *calibration* and *known
-limitations*, and it must be cited where it lands — an authored import, marked as one, the way
-`PREREG_TEMPLATE.md` §6 already requires for multiple-testing corrections. It is **not** evidence
-about this system's parameters. A published estimate does not make a parameter `validated` here;
-only a pre-registered study against this universe does. Borrowing a method is cheap and correct;
-borrowing a conclusion is not.
+**External work supplies method, calibration and known limitations, and is cited where it lands.**
+It is **not** evidence about this system's parameters: only a pre-registered study against this
+universe makes one `validated`. Borrowing a method is correct; borrowing a conclusion is not.
 
 ### 10.4 A causal claim in a report cites a check, or is marked conjecture
 
-Reports explain results. The explanation is what a reader carries away, and it is the least
-inspected thing in the document: the pre-registration disciplines the *statistic*, the gates
-discipline the *registry*, and nothing at all disciplines the sentence that says **why**.
+The pre-registration disciplines the *statistic* and the gates discipline the *registry*; nothing
+disciplines the sentence that says **why**, and that sentence is what a reader carries away.
+`PR-008-report.md`'s strongest one passed every gate and was false, never tested because it read as
+exposition rather than as a claim.
 
-The strongest sentence in `PR-008-report.md` — the signal sits three orders of magnitude below the
-noise floor — passed sixteen gates and was false. It was never tested because it read as exposition
-rather than as a claim.
-
-So: a sentence in a report asserting *why* a result came out as it did either **names the check that
-establishes it**, or is **marked as conjecture**. No gate enforces this; a gate that parsed English
-for causal claims would be noise, and a marker that can be applied vacuously is worse than a
-convention someone actually follows. It costs one clause and it would have caught the withdrawal.
+So a sentence asserting *why* a result came out as it did either **names the check that establishes
+it** or is **marked conjecture**. No gate enforces it: parsing English for causal claims would be
+noise.
 
 ## 10.5 A measured count lives in exactly one place
 
-**`HANDOFF.md` §2 owns every measured count.** Gate counts, test counts, component and parameter
-censuses, golden vectors, document totals. No other document states the number — it names the
-source, or the command that derives it. Generated documents are exempt: their figures are
-recomputed on every build and `--check-only` is already their gate.
+**`HANDOFF.md` §2 owns every measured count** — gate and test counts, component and parameter
+censuses, golden vectors, document totals. No other document states the number; it names the source
+or the command that derives it. Generated documents are exempt: `--check-only` is already their gate.
 
-Enforced by gate 14, which as of 2026-08-10 checks **ownership before value**. A count in the wrong
-document fails even when it is correct.
+Enforced by gate 14, which checks **ownership before value** — a count in the wrong document fails
+even when it is correct. **That is the whole rule and it is not pedantry:** these figures have been
+right in every copy but one, repeatedly, and every stale one read as true on the day it was written.
+The drift is a property of keeping copies. Scanning harder does not fix it; deleting the copies does.
 
-**That last part is the whole rule, and it is not pedantry.** Correctness was never the problem.
-These figures have been simultaneously right in five documents and wrong in a sixth, five separate
-times — the drift is a property of keeping six copies, not of anyone being careless, and every
-stale one read as true on the day it was written. `ROADMAP.md` §1 was a second dashboard whose
-merge-gate and test rows had both fallen far behind the tree, and gate 14 could not see most of it
-because the phrasings did not match the ones it scans for. Scanning harder does not fix that.
-Deleting the copies does. (`git log -p` has the figures — and this paragraph originally quoted
-them, which tripped the very gate it describes.)
-
-Writing history is still allowed, and is the one exception: strike the line through, or write
-`DONE` / `CLOSED` / `REACHED` with a date. *"DONE 2026-08-03, 14 gates"* is a correct statement
-about 2026-08-03 and updating it would falsify the record. What the gate cannot do is infer tense,
-so an unmarked past-tense sentence reads as a live claim and fails — mark it, or drop the numeral.
+**Writing history is the one exception:** strike the line through, or write `DONE` / `CLOSED` /
+`REACHED` with a date. The gate cannot infer tense, so an unmarked past-tense sentence reads as a
+live claim and fails — mark it, or drop the numeral.
 
 ## 10.6 And that one place is generated, not typed
 
-**§10.5 removed the copies. It did not make the survivor true.** A measured fact that a tool can
-derive is derived by that tool and written by that tool. Hand-typing a number into its owning
-document is still drift — and it is now *harder* to catch, because §10.5 deleted the second copy
-that used to disagree with it.
+**§10.5 removed the copies. It did not make the survivor true.** A fact a tool can derive is derived
+and written by that tool; hand-typing a number into its owning document is still drift, and now
+*harder* to catch, because the copy that used to disagree is gone.
 
-**What paid for this rule, 2026-08-15.** `HANDOFF.md` §2's Track A row read *"counter at 3"* while
-`tools/track_a_streak.py` computed **4** — and the row itself said *"computed by
-`tools/track_a_streak.py` (gate 23, advisory) … not hand-kept."* It was hand-kept. The same table's
-directory row read *9 pulls, 1 confirmed*; `directory.duckdb` held **10 and 2**. Both numbers sat in
-the single owner §10.5 established, both were wrong, and nothing in the tree contradicted them.
+**What paid for it, 2026-08-15:** `HANDOFF.md` §2's Track A row disagreed with what
+`tools/track_a_streak.py` computed, while the row itself said it was *"not hand-kept"*. It was.
 **Concentrating a fact makes it findable, not true.**
 
-So:
+1. **If a fact can be derived, a tool derives it and `--check-only` gates it.** `build_frd.py`,
+   `build_components.py`, `build_checklists.py`, `build_coverage.py` and `build_lock.py` all work
+   this way and none has gone stale; the documents that go stale are the ones a person types.
+2. **A gate that cannot measure says so, and does not exit 0 as though it had.** A gate answering
+   differently depending on where it runs is worse than no gate: it manufactures confidence.
+3. **A number a gate did not measure is not quotable.** `UNAVAILABLE` is a real answer.
+4. **Introducing a derived fact means extending the deriving tool in the same change.** A derivation
+   that is "someone will remember" is wrong within the week.
 
-1. **If a fact can be derived, a tool derives it and `--check-only` gates it.** This is not a new
-   pattern — `build_frd.py`, `build_components.py`, `build_checklists.py`, `build_coverage.py` and
-   `build_lock.py` all work this way, and none of them has ever gone stale. The documents that go
-   stale are exactly the ones a person types.
-2. **A gate that cannot measure says so, and does not exit 0 as though it had.** Gate 23 reads
-   `data/daily_run.log`, which exists only in the main checkout; from a worktree it prints
-   *"nothing scheduled has run"* and exits 0, so a hand-kept counter is never contradicted. This is
-   the same shape as gate 16's *"green from a worktree, red from the main checkout"* bug, already
-   documented in `HANDOFF.md` §2 as fixed. A gate answering differently depending on where it runs
-   is worse than no gate: it manufactures confidence.
-3. **A number a gate did not measure is not quotable.** `UNAVAILABLE` is a real answer. Reporting a
-   false negative as a measurement is the failure this whole section exists to stop.
-4. **Introducing a derived fact means extending the deriving tool in the same change.** A fact whose
-   derivation is "someone will remember" is a fact that will be wrong within the week.
-
-**A merge-time checklist of files to update is explicitly rejected.** It was considered and it is the
-disease wearing the cure's clothes: naming the files does not make them true, and it is the same
-hand-reconciliation that §10.5 records failing five separate times. Generate, or gate, or leave the
-fact where it was measured and link to it.
+**A merge-time checklist of files to update is explicitly rejected** — naming the files does not
+make them true, and it is the hand-reconciliation §10.5 records failing.
 
 ## 10.7 Open work lives in `TODO.md`, and `HANDOFF.md` is memory
 
 **`TODO.md` at the repository root is the only open-work list.** Every open, pending, picked or
-blocked item goes there. No document keeps a parallel list, and a task that is not in `TODO.md` is
-not tracked. It carries provenance marks — verified this session, or carried from a prior audit —
+blocked item goes there; a task that is not in it is not tracked. It carries provenance marks,
 because an unverified item that reads as verified is how a fixed problem gets worked twice.
 
-**`TODO.md` holds work items and never measured counts.** Where an item needs a number it names the
-command that derives it. A to-do list that restates a census is the next stale copy, and §10.5 and
-§10.6 apply to it exactly as they apply to everything else.
+**`TODO.md` holds work items and never measured counts** — where an item needs a number it names the
+command. §10.5 and §10.6 apply to it as to everything else.
 
-**`HANDOFF.md` is session-to-session memory and nothing else**: what changed since the last session,
-what is in flight, what is frozen, and where to look. It is not the plan (`docs/08-pm/plans/`), not
-the analysis, not the task list (`TODO.md`), not the habit guide (this file), and not the project
-history (`git log`). Anything in it that a fresh session would not need in its first ten minutes
-belongs somewhere else, and §10.6 governs every number that remains.
+**`HANDOFF.md` is session-to-session memory and nothing else**: what changed, what is in flight,
+what is frozen, where to look. Not the plan (`docs/08-pm/plans/`), not the analysis, not the task
+list, not this file, not the project history.
 
 **THERE IS EXACTLY ONE HANDOFF FILE — owner ruling, 2026-08-24.** `HANDOFF.md` at the repository
-root. A session does **not** write `SESSION-HANDOFF-<date>.md` or any other dated variant, and gate
-15 fails on one. Update the single file; if what you have will not fit in it, that content belongs
-in `TODO.md` (open work) or in §12 here (a habit), which is where it was going to end up anyway.
-
-**What paid for it: seven created and four deleted in six days.** Four traps lived only inside one
-of them and were rescued hours before it was deleted. `DR-016`:441 still cites one — an append-only
-record pointing at a file removed on 2026-08-23, which §11 rule 2 forbids editing to repair. And
-gate 14 never scanned them, so the numbers inside drifted unchecked; the last one claimed
-*"everything is merged"* on a day it was not.
+root; gate 15 fails on a dated variant. If what you have will not fit, it belongs in `TODO.md` (open
+work) or §12 here (a habit). **What paid for it:** dated handoffs were created and deleted faster
+than anything could safely cite them — traps lived only inside one, an append-only record still
+points at another that was removed, and gate 14 never scanned any of them.
 
 ## 11. Before removing or retiring anything
 
-`docs/06-engineering/CHANGE_MANAGEMENT.md` §5 is canonical. The operational rules are:
+`docs/06-engineering/CHANGE_MANAGEMENT.md` §5 is canonical. The operational rules:
 
-1. **`stalled` and `unused` never authorise deletion.** Stalled is a work state. Unused means only
-   that named checks found no use; it creates a candidate.
+1. **`stalled` and `unused` never authorise deletion.** Stalled is a work state; unused means only
+   that named checks found no use, which creates a candidate.
 2. **Never delete a protected record.** Accepted decisions and ADRs, ratified criteria,
    pre-registrations, reports, journal entries and evidence are corrected forward by superseding,
    amending or visibly withdrawing them.
-3. **Consolidate ordinary documents only with a migration.** Move every unique obligation, update
-   references, `registry/project_manifest.yml` and `docs/README.md` in the same change, and name the
-   commit preserving the former state.
-4. **Treat source, tests and tools as review-required.** For `src/` and `tools/`, check the code graph
-   first, then the files, dynamic entry points, configuration, schedulers, tests and git history. A
-   report-linked runner or fixture is evidence-bound even with no runtime caller.
-5. **Generated derivatives may be removed.** Verify they reproduce from canonical source and are
-   ignored if they should not be tracked.
-6. **Record and verify the exact removal.** Put the rationale and checks in the commit or pull
-   request, then run the complete gate suite. `safe to delete` is that one reviewed decision, not a
-   permanent label.
+3. **Consolidate ordinary documents only with a migration** — move every unique obligation and
+   update references, `registry/project_manifest.yml` and `docs/README.md` in the same change.
+4. **Treat source, tests and tools as review-required.** Check the code graph, then the files,
+   dynamic entry points, configuration, schedulers, tests and git history. A report-linked runner is
+   evidence-bound even with no runtime caller.
+5. **Generated derivatives may be removed** once verified to reproduce from canonical source.
+6. **Record and verify the exact removal** in the commit or pull request, then run the complete gate
+   suite. `safe to delete` is that one reviewed decision, not a permanent label.
 
 ## 12. Traps that have cost real time, and the habits that catch them
 
-Migrated from `HANDOFF.md` §8 on 2026-08-15 — §10.7 makes this file the habit guide and HANDOFF
-session memory, and these are habits.
+**The traps.** One rule, one clause on what it cost.
 
-**Traps that have cost real time.** (This heading read *"Two traps"* over three bullets until
-2026-08-17 — gate 14 matches digits, so a count spelled in words is invisible to it. Written out,
-the words are as fragile as the numerals; the fix is to stop counting in prose at all.)
-
-- **The worktree venv points at the main checkout.** `pytest` run from a worktree exercises
-  `C:\PycharmProjects\SwingDesk\src`, not the worktree's, unless `PYTHONPATH` says otherwise. The
-  documentation gates read files by path and are unaffected; the code gates are not. Always run gates
-  with `PYTHONPATH=$PWD/src`.
-  **The symptom is a PASS, which is why knowing the rule is not enough to be safe from it.** Caught
-  again 2026-08-18, by a session that had this paragraph in context: `pytest tests/ -q` from the
-  worktree came back fully green against a change that had broken **37 assertions**, because it was
-  testing `master`. A suite that goes green from a worktree without `PYTHONPATH` is evidence about
-  the main checkout and says nothing whatever about your change. `ruff` and `mypy` take file paths
-  and are honest; `pytest` and `import-linter` import the package and are not.
-- **`data/` is not in your worktree either, and that is the same trap wearing a different hat.** The
-  DuckDB stores and the scheduler log live only in the main checkout. Gates 23 and 24 read them and
-  report `UNAVAILABLE` rather than passing blind; point them at the real stores with
-  `SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data` when you need the runtime figures.
-- **Gate 24 can be red on the main checkout on any morning, with nothing wrong.** `HANDOFF.md` §2's
-  runtime block is generated from `data/`, and the scheduled evening run moves what `data/` says. So
-  the block drifts every night the run executes and the gate compares it the next morning.
-  Regenerate rather than investigate:
-  ```bash
-  PYTHONPATH=$PWD/src python tools/build_state.py
-  ```
-  From a worktree the same command regenerates the repo and worktree blocks and **leaves the runtime
-  block alone**, which is why gate 24 answers `UNAVAILABLE` there instead of guessing. Point it at
-  the real stores and it regenerates all three, so a worktree can land the fix without the main
-  checkout committing anything:
+- **The worktree venv points at the main checkout** — always run gates with `PYTHONPATH=$PWD/src`.
+  **The symptom is a PASS**, so knowing the rule is not enough: a suite green from a worktree
+  without it is evidence about `master`. `ruff` and `mypy` take file paths and are honest; `pytest`
+  and `import-linter` import the package and are not.
+- **`data/` is not in your worktree either.** The stores and the scheduler log live only in the main
+  checkout; gates 23 and 24 report `UNAVAILABLE` rather than passing blind. Point them at the real
+  ones with `SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data`.
+- **Gate 24 can be red on the main checkout on any morning with nothing wrong** — the evening run
+  moves `data/` and the gate compares it next morning. Regenerate rather than investigate:
   ```bash
   SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data PYTHONPATH=$PWD/src python tools/build_state.py
   ```
-  Worth knowing before a session spends twenty minutes on a red gate that describes last night's
-  weather — or concludes the block can only be fixed from a checkout that cannot commit to `master`.
-- **`CREATE TABLE IF NOT EXISTS` is silent when a COLUMN is added, and the store dies days later.**
-  Found 2026-08-22, after the scheduled run had been dead since 08-18. `PR #9` added
-  `initial_costs_per_share` to `positions` on 08-17; the table already existed, so the statement did
-  nothing and the column never appeared on disk. Every evening from 08-18 - **both passes**, once the
-  19:30 task was registered - died on `BinderException: Referenced column ... not found`.
-  **Nothing noticed for four trading days**, because the failure was a stack trace in a log rather
-  than a coded refusal, and `a.run_completes` is a number nobody reads between sessions.
-  `platform/schema.py` now reconciles every store at open: an empty drifted table is re-created from
-  its own declared SQL, a POPULATED one refuses and names the drift, because filling a `NOT NULL`
-  column on existing rows means inventing a value. **Adding a column to a schema is a migration, and
-  it is not free just because the `CREATE` statement did not complain.**
-- **A test that pins a date but not the clock is a time bomb, and it goes off on a day nobody is
-  looking.** Found 2026-08-22: four tests in `test_cli.py` seeded a proposal dated 2026-08-16 and
-  then called `pending` and `respond` WITHOUT `--as-of`, so they read the wall clock.
-  `management.proposal_expiry_days` is 3 sessions, so they passed when written on 2026-08-17 and
-  **on 2026-08-20 the window closed and `master` went red with nobody having touched it.** The
-  failures surfaced in tests about approval, rejection and double-answering - none of which is about
-  expiry - so the symptom pointed nowhere near the cause.
-  **The tests that were ABOUT expiry never broke**, because those pin `--as-of` on both sides of the
-  boundary. The rule that separates them: if a fixture carries a hard-coded date and the code under
-  test reads `now`, the test is asserting something about today's date. **Pin both, or neither.**
-- **A PARTIALLY pinned clock is worse than an unpinned one, because its tests agree with the bug.**
-  Found 2026-08-22, migrated here from that day's session handoff when it was retired.
-  `tools/track_a_streak.py` computed the streak from `SWINGDESK_NOW` and printed the
-  deliberate-restart line from the **wall clock**. A test pinned to 2026-08-18 went on passing,
-  because the line it was reading had quietly opted out of the pin. Same family as the trap above and
-  worth its own sentence: **when a tool takes an injectable clock, every read of "now" in it uses
-  that clock — including the ones that only print.** A half-pinned tool is a tool whose tests measure
-  the calendar.
-- **Hand-maintained counts drift, every time.** Six have now been caught: the study verdicts
-  (a study census and its refutation count, wrong in five documents at once), the gate total, the
-  specification coverage summary
-  (31/22 against a table saying 30/24), a component-activation claim in
-  `COMPONENT_REGISTRY_SPEC.md`, and — 2026-08-15, after §10.5 had supposedly closed this — the Track
-  A streak and the directory pull census, both inside their own single owner. Each read as correct.
-  **None was reachable by review** — only recomputation caught them, which is why gates 3f, 3g, 3ci,
-  the gap-summary check in 3e, and now gate 24 exist.
-- **Answering from a PROXY instead of from the artifact that owns the claim.** Five of these in one
-  session, 2026-08-23/24, and they are one move rather than five mistakes:
-  *"v1 is close"* — inferred from `HANDOFF.md` §2's open project gates, while `ROADMAP.md` §2 lists
-  all six of `CHARTER.md` §4's capabilities as **done since 2026-08-02**. Two different ladders.
-  *"1 of 465 components active is the largest finish-line gap"* — inferred from a count instead of
-  reading the six capabilities, none of which asks for it.
-  *"The backtest engine only needs a parameterised front end"* — inferred from the **signature**
-  `run_arm(series, gate, atr, config)`; the body hardcodes `breakout_high`, so the engine expresses
-  one strategy family and it is the refuted one.
-  *"The 19:30 task is not registered"* — trusted `TODO.md` over the machine; it had been registered
-  five days earlier, and `AGENTS.md` §12 said so in this same file.
-  *"`DR-006` §10.3"* — cited from memory; it is §10.3 of this file.
-  **§10.5 gave every measured COUNT one owner. Nothing does that for a STATUS**, so a status claim
-  gets answered by whichever document mentions it first. The rule that closes it:
-  **a claim about state is read from the artifact that owns that state, and the owner is named
-  before the claim is made.** `CHARTER.md` §4 and `ROADMAP.md` §2 own "is v1 done". `criteria.yml`
-  owns "is this criterion met". The machine owns "is this task registered" — gate 26 asks it. The
-  function BODY owns "does this code support X"; a signature is a proxy and reads as an answer.
-
-- **A citation that was CORRECT when written, still standing after the fact it cites moved.** Nine
-  of these in one session, 2026-08-24, and they are one failure rather than nine. Nothing here
-  rotted by being wrong on the day it was written; each rotted when a *cited* fact changed
-  underneath it — a study verdict withdrawn, a charter amended, a parameter given a value, a gate
-  added — and the sentence stayed.
-  `SPEC_GAP_ANALYSIS.md` graded a section **FULL** on the evidence *"PR-002 validated"* eight days
-  after that verdict was corrected to `inconclusive`, which is `AGENTS.md` §3's *nothing looks more
-  validated than it is* being violated in a Tier-8 table.
-  `UX_TASK_FLOWS.md` said the risk budget's parameters were *"all `unset`"* two days after `DR-006`
-  ratified them; `GO_LIVE_GATES.md` said the same of `validation.max_allowable_drawdown` sixteen
-  days after `DR-007` gave it a value — and that one is the project's own inert gate, so the stale
-  line was the exact claim a reader would act on.
-  `docs/README.md` marked three specifications `planned` while all three existed and declared
-  `drafting`; `HANDOFF.md` §2 said CI reports *four* `UNAVAILABLE` six days after gate 26 made it
-  five; `RISK_REGISTER.md` said *"9 parameters carry assumed values"* against 34 — and that exact
-  sentence is quoted in `verify_counts.py`'s own comment as the example justifying why the gate does
-  not check that form.
-  **Two things follow, and they are different.** The mechanical half is gate-able and now gated:
-  **28** refuses a document stating a parameter status the registry contradicts, **15** now compares
-  the index's Status cell against the manifest, and **29** refuses a pre-registration id claimed
-  twice. The other half is not: no gate can see that a study verdict was withdrawn or a charter
-  amended, and every one of those citations was internally consistent.
-  **So the habit is a re-read rather than a check: when a fact changes, the thing to search for is
-  not the file you changed but everything that CITED it.** `git grep` the id — the parameter, the
-  study, the criterion, the gate number — before considering the change landed. It is the same
-  move §10.2 asks for across branches, aimed at documents instead.
-
-- **Migrated 2026-08-24 from that day's dated session handoff, §3, before it was deleted.**
-  Four traps that lived only there, which is why they are here now — a habit stored in a
-  document whose own header says to delete it is a habit with an expiry date. The file is
-  not named here on purpose: naming it would leave this bullet citing something that no
-  longer exists, which is the defect the migration was performed to avoid.
-  **`REFUSED` is not `INCONCLUSIVE`.** One says there was not enough data to look with; the other
-  says the study looked and could not tell. Gate 3f had no `REFUSED` in its vocabulary, so the
-  first study to obey `PREREG_TEMPLATE` §8 failed a gate for obeying it.
-  **A refused study still spends its trials.** `b.deflated_sharpe` deflates by shots taken at the
-  data, not by shots that produced an answer. `trial_budget.py` counted such a study as **0** until
-  it was taught to read a study's own declared count.
-  **Coverage is an ALPHABETICAL PREFIX, not a sample.** It is why `SPY` was missing while `DIA` was
-  present, and why a percentile taken from stored coverage is defensible only because a seeded
-  random sample and the prefix were checked against each other and agreed.
-  **Two stores, two clocks.** Bars, corporate actions and classifications are filled by different
-  passes, so reading one at another's `knowledge_time` hides everything learned since. Hit twice in
-  a single session before it was written down.
-  **The stores are SINGLE-WRITER (`ADR-0004`), and the right response to a held one is
-  `UNAVAILABLE`, never a traceback.** Demonstrated again 2026-08-24 at 18:31, against the real
-  scheduled 18:30 pass: `tools/build_state.py` raised `duckdb.IOException` where it should have
-  reported that it could not measure and left the block alone. A long refresh pass blocks every
-  tool that reads the stores, and that is the design working rather than a fault.
+  From a worktree without `SWINGDESK_DATA` it regenerates the repo and worktree blocks and leaves
+  the runtime block alone.
+- **`CREATE TABLE IF NOT EXISTS` is silent when a COLUMN is added, and the store dies days later** —
+  a new column never reached disk and every scheduled evening died for four trading days, unnoticed
+  because the failure was a stack trace rather than a coded refusal. `platform/schema.py` now
+  reconciles every store at open. **Adding a column is a migration.**
+- **A test that pins a date but not the clock is a time bomb.** Tests seeded a dated proposal and
+  then read the wall clock, so `master` went red on the day the expiry window closed with nobody
+  having touched it. **If a fixture carries a hard-coded date and the code under test reads `now`:
+  pin both, or neither.**
+- **A PARTIALLY pinned clock is worse than an unpinned one, because its tests agree with the bug** —
+  a tool computed from its injected clock and printed one line from the wall clock, and the pinned
+  test passed. **Every read of "now" uses the injected clock, including the ones that only print.**
+- **Hand-maintained counts drift, every time.** Study verdicts, the gate total, a coverage summary, a
+  component-activation claim, the Track A streak and the directory census have all been caught, the
+  last two inside their own single owner. **None was reachable by review** — only recomputation
+  caught them, which is why gates 3f, 3g, 3ci, 3e's gap-summary check and 24 exist.
+- **Answering from a PROXY instead of from the artifact that owns the claim** — *"v1 is close"* read
+  off open project gates while `ROADMAP.md` §2 lists the charter's capabilities as done, and *"the
+  engine only needs a parameterised front end"* read off a signature whose body hardcodes one
+  strategy family. §10.5 gave every measured COUNT one owner; **nothing does that for a STATUS, so
+  read a claim about state from the artifact that owns it and name the owner before making it.**
+- **A citation that was CORRECT when written, still standing after the fact it cites moved.** Nothing
+  rots by being wrong the day it is written; it rots when a *cited* fact changes — a verdict
+  withdrawn, a charter amended, a parameter given a value. Gates 15, 28 and 29 catch the mechanical
+  half; no gate sees a withdrawn verdict. **When a fact changes, `git grep` the id and check
+  everything that CITED it, not the file you changed** — §10.2's move, aimed at documents.
+- **`REFUSED` is not `INCONCLUSIVE`** — one says there was not enough data to look with, the other
+  that the study looked and could not tell. Gate 3f had no `REFUSED`, so the first study to obey
+  `PREREG_TEMPLATE.md` §8 failed a gate for obeying it.
+- **A refused study still spends its trials.** `b.deflated_sharpe` deflates by shots taken at the
+  data, not by shots that produced an answer.
+- **Coverage is an ALPHABETICAL PREFIX, not a sample** — a percentile from stored coverage is
+  defensible only because a seeded random sample and the prefix were checked against each other.
+- **Two stores, two clocks.** Bars, corporate actions and classifications are filled by different
+  passes, so reading one at another's `knowledge_time` hides everything learned since.
+- **The stores are SINGLE-WRITER (`ADR-0004`); the right response to a held one is `UNAVAILABLE`,
+  never a traceback.** A long refresh pass blocks every tool that reads them, and that is the design
+  working.
+- **A scheduler status is not an exit code** — `Last Result` carries a `SCHED_S_*` value while a run
+  is in flight, and gate 26 called a healthy mid-run pass a crash until it stopped reading that
+  column unconditionally. A gate that manufactures alarm costs what §10.6 rule 2 says one that
+  manufactures confidence costs.
 
 **The habits:**
 
-- **Name the owner before making the claim.** One sentence, in your own head, before you assert
-  anything about state: *which artifact owns this, and have I opened it?* It costs a read and it is
-  the only thing that catches the proxy trap above, because a proxy answer feels exactly like a
-  checked one. Gates cannot help here — every one of those five claims was about something no gate
-  can see, which is why this is a habit and not a check.
-- **Verify before asserting.** When you find a stale claim, **add a gate rather than fixing the
-  instance.** Gates 3f, 3g, 3ci, 3e's gap-summary check, 24 and 25 all exist because of it, and
-  every one has since caught something. Gate 25 is the clearest case: nothing bound a study's runner
-  to its own pre-registration, so `PR-002` reached an affirmative verdict over a declared scope
-  shortfall with 1 of 3 registered perturbations run, and every gate stayed green.
+- **Name the owner before making the claim.** *Which artifact owns this, and have I opened it?* It
+  is the only thing that catches the proxy trap, because a proxy answer feels exactly like a checked
+  one and no gate can help.
+- **Verify before asserting, and when you find a stale claim add a gate rather than fixing the
+  instance.** Gate 25 is the clearest case: nothing bound a study's runner to its own
+  pre-registration, so `PR-002` reached an affirmative verdict over a declared scope shortfall with
+  every gate green.
 - **`unavailable` is not `fail`, and it is not `pass` either.** A gap in the *system* and a fact
-  about the *trade* are different claims. Collapsing them is the most damaging error this product can
-  make — and a gate that cannot see its subject makes the same error about itself (§10.6).
-- **An `UNSET` parameter is the design working**, not a backlog item. Components refuse rather than
-  default.
-- **Never hand-edit** a `verbatim` block or a generated file. Gates 2, 3b–3ci and 24 exist to catch it.
-- **No Russian in code** (§5) — one marked exception, the course-index heading pattern, which is data
-  rather than prose. Course quotations live in `docs/`, where gate 2 checks them.
-- **Rollback is mostly supersede, not revert.** The stores are append-only; `CHANGE_MANAGEMENT.md`
-  §3 says what can be undone and what can only be corrected forward.
+  about the *trade* are different claims; collapsing them is the most damaging error this product
+  can make — and a gate that cannot see its subject makes the same error about itself (§10.6).
+- **An `UNSET` parameter is the design working**, not a backlog item.
+- **Never hand-edit** a `verbatim` block or a generated file.
+- **No Russian in code** (§5), one marked exception: the course-index heading pattern.
+- **Rollback is mostly supersede, not revert.** `CHANGE_MANAGEMENT.md` §3 says what can be undone
+  and what can only be corrected forward.
 
 ## 13. How to talk to the owner — owner instruction, 2026-08-17
 
-**Scope: chat replies only.** This governs what an agent *says to the owner in conversation*. It
-governs nothing that lands in the repository. §5 stands unchanged for every artifact — documents,
-code, comments, docstrings, commit messages, CLI output, reports and UI copy stay **English
-throughout**, and the reasons in §5 are unaffected by anything here.
+**Scope: chat replies only.** It governs what an agent *says to the owner in conversation* and
+nothing that lands in the repository — §5 stands unchanged for every artifact, which stays **English
+throughout**.
 
 The rules, in the owner's own words:
 
@@ -627,23 +436,16 @@ The rules, in the owner's own words:
 > Не оскорбляй меня или мою семью, мат должен относиться к ситуации, проблеме или эмоции.
 
 **Kept verbatim, and that is the second marked exception to §5's English rule** — the first being
-`build_course_index.py`'s `TOPIC_HEADING` pattern. Same reason: these words *are* the
-specification. A rule that names which words to use cannot be translated without destroying the
-thing it specifies, exactly as removing that pattern's Cyrillic stops the extraction rather than
-tidying it.
+`build_course_index.py`'s `TOPIC_HEADING`. These words *are* the specification, and a rule naming
+which words to use cannot be translated without destroying what it specifies.
 
-**Where the profanity stops, restated because it is the part that can break something.** Never
-inside code, commands, URLs, JSON, paths, error text, or a verbatim quotation. Those are the same
-boundaries §5 draws and the same ones gate 2 depends on: a course quotation is checked against the
-PDF byte for byte, and a command the owner pastes into a shell has to run.
-
-**It is aimed at situations, never at people.** Not the owner, not their family. A problem is
-`хуйня`; the person reading this is not.
+**Where the profanity stops:** never inside code, commands, URLs, JSON, paths, error text, or a
+verbatim quotation — the same boundaries §5 draws and gate 2 depends on. **And it is aimed at
+situations, never at people.**
 
 **"Кратко и прямо" is a load-bearing half of this instruction**, not a preamble to the fun part.
-Fewer words, the answer first, no hedging — and it does not license less rigour. The measured-number
-rules (§10.5, §10.6), the trust discipline (§1) and the habit of proving a test can fail (§12) are
-unchanged; brevity applies to how a finding is reported, never to whether it was verified.
+Fewer words, the answer first, no hedging — and it licenses no less rigour. Brevity applies to how a
+finding is reported, never to whether it was verified.
 
 ## 14. Force the answer — owner instruction, 2026-08-17
 
@@ -653,19 +455,18 @@ unchanged; brevity applies to how a finding is reported, never to whether it was
 casual go-ahead as the answer.** Put the question, wait, and if the reply is a general "just do it"
 rather than an answer to *that* question, ask again.
 
-This is not `D6` restated. `D6` ("a proposal is not permission") stops the **system** from acting
-unasked; this stops an **agent** from treating ambient approval as a specific one. Both directions
-have to be closed or the audit trail records a decision nobody made.
+This is not `D6` restated. `D6` ("a proposal is not permission") stops the **system** acting unasked;
+this stops an **agent** treating ambient approval as a specific one. Both directions have to be
+closed, or the audit trail records a decision nobody made.
 
 Two things follow, and they are the enforceable part:
 
 - **A critical proposal is answered by `swingdesk respond POS-N SEQ --approve|--reject --reason "…"`
-  and by nothing else.** That is also what puts the owner's reason and the moment they answered into
-  the append-only response table, which is what Production Rule 3.8 requires and what a sentence in
-  chat cannot do.
+  and by nothing else** — that is what puts the owner's reason and the moment they answered into the
+  append-only response table, which a sentence in chat cannot do.
 - **A critical proposal never expires and never auto-applies** (`DR-013` §2.2). A timer that exits a
   position is the system deciding with a delay, which `CHARTER.md` A-001 forbids.
 
-The general form, worth carrying beyond proposals: **when the owner asks for something whose right
-answer is theirs to give, the helpful move is the question, not the guess.** Do the parts that do not
-depend on the answer, then ask — do not silently pick a default and proceed.
+The general form: **when the owner asks for something whose right answer is theirs to give, the
+helpful move is the question, not the guess.** Do the parts that do not depend on the answer, then
+ask — do not silently pick a default and proceed.

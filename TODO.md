@@ -514,7 +514,7 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       so the coverage figure is recomputed on every run and cannot be ~10 days stale again. Derive
       it with that command; this line deliberately does not repeat it (`AGENTS.md` §10.5).
 
-### PICK THIS UP FIRST: slim `AGENTS.md` — owner instruction 2026-08-24, measured and briefed
+### DONE 2026-08-24: slim `AGENTS.md` — owner instruction, cut and verified
 
 **The ask:** *"У нас agents выглядят уже как книжка... Можно ли его сделать нормальным, чистеньким,
 без прозы? Правила, конвенции, всё как есть."* Yes. The brief is below so a fresh session starts
@@ -551,6 +551,26 @@ and say in the file that the full accounts remain reachable through `git log -p 
 
 **Deliberately not started at the end of a long session.** It is the most-cited document in the
 tree; a large edit made tired is how this repository has been burned before.
+
+**CUT 2026-08-24, and the risk above was answered with a check rather than with care.** Three
+things were asserted mechanically after the edit, not read for: every `##`/`###` heading is
+**byte-identical and in the same order**; every `AGENTS.md` section reference across every tracked
+file still **resolves** — none dangling; and §13's owner block is **unchanged byte for byte**. No
+document, parameter or component id appears in the new file that was not in the old one, so the cut
+could not invent a citation. All gates pass.
+
+**It came in ABOVE the target, and the target was the estimate that was wrong.** Roughly a third
+was removed, not a half. The arithmetic the brief did not do: the file's tables, command blocks and
+the owner's verbatim quotation are unshrinkable, and the rest is about sixty distinct rules. At
+**one rule plus one price clause each** — which this same brief calls non-negotiable, because a bare
+rule reads as arbitrary and gets ignored — the floor sits well above 3,500 words. Reaching the
+number needs one of two things the owner has not asked for: **drop the price clauses, or drop
+rules.** Neither was taken.
+
+What actually went: every restatement, every second example, every paragraph that retold an
+incident already summarised in its own first sentence. §12 was a third of the file and is the
+section that changed most. Derive the current length with `python -c "print(len(open('AGENTS.md',
+encoding='utf-8').read().split()))"`, never from this line.
 
 ### The dated session-handoff files are outside the document map, and one has already broken a record
 
