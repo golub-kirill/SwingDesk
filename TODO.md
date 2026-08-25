@@ -439,12 +439,26 @@ target is a sentence asserting something about the WORLD that nobody tested.
       What those trades would have returned: not — no free source serves the price path of a symbol
       that has gone, so the −2R assumption stays an assumption. `VENDOR_COMPARISON.md` §7 and
       `EVIDENCE_SUMMARY.md` §3 are both amended in place.
-- [ ] **`[v]` NEXT, and it is now unblocked: measure the delisting rate over the admitted universe.**
-      The survivorship bound's exposure is currently assumed. With EDGAR the count is derivable —
-      for each historical window, how many names that the screen would have admitted later
-      delisted. That converts one half of the bound from an assumption into a measurement and needs
-      no new vendor relationship. It is a measurement, not a study: it describes the universe and
-      evaluates no strategy.
+- [ ] **`[v]` NEXT, and it needs ONE owner action first — a contact address for the SEC header.**
+      *(This item replaces a more optimistic version written an hour earlier the same day, before
+      the host boundary was measured. `AGENTS.md` §15 applies to one's own claims too.)*
+      **The measurement worth having:** `directory.duckdb` holds 18 pulls, and **87 symbols present
+      at the first pull are absent at the last** — over three weeks. `DR-008` c3 records that a
+      departure is an observation and not a delisting, *because a ticker change looks the same*.
+      **EDGAR resolves exactly that ambiguity**: a company that still files and still lists moved or
+      renamed; one with empty ticker and exchange lists and a Form 25 delisted. Classifying those 87
+      turns the project's own departure record from ambiguous into counted, and it is the first
+      empirical purchase anyone has had on the survivorship question.
+      **Eyeballing the sample already shows it is a mixture**, which is why it is worth doing rather
+      than assuming: `BBBY` plainly delisted, `AVB` is a large S&P 500 REIT and cannot have, and a
+      good share of the rest are SPAC units and warrants that "depart" on separation.
+      **The blocker, measured rather than guessed.** Lookup by CIK works today. Lookup by TICKER
+      needs `www.sec.gov/files/company_tickers.json`, and `www.sec.gov` returns **403** to a
+      descriptive `User-Agent` while `data.sec.gov` returns **200** — two probes each way. The SEC
+      asks for a contact address in the header. **That address is the owner's to supply and no agent
+      may invent one**; set `SWINGDESK_EDGAR_CONTACT` and the route opens.
+      **Then it is a measurement, not a study**: it describes the universe and evaluates no strategy,
+      so it spends no trial.
 - [ ] **`[v]` "A fourth estimator is the same family."** `HANDOFF.md` §7's spread row. Three
       estimators were measured and that part is evidence; the fourth-estimator clause is a
       **prediction** and it closes the search (§15 rule 3). Either name the property that makes it

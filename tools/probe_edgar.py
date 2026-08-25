@@ -22,10 +22,26 @@ half of that bound from an assumption into a measurement - a name that vanished 
 when its price path cannot be recovered.
 
 **Cost, registration and terms.** None, none, and a fair-access policy: requests must carry a
-descriptive `User-Agent` and are rate-limited. Verified 2026-08-24 - no header returns **403**, a
-descriptive one returns **200**. **No email is sent by this tool.** The SEC asks for a contact
-address in the header and the operator can supply one through `SWINGDESK_EDGAR_CONTACT`; nothing
-here transmits an address it was not given.
+descriptive `User-Agent` and are rate-limited. **No email is sent by this tool.** The SEC asks for a
+contact address in the header and the operator can supply one through `SWINGDESK_EDGAR_CONTACT`;
+nothing here transmits an address it was not given.
+
+**THE TWO HOSTS BEHAVE DIFFERENTLY, measured 2026-08-24 with two probes each way.** This is the
+practical boundary and it decides what is reachable today:
+
+| Host | With a descriptive `User-Agent` | Examples tried |
+|---|---|---|
+| `data.sec.gov` | **200** | `/submissions/CIK…json`, `/api/xbrl/frames/…` |
+| `www.sec.gov` | **403** *"Undeclared Automated Tool"* | `/Archives/edgar/full-index/…`, `/files/company_tickers` |
+
+So the per-issuer API family is open **and the static-file family is not**. That matters because the
+ticker-to-CIK map lives on `www.sec.gov`, so a lookup BY TICKER needs the operator to declare a
+contact, while a lookup by CIK works now. It is a one-line configuration the owner supplies, not a
+closed door - recorded here rather than described as unavailable (`AGENTS.md` §15).
+
+**Whether an email-shaped `User-Agent` opens `www.sec.gov` is UNTESTED**, deliberately: sending a
+fabricated contact address would misrepresent who is calling, and the real one is the owner's to
+give.
 
 **Read-only, and it writes nothing.** It fetches a handful of submission records to demonstrate the
 route and prints what it found.
