@@ -473,7 +473,43 @@ target is a sentence asserting something about the WORLD that nobody tested.
       What those trades would have returned: not — no free source serves the price path of a symbol
       that has gone, so the −2R assumption stays an assumption. `VENDOR_COMPARISON.md` §7 and
       `EVIDENCE_SUMMARY.md` §3 are both amended in place.
-- [ ] **`[v]` NEXT, and it needs ONE owner action first — a contact address for the SEC header.**
+- [x] **`[v]` DONE 2026-08-25 — and it needed NO owner action. The blocker was false.**
+      This item read *"it needs ONE owner action first — a contact address for the SEC header"*, on
+      the strength of a measurement that `www.sec.gov` returns 403 to a descriptive `User-Agent`
+      while `data.sec.gov` returns 200. **Retested with the header held constant, and the host was
+      never the variable: `www.sec.gov` requires a `User-Agent` AND an `Accept` header.** Six
+      probes, one header isolated at a time, repeated against flakiness.
+      **How the wrong conclusion was reached is the transferable part.** `probe_edgar.fetch()` has
+      always sent `Accept: application/json`; the `www.sec.gov` probe was made separately and sent
+      only a `User-Agent`. **The two hosts were compared with different headers**, the difference
+      was attributed to the host, and a real measurement waited fifteen days on an owner action
+      nobody needed. `AGENTS.md` §17 — verify at the right granularity — and §15's asymmetry: a
+      wrong impossibility costs everything downstream of it, silently.
+      `tools/probe_edgar.py` now **re-derives that table on every run** rather than carrying it as
+      prose, which is §10.6's argument applied to a reachability fact.
+      **THE MEASUREMENT, taken: `python tools/classify_departures.py`.** Of the **87** symbols that
+      left the directory between 2026-08-03 and 2026-08-24, **26 are confirmed delistings of that
+      security**, 11 are structured symbols (warrants, units, rights, classes) that depart on
+      separation, 1 is a rename, 40 are unresolved and 9 report *still listed at EDGAR*. Derive the
+      numbers with the command; never from this line.
+      **The methodological finding is worth more than the count, and it corrects `probe_edgar`'s
+      own validated method.** Two discriminators disagree at short horizons: the filer's TICKER LIST
+      is **not timely** — 34 of the 36 resolvable names still carried their departed ticker in EDGAR
+      metadata while absent from the vendor's live directory — while the **Form 25 / 25-NSE DATE
+      is**, and it lands on the same pull the symbol vanished at. `AVB` left between the 08-14 and
+      08-17 pulls and filed on 08-17; `WBS` left between 08-19 and 08-20 and filed on 08-20. So a
+      RECENT departure is classified by the form date; the ticker list is right for history only.
+      **And it refutes this file's own eyeball.** The earlier version of this item read *"`AVB` is a
+      large S&P 500 REIT and cannot have [delisted]"*. AvalonBay filed a 25-NSE the day it left, is
+      absent from both live vendor files, and so is Equity Residential — which reports **no ticker
+      at all** at EDGAR. An eyeball is a claim too.
+      **What it does NOT establish**, stated so the number is not over-read: `unresolved` is not
+      *not delisted*; *still listed at EDGAR* is not survival, because the metadata lags; and the
+      RETURN half of the survivorship bound is untouched, so −2R stays an assumption.
+- [ ] **`[v]` ~~NEXT, and it needs ONE owner action first — a contact address for the SEC header.~~**
+      **Struck 2026-08-25 — see above.** Kept visible rather than deleted, per §10.5's convention:
+      an item that parked a measurement behind an owner action for fifteen days on an untested
+      premise is worth more visible than absent.
       *(This item replaces a more optimistic version written an hour earlier the same day, before
       the host boundary was measured. `AGENTS.md` §15 applies to one's own claims too.)*
       **The measurement worth having:** `directory.duckdb` holds 18 pulls, and **87 symbols present

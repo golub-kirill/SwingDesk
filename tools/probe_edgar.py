@@ -26,24 +26,33 @@ descriptive `User-Agent` and are rate-limited. **No email is sent by this tool.*
 contact address in the header and the operator can supply one through `SWINGDESK_EDGAR_CONTACT`;
 nothing here transmits an address it was not given.
 
-**THE TWO HOSTS BEHAVE DIFFERENTLY, measured 2026-08-24 with two probes each way.** This is the
-practical boundary and it decides what is reachable today:
+**~~THE TWO HOSTS BEHAVE DIFFERENTLY~~ - RETESTED 2026-08-25 AND THEY DO NOT. Both are open, and
+nothing needs configuring.**
 
-| Host | Descriptive `User-Agent` | Examples tried |
+This block used to read: *"`data.sec.gov` 200, `www.sec.gov` 403 ... the ticker-to-CIK map lives on
+`www.sec.gov`, so a lookup BY TICKER needs the operator to declare a contact."* Measured again with
+the header held constant, and **the host was never the variable**:
+
+| Headers sent | `data.sec.gov` | `www.sec.gov` |
 |---|---|---|
-| `data.sec.gov` | **200** | `/submissions/CIK…json`, `/api/xbrl/frames/…` |
-| `www.sec.gov` | **403** | `/Archives/edgar/full-index/…`, `/files/company_tickers` |
+| none | 403 | 403 |
+| `User-Agent` only | 200 | **403** |
+| `User-Agent` + `Accept` | 200 | **200** |
+| `Accept` only | - | 403 |
 
-The 403 body names the reason: *"Your Request Originates from an Undeclared Automated Tool"*.
+**`www.sec.gov` requires BOTH a `User-Agent` and an `Accept` header.** Six probes, isolated one
+header at a time, repeated three times against flakiness.
 
-So the per-issuer API family is open **and the static-file family is not**. That matters because the
-ticker-to-CIK map lives on `www.sec.gov`, so a lookup BY TICKER needs the operator to declare a
-contact, while a lookup by CIK works now. It is a one-line configuration the owner supplies, not a
-closed door - recorded here rather than described as unavailable (`AGENTS.md` §15).
+**How the wrong conclusion was reached, which is the transferable part.** `fetch()` has always sent
+`Accept: application/json`; the `www.sec.gov` probe was made separately and sent only a
+`User-Agent`. **The two hosts were compared with different headers**, the difference was attributed
+to the host, and a real measurement was parked behind an owner action that was never needed. That is
+`AGENTS.md` §17 exactly - verify at the right granularity - and §15's asymmetry: the wrong
+impossibility cost fifteen days of a measurement nobody could take.
 
-**Whether an email-shaped `User-Agent` opens `www.sec.gov` is UNTESTED**, deliberately: sending a
-fabricated contact address would misrepresent who is calling, and the real one is the owner's to
-give.
+**The contact address is still worth setting and is no longer a blocker.** The SEC's fair-access
+policy asks for one and `SWINGDESK_EDGAR_CONTACT` still supplies it; nothing here transmits an
+address it was not given. What changed is that lookup BY TICKER works without it.
 
 **Read-only, and it writes nothing.** It fetches a handful of submission records to demonstrate the
 route and prints what it found.
@@ -62,6 +71,10 @@ import urllib.error
 import urllib.request
 
 BASE = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
+
+#: The ticker-to-CIK map. Lives on `www.sec.gov`, which was believed closed to this tool until
+#: 2026-08-25 - see the header block. About 10,400 currently-registered tickers.
+TICKER_MAP = "https://www.sec.gov/files/company_tickers.json"
 
 #: SEC fair access allows ten requests a second. One every two seconds is far inside it and this
 #: probe fetches a handful of records, so politeness costs nothing worth optimising.
@@ -114,8 +127,44 @@ def describe(record: dict) -> tuple[bool, list[tuple[str, str]]]:
     return listed, notices
 
 
+def host_reachability() -> list[tuple[str, str]]:
+    """Re-derive the host/header table on every run instead of trusting the block above.
+
+    **This exists because that block was wrong for fifteen days**, and wrong in the direction that
+    closes work: it reported `www.sec.gov` as forbidden and sent a real measurement to wait on an
+    owner action that was never needed. A reachability fact decides what work is possible, so it
+    earns the same treatment `AGENTS.md` §10.6 gives a measured count - derived, not remembered.
+    Three requests.
+    """
+    results = []
+    for label, url, headers in (
+        ("data.sec.gov  UA+Accept", BASE.format(cik=320193),
+         {"User-Agent": _user_agent(), "Accept": "application/json"}),
+        ("www.sec.gov   UA only", TICKER_MAP, {"User-Agent": _user_agent()}),
+        ("www.sec.gov   UA+Accept", TICKER_MAP,
+         {"User-Agent": _user_agent(), "Accept": "application/json"}),
+    ):
+        request = urllib.request.Request(url, headers=headers)
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                results.append((label, str(response.status)))
+        except urllib.error.HTTPError as error:
+            results.append((label, f"{error.code} {error.reason}"))
+        except (urllib.error.URLError, TimeoutError) as error:
+            results.append((label, f"UNREACHABLE {error}"))
+        time.sleep(DELAY_SECONDS)
+    return results
+
+
 def main() -> int:
     print(f"probe_edgar: {len(CASES)} case(s), User-Agent {_user_agent()!r}\n")
+
+    print("  host reachability, re-measured now rather than quoted:")
+    for label, status in host_reachability():
+        print(f"      {label:26} {status}")
+    print("      `www.sec.gov` needs BOTH headers. The host was never the variable; the header was.")
+    print()
+
     failures = 0
     for index, (cik, name, expected_listed) in enumerate(CASES):
         if index:

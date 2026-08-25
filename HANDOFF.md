@@ -344,12 +344,16 @@ deliberately built no value into a threshold and took no decision that was the o
 4. **The `PR-005` trade log** — the published CSV no longer matches a fresh replay because seven
    bars arrived three hours after publication. Three options in `TODO.md`; `docs/prereg/results/`
    was deliberately not touched.
-5. **`SWINGDESK_EDGAR_CONTACT` is one line and unblocks a real measurement.** `data.sec.gov` answers
-   a descriptive `User-Agent` and `www.sec.gov` does not, so lookup by CIK works and lookup by
-   TICKER needs the contact the SEC asks for. With it, the **87 symbols that left the directory in
-   three weeks** can be classified into delistings and renames — which `DR-008` c3 records as
-   currently indistinguishable, and which is the first empirical purchase anyone has had on the
-   survivorship question.
+5. ~~**`SWINGDESK_EDGAR_CONTACT` is one line and unblocks a real measurement.**~~ **DONE
+   2026-08-25, and it needed no owner action: the blocker was false.** `www.sec.gov` requires a
+   `User-Agent` **and an `Accept` header** — the original comparison sent `Accept` to one host and
+   not the other, attributed the difference to the host, and parked a measurement behind an owner
+   action nobody needed. `python tools/classify_departures.py` classifies the 87 departures: **26
+   confirmed delistings**, 11 structured symbols, 1 rename, 40 unresolved. The methodological
+   finding outranks the count — the filer's TICKER LIST lags the vendor by more than the window
+   (34 of 36) while the **Form 25 date does not**, landing on the same pull the symbol vanished at.
+   `tools/probe_edgar.py` re-derives the host table on every run now instead of carrying it as
+   prose. Setting the contact is still good citizenship and no longer blocks anything.
 6. **The AI guard exists and is half of what A-001 requires.** `application/ai_guard.py` refuses
    both controlled vocabularies and any numeral the deterministic path did not produce, reading the
    vocabularies from their enums so they cannot drift. **It cannot see paraphrase**, two tests
