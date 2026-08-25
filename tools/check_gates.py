@@ -168,6 +168,8 @@ def main() -> int:
                               [python, "tools/verify_prereg_ids.py"]),
         "30 rules home": _run("a rule lives in AGENTS.md and nowhere else",
                               [python, "tools/verify_rules_home.py"]),
+        "31 commands run": _run("a command a document tells you to run accepts the arguments given",
+                                [python, "tools/verify_commands.py"]),
     }
 
     print("\n" + "=" * 62)

@@ -252,14 +252,45 @@ def _directory_facts(measured_instruments: int) -> list[tuple[str, str]]:
         latest = connection.execute(
             "SELECT rows FROM directory_pulls ORDER BY knowledge_time DESC LIMIT 1"
         ).fetchone()
+        # The two reasons a pull carries no session date are DIFFERENT facts and this row asserted
+        # one of them for both until 2026-08-25. A pull taken BEFORE the field existed is
+        # permanently unattributable (`DR-008` c3). A pull taken AFTER it and still null was
+        # REJECTED by the monotonicity check in `DirectoryStore.record` - the vendor file had not
+        # regenerated, so it is a re-pull of a session already recorded. Three of the ten were the
+        # second kind while the row said all ten were the first, which is the drift §10.6 exists to
+        # stop, living inside the generator that exists to stop it.
+        boundary = connection.execute(
+            "SELECT MIN(knowledge_time) FROM directory_pulls WHERE source_session_date IS NOT NULL"
+        ).fetchone()[0]
+        if boundary is None:
+            predating, rejected = pulls - confirmed, 0
+        else:
+            predating = connection.execute(
+                "SELECT COUNT(*) FROM directory_pulls "
+                "WHERE source_session_date IS NULL AND knowledge_time < ?", [boundary]
+            ).fetchone()[0]
+            rejected = connection.execute(
+                "SELECT COUNT(*) FROM directory_pulls "
+                "WHERE source_session_date IS NULL AND knowledge_time > ?", [boundary]
+            ).fetchone()[0]
     finally:
         connection.close()
     listed = int(latest[0]) if latest else 0
     coverage = f"{measured_instruments / listed:.1%}" if listed else "n/a"
+    unattributed = (
+        f"**{predating}** predate the field and stay permanently unattributed (`DR-008` c3)"
+        if predating else "none predate the field"
+    )
+    if rejected:
+        unattributed += (
+            f"; **{rejected}** do NOT - they were taken after the field existed and the vendor "
+            f"file had not regenerated, so `DirectoryStore.record`'s monotonicity check dropped "
+            f"the claim. Each of those is a re-pull of an already-recorded session, which "
+            f"`DR-008` says should make **zero requests**"
+        )
     return [
         ("Directory", f"**{pulls} pulls** · **{confirmed} confirmed** against the response's own "
-                      f"`Last-Modified` (`source_session_date`); the rest predate the field and "
-                      f"stay permanently unattributed (`DR-008` c3)"),
+                      f"`Last-Modified` (`source_session_date`); of the rest, {unattributed}"),
         ("Universe coverage", f"bars stored for {measured_instruments:,} of {listed:,} listed "
                               f"symbols - **{coverage}**"),
     ]
@@ -304,7 +335,8 @@ def _classification_facts() -> list[tuple[str, str]]:
                             f"(**{share}**) report at least one non-zero weight. The stricter "
                             f"`look_through` count, which also drops a degenerate ETF "
                             f"look-through (`DR-006` §8.7), is lower - derive it with "
-                            f"`python tools/measure_sector_cap.py --wide`"),
+                            f"`python tools/measure_sector_cap.py --wide "
+                            f"--classifications data/classifications.duckdb`"),
     ]
 
 
