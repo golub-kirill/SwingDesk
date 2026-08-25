@@ -229,6 +229,22 @@ Run it **before starting** and again **before merging**. `HANDOFF.md` §2 carrie
 16 fails if a worktree is missing — but a sibling worktree is not in your tree, so an accurate
 document can be silently incomplete about the thing most likely to waste your session.
 
+**Listing them is not reading them, and that distinction cost two hours on 2026-08-25.** The command
+above returns names. A session ran it, read the siblings' commit **subjects**, saw them naming other
+work, and went on to correct the same two table rows a sibling had corrected two hours earlier —
+with gate 16 green the whole time, because gate 16's subject is whether the worktree is *declared*.
+A subject line describes what a commit was *about*; it cannot tell you what it *touched*.
+
+```bash
+python tools/verify_sibling_edits.py          # overlaps, in merge-base coordinates
+git diff master...<branch> -- <path>          # then read the one that overlaps
+```
+
+**Run it before you write, not when the gates run.** Gate 33 is that check and it is advisory, but
+it fires at gate time — by which point the duplicated work exists and the choice is which version to
+throw away. **Decide that NOW rather than at merge time**: two same-day corrections of one paragraph
+in an append-only-adjacent record is worse than either of them alone.
+
 ### 10.2 Before a study, search the other branches for the same question
 
 ```bash
@@ -324,6 +340,32 @@ work) or §12 here (a habit). **What paid for it:** dated handoffs were created 
 than anything could safely cite them — traps lived only inside one, an append-only record still
 points at another that was removed, and gate 14 never scanned any of them.
 
+## 10.8 A claim that something is CHECKED is itself a claim
+
+Added 2026-08-25, and it is the authoring side of two gates built the same day. Gate 34 exists
+because `INVARIANTS.md` §1 named a test that could not fail; gate 35 because documents argue
+enforcement by naming a test and nothing verified the name resolved. **Both catch the sentence after
+it is written. Nothing stopped it being written.**
+
+**So: before writing that a line, a value or a behaviour is now covered, make the check say so.**
+Run the gate against the actual text, or plant the defect and watch it go red. A sentence claiming
+coverage is trusted exactly as much as one claiming a result, and it is the sentence a reader uses
+to decide they need not look.
+
+**What paid for it, and it is small enough to be embarrassing.** `UX_COPY.md` was corrected to read
+``**0** `validated` `` with the note *"gate 14 now reads this line"*. It did not: gate 14 matches a
+digit adjacent to a backticked status, and the closing `**` of the bold sat between them. Two
+characters, and the correction to a false claim was itself a false claim — in the document whose
+subject is not overstating what is known. Running the gate's own matcher against the string took
+under a minute and is the whole rule.
+
+**Then the second half.** With the markers fixed the gate went red anyway, correctly: §10.5 gives a
+measured count one owner, and restating it in an owner-facing document is the next thing to rot. The
+line names the source instead, and what is left gated is the *specific* claim — `regime.classifier_rule`
+is `assumed` — which gate 28 checks every run. **A claim you cannot get under a gate is not thereby
+excused from being true; it is a claim you now know nobody will catch.** `TODO.md` §4 carries the
+open question that follows: §10.5 gives every COUNT an owner and nothing does that for a STATUS.
+
 ## 11. Before removing or retiring anything
 
 `docs/06-engineering/CHANGE_MANAGEMENT.md` §5 is canonical. The operational rules:
@@ -401,6 +443,28 @@ points at another that was removed, and gate 14 never scanned any of them.
   is in flight, and gate 26 called a healthy mid-run pass a crash until it stopped reading that
   column unconditionally. A gate that manufactures alarm costs what §10.6 rule 2 says one that
   manufactures confidence costs.
+- **Windows decodes a piped subprocess as cp1252, and the failure lands in a reader thread where it
+  looks like nothing.** Gate 33's first run raised `UnicodeDecodeError` on a `git diff` carrying `§`
+  and an em dash, and then printed **"0 overlaps"** over output it had never read — a clean result
+  from unread bytes, which is §10.6 rule 2's failure produced by an encoding default. **Any
+  `subprocess.run` whose output you parse passes `encoding="utf-8", errors="replace"`.** The same
+  default bites a heredoc: `python - <<'PY'` loses non-ASCII on the way to stdin, so a patch script
+  matching on `§` silently matches nothing. Use `§`, or write the file and run it.
+- **A number you worked out in your head is still a number.** Two reached prose on 2026-08-25: an
+  interval written as sixteen days that was one day, and a tally of the studies that had narrowed
+  their scope on the same refuted citation, written as one more than the list holds. Neither came
+  from a registry, so §10.5 did not
+  cover them and no gate was looking for them. The second was caught only because gate 13 objected
+  to the **phrasing** — a bare number beside the word it counts — and re-counting to satisfy the
+  gate is what exposed the arithmetic. *(Naming the wrong figure here would trip gate 13 in turn,
+  which is the rule demonstrating itself.)* Derive an interval from the dates and a tally from the
+  list, in the shell, before either goes in a file.
+- **The code graph's null needs a positive control every time, and here are two ways it lies.**
+  §9 states the rule; these are the instances it cost time to find. `transitive_loop_depth` is **not
+  populated** in this index, so a query filtering on it returns clean because there is nothing to
+  return. And an ambiguous bare name is attributed to one owner: `freshness.assess` reports zero
+  callers while `pipeline.py` calls it twice as `fresh.assess`, because `portfolio.assess` has the
+  same short name. Read the file before reporting a null.
 
 **The habits:**
 
@@ -411,6 +475,14 @@ points at another that was removed, and gate 14 never scanned any of them.
   instance.** Gate 25 is the clearest case: nothing bound a study's runner to its own
   pre-registration, so `PR-002` reached an affirmative verdict over a declared scope shortfall with
   every gate green.
+- **Then measure the gate before shipping it, and be willing to throw it away.** Four mechanisms
+  were probed on 2026-08-25 and **three were rejected on their own numbers** — a parameter id near a
+  numeric claim (21 pairings, one live hit, a false positive), one near a cited `DR-NNN` (15
+  pairings, two live hits, both legitimate prose), and widening gate 14 to spelled-out numbers (19
+  hits, zero real drift). The one that shipped, gate 35, works because its subject is exact: a named
+  test either exists or it does not. **A gate over prose needs an exact token, or it becomes the
+  noise `CI_POLICY.md` §3 describes.** Recording the rejected three is the point — otherwise the
+  next session re-derives them.
 - **`unavailable` is not `fail`, and it is not `pass` either.** A gap in the *system* and a fact
   about the *trade* are different claims; collapsing them is the most damaging error this product
   can make — and a gate that cannot see its subject makes the same error about itself (§10.6).
