@@ -59,6 +59,30 @@ SIZE can be constrained by measurement and its MAGNITUDE cannot, where the sente
 said neither could. Struck rather than rewritten, per `AGENTS.md` §15: it was an impossibility
 asserted without a test.
 
+**And the SIZE half is now measured rather than merely measurable — 2026-08-25.**
+`python tools/classify_departures.py` classifies every symbol that left the directory between two
+pulls. Over the first three weeks of the record it resolved a material share of the departures into
+**confirmed delistings of that security**, with the rest split between structured symbols that
+depart on separation, renames, and names this route could not place. Derive the counts with the
+command, never from this paragraph (`AGENTS.md` §10.5).
+
+**Two things about that measurement change how it should be read, and both cut against comfort.**
+First, **`unresolved` is not `not delisted`** — it is a symbol the route could not place, and it is
+the largest bucket. Second, and more important: **EDGAR's ticker metadata LAGS the vendor's
+directory by more than the observation window.** Measured at 34 of 36 resolvable names still
+carrying their departed ticker while absent from the live vendor files. So the discriminator
+`probe_edgar.py` validated on a 2024 delisting — an empty ticker and exchange list — is right for
+history and useless for last week; the **Form 25 date** is the timely one, and it lands on the same
+pull the symbol vanished at. A classifier reading a present ticker as survival would understate this
+exposure in the flattering direction.
+
+**It also cost this project an assumption it had written down.** `TODO.md` had eyeballed the sample
+and reasoned that *"`AVB` is a large S&P 500 REIT and cannot have [delisted]"*. AvalonBay filed a
+Form 25-NSE the day it left the directory and is absent from both live vendor files; so is Equity
+Residential, which reports no ticker at all at EDGAR. **The bound is not merely uncertain in the
+tails — a departure that looks obviously benign can be a delisting**, which is the direction that
+makes `PR-002`'s 1.6–2.3% threshold easier to reach rather than harder.
+
 **And its verdict does not follow its own decision rule.** `PR-002` §6 permits `accept` only on both
 countries independently; the third amendment, dated before the run, states that a single-market
 result takes the `inconclusive` branch. `tools/run_pr002.py` implements the percentile branches with
