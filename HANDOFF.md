@@ -307,6 +307,28 @@ longer matches a fresh replay, because seven bars arrived three hours after it w
 **The code graph was re-indexed once it merged** — `src/` and `tools/` both changed (`AGENTS.md`
 §9 rule 3). It is named `swingdesk`, rooted at the main checkout, and now describes `master`.
 
+### What `claude/inspiring-colden-2e8e16` carries — unmerged, 2026-08-25
+
+Three gates and two corrections. **None of it moves a decision output, sets a value, or touches a
+frozen file**, so it spends no `a.run_completes` counter.
+
+- **Gate 32 — a checklist item's stated blocker must still be blocking.** The eight `UNAVAILABLE`
+  pre-trade items each carry a sentence saying what the system waits on, and re-reading them was a
+  manual chore the trade-flow plan asks for by name. Each now declares the registry statuses its
+  reason rests on. Written for `entry.maximum_entry_atr`: `DR-020` created it `unset`, `E08` and
+  `E09` wait on it, and **neither sentence even named it**.
+- **Gate 33 — a live branch is rewriting the lines you are rewriting.** Advisory. Gate 16 makes a
+  sibling worktree visible; it does not say the sibling is editing your paragraph, and on this day
+  two trees corrected the same two table rows two hours apart with gate 16 green.
+- **Gate 34 — an enforcement the tree CLAIMS must be able to fail.** 15 mutants, 20 s, 0 survivors,
+  over `INVARIANTS.md` §1 and `REQ-VALIDATION-001`'s five live vetoes. It exists because the test
+  `INVARIANTS.md` named for invariant 1 asserted `(net / x) * x == net` and could not fail; that
+  test is rewritten and pinned to a value.
+- **The Canada row in §2**, and the `TODO.md` §6 item that was blocked on `DR-003` gap 1 and is
+  not any more.
+- **`PR-001` §10 and `PR-002`'s report** are corrected forward for the refuted enumeration claim.
+  No verdict, sample or number moves, and both say so in the file.
+
 ### What to pick up, ranked — 2026-08-25
 
 **Everything below needs the owner except items 5 and 6.** The session that produced them
