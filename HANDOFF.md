@@ -5,9 +5,14 @@ rules that were each paid for, and §12, traps that each cost real time — then
 
 ## 0. The first thing, and it is not code
 
-**Everything is merged.** The 2026-08-24/25 session landed as a pull request onto `master`; the main
-checkout is fast-forwarded and the code graph re-indexed against it (`AGENTS.md` §9 rule 3). Nothing
-is held in a branch waiting for a decision.
+~~**Everything is merged.**~~ **It was on the morning of 2026-08-25 and it is not now.** The
+2026-08-24/25 session landed as a pull request onto `master`; the main checkout is fast-forwarded
+and the code graph re-indexed against it (`AGENTS.md` §9 rule 3). **Two branches have since gone
+unmerged and both hold real work** — §2's worktree census names them and `python
+tools/verify_branches.py` prints which are merged. `claude/inspiring-colden-2e8e16` is summarised in
+§5 below; read the sibling's own log for the other, and **run
+`python tools/verify_sibling_edits.py` before editing anything either might be editing** — on
+2026-08-25 two trees rewrote the same two table rows two hours apart with gate 16 green.
 
 **Read these four before touching the flow, the registry or the criteria. Each changes what you
 would otherwise assume, and each was measured rather than argued.**
