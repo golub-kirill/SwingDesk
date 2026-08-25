@@ -120,8 +120,18 @@ what the course means, and it does not.
 
 **And how fragile that is:** concentrated in the low-breadth cell, only **1.6%–2.3% of trades
 missing at −2R/−3R** erases the separation. Yahoo serves no delisted history (D10 reaffirmed the
-free tier), so that exposure can never be confirmed or ruled out — see
-`docs/prereg/results/PR-002-report.md` and the note on `regime.classifier_rule`.
+free tier) — see `docs/prereg/results/PR-002-report.md` and the note on `regime.classifier_rule`.
+
+**Corrected 2026-08-25.** This paragraph ended *"so that exposure can never be confirmed or ruled
+out"* — the same sentence `EVIDENCE_SUMMARY.md` §3 struck on 2026-08-24, which had not been
+propagated here. **The bound has two halves and the free tier closes only one.** How many names
+vanished, and when, is **measurable**: SEC EDGAR keeps every filer back to 1993, free and official,
+and an empty ticker/exchange list with a Form 25 or 25-NSE dates the event
+(`python tools/probe_edgar.py`). What those trades would have **returned** is not — no free source
+serves the price path of a symbol that has gone — so the −2R assumption stays an assumption. The
+exposure's SIZE can be constrained by measurement; its MAGNITUDE cannot. Kept as an amendment
+rather than a silent rewrite, per `AGENTS.md` §15: it was an impossibility asserted without a test,
+and it survived here for a day after being refuted in its home document.
 
 The variant selection deserves its own line: `BREADTH_X_VOL` — the two-axis classifier — was
 registered and **not** selected. It lost on **stability** (5.777 label flips per 100 sessions
