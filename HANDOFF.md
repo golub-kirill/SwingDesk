@@ -27,12 +27,23 @@ would otherwise assume, and each was measured rather than argued.**
    names `risk.risk_off_ladder`, which is `unset`. Every gate passed over it for a defensible
    reason — 3g checks that inputs EXIST, 1 accepts `none` as honest — and neither asks whether a
    ratified criterion can FIRE. Gate 1 now prints that subset on every run.
-3. **"Canada cannot be enumerated" is false, and a study lost half its scope to it.** `DR-003`
-   wrote *"no free symbol directory in hand … cannot presently enumerate"*; `PR-002` cited it
-   unqualified and dropped §6's two-country requirement — the one whose failure is why that study
-   could not reach an affirmative verdict. TMX serves the directory free, no account:
-   `python tools/probe_canada.py --full`. **It does not repair `PR-002`** — the endpoint is today's
-   membership, and applying it to old data is survivorship bias with extra steps.
+3. **"Canada cannot be enumerated" is false, and the research record narrowed itself on it.**
+   `DR-003` wrote *"no free symbol directory in hand … cannot presently enumerate"*. TMX serves the
+   directory free, no account: `python tools/probe_canada.py --full`, re-verified 2026-08-25.
+   **It repairs no study** — the endpoint is today's membership, and applying it to old data is
+   survivorship bias with extra steps.
+   **Counted 2026-08-25, and this line said "a study" until then.** `PR-001`, `PR-002`, `PR-005`
+   and `PR-008` all narrowed to a US-only universe on that record, citing it eight times. Five keep
+   `DR-003`'s *"in hand"* qualifier; **three turn it into an unqualified "cannot"** — `PR-002`'s
+   report twice and `PR-001`'s own registration once, where the qualifier survives the first clause
+   of a sentence and dies in the second. `PR-001` §10's third amendment counts them and names the
+   command that re-derives the split.
+   **The citations were swept the same day and four live documents were stale**: `RISK_REGISTER.md`
+   D-3 and D-1, `ROADMAP.md` §5 and `UX_TASK_FLOWS.md`. D-3 had it at **high / accepted** — a risk
+   accepted after it stopped existing is the entry that stops anyone trying.
+   **What blocks Canada now is a fetch nobody has run**, and §2's `Canada` row owns the number: the
+   directory holds zero `.TO` symbols and the bar store holds one `.TO` instrument, fetched once on
+   2026-08-02 and never refreshed.
 4. **"No free source serves delisted history" is half false.** SEC EDGAR serves the FACT and DATE of
    a delisting, free and official, back to 1993 (`tools/probe_edgar.py`). Prices for a delisted name
    are still unobtainable, so the bound's RETURN half stands untouched.
@@ -111,6 +122,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | PIT integrity | **CLEAN** - bars whose `event_time` postdates their `knowledge_time`: 0 |
 | Directory | **18 pulls** · **8 confirmed** against the response's own `Last-Modified` (`source_session_date`); the rest predate the field and stay permanently unattributed (`DR-008` c3) |
 | Universe coverage | bars stored for 3,743 of 13,169 listed symbols - **28.4%** |
+| Canada | **1 instrument** with bars, 252 bars over one fetch, last 2026-08-02 · **0** `.TO` symbol(s) listed in `directory.duckdb`. `BR-9`'s per-country requirement is unmet in every reported study. Since `DR-003` gap 1 was refuted (2026-08-25) a FORWARD result is blocked by this row rather than by a missing source; a HISTORICAL one also needs point-in-time membership, which the TMX endpoint cannot supply at any price |
 | Classifications | 1,148 instrument(s) carry a sector · 1,046 (**91.1%**) report at least one non-zero weight. The stricter `look_through` count, which also drops a degenerate ETF look-through (`DR-006` §8.7), is lower - derive it with `python tools/measure_sector_cap.py --wide` |
 | Track A clock | **1/20** consecutive clean sessions (2026-08-24 to 2026-08-24) · counting from a **deliberate restart on 2026-08-22**, not an outage - `python tools/track_a_streak.py` prints why · `a.run_completes`, computed by `tools/track_a_streak.py` |
 

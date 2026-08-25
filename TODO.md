@@ -1773,14 +1773,26 @@ is for where no gate can reach.
         exactly the fix `DR-003` gap 2 applied there and missed here. Needed no directory and no
         owner decision, so it landed ahead of (a). **Frozen file.**
 
-      **(a) is blocked on `DR-003` gap 1, not on an engineering choice.** Resolving identity means
-      resolving against a directory, and `DR-003` already records that Canada has no free symbol
-      directory in hand — so a `.TO` instrument has nothing to resolve against, and fail-closed
-      would refuse every Canadian candidate. Owner's call 2026-08-16: **source a TSX directory
-      first**; identity resolution waits on it. That makes `DR-003` gap 1 a blocker for a second
-      thing now — the US-only universe *and* instrument identity — and it needs its own decision
-      record when a source is evaluated. Blocks any historical edge claim; does not block
-      Track-A-only PAPER. **Changes the daily-run path — behind the freeze.**
+      ~~**(a) is blocked on `DR-003` gap 1, not on an engineering choice.**~~ **The blocker moved
+      2026-08-25 and the item did not, so it is restated rather than struck.** The old reasoning:
+      resolving identity means resolving against a directory, `DR-003` recorded that Canada had no
+      free symbol directory in hand, so a `.TO` instrument had nothing to resolve against and
+      fail-closed would refuse every Canadian candidate. Owner's call 2026-08-16 was **source a TSX
+      directory first**, and identity resolution waited on it.
+      **A source exists.** `DR-003` *"Gap 1 is closed"* — TMX serves its own directory free, no
+      account, no key (`python tools/probe_canada.py --full`, re-verified 2026-08-25). The owner's
+      call is satisfied on its own terms; what is left is wiring, and `DR-008` governs how any
+      directory is pulled, attributed and audited, so a second source is that record's business
+      rather than a free-hand fetch.
+      **And the refusal it feared binds on almost nothing today — measured, not assumed.**
+      `HANDOFF.md` §2's `Canada` row owns the numbers: the directory holds **zero** `.TO` symbols
+      and the bar store holds **one** `.TO` instrument, 252 bars from a single fetch on 2026-08-02
+      that has never been refreshed. So *"fail-closed would refuse every Canadian candidate"*
+      refuses an empty set drawn from the directory. **The one instrument is itself an instance of
+      this defect** rather than a counterexample: it holds bars while absent from the directory, so
+      nothing could resolve it either way.
+      Blocks any historical edge claim; does not block Track-A-only PAPER. **Changes the daily-run
+      path — behind the freeze.**
 - [ ] **11 of 13 journalled runs carry `code_dirty = true`.** `a.reproducible` requires a
       byte-identical re-run from a stored manifest; a manifest pointing at a dirty tree cannot be
       replayed from its SHA.

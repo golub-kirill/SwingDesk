@@ -239,6 +239,59 @@ def _bar_facts() -> tuple[list[tuple[str, str]], int]:
     ], instruments
 
 
+def _canada_facts() -> list[tuple[str, str]]:
+    """What the never-merge non-negotiable costs, as a number rather than as a phrase.
+
+    Every reported study narrows to a US-only universe and cites `DR-003` for it, and `BR-9`'s
+    per-country requirement has been unmet since the first one. `DR-003` gap 1 - *"no free symbol
+    directory in hand"* - was refuted on 2026-08-25, so the question a fresh session needs answered
+    stopped being *"is there a source?"* and became *"has anyone fetched anything?"*.
+
+    That question had no owner. `DR-003`'s own addendum answers it in prose as *"the Canadian half
+    of the store is empty today"*, which is a hand-written claim about `data/` sitting in an
+    append-only record - the exact shape §10.6 exists to end. It is also not quite true: the store
+    holds one `.TO` instrument, and a row that says *one, fetched once, never refreshed* is a
+    different fact from *none*.
+
+    Both halves are counted, because they fail independently: a symbol can be listed in the
+    directory with no bars, and - as `CNQ.TO` demonstrates - can hold bars while absent from the
+    directory, which is the identity defect `TODO.md` §6 records rather than a coverage figure.
+    """
+    bars = _connect("bars.duckdb")
+    try:
+        instruments = bars.execute(
+            "SELECT COUNT(DISTINCT instrument_id) FROM bars WHERE instrument_id LIKE '%.TO'"
+        ).fetchone()[0]
+        rows, fetches, last = bars.execute(
+            "SELECT COUNT(*), COUNT(DISTINCT knowledge_time), MAX(knowledge_time) FROM bars "
+            "WHERE instrument_id LIKE '%.TO'"
+        ).fetchone()
+    finally:
+        bars.close()
+    directory = _connect("directory.duckdb")
+    try:
+        listed = directory.execute(
+            "SELECT COUNT(DISTINCT symbol) FROM directory WHERE symbol LIKE '%.TO'"
+        ).fetchone()[0]
+    finally:
+        directory.close()
+
+    if not instruments and not listed:
+        detail = "**nothing stored and nothing listed**"
+    else:
+        stamp = last.date().isoformat() if last is not None else "n/a"
+        plural = "" if instruments == 1 else "s"
+        fetched = "one fetch" if fetches == 1 else f"{fetches} distinct fetch times"
+        detail = (f"**{instruments} instrument{plural}** with bars, {rows:,} bars over {fetched}, "
+                  f"last {stamp} · **{listed}** `.TO` symbol(s) listed in `directory.duckdb`")
+    return [
+        ("Canada", f"{detail}. `BR-9`'s per-country requirement is unmet in every reported study. "
+                   f"Since `DR-003` gap 1 was refuted (2026-08-25) a FORWARD result is blocked by "
+                   f"this row rather than by a missing source; a HISTORICAL one also needs "
+                   f"point-in-time membership, which the TMX endpoint cannot supply at any price"),
+    ]
+
+
 def _directory_facts(measured_instruments: int) -> list[tuple[str, str]]:
     connection = _connect("directory.duckdb")
     try:
@@ -361,6 +414,7 @@ def runtime_rows() -> list[tuple[str, str]] | None:
             *_journal_facts(),
             *bar_rows,
             *_directory_facts(instruments),
+            *_canada_facts(),
             *_classification_facts(),
             _track_a_row(),
         ]
