@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -1828,3 +1829,65 @@ def test_no_cards_file_is_not_a_failure(tmp_path: Path) -> None:
     (root / "registry").mkdir(parents=True)
     code, out = run_gate("verify_cards.py", root)
     assert code == 0, out
+
+
+# ------------------------------------------------------------ gate 26: the schedule, as the machine
+#
+# `Last Result` is two different quantities wearing one column. Usually it is the wrapper's exit
+# code; while a run is in flight, or before the first one, it is a `SCHED_S_*` status instead. The
+# gate shipped knowing this for exactly one status and not the other, so on 2026-08-24 it called a
+# healthy mid-run second pass a crash. These tests pin the distinction rather than the instance -
+# a task is only mid-run for a few minutes an evening, and waiting for the calendar to reproduce a
+# defect is not a test.
+
+import verify_schedule  # noqa: E402  - `sys.path` is extended at the top of this module
+
+
+def test_a_task_that_is_still_running_is_not_reported_as_a_crash() -> None:
+    """The 2026-08-24 false red, in one line. 267009 is SCHED_S_TASK_RUNNING."""
+    judgement, phrase = verify_schedule.verdict("267009")
+    assert judgement == "pending", "a run in flight has produced no exit code to judge"
+    assert "running" in phrase
+
+
+def test_a_task_that_has_never_run_is_still_not_a_crash() -> None:
+    """The case the gate already handled. Kept so the rewrite cannot drop it silently."""
+    assert verify_schedule.verdict("267011")[0] == "pending"
+
+
+def test_an_absent_result_is_pending_rather_than_clean() -> None:
+    """An empty column is the absence of an answer, not the answer 0."""
+    assert verify_schedule.verdict("   ")[0] == "pending"
+
+
+@pytest.mark.parametrize("code", ["0", "2"])
+def test_the_wrappers_two_good_outcomes_are_clean(code: str) -> None:
+    """0 completed, 2 refused. `FAIL_CLOSED_POLICY` makes a coded refusal a real outcome."""
+    assert verify_schedule.verdict(code)[0] == "clean"
+
+
+@pytest.mark.parametrize("code", ["1", "3", "267014"])
+def test_a_genuine_failure_is_still_a_crash(code: str) -> None:
+    """The positive control. Without this the rows above only prove nothing ever fails.
+
+    3 is the preflight refusing to attempt the run, 1 is what every evening from 08-18 to 08-21
+    reported while the store carried a drifted column, and 267014 is the task having been TERMINATED
+    - a status, but not a benign one, so it must not ride along with the two that are.
+    """
+    assert verify_schedule.verdict(code)[0] == "crash"
+
+
+def test_no_named_status_can_collide_with_a_wrapper_exit_code() -> None:
+    """What makes special-casing these two safe, asserted rather than asserted-in-a-comment.
+
+    A status code is only distinguishable from an exit code because `daily_run.cmd` cannot produce
+    it. If that ever stopped being true, a crash would be silently reclassified as a healthy run -
+    which is the failure this gate exists to catch, committed by the gate itself.
+    """
+    wrapper = (REPO / "tools" / "daily_run.cmd").read_text(encoding="utf-8")
+    literals = set(re.findall(r"exit /b (\d+)", wrapper))
+    assert literals, "the wrapper's own exit codes must be readable, or this test asserts nothing"
+    for code in verify_schedule.NO_RESULT_YET:
+        assert code not in literals
+        assert code not in verify_schedule.CLEAN_RESULTS
+        assert int(code) > 255, "every documented exit code in this project fits in a byte"
