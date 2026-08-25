@@ -22,11 +22,15 @@ Stdlib only, like gates 2 and 3, so it runs on system Python.
 
 from __future__ import annotations
 
+import os
 import re
 import sys
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parents[1]
+#: `SWINGDESK_ROOT` so this gate can be pointed at a fixture tree, the way gates 3e and 3g already
+#: can. It was the last of the four registry gates whose root was fixed at import, which is why it
+#: had never been proven able to go red: there was nowhere to plant a defect except the real tree.
+REPO = Path(os.environ.get("SWINGDESK_ROOT") or Path(__file__).resolve().parents[1])
 PREREG = REPO / "docs" / "prereg"
 RESULTS = PREREG / "results"
 

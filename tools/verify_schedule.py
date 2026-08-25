@@ -38,6 +38,23 @@ UNAVAILABLE_EXIT = 4
 #: coded refusal, which `track_a_streak.py` also treats as clean - anything else is a crash.
 CLEAN_RESULTS = ("0", "2")
 
+#: ...except that `Last Result` holds an exit code only once a run has produced one. Between those
+#: moments the Task Scheduler puts its own STATUS there instead, and a status is not a crash. Both
+#: values below are `SCHED_S_*` HRESULTs from the scheduler's own header, and neither is a number
+#: `daily_run.cmd` can return - which is what makes them safe to name rather than guess at.
+#:
+#: **What paid for the first row, 2026-08-24.** This gate reported *"SwingDesk second pass: last run
+#: 7:30:00 PM exited 267009"* at 19:39, nine minutes into a pass that had started at 19:30 and was
+#: working normally - the first clean evening after the schema drift that had killed every run since
+#: 08-18. `267011` was already special-cased and `267009` is the same KIND of value, so the check
+#: called a healthy run a crash on the one evening it had something to say. A gate that manufactures
+#: alarm trains its operator to ignore it, which costs exactly what `AGENTS.md` section 10.6 rule 2
+#: says a gate that manufactures confidence costs.
+NO_RESULT_YET = {
+    "267009": "still running",     # SCHED_S_TASK_RUNNING,     0x00041301
+    "267011": "has not run yet",   # SCHED_S_TASK_HAS_NOT_RUN, 0x00041303
+}
+
 #: Settings that make a task silently not run, and that only the verbose query shows. Neither is a
 #: fault this can fix - both are the owner's environment - but both explain an evening with no log
 #: line, which is otherwise indistinguishable from a run that did nothing.
@@ -62,6 +79,23 @@ def _query(task: str) -> dict[str, str] | None:
     return rows[0] if rows else None
 
 
+def verdict(last_result: str) -> tuple[str, str]:
+    """What `Last Result` says about the run that produced it: `clean`, `pending` or `crash`.
+
+    Pure, and separate from `main`, because the interesting cases cannot be summoned on demand: a
+    task is mid-run for a few minutes an evening, which is precisely when nobody is reading a gate.
+    Tested directly in `tests/test_gates.py` instead of waiting for the calendar to reproduce it.
+    """
+    code = last_result.strip()
+    if not code:
+        return "pending", "no result reported"
+    if code in CLEAN_RESULTS:
+        return "clean", f"exit {code}"
+    if code in NO_RESULT_YET:
+        return "pending", NO_RESULT_YET[code]
+    return "crash", f"exited {code}"
+
+
 def main() -> int:
     if sys.platform != "win32":
         print("schedule: UNAVAILABLE - the Task Scheduler exists only on the scheduling machine.")
@@ -75,6 +109,7 @@ def main() -> int:
         return UNAVAILABLE_EXIT
 
     failures: list[str] = []
+    pending = 0
     for task, record in seen:
         if record is None:
             failures.append(f"{task}: NOT REGISTERED. docs/runbooks/README.md has the command.")
@@ -90,16 +125,24 @@ def main() -> int:
                 print(f"      NOTE        {consequence} ({field}: {needle})")
         if state.lower() != "enabled":
             failures.append(f"{task}: scheduled state is {state!r}, not Enabled")
-        if last_result and last_result not in CLEAN_RESULTS and last_result != "267011":
-            # 267011 is "has not run yet", which a freshly registered task reports and which is not
-            # a failure. Every other non-clean code is the wrapper crashing.
+        judgement, phrase = verdict(last_result)
+        if judgement == "pending":
+            pending += 1
+            print(f"      NOTE        {phrase} - this check says nothing about that run")
+        elif judgement == "crash":
             failures.append(
                 f"{task}: last run {last_run} exited {last_result} - see data/daily_run.log"
             )
 
     for failure in failures:
         print(f"  {failure}")
-    print(f"--- schedule: {'PASS' if not failures else 'FAIL'} ({len(seen)} task(s) named)")
+    # The summary names what was JUDGED, not what was queried. A task mid-run leaves this check with
+    # nothing to say about it, and a bare PASS over two tasks when only one was judged is the same
+    # overclaim in the other direction.
+    counted = f"{len(seen)} task(s) named"
+    if pending:
+        counted += f", {pending} with no result to judge"
+    print(f"--- schedule: {'PASS' if not failures else 'FAIL'} ({counted})")
     return 1 if failures else 0
 
 

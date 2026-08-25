@@ -514,7 +514,7 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       so the coverage figure is recomputed on every run and cannot be ~10 days stale again. Derive
       it with that command; this line deliberately does not repeat it (`AGENTS.md` §10.5).
 
-### PICK THIS UP FIRST: slim `AGENTS.md` — owner instruction 2026-08-24, measured and briefed
+### DONE 2026-08-24: slim `AGENTS.md` — owner instruction, cut and verified
 
 **The ask:** *"У нас agents выглядят уже как книжка... Можно ли его сделать нормальным, чистеньким,
 без прозы? Правила, конвенции, всё как есть."* Yes. The brief is below so a fresh session starts
@@ -551,6 +551,26 @@ and say in the file that the full accounts remain reachable through `git log -p 
 
 **Deliberately not started at the end of a long session.** It is the most-cited document in the
 tree; a large edit made tired is how this repository has been burned before.
+
+**CUT 2026-08-24, and the risk above was answered with a check rather than with care.** Three
+things were asserted mechanically after the edit, not read for: every `##`/`###` heading is
+**byte-identical and in the same order**; every `AGENTS.md` section reference across every tracked
+file still **resolves** — none dangling; and §13's owner block is **unchanged byte for byte**. No
+document, parameter or component id appears in the new file that was not in the old one, so the cut
+could not invent a citation. All gates pass.
+
+**It came in ABOVE the target, and the target was the estimate that was wrong.** Roughly a third
+was removed, not a half. The arithmetic the brief did not do: the file's tables, command blocks and
+the owner's verbatim quotation are unshrinkable, and the rest is about sixty distinct rules. At
+**one rule plus one price clause each** — which this same brief calls non-negotiable, because a bare
+rule reads as arbitrary and gets ignored — the floor sits well above 3,500 words. Reaching the
+number needs one of two things the owner has not asked for: **drop the price clauses, or drop
+rules.** Neither was taken.
+
+What actually went: every restatement, every second example, every paragraph that retold an
+incident already summarised in its own first sentence. §12 was a third of the file and is the
+section that changed most. Derive the current length with `python -c "print(len(open('AGENTS.md',
+encoding='utf-8').read().split()))"`, never from this line.
 
 ### The dated session-handoff files are outside the document map, and one has already broken a record
 
@@ -838,9 +858,15 @@ is for where no gate can reach.
       **THREE incompletenesses, and they are not the same** (`DR-006` §12.4): an unset cap refuses
       every candidate; an unclassifiable CANDIDATE is admitted UNCHECKED; an unclassifiable POSITION
       makes the split understate and refuses nothing.
-      **The store starts EMPTY, so today every candidate is admitted unchecked and the report says
-      so.** That is not a defect — it is §3 being obeyed — but it does mean the cap protects nothing
-      until the refresh pass has run. `unchecked` is a coverage number to close, not a verdict.
+      **The store started EMPTY on 2026-08-23, so every candidate was admitted unchecked that day
+      and the report said so.** That was not a defect — it is §3 being obeyed — but it did mean the
+      cap protected nothing until the refresh pass had run. `unchecked` is a coverage number to
+      close, not a verdict, and the refresh pass has since moved it: **the run's own SECTOR block
+      prints how many candidates were admitted unchecked, and it is no longer all of them.** Read it
+      from the latest report in `data/reports/`, never from this line.
+      **It is harmless only while the book is empty.** With zero positions there is no risk to place
+      in any sector, so an unclassified candidate cannot breach a cap that nothing is consuming. The
+      first real position is what turns this coverage number into a hole in `risk.max_sector_risk`.
       **The point-in-time gap is now ENCODED**: read as-of, so a replay before the first pull finds
       nothing rather than answering an older question with today's classification.
 
@@ -1392,16 +1418,28 @@ is for where no gate can reach.
       5 tests; the three that assert a *failure* confirmed red against the pre-fix check, the two
       positive controls confirmed green. Restored from a file copy, never `git checkout` — see the
       process note under proposal expiry.
-- [ ] **`[v]` Six gates have never been proven able to fail.** `tests/test_gates.py`'s own docstring
-      sets the bar — *"A gate that has never been seen red proves nothing"* — and these have zero
-      references in it: `verify_parameters` (1), `verify_transcription` (2), `verify_docs` (3e),
-      `verify_studies` (3f), `verify_criteria` (3g), `verify_components` (11).
-      Measured 2026-08-16 while auditing for the failure mode that bit three times this session
-      (gate 23 blind, `build_state` v1, gate 25 v1). **They are not blind in that sense** — every one
-      reports what it examined, which is the existing honesty mechanism, and 3f demonstrably caught
-      real defects during the PR-002 correction. What is missing is proof that their conditions can
-      fire, which is a different and weaker gap than the one already fixed. Fixture-and-assert tests,
-      one defect each, in the pattern the file already uses.
+- [x] **`[v]` ~~Six gates have never been proven able to fail.~~ CLOSED 2026-08-24 — and it was six
+      only on the day it was written.** `tests/test_gates.py`'s own docstring sets the bar: *"A gate
+      that has never been seen red proves nothing"*.
+      **Re-measured before working it, by asking the test file rather than this entry.**
+      `verify_parameters` (1) and `verify_components` (11) got tests on 2026-08-18 and this item was
+      never updated — so the list of things this repository has not caught yet had itself gone stale,
+      which is the shape the whole file exists to catch. Derive the current answer, never from this
+      line: grep `tests/` for each `tools/verify_*.py` name.
+      **The remaining four are done**: 3g (a ratified criterion resting on an `unset` parameter, and
+      one naming a parameter absent from the registry), 3e (a dangling citation, an absent parameter,
+      a status off the ladder, a gap summary disagreeing with a recount of its own table), 3f (a
+      refuted study validating a parameter — the `PR-002` defect, which gate 3e cannot see because
+      every reference resolves; plus an index disagreeing with its report, and a verdict token
+      outside the vocabulary being named rather than counted), and 2 (a declared source that cannot
+      be resolved, and an enum member that has left the document defining it — both need no PDF, so
+      they run where CI reports gate 2 `UNAVAILABLE`).
+      **What kept them last was structural, not neglect.** Each one's subject is the real tree, so
+      planting a defect meant either editing the repository — which this suite must never do — or
+      giving the gate a fixture root. `verify_docs` and `verify_criteria` already honoured
+      `SWINGDESK_ROOT`; `verify_studies` did not, and now does.
+      Every defect test has a positive control on the same fixture, so a red result cannot come from
+      a broken fixture instead of the planted defect.
 - [ ] **`[c]` Gate 10** (traceability) — unblocked now that ATR is active, still to build.
 - [ ] **`[c]` Gate 22** + `DR-008`'s remaining machinery · **Gate 14's word-number hole.**
 - [ ] **`[c]` 6 specified components awaiting activation** — pivots (M12-T0201, M12-T0202), moving
