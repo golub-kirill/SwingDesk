@@ -578,6 +578,29 @@ parameters:
     named_in: [M48-T0738, M52-T0799, M53-T0815, M55-T0834]
     ui_editable: true
 
+  - id: entry.maximum_entry_atr
+    unit: multiple of ATR past the trigger
+    value: null
+    status: unset
+    provenance: null
+    read_by: none
+    ui_editable: false
+    named_in:
+      - 'Appendix E item E09 - "Entry zone и maximum entry записаны"'
+    note: >-
+      How far past the trigger an entry may still be taken. Inside it the plan becomes Trade;
+      beyond it, Late. DR-020 authors the watchlist transition graph and this is the one parameter
+      that graph needs which the registry did not already hold.
+      UNSET DELIBERATELY, and it is the reason Trade is unreachable today for a NAMED cause rather
+      than because nobody wrote the transitions. Appendix E names the concept and the course
+      quantifies nothing, which AGENTS.md section 8 records as this project's central fact.
+      Searched under AGENTS.md section 16 on 2026-08-24: no rank-1 evidence supports any particular
+      distance on daily equities. The nearest study falsifies intraday opening-range breakouts in
+      MNQ futures - a different market and horizon, so a limitation of a method rather than evidence
+      here. A value therefore needs a pre-registration or an owner ruling recorded as assumed.
+      THE UNIT IS DECIDED AND THE VALUE IS NOT. ATR rather than a percentage, because a fixed
+      percentage applies a materially different rule to a 1%-range name and a 6%-range one, and
+      DR-012 already expresses the stop in ATR so the entry-to-stop distance stays comparable.
   - id: exit.atr_stop_multiple
     unit: multiple of ATR
     value: 2.0
