@@ -108,7 +108,16 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       by work.** On the morning of 08-17, `planned_risk` could be replaced with the constant
       `Decimal('42')` and the entire suite stayed green, including the test `INVARIANTS.md` §1 names
       as enforcing that invariant — which asserts `(net/x)*x == net`, an identity that cannot fail
-      for any `x`. That test is still a tautology and should be replaced.
+      for any `x`. ~~That test is still a tautology and should be replaced.~~ **REPLACED
+      2026-08-25**, the last open half of this item. `test_r_denominator_is_the_planned_risk` now
+      pins the denominator's VALUE — 99.00, worked by hand from the fixture's own parameters and
+      carried beside the test — and separately pins which field `r_multiple` divides by. **Proven
+      against three mutants rather than asserted:** `planned_risk = Decimal("42")` and
+      `risk_per_share = entry - stop` (costs dropped) both fail the first assertion, and
+      `r_multiple` dividing by `risk_per_share` fails the second, at `net = 0.01` — the two agree at
+      zero, which is why a property over a range catches it and a single example would not.
+      The three plausible denominators here are 99.00, the allowed risk of 100.00 and the per-share
+      5.50; only the exact value tells them apart, which is why the test carries a number.
       **But the defect it left open is closed.** Re-measured on `master` after PR #9 merged: the
       `Decimal('42')` mutant is **killed**, and so is `risk_per_share = entry - stop + costs` →
       `entry - stop`. What kills them is `test_sizing_and_position_agree_on_the_denominator`, the

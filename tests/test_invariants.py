@@ -147,6 +147,20 @@ def test_a_nonpositive_stop_always_refuses(entry: Decimal, stop: Decimal) -> Non
     assert result.code == "STOP"
 
 
+#: The fixture's own arithmetic, worked by hand so this test constrains the code instead of
+#: restating it. Entry 100.00, stop 95.00, USD, 50bp against a 0.02 floor:
+#:
+#:   costs per share = max(0.02, 50/10_000 * 100.00)  = 0.5000
+#:   risk per share  = 100.00 - 95.00 + 0.5000        = 5.5000   costs are IN the risk (DR-010)
+#:   allowed risk    = 10_000 * 1.0%                  = 100.00
+#:   shares          = floor(100.00 / 5.5000)         = 18       always down (Appendix C)
+#:   planned risk    = 18 * 5.5000                    = 99.00
+#:
+#: The three plausible denominators are 99.00, the allowed risk of 100.00, and the per-share 5.50.
+#: They are close enough that only the exact value distinguishes them, which is the point.
+_PLANNED_RISK = Decimal("99.00")
+
+
 @given(net=st.decimals(min_value=-10_000, max_value=10_000, places=2))
 @settings(max_examples=100, deadline=None)
 def test_r_denominator_is_the_planned_risk(net: Decimal) -> None:
@@ -155,10 +169,22 @@ def test_r_denominator_is_the_planned_risk(net: Decimal) -> None:
     This is the invariant most often broken in systems of this kind: once the denominator follows
     the current stop, R stops being comparable across trades and every statistic built on it
     quietly changes meaning.
+
+    REWRITTEN 2026-08-25. It asserted `r_multiple(net, sized) * sized.planned_risk == net`, which is
+    `(net / x) * x == net` - an identity true for every non-zero `x`, so it held whatever
+    `planned_risk` contained. Measured on 2026-08-17: replacing `planned_risk` with the constant
+    `Decimal("42")` left this test green, and `INVARIANTS.md` §1 names it as the enforcement of
+    invariant 1. What eventually killed that mutant was
+    `test_sizing_and_position_agree_on_the_denominator`, written for a different reason.
+
+    Both assertions below carry weight and neither subsumes the other: the first pins the
+    denominator's VALUE, and the second pins which field `r_multiple` divides by - swapping it to
+    `risk_per_share` passes the first and fails the second.
     """
     sized = size_long(Decimal("100.00"), Decimal("95.00"), "USD", _registry())
     assert not isinstance(sized, Refusal)
-    assert r_multiple(net, sized) * sized.planned_risk == pytest.approx(net)
+    assert sized.planned_risk == _PLANNED_RISK
+    assert r_multiple(net, sized) == net / _PLANNED_RISK
 
 
 def test_unset_parameter_refuses_and_names_itself() -> None:
