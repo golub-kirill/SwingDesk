@@ -29,10 +29,12 @@ nothing here transmits an address it was not given.
 **THE TWO HOSTS BEHAVE DIFFERENTLY, measured 2026-08-24 with two probes each way.** This is the
 practical boundary and it decides what is reachable today:
 
-| Host | With a descriptive `User-Agent` | Examples tried |
+| Host | Descriptive `User-Agent` | Examples tried |
 |---|---|---|
 | `data.sec.gov` | **200** | `/submissions/CIK…json`, `/api/xbrl/frames/…` |
-| `www.sec.gov` | **403** *"Undeclared Automated Tool"* | `/Archives/edgar/full-index/…`, `/files/company_tickers` |
+| `www.sec.gov` | **403** | `/Archives/edgar/full-index/…`, `/files/company_tickers` |
+
+The 403 body names the reason: *"Your Request Originates from an Undeclared Automated Tool"*.
 
 So the per-issuer API family is open **and the static-file family is not**. That matters because the
 ticker-to-CIK map lives on `www.sec.gov`, so a lookup BY TICKER needs the operator to declare a
