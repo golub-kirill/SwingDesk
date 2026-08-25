@@ -27,6 +27,47 @@ retyping it.
 
 ## 1. Blocking now
 
+### THE ONLY RATIFIED LIVE CRITERION CANNOT FIRE — found 2026-08-24
+
+- [ ] **`[v]` `k.drawdown_pause` is ratified, scope `live`, and nothing enforces it.**
+      `registry/criteria.yml` ratifies it: trigger *"Realised drawdown exceeds
+      `validation.max_allowable_drawdown`"*, action *"Pause - not kill. Reduce size per the risk-off
+      ladder and review."* The threshold is **owner-set at 20** percent of equity.
+      **Nothing in `src/` computes realised drawdown.** Two matches for the word exist in the whole
+      package and both are prose inside a study's docstring. The parameter's `read_by` is `none`.
+      **And its ACTION is unreachable too:** it prescribes the risk-off ladder, and
+      `risk.risk_off_ladder` is itself `unset` with no reader.
+      **Every gate passed over it, and each for a defensible reason.** Gate 3g checks that a
+      criterion's inputs EXIST - the value is there, so it passes, and its own docstring says it
+      checks existence rather than discrimination. Gate 1 accepts `read_by: none` because `none` is
+      honest and many parameters legitimately precede their consumer. Neither asks whether a
+      RATIFIED criterion can fire.
+      **It was the only criterion with scope `live`**, so this was not one of several - it was all of
+      them. Derive the current set:
+      ```bash
+      PYTHONPATH=$PWD/src python tools/verify_parameters.py
+      ```
+      which now prints the cited-by-a-ratified-criterion subset of the unwired parameters on every
+      run, so the finding cannot be lost again the way it was found.
+      **Harmless today and only today.** `DR-014` rules no owner capital and there are no positions,
+      so no drawdown exists to breach anything. The moment a position is opened, the project's own
+      kill switch is decorative.
+      **What closing it needs is bigger than a wiring job and touches owner decisions**: realised
+      drawdown needs an account-equity concept and an equity curve, and the store holds neither.
+      Fills are recorded per position; nothing aggregates them into equity. Starting capital,
+      mark-to-market versus realised-only, and whether the curve is per-account or per-strategy are
+      all decisions, not implementation details.
+      **Do not set a number to make a gate green.** The threshold is already set; what is missing is
+      the measurement, and inventing an equity definition to satisfy a criterion would be the
+      `AGENTS.md` §3 failure - a thing looking more validated than it is.
+
+- [ ] **`[c]` `risk.liquidity_cap_order_to_adtv_pct` is owner-set at 1.0 and read by nothing.**
+      The second owner-set orphan. Measured context from `DR-003`'s addendum: at the current account
+      size a position is a median 0.0026% of one session's dollar volume, so the cap is nowhere near
+      binding and would only begin to at roughly a $2.2M account. Unenforced rather than urgent -
+      recorded so it is not rediscovered as a surprise.
+
+
 ~~**`master` went RED on its own, 2026-08-22, and it is fixed in this branch.**~~ **CLOSED
 2026-08-22** — merged as `7f3568a` and verified on `master` 2026-08-24. Four tests in `test_cli.py`
 seeded a proposal dated 2026-08-16 and let `pending` / `respond` read the wall clock;
