@@ -491,9 +491,16 @@ target is a sentence asserting something about the WORLD that nobody tested.
       constraint, because the speed is not wanted.
       **What would change it:** universe growth. The budgets bind at roughly seven times the current
       fetch count, and coverage is 28% of the directory.
-- [ ] **`[c]` "There is no legal source of probability in this system today."** Likely sound - it is
-      a statement about this system's own evidence rather than about the world - but it is the
-      single strongest closure in the tree and has never been stated with a test beside it.
+- [x] **`[c]→[v]` "There is no legal source of probability" — AUDITED 2026-08-25, and it is the
+      one closure that was never really an impossibility claim.**
+      It is a statement about this system's own evidence, not about the world, and it is therefore
+      **derivable**: a probability needs a validated expectation, and a parameter reaches
+      `validated` only by citing a study that ACCEPTed. Both are counted by tools that already run
+      on every gate pass — `verify_studies.py` for accepted verdicts, `verify_parameters.py` for
+      validated parameters — and both report none today.
+      `EVIDENCE_SUMMARY.md` §4 now names those commands, so the sentence **stops being true the day
+      either changes**, with nobody having to remember to revisit it. That is what §15 rule 1 asks
+      for, and it is why this row needed an amendment rather than an investigation.
 - [ ] **`[c]` Everything else the command above returns**, read once and marked: tested, untested,
       or an owner decision. A claim that survives with a test named beside it is worth more than one
       that was merely never challenged.

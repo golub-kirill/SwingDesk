@@ -70,6 +70,21 @@ limitation was registered before the data was seen. Tracked in `TODO.md` §5.
 No expectation estimate exists and no calibrated model exists (`EXPECTATION_MODEL.md` §9c). Any
 probability displayed would be manufactured.
 
+**Audited 2026-08-25 under `AGENTS.md` §15 rule 1, which asks an impossibility to name the check
+that establishes it. This one can, and that changes its character.** It is not a claim about the
+world — it is a claim about this system's own evidence, and it is DERIVED:
+
+```bash
+PYTHONPATH=$PWD/src python tools/verify_studies.py      # accepted verdicts
+PYTHONPATH=$PWD/src python tools/verify_parameters.py   # validated parameters
+```
+
+A probability of an outcome needs a validated expectation, and a parameter reaches `validated` only
+by citing a study that ACCEPTed. **So the sentence above is true exactly while those two commands
+report none, and it stops being true the day either changes — without anyone having to remember to
+revisit it.** That is the difference between a closure that names its check and one that does not,
+and it is why this row does not need the audit the other three did.
+
 ## 5. Historical results carry a universe caveat that has not been discharged
 
 `PR-001`, `PR-002` and `PR-005` build their universe from the **current** symbol directory, and
