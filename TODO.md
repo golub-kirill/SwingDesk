@@ -817,8 +817,17 @@ decision names an implementer, never that the implementer implements the decisio
       as "`DR-008` is done".
       • **Process lock** — no lock of any kind. `DR-008` says even the forced pull does not bypass
       it, and there is nothing to bypass. Two collectors can run at once today.
-      • **Checksums** — *"non-empty parse and checksum creation before either becomes canonical"*.
-      No checksum exists anywhere in the collector or the store.
+      • ~~**Checksums**~~ **BUILT 2026-08-25.** One SHA-256 over both response bodies, stored on
+      the pull. **One digest over the PAIR, not one each**, because a pull is a complete snapshot —
+      the record's own framing, and the reason `as_of` reads the latest pull rather than unioning.
+      A length prefix separates the two bodies so that moving bytes between the files cannot
+      collide, which is pinned by a test.
+      **What it is FOR is one question:** whether the vendor served the same bytes again. An
+      unattributed pull is ambiguous between *the file did not regenerate* and *the trailer was
+      unreadable*, and those want different responses — the first is the vendor being slow, the
+      second is a parsing problem on our side. Raw bodies are never archived (`DR-008` forbids it),
+      so the digest is the only trace there can be. The eighteen existing pulls read `None`, which
+      is the honest answer and must not be read as an empty digest.
       • **Retry — NOT a gap, and this line said otherwise for an hour.** *"It **may** retry one
       failed attempt after 60 seconds"* is a CEILING, not an obligation — §"rejected alternatives"
       lists *"unlimited retry inside one command"* as the thing it bounds. `_download` retries zero

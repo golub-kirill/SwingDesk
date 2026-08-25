@@ -567,3 +567,50 @@ def test_a_weekend_is_never_itself_a_gap(store) -> None:
     store.record([_entry("AAA")], later, "src", date(2026, 8, 24))
     window = [s.session_date for s in cal.sessions(Exchange.NYSE, date(2026, 8, 21), date(2026, 8, 24))]
     assert store.gaps(window) == ()
+
+
+# ------------------------------------------------- DR-008's checksum (2026-08-25)
+#
+# "Both files must pass ... non-empty parse and checksum creation before either becomes canonical",
+# and "only validated parsed fields, source timestamps and checksums are stored with a snapshot".
+# Raw bodies are never archived, so the digest is the only trace of what the vendor actually served.
+
+
+def test_a_checksum_is_stored_with_the_pull_and_read_back(store) -> None:
+    store.record([_entry("AAA")], MONDAY, "src", None, checksum="abc123")
+    assert store.checksum_at(MONDAY) == "abc123"
+    assert store.latest_checksum() == "abc123"
+
+
+def test_a_pull_predating_the_column_reads_None_rather_than_failing(store) -> None:
+    """The column was added to a store that already held eighteen pulls. `None` is the honest
+    answer for those, and it must not be confused with a pull whose digest was empty."""
+    store.record([_entry("AAA")], MONDAY, "src", None)
+    assert store.checksum_at(MONDAY) is None
+    assert store.latest_checksum() is None
+
+
+def test_latest_checksum_skips_the_pulls_that_have_none(store) -> None:
+    store.record([_entry("AAA")], MONDAY, "src", None)
+    later = MONDAY + timedelta(hours=1)
+    store.record([_entry("AAA")], later, "src", None, checksum="deadbeef")
+    assert store.latest_checksum() == "deadbeef"
+
+
+def test_identical_bodies_digest_identically_and_different_ones_do_not() -> None:
+    import fetch_directory
+
+    assert fetch_directory.digest("a", "b") == fetch_directory.digest("a", "b")
+    assert fetch_directory.digest("a", "b") != fetch_directory.digest("b", "a")
+
+
+def test_the_digest_cannot_be_fooled_by_moving_bytes_between_the_two_FILES() -> None:
+    """One digest covers the PAIR, because a pull is a complete snapshot.
+
+    Concatenating without a length prefix would make ("ab", "c") and ("a", "bc") collide - two
+    genuinely different snapshots reported as the same one, which is the exact claim the digest
+    exists to make.
+    """
+    import fetch_directory
+
+    assert fetch_directory.digest("ab", "c") != fetch_directory.digest("a", "bc")

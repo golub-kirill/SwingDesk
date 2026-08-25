@@ -33,6 +33,7 @@ recorded nothing left the store unable to tell "declined" from "never ran".
 from __future__ import annotations
 
 import argparse
+import hashlib
 import itertools
 import json
 import re
@@ -145,6 +146,23 @@ def _corroborated_session_date(text: str, last_modified: str | None) -> date | N
     if abs(trailer.astimezone(UTC) - modified.astimezone(UTC)) > _CORROBORATION_TOLERANCE:
         return None
     return trailer.date()
+
+
+def digest(*bodies: str) -> str:
+    """A `DR-008` checksum over the response bodies, in the order they were fetched.
+
+    **One digest over both files, not one each.** A pull is a complete snapshot - the record's own
+    framing, and the reason `DirectoryStore.as_of` reads the latest pull rather than unioning - so
+    the thing worth identifying is the pair. Two files whose contents swapped between them would be
+    a different snapshot and must not collide, which is what the length prefix prevents.
+    """
+    hasher = hashlib.sha256()
+    for body in bodies:
+        encoded = body.encode("utf-8")
+        hasher.update(str(len(encoded)).encode("ascii"))
+        hasher.update(b":")
+        hasher.update(encoded)
+    return hasher.hexdigest()
 
 
 def gap_severity(gaps: Sequence[date]) -> str | None:
@@ -274,6 +292,7 @@ def main() -> int:
     nasdaq_text, nasdaq_modified = _download(FILES["nasdaqlisted.txt"])
     other_text, other_modified = _download(FILES["otherlisted.txt"])
     received = len(nasdaq_text.encode("utf-8")) + len(other_text.encode("utf-8"))
+    checksum = digest(nasdaq_text, other_text)
     entries = [
         *universe.parse_nasdaq_listed(nasdaq_text),
         *universe.parse_other_listed(other_text),
@@ -292,8 +311,12 @@ def main() -> int:
 
     with DirectoryStore(store_path) as store:
         previous = store.latest_pull(knowledge_time)
+        # The digest is compared BEFORE the pull is recorded, or the pull just written would be
+        # the latest one and every evening would report "identical to itself".
+        previous_checksum = store.latest_checksum()
         stored_date = store.record(
-            entries, knowledge_time, SOURCE, claimed_date, supersedes=superseded
+            entries, knowledge_time, SOURCE, claimed_date,
+            supersedes=superseded, checksum=checksum,
         )
         print(f"recorded {len(entries)} rows ({len(eligible)} eligible) at {knowledge_time:%Y-%m-%d %H:%M}Z")
         if superseded is not None:
@@ -309,6 +332,13 @@ def main() -> int:
         if claimed_date is not None and stored_date is None:
             print(f"source_session_date {claimed_date} rejected - not strictly after the last "
                   "stored session date; the vendor file may not have regenerated")
+        if previous_checksum is not None:
+            # Says which of the two an unattributed pull was, instead of leaving it ambiguous.
+            if previous_checksum == checksum:
+                print("checksum: byte-identical to the previous pull - the vendor served the same "
+                      "files, so this adds no observation the store did not already hold")
+            else:
+                print("checksum: differs from the previous pull")
         elif stored_date is not None:
             print(f"source_session_date confirmed: {stored_date}")
 

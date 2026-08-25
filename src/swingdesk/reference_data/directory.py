@@ -69,7 +69,13 @@ CREATE TABLE IF NOT EXISTS directory_pulls (
     knowledge_time      TIMESTAMPTZ PRIMARY KEY,
     source              VARCHAR     NOT NULL,
     rows                INTEGER     NOT NULL,
-    source_session_date DATE
+    source_session_date DATE,
+    -- `DR-008`: a checksum is created before a snapshot becomes canonical, and checksums are among
+    -- the few things stored with one. It answers a question nothing else here can: whether the
+    -- vendor served the SAME BYTES again. An unattributed pull is currently ambiguous between "the
+    -- file did not regenerate" and "the trailer was unreadable", and those want different responses.
+    -- Raw bodies are never archived (the record forbids it), so the digest is the only trace.
+    checksum            VARCHAR
 );
 
 -- `DR-008`: "Each invocation stores at most one compact aggregate audit row: timestamps, mode and
@@ -115,6 +121,7 @@ CREATE TABLE IF NOT EXISTS directory_supersessions (
 #: has the column from `_SCHEMA`.
 _MIGRATION = """
 ALTER TABLE directory_pulls ADD COLUMN IF NOT EXISTS source_session_date DATE;
+ALTER TABLE directory_pulls ADD COLUMN IF NOT EXISTS checksum VARCHAR;
 """
 
 
@@ -146,6 +153,7 @@ class DirectoryStore:
         source: str,
         source_session_date: date | None = None,
         supersedes: datetime | None = None,
+        checksum: str | None = None,
     ) -> date | None:
         """Store one complete pull. Returns the session date actually stored.
 
@@ -195,8 +203,8 @@ class DirectoryStore:
             "INSERT OR REPLACE INTO directory VALUES (?, ?, ?, ?, ?, ?)", rows
         )
         self._connection.execute(
-            "INSERT OR REPLACE INTO directory_pulls VALUES (?, ?, ?, ?)",
-            [knowledge_time, source, len(rows), source_session_date],
+            "INSERT OR REPLACE INTO directory_pulls VALUES (?, ?, ?, ?, ?)",
+            [knowledge_time, source, len(rows), source_session_date, checksum],
         )
         return source_session_date
 
@@ -282,6 +290,28 @@ class DirectoryStore:
             "SELECT knowledge_time FROM directory_pulls WHERE source_session_date = ? "
             "ORDER BY knowledge_time DESC LIMIT 1",
             [session_date],
+        ).fetchone()
+        return row[0] if row else None
+
+    def checksum_at(self, knowledge_time: datetime) -> str | None:
+        """The digest recorded with one pull, or `None` if that pull predates the column."""
+        row = self._connection.execute(
+            "SELECT checksum FROM directory_pulls WHERE knowledge_time = ?", [knowledge_time]
+        ).fetchone()
+        return row[0] if row else None
+
+    def latest_checksum(self) -> str | None:
+        """The digest of the most recent pull that has one.
+
+        **What it is for, and it is one question:** whether the vendor served the same bytes again.
+        An unattributed pull is ambiguous between *the file did not regenerate* and *the trailer was
+        unreadable*, and those want different responses - the first is the vendor being slow, the
+        second is a parsing problem on our side. Comparing digests separates them without archiving
+        a single raw response, which `DR-008` forbids.
+        """
+        row = self._connection.execute(
+            "SELECT checksum FROM directory_pulls WHERE checksum IS NOT NULL "
+            "ORDER BY knowledge_time DESC LIMIT 1"
         ).fetchone()
         return row[0] if row else None
 
