@@ -985,6 +985,32 @@ is for where no gate can reach.
 
 **Decision records** — DR-007 / DR-008 / DR-010 / **DR-012 / DR-013 / DR-014** are accepted.
 
+- [ ] **`[v]` §10.5 GIVES EVERY COUNT AN OWNER. NOTHING DOES THAT FOR A STATUS, AND ONE SESSION
+      FOUND TWENTY-ODD STALE ONES — the owner's call, because the fix is a rule.**
+      `AGENTS.md` §12 already names the shape: *"§10.5 gave every measured COUNT one owner; nothing
+      does that for a STATUS, so read a claim about state from the artifact that owns it."* That is
+      a **habit**, and habits are what §10.6 rule 1 says do not survive contact with a busy session.
+      **The evidence is one day's work rather than an argument.** 2026-08-25, across **15 governed
+      documents**: a risk register accepting a risk that had been refuted; a requirement register
+      saying a check *"does not exist"* when it had existed since 08-08; an invariants document
+      asserting seven tests would fail when one of them could not; a chaos table opening *"must be
+      tested, not assumed"* with nothing saying which test covered which row; a ratified, WIRED risk
+      cap whose arithmetic ran on a threshold superseded thirteen days earlier; two open items
+      blocked on things that had stopped blocking; and `HANDOFF.md`'s own first sentence — *"nothing
+      is held in a branch waiting for a decision"* — while two branches held work.
+      **None of them was wrong when written.** Every one rotted because a cited fact moved, which is
+      exactly what §10.5 exists to stop for numbers and nothing stops for states.
+      **What a rule would have to decide, and none of it is an agent's:** whether a status claim must
+      name the artefact that owns it the way a count names its command; whether "nothing does X" is
+      allowed in prose at all, or must be a derivation; and what the mechanism is, given that four
+      gate ideas were probed this session and **three were rejected as too noisy to ship** — a
+      backticked parameter near a numeric claim (21 pairings, 1 live hit, a false positive), one near
+      a cited `DR-NNN` (15 pairings, 2 live hits, both legitimate), and a reachability gate over
+      controlled vocabularies (withdrawn 2026-08-25 in the trade-flow plan). **The one that did ship
+      is the shape that works**: gate 35 checks a citation whose subject is EXACT — a named test
+      either exists or does not. A status claim in prose is not exact, which is the whole difficulty.
+      **Recorded rather than proposed.** `AGENTS.md` §14 makes the rule the owner's, and gate 30
+      makes `AGENTS.md` its only home.
 - [ ] **`[v]` THE TRIAL BUDGET — `docs/08-pm/TRIAL_BUDGET.md`, written 2026-08-24, `owner-pending`.**
       The number is the owner's. Derive every figure with `python tools/trial_budget.py`, never from
       this line.
