@@ -52,12 +52,39 @@ from swingdesk.reference_data import calendar as cal
 from swingdesk.reference_data import universe
 from swingdesk.reference_data.directory import DirectoryStore
 
-SOURCE = "nasdaqtrader.com/SymDir"
-USER_AGENT = "swingdesk/0.0"
-FILES = {
-    "nasdaqlisted.txt": "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
-    "otherlisted.txt": "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt",
-}
+REPO = Path(__file__).resolve().parents[1]
+
+#: `DR-008`: "The source URLs, retry budget, timeouts, cap and staleness levels live in one committed
+#: machine-readable policy and are merge-gated." Until 2026-08-25 they were literals here and nothing
+#: gated them. Loaded at import so a malformed policy stops the collector rather than being noticed
+#: at the moment it would have bounded a request - fail closed, the same rule the local switch uses.
+POLICY_PATH = REPO / "registry" / "directory_pull_policy.yml"
+
+
+def _load_policy(path: Path) -> dict:
+    """The network policy, or a refusal naming what is wrong with it.
+
+    No defaults and no `.get(..., fallback)`: a missing limit must stop the collector, because a
+    limit that silently falls back to a built-in is the second copy this file was moved out of the
+    source to eliminate.
+    """
+    import yaml
+
+    loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(loaded, dict):
+        raise ValueError(f"{path}: the directory pull policy must be a mapping")
+    for section in ("source", "limits", "staleness"):
+        if not isinstance(loaded.get(section), dict):
+            raise ValueError(f"{path}: missing or malformed `{section}` section")
+    if not loaded["source"].get("files"):
+        raise ValueError(f"{path}: `source.files` is empty - there is nothing to fetch")
+    return loaded
+
+
+POLICY = _load_policy(POLICY_PATH)
+SOURCE = POLICY["source"]["label"]
+USER_AGENT = POLICY["source"]["user_agent"]
+FILES: dict[str, str] = dict(POLICY["source"]["files"])
 
 #: The vendor's own end-of-day marker, e.g. "File Creation Time: 0813202621:31".
 _TRAILER = re.compile(r"File Creation Time:\s*(\d{2})(\d{2})(\d{4})(\d{2}):(\d{2})")
@@ -75,14 +102,19 @@ _TRAILER_ZONE = ZoneInfo("America/New_York")
 #: trailer that merely happens to land on the right calendar date for the wrong reason.
 _CORROBORATION_TOLERANCE = timedelta(minutes=5)
 
-#: Response cap (DR-008). Applied to Content-Length AND to bytes actually read, so a server that
-#: omits or misstates the header cannot bypass it.
-MAX_RESPONSE_BYTES = 2 * 1024 * 1024
+#: Response cap (DR-008), read from the policy. Applied to Content-Length AND to bytes actually
+#: read, so a server that omits or misstates the header cannot bypass it.
+MAX_RESPONSE_BYTES: int = POLICY["limits"]["max_response_bytes"]
+REQUEST_TIMEOUT_SECONDS: int = POLICY["limits"]["request_timeout_seconds"]
+WARNING_AT: int = POLICY["staleness"]["warning_at_consecutive_misses"]
+ERROR_AT: int = POLICY["staleness"]["error_at_consecutive_misses"]
 
 #: Per-machine switch. Ignored by git, never committed, and absent means OFF - the same
 #: fail-closed rule the parameter registry uses. There is deliberately no committed default.
+#: NOT in the policy file: the policy is what this project commits to doing to somebody else's
+#: server, and the switch is one machine's own state. Committing it would make an operator's local
+#: choice a repository fact.
 LOCAL_CONFIG = ".swingdesk-local.json"
-REPO = Path(__file__).resolve().parents[1]
 
 
 def collection_enabled(root: Path) -> bool:
@@ -101,7 +133,7 @@ def collection_enabled(root: Path) -> bool:
 def _download(url: str) -> tuple[str, str | None]:
     """The decoded body, and the response's own `Last-Modified` header (or None if absent)."""
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(request, timeout=30) as response:
+    with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT_SECONDS) as response:
         declared = response.headers.get("Content-Length")
         if declared is not None and int(declared) > MAX_RESPONSE_BYTES:
             raise ValueError(f"{url}: declared {declared} bytes exceeds the cap")
@@ -168,6 +200,9 @@ def digest(*bodies: str) -> str:
 def gap_severity(gaps: Sequence[date]) -> str | None:
     """`DR-008`: one consecutive miss is a `WARNING`; two or more are an `ERROR`.
 
+    Both thresholds are read from `registry/directory_pull_policy.yml`, never from a literal
+    here - `DR-008` puts the staleness levels in the policy alongside the network limits.
+
     **Consecutive is the word that matters** and it is about a RUN, not a total. Eight isolated
     single misses over two months are eight recoverable evenings; two in a row means whatever
     stopped the collector was still stopping it the next day, and the departure record has a hole no
@@ -183,7 +218,7 @@ def gap_severity(gaps: Sequence[date]) -> str | None:
         # adjacent here, and treating the weekend as a gap would report one every week.
         run = run + 1 if _adjacent_sessions(earlier, later) else 1
         longest = max(longest, run)
-    return "ERROR" if longest >= 2 else "WARNING"
+    return "ERROR" if longest >= ERROR_AT else "WARNING"
 
 
 def _adjacent_sessions(earlier: date, later: date) -> bool:

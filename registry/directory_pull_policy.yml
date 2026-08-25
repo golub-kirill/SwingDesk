@@ -1,0 +1,53 @@
+# The directory collector's network policy, in one committed machine-readable file.
+#
+# `DR-008` (ratified 2026-08-10): "The source URLs, retry budget, timeouts, cap and staleness levels
+# live in one committed machine-readable policy and are merge-gated." Until 2026-08-25 they were
+# Python literals in `tools/fetch_directory.py` and nothing gated them.
+#
+# **Why a file rather than constants, which is the part worth understanding.** These are the limits
+# on what this project's own software is permitted to ask of somebody else's free server. A limit
+# that lives in a literal is changed by editing a line; a limit that lives here is changed by a
+# commit that a gate reads and a reviewer sees. `DR-008`'s rejected-alternatives table names the
+# failure it is guarding: "unlimited retry inside one command - can hammer the source without a new
+# human decision." The point is the *new human decision*, and that is what committing a policy file
+# makes visible.
+#
+# Gate 22 (`tools/verify_directory_policy.py`) checks this file against the collector: every key
+# below must be present and well-formed, and the collector must READ them rather than carry a second
+# copy. A policy nothing reads would be decoration, which is the one-logic-in-two-places failure
+# this repository has paid for before.
+
+version: 1
+
+source:
+  # The two files cover every US venue in scope. `DR-008` calls them the "two fixed HTTPS files"
+  # and the allowlist is exactly this list - the forced pull does not bypass it either.
+  host: www.nasdaqtrader.com
+  label: nasdaqtrader.com/SymDir
+  user_agent: swingdesk/0.0
+  files:
+    nasdaqlisted.txt: https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt
+    otherlisted.txt: https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt
+
+limits:
+  # 2 MiB. Applied to `Content-Length` AND to bytes actually read, so a server that omits or
+  # misstates the header cannot bypass it. `DR-008`: "substantial headroom over the dated HEAD
+  # measurement named in the record while remaining small enough to stop an accidental or hostile
+  # response before it is held in memory."
+  max_response_bytes: 2097152
+
+  # Seconds. One number, applied to each request.
+  request_timeout_seconds: 30
+
+  # A CEILING, not an obligation - "it MAY retry one failed attempt after 60 seconds". The collector
+  # retries zero times today, which is inside it. The forced pull makes "one two-file attempt with
+  # no internal retry" and so is bounded at zero by its own clause regardless of this value.
+  max_retries_per_attempt: 1
+  retry_after_seconds: 60
+
+staleness:
+  # `DR-008`: "One consecutive miss is a log WARNING; two or more are ERROR." CONSECUTIVE counts a
+  # run of missing SESSIONS - a Friday and the Monday after it are adjacent, and treating the
+  # weekend as a gap would report one every week.
+  warning_at_consecutive_misses: 1
+  error_at_consecutive_misses: 2

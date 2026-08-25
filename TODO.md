@@ -834,10 +834,24 @@ decision names an implementer, never that the implementer implements the decisio
       times, which is inside the ceiling and therefore compliant. Recorded rather than deleted
       because reading a permission as a requirement is how a clean implementation acquires an
       imaginary defect, and this audit was written to stop the opposite error.
-      • **The committed machine-readable policy** — *"The source URLs, retry budget, timeouts, cap
-      and staleness levels live in one committed machine-readable policy and are merge-gated."*
-      They are Python literals in `tools/fetch_directory.py`; `registry/` holds no such file and no
-      gate reads one.
+      • ~~**The committed machine-readable policy**~~ **BUILT 2026-08-25 as
+      `registry/directory_pull_policy.yml` + GATE 22.** Neither the filename nor the gate number is
+      invented — `plans/2026-08-11-evidence-foundation.md` names both, deferred rather than
+      dismissed.
+      **The clause is not "put constants in YAML", and the reason matters.** These are the limits on
+      what this project's software may ask of somebody else's free server. A limit in a literal is
+      changed by editing a line; a limit in a committed, gated policy is changed by a commit a gate
+      reads and a reviewer sees. `DR-008`'s own rejected-alternatives table names what it guards:
+      *"unlimited retry inside one command — can hammer the source without a new human decision."*
+      **The new human decision is the point.**
+      **Gate 22's second check is the one with teeth:** a source URL left as a literal in
+      `tools/fetch_directory.py` fails **even when it agrees with the policy**, because agreeing
+      today is how every drift here has looked on the day it was written (`AGENTS.md` §10.5). Read
+      from the syntax tree, so a gate about a network tool never imports one. Both check classes
+      **confirmed red** — a planted URL literal, and a zero cap.
+      **`.swingdesk-local.json` is deliberately NOT in the policy**: the policy is what this project
+      commits to doing to someone else's server, and the switch is one machine's own state.
+      Committing it would turn an operator's local choice into a repository fact.
       • ~~**Exact HEADER validation**~~ **BUILT 2026-08-25.** Row shape was checked from the start
       and refuses a short row; the header was `splitlines()[1:]`-ed away without being compared to
       anything, so a vendor that reordered its columns would have been parsed silently **by
@@ -1841,8 +1855,10 @@ is for where no gate can reach.
       `ClassificationStore.as_of` + `look_through` — the same reader the pipeline uses, so a
       coverage number measured there is the coverage the cap actually has.
 - [ ] **`[c]` Gate 10** (traceability) — unblocked now that ATR is active, still to build.
-- [ ] **`[c]` Gate 22** + `DR-008`'s remaining machinery — see §2 for what of `DR-008` is built and
-      what is not.
+- [x] **`[v]` Gate 22 BUILT 2026-08-25** — `registry/directory_pull_policy.yml` and
+      `tools/verify_directory_policy.py`. See §2 for the whole `DR-008` audit: five clauses built
+      this session, two still open (the process lock, and eligibility checking *"after the latest
+      session has completed"* rather than merely that today is a session).
 - [x] **`[v]` GATE 14'S WORD-NUMBER HOLE — BUILT, MEASURED, AND REVERTED 2026-08-25. The hole is
       real and pattern-matching is the wrong fix.** Recorded because the next session will have the
       same idea.

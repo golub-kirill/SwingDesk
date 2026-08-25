@@ -154,6 +154,9 @@ def main() -> int:
                                       [python, "tools/verify_decisions.py"]),
         "21 worktree clean": _run("no finished work left uncommitted (advisory)",
                                [python, "tools/verify_worktree_clean.py"]),
+        "22 directory policy": _run("the directory collector's network limits live in the "
+                                    "committed policy and nowhere else",
+                                    [python, "tools/verify_directory_policy.py"]),
         "23 track A streak": _run("the a.run_completes streak, computed not hand-kept (advisory)",
                                [python, "tools/track_a_streak.py"], "23 track A streak"),
         "24 state block": _run("HANDOFF section 2 is generated, not typed",

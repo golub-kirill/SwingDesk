@@ -2545,3 +2545,120 @@ def test_the_gate_never_executes_the_tool_it_checks(tmp_path: Path) -> None:
         "verify_commands.py executed the tool it was checking - it must read the parser from the "
         "syntax tree only"
     )
+
+
+# ------------------------- gate 22: DR-008's network limits live in the committed policy
+#
+# Ratified 2026-08-10, built 2026-08-25. `plans/2026-08-11-evidence-foundation.md` names both the
+# file and the gate number, so neither is invented here.
+#
+# The clause is not "put constants in YAML". These are the limits on what this project's software
+# may ask of somebody else's free server, and DR-008's rejected-alternatives table names what it
+# guards: "unlimited retry inside one command - can hammer the source without a new human
+# decision." A committed, gated policy is what makes a new human decision happen.
+
+_GOOD_POLICY = """version: 1
+source:
+  host: example.invalid
+  label: example/SymDir
+  user_agent: swingdesk/0.0
+  files:
+    a.txt: https://example.invalid/a.txt
+limits:
+  max_response_bytes: 2097152
+  request_timeout_seconds: 30
+  max_retries_per_attempt: 1
+  retry_after_seconds: 60
+staleness:
+  warning_at_consecutive_misses: 1
+  error_at_consecutive_misses: 2
+"""
+
+_CLEAN_COLLECTOR = '''"""A collector that reads its limits."""
+POLICY_PATH = "registry/directory_pull_policy.yml"
+LOCAL_CONFIG = ".swingdesk-local.json"
+'''
+
+
+def _policy_tree(root: Path, *, policy: str = _GOOD_POLICY, collector: str = _CLEAN_COLLECTOR) -> None:
+    (root / "registry").mkdir(exist_ok=True)
+    (root / "tools").mkdir(exist_ok=True)
+    (root / "registry" / "directory_pull_policy.yml").write_text(policy, encoding="utf-8")
+    (root / "tools" / "fetch_directory.py").write_text(collector, encoding="utf-8")
+
+
+def test_a_complete_policy_and_a_clean_collector_pass(tmp_path: Path) -> None:
+    """The positive control: every refusal below must be the planted defect, not a broken fixture."""
+    _policy_tree(tmp_path)
+    code, out = run_gate("verify_directory_policy.py", tmp_path)
+    assert code == 0, out
+
+
+def test_a_missing_policy_is_a_failure(tmp_path: Path) -> None:
+    """The state DR-008 was in for fifteen days: the clause ratified, the file absent."""
+    (tmp_path / "tools").mkdir()
+    (tmp_path / "tools" / "fetch_directory.py").write_text(_CLEAN_COLLECTOR, encoding="utf-8")
+    code, out = run_gate("verify_directory_policy.py", tmp_path)
+    assert code == 1, out
+    assert "does not exist" in out
+
+
+def test_a_missing_limit_is_a_failure(tmp_path: Path) -> None:
+    """A policy missing a limit must fail HERE, not at the moment that limit would have bounded a
+    request - by then the request has been made."""
+    _policy_tree(tmp_path, policy=_GOOD_POLICY.replace("  request_timeout_seconds: 30\n", ""))
+    code, out = run_gate("verify_directory_policy.py", tmp_path)
+    assert code == 1, out
+    assert "request_timeout_seconds" in out
+
+
+def test_a_nonpositive_cap_is_a_failure(tmp_path: Path) -> None:
+    """A zero cap reads as "configured" and refuses every response. Present is not the same as sane."""
+    _policy_tree(tmp_path, policy=_GOOD_POLICY.replace("2097152", "0"))
+    code, out = run_gate("verify_directory_policy.py", tmp_path)
+    assert code == 1, out
+    assert "must be positive" in out
+
+
+def test_a_boolean_is_not_accepted_as_an_integer_limit(tmp_path: Path) -> None:
+    """`True` is an `int` in Python, and a boolean cap is nonsense that would pass a naive check."""
+    _policy_tree(tmp_path, policy=_GOOD_POLICY.replace("  request_timeout_seconds: 30",
+                                                       "  request_timeout_seconds: true"))
+    code, out = run_gate("verify_directory_policy.py", tmp_path)
+    assert code == 1, out
+    assert "request_timeout_seconds" in out
+
+
+def test_a_non_https_source_is_a_failure(tmp_path: Path) -> None:
+    _policy_tree(tmp_path, policy=_GOOD_POLICY.replace("https://example.invalid/a.txt",
+                                                       "http://example.invalid/a.txt"))
+    code, out = run_gate("verify_directory_policy.py", tmp_path)
+    assert code == 1, out
+    assert "https" in out
+
+
+def test_a_URL_literal_left_in_the_collector_is_a_failure(tmp_path: Path) -> None:
+    """The check with teeth. A copy that AGREES with the policy today is still refused.
+
+    Agreeing today is exactly how every drift in this repository has looked on the day it was
+    written - `AGENTS.md` §10.5.
+    """
+    _policy_tree(
+        tmp_path,
+        collector=_CLEAN_COLLECTOR + 'FALLBACK = "https://example.invalid/a.txt"\n',
+    )
+    code, out = run_gate("verify_directory_policy.py", tmp_path)
+    assert code == 1, out
+    assert "as a literal" in out
+
+
+def test_a_broken_policy_is_reported_before_the_collector_is_blamed(tmp_path: Path) -> None:
+    """Blaming the collector for a limit the policy never defined sends someone to the wrong file."""
+    _policy_tree(
+        tmp_path,
+        policy="version: 1\n",
+        collector=_CLEAN_COLLECTOR + 'FALLBACK = "https://example.invalid/a.txt"\n',
+    )
+    code, out = run_gate("verify_directory_policy.py", tmp_path)
+    assert code == 1, out
+    assert "as a literal" not in out
