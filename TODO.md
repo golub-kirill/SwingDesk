@@ -620,9 +620,47 @@ target is a sentence asserting something about the WORLD that nobody tested.
       "everything".
       Drift is guarded the way the vocabularies are — every enum member must carry a translation,
       **confirmed red** by removing one entry from each table.
-- [ ] **`[c]` Widen it past documents — the rest.** Code comments and study scope sections carry the
-      same shape, and `PR-002`'s report alone carries several. A study that narrowed its own scope
-      on an untested "cannot" is the most expensive instance there could be.
+- [x] **`[v]` THE CODE PASS RAN 2026-08-25 and found nothing.** `src/` and `tools/` carry about
+      thirty matches and essentially all are **design invariants or coded refusals** — *"a fill can
+      never exist without the acknowledgement that let it in"*, *"management cannot be evaluated"* —
+      not claims about the world. That is the discipline working: a refusal in this code names the
+      input it lacked rather than asserting the input cannot exist.
+      **One is a real claim and it survives, narrowed.** `contracts/reference.py` justifies
+      ticker-as-label with *"we cannot detect reuse from price continuity because no free source
+      serves delisted history"*. Still true of PRICES, which is what the sentence rests on. Worth
+      recording that EDGAR now makes the WEAKER form checkable — a Form 25 dates the death of the
+      old security, so a ticker appearing after that date is a reuse candidate — but nothing in this
+      project needs that today and building it would be speculative.
+- [ ] **`[c]` Study scope sections — still open, and deliberately last.** `PR-002`'s report is the
+      known instance and its Canada citation is already recorded above. Amending a published report
+      is governed by `AUDIT_AND_IMMUTABILITY.md`, so this is a different kind of task from editing a
+      live document and should not be done casually.
+
+### THE AUDIT'S OWN BASE RATE — measured 2026-08-25, and the owner's hypothesis holds
+
+**The ask was whether this project had been stopping itself on untested "cannot"s.** Seven
+impossibility claims have now actually been TESTED rather than read. **Four were false.**
+
+| Claim | Outcome |
+|---|---|
+| *"No free source serves delisted history"* | **half false** — EDGAR gives the fact and date, free and official; prices stay closed |
+| *"Canada cannot be enumerated"* | **false** — TMX serves its directory free, no account |
+| *"None of §3a's six routes is mechanically detectable"* | **false for three of six**, and a fourth was never open |
+| *"`www.sec.gov` 403s, so a lookup by ticker needs an owner-supplied contact"* | **false** — it needed an `Accept` header |
+| *"A fourth spread estimator is the same family"* | **survives**, and now carries the mechanism rather than the prediction |
+| *"There is no legal source of probability in this system"* | **survives**, and is now derivable from two gates rather than asserted |
+| *"Batching is not the lever"* | **the claim survives; the PARKING did not** — `NFR.md` §3 had already ruled on concurrency in both directions |
+
+**Three of the four refutations came from testing at a FINER GRANULARITY than the original test**,
+which is `AGENTS.md` §17 and is the transferable lesson: the header rather than the host, the six
+routes rather than "none of it", *"no directory in hand"* rather than *"cannot be enumerated"*. The
+original measurements were not sloppy — each was correct about what it actually measured, and each
+conclusion was drawn one level coarser than the evidence supported.
+
+**And the cost was never symmetric.** Every refuted claim had closed real work: a study dropped half
+its scope, a measurement waited fifteen days on an owner action nobody needed, a guard was described
+as hopeless when half of it was a finite set. `AGENTS.md` §15's asymmetry is not a theory here; it
+is the measured outcome of seven tests.
 
 **Widen it past documents when the document pass is done.** The same shape lives in code comments
 and in study scope sections - `PR-002`'s report alone carries several - and a study that narrowed
