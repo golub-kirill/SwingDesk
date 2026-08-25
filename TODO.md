@@ -838,9 +838,15 @@ is for where no gate can reach.
       **THREE incompletenesses, and they are not the same** (`DR-006` §12.4): an unset cap refuses
       every candidate; an unclassifiable CANDIDATE is admitted UNCHECKED; an unclassifiable POSITION
       makes the split understate and refuses nothing.
-      **The store starts EMPTY, so today every candidate is admitted unchecked and the report says
-      so.** That is not a defect — it is §3 being obeyed — but it does mean the cap protects nothing
-      until the refresh pass has run. `unchecked` is a coverage number to close, not a verdict.
+      **The store started EMPTY on 2026-08-23, so every candidate was admitted unchecked that day
+      and the report said so.** That was not a defect — it is §3 being obeyed — but it did mean the
+      cap protected nothing until the refresh pass had run. `unchecked` is a coverage number to
+      close, not a verdict, and the refresh pass has since moved it: **the run's own SECTOR block
+      prints how many candidates were admitted unchecked, and it is no longer all of them.** Read it
+      from the latest report in `data/reports/`, never from this line.
+      **It is harmless only while the book is empty.** With zero positions there is no risk to place
+      in any sector, so an unclassified candidate cannot breach a cap that nothing is consuming. The
+      first real position is what turns this coverage number into a hole in `risk.max_sector_risk`.
       **The point-in-time gap is now ENCODED**: read as-of, so a replay before the first pull finds
       nothing rather than answering an older question with today's classification.
 
