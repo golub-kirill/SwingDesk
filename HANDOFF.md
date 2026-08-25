@@ -15,6 +15,19 @@ study record.** §5's *What to pick up* ranks everything else.
 No pull request was opened — the owner had not asked for one. Opening it is the first decision, not
 the first action.
 
+**And one thing is still unresolved from the evening of 2026-08-24, in ten seconds:**
+
+```bash
+PYTHONPATH=$PWD/src SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data python tools/verify_schedule.py
+PYTHONPATH=$PWD/src SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data python tools/track_a_streak.py
+```
+
+The **18:30 pass completed, `exit 0`** — the outage that began 2026-08-18 is closed for it, and
+`a.run_completes` started counting at **1/20**. The **19:30 second pass had not run yet** when this
+session ended, and it is what closes gate 26: that gate reads BOTH tasks, and the second one last
+ran 2026-08-21 with `exit 1`. So gate 26 red on your first run is expected if the second pass has
+not happened; red *after* it has is a real finding and `data/daily_run.log` is where it lives.
+
 **Everything else is committed.** `master` is protected on `github.com/golub-kirill/SwingDesk`
 (public) and requires the `gates` check, so it only ever advances to a commit CI has already
 passed.
@@ -385,6 +398,21 @@ end** — and on `master` that is about **24 minutes** (measured 2026-08-24; the
 to ~6 is not merged). 18:30 + 24 min still clears the 19:30 second pass, but the margin is now
 about half an hour, and both passes hold the same single-writer stores. Worth watching rather than
 assuming.
+
+### Long jobs, and the one rule about them
+
+Three jobs take longer than a session wants to wait, and **all three hold the bar store**, which is
+single-writer (`ADR-0004`). A job still running at 18:30 or 19:30 takes that evening's pass down.
+
+| | |
+|---|---|
+| `tools/refresh_universe.py`, ten-year deepening | **~2¼ hours** |
+| `tools/run_pr012.py` | **13m37s** |
+| `tools/verify_reproducible.py` | **11m40s** for both passes |
+
+**Run them in the background and against a COPY where the tool allows it** — several take `--data`
+for exactly this, and a copy of `bars.duckdb` takes under a second. Every long job this session ran
+used a copy, which is why the 18:30 pass was never at risk from them.
 
 ### Two live risks
 

@@ -368,10 +368,10 @@ def runtime_rows() -> list[tuple[str, str]] | None:
         # A store held by another process is the SAME third state as a store that is not here: this
         # checkout cannot measure the runtime block, so it must not rewrite it. `ADR-0004` makes the
         # stores single-writer, so the evening run holding `bars.duckdb` is the design working - and
-        # `SESSION-HANDOFF` §3 already named the right response as "`UNAVAILABLE`, never a
-        # traceback". This tool raised one instead, caught 2026-08-24 at 18:31 while the scheduled
-        # 18:30 pass was mid-run. Reported rather than swallowed, because a silent None here would
-        # be indistinguishable from having no `data/` at all.
+        # `AGENTS.md` §12 names the right response: "UNAVAILABLE, never a traceback". This tool
+        # raised one instead, caught 2026-08-24 at 18:31 while the scheduled 18:30 pass was mid-run.
+        # Reported rather than swallowed, because a silent None here would be indistinguishable
+        # from having no `data/` at all.
         print(f"state: a store in {DATA} is open in another process - the scheduled run holds them "
               f"while it works. The runtime block is UNAVAILABLE from here and is left alone.")
         print(f"       {error}")

@@ -553,9 +553,11 @@ the words are as fragile as the numerals; the fix is to stop counting in prose a
   study, the criterion, the gate number — before considering the change landed. It is the same
   move §10.2 asks for across branches, aimed at documents instead.
 
-- **Migrated 2026-08-24 from `SESSION-HANDOFF-2026-08-24.md` §3, before that file was deleted.**
-  Four traps that lived only there, which is why they are here now — a habit stored in a document
-  whose own header says to delete it is a habit with an expiry date.
+- **Migrated 2026-08-24 from that day's dated session handoff, §3, before it was deleted.**
+  Four traps that lived only there, which is why they are here now — a habit stored in a
+  document whose own header says to delete it is a habit with an expiry date. The file is
+  not named here on purpose: naming it would leave this bullet citing something that no
+  longer exists, which is the defect the migration was performed to avoid.
   **`REFUSED` is not `INCONCLUSIVE`.** One says there was not enough data to look with; the other
   says the study looked and could not tell. Gate 3f had no `REFUSED` in its vocabulary, so the
   first study to obey `PREREG_TEMPLATE` §8 failed a gate for obeying it.

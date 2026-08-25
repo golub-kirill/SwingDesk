@@ -514,6 +514,41 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       so the coverage figure is recomputed on every run and cannot be ~10 days stale again. Derive
       it with that command; this line deliberately does not repeat it (`AGENTS.md` §10.5).
 
+### The dated session-handoff files are outside the document map, and one has already broken a record
+
+**Owner question, 2026-08-24: why a permanent `HANDOFF.md` AND a dated `SESSION-HANDOFF-<date>.md`,
+and should it continue?** Measured rather than argued, and the answer needs an owner ruling.
+
+`AGENTS.md` §10.7 names **four** documents and gives each an owner. `SESSION-HANDOFF-<date>.md` is a
+fifth, outside the map. **Seven have been created and four deleted in six days**, two of them
+replacing themselves.
+
+**Three costs, all measured:**
+
+1. **Things die in it.** Four traps lived only in `SESSION-HANDOFF-2026-08-24.md` §3 and were
+   migrated to `AGENTS.md` §12 on 2026-08-24, hours before that file was deleted by its own
+   instruction. Nothing would have noticed their loss.
+2. **An append-only record cites one.** `DR-016` line 441 cites `SESSION-HANDOFF` §1. `DR-016` is
+   dated 2026-08-18 and the file it points at was deleted **2026-08-23** — so that citation has been
+   dangling since, and `AGENTS.md` §11 rule 2 forbids editing the record to fix it. Gate 3e cannot
+   see it either: it resolves names of the form `something.md` and the citation is a bare
+   `SESSION-HANDOFF §1`. **Demonstrated within the minute:** deleting the file made gate 3e fail
+   immediately on a citation in `AGENTS.md` that used the full filename, and stay silent about
+   `DR-016`'s bare one. The gate is not weak — the citation style decides whether it can help, and
+   an append-only record picked the style the gate cannot see.
+3. **Its numbers drift unchecked.** Gate 14 reads `docs/**` plus exactly three root files, and this
+   is not one of them. On the day it was deleted it still claimed *"everything is merged"* and a
+   gate count two behind the tree.
+
+**Recommendation: stop creating them.** Every section such a file carries already has an owner —
+what changed is `git log`, open work is this file, state is `HANDOFF.md` §2 and is generated, what
+to do next is `HANDOFF.md` §5, habits are `AGENTS.md` §12. A session that cannot fit its handover
+into `HANDOFF.md` is holding something that belongs in one of those, which is exactly what happened
+to the four traps.
+
+**Not acted on beyond the migration**: the convention is the owner's to keep or drop, and this entry
+is the question rather than the answer.
+
 ### Measured and deliberately NOT built: gate 14 over `TODO.md`
 
 **`AGENTS.md` §10.7 says this file never holds a measured count, and nothing enforces it.** Gate 14
