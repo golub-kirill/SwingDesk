@@ -2818,3 +2818,79 @@ def test_a_supersession_clause_does_not_hide_a_proposed_status() -> None:
 def test_a_record_with_no_status_line_is_unknown_rather_than_accepted() -> None:
     """None, not a default. An absent status must not read as ratified."""
     assert _status("# DR-999\n\nSome prose about a decision.\n") is None
+
+
+# --------------------------- gate 36: the inventory and the runner name the same gates
+
+
+def _inventory_tree(tmp_path: Path, rows: str, entries: str) -> Path:
+    """A `CI_POLICY.md` §1 table and a `check_gates.py` registry, and nothing else."""
+    (tmp_path / "docs" / "06-engineering").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "06-engineering" / "CI_POLICY.md").write_text(
+        "# CI POLICY\n\n## 1. Gates\n\n| # | Gate | Catches | Status |\n|---|---|---|---|\n"
+        f"{rows}\n## 2. What each gate protects\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "tools").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "tools" / "check_gates.py").write_text(
+        f"def main():\n    results = {{\n{entries}    }}\n", encoding="utf-8"
+    )
+    return tmp_path
+
+
+def test_inventory_gate_catches_a_row_claiming_a_gate_that_does_not_run(tmp_path: Path) -> None:
+    """The defect it was written for: row 12 read `exists` over a number never registered."""
+    root = _inventory_tree(
+        tmp_path,
+        "| 1 | `a.py` | x | **exists** |\n| 12 | `b.py` | y | **exists** |\n",
+        '        "1 parameters": _run("x", []),\n',
+    )
+    code, out = run_gate("verify_gate_inventory.py", root)
+    assert code == 1
+    assert "gate 12 is listed as existing" in out
+
+
+def test_inventory_gate_catches_a_gate_that_runs_with_no_row(tmp_path: Path) -> None:
+    """The other direction: a gate added to the runner and never written down."""
+    root = _inventory_tree(
+        tmp_path,
+        "| 1 | `a.py` | x | **exists** |\n",
+        '        "1 parameters": _run("x", []),\n        "99 secret": _run("y", []),\n',
+    )
+    code, out = run_gate("verify_gate_inventory.py", root)
+    assert code == 1
+    assert "gate 99 runs and has no row" in out
+
+
+def test_inventory_gate_leaves_a_to_build_row_alone(tmp_path: Path) -> None:
+    """Row 10 has been honest about itself all along and must not be reddened for it."""
+    root = _inventory_tree(
+        tmp_path,
+        "| 1 | `a.py` | x | **exists** |\n| 10 | traceability | y | to build |\n",
+        '        "1 parameters": _run("x", []),\n',
+    )
+    code, out = run_gate("verify_gate_inventory.py", root)
+    assert code == 0, out
+
+
+def test_inventory_gate_leaves_a_retired_row_alone(tmp_path: Path) -> None:
+    """A struck-through row is history, the same convention as gates 28 and 35."""
+    root = _inventory_tree(
+        tmp_path,
+        "| 1 | `a.py` | x | **exists** |\n| ~~12~~ | ~~`b.py`~~ | RETIRED | ~~exists~~ |\n",
+        '        "1 parameters": _run("x", []),\n',
+    )
+    code, out = run_gate("verify_gate_inventory.py", root)
+    assert code == 0, out
+
+
+def test_inventory_gate_catches_one_number_claimed_twice(tmp_path: Path) -> None:
+    """Three things once claimed "Gate 12" and it cost a day (`RECONCILIATION_PLAN.md` §4)."""
+    root = _inventory_tree(
+        tmp_path,
+        "| 1 | `a.py` | x | **exists** |\n| 1 | `b.py` | y | **exists** |\n",
+        '        "1 parameters": _run("x", []),\n',
+    )
+    code, out = run_gate("verify_gate_inventory.py", root)
+    assert code == 1
+    assert "claimed by two rows" in out

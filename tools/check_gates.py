@@ -142,6 +142,8 @@ def main() -> int:
                                    [python, "tools/verify_invariant_tests.py"]),
         "35 cited tests": _run("a document naming a test names one that exists",
                                [python, "tools/verify_cited_tests.py"]),
+        "36 gate inventory": _run("the inventory and the runner name the same gates",
+                                  [python, "tools/verify_gate_inventory.py"]),
     }
 
     print("\n" + "=" * 62)

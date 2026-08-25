@@ -1864,6 +1864,20 @@ is for where no gate can reach.
       `if is_long: return True` and passed seven audits"* — merged into 3g's row rather than lost
       (`AGENTS.md` §11 rule 3: consolidate only with a migration).
       **Row 10 is the honest comparison**: it also has no runner and it says **to build**.
+- [x] **`[v]` GATE 36 — the inventory and the runner must name the same gates. Built 2026-08-25,
+      out of the row-12 finding directly above.**
+      Every other gate protects the tree; this one protects **the list a reader consults to learn
+      what is protected**, which nothing else could see. Three exact checks — every registered gate
+      has a row, every row claiming to exist is registered, no number is claimed twice — and a gate
+      number is a token rather than a judgement, so there is no noise to trade off.
+      A row marked `to build` or struck through claims nothing and is left alone, which is how row
+      10 has been honest about itself since it was written.
+      **What it deliberately does not check:** whether a row DESCRIBES its gate correctly. That is
+      prose against behaviour and no gate reads it; what this closes is the two disagreeing about a
+      gate's EXISTENCE, which is what actually happened.
+      ```bash
+      python tools/verify_gate_inventory.py
+      ```
 - [ ] **`[c]` Gate 22** + `DR-008`'s remaining machinery · **Gate 14's word-number hole.**
 - [ ] **`[c]` 6 specified components awaiting activation** — pivots (M12-T0201, M12-T0202), moving
       average (M25-T0382), regime (M30-T0450), breadth (M31-T0459), trend (M33-T0485). All have real
