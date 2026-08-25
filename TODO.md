@@ -645,6 +645,18 @@ evening returned every one of those sessions, clean. The owner asked; nobody had
       **Not asserted about earlier runs.** The last run to complete was 2026-08-17 at 11m45s
       end-to-end, before the universe was deepened to ten years; its decision-path share was
       never recorded and is not reconstructible.
+      **Swept for residual quadratics 2026-08-25, and `src/` is clean — a negative worth having,
+      because it says where NOT to look next.** The code graph carries a `linear_scan_in_loop`
+      property, which is the hidden O(n²) a loop-depth count misses and is exactly the shape the
+      biggest hot spot below had. Asked of all 1,450 indexed functions: **eight hits, every one in
+      `tools/`** — gate verifiers that sweep documents once — and **none in `src/`**. The deepest
+      loop nest anywhere in `src/` is 2, in places where it is inherent (sessions × members for
+      breadth, positions × weights for the sector book, both bounded small).
+      **Two limits, stated so the next reader does not over-read it.** The index is built at
+      `master`'s tip, and `transitive_loop_depth` — the cross-function version — is **not populated**
+      in this index, so nothing here rules out a quadratic assembled from two functions. Both were
+      checked with a positive control before being reported; the first query looked clean only
+      because the property was absent, which is `AGENTS.md` §9's warning arriving in practice.
       **Three hot spots, none of them in a frozen file, and the biggest was quadratic.**
       `completeness.check` asked `BarSeries.bars_on` - a linear scan - once per session date, and
       the pipeline checks each instrument's WHOLE stored extent, so sessions ≈ bars: ~2,500 x

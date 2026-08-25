@@ -364,6 +364,14 @@ rather than the 2.2 recorded, against a design target of 2.5. `DR-006` §18 carr
   that for a STATUS** — twenty-odd stale ones across fifteen governed documents in a day, none of
   them wrong when written.
 
+**The code graph describes `master`, not this branch** — `AGENTS.md` §9 rule 3 says to re-index
+after a MERGE, and this is not merged, so that is correct rather than an oversight. It does not know
+the six tools or the tests added here. Two of its answers were checked against the files this
+session and **one was wrong**: `freshness.assess` reports zero fan-in and is called twice in
+`pipeline.py` under an alias, while `transitive_loop_depth` is not populated at all — a query on it
+looks clean because the property is absent. §9's *"a null result is evidence only once a positive
+control shows the query works"* is not a formality.
+
 **One thing to do at merge time, and gate 36 will insist on it.** The sibling branch registers gates
 **22** (`verify_directory_policy.py`) and **31** (`verify_commands.py`) in `check_gates.py` and adds
 **no rows** to `CI_POLICY.md` §1 — checked 2026-08-25 against its tip. Gate 36 requires the
