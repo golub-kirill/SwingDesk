@@ -1878,6 +1878,14 @@ is for where no gate can reach.
       ```bash
       python tools/verify_gate_inventory.py
       ```
+- [ ] **`[v]` AT MERGE: gates 22 and 31 need `CI_POLICY.md` rows, and gate 36 will insist.**
+      Checked 2026-08-25 against `claude/swingdesk-open-tasks-2001c8`'s tip: it registers **22**
+      (`verify_directory_policy.py`) and **31** (`verify_commands.py`) in `check_gates.py` and adds
+      no rows to the inventory. Gate 36 requires the two to name the same gates, so a merge of both
+      branches is red until those rows exist. **Two rows; the descriptions are already in the runner
+      entries.** Neither branch can add them alone — a row here for a gate this branch does not
+      register fails gate 36 from the other side, which is the check being symmetric rather than
+      awkward.
 - [ ] **`[c]` Gate 22** + `DR-008`'s remaining machinery · **Gate 14's word-number hole.**
 - [ ] **`[c]` 6 specified components awaiting activation** — pivots (M12-T0201, M12-T0202), moving
       average (M25-T0382), regime (M30-T0450), breadth (M31-T0459), trend (M33-T0485). All have real

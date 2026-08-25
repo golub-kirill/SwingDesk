@@ -364,6 +364,15 @@ rather than the 2.2 recorded, against a design target of 2.5. `DR-006` §18 carr
   that for a STATUS** — twenty-odd stale ones across fifteen governed documents in a day, none of
   them wrong when written.
 
+**One thing to do at merge time, and gate 36 will insist on it.** The sibling branch registers gates
+**22** (`verify_directory_policy.py`) and **31** (`verify_commands.py`) in `check_gates.py` and adds
+**no rows** to `CI_POLICY.md` §1 — checked 2026-08-25 against its tip. Gate 36 requires the
+inventory and the runner to name the same gates, so a merge of both branches goes red until those
+two rows exist. **That is the gate working on its first real merge, not a defect in either branch**;
+the fix is two rows, and the descriptions are already in the runner entries. Neither branch can add
+them alone: a row for a gate the other branch registers would fail gate 36 here, in the other
+direction.
+
 ### What to pick up, ranked — 2026-08-25
 
 **Everything below needs the owner except items 5 and 6.** The session that produced them
