@@ -377,3 +377,117 @@ def test_departures_are_directional(store) -> None:
 
     assert store.departures(MONDAY, FRIDAY) == ()
     assert store.departures(FRIDAY, MONDAY) == ("TEST2",)
+
+
+# ---------------------------------------------- DR-008's audit, guard and forced pull (2026-08-25)
+#
+# All three were ratified 2026-08-10 and none was built. Gate 20 exists BECAUSE of that omission and
+# passed the whole time, because it checks that a record names an implementer, not that the
+# implementer implements the record - `AGENTS.md` §17, verify at the right granularity. Gate 31
+# found it from the other side: the record's emergency command names flags argparse never had.
+
+
+def test_an_invocation_that_makes_no_request_still_records_an_audit_row(store) -> None:
+    """A refusal that recorded nothing left "declined" and "never ran" indistinguishable."""
+    started = datetime(2026, 8, 25, 18, 30, tzinfo=UTC)
+    store.record_audit(
+        started_at=started, finished_at=started, mode="SCHEDULED", reason=None,
+        enabled=False, attempts=0, requests=0, received_bytes=0,
+        result="DISABLED", snapshot=None,
+    )
+    rows = store.audit()
+    assert len(rows) == 1
+    assert rows[0][2] == "SCHEDULED"
+    assert rows[0][8] == "DISABLED"
+    assert rows[0][6] == 0, "a declined invocation must record zero requests, not no row"
+
+
+def test_at_most_one_audit_row_per_invocation(store) -> None:
+    """`DR-008` says "at most one", and the primary key is what makes that true rather than hoped."""
+    started = datetime(2026, 8, 25, 18, 30, tzinfo=UTC)
+    for result in ("DISABLED", "RECORDED"):
+        store.record_audit(
+            started_at=started, finished_at=started, mode="SCHEDULED", reason=None,
+            enabled=True, attempts=0, requests=0, received_bytes=0,
+            result=result, snapshot=None,
+        )
+    assert len(store.audit()) == 1
+    assert store.audit()[0][8] == "RECORDED"
+
+
+def test_pull_for_session_is_what_makes_the_guard_decidable_before_the_network(store) -> None:
+    """The vendor's session date arrives WITH the file, so the guard cannot wait for it.
+
+    Until this existed the collector downloaded both files and then let `record` strip the date -
+    two requests spent to learn something the store already knew.
+    """
+    store.record([_entry("AAA")], MONDAY, "src", date(2026, 8, 24))
+    assert store.pull_for_session(date(2026, 8, 24)) == MONDAY
+    assert store.pull_for_session(date(2026, 8, 25)) is None
+
+
+def test_a_repeated_forced_reason_is_visible_to_the_caller(store) -> None:
+    """`DR-008` requires a NEW reason per forced pull; a reason that repeats is one nobody reads."""
+    assert store.last_forced_reason() is None
+    first = datetime(2026, 8, 25, 18, 30, tzinfo=UTC)
+    store.record_audit(
+        started_at=first, finished_at=first, mode="FORCED", reason="truncated first response",
+        enabled=True, attempts=1, requests=2, received_bytes=10,
+        result="RECORDED", snapshot=first,
+    )
+    assert store.last_forced_reason() == "truncated first response"
+
+    # A later SCHEDULED row must not become the answer - the requirement is about forced pulls only.
+    later = first + timedelta(hours=1)
+    store.record_audit(
+        started_at=later, finished_at=later, mode="SCHEDULED", reason=None,
+        enabled=True, attempts=0, requests=0, received_bytes=0,
+        result="ALREADY_RECORDED", snapshot=None,
+    )
+    assert store.last_forced_reason() == "truncated first response"
+
+
+def test_the_monotonicity_check_still_refuses_a_repeat_session_by_default(store) -> None:
+    """The positive control for the exception below: without `supersedes`, nothing changes."""
+    store.record([_entry("AAA")], MONDAY, "src", date(2026, 8, 24))
+    again = MONDAY + timedelta(hours=1)
+    assert store.record([_entry("AAA")], again, "src", date(2026, 8, 24)) is None
+
+
+def test_a_forced_replacement_keeps_its_session_date(store) -> None:
+    """A correction and a second observation are different claims, and only one may repeat a date.
+
+    Without this the replacement stored a NULL date and `pull_for_session` went on answering with
+    the snapshot the operator had just corrected - the forced pull would have been a no-op dressed
+    as a repair.
+    """
+    store.record([_entry("AAA")], MONDAY, "src", date(2026, 8, 24))
+    later = MONDAY + timedelta(hours=1)
+    stored = store.record([_entry("AAA"), _entry("BBB")], later, "src", date(2026, 8, 24),
+                          supersedes=MONDAY)
+    assert stored == date(2026, 8, 24)
+    assert store.pull_for_session(date(2026, 8, 24)) == later
+
+
+def test_the_superseded_pull_remains_stored_and_the_note_is_appended(store) -> None:
+    """`DR-008`: "The previous snapshot remains stored but is no longer canonical."
+
+    Append, never overwrite - `AUDIT_AND_IMMUTABILITY.md` §2. A correction that erased its
+    predecessor would present the corrected state as though it had always been so.
+    """
+    store.record([_entry("AAA")], MONDAY, "src", date(2026, 8, 24))
+    later = MONDAY + timedelta(hours=1)
+    store.record([_entry("AAA"), _entry("BBB")], later, "src", date(2026, 8, 24), supersedes=MONDAY)
+    store.record_supersession(
+        recorded_at=later, superseded=MONDAY, replacement=later, reason="truncated first response",
+    )
+
+    notes = store.supersessions()
+    assert len(notes) == 1
+    assert notes[0][1] == MONDAY and notes[0][2] == later
+    assert notes[0][3] == "truncated first response"
+
+    # The superseded snapshot is still readable at its own knowledge time - that is what makes the
+    # supersession evidence rather than a rewrite.
+    assert {e.symbol for e in store.as_of(MONDAY)} == {"AAA"}
+    assert {e.symbol for e in store.as_of(later)} == {"AAA", "BBB"}

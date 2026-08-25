@@ -2406,3 +2406,142 @@ def test_a_missing_journal_is_unmeasurable_rather_than_zero(tmp_path: Path) -> N
     import datetime as dt
 
     assert retry_needed.count_repairable(tmp_path / "absent.duckdb", dt.date(2026, 8, 24)) is None
+
+
+# ------------------------- gate 31: a command a document tells you to run is a command that runs
+#
+# What paid for it, 2026-08-25: `HANDOFF.md` §2's GENERATED census told a reader to derive the
+# classification coverage with `python tools/measure_sector_cap.py --wide`, and that exits 2 -
+# `--classifications` is required. Three of the five mentions of that tool were unrunnable, and the
+# third was copied out of §2 by a session that trusted it. A broken command propagates exactly like
+# a stale count.
+
+
+#: A tool whose parser is read out of its syntax tree, never by importing or running it. The body
+#: is deliberately import-free: if the gate ever regressed to importing its subject, this fixture
+#: would still work and the regression would be invisible - so the assertion that it does not
+#: import is carried by `test_the_gate_never_executes_the_tool_it_checks` below.
+_TOOL_WITH_A_REQUIRED_FLAG = '''"""A fixture tool."""
+import argparse
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(prog="sample")
+    parser.add_argument("--classifications", required=True)
+    parser.add_argument("--wide", action="store_true")
+    parser.parse_args()
+    return 0
+'''
+
+
+def _commands_tree(root: Path, *, doc: str, tool: str = _TOOL_WITH_A_REQUIRED_FLAG) -> None:
+    """A fixture repository: one tool with a known parser, one document naming it.
+
+    STAGED, not merely written - the gate reads `git ls-files`, and an unstaged fixture presents an
+    empty tree in which every failure assertion passes for the wrong reason.
+    """
+    (root / "tools").mkdir(exist_ok=True)
+    (root / "tools" / "sample.py").write_text(tool, encoding="utf-8")
+    (root / "DOC.md").write_text(doc, encoding="utf-8")
+    _git_init(root)
+    subprocess.run(["git", "-C", str(root), "add", "-A"], capture_output=True, check=True)
+
+
+def test_a_required_flag_left_out_is_a_failure(tmp_path: Path) -> None:
+    """The defect itself: the document promises a derivation the reader cannot run."""
+    _commands_tree(tmp_path, doc="Derive it with `python tools/sample.py --wide`.\n")
+    code, out = run_gate("verify_commands.py", tmp_path)
+    assert code == 1, out
+    assert "--classifications" in out and "required" in out
+
+
+def test_the_complete_command_passes(tmp_path: Path) -> None:
+    """The positive control on the same fixture, so a red result cannot come from a broken tree."""
+    _commands_tree(tmp_path, doc="Derive it with `python tools/sample.py --wide --classifications x`.\n")
+    code, out = run_gate("verify_commands.py", tmp_path)
+    assert code == 0, out
+    assert "1 invocation(s)" in out
+
+
+def test_a_flag_the_tool_does_not_declare_is_a_failure(tmp_path: Path) -> None:
+    """`DR-008` names `--emergency-repull`, which `fetch_directory.py` has never declared."""
+    _commands_tree(tmp_path, doc="Run `python tools/sample.py --classifications x --emergency`.\n")
+    code, out = run_gate("verify_commands.py", tmp_path)
+    assert code == 1, out
+    assert "--emergency" in out
+
+
+def test_a_tool_that_does_not_exist_is_a_failure(tmp_path: Path) -> None:
+    """A rename that misses a citation is otherwise silent across ninety-odd mentions."""
+    _commands_tree(tmp_path, doc="Run `python tools/renamed_away.py`.\n")
+    code, out = run_gate("verify_commands.py", tmp_path)
+    assert code == 1, out
+    assert "does not exist" in out
+
+
+def test_chained_commands_do_not_leak_flags_to_the_first_tool(tmp_path: Path) -> None:
+    """The gate's own first run produced two false positives of exactly this shape.
+
+    `python a.py && python b.py --flag` was read as `a.py --flag`, reporting `AGENTS.md` §2 and
+    `docs/README.md` - both correct - as defects. A gate whose output has to be skimmed is how a
+    real finding gets skipped, so this is pinned rather than remembered.
+    """
+    _commands_tree(
+        tmp_path,
+        doc="```bash\npython tools/sample.py --classifications x && python tools/other.py --wide\n```\n",
+    )
+    _code, out = run_gate("verify_commands.py", tmp_path)
+    # `other.py` does not exist, so the run fails - but it must fail for THAT and not for `--wide`.
+    assert "does not exist" in out
+    assert "passes `--wide` to `tools/sample.py`" not in out
+
+
+def test_a_line_marked_partial_is_not_read_as_an_invocation(tmp_path: Path) -> None:
+    """The escape hatch: a document showing a command SHAPE says so, and it is a claim on the record."""
+    _commands_tree(
+        tmp_path,
+        doc="<!-- partial-command -->\nThe shape is `python tools/sample.py --wide`.\n",
+    )
+    code, out = run_gate("verify_commands.py", tmp_path)
+    assert code == 0, out
+    assert "0 invocation(s)" in out
+
+
+def test_naming_a_tool_as_a_file_is_not_an_invocation(tmp_path: Path) -> None:
+    """`tools/foo.py` in a sentence is a reference - gate 3e's business, not this one's."""
+    _commands_tree(tmp_path, doc="See `tools/sample.py` for the measurement.\n")
+    code, out = run_gate("verify_commands.py", tmp_path)
+    assert code == 0, out
+    assert "0 invocation(s)" in out
+
+
+def test_the_gate_never_executes_the_tool_it_checks(tmp_path: Path) -> None:
+    """`verify_commands.py` claims it reads a parser statically. This is what makes that a fact.
+
+    The fixture tool writes a file at IMPORT time. If the gate ever imported or ran its subject to
+    inspect the parser - the obvious implementation, and the one that would pass every other test
+    here - the file would appear. A `CI_POLICY.md` §4 tool that quietly started executing network
+    scripts to check them would be a real incident, and nothing else in the suite would notice.
+    """
+    tripwire = tmp_path / "IT_RAN"
+    tool = (
+        '"""A fixture tool that announces execution."""\n'
+        "import argparse, pathlib\n\n"
+        f"pathlib.Path({str(tripwire)!r}).write_text('executed', encoding='utf-8')\n\n\n"
+        "def main() -> int:\n"
+        '    parser = argparse.ArgumentParser(prog="sample")\n'
+        '    parser.add_argument("--classifications", required=True)\n'
+        "    parser.parse_args()\n"
+        "    return 0\n"
+    )
+    _commands_tree(
+        tmp_path,
+        doc="Run `python tools/sample.py --classifications x`.\n",
+        tool=tool,
+    )
+    code, out = run_gate("verify_commands.py", tmp_path)
+    assert code == 0, out
+    assert not tripwire.exists(), (
+        "verify_commands.py executed the tool it was checking - it must read the parser from the "
+        "syntax tree only"
+    )
