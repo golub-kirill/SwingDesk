@@ -334,6 +334,33 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
 
 ## 2. Picked work
 
+### The second pass is conditional now; its TIME is still wrong and that part is the owner's
+
+**`DR-019` built the condition** — the 19:30 pass asks the journal whether the first run refused
+anything a retry could repair, runs when it did, declines cleanly when it did not, and **runs anyway
+when it cannot tell**. Measured before building: across every evening that ran both passes the two
+runs decided byte-identically, and the failure the pass insures against has never been observed in
+this repository.
+
+- [ ] **`[v]` Move the pass later — needs the owner, and it costs an evening rather than code.**
+      Measured 2026-08-24, times local against a 15:00 close: the tail of names had no Monday bar at
+      **~3.5 h** (first pass) or **~4.5 h** (second pass), and every one of them had it at
+      **~7.1 h**. So a pass at 19:30 will keep missing what it exists to catch.
+      `docs/runbooks/README.md` §1a makes registering a scheduled task the owner's step, and the
+      task is `Logon Mode: Interactive only` — a later pass means being logged in later. That is a
+      decision about the owner's evening, not about the software.
+- [ ] **`[v]` Measure the arrival curve before moving anything.** The window above rests on **one**
+      session. Probing the vendor hourly after the close for a week costs nothing but patience and
+      turns a single observation into a distribution — and `AGENTS.md` §15 rule 1 asks exactly that
+      of a claim this load-bearing. Cheap shape: for the names the run refused, ask the vendor again
+      each hour and record when the session first appears.
+- [ ] **`[c]` The `E11` event calendar has no source.** `application/checklist.py` records that no
+      event calendar is wired **and** that the course supplies no buffer to apply if one were —
+      `screen.earnings_buffer_days` needs a decision record or a study, not a transcription. It is
+      one of the eight items keeping every candidate at `Research`
+      (`docs/08-pm/plans/2026-08-24-the-trade-flow.md` §2).
+
+
 ### AUDIT THE IMPOSSIBILITY CLAIMS — owner instruction, 2026-08-24, and `AGENTS.md` §15 is the rule
 
 **The ask:** *"Мы очень часто верим, что у нас нет возможности или не получается, и зарубаем на

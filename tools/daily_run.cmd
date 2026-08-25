@@ -85,6 +85,40 @@ REM full one, it is a different thing. Two passes a day roughly halves the
 REM window this holds, which is still comfortably over a fortnight.
 for %%F in ("%LOG%") do if %%~zF GTR 50000000 move /Y "%LOG%" "%LOG%.1" >nul 2>&1
 
+REM ---------------------------------------------------------------------------
+REM THE SECOND PASS IS CONDITIONAL - owner instruction, 2026-08-24
+REM ---------------------------------------------------------------------------
+REM It ran unconditionally from DR-015 section 3 until here, and MEASURED across
+REM every evening that ran both passes, it never once changed an outcome: the two
+REM runs carry the same output_hash every time. The failure it insures against -
+REM a fetch erroring - has not been observed here in ~11,200 instrument-fetches.
+REM
+REM So it now asks the journal first: did tonight's run refuse anything a later
+REM attempt could plausibly repair? A DATA refusal is that class. RISK, STOP and
+REM LIQ are decisions about the trade and no amount of waiting moves them.
+REM
+REM UNAVAILABLE RUNS THE PASS. If the journal cannot be read, the condition is
+REM unmeasured - and an unmeasured condition must not silently suppress a pass.
+REM AGENTS.md section 12: unavailable is not fail, and it is not pass either.
+REM
+REM WHY GOTO AND NOT AN IF BLOCK: `set X=%ERRORLEVEL%` inside a parenthesised
+REM block needs delayed expansion and silently reads the wrong value without it.
+REM Flat, descending errorlevel tests avoid the whole trap.
+REM
+REM TRACK A IS UNAFFECTED. Its parser counts only the attempt starting within
+REM +-30 minutes of 18:30, and this branch is reachable only when the wrapper was
+REM invoked with `second-pass`.
+if not "%SECOND%"=="1" goto :attempt
+"%PY%" -X utf8 "%REPO%\tools\retry_needed.py" --data "%REPO%\data" >> "%LOG%" 2>&1
+if errorlevel 4 goto :attempt
+if errorlevel 1 goto :nothing_to_retry
+goto :attempt
+
+:nothing_to_retry
+echo ===== [%DATE% %TIME%] second pass skipped, nothing to retry >> "%LOG%"
+exit /b 0
+
+:attempt
 echo. >> "%LOG%"
 echo ===== [%DATE% %TIME%] %PASS% starting >> "%LOG%"
 

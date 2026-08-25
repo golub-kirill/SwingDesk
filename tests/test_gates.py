@@ -2303,3 +2303,106 @@ def test_the_pointer_must_be_near_the_heading(tmp_path: Path) -> None:
     _rules_tree(tmp_path, other=far)
     code, out = run_gate("verify_rules_home.py", tmp_path)
     assert code == 1, out
+
+
+# ------------------------- the second pass is conditional (owner instruction, 2026-08-24)
+#
+# It ran unconditionally from `DR-015` §3 until here, and never once changed an outcome: measured
+# across every evening that ran both passes, the two runs carry the same `output_hash`. It now asks
+# the journal whether tonight refused anything a later attempt could repair.
+#
+# The wrapper cannot be executed here - it starts a real scan - so its CONTROL FLOW is asserted from
+# its text, and the three branches were separately exercised against a stubbed copy.
+
+import retry_needed  # noqa: E402  - `sys.path` is extended at the top of this module
+
+
+def _wrapper() -> str:
+    return (TOOLS / "daily_run.cmd").read_text(encoding="utf-8")
+
+
+def test_only_the_second_pass_consults_the_condition() -> None:
+    """The 18:30 run is what Track A counts and what the owner reads. It must never be suppressed."""
+    wrapper = _wrapper()
+    guard = wrapper.index('if not "%SECOND%"=="1" goto :attempt')
+    ask = wrapper.index("retry_needed.py")
+    assert guard < ask, "the first pass must jump over the question, not answer it"
+
+
+def test_the_errorlevel_tests_descend_and_that_is_the_whole_safety() -> None:
+    """`if errorlevel N` in cmd means N OR GREATER, which inverts this check if written ascending.
+
+    Written `1` first, an UNAVAILABLE (4) would match the `1` branch and SUPPRESS the pass on a
+    condition nobody could measure - the exact opposite of the intended behaviour, and silently.
+    """
+    wrapper = _wrapper()
+    four = wrapper.index("if errorlevel 4")
+    one = wrapper.index("if errorlevel 1 goto :nothing_to_retry")
+    assert four < one, "descending order, or an unmeasurable condition silently skips the pass"
+
+
+def test_an_unmeasurable_condition_runs_the_pass() -> None:
+    """`unavailable` is not `pass` and it is not `fail` - here it must not mean "skip"."""
+    wrapper = _wrapper()
+    line = next(row for row in wrapper.splitlines() if row.startswith("if errorlevel 4"))
+    assert line.strip().endswith("goto :attempt")
+
+
+def test_the_skip_path_reports_itself_and_exits_clean() -> None:
+    """A silently skipped evening is indistinguishable from an evening that never fired."""
+    wrapper = _wrapper()
+    # The LABELS, not the gotos that name them - `:attempt` first appears inside `goto :attempt`,
+    # which sits before this block and made the slice empty on the first run of this test.
+    block = wrapper[wrapper.index("\n:nothing_to_retry"):wrapper.index("\n:attempt")]
+    assert "nothing to retry" in block, "the log must say why the pass did not happen"
+    assert "exit /b 0" in block, "declining to retry is a clean outcome, not a failure"
+
+
+def _journal(path, rows: list[tuple[str, str | None, str]]) -> None:
+    """A journal holding `(decision, reason_code, recorded_at)` and nothing else this needs."""
+    import duckdb
+
+    connection = duckdb.connect(str(path))
+    connection.execute(
+        "CREATE TABLE decisions (run_id VARCHAR, recorded_at TIMESTAMP, instrument_id VARCHAR, "
+        "decision VARCHAR, reason_code VARCHAR, reason VARCHAR)"
+    )
+    for decision, code, when in rows:
+        connection.execute(
+            "INSERT INTO decisions VALUES ('r', ?, 'TEST.1', ?, ?, 'because')", [when, decision, code]
+        )
+    connection.close()
+
+
+def test_a_data_refusal_warrants_a_later_pass(tmp_path: Path) -> None:
+    """`DATA` is the one refusal class a later attempt can repair: stale, incomplete or absent."""
+    import datetime as dt
+
+    path = tmp_path / "journal.duckdb"
+    _journal(path, [("Skip", "DATA", "2026-08-24 18:40:00")])
+    assert retry_needed.count_repairable(path, dt.date(2026, 8, 24)) == 1
+
+
+def test_a_risk_refusal_does_not(tmp_path: Path) -> None:
+    """`RISK` is a decision about the trade. Waiting an hour does not change the book."""
+    import datetime as dt
+
+    path = tmp_path / "journal.duckdb"
+    _journal(path, [("Skip", "RISK", "2026-08-24 18:40:00"), ("Watch", None, "2026-08-24 18:40:00")])
+    assert retry_needed.count_repairable(path, dt.date(2026, 8, 24)) == 0
+
+
+def test_another_days_refusal_does_not_warrant_tonight(tmp_path: Path) -> None:
+    """The question is about TONIGHT. A stale count would run a pass every evening forever."""
+    import datetime as dt
+
+    path = tmp_path / "journal.duckdb"
+    _journal(path, [("Skip", "DATA", "2026-08-21 18:40:00")])
+    assert retry_needed.count_repairable(path, dt.date(2026, 8, 24)) == 0
+
+
+def test_a_missing_journal_is_unmeasurable_rather_than_zero(tmp_path: Path) -> None:
+    """`None` and `0` are different answers, and collapsing them is what suppresses a needed pass."""
+    import datetime as dt
+
+    assert retry_needed.count_repairable(tmp_path / "absent.duckdb", dt.date(2026, 8, 24)) is None
