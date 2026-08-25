@@ -134,18 +134,35 @@ def select(
     extra steps, and it is the specific mistake DR-003 was written to avoid.
     """
     entries = directory.as_of(as_of, eligible_only=True)
-    stored = set(store.instrument_ids(as_of))
+    # Every instrument's ADTV window and true bar count, in ONE query. The rule reads three things
+    # off a series - how many bars it has, its last close, and the mean dollar volume over the last
+    # `adtv_window` of them - and this used to read the whole stored history per instrument to
+    # answer them. On the ten-year store that was 3.57 million bars, 3,720 queries and 73 seconds,
+    # of which 99.4% was discarded (`BarStore.tails`).
+    #
+    # It also narrows `measured` by one edge case, named because a silent change to a reported
+    # coverage number is the kind of thing this project counts as a defect. `instrument_ids` asked
+    # only whether the store held ANY bar for a symbol; `tails` asks whether it holds DAILY RAW
+    # bars, which is what the rule reads. An instrument with only hourly bars used to be counted as
+    # measured and then rejected, which reported coverage the rule could not actually deliver. No
+    # such instrument exists today - the two agree at 3,718 of 13,136 eligible, measured
+    # 2026-08-24 - and the narrower reading is the honest one if one ever does.
+    tails = store.tails(Interval.DAY, Series.RAW, as_of, rule.adtv_window)
 
     members: list[Membership] = []
     measured = 0
     for entry in entries:
         instrument = rules.to_instrument(entry)
-        if instrument.id not in stored:
+        found = tails.get(instrument.id)
+        if found is None:
             continue
+        bars, series = found
         measured += 1
 
-        series = store.as_of(instrument.id, Interval.DAY, Series.RAW, as_of)
-        if not rule.admits(series):
+        # `history` is the stored series' full length; `series` is its tail. The alternative -
+        # letting the rule infer the count from the tail - would silently fail `min_history` for
+        # every instrument in the universe.
+        if not rule.admits(series, history=bars):
             continue
         adtv = rules.average_dollar_volume(series, rule.adtv_window)
         if adtv is None:  # unreachable while admits() requires a full window; belt and braces
@@ -155,7 +172,7 @@ def select(
                 instrument=instrument,
                 close=series.bars[-1].close,
                 adtv=adtv,
-                bars=len(series.bars),
+                bars=bars,
             )
         )
 

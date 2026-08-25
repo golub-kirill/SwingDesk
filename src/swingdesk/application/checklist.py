@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -34,7 +35,15 @@ Context = dict[str, Any]
 Evaluator = Callable[[Context], tuple[ItemState, str]]
 
 
+@lru_cache(maxsize=4)
 def _load_items(appendix: str = "E") -> list[dict[str, Any]]:
+    """The checklist definition for one appendix, parsed once per process.
+
+    Cached because `generate` is called per candidate and this re-read and re-parsed the whole
+    registry every time - 50 ms x 1,141 candidates, for a file that cannot change mid-run. The
+    caller only ever reads the items, so handing out the same list is not a shared-mutable-state
+    hazard; a caller that mutated it would be a defect either way.
+    """
     import yaml
 
     data = yaml.safe_load(REGISTRY.read_text(encoding="utf-8"))

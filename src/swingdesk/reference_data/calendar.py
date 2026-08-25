@@ -56,31 +56,59 @@ def _schedule(exchange: Exchange, start: date, end: date) -> pd.DataFrame:
     return schedule
 
 
+@lru_cache(maxsize=4)
 def sessions(exchange: Exchange, start: date, end: date) -> tuple[ExchangeSession, ...]:
     """Every trading session for `exchange` in `[start, end]`, ascending.
 
     A date absent from the result is a date the exchange was closed - a fact no amount of bar data
     could establish.
+
+    **Cached, and the result is safe to share**: the tuple and every `ExchangeSession` in it are
+    frozen, and `_schedule` below has been cached since it was written, so this adds no staleness
+    that was not already there.
+
+    **`maxsize` is 4 because the fifth entry buys almost nothing.** Windows here are each
+    instrument's stored extent, and the shape of that distribution decides the cache, not intuition:
+    over the 1,141-member admitted universe there are **372 distinct windows**, of which two cover
+    **669 instruments** and most of the rest appear once. Simulated over the run's actual window
+    sequence, an LRU of 4 hits **58.7%** and an LRU of 64 hits **63.6%** - sixteen times the memory
+    for five points. One entry can hold ~2,500 validated records at ~1.2 kB each, so the size is a
+    memory decision.
+
+    **A whole-year span cache was built here and removed the same day.** Quantising the ends to
+    whole years collapses those 372 windows into 36 spans and cuts the full-universe pass from
+    159 s to 136 s - and retains **228 MB**, measured, because the saving comes precisely from
+    keeping ~199,000 built `ExchangeSession` objects alive. `NFR.md` §3 budgets the decision path at
+    **5 minutes** and it now runs in about 2.6, so the 23 seconds bought nothing any requirement
+    asks for while the memory was real. Recorded rather than deleted: the numbers are what a future
+    session needs to revisit it, and the cheaper route is a lighter `ExchangeSession` rather than a
+    bigger cache.
     """
     frame = _schedule(exchange, start, end)
+    if frame.empty:
+        # An empty frame's columns carry no dtype, so `.dt` below raises rather than returning
+        # nothing. A window the exchange was shut for the whole of is a normal answer - a weekend,
+        # a holiday week, or a date the calendar does not know - and it is an empty tuple.
+        return ()
     tz = _calendar(exchange).tz
-    result: list[ExchangeSession] = []
-    # `iterrows` types the index as Hashable. This frame's index is a DatetimeIndex - that is
-    # what pandas_market_calendars returns - so the cast states a fact the stubs cannot.
-    for stamp, row in frame.iterrows():
-        stamp = cast(pd.Timestamp, stamp)
-        open_local = row["market_open"].tz_convert(tz)
-        close_local = row["market_close"].tz_convert(tz)
-        result.append(
-            ExchangeSession(
-                exchange=exchange,
-                session_date=stamp.date(),
-                open_time=open_local.to_pydatetime(),
-                close_time=close_local.to_pydatetime(),
-                is_early_close=close_local.hour < _REGULAR_CLOSE_HOUR,
-            )
+    # Converted for the whole column at once. Per row it built a pandas Series per access, which
+    # cost 82 of the 230 seconds one profiled 150-instrument pass spent - `iterrows` is the
+    # expensive way to read a frame this project only ever reads two columns of.
+    opens = frame["market_open"].dt.tz_convert(tz)
+    closes = frame["market_close"].dt.tz_convert(tz)
+    # The index is a DatetimeIndex - that is what pandas_market_calendars returns - so the cast
+    # states a fact the stubs cannot.
+    index = cast(pd.DatetimeIndex, frame.index)
+    return tuple(
+        ExchangeSession(
+            exchange=exchange,
+            session_date=stamp.date(),
+            open_time=open_local.to_pydatetime(),
+            close_time=close_local.to_pydatetime(),
+            is_early_close=close_local.hour < _REGULAR_CLOSE_HOUR,
         )
-    return tuple(result)
+        for stamp, open_local, close_local in zip(index, opens, closes, strict=True)
+    )
 
 
 def session(exchange: Exchange, on: date) -> ExchangeSession | None:

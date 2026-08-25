@@ -135,6 +135,24 @@ amendment means here. Editing a ratified row is never the move.
 
 ## 5. Conventions
 
+- **Say the name, not the code — owner instruction, 2026-08-24.** *"Я хер знает что такое NFR. Не
+  знаю, что такое PR-012, DR-012, DR-018, ранбук."* Every identifier in this repository is opaque
+  to the person the project is for, and a status report built out of them is unreadable however
+  correct it is.
+  **The rule: an identifier gets a plain-language name the first time it appears in anything the
+  owner reads** — a chat reply, a report, a summary, a commit subject. `NFR.md` is *the
+  non-functional requirements — speed, storage and determinism budgets*. `PR-012` is *the study of
+  whether ranking by relative strength beats plain momentum*. `DR-012` is *the ruling that set the
+  stop distance and the maximum holding period*. `DR-018` is *the ruling that chose the benchmark
+  index*. `run_book` is *the backtest that walks a whole portfolio instead of one instrument at a
+  time*. After the first mention the short id is fine — it is the anchor, not the explanation.
+  **The ids themselves stay.** They are citation targets: roughly fifty references point at them,
+  gates 3e, 20, 25 and 29 resolve them, and renaming a `DR-NNN` would break an append-only record
+  (§11 rule 2). What changes is that a bare id is never the whole sentence.
+  **The owner deferred the sweep** — *"по-хорошему, пиши нормальные имена, но потом"* — so existing
+  documents are corrected as they are touched rather than in one pass. `TODO.md` §3 carries the
+  item.
+
 - **English throughout** — docs, code, UI. The course's controlled vocabulary (`Trade`/`Watch`/
   `Skip`/`Pause`, the skip and error codes, `STAGE`/`LAYER`/`CLAIM TYPE`) is used verbatim and never
   translated.
@@ -392,6 +410,17 @@ the analysis, not the task list (`TODO.md`), not the habit guide (this file), an
 history (`git log`). Anything in it that a fresh session would not need in its first ten minutes
 belongs somewhere else, and §10.6 governs every number that remains.
 
+**THERE IS EXACTLY ONE HANDOFF FILE — owner ruling, 2026-08-24.** `HANDOFF.md` at the repository
+root. A session does **not** write `SESSION-HANDOFF-<date>.md` or any other dated variant, and gate
+15 fails on one. Update the single file; if what you have will not fit in it, that content belongs
+in `TODO.md` (open work) or in §12 here (a habit), which is where it was going to end up anyway.
+
+**What paid for it: seven created and four deleted in six days.** Four traps lived only inside one
+of them and were rescued hours before it was deleted. `DR-016`:441 still cites one — an append-only
+record pointing at a file removed on 2026-08-23, which §11 rule 2 forbids editing to repair. And
+gate 14 never scanned them, so the numbers inside drifted unchecked; the last one claimed
+*"everything is merged"* on a day it was not.
+
 ## 11. Before removing or retiring anything
 
 `docs/06-engineering/CHANGE_MANAGEMENT.md` §5 is canonical. The operational rules are:
@@ -507,6 +536,56 @@ the words are as fragile as the numerals; the fix is to stop counting in prose a
   before the claim is made.** `CHARTER.md` §4 and `ROADMAP.md` §2 own "is v1 done". `criteria.yml`
   owns "is this criterion met". The machine owns "is this task registered" — gate 26 asks it. The
   function BODY owns "does this code support X"; a signature is a proxy and reads as an answer.
+
+- **A citation that was CORRECT when written, still standing after the fact it cites moved.** Nine
+  of these in one session, 2026-08-24, and they are one failure rather than nine. Nothing here
+  rotted by being wrong on the day it was written; each rotted when a *cited* fact changed
+  underneath it — a study verdict withdrawn, a charter amended, a parameter given a value, a gate
+  added — and the sentence stayed.
+  `SPEC_GAP_ANALYSIS.md` graded a section **FULL** on the evidence *"PR-002 validated"* eight days
+  after that verdict was corrected to `inconclusive`, which is `AGENTS.md` §3's *nothing looks more
+  validated than it is* being violated in a Tier-8 table.
+  `UX_TASK_FLOWS.md` said the risk budget's parameters were *"all `unset`"* two days after `DR-006`
+  ratified them; `GO_LIVE_GATES.md` said the same of `validation.max_allowable_drawdown` sixteen
+  days after `DR-007` gave it a value — and that one is the project's own inert gate, so the stale
+  line was the exact claim a reader would act on.
+  `docs/README.md` marked three specifications `planned` while all three existed and declared
+  `drafting`; `HANDOFF.md` §2 said CI reports *four* `UNAVAILABLE` six days after gate 26 made it
+  five; `RISK_REGISTER.md` said *"9 parameters carry assumed values"* against 34 — and that exact
+  sentence is quoted in `verify_counts.py`'s own comment as the example justifying why the gate does
+  not check that form.
+  **Two things follow, and they are different.** The mechanical half is gate-able and now gated:
+  **28** refuses a document stating a parameter status the registry contradicts, **15** now compares
+  the index's Status cell against the manifest, and **29** refuses a pre-registration id claimed
+  twice. The other half is not: no gate can see that a study verdict was withdrawn or a charter
+  amended, and every one of those citations was internally consistent.
+  **So the habit is a re-read rather than a check: when a fact changes, the thing to search for is
+  not the file you changed but everything that CITED it.** `git grep` the id — the parameter, the
+  study, the criterion, the gate number — before considering the change landed. It is the same
+  move §10.2 asks for across branches, aimed at documents instead.
+
+- **Migrated 2026-08-24 from that day's dated session handoff, §3, before it was deleted.**
+  Four traps that lived only there, which is why they are here now — a habit stored in a
+  document whose own header says to delete it is a habit with an expiry date. The file is
+  not named here on purpose: naming it would leave this bullet citing something that no
+  longer exists, which is the defect the migration was performed to avoid.
+  **`REFUSED` is not `INCONCLUSIVE`.** One says there was not enough data to look with; the other
+  says the study looked and could not tell. Gate 3f had no `REFUSED` in its vocabulary, so the
+  first study to obey `PREREG_TEMPLATE` §8 failed a gate for obeying it.
+  **A refused study still spends its trials.** `b.deflated_sharpe` deflates by shots taken at the
+  data, not by shots that produced an answer. `trial_budget.py` counted such a study as **0** until
+  it was taught to read a study's own declared count.
+  **Coverage is an ALPHABETICAL PREFIX, not a sample.** It is why `SPY` was missing while `DIA` was
+  present, and why a percentile taken from stored coverage is defensible only because a seeded
+  random sample and the prefix were checked against each other and agreed.
+  **Two stores, two clocks.** Bars, corporate actions and classifications are filled by different
+  passes, so reading one at another's `knowledge_time` hides everything learned since. Hit twice in
+  a single session before it was written down.
+  **The stores are SINGLE-WRITER (`ADR-0004`), and the right response to a held one is
+  `UNAVAILABLE`, never a traceback.** Demonstrated again 2026-08-24 at 18:31, against the real
+  scheduled 18:30 pass: `tools/build_state.py` raised `duckdb.IOException` where it should have
+  reported that it could not measure and left the block alone. A long refresh pass blocks every
+  tool that reads the stores, and that is the design working rather than a fault.
 
 **The habits:**
 

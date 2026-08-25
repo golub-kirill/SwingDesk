@@ -249,6 +249,210 @@ def _manifest_tree(tmp_path: Path, *, status: str = "drafting", number: str = "0
     return tmp_path
 
 
+# -------------------------------------- not a gate: the NFR latency budget's one coupling
+
+
+def test_the_nfr_decision_path_budget_is_readable_and_says_five_minutes() -> None:
+    """`tools/measure_latency.py` reads its threshold out of `NFR.md` rather than carrying a copy.
+
+    That is the right design — a second copy of a ratified number is the drift `AGENTS.md` §10.5
+    exists to stop — and it buys one coupling: reformatting §3's table silently disarms the tool.
+    So the coupling is pinned here. The measurement itself is not a gate; it runs the whole decision
+    path over the stored universe and needs `data/`.
+    """
+    import measure_latency
+
+    assert measure_latency._budget_minutes() == 5
+
+
+def test_the_latency_tool_refuses_rather_than_assuming_a_budget(tmp_path: Path) -> None:
+    """A tool that guessed five minutes when it could not read the row would be asserting its own
+    threshold, which is the thing reading it from the document avoids."""
+    import measure_latency
+
+    missing = tmp_path / "NOT_NFR.md"
+    missing.write_text("# no table here\n", encoding="utf-8")
+    original = measure_latency.NFR
+    try:
+        measure_latency.NFR = missing
+        assert measure_latency._budget_minutes() is None
+    finally:
+        measure_latency.NFR = original
+
+
+# ------------------------------------------------------ gate 29: pre-registration ids
+
+
+def _prereg_tree(tmp_path: Path, *, index: str, documents: tuple[str, ...] = (),
+                 elsewhere: str = "") -> Path:
+    """A prereg directory, its index, and optionally a document that merely REFERENCES an id."""
+    (tmp_path / "docs" / "prereg" / "results").mkdir(parents=True)
+    (tmp_path / "docs" / "prereg" / "README.md").write_text(index, encoding="utf-8")
+    for name in documents:
+        (tmp_path / "docs" / "prereg" / name).write_text("# study\n", encoding="utf-8")
+    if elsewhere:
+        (tmp_path / "docs" / "08-pm").mkdir(parents=True, exist_ok=True)
+        (tmp_path / "docs" / "08-pm" / "NOTE.md").write_text(elsewhere, encoding="utf-8")
+    return tmp_path
+
+
+def test_prereg_gate_catches_a_study_missing_from_its_own_index(tmp_path: Path) -> None:
+    root = _prereg_tree(tmp_path, index="# Pre-registrations\n\n- PR-001 trend definition\n",
+                        documents=("PR-001-trend-definition.md", "PR-002-regime-classifier.md"))
+    code, out = run_gate("verify_prereg_ids.py", root)
+    assert code == 1
+    assert "PR-002 has a document in docs/prereg/ and no row" in out
+
+
+def test_prereg_gate_catches_an_id_reserved_by_reference_only(tmp_path: Path) -> None:
+    """The `PR-006` case, and the one the index itself says nothing could find.
+
+    An id named inside a decision record with no file behind it leaves no artefact for any other
+    check in this tree to notice, and reserving an id is how a debt becomes visible.
+    """
+    root = _prereg_tree(tmp_path, index="# Pre-registrations\n\n- PR-001 trend definition\n",
+                        documents=("PR-001-trend-definition.md",),
+                        elsewhere="Overturning this needs PR-006, which is reserved.\n")
+    code, out = run_gate("verify_prereg_ids.py", root)
+    assert code == 1
+    assert "PR-006 is reserved by reference" in out
+
+
+def test_prereg_gate_does_not_read_a_report_as_a_reservation(tmp_path: Path) -> None:
+    """`results/PR-001-report.md` is a study's output, not a second claim on the number.
+
+    Reading it as one made every reported study collide with itself - measured, on the first run.
+    """
+    root = _prereg_tree(tmp_path, index="# Pre-registrations\n\n- PR-001 trend definition\n",
+                        documents=("PR-001-trend-definition.md",))
+    (root / "docs" / "prereg" / "results" / "PR-001-report.md").write_text("# r\n", encoding="utf-8")
+    code, out = run_gate("verify_prereg_ids.py", root)
+    assert code == 0, out
+    assert "0 failure(s)" in out
+
+
+def test_prereg_gate_says_when_the_cross_branch_half_could_not_run(tmp_path: Path) -> None:
+    """A shallow clone has no other branches, and a gate that cannot measure says so.
+
+    `AGENTS.md` §10.6 rule 2. Returning green for a check that never ran is how gate 16 and gate 23
+    both went wrong before this one was written.
+    """
+    root = _prereg_tree(tmp_path, index="# Pre-registrations\n\n- PR-001 trend definition\n",
+                        documents=("PR-001-trend-definition.md",))
+    code, out = run_gate("verify_prereg_ids.py", root)
+    assert code == 0, out
+    assert "cross-branch check DID NOT RUN" in out
+
+
+def test_prereg_gate_catches_two_live_branches_claiming_one_id(tmp_path: Path) -> None:
+    """`POSTMORTEM-2026-08-09.md` root cause A, as a check rather than a habit.
+
+    Two efforts numbered different studies `PR-007`, and nothing could see it because each tree was
+    internally consistent. Merged branches are excluded on purpose - their old filenames are
+    correct statements about a commit, and this repository's two real collisions are both merged.
+    """
+    root = _prereg_tree(tmp_path, index="# Pre-registrations\n\n- PR-007 base strategy\n",
+                        documents=("PR-007-base-strategy.md",))
+    def git(*args: str) -> None:
+        subprocess.run(["git", "-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t", *args],
+                       capture_output=True, check=True)
+    git("init", "-b", "master")
+    git("add", "-A")
+    git("commit", "-m", "master")
+    git("checkout", "-b", "sibling")
+    (root / "docs" / "prereg" / "PR-007-base-strategy.md").unlink()
+    (root / "docs" / "prereg" / "PR-007-effective-spread.md").write_text("# s\n", encoding="utf-8")
+    git("add", "-A")
+    git("commit", "-m", "sibling numbers a different study PR-007")
+    git("checkout", "master")
+
+    code, out = run_gate("verify_prereg_ids.py", root)
+
+    assert code == 1
+    assert "PR-007 names two different studies across live branches" in out
+    assert "effective-spread on sibling" in out
+
+
+def _claims_tree(tmp_path: Path, prose: str, *, where: str = "docs/02-domain/SPEC.md") -> Path:
+    """A registry with one set and one unset parameter, and one document making `prose`."""
+    (tmp_path / "registry").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "registry" / "parameters.yml").write_text(
+        "parameters:\n"
+        "  - id: risk.max_open_risk\n    value: 4\n    provenance: owner\n"
+        "  - id: exit.atr_stop_multiple\n    value: 2.0\n    provenance: assumed:DR-012\n"
+        "  - id: account.fx_rate_cad\n    value:\n    provenance:\n",
+        encoding="utf-8",
+    )
+    target = tmp_path / where
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(f"# Spec\n\n{prose}\n", encoding="utf-8")
+    return tmp_path
+
+
+# ------------------------------------------------------- gate 28: parameter claims in prose
+
+
+def test_claims_gate_catches_a_parameter_called_unset_that_has_a_value(tmp_path: Path) -> None:
+    """The drift this gate exists for, in its commonest form.
+
+    `UX_TASK_FLOWS.md` said the risk budget needs `risk.max_open_risk` "and friends, all `unset`"
+    two days after `DR-006` ratified them, and `GO_LIVE_GATES.md` called
+    `validation.max_allowable_drawdown` `unset` sixteen days after `DR-007` gave it a value.
+    """
+    root = _claims_tree(tmp_path, "The book cap needs `risk.max_open_risk`, which is `unset`.")
+    code, out = run_gate("verify_parameter_claims.py", root)
+    assert code == 1
+    assert "says `risk.max_open_risk` is `unset`; the registry has `owner`" in out
+
+
+def test_claims_gate_reads_provenance_before_its_citation(tmp_path: Path) -> None:
+    """`assumed:DR-012` is `assumed`; what follows the colon is the evidence, not the status."""
+    root = _claims_tree(tmp_path, "`exit.atr_stop_multiple` is `assumed` and read by the pipeline.")
+    code, out = run_gate("verify_parameter_claims.py", root)
+    assert code == 0, out
+
+
+def test_claims_gate_leaves_history_and_transitions_alone(tmp_path: Path) -> None:
+    """Rewriting a dated statement to match today falsifies the record (`AGENTS.md` §10.5).
+
+    All four forms in one tree, because suppressing the wrong one is how this gate would become
+    noise: a strikethrough, a ruling word, a move between two statuses, and a denial.
+    """
+    root = _claims_tree(
+        tmp_path,
+        "- `risk.max_open_risk` was `unset` before the ruling.\n"
+        "- ~~`risk.max_open_risk` is `unset`~~\n"
+        "- RULED 2026-08-22: `risk.max_open_risk` is `unset` no longer.\n"
+        "- `risk.max_open_risk` moves from `unset` to owner-set.\n"
+        "- This does not make `risk.max_open_risk` `unset`.\n",
+    )
+    code, out = run_gate("verify_parameter_claims.py", root)
+    assert code == 0, out
+
+
+def test_claims_gate_does_not_police_the_append_only_stores(tmp_path: Path) -> None:
+    """A decision record states what was true when it was accepted and may not be edited.
+
+    `AGENTS.md` §11 rule 2. A gate demanding `docs/decisions/` track today's registry would be
+    demanding the one thing that store forbids.
+    """
+    root = _claims_tree(
+        tmp_path,
+        "`risk.max_open_risk` is `unset`, so sizing refuses.",
+        where="docs/decisions/DR-999-probe.md",
+    )
+    code, out = run_gate("verify_parameter_claims.py", root)
+    assert code == 0, out
+
+
+def test_claims_gate_still_reads_an_unset_parameter_as_unset(tmp_path: Path) -> None:
+    """The other half of the pair. A gate that only ever fails is not discriminating either."""
+    root = _claims_tree(tmp_path, "`account.fx_rate_cad` is `unset`, so a CAD candidate refuses.")
+    code, out = run_gate("verify_parameter_claims.py", root)
+    assert code == 0, out
+    assert "0 failure(s)" in out
+
+
 def _study_tree(tmp_path: Path, claim: str, *, verdicts: tuple[str, ...] = ("reject",)) -> Path:
     """A tree with `len(verdicts)` reported studies and a document making `claim`."""
     results = tmp_path / "docs" / "prereg" / "results"
@@ -300,6 +504,59 @@ def test_manifest_gate_catches_an_index_row_with_no_entry(tmp_path: Path) -> Non
     code, out = run_gate("verify_project_manifest.py", root)
     assert code == 1
     assert "row '02' has no manifest entry" in out
+
+
+def test_manifest_gate_catches_an_index_status_cell_that_drifted(tmp_path: Path) -> None:
+    """The drift the gate NAMED and did not check: the index's own Status cell.
+
+    Three Tier-2 specifications read `planned` in `docs/README.md` while the manifest and their own
+    headers said `drafting` - which is one of the four defects this gate's docstring was written
+    about. It caught it only through the document header, so the index cell went on saying `planned`
+    for sixteen days after the manifest was corrected. This is the missing half.
+    """
+    root = _manifest_tree(tmp_path)
+    readme = root / "docs" / "README.md"
+    readme.write_text(
+        readme.read_text(encoding="utf-8").replace(
+            "| Owner | drafting |", "| Owner | planned |"
+        ),
+        encoding="utf-8",
+    )
+
+    code, out = run_gate("verify_project_manifest.py", root)
+
+    assert code == 1
+    assert "reads 'planned' but the manifest says 'drafting'" in out
+    assert "declares" not in out, (
+        "the document header is untouched, so only the index check may fire - otherwise this test "
+        "would pass on the check that already existed"
+    )
+
+
+def test_manifest_gate_refuses_a_second_handoff_file(tmp_path: Path) -> None:
+    """Owner ruling 2026-08-24: exactly one handoff file, `HANDOFF.md`.
+
+    Seven dated variants were created and four deleted in six days. Four traps lived only inside
+    one of them; `DR-016` still cites one that was deleted, which `AGENTS.md` §11 rule 2 forbids
+    repairing; and gate 14 never scanned them, so their counts drifted unchecked.
+    """
+    root = _manifest_tree(tmp_path)
+    (root / "SESSION-HANDOFF-2026-08-24.md").write_text("# dump\n", encoding="utf-8")
+
+    code, out = run_gate("verify_project_manifest.py", root)
+
+    assert code == 1
+    assert "there is exactly one handoff file" in out
+
+
+def test_manifest_gate_leaves_the_one_handoff_alone(tmp_path: Path) -> None:
+    """The other half of the pair — the rule is one file, not zero."""
+    root = _manifest_tree(tmp_path)
+    (root / "HANDOFF.md").write_text("# handoff\n", encoding="utf-8")
+
+    code, out = run_gate("verify_project_manifest.py", root)
+
+    assert code == 0, out
 
 
 def test_manifest_gate_passes_a_consistent_tree(tmp_path: Path) -> None:

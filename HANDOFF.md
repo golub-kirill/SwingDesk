@@ -1,9 +1,36 @@
 # HANDOFF — start here in a fresh session
 
-Written 2026-08-04; **brought current 2026-08-11**, after a session that set the two parameters
-sizing was blocked on, put the gates on CI, protected `master`, activated the first component, and
-found that a ratified decision had never been built. Read this, then `AGENTS.md` — especially §10,
-rules that were each paid for — then `docs/README.md`.
+Written 2026-08-04; **brought current 2026-08-24**. Read this, then `AGENTS.md` — especially §10,
+rules that were each paid for, and §12, traps that each cost real time — then `docs/README.md`.
+
+## 0. The first thing, and it is not code
+
+**A branch holds a session's work and is NOT merged.** `claude/swingdesk-tasks-cl-perf-707e67`,
+worktree at `.claude/worktrees/swingdesk-tasks-cl-perf-707e67`. **Nothing in it is on `master`**,
+so `master` still runs the slow pipeline, still has fewer gates than §2 reports for this tree, and
+still carries the documentation defects that branch corrected. §5's *In flight* block says what
+it contains and why it is safe to merge; **read that before touching `src/`, `tools/` or the
+study record.** §5's *What to pick up* ranks everything else.
+
+No pull request was opened — the owner had not asked for one. Opening it is the first decision, not
+the first action.
+
+**And one thing is still unresolved from the evening of 2026-08-24, in ten seconds:**
+
+```bash
+PYTHONPATH=$PWD/src SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data python tools/verify_schedule.py
+PYTHONPATH=$PWD/src SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data python tools/track_a_streak.py
+```
+
+The **18:30 pass completed, `exit 0`** — the outage that began 2026-08-18 is closed for it, and
+`a.run_completes` started counting at **1/20**. The **19:30 second pass had not run yet** when this
+session ended, and it is what closes gate 26: that gate reads BOTH tasks, and the second one last
+ran 2026-08-21 with `exit 1`. So gate 26 red on your first run is expected if the second pass has
+not happened; red *after* it has is a real finding and `data/daily_run.log` is where it lives.
+
+**Everything else is committed.** `master` is protected on `github.com/golub-kirill/SwingDesk`
+(public) and requires the `gates` check, so it only ever advances to a commit CI has already
+passed.
 
 Everything below is measured from the tree, not remembered. **§2 is the only place a measured count
 lives** (`AGENTS.md` §10.5); a figure here that disagrees with `python tools/check_gates.py` is this
@@ -12,10 +39,6 @@ document being wrong, not the gate.
 That rule has one hole worth knowing: gate 14 matches digits, so a count spelled in words is
 invisible to it. This paragraph replaced *"Twenty-two gates"*, which had been wrong since the gate
 count reached 24 and no gate could see it.
-
-**Everything is committed and pushed** on `github.com/golub-kirill/SwingDesk` (public). `master` is
-protected and requires the `gates` check, so it only ever advances to a commit CI has already
-passed.
 
 ---
 
@@ -45,13 +68,13 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 
 | | |
 |---|---|
-| Merge gates | **32**, one command: `python tools/check_gates.py` |
-| Tests | **798**, fully offline |
-| Docs | 117 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
+| Merge gates | **34**, one command: `python tools/check_gates.py` |
+| Tests | **821**, fully offline |
+| Docs | 119 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 459 registered · 5 `specified` · **1 `active`** |
 | Parameters | 105 - 60 `unset`, 34 `assumed`, 11 `owner`, **0 `validated`** |
 | Golden vectors | 25 vectors across 6 components |
-| Studies | 8 registered · 6 reported |
+| Studies | 9 registered · 7 reported |
 | Criteria | `registry/criteria.yml` **v1.1.1** |
 
 <!-- END GENERATED: state:repo -->
@@ -62,16 +85,16 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 
 | | |
 |---|---|
-| Journal | 22 runs, 7 incomplete · **12 run(s) recorded against a dirty tree** and therefore not replayable from their SHA |
-| Decisions | 11240 recorded · 0 uncoded refusals (`a.no_uncoded_failures` requires 0) |
-| Bar store | 3,596,209 rows across 3,743 instruments |
+| Journal | 23 runs, 7 incomplete · **12 run(s) recorded against a dirty tree** and therefore not replayable from their SHA |
+| Decisions | 12381 recorded · 0 uncoded refusals (`a.no_uncoded_failures` requires 0) |
+| Bar store | 3,597,265 rows across 3,743 instruments |
 | PIT integrity | **CLEAN** - bars whose `event_time` postdates their `knowledge_time`: 0 |
-| Directory | **17 pulls** · **7 confirmed** against the response's own `Last-Modified` (`source_session_date`); the rest predate the field and stay permanently unattributed (`DR-008` c3) |
+| Directory | **18 pulls** · **8 confirmed** against the response's own `Last-Modified` (`source_session_date`); the rest predate the field and stay permanently unattributed (`DR-008` c3) |
 | Universe coverage | bars stored for 3,743 of 13,169 listed symbols - **28.4%** |
 | Classifications | 1,148 instrument(s) carry a sector · 1,046 (**91.1%**) report at least one non-zero weight. The stricter `look_through` count, which also drops a degenerate ETF look-through (`DR-006` §8.7), is lower - derive it with `python tools/measure_sector_cap.py --wide` |
-| Track A clock | **0/20** consecutive clean sessions · counting from a **deliberate restart on 2026-08-22**, not an outage - `python tools/track_a_streak.py` prints why · `a.run_completes`, computed by `tools/track_a_streak.py` |
+| Track A clock | **1/20** consecutive clean sessions (2026-08-24 to 2026-08-24) · counting from a **deliberate restart on 2026-08-22**, not an outage - `python tools/track_a_streak.py` prints why · `a.run_completes`, computed by `tools/track_a_streak.py` |
 
-*Measured from `data/` on 2026-08-24.*
+*Measured from `data/` on 2026-08-25.*
 
 <!-- END GENERATED: state:runtime -->
 
@@ -80,10 +103,10 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | | As of | |
 |---|---|---|
 | `master` | 2026-08-10 | **protected** — required check `gates`, admins included, no force-push. A new merge commit is refused until its check reports; fast-forward a green commit, or use a PR |
-| CI | 2026-08-17 | `gates`, windows-latest. Exactly **four** `UNAVAILABLE`, verified against run `32093559374`: gates 2 and 3 need the course PDFs, which are not in the repo; gates 23 and 24 need `data/`. Everything else must be green |
-| Daily run | 2026-08-09 | **SCHEDULED** — Windows Task Scheduler, `SwingDesk daily run`, weekdays 18:30 local, wrapper `tools/daily_run.cmd`, log `data/daily_run.log`. ~5 min per run |
+| CI | 2026-08-24 | `gates`, windows-latest. **Five** `UNAVAILABLE`, verified against run `32757431015`: gates 2 and 3 need the course PDFs, which are not in the repo; gates 23, 24 and **26** need `data/` or the scheduling machine. Everything else must be green. ~~Exactly **four** … verified against run `32093559374`~~ — that row was written 2026-08-17 and gate 26 landed on the 18th, so it asserted four for six days while CI reported five. Gates 28 and 29 were added after this run and both execute in CI; **29's cross-branch half cannot**, and prints that it did not run rather than passing for a check it never made |
+| Daily run | 2026-08-24 | **SCHEDULED** — Windows Task Scheduler, `SwingDesk daily run`, weekdays 18:30 local, wrapper `tools/daily_run.cmd`, log `data/daily_run.log`. **~6 min per pass** over 1,141 members, of which **160 s** is compute and ~3 min is 1,141 sequential vendor fetches — measured 2026-08-24 by `tools/verify_reproducible.py`, which ran two full passes in 11m40s. It was ~24 min that morning; the row read ~5 min and had been right on 2026-08-09 |
 | Costs | 2026-08-09 | slippage **measured** — 25bps per side (`DR-005`); commission still assumed |
-| ТЗ coverage | 2026-08-13 | FULL 30 · PARTIAL 24 · ABSENT 0 · DEFERRED 3 — recounted from `SPEC_GAP_ANALYSIS.md` §3 by gate 3e |
+| ТЗ coverage | 2026-08-24 | FULL 29 · PARTIAL 26 · ABSENT 0 · DEFERRED 2 — recounted from `SPEC_GAP_ANALYSIS.md` §3 by gate 3e. Two rows moved: §32 out of DEFERRED because charter amendment A-001 put the AI contour in scope, and §18 out of FULL because `PR-002`'s verdict — its only stated evidence — was corrected to `inconclusive` |
 | Project gates | 2026-08-10 | G0, G4, G5 closed · G1, G2, G3, G6, G7 open |
 
 ```bash
@@ -108,10 +131,9 @@ once did).
 
 *Generated by `tools/build_state.py` (gate 24). Do not edit between the markers - an edit here is overwritten and fails the gate.*
 
-- `claude/swingdesk-session-handoff-cfd0c4`
 - `claude/handoff-2026-08-24`
 - `claude/handoff-final`
-- `claude/swingdesk-session-continuation-39adaa`
+- `claude/swingdesk-tasks-cl-perf-707e67`
 
 *Tip and merge state deliberately absent - both move under this document's own feet. `python tools/verify_branches.py` prints them.*
 
@@ -134,6 +156,29 @@ Four things a fresh session must not get wrong, each argued there:
   free tier can never rule out;
 - **there is no legal source of probability in this system today.** Any probability displayed would
   be manufactured.
+
+**And a fifth, added 2026-08-24 because a session summary got it wrong out loud.** *"The first
+strategy card exists"* is true and reads like *"a strategy runs"*, which is false in a way the
+record settles: **every decision this system has ever taken is a `Watch` or a `Skip`. Not one is a
+`Trade`.** No `Pause` either, no position ever opened, no fill, no management proposal. The tallies
+move every evening and §2 owns them — derive the split with
+`python tools/build_state.py`, and the per-verdict breakdown from `data/journal.duckdb` directly.
+(This paragraph carried three counts for six hours until the 18:30 run moved all three, which is
+the drift `AGENTS.md` §10.5 exists to stop and it happened inside the document that states the
+rule.) `pipeline.py`'s terminal state for a candidate that passes every check is the
+literal `"Watch"` with the reason *"sized; awaiting a trigger"* — and **there is no trigger in the
+live path**, so `"Trade"` is in the decision vocabulary and is emitted by nothing in `src/`.
+`REQUIREMENTS.md` `REQ-VALIDATION-002`, `ALLOCATION_SPEC.md` §7, `EXECUTION_MODEL.md` §7 and
+`SYSTEM_MODES.md` §4 all say so; what was missing was saying it here, in the file a session reads
+first.
+
+**`CARD-001` is `Untested` and REFUSES**, which is the card doing its job: four selection inputs are
+`unset`, the study that would have set them refused a verdict for want of sample, and all four of
+its components are `registered`. A card is a list of what blocks a strategy, not a strategy.
+
+**The absence of an AI is a ratified decision, not a gap.** Charter amendment A-001: the final
+trading decision is human-only, and an AI may never decide, size, override a veto or originate a
+number. Nobody should go looking for the missing recommender.
 
 Do not write anything implying more confidence than that. `UX_COPY.md` §3 carries the standing
 warning verbatim.
@@ -172,6 +217,86 @@ exits have never been varied and cannot be the refuted entry family re-parameter
 parked, not killed**: `PR-002`'s own survivorship bound puts it on its kill line at the observed
 1.6–2.3% missing rate, and it is revivable only as a portfolio participation gate — never a
 per-signal entry filter, which is closed by evidence (§7).
+
+### In flight — `claude/swingdesk-tasks-cl-perf-707e67`, not merged
+
+**The daily run was breaching a ratified NFR budget by 4x and nothing measured it.**
+`NFR.md` §3 budgets the **decision path at ≤ 5 minutes**; measured on 2026-08-24 before any
+change it was **20.2 minutes** — 19.0 of pipeline compute plus 71.9 s of universe selection —
+and it is **2.7 minutes** now. The breach was invisible because the same table's end-to-end
+budget (≤ 45 min) was comfortably met at ~24 min, and nothing in this tree measured any of
+those budgets — the run log gives a total and no split, and **the requirement lives in the
+split**. `tools/measure_latency.py` measures the decision path now and reads its threshold
+out of `NFR.md` rather than carrying a copy; the refresh and report-generation budgets are
+still unmeasured and neither is close to binding. Three hot spots and a
+quadratic: `completeness.check` was O(bars x sessions) over each instrument's whole stored extent,
+`application/universe.py`'s selection read 3.57 million bars to answer a count, a last close and a
+twenty-session average, `calendar.sessions` read a pandas frame with `iterrows` against a cache running at a 2%
+hit rate, and `checklist` re-parsed its registry per candidate.
+
+**Byte-identity is the reason to trust it, and it was measured five times**, most usefully by
+`tools/verify_reproducible.py` reproducing `50e1646b933a4a9d` over the full 1,141-instrument
+universe — the hash recorded on `master` before the change — and by `tools/run_pr005_replay.py`
+reproducing all 20 of PR-005's cells through the backtest engine instead of the pipeline. So it
+moves no decision output and spends no `a.run_completes` counter, and none of it touches a frozen
+file.
+
+**Two gates came with it**, 28 (a document may not state a parameter status the registry
+contradicts) and 29 (a pre-registration id is reserved once, including across unmerged branches).
+`TODO.md` §3 is empty for the first time.
+
+**Two owner rulings landed on it late in the day and both are live work, not notes.**
+
+**The AI may advise on an OPEN position** — `AI_AUTHORITY_MODEL.md` §3a, amended and ratified
+2026-08-24. §3 is untouched; entry stays closed; the decision vocabulary, the MANAGEMENT vocabulary
+(`HOLD`/`MOVE_STOP`/`PARTIAL_EXIT`/`EXIT_NOW`/`PAUSE`) and originating a number all stay forbidden.
+Checked against the charter first: A-001 asks for "synthesis, not authority", advice is not
+authority, and none of its six prohibitions is engaged — so this is not a charter amendment. **A-001's
+standing condition is NOT discharged**: nothing may be implemented until the two vocabularies are
+mechanically guarded, and they are still prose.
+
+**`PR-013` measures the signal instead of the book** — registered, runner built, exploratory by
+declaration. The owner's constraint is what drove it: four positions held twenty sessions is ~50
+entries a year, the ratified sample floor is 100 closed trades, and the horizon is six months — so
+**25 live trades**, and live evidence inside the horizon is arithmetically impossible without moving
+a ratified value. The 2026-08-16 research suspension was overridden by the owner for this study and no
+other, and `TODO.md` §2 records both the override and the fact that the suspension's own exit
+condition can never be met.
+
+**One thing on it needs the owner and is not an agent's to take:** PR-005's published trade log no
+longer matches a fresh replay, because seven bars arrived three hours after it was published.
+`TODO.md` §5 states the three options; `docs/prereg/results/` was not touched.
+
+**Re-index the code graph after this merges** — `src/` and `tools/` both changed (`AGENTS.md` §9
+rule 3). It is deliberately NOT re-indexed now: the index is named `swingdesk` and rooted at the
+main checkout, and pointing it at an unmerged branch would make it describe code `master` does not
+have.
+
+### What to pick up, ranked — 2026-08-24
+
+1. **Slim `AGENTS.md` — owner instruction, briefed and ready to start.** `TODO.md` §3 carries the
+   measurement and the cutting rule. The one thing not to get wrong: **153 references point at its
+   section numbers and 16 sit in files that may not be edited**, so headings and numbers stay
+   exactly as they are and only the narrative inside them is cut. Target roughly half of 7,146
+   words.
+2. **Decide about the branch in §0.** Everything below assumes it either merges or does not, and
+   the two worlds differ. Opening a pull request is the owner's call and was not made.
+3. **`a.run_completes` and gate 26.** The outage that began 2026-08-18 was a schema drift, the
+   repair is verified, and the evening pass is what proves it in production. Read
+   `python tools/track_a_streak.py` before anything else operational.
+4. **The AI guard, which `CHARTER.md` A-001 makes a PRECONDITION.** §3a permits advice on an open
+   position; A-001 says nothing may be implemented before the authority model is *gated*, and
+   `AI_AUTHORITY_MODEL.md` §11 records that its prohibitions are prose. The two vocabularies —
+   decisions and management actions — are mechanically checkable and nothing checks them. **This is
+   the next build, not the AI itself.**
+5. **The `PR-005` trade log needs an owner ruling** — the published CSV no longer matches a fresh
+   replay because seven bars arrived three hours after it was published. Three options in
+   `TODO.md` §5; `docs/prereg/results/` was deliberately not touched.
+6. **The next pre-registration, if there is one.** `PR-013` looked at one lookback and one horizon
+   and found nothing at that pair; it did not refute the family. Whoever writes the next one owes it
+   a decision rule with a branch for *both arm and control are losing*, which `PR-013`'s lacked.
+7. **Everything owner-pending is in `TODO.md` §4** — the trial budget, `account.fx_rate_cad`,
+   `data.staleness_action_threshold`, the successor timebox, `DR-016`/`DR-017`.
 
 ### The clock, and the freeze that protects it
 
@@ -243,12 +368,69 @@ different facts, and the exit code alone cannot tell them apart. **It does not c
 `a.run_completes` measures**, which stays exactly its ratified text — the run completes and produces
 a report.
 
+### The schema repair held, and the outage is closed — measured 2026-08-24 after the run
+
+**`exit 0`.** The 18:30 pass ran 18:30:00.82 → 18:49:59.38 — **19 min 59 s** — and completed. The
+fault that killed every evening from 2026-08-18 was `positions.open_as_of` binding a column the
+table on disk did not have; `positions.duckdb` carries it again and the run proves it in production.
+
+**Gate 26 was still red immediately afterwards and correctly so**: it reads BOTH tasks, and the
+19:30 second pass had last run 2026-08-21 with `exit 1`. That pass is what closes the gate.
+`tools/track_a_streak.py` also still read 0 straight after, because it does not count a session
+until its 18:30 ± 30 min window has closed — after 19:00 the day becomes countable. Neither is a
+fault; both are the tools declining to answer early.
+
+**Twenty minutes is what `master` costs, and it breaches a ratified budget.** `NFR.md` §3 budgets
+the decision path at ≤ 5 minutes; measured this morning `master` needs 20.2 (19.0 of compute plus
+71.9 s of universe selection) before the vendor. This was the **first full pass since the store was
+deepened to ten years** — the last one to complete was 2026-08-17 at 11m45s against a median of 510
+bars rather than 2,512, and every evening between died in 45 seconds. The branch in §0 takes it to
+about six minutes a pass; on `master` the margin to the 19:30 second pass is forty minutes and
+shrinks as coverage grows, and both passes hold the same single-writer stores.
+
+### The estimate that preceded it, kept because it was right
+
+Both facts above were established **before** the pass ran, against a copy of the live store rather
+than by waiting: `open_as_of` was shown to bind again, and `master`'s decision path was measured at
+20.2 minutes. The run then took **19m59s** and exited 0. Recorded because the habit is the
+transferable part — the alternative was to wait four hours and learn the same two things afterwards.
+
+### Long jobs, and the one rule about them
+
+Three jobs take longer than a session wants to wait, and **all three hold the bar store**, which is
+single-writer (`ADR-0004`). A job still running at 18:30 or 19:30 takes that evening's pass down.
+
+| | |
+|---|---|
+| `tools/refresh_universe.py`, ten-year deepening | **~2¼ hours** |
+| `tools/run_pr012.py` | **13m37s** |
+| `tools/verify_reproducible.py` | **11m40s** for both passes |
+
+**Run them in the background and against a COPY where the tool allows it** — several take `--data`
+for exactly this, and a copy of `bars.duckdb` takes under a second. Every long job this session ran
+used a copy, which is why the 18:30 pass was never at risk from them.
+
 ### Two live risks
 
 **`Logon Mode: Interactive only`** — the task runs only while the user is logged on, and changing
 that needs stored credentials. Whether `StartWhenAvailable` makes a logged-out 18:30 *late* rather
-than *lost* is **untested here and marked conjecture** (`AGENTS.md` §10.4). One evening settles it:
-log out before 18:30, log back in, and read `Last Run Time` against the trigger time.
+than *lost* is **still untested and still conjecture** (`AGENTS.md` §10.4) — a logout and a sleep
+are different mechanisms. One evening settles it: log out before 18:30, log back in, and read
+`Last Run Time` against the trigger time.
+
+**The SLEEP case is no longer conjecture, and the answer is *lost*.** Measured 2026-08-24 from the
+Windows event log, not argued: on **2026-08-20** the machine slept from 2026-08-19T20:01 local
+through **2026-08-20T19:01 local** — straight over that day's 18:30 trigger — and
+`data/daily_run.log` has **no 18:30 entry for 08-20 at all**, while the 19:30 pass ran normally at
+19:30:01. The 18:30 task carries `<StartWhenAvailable>true</StartWhenAvailable>`, so it *should*
+have run late on the 19:01 wake, and it did not. **A missed pass is not deferred, it is dropped —
+and it leaves no trace anywhere except an absence.**
+
+`tools/track_a_streak.py` already reads that absence correctly: its window is 18:30 ± 30 min, so a
+day on which only the 19:30 pass ran is `None` — missing — and breaks the streak. Nothing needed
+fixing there. What is worth knowing is the failure MODE: **`a.run_completes` can be reset by the
+machine being asleep at 18:30**, and the log will say nothing rather than something wrong.
+(Only one such day exists in the 08-10 → 08-21 window; every other wake landed before 18:30 local.)
 
 ~~**The directory pull still does not run, and it is the most time-sensitive item in the project.**
 `DR-008` was ratified 2026-08-10 and its collector was never built — `tools/fetch_directory.py` has

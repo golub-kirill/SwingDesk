@@ -51,7 +51,7 @@ fetch budget forced a weekly/daily split (`ROADMAP.md` §4) and Appendix T had a
 | USA/Canada regime determined | **no.** The classifier exists (M30-T0450) and is not wired into the run; and Canada cannot be enumerated at all (`DR-003` gap 1), so the phrase's two halves fail for different reasons |
 | sector map, commodities, CADUSD | **no.** `Instrument.sector` is `None` — no free point-in-time sector source is in hand. No FX series |
 | open positions and events updated | **half.** Positions: yes, read as-of. Events: no source at all (`EVENT_SPEC.md`) |
-| weekly watchlist and risk budget | **half.** The universe selection is the watchlist; the risk budget needs `risk.max_open_risk` and friends, all `unset` |
+| weekly watchlist and risk budget | **half.** The universe selection is the watchlist; the risk budget needs `risk.max_open_risk` and friends, and `DR-006` ratified them on 2026-08-22 — the budget is now computed and enforced (`trade_management/portfolio.py`), while the *weekly* cadence the course asks for is still not a thing this system has |
 | no-trade scenarios recorded | **no** |
 
 ### `До сессии` — the daily run

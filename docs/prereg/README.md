@@ -23,6 +23,7 @@ has to happen first, not the thing that has to happen last.
 | `PR-010` | Does EDGE resolve the spread level Corwin-Schultz and Abdi-Ranaldo could not? | **reported — REJECT** | — |
 | `PR-011` | Should instrument classes that cannot hold a stop be screened out? | not written | — id reserved 2026-08-22, see `TODO.md` §5 |
 | `PR-012` | Does a cross-sectional ranking beat plain momentum on a capacity-constrained book? | **reported — REFUSED** 2026-08-24, the minimum sample is not met on two of three arms | `CARD-001`; the capacity cap caps the sample, and both caps are ratified |
+| `PR-013` | Does relative strength separate forward returns **at all**, measured on names rather than on a four-position book? | **reported — `inconclusive`** 2026-08-24, and the verdict understates it: **all six GROSS intervals include zero**, so the ordering does not separate forward returns before costs are considered at all. **Exploratory by declaration** (§0b) | The sample rule was MET — 142 holdout dates against a minimum of 100 — which is what `PR-012` could not reach. `CARD-001`'s inputs stay `unset` |
 
 **Three ids collided on 2026-08-09 and several studies moved.** Three efforts registered studies without
 seeing each other. `RECONCILIATION_PLAN.md` D-R4 awards a contested id to the earliest commit
@@ -54,9 +55,17 @@ rather than implied.
 
 **`PR-006` was reserved on 2026-08-02 and went unlisted here until 2026-08-05.** Reserving an id in
 a decision record and not recording it in the index is how the debt stops being visible, which is
-the one thing this table exists to prevent. Nothing catches it: `verify_docs.py` fails on a decision
+the one thing this table exists to prevent. ~~Nothing catches it: `verify_docs.py` fails on a decision
 record whose *file* is missing from the decisions index, but an id reserved **by reference only**,
-with no file behind it, leaves nothing for a gate to find. Worth fixing if a third one appears.
+with no file behind it, leaves nothing for a gate to find. Worth fixing if a third one appears.~~
+
+**A third appeared, and gate 29 (`tools/verify_prereg_ids.py`) now catches all three shapes**, 2026-08-24:
+a study document missing from this index, an id reserved by reference anywhere in `docs/` and not
+listed here, and two **unmerged** branches numbering different studies the same. That last one is
+`AGENTS.md` §10.2 as a check rather than a habit — `POSTMORTEM-2026-08-09.md` root cause A is two
+efforts whose trees were each internally consistent. Merged branches are excluded deliberately:
+this repository's two real collisions — a second `PR-006` and a second `PR-007` — are both on merged
+branches, so the numbering was reconciled and the old filenames are correct statements about a commit.
 
 **The spread level is closed by evidence.** Three estimators — Corwin-Schultz (2012),
 Abdi-Ranaldo (2017) and EDGE (2024, built to fix both) — cannot resolve it on this universe.

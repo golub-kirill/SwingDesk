@@ -351,16 +351,31 @@ def runtime_rows() -> list[tuple[str, str]] | None:
     None is not an error and not an empty result. It is the third state: the subject of the
     measurement is absent here, so no claim about it can be made from this tree.
     """
+    import duckdb
+
     if not DATA.is_dir():
         return None
-    bar_rows, instruments = _bar_facts()
-    return [
-        *_journal_facts(),
-        *bar_rows,
-        *_directory_facts(instruments),
-        *_classification_facts(),
-        _track_a_row(),
-    ]
+    try:
+        bar_rows, instruments = _bar_facts()
+        return [
+            *_journal_facts(),
+            *bar_rows,
+            *_directory_facts(instruments),
+            *_classification_facts(),
+            _track_a_row(),
+        ]
+    except duckdb.IOException as error:
+        # A store held by another process is the SAME third state as a store that is not here: this
+        # checkout cannot measure the runtime block, so it must not rewrite it. `ADR-0004` makes the
+        # stores single-writer, so the evening run holding `bars.duckdb` is the design working - and
+        # `AGENTS.md` §12 names the right response: "UNAVAILABLE, never a traceback". This tool
+        # raised one instead, caught 2026-08-24 at 18:31 while the scheduled 18:30 pass was mid-run.
+        # Reported rather than swallowed, because a silent None here would be indistinguishable
+        # from having no `data/` at all.
+        print(f"state: a store in {DATA} is open in another process - the scheduled run holds them "
+              f"while it works. The runtime block is UNAVAILABLE from here and is left alone.")
+        print(f"       {error}")
+        return None
 
 
 # ----------------------------------------------------------------------------- rendering

@@ -162,6 +162,10 @@ def main() -> int:
                             [python, "tools/verify_schedule.py"], "26 schedule"),
         "27 strategy cards": _run("a card's references resolve and it claims no more than it has",
                                   [python, "tools/verify_cards.py"]),
+        "28 parameter claims": _run("no document states a parameter status the registry contradicts",
+                                    [python, "tools/verify_parameter_claims.py"]),
+        "29 prereg ids": _run("a pre-registration id is reserved once and listed where it is owed",
+                              [python, "tools/verify_prereg_ids.py"]),
     }
 
     print("\n" + "=" * 62)

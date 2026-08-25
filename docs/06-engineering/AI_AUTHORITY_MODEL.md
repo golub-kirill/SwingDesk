@@ -98,6 +98,74 @@ it used, and a reviewer can recompute it.
 The distinction in one line: **the agent may tell you what the system knows and where the system
 disagrees with itself. It may not tell you what to do about it.**
 
+## 3a. Amendment — the agent may advise on an OPEN POSITION · 2026-08-24 · owner
+
+**§3 above is not edited.** It is a ratified section and `CHANGE_MANAGEMENT.md` §5 corrects such a
+record forward by amending it, never by rewriting it. Everything §3 says still governs candidate
+selection; this section changes one thing on the management side and says exactly what.
+
+**What the owner asked for**, 2026-08-24: load the agent with all the context and all the
+computations the system has, and let it advise on **how to run the trade, what to watch, what is
+missing, and what a genuinely good trader would attend to.** Two of those three were already
+permitted by §3 — surfacing conflict and surfacing absence are in its own list. The third,
+*what a good trader would do*, is "what to do about it", and §3's closing line forbids it.
+
+### Why this is NOT a charter amendment
+
+`CHARTER.md` A-001 is the ratified boundary and it is narrower than §3 made it:
+
+- **Clause 3** puts an agent in scope "to subsume context and present a global picture. Synthesis,
+  not authority." **Advice is not authority.** Authority binds; advice does not, and every decision
+  in this system still requires a human to reach it (clause 1, absolute).
+- **Clause 4** lists six prohibitions and they are the real fence: the agent may never *decide, size
+  a position, override a veto, alter a parameter, extend its own permissions, or originate a
+  number.* Saying *"this position is now eleven sessions into a twenty-session limit and its stop
+  sits inside one average daily range"* engages none of them.
+
+So **§3 drew a tighter line than A-001 required**, and loosening it inside clause 4's fence does not
+reopen the charter. **A-001 clause 5 is untouched**: the agent stays outside the v1 finish line, and
+moving it inside would be a separate amendment which this is not.
+
+### What this permits — only on a position that is already open
+
+- Say what a careful trader would attend to on **this** position now.
+- Name which of the system's own checks bear on it and what each currently says.
+- Say what is **missing** that would change the picture.
+- Restate what the position's own recorded history implies — sessions held against the holding
+  limit, drawdown since entry, distance to the stop — **as computed by deterministic code, with
+  provenance attached.**
+
+### What is unchanged on the entry side
+
+**Nothing about candidate selection moves.** No advice on which candidate to take, no ordering by
+desirability, and §3 rule 3 stands: an ordering the agent cannot attribute to a named deterministic
+key is forbidden. The entry path is where a recommendation would most closely resemble a decision,
+and it stays closed.
+
+### What stays forbidden on BOTH sides — and clause 2 is the loophole this would otherwise open
+
+1. **The decision vocabulary** — `Trade` / `Watch` / `Skip` / `Pause` — and any synonym, paraphrase,
+   translation, colour, emoji or score that maps onto it one-to-one. Unchanged from §3 rule 1.
+2. **The management vocabulary, for exactly the same reason** — `HOLD`, `MOVE_STOP`,
+   `PARTIAL_EXIT`, `EXIT_NOW`, `PAUSE` (`contracts/position.py:ActionKind`). These are the decision
+   artefacts of an open position: `DR-013` binds each to an approval lifecycle and a critical one
+   never expires and never auto-applies. **An agent that emits one has proposed**, and a proposal is
+   the deterministic path's to make. Without this clause the amendment would permit by the back door
+   precisely what clause 1 above forbids at the front.
+3. **Originating a number.** No stop price, no share count, no target, no probability, no confidence.
+   `CHARTER.md` A-001 clause 4 names this and it is not relaxed here. The agent may restate a number
+   a component computed, carrying that component's provenance and validation status.
+
+**The distinction, restated for the management side:** the agent may say what bears on this position
+and what the system cannot see. It may not say what to do, and it may not say it in numbers.
+
+### The standing condition still applies
+
+A-001: *nothing is implemented before the authority model is written and gated.* §11 records that the
+prohibitions here are prose and nothing enforces them. **This amendment widens what is permitted and
+does not discharge that condition** — the vocabulary of clauses 1 and 2 above is mechanically
+checkable, and a guard for it is the precondition for any implementation, not a later refinement.
+
 ## 4. Decision context — what the agent is allowed to see
 
 ТЗ §3.8 corrects the loose claim that an AI "considers all information". The accurate form:

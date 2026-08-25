@@ -268,7 +268,8 @@ A probability may come only from **a validated expectation estimate, a calibrate
 or a matched historical cohort.** Nothing else may be rendered as one — not a setup score, not a
 component's confidence, not a count of satisfied conditions, and not a model's own stated certainty.
 
-**This system currently has no legal source of probability.** One parameter is `validated`, no
+**This system currently has no legal source of probability.** The registry holds no `validated`
+parameter at all — derive it with `python tools/verify_parameters.py`, never from this line — no
 expectation estimate exists, and no calibrated model exists. Any probability displayed today would be
 manufactured, and the honest output is a refusal.
 

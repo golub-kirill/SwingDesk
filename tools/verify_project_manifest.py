@@ -98,12 +98,47 @@ def main() -> int:
             )
 
     # --- the index against the manifest -----------------------------------------------
-    indexed = {m.group(1) for line in README.read_text(encoding="utf-8").splitlines()
-               if (m := ROW.match(line))}
-    for number in sorted(indexed - seen_numbers):
+    indexed: dict[str, str] = {}
+    for line in README.read_text(encoding="utf-8").splitlines():
+        if m := ROW.match(line):
+            cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+            indexed[m.group(1)] = cells[-1] if cells else ""
+    for number in sorted(set(indexed) - seen_numbers):
         failures.append(f"docs/README.md: row {number!r} has no manifest entry")
-    for number in sorted(seen_numbers - indexed):
+    for number in sorted(seen_numbers - set(indexed)):
         failures.append(f"manifest: document {number!r} has no row in docs/README.md")
+
+    # The index's STATUS CELL against the manifest's copy of it. This gate's own docstring lists
+    # `REGIME_SPEC` / `EVENT_SPEC` / `CHART_SPEC` reading `planned` while all three existed as one
+    # of the four drifts it was written for - and it caught that only through each document's OWN
+    # header, which the manifest tracks. The index cell itself went unchecked, so on 2026-08-24 all
+    # three still read `planned` in `docs/README.md`, sixteen days after the manifest recorded
+    # `drafting`. A gate that names a defect in its docstring and does not test for it is the same
+    # shape as a hand-kept count (`AGENTS.md` §10.6): findable, and not true.
+    for doc in documents:
+        declared = doc.get("readme_status_text")
+        row_status = indexed.get(doc["display_number"])
+        if declared is None or row_status is None:
+            continue
+        if row_status != declared:
+            failures.append(
+                f"{doc['id']}: docs/README.md row {doc['display_number']!r} reads "
+                f"{row_status!r} but the manifest says {declared!r}"
+            )
+
+    # --- exactly one handoff file (owner ruling, 2026-08-24) ---------------------------
+    # `AGENTS.md` §10.7. Seven dated `SESSION-HANDOFF-*.md` files were created and four deleted in
+    # six days; four traps lived only inside one of them and were rescued hours before it went, and
+    # `DR-016` still cites one that was deleted on 2026-08-23 - an append-only record pointing at
+    # nothing, which §11 rule 2 forbids repairing. Gate 14 never scanned them either, so their
+    # counts drifted unchecked. One file, updated in place.
+    for path in sorted(REPO.glob("*HANDOFF*.md")):
+        if path.name != "HANDOFF.md":
+            failures.append(
+                f"{path.name}: there is exactly one handoff file and it is HANDOFF.md "
+                f"(AGENTS.md §10.7, owner ruling 2026-08-24). Fold this into HANDOFF.md, or into "
+                f"TODO.md if it is open work and AGENTS.md §12 if it is a habit, then delete it."
+            )
 
     # --- every document is accounted for ----------------------------------------------
     catalogued = {doc["path"] for doc in documents if doc.get("path")}

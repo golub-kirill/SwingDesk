@@ -192,11 +192,22 @@ class BarSeries(BaseModel):
 
     @property
     def session_dates(self) -> tuple[date, ...]:
-        """Distinct session dates present, ascending. Used by the completeness check."""
+        """Distinct session dates present, ascending.
+
+        The completeness check used to read this and then ask `bars_on` for each date; it buckets
+        the bars in one pass now, so this has no caller in `src/`. Kept because it states a real
+        property of the container and the cost of keeping it is a docstring.
+        """
         seen: dict[date, None] = {}
         for bar in self.bars:
             seen.setdefault(bar.session_date, None)
         return tuple(seen)
 
     def bars_on(self, session_date: date) -> tuple[Bar, ...]:
+        """Every bar on one session. A LINEAR SCAN - never call it once per session date.
+
+        The warning is here because the one caller that did cost 90 seconds of a 150-instrument
+        run: a series spanning n sessions asked n times and paid O(n^2). Iterate `self.bars` once
+        and bucket by `session_date` instead (`market_data/completeness.py` is the worked example).
+        """
         return tuple(bar for bar in self.bars if bar.session_date == session_date)

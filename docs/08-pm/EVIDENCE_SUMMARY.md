@@ -70,20 +70,65 @@ point-in-time membership is not used, though `reference_data.universe.members()`
 studies do not call it. Direction and magnitude of the resulting bias are unknown. Tracked in
 `TODO.md` §5.
 
-## 6. Two ratified criteria are inert
+## 6. ~~Two ratified criteria are inert~~ One is, for two independent reasons
 
-`k.strategy_rejected` cannot fire — Track B evaluates on journalled trades only, and its benchmark
-comparison is not commensurable. See `HANDOFF.md` §5.
+`k.strategy_rejected` cannot fire, and **both blockers must clear before it ever can**
+(`EXPECTATION_MODEL.md` §9b): `criteria.yml` v1.1.0 settles that Track B evaluates on **journalled
+trades only**, so no backtest can fire it whatever else is true — and its benchmark comparison is
+**not commensurable**, because a per-trade R expectancy and a buy-and-hold return need a horizon and
+an exposure assumption to be compared at all.
 
-**UNRESOLVED:** this sentence says *two* and names *one*. Every other source in the tree means two
-*reasons*, not two criteria. Carried forward unchanged rather than silently corrected, because a
-migration preserves the record; the wording defect is tracked in `TODO.md` §3.
+**Resolved 2026-08-24. The heading was a wording defect and the count was the wrong noun.** It said
+*two* and named *one*; every other source in the tree means two *reasons*. Checked against the
+second candidate before concluding: `k.drawdown_pause` was the project's other inert gate — ratified
+against `validation.max_allowable_drawdown` while that parameter was `unset`, so its verdict was
+invariant across every input the system could produce — and `DR-007` gave it a value on 2026-08-08.
+`RULE_SPEC.md` §7 states the result exactly: **"The gate went from unable to fail to untested, which
+is progress and is not the same as working."** Untested is not inert, so it does not belong in this
+count, and nothing else in the tree does either.
+
+Struck through rather than rewritten, per `AGENTS.md` §10.5's own convention: a heading that stood
+for weeks and was wrong is worth more visible than absent.
 
 ## 7. Reaching v1 with no validated edge is a success, not a failure
 
 `CHARTER.md` §4's v1 finish line is a **machinery** target and was reached 2026-08-02. Reaching v1
 and reporting no validated edge is a **success** against the ratified criteria. `SUCCESS_AND_KILL_CRITERIA.md`
 is explicit that a negative result is a result.
+
+## 8. The cross-sectional family has been looked at twice, and neither look found anything
+
+Added 2026-08-24. **Both are labelled, and the labels are the point.**
+
+**`PR-012` REFUSED a verdict** — not `inconclusive`. Four concurrent positions held at most twenty
+sessions produce about fifty entries a year, so its holdout supplied 181–203 trades against its own
+declared minimum of 200. It reported the measurement and declined to conclude, which is what
+`PREREG_TEMPLATE` §8 asks for. **A refusal still spends its trials.**
+
+**`PR-013` is EXPLORATORY by its own declaration** and therefore advances no validation status and
+sets no parameter. Its drafter had read `PR-012`'s numbers, said so in §0b before the run, and
+registered it anyway because the question is different: does the ORDERING carry information, rather
+than does a capacity-constrained book beat another one.
+
+**What it measured, and this is the part worth carrying.** Over 142 holdout formation dates — the
+sample rule was **met**, which `PR-012` could not manage — **all six gross intervals include zero**,
+in both periods and all three arms. Before a single basis point of cost, the top-decile minus
+bottom-decile forward return is not distinguishable from nothing. The largest point estimate is
++0.24% over five sessions against an interval running −0.15% to +0.61%, and the three forms do not
+separate from one another either.
+
+**Survivorship makes that the stronger reading rather than the weaker one.** The directory is
+today's, so every figure is biased upward; a measurement inclined to find an edge found none.
+
+**What it does NOT establish.** One lookback (126 sessions) and one horizon (5 sessions), neither
+searched. The family is not refuted and `CARD-001`'s four selection inputs remain `unset` — a study
+that sets nothing is what an exploratory result is.
+
+**And a caution about its own verdict word.** `PR-013` reports `inconclusive` because the registered
+decision rule has no branch for *both the arm and the control are losing*, so an arm whose interval
+sat wholly below zero was not rejected by it. The numbers are what to read; the verdict word
+understates them. The gap is recorded in that study's report for whoever writes the next
+pre-registration.
 
 ---
 

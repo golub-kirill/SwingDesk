@@ -192,6 +192,90 @@ class BarStore:
         ).fetchall()
         return {row[0]: row[1] for row in rows}
 
+    def tails(
+        self, interval: Interval, series: Series, knowledge_time: datetime, count: int
+    ) -> dict[str, tuple[int, BarSeries]]:
+        """The last `count` bars of every instrument, with each one's TOTAL bar count.
+
+        One query instead of one per instrument, for the same reason `last_sessions` above is one
+        query: universe construction runs over everything the store holds, and a read per symbol
+        makes deciding who is admissible cost more than deciding what to do about them. Measured
+        2026-08-24 on the ten-year store, `application.universe.select` read **3.57 million bars**
+        - one full history per instrument, 3,720 queries - to answer a bar count, a last close and
+        a twenty-session average. That is 73 seconds of a run, and 99.4% of what it read was
+        discarded.
+
+        The count travels with the tail because it is the one thing the tail cannot answer:
+        `min_history` is a fact about the whole stored series, and a caller holding twenty bars
+        would otherwise have to guess it or ask again.
+
+        Same as-of rule as `as_of` - best value per `event_time` known at `knowledge_time` - and the
+        same `BarSeries` out, so a caller runs the same membership test on the same numbers rather
+        than a second implementation of it.
+        """
+        if count < 1:
+            raise ValueError(f"count must be >= 1, got {count}")
+
+        rows = self._connection.execute(
+            """
+            WITH best AS (
+                SELECT instrument_id, event_time, session_date, open, high, low, close, volume,
+                       knowledge_time
+                FROM bars
+                WHERE interval = ? AND series = ? AND knowledge_time <= ?
+                QUALIFY ROW_NUMBER() OVER (
+                    PARTITION BY instrument_id, event_time ORDER BY knowledge_time DESC
+                ) = 1
+            ), ranked AS (
+                SELECT *,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY instrument_id ORDER BY event_time DESC
+                       ) AS from_end,
+                       COUNT(*) OVER (PARTITION BY instrument_id) AS total
+                FROM best
+            )
+            SELECT instrument_id, total, event_time, session_date, open, high, low, close, volume,
+                   knowledge_time
+            FROM ranked
+            WHERE from_end <= ?
+            ORDER BY instrument_id, event_time
+            """,
+            [interval.value, series.value, knowledge_time, count],
+        ).fetchall()
+
+        grouped: dict[str, tuple[int, list[Bar]]] = {}
+        for row in rows:
+            instrument_id, total = row[0], int(row[1])
+            bucket = grouped.setdefault(instrument_id, (total, []))
+            bucket[1].append(
+                Bar(
+                    instrument_id=instrument_id,
+                    interval=interval,
+                    series=series,
+                    event_time=row[2],
+                    session_date=row[3],
+                    open=row[4],
+                    high=row[5],
+                    low=row[6],
+                    close=row[7],
+                    volume=row[8],
+                    knowledge_time=row[9],
+                )
+            )
+        return {
+            instrument_id: (
+                total,
+                BarSeries(
+                    instrument_id=instrument_id,
+                    interval=interval,
+                    series=series,
+                    knowledge_time=knowledge_time,
+                    bars=tuple(bars),
+                ),
+            )
+            for instrument_id, (total, bars) in grouped.items()
+        }
+
     def latest_knowledge_time(self) -> datetime | None:
         """The most recent instant this store learned anything, or None when it holds nothing.
 
@@ -240,10 +324,17 @@ class BarStore:
             return WriteResult(0, 0, 0)
 
         first = incoming[0]
+        # Only the part of the stored history the batch can collide with. Every lookup below is
+        # `current.get(bar.event_time)` for a bar in `incoming`, so a row older than the batch's
+        # own earliest event_time can never be consulted - reading it built a validated `Bar` that
+        # nothing then looked at. The daily run fetches one year against a store holding ten, so
+        # this is nine tenths of the read: measured 2026-08-24, the write path was reconstructing
+        # ~2,500 bars per instrument to compare 251 of them.
+        earliest = min(bar.event_time for bar in incoming)
         current = {
             bar.event_time: bar
             for bar in self.as_of(
-                first.instrument_id, first.interval, first.series, knowledge_time
+                first.instrument_id, first.interval, first.series, knowledge_time, start=earliest
             ).bars
         }
 

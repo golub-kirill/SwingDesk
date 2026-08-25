@@ -27,11 +27,18 @@ retyping it.
 
 ## 1. Blocking now
 
-**`master` went RED on its own, 2026-08-22, and it is fixed in this branch.** Four tests in
-`test_cli.py` seeded a proposal dated 2026-08-16 and let `pending` / `respond` read the wall clock;
+~~**`master` went RED on its own, 2026-08-22, and it is fixed in this branch.**~~ **CLOSED
+2026-08-22** — merged as `7f3568a` and verified on `master` 2026-08-24. Four tests in `test_cli.py`
+seeded a proposal dated 2026-08-16 and let `pending` / `respond` read the wall clock;
 `management.proposal_expiry_days` is 3 sessions, so on 2026-08-20 the window closed and gate 8 began
 failing on an untouched tree. Fixed by pinning `--as-of` the way the file's own expiry tests already
-do, and the trap is now in `AGENTS.md` §12. The 2026-08-11 freeze lifted on 2026-08-17.
+do, and the trap is in `AGENTS.md` §12. Kept struck through rather than deleted because it stood at
+the head of "Blocking now" for two days after it stopped blocking anything, which is its own small
+lesson about where a closed item goes.
+
+**The 2026-08-11 freeze lifted on 2026-08-17.** `application/pipeline.py`,
+`trade_management/sizing.py` and `tools/daily_run.cmd` are still the frozen files, and a merge to
+one that moves decision output still resets `a.run_completes` (`HANDOFF.md` §5).
 
 **What blocks the next thing worth doing.** The two items that stood here on 2026-08-18 are both
 closed — the R denominator by re-measurement, the staleness gate by `DR-015` being built — and what
@@ -237,8 +244,8 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       that enum would mean inventing five empty fields and the first component to read one would
       get numbers back. It is its own record with its own table, which is what "with their own
       `knowledge_time`" in the spec's own row requires.
-      **Wired into no decision.** The gate needs `data.revision_epsilon`, which is `unset` pending
-      the ruling below, so storing an action changes nothing the run decides — which is exactly why
+      **Wired into no decision when this landed.** The gate needs `data.revision_epsilon`, which
+      was `unset` pending the ruling below, so storing an action changed nothing the run decides — which is exactly why
       it was safe to land before the ruling. 11 tests, 5 mutants killed including the look-ahead one
       (an action learned later must be invisible to an earlier read).
       **RE-MEASURED 2026-08-23 (`DR-016` §8) — the value survives, the SCOPE does not.** §2's table
@@ -277,7 +284,7 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       stop-out that never happened, on a position still held.
       `DATA_QUALITY_SPEC.md` §4 specifies the gate in full, including the `DATA_ERR`/`Critical`
       case for a changed raw bar. **Nothing is implemented** — no mention of splits or dividends
-      anywhere in `src/` — and `data.revision_epsilon` is `unset`. Needs its own record, same shape
+      anywhere in `src/` — and `data.revision_epsilon` was `unset`. Needs its own record, same shape
       as `DR-015`. **Stale data makes the system decide on old information, which is now refused.
       An unhandled split makes it decide on *wrong* information while every freshness check
       passes.**
@@ -301,6 +308,20 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       card, not a study). Resume research once one real end-to-end cycle — proposal → owner sees it
       → position opened → managed → approved → applied → filled — has actually run. See §6b for the
       gap analysis that prompted this and the build order now underway.
+      **OVERRIDDEN BY THE OWNER 2026-08-24 for one study, and the override is recorded rather than
+      assumed.** `PR-013` was registered on owner direction while this suspension stood. A council
+      is advisory and the owner is not, so the direction governs — but two things are worth having
+      in writing.
+      **First, the resume condition as written can never be met.** It waits on one real end-to-end
+      cycle, and measured the same day: the system has recorded 11,240 decisions and **not one
+      `Trade`**, the live path's terminal state is `Watch — sized; awaiting a trigger`, and there is
+      no trigger in it. A suspension whose exit condition is unreachable is a permanent stop, which
+      is not what the council voted for.
+      **Second, the owner's reason is a constraint the council did not have.** Six months, and at
+      four concurrent positions held twenty sessions that is 25 live trades against a ratified floor
+      of 100. Waiting for the cycle and waiting for the evidence are the same wait, and it is longer
+      than the horizon.
+      **Still suspended:** everything else on the list above. This override is one study, named.
 - [x] **`[v]` Gate 16 was RED — fixed 2026-08-15.** Both undeclared worktrees are now named in
       `HANDOFF.md` §2. `python tools/verify_branches.py` exits 0.
 - [x] **`[v]` `HANDOFF.md` §2's stale rows — fixed at the mechanism, 2026-08-15.** §2 is now
@@ -342,18 +363,270 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       is required and writes the cell-by-cell comparison beside the log. **`PR-009` must register
       against this replay's vintage, not against PR-005's published aggregate** — they are now
       known not to be the same thing, and the provenance file says so in the artifact itself.
+- [x] **`[v]` THE DAILY RUN WAS BREACHING A RATIFIED NFR BUDGET BY 4x AND NOTHING MEASURED IT —
+      FIXED 2026-08-24.** Derive the figures with the commands named below, never from this line.
+      **`NFR.md` §3 budgets the DECISION PATH at ≤ 5 minutes.** Measured on 2026-08-24 before
+      any change: 19.0 min of pipeline compute over the 1,141-member universe plus 71.9 s of
+      universe selection — **20.2 minutes, four times the budget.** After: **2.7 minutes**,
+      inside it with room.
+      **Why nobody saw it.** The same table budgets the END-TO-END run at ≤ 45 min, and
+      end-to-end was ~24 min — comfortable. The breach was in a row that only an instrumented
+      run can measure, and nothing in this tree measured any of `NFR.md` §3's budgets:
+      `data/daily_run.log` gives end-to-end duration and no split, and **the requirement
+      lives in the split.**
+      **`tools/measure_latency.py` closes that half of it**, built the same day: it replays
+      the vendor from the store, times universe selection and the pipeline separately, and
+      compares the total against the budget **read out of `NFR.md`** rather than a copy —
+      a tool asserting its own ratified threshold is the drift §10.5 exists to stop, and it
+      refuses rather than assuming five minutes if the row cannot be parsed. That one
+      coupling is pinned by a test, because reformatting §3's table would otherwise disarm
+      the tool silently. Reads **160.5 s, 139 s to spare**.
+      **Two budgets are still unmeasured** and are named rather than quietly dropped: the
+      incremental refresh (≤ 20 min, I/O-bound and explicitly a place concurrency applies)
+      and report generation (≤ 30 s). Neither is close to binding today; both would need the
+      run itself to record a split, which `application/pipeline.py` being frozen makes a
+      sequencing question rather than a coding one.
+      **Not asserted about earlier runs.** The last run to complete was 2026-08-17 at 11m45s
+      end-to-end, before the universe was deepened to ten years; its decision-path share was
+      never recorded and is not reconstructible.
+      **Three hot spots, none of them in a frozen file, and the biggest was quadratic.**
+      `completeness.check` asked `BarSeries.bars_on` - a linear scan - once per session date, and
+      the pipeline checks each instrument's WHOLE stored extent, so sessions ≈ bars: ~2,500 x
+      ~2,500 per instrument, 7.2 billion comparisons a run. Affordable at the old median of 510
+      bars and not at ten years, which is why the run had crept from ~5 min to ~12 before the
+      deepening and to ~24 after it. `calendar.sessions` read a pandas frame with `iterrows`, which
+      builds a Series per row, for two columns. `checklist._load_items` re-parsed the checklist
+      registry per candidate.
+      **And `universe.select` read 3.57 MILLION bars to answer three numbers** - a bar count, a
+      last close and a twenty-session average - one full history per instrument, 3,720 queries, 73
+      seconds, 99.4% discarded. `BarStore.tails` answers all three in one query.
+      **Measured end to end: ~24 min -> ~6 min a pass, and the remaining time is the VENDOR**, not
+      this code: **160 s of compute over the full 1,141**, measured directly rather than
+      extrapolated, against ~3 min of 1,141 sequential fetches — and `tools/verify_reproducible.py`
+      timed two whole passes end to end at **11m40s**. The compute halves that
+      were fixed are 150.2 s -> 15.4 s for 150 instruments (9.8x) and 71.9 s -> 1.7 s for selection
+      (41x).
+      **Byte-identity was proven, not assumed, SIX times, and the last two go through code paths
+      the pipeline never touches:** the same `output_hash` before and after at every step on a
+      150-instrument pass; all 1,141 selection members identical member for member against the
+      pre-change loop written out verbatim; `tools/verify_reproducible.py` reproducing
+      `50e1646b933a4a9d` - the hash recorded on `master` before the change - over the full universe;
+      **`tools/run_pr005_replay.py` reproducing all 20 of PR-005's cells** through the backtest
+      engine; and **`tools/run_pr012.py` reproducing all 12 of PR-012's cells** - trade counts,
+      deferred counts, mean net R and both CI bounds - through `run_book`, the ranking and the
+      classification store, ending on the same `REFUSED` for the same reason. So it moves no
+      decision output and spends no `a.run_completes` counter.
+      **Two run times worth knowing before a session waits on one:** `run_pr012.py` is **13m37s**
+      and `verify_reproducible.py` is **11m40s** for both passes. They are now the two most
+      expensive tools in the tree.
+      **A fourth hot spot, found by measuring my own fix — and the fix for it was BUILT AND THEN
+      REMOVED THE SAME DAY, which is the part worth carrying.** The calendar cache thrashes: the
+      windows asked for are each instrument's stored extent, 372 distinct ones over the admitted
+      1,141, so no exact-window cache can hold them. Quantising the ends to whole years collapses
+      them to **36** spans and cuts the pass **159 s -> 136 s** — equivalence measured over 886
+      windows, 0 mismatches.
+      **It retains 228 MB, measured**, because the saving comes precisely from keeping ~199,000
+      built `ExchangeSession` objects alive at ~1.2 kB each. `NFR.md` §3 budgets the decision path
+      at **5 minutes** and it now runs in **2.7**, so those 23 seconds bought nothing any
+      requirement asks for while the memory was real. Removed, and `sessions`' own cache dropped
+      from 32 entries to **4** on a second measurement: simulated over the run's actual window
+      sequence an LRU of 4 hits 58.7% and an LRU of 64 hits 63.6%, because two windows cover 669
+      of the 1,141 instruments and most of the rest appear once. Sixteen times the memory for five
+      points.
+      **The cheaper route, for whoever revisits it:** a lighter `ExchangeSession` — it is a
+      pydantic model at ~1.2 kB and a frozen slotted dataclass would be a fraction of that — not a
+      bigger cache.
+      **What it found that was NOT performance:** deleting the window filter in
+      `completeness.check` left the whole suite green as it stood that morning, because every
+      fixture in that file builds its
+      series exactly over the window it then checks. The rule the code comment had always stated
+      was asserted by nothing. Closed with a test that overhangs both ends.
+      **BATCHING THE VENDOR IS NOT THE NEXT LEVER — measured 2026-08-24, so nobody spends a session
+      on it.** With compute cut, the vendor is now the majority of the run, and one HTTP request per
+      instrument looks like the obvious target. `yf.download` over 20 tickers at once returns in
+      **144 ms each against 167 ms one at a time — 1.2x**, because that call is a convenience
+      wrapper over the same per-symbol endpoint rather than a batch endpoint. The lever would be
+      CONCURRENCY, not batching, and that means parallel requests against an unofficial scrape of a
+      consumer site (`ADR-0001`) on a free tier — a different kind of decision from a refactor.
+      **The data half is already measured and it came out clean:** batch and single-ticker returns
+      agree on **250 of 251 bars** for every one of 20 names, and the only disagreement is the
+      CURRENT unclosed session, which `BarStore.write` refuses by construction. So whoever picks
+      concurrency up does not have to re-establish equality, only decide about the vendor.
+- [ ] **`[v]` PR-005'S PUBLISHED TRADE LOG NO LONGER MATCHES A FRESH REPLAY — and the reason is
+      seven bars that arrived three hours after it was published. Found 2026-08-24; needs an owner
+      decision, and NOTHING under `docs/prereg/results/` was touched.**
+      Run it yourself: `PYTHONPATH=$PWD/src python tools/run_pr005_replay.py --data <store>`.
+      **The measurement.** A replay against the current store reproduces `PR-005.json` **exactly in
+      all 20 cells** — trade counts and mean R to six decimals. The published provenance beside the
+      log records something different: `1x/A/holdout` off by 0.000326 and `1x/D/holdout` by
+      0.000520, 16 of 20 exact. Both are true of their own vintage.
+      **What moved, named precisely.** `PR-005-trades.csv` was generated at series knowledge_times
+      of **2026-08-17T15:58**. The scheduled run at **18:30:46 the same evening** wrote **7 bars
+      inside the study window** that the replay had not seen: `LEG` and `NDSN` for 2026-07-21,
+      07-22 and 07-31, and `KMB` for 07-22. With those present the two single-margin gates — A
+      turns on one threshold, D on exact pivot extremes — land where `PR-005` had them. Verified as
+      a fact about the STORE, not about this branch: the same replay at pre-change `master`
+      (`65e2165`) gives the same 20 exact cells, and the in-window `knowledge_time` maximum is
+      2026-08-17 18:30, so nothing since has touched this sample.
+      **A recorded standing fact is FALSE and should stop being repeated.** §2 of this file says
+      *"`LEG` and `NDSN` have no 2026-07-31 bar and the vendor does not supply one … a standing
+      data-quality fact about this source."* The store holds both — `LEG` close 9.80, `NDSN` close
+      297.78 — fetched by the ordinary evening pass **three hours after** that sentence was
+      written. It was vendor LAG, not vendor absence, and the difference is the whole claim.
+      **And the provenance's `why_not` is falsified in its practical implication.** It reads *"the
+      bytes the study read no longer exist anywhere and cannot be recovered by refetching."* The
+      bytes may not be recoverable; the RESULT was, by the next scheduled run.
+      **The owner decision, and it is not an agent's to take.** The published CSV is a protected
+      record (`AGENTS.md` §11 rule 2) and re-publishing it rewrites the research record. Three
+      options: leave it and note the vintage; re-publish with `--write --accept-drift` so the log
+      matches a replay anyone can reproduce today; or publish the new one alongside. **`PR-009` is
+      what turns on the answer** — it was told to register against *"this replay's vintage, not
+      PR-005's published aggregate … they are now known not to be the same thing"*, and on the
+      current store they ARE the same thing while the CSV on disk is not.
 - [ ] **`[c]` UDR-004 — regime ontology.** Three candidate lists now: ТЗ's 8, course v5.0's 11,
       v7.0's 7 (`RECONCILIATION_PLAN.md` §5). Ties to `USER_STORIES.md`:304 (US-004 unsatisfiable
       while `regime.classifier_rule` is contested).
+- [ ] **`[v]` Plain names for the opaque ids — owner instruction 2026-08-24, sweep DEFERRED by the
+      owner.** *"Я хер знает что такое NFR. Не знаю, что такое PR-012, DR-012, DR-018, ранбук."*
+      The rule is in `AGENTS.md` §5 and applies from now on: an identifier gets a plain-language
+      name the first time it appears in anything the owner reads, and the bare id is never the whole
+      sentence. **The ids themselves stay** — roughly fifty references point at them, four gates
+      resolve them, and renaming a `DR-NNN` would edit an append-only record.
+      **What is deferred is the sweep of existing documents** (*"по-хорошему, пиши нормальные имена,
+      но потом"*). Correct them as they are touched rather than in one pass; a pass over every
+      document that cites an id is the blast radius §11 rule 3 warns about.
 - [ ] **`[c]` G-3 next timebox.**
-- [ ] **`[c]` Test logon-mode behaviour.** Needs a log-out before 18:30 one evening, then read
-      `Last Run Time` against the trigger. Settles `AGENTS.md` §10.4's marked conjecture.
-- [ ] **`[c]` Re-measure universe coverage.** 28.3% is ~10 days stale. New number goes to
-      `HANDOFF.md` §2 only — `DR-005` is append-only.
+- [ ] **`[v]` Test LOGON-mode behaviour — still open; the SLEEP half is now measured and the
+      answer is `lost`.** Needs a log-out before 18:30 one evening, then read `Last Run Time`
+      against the trigger. That half settles `AGENTS.md` §10.4's marked conjecture and a sleep does
+      not settle it: they are different mechanisms.
+      **What was measured, 2026-08-24, from the Windows event log** (`HANDOFF.md` §5): the machine
+      slept over the 2026-08-20 18:30 trigger and woke at 19:01 local, the task carries
+      `StartWhenAvailable=true`, and **no 18:30 entry exists in `data/daily_run.log` for that day**
+      while the 19:30 pass ran. A missed pass is dropped, not deferred.
+      **No code change came out of it**, and that was checked rather than assumed:
+      `tools/track_a_streak.py` reads 18:30 ± 30 min, so a day carrying only the 19:30 pass is
+      already `None` and already breaks the streak. The finding is operational —
+      **`a.run_completes` can be reset by the machine sleeping**, and the evidence for it is an
+      absence rather than an error.
+- [x] **`[v]` Re-measure universe coverage — DISCHARGED BY THE MECHANISM, not by a measurement.**
+      `HANDOFF.md` §2's runtime block is generated by `tools/build_state.py` and gated by gate 24,
+      so the coverage figure is recomputed on every run and cannot be ~10 days stale again. Derive
+      it with that command; this line deliberately does not repeat it (`AGENTS.md` §10.5).
+
+### PICK THIS UP FIRST: slim `AGENTS.md` — owner instruction 2026-08-24, measured and briefed
+
+**The ask:** *"У нас agents выглядят уже как книжка... Можно ли его сделать нормальным, чистеньким,
+без прозы? Правила, конвенции, всё как есть."* Yes. The brief is below so a fresh session starts
+cutting rather than measuring.
+
+**The hard constraint, measured 2026-08-24: section numbers CANNOT change.** 153 references across
+the repository point at `AGENTS.md` sections, and **16 of them sit in files that may not be
+edited** — accepted decision records, ADRs, pre-registrations. Renumbering means rewriting ratified
+documents to chase a heading, which §11 rule 2 forbids. Most-cited: §12 (28 references), §3 (26),
+§10.5 (25), §7 (17), §10.6 (15).
+
+**So: same headings, same numbers, same rules. Cut the narrative inside them, nothing else.**
+
+**Where the weight actually is** — 7,146 words total:
+
+| words | section |
+|---:|---|
+| **2,185** | §12 traps — **a third of the file** |
+| 659 | §10 the four rules of 2026-08-09 |
+| 477 | §5 conventions |
+| 402 | §10.6 |
+| 389 | §9 finding things in the code |
+
+**The cutting rule: one rule, one line, plus ONE clause saying what paid for it.** Not a paragraph
+retelling the incident. Worked example — the worktree/`PYTHONPATH` trap goes from 130 words to
+about 25 without losing either the instruction or the reason to believe it.
+
+**Target: ~3,000-3,500 words.** Roughly half.
+
+**The one objection, and it is not rhetorical.** In this repository the war stories are load-bearing:
+the culture rests on *every rule was paid for*, and a bare rule with no price reads as arbitrary and
+gets ignored — which is the failure mode §12 exists to prevent. So **keep one price clause per rule**
+and say in the file that the full accounts remain reachable through `git log -p AGENTS.md`.
+
+**Deliberately not started at the end of a long session.** It is the most-cited document in the
+tree; a large edit made tired is how this repository has been burned before.
+
+### The dated session-handoff files are outside the document map, and one has already broken a record
+
+**Owner question, 2026-08-24: why a permanent `HANDOFF.md` AND a dated `SESSION-HANDOFF-<date>.md`,
+and should it continue?** Measured rather than argued, and the answer needs an owner ruling.
+
+`AGENTS.md` §10.7 names **four** documents and gives each an owner. `SESSION-HANDOFF-<date>.md` is a
+fifth, outside the map. **Seven have been created and four deleted in six days**, two of them
+replacing themselves.
+
+**Three costs, all measured:**
+
+1. **Things die in it.** Four traps lived only in `SESSION-HANDOFF-2026-08-24.md` §3 and were
+   migrated to `AGENTS.md` §12 on 2026-08-24, hours before that file was deleted by its own
+   instruction. Nothing would have noticed their loss.
+2. **An append-only record cites one.** `DR-016` line 441 cites `SESSION-HANDOFF` §1. `DR-016` is
+   dated 2026-08-18 and the file it points at was deleted **2026-08-23** — so that citation has been
+   dangling since, and `AGENTS.md` §11 rule 2 forbids editing the record to fix it. Gate 3e cannot
+   see it either: it resolves names of the form `something.md` and the citation is a bare
+   `SESSION-HANDOFF §1`. **Demonstrated within the minute:** deleting the file made gate 3e fail
+   immediately on a citation in `AGENTS.md` that used the full filename, and stay silent about
+   `DR-016`'s bare one. The gate is not weak — the citation style decides whether it can help, and
+   an append-only record picked the style the gate cannot see.
+3. **Its numbers drift unchecked.** Gate 14 reads `docs/**` plus exactly three root files, and this
+   is not one of them. On the day it was deleted it still claimed *"everything is merged"* and a
+   gate count two behind the tree.
+
+**Recommendation: stop creating them.** Every section such a file carries already has an owner —
+what changed is `git log`, open work is this file, state is `HANDOFF.md` §2 and is generated, what
+to do next is `HANDOFF.md` §5, habits are `AGENTS.md` §12. A session that cannot fit its handover
+into `HANDOFF.md` is holding something that belongs in one of those, which is exactly what happened
+to the four traps.
+
+**Not acted on beyond the migration**: the convention is the owner's to keep or drop, and this entry
+is the question rather than the answer.
+
+### Measured and deliberately NOT built: gate 14 over `TODO.md`
+
+**`AGENTS.md` §10.7 says this file never holds a measured count, and nothing enforces it.** Gate 14
+reads `docs/**` plus exactly three root files — `README.md`, `AGENTS.md`, `HANDOFF.md` — so the rule
+that governs this document is the one rule it cannot see. Probed 2026-08-24 by adding `TODO.md` to
+that list: **15 hits, and after marking the six genuinely historical census lines, 8 remain and all
+8 are false.**
+
+They are all one shape, and it is the shape the gate's own comment already names for parameters:
+*"11 tests, 5 mutants killed"* and *"an engine ignoring the injected trigger takes 17 tests with
+it"* are statements about what a change ADDED, not about the suite. The clinching one is
+`gate 25's condition 4 gates` — where **"gates" is a verb**.
+
+**So it stays out of scope, and the gap is recorded rather than papered over.** `CI_POLICY` §3's
+"a noisy gate gets bypassed" costs more than this drift does, and the drift here is bounded: a
+count in a closed `[x]` item is history that only reads wrong, while the same count in `HANDOFF.md`
+§2 would be acted on. The six historical lines are now marked with `DONE` and a date, per §10.5's
+own convention.
 
 ## 3. Contradictions — two documents disagree
 
 Each of these is a silent wrong-answer generator: a session reads one, acts, and is wrong.
+
+**EMPTY as of 2026-08-24 — every item below is closed, and four of them were not what they
+said.** Kept for the reasoning, because the reasoning is the transferable part:
+
+- **`G0 status` and `k.project_timebox` were never disagreements.** One was a stale open item whose
+  parenthesis had been wrong from the day it was written; the other was two different fields being
+  read as one claim. `AGENTS.md` §12's habit — name the artefact that owns the status before making
+  the claim — resolved both, and no gate could have.
+- **`HANDOFF.md`:124 pointed at a line that had MOVED**, to `EVIDENCE_SUMMARY.md`, five days before
+  anyone tried to resolve it. An audit item carrying a file and a line number ages faster than the
+  claim it describes.
+- **`docs/README.md` drift and `SPEC_GAP §32/§33` were real, and both got a gate rather than a
+  fix** — 15's missing half and 28, which found six more of the same shape on its first run.
+
+**The one pattern under all of it:** nothing here rotted by being wrong when it was written. It
+rotted when a *cited* fact moved — a study verdict withdrawn, a charter amended, a parameter given a
+value — and the citation stayed. That is what gates 28 and 29 are aimed at, and it is what the habit
+is for where no gate can reach.
 
 - [x] **`[v]` `registry/criteria.yml`:222's stale note — fixed 2026-08-15 via v1.1.1 amendment.**
       Council-reviewed (5 advisors + peer review); one response's recommendation was flagged by the
@@ -362,9 +635,16 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       byte-for-byte untouched; a comment (not a data field) points to the v1.1.1 entry, which carries
       the verified correction with its evidence. Same fix applied to
       `docs/00-charter/SUCCESS_AND_KILL_CRITERIA.md`:154 via `AGENTS.md` §10.5's own
-      strikethrough-and-append convention. All 29 gates pass.
-- [ ] **`[c]` G0 status.** `CONSTRAINTS.md`:150 says ratifying the remaining `criteria.yml` values
-      "closes G0"; `HANDOFF.md` §2 says G0 is closed.
+      strikethrough-and-append convention. Every gate passed, DONE 2026-08-15.
+- [x] **`[v]` G0 status — RESOLVED 2026-08-24, and it was not a disagreement about G0.**
+      `docs/README.md` §Gates owns gate status and records **G0 CLOSED 2026-08-02**; `ROADMAP.md`
+      §1 and `HANDOFF.md` §2 both agree with it. What `CONSTRAINTS.md` §9 held was a stale OPEN
+      ITEM — *"ratify the remaining `criteria.yml` values (one confirmation; closes G0)"* — whose
+      precondition was met on 2026-08-08 and whose parenthesis was wrong when it was written: G0
+      closed on the finish line being ratified and the criteria frozen at v1.0.0, six days before
+      the remaining values were ruled. Ticked with its date, per `AGENTS.md` §10.5's convention.
+      **The habit that resolved it is §12's:** name the artefact that owns the status before making
+      the claim. Three documents "disagreed" and only one of them was answering the question.
 - [x] **`[v]` `PREREG_TEMPLATE.md` §6 carried as OPEN two things `criteria.yml` RATIFIED — FIXED
       2026-08-24.** Found while pricing `b.deflated_sharpe`. The template said the multiple-testing
       correction was *"None is adopted yet"* and asked *"whether the trial count … is per component,
@@ -387,14 +667,74 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       The date is 2026-08-09 (`tools/track_a_streak.py`'s own `SCHEDULING_STARTED` constant, which
       cites this same date), not 08-10 — 08-10 is the first NYSE session the schedule was
       *evaluated against*, and the day it failed on batteries.
-- [ ] **`[c]` SPEC_GAP §32/§33** still read `DEFERRED`; `COVERAGE_AUDIT.md` says charter amendment
-      A-001 makes them `MISSING, not OUT_OF_SCOPE`.
-- [ ] **`[c]` `HANDOFF.md`:124** says "Two ratified criteria are inert" and names only
-      `k.strategy_rejected`. Every other source means two *reasons*. Likely a wording defect.
-- [ ] **`[c]` `k.project_timebox`** is `owner-set` in YAML, described as `met` in ROADMAP and
-      RISK_REGISTER.
-- [ ] **`[c]` `docs/README.md` drift** — says 21 stories (22 exist); marks REGIME_SPEC / EVENT_SPEC /
-      CHART_SPEC as planned though all three are written.
+- [x] **`[v]` SPEC_GAP §32/§33 — RESOLVED 2026-08-24, and reading the row pulled three more with
+      it.** §32 leaves `DEFERRED` for **PARTIAL**: A-001 put the AI contour in scope on 2026-08-08
+      — outside the ratified v1 finish line, which is a different claim — and
+      `AI_AUTHORITY_MODEL.md` was written for it the same day, so the row was citing a non-goal the
+      charter had already amended. `COVERAGE_AUDIT.md` §3 grades the contour `PARTIALLY_COVERED`
+      and its §4 says *"the coverage status is `MISSING`, not `OUT_OF_SCOPE`"*. §33 stays
+      `DEFERRED` and its reason moves to `COVERAGE_AUDIT.md` §5, which rules model governance
+      *"not yet"* because it follows the authority model rather than §32.
+      **§18 left FULL in the other direction, and it is the one that mattered.** Its only stated
+      evidence was **"PR-002 validated"** — that verdict was corrected to `inconclusive` on
+      2026-08-16, `regime.classifier_rule` is `assumed:PR-002`, and its `read_by` is **`none`**.
+      A Tier-8 table asserted the strongest word this project has, eight days after the study that
+      supplied it was withdrawn. `AGENTS.md` §3: *nothing looks more validated than it is.*
+      **Two more rows kept their class and lost a stale shortfall.** §30 said *"no portfolio layer
+      — correlation, sector and open-risk caps all `unset`"* and §31 said two of `DR-006`'s six
+      constraints *"cannot be evaluated"*; all six reach code as of 2026-08-23 and every cap names
+      a consumer. Two counts outside their owner went too: §14's `(96)` parameters against 105, and
+      §47's *"61-document plan"*.
+      **Census: FULL 29 · PARTIAL 26 · ABSENT 0 · DEFERRED 2**, recounted by gate 3e — which was
+      proven to fail on a wrong summary before the new one was trusted. `HANDOFF.md` §2's hand-kept
+      row carries it.
+      **The failure mode is worth carrying beyond this row:** nothing in that table rots by being
+      wrong when written. It rots when a *cited* fact moves and the citation stays, and gate 3e can
+      see neither a withdrawn verdict nor an amended charter.
+- [x] **`[v]` "Two ratified criteria are inert" — RESOLVED 2026-08-24. It is one criterion and two
+      reasons, and the claim had MOVED before it was resolved.** The item said `HANDOFF.md`:124; §3
+      of that file sent the standing account to `docs/08-pm/EVIDENCE_SUMMARY.md` on 2026-08-15 and
+      the sentence went with it, carrying its own `UNRESOLVED` note. So the item pointed at a line
+      that no longer existed — worth knowing before the next audit chases one.
+      **The second candidate was checked rather than assumed.** `k.drawdown_pause` was this
+      project's other inert gate — ratified while `validation.max_allowable_drawdown` was `unset`,
+      so its verdict was invariant across every input — and `DR-007` gave it a value on 2026-08-08.
+      `RULE_SPEC.md` §7: *"The gate went from unable to fail to untested."* Untested is not inert.
+      Corrected with a strikethrough in `EVIDENCE_SUMMARY.md` §6, per `AGENTS.md` §10.5's own
+      convention.
+      **A second stale claim fell out of it, and it is the spelled-out-count hole again.**
+      `EXPECTATION_MODEL.md` §9c read *"One parameter is `validated`"*. The registry holds
+      **none** — it has since `PR-002`'s verdict was corrected on 2026-08-16 — and gate 14 could
+      not see it twice over: the count is spelled in words, and "parameter is" sits between the
+      number and the backticked status its pattern anchors on. Rewritten to name the command.
+      **Gate 14 was deliberately NOT extended to match word-numbers**, and the reason is its own
+      design note: people write censuses in digits and local statements in words (*"two tests pin
+      this"*), so matching words would fire mostly on the second kind — and `CI_POLICY` §3's
+      "a noisy gate gets bypassed" is the failure that costs more than the drift.
+- [x] **`[v]` `k.project_timebox` — NOT a contradiction. Closed 2026-08-24 by reading the two
+      fields.** `status: owner-set` in `criteria.yml` says how the criterion came to exist; `met`
+      in `ROADMAP.md` §8 and `RISK_REGISTER.md` G-3 says whether its condition was satisfied
+      (G5 closed 2026-08-02, inside a two-month box). Two fields, two questions, no disagreement.
+      **What IS open is the successor**, and it is already tracked: `ROADMAP.md` §8 and
+      `RISK_REGISTER.md` G-3 both say no next timebox has been set, and `TODO.md` §2 carries it as
+      `G-3 next timebox`. That is an owner decision, not a documentation defect.
+- [x] **`[v]` `docs/README.md` drift — FIXED AT THE GATE 2026-08-24, not at the instance.**
+      Both halves were real: row 06 said 21 stories where 22 exist, and rows 22/23/24 marked
+      `REGIME_SPEC` / `EVENT_SPEC` / `CHART_SPEC` `planned` while all three exist and declare
+      `drafting` in their own headers.
+      **Gate 15's docstring already NAMED this exact drift as one of the four it was written for**
+      — and the gate only ever compared a document's own `**Status:**` header against the manifest,
+      never the index's Status CELL. So `registry/project_manifest.yml` carried
+      `readme_status_text: drafting` for all three while `docs/README.md` went on printing
+      `planned` for sixteen days, with the gate green. A gate that names a defect in its docstring
+      and does not test for it is a hand-kept count wearing a gate's clothes (`AGENTS.md` §10.6).
+      **The check now compares them**, and it found two more the moment it ran: row 02 carried a
+      stale `criteria.yml` v1.1.0 reference and a *"time box proposed 2026-08-08"* clause that
+      v1.1.1 has since settled, and row 58's manifest entry held the document's Content sentence in
+      the status field. One test, whose assertion fails if only the pre-existing document-header
+      check fires.
+      The 21 was **dropped rather than corrected** — a count in a document that does not own it is
+      the next stale copy (`AGENTS.md` §10.5).
 
 ## 4. Pending decisions
 
@@ -706,6 +1046,34 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       separate fields and never relates them, so a split copied from a study of a different shape
       looks like rigour and behaves like a sample cut.
 
+- [ ] **`[v]` PR-013 RAN, THE SAMPLE RULE WAS MET, AND THE ORDERING CARRIES NOTHING BEFORE COSTS.**
+      2026-08-24, owner direction (variant C). `docs/prereg/results/PR-013-report.md`; derive every
+      figure with `python tools/run_pr013.py --data <store>`, never from this line.
+      **The sample problem is solved and that is the structural result.** 142 holdout formation
+      dates against a minimum of 100 — `PR-012` could reach only 181–203 trades against its own 200
+      and refused. What bought it was the HORIZON, not the unit: five-session formation gives five
+      times as many independent dates as a twenty-session hold permits trades to be opened. Ranking
+      names rather than trades buys nothing by itself — every name ranked on one date shares that
+      date's market move, so a cross-section is ONE observation. That correction was made while
+      designing and is the transferable part.
+      **The finding is in the GROSS column and it is stronger than the verdict.** All six gross
+      intervals include zero, in both periods and all three arms. Largest point estimate +0.24% over
+      five sessions, interval −0.15% to +0.61%. The three forms do not separate from each other
+      either. Survivorship biases every figure UPWARD, so a measurement inclined to find an edge
+      found none.
+      **The net column is arithmetic, not a finding:** 100 bps per formation date at a five-session
+      rebalance is ~50% a year, larger than every point estimate, so every net interval is below
+      zero by construction.
+      **The registered decision rule has a gap, disclosed rather than patched.** An arm whose CI
+      sits wholly BELOW zero landed in `inconclusive`, because §6's reject clauses are "CI includes
+      zero" or "at or below the control" and neither fires when both arm and control are losing.
+      Confirmed by calling the registered function. **The next pre-registration needs a branch for
+      *both arms and control are negative*** — comparing two losers on which loses less is not a
+      finding. Fixing it now would be the redesign rule 3 downgrades.
+      **3 trials spent.** Exploratory by declaration (§0b), so it advances no validation status and
+      sets none of `CARD-001`'s four `unset` inputs.
+      **It does not refute the family** (§9): one lookback and one horizon, neither searched, and
+      that was deliberate to avoid spending trials on a sweep.
 - [ ] **`[v]` PR-012 RAN AND REFUSED A VERDICT — and the reason is structural, not fixable by
       data.** 2026-08-24. `docs/prereg/results/PR-012-report.md`; derive every figure with
       `python tools/run_pr012.py`, never from this line.
@@ -766,8 +1134,16 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       iteration order, set membership and dictionary insertion have every chance to bite, and gate
       9's three-instrument case gives them almost none. It does **not** establish that a stored
       manifest replays: no journalled run was recorded at this code, and that remains true.
-      **It is slow — about twenty minutes a pass** on the deepened store, so it is a deliberate
-      check rather than a merge gate.
+      ~~**It is slow — about twenty minutes a pass** on the deepened store, so it is a deliberate
+      check rather than a merge gate.~~
+      **RE-MEASURED 2026-08-24 after the performance work in §2: 11m40s for BOTH passes**, so
+      about six minutes each including 1,141 live vendor fetches. Still a deliberate check rather
+      than a merge gate - it touches the network, which `CI_POLICY` §4 forbids a gate to do - but
+      the reason is no longer the clock.
+      **And it re-established the criterion at the NEW code, which is the point:** both passes
+      produced `50e1646b933a4a9d`, byte-identical to the hash this same tool recorded on `master`
+      before any of the changes. Same decision output over the full production universe, from
+      different code.
 
 - [ ] **`[v]` `M31-T0464` IS `specified` — 2026-08-24, and the gate caught the shortcut.**
       `derived_observations/relative_strength.py` computes the RS line: the ratio of an
@@ -869,8 +1245,22 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       post-hoc and **must not be adopted as a finding**. A screen justified by a mechanism is
       registerable; a screen justified by the sign it produces on the sample that suggested it is
       the thing pre-registration exists to stop.
-- [ ] **`[c]` Prereg id-reservation has no gate** — three ids have already collided.
-      `docs/prereg/README.md`:52 says "worth fixing if a third one appears." A third has appeared.
+- [x] **`[v]` Prereg id-reservation has a gate — 29, built 2026-08-24.** The index said *"worth
+      fixing if a third one appears"* and a third had. `tools/verify_prereg_ids.py` catches all
+      three shapes: a study document missing from its own index, an id reserved **by reference
+      only** anywhere in `docs/` and not listed (the `PR-006` case the index itself said nothing
+      could find), and **two unmerged branches numbering different studies the same** — which is
+      `AGENTS.md` §10.2 as a check rather than a habit.
+      **Merged branches are excluded, and that is a rule rather than a convenience.** Measured:
+      this repository's two real collisions — a second `PR-006` and a second `PR-007` — are both on
+      **merged** branches, so the numbering was reconciled and their old filenames are correct
+      statements about a commit, the same way a struck-through count is.
+      **The cross-branch half says when it could not run.** A shallow CI clone has no other
+      branches, and gate 16 and gate 23 both went green-from-the-wrong-place before `AGENTS.md`
+      §10.6 rule 2 was written. Five tests, including a real two-branch git fixture that collides.
+      **One defect the first run found in the gate itself:** `results/PR-001-report.md` read as a
+      second claim on the number, so every reported study collided with itself. A study's output is
+      not a reservation.
 - [x] **`[v]` PR-002's verdict corrected to `INCONCLUSIVE` — 2026-08-16, council-reviewed.**
       §6 permits `accept` only on both countries; the third amendment (pre-run) assigned a
       single-market result to the `inconclusive` branch; the runner implemented the percentile
@@ -932,7 +1322,8 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       and `is_reconciled` checked in the render (not asserted in the pure module) so a broken
       invariant is seen, not raised mid-run. Prints on a run with zero candidates too — zero stated,
       not silence. 4 new tests against the story's own gherkin, `verify_docs.py` gate 3e passes
-      (citing US-022 without checking it was live). All 29 gates pass, 407 tests.
+      (citing US-022 without checking it was live). Every gate and every test passed, DONE
+      2026-08-11.
 - [ ] **`[v]` MEASURED 2026-08-17: 3 of 11 mutants survive the entire test suite.** The council's
       own flip condition, turned from an assumption into a number. Method: patch one computed
       quantity per module in committed source, run the **whole** suite, restore, record whether
@@ -942,7 +1333,7 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       existing 480 needs real mutants.
       **The three survivors, and they are not one kind:**
       • `sizing.py` — `planned_risk` replaced with the constant `Decimal('42')`. **The R denominator
-      the entire validation programme is expressed in.** 480 tests green.
+      the entire validation programme is expressed in.** Suite green, DONE 2026-08-13.
       • `sizing.py` — `risk_per_share = entry - stop + costs` → `entry - stop`. Green.
       • `calendar.py:112` — `sessions_behind` returning `max(0, len(window) - 1)`. Green, **and for a
       different reason: the function has no caller anywhere in `src/`** while
@@ -1028,7 +1419,7 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       Candidates Skip with the parameter named; open positions PAUSE rather than being managed on an
       invented stop. Old behaviour `pipeline.py`:289 and :369 both use
       `exits or ExitPolicy(Decimal("2.0"), 20)` — a hard-coded constant with no registry read and no
-      provenance, while `exit.atr_stop_multiple` and `exit.max_holding_period` are both `unset`.
+      provenance, while `exit.atr_stop_multiple` and `exit.max_holding_period` were both `unset`.
       This is a no-silent-default violation sitting in the production path. **Was a frozen file
       queued behind the freeze; the freeze lifted 2026-08-17 and PR #9 merged the same evening.**
 - [x] **`[v]` Sizing stop and exit policy disagreed — fixed 2026-08-16.** One policy for the whole
@@ -1136,7 +1527,8 @@ means. **It has not run with owner capital and will not** (`DR-014`).
 
 
 Traced end to end 2026-08-16, not just the pipeline internals: `daily_run.cmd` → `cli.py scan` →
-`report.py`. **BUILT and gated** (30/30 gates, 435 tests): candidate screening, sizing, exit-policy
+`report.py`. **BUILT and gated** — every gate and every test green, DONE 2026-08-12: candidate
+screening, sizing, exit-policy
 computation, checklist generation, report rendering, journal evidence, replay/determinism. **NOT
 built or wired**, despite the pure logic mostly existing and being unit-tested in isolation — this
 is the gap the council's suspend-research call (§1) is about, and the build order it recommended:

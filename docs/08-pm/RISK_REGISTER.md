@@ -68,7 +68,7 @@ aesthetic.
 | ID | Risk | Rating | Control |
 |---|---|---|---|
 | G-1 | **A study's result changes what the owner wants tested next** — the ordinary way pre-registration erodes | **medium** | Amendments are appended and dated; an amendment after seeing data downgrades a study to exploratory. Every amendment so far was made before any data was seen and says so |
-| G-2 | **`assumed` values quietly becoming load-bearing.** 9 parameters carry assumed values today | **medium** | Every number computed from them is marked assumption-derived where it appears (`uses_assumed_parameters`). The count is reported daily and is a project-health signal |
+| G-2 | **`assumed` values quietly becoming load-bearing.** How many parameters carry one is a measured count and lives in `HANDOFF.md` §2 — derive it with `python tools/verify_parameters.py`. It read **9** here until 2026-08-24 and the registry held far more | **medium** | Every number computed from them is marked assumption-derived where it appears (`uses_assumed_parameters`). The count is reported daily and is a project-health signal |
 | G-3 | **The timebox passes without a decision.** `k.project_timebox` was 2 months to G5 — met — and no next timebox is set | **open** | None. `ROADMAP.md` §8 flags it |
 
 ## 3. Risks deliberately not carried
