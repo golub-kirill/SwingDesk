@@ -1799,7 +1799,14 @@ is for where no gate can reach.
 - [ ] **`[c]` 6 specified components awaiting activation** — pivots (M12-T0201, M12-T0202), moving
       average (M25-T0382), regime (M30-T0450), breadth (M31-T0459), trend (M33-T0485). All have real
       implementations.
-- [ ] **`[c]` `tools/` under mypy** (100 errors, 21/28 files) · structured logging · backup/restore ·
+- [ ] **`[v]` `tools/` under mypy** ~~(100 errors, 21/28 files)~~ — **re-measured 2026-08-25:
+      242 errors across 43 files**, and the old figure was stale in both terms because `tools/` grew.
+      Derive it, never from here: `PYTHONPATH=$PWD/src python -m mypy tools/`. **Most are
+      `Missing type arguments for generic type`**, which is volume rather than risk. The tools this
+      session added are clean, checked individually; the sweep itself is deliberately not started,
+      because `tools/` is where a parallel effort is most likely to be editing at any moment and 43
+      files of annotation churn is the worst possible merge surface (`AGENTS.md` §10.1) ·
+      structured logging · backup/restore ·
       chaos scenarios · breadth card (parked) · `sizing.py` cost-model swap.
 
 ### Correctness findings from the 2026-08-15 review — all `[v]`

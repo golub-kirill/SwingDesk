@@ -66,8 +66,9 @@ def _date_literals(tree: ast.AST) -> list[tuple[int, str]]:
             )
             if (name in DATE_CONSTRUCTORS and len(node.args) >= 3
                     and all(isinstance(arg, ast.Constant) for arg in node.args)):
-                rendered = ", ".join(str(arg.value) for arg in node.args  # type: ignore[attr-defined]
-                                     if isinstance(arg, ast.Constant))
+                rendered = ", ".join(
+                    str(arg.value) for arg in node.args if isinstance(arg, ast.Constant)
+                )
                 found.append((node.lineno, f"{name}({rendered})"))
         elif isinstance(node, ast.Constant) and isinstance(node.value, str):
             if _is_date_string(node.value):

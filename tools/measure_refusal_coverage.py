@@ -87,7 +87,7 @@ def _sites(path: Path) -> dict[int, tuple[int, str, bool]]:
 
 def main() -> int:
     src = REPO / "src"
-    targets: dict[str, dict[int, tuple[int, str]]] = {}
+    targets: dict[str, dict[int, tuple[int, str, bool]]] = {}
     for path in sorted(src.rglob("*.py")):
         sites = _sites(path)
         if sites:
