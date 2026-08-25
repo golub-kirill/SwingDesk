@@ -2588,7 +2588,7 @@ def _mutant(**overrides: object):
     from verify_invariant_tests import Mutant
 
     fields = {
-        "invariant": 2,
+        "claim": "invariant 2",
         "breaks": "open risk is clamped at zero",
         "path": "swingdesk/contracts/position.py",
         "old": "return (self.entry_price - self.current_stop) * self.shares",

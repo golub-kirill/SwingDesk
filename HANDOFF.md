@@ -169,7 +169,6 @@ once did).
 
 - `claude/inspiring-colden-2e8e16`
 - `claude/swingdesk-open-tasks-2001c8`
-- `claude/handoff-final`
 - `claude/state-block-from-the-run`
 - `claude/swingdesk-tasks-cl-perf-707e67`
 

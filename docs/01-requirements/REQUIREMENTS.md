@@ -24,7 +24,7 @@ justified deviation, **MAY** is an option.
 |---|---|---|
 | `REQ-DATA-001` | The event calendar MUST be a point-in-time dataset with the same bitemporal semantics as market data. **No event date may appear as a literal in executable code.** Every record carries `source_id`, `known_from`, `checksum`. | **partially met** — no date literals in `src/` (verified); no event calendar exists at all (`EVENT_SPEC.md` §4) |
 | `REQ-DATA-002` | A missing or stale critical input MUST NOT silently become zero or a neutral value. It MUST produce `UNKNOWN`; on a live path a critical `UNKNOWN` MUST produce `NO_TRADE`. | **met** — components refuse rather than default (`INVARIANTS.md` #9); ATR emits `None` before warm-up |
-| `REQ-VALIDATION-001` | Every gate, veto or eligibility filter MUST have a pair of inputs producing different verdicts. An object whose verdict is invariant across all inputs MUST NOT reach runtime. | **partially met** — gate 3g enforces the narrow half for criteria (2026-08-08); no mutation testing. See §2 |
+| `REQ-VALIDATION-001` | Every gate, veto or eligibility filter MUST have a pair of inputs producing different verdicts. An object whose verdict is invariant across all inputs MUST NOT reach runtime. | **partially met** — gate 3g enforces the narrow half for criteria (2026-08-08), and **gate 34 mutation-tests the five vetoes that evaluate on the live path** (2026-08-25), each forced to admit everything. Still partial: `k.drawdown_pause` is ratified and cannot fire, so the criteria half has no verdict to flip. See §2 |
 | `REQ-VALIDATION-002` | For an identical bar and an identical versioned config, the backtest path and the live path MUST produce an identical `Decision`. Divergence MUST fail the build. | **NOT met, and structurally so** — see §3 |
 | `REQ-OUTPUT-001` | Every numeric value in a decision output MUST carry its source identifier — estimate version, cohort key, or model reference. A value without provenance MUST NOT be displayed. | **largely met** — `ParameterUse` travels with every computed value; the report marks `assumed` inputs adjacent to the number |
 | `REQ-EVIDENCE-001` | Assigning a validation stage MUST reference a validation run that actually executed in an automated pipeline. An implemented-but-uncalled validation function MUST NOT justify a stage. | **NOT met, and 2026-08-16 proved why it matters.** The single `validated:` assignment in this tree — `regime.classifier_rule` = `validated:PR-002` — referenced a run that executed but whose verdict violated its own pre-registered decision rule; nothing enforced the link and nothing checked the verdict against the branches the prereg registered. The parameter is now `assumed:PR-002` and **no parameter holds a validation stage**. The requirement is unenforced, not satisfied |
@@ -60,9 +60,30 @@ because a typo there would exempt the row from the first check, which would make
 weaker rather than loudly wrong. All three were mutation-checked against a deliberately broken
 registry before the gate was trusted.
 
-**The second half — mutation testing — still does not exist**, and it needs a corpus of evaluated
+~~**The second half — mutation testing — still does not exist**, and it needs a corpus of evaluated
 criteria before it can. Nothing evaluates these yet, so a mutation gate here would have nothing to
-flip.
+flip.~~
+
+**BUILT 2026-08-25 as gate 34, and the premise above had gone stale rather than been wrong.** It was
+written when no veto evaluated anything. `DR-006` then wired the concurrent-position, open-risk,
+correlation and sector caps into the live path (2026-08-22/23) and `DR-015` wired the staleness gate
+(2026-08-18), so a corpus arrived and nobody re-read this paragraph — which is `AGENTS.md` §12's
+*"a citation that was correct when written, still standing after the fact it cites moved"*.
+
+Each of those five vetoes is now forced to **admit everything** — the exact shape of TradAlert's
+`if is_long: return True` — against a scratch copy of `src/`, and a named test must go red. All five
+are caught. Derive it, never quote it from here:
+
+```bash
+python tools/verify_invariant_tests.py
+```
+
+**What is still not covered, and it is the half this requirement was written about.** The
+requirement says *"every gate, veto or eligibility filter"*, and ratified CRITERIA are not vetoes in
+code. `k.drawdown_pause` cannot fire at all — nothing computes realised drawdown — so there is no
+verdict to flip and no mutant to write. The gate names that omission on every run rather than
+counting it as covered, and `TODO.md` §1 carries it as open work. **The status below stays
+`partially met` because of it.**
 
 ## 3. `REQ-VALIDATION-002` — backtest and live are two code paths today
 

@@ -1704,9 +1704,17 @@ is for where no gate can reach.
       invariant broke"*, and for invariant 1 that was false for three weeks — the named test
       asserted `(net/x)*x == net`. Gate 8 says the tests pass; **nothing said they could fail**, and
       the document is what a reader trusts.
-      Ten mutants over seven invariants, each a committed source edit applied to a **scratch copy**
-      of `src/` — which matters here because two of them land in `trade_management/sizing.py`, a
-      frozen file. All ten are killed today. Runtime ~15 s.
+      Fifteen mutants, each a committed source edit applied to a **scratch copy** of `src/` — which
+      matters here because two of them land in `trade_management/sizing.py`, a frozen file. All
+      fifteen are killed today. Runtime ~20 s.
+      **It also closes the half of `REQ-VALIDATION-001` that `REQUIREMENTS.md` §2 called impossible.**
+      That paragraph said mutation testing *"needs a corpus of evaluated criteria before it can.
+      Nothing evaluates these yet, so a mutation gate here would have nothing to flip."* It was
+      correct when written and went stale: `DR-006` wired the concurrent-position, open-risk,
+      correlation and sector caps into the live path and `DR-015` wired the staleness gate. All five
+      are now forced to **admit everything** — TradAlert's `if is_long: return True`, which passed
+      seven audits — and a named test catches each. **Still `partially met`**: the requirement also
+      covers ratified criteria, and `k.drawdown_pause` has no verdict to flip (§1 above).
       **A mutation site that no longer matches is a FAILURE, not a skip**: refactoring the line a
       mutant targets is exactly when the check must speak up.
       Invariants 4 and 7 have no mutant — a signature and a pure function — and the gate names them
