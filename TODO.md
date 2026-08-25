@@ -1674,6 +1674,22 @@ is for where no gate can reach.
       ```bash
       PYTHONPATH=$PWD/src python tools/verify_checklist_blockers.py
       ```
+- [x] **`[v]` GATE 33 — a live branch rewriting the lines you are rewriting. Built 2026-08-25,
+      the day it fired on this session.** Gate 16 makes a sibling worktree VISIBLE; it does not say
+      the sibling is editing your paragraph. Both trees corrected `RISK_REGISTER.md` D-3 and the
+      Canadian row of `UX_TASK_FLOWS.md` on 2026-08-25, two hours apart, with gate 16 green and both
+      sessions having read the branch list. Reading the sibling's commit SUBJECTS did not reveal it,
+      because they named its other work; reading its DIFF would have, in one command.
+      Overlaps are computed in **merge-base coordinates**, so a hit means both trees rewrote the
+      same original text rather than merely touched the same file — two sessions appending to
+      different parts of this file do not collide and are not reported.
+      **Advisory, and it must stay advisory**: parallel work is normal here and vetoing an overlap
+      would block ordinary work, which is how a gate gets bypassed (`CI_POLICY.md` §3).
+      **It does not run in CI** — a shallow clone has no siblings — and it says so rather than
+      reporting clean, the same handling as gate 29's cross-branch half.
+      ```bash
+      python tools/verify_sibling_edits.py
+      ```
 - [ ] **`[c]` Gate 10** (traceability) — unblocked now that ATR is active, still to build.
 - [ ] **`[c]` Gate 22** + `DR-008`'s remaining machinery · **Gate 14's word-number hole.**
 - [ ] **`[c]` 6 specified components awaiting activation** — pivots (M12-T0201, M12-T0202), moving

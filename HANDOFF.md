@@ -38,9 +38,13 @@ would otherwise assume, and each was measured rather than argued.**
    report twice and `PR-001`'s own registration once, where the qualifier survives the first clause
    of a sentence and dies in the second. `PR-001` §10's third amendment counts them and names the
    command that re-derives the split.
-   **The citations were swept the same day and four live documents were stale**: `RISK_REGISTER.md`
-   D-3 and D-1, `ROADMAP.md` §5 and `UX_TASK_FLOWS.md`. D-3 had it at **high / accepted** — a risk
-   accepted after it stopped existing is the entry that stops anyone trying.
+   **The citations were swept and live documents were stale** — `ROADMAP.md` §5 is corrected here;
+   `RISK_REGISTER.md` D-3 and `UX_TASK_FLOWS.md` were corrected on
+   `claude/swingdesk-open-tasks-2001c8` two hours before this tree reached them, **and both trees
+   found it independently**, which is `POSTMORTEM-2026-08-09.md` root cause A repeating with gate 16
+   green. Those two rows are deliberately left at `master`'s text on this branch so the sibling's
+   version merges without a conflict; `tools/verify_sibling_edits.py` is the check that would have
+   said so at the start.
    **What blocks Canada now is a fetch nobody has run**, and §2's `Canada` row owns the number: the
    directory holds zero `.TO` symbols and the bar store holds one `.TO` instrument, fetched once on
    2026-08-02 and never refreshed.
@@ -99,8 +103,8 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 
 | | |
 |---|---|
-| Merge gates | **36**, one command: `python tools/check_gates.py` |
-| Tests | **891**, fully offline |
+| Merge gates | **37**, one command: `python tools/check_gates.py` |
+| Tests | **894**, fully offline |
 | Docs | 122 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 459 registered · 5 `specified` · **1 `active`** |
 | Parameters | 106 - 61 `unset`, 34 `assumed`, 11 `owner`, **0 `validated`** |

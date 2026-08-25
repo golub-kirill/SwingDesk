@@ -2493,3 +2493,88 @@ def test_blocker_gate_names_the_reasons_it_cannot_pin(tmp_path: Path) -> None:
     assert code == 0, out
     assert "E03 data_freshness" in out
     assert "E05 sector_benchmark" in out
+
+
+# ------------------------------------------- gate 33: two live branches rewriting the same lines
+
+
+def _sibling_tree(tmp_path: Path, mine: str, theirs: str) -> Path:
+    """A trunk, and two live branches that each rewrite one line of the same file.
+
+    `mine` and `theirs` replace a distinct marker line, so which lines overlap is decided by the
+    fixture rather than by the diff engine's whitespace judgement.
+    """
+    def git(*args: str) -> None:
+        subprocess.run(
+            ["git", "-C", str(tmp_path), "-c", "user.email=t@t", "-c", "user.name=t", *args],
+            capture_output=True, check=True,
+        )
+
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    target = tmp_path / "shared.md"
+    target.write_text("\n".join(f"line {n}" for n in range(1, 11)) + "\n", encoding="utf-8")
+    git("init", "-b", "master")
+    git("add", "-A")
+    git("commit", "-m", "trunk")
+
+    git("checkout", "-b", "sibling")
+    target.write_text(target.read_text(encoding="utf-8").replace("line 9", theirs), encoding="utf-8")
+    git("add", "-A")
+    git("commit", "-m", "sibling edit")
+
+    git("checkout", "master")
+    git("checkout", "-b", "mine")
+    target.write_text(target.read_text(encoding="utf-8").replace("line 9", mine), encoding="utf-8")
+    git("add", "-A")
+    git("commit", "-m", "my edit")
+    return tmp_path
+
+
+def test_sibling_gate_reports_two_branches_rewriting_one_line(tmp_path: Path) -> None:
+    """The 2026-08-25 instance: gate 16 green, and two trees rewrote the same table rows.
+
+    Both branches change base line 9, so the overlap is real rather than same-file coincidence.
+    """
+    root = _sibling_tree(tmp_path, mine="mine rewrote it", theirs="sibling rewrote it")
+    code, out = run_gate("verify_sibling_edits.py", root)
+    assert code == 0, out          # advisory: it reports and never vetoes
+    assert "shared.md" in out
+    assert "`sibling`" in out
+    assert "1 overlap(s)" in out
+
+
+def test_sibling_gate_is_quiet_when_the_branches_touch_different_lines(tmp_path: Path) -> None:
+    """Same file, different text. Two sessions appending to `TODO.md` must not be reported."""
+    def git(*args: str) -> None:
+        subprocess.run(
+            ["git", "-C", str(tmp_path), "-c", "user.email=t@t", "-c", "user.name=t", *args],
+            capture_output=True, check=True,
+        )
+
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    target = tmp_path / "shared.md"
+    target.write_text("\n".join(f"line {n}" for n in range(1, 11)) + "\n", encoding="utf-8")
+    git("init", "-b", "master")
+    git("add", "-A")
+    git("commit", "-m", "trunk")
+    git("checkout", "-b", "sibling")
+    target.write_text(target.read_text(encoding="utf-8").replace("line 9", "theirs"), encoding="utf-8")
+    git("add", "-A")
+    git("commit", "-m", "sibling edit")
+    git("checkout", "master")
+    git("checkout", "-b", "mine")
+    target.write_text(target.read_text(encoding="utf-8").replace("line 2", "mine"), encoding="utf-8")
+    git("add", "-A")
+    git("commit", "-m", "my edit")
+
+    code, out = run_gate("verify_sibling_edits.py", tmp_path)
+    assert code == 0, out
+    assert "0 overlap(s)" in out
+
+
+def test_sibling_gate_says_it_did_not_run_rather_than_reporting_clean(tmp_path: Path) -> None:
+    """No git, no siblings, no claim. Gate 29's handling, for the same reason."""
+    code, out = run_gate("verify_sibling_edits.py", tmp_path)
+    assert code == 0
+    assert "DID NOT RUN" in out
+    assert "not a clean result" in out

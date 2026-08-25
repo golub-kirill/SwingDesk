@@ -48,7 +48,7 @@ fetch budget forced a weekly/daily split (`ROADMAP.md` §4) and Appendix T had a
 | Item | State |
 |---|---|
 | data and broker reconciled | **half.** The data half is `fetch_directory` + `refresh_universe`. There is no broker integration and there will not be one — D1 makes this decision support, and §4 explains why the *reconciliation* still matters |
-| USA/Canada regime determined | **no.** The classifier exists (M30-T0450) and is not wired into the run; and Canada has no stored bars, so the phrase's two halves fail for different reasons. ~~Canada cannot be enumerated at all (`DR-003` gap 1)~~ — **refuted 2026-08-25**, and *"at all"* was always stronger than `DR-003` said: TMX serves its own directory free (`python tools/probe_canada.py --full`), so the Canadian half fails on coverage now, not on enumeration |
+| USA/Canada regime determined | **no.** The classifier exists (M30-T0450) and is not wired into the run; and Canada cannot be enumerated at all (`DR-003` gap 1), so the phrase's two halves fail for different reasons |
 | sector map, commodities, CADUSD | **no.** `Instrument.sector` is `None` — no free point-in-time sector source is in hand. No FX series |
 | open positions and events updated | **half.** Positions: yes, read as-of. Events: no source at all (`EVENT_SPEC.md`) |
 | weekly watchlist and risk budget | **half.** The universe selection is the watchlist; the risk budget needs `risk.max_open_risk` and friends, and `DR-006` ratified them on 2026-08-22 — the budget is now computed and enforced (`trade_management/portfolio.py`), while the *weekly* cadence the course asks for is still not a thing this system has |

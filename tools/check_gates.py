@@ -170,6 +170,8 @@ def main() -> int:
                               [python, "tools/verify_rules_home.py"]),
         "32 checklist blockers": _run("a checklist item's stated blocker is still blocking",
                                       [python, "tools/verify_checklist_blockers.py"]),
+        "33 sibling edits": _run("no live branch is rewriting the same lines (advisory)",
+                                 [python, "tools/verify_sibling_edits.py"]),
     }
 
     print("\n" + "=" * 62)
