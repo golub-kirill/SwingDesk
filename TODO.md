@@ -819,7 +819,12 @@ decision names an implementer, never that the implementer implements the decisio
       it, and there is nothing to bypass. Two collectors can run at once today.
       • **Checksums** — *"non-empty parse and checksum creation before either becomes canonical"*.
       No checksum exists anywhere in the collector or the store.
-      • **Retry** — *"It may retry one failed attempt after 60 seconds."* `_download` has no retry.
+      • **Retry — NOT a gap, and this line said otherwise for an hour.** *"It **may** retry one
+      failed attempt after 60 seconds"* is a CEILING, not an obligation — §"rejected alternatives"
+      lists *"unlimited retry inside one command"* as the thing it bounds. `_download` retries zero
+      times, which is inside the ceiling and therefore compliant. Recorded rather than deleted
+      because reading a permission as a requirement is how a clean implementation acquires an
+      imaginary defect, and this audit was written to stop the opposite error.
       • **The committed machine-readable policy** — *"The source URLs, retry budget, timeouts, cap
       and staleness levels live in one committed machine-readable policy and are merge-gated."*
       They are Python literals in `tools/fetch_directory.py`; `registry/` holds no such file and no
@@ -1827,7 +1832,30 @@ is for where no gate can reach.
       `ClassificationStore.as_of` + `look_through` — the same reader the pipeline uses, so a
       coverage number measured there is the coverage the cap actually has.
 - [ ] **`[c]` Gate 10** (traceability) — unblocked now that ATR is active, still to build.
-- [ ] **`[c]` Gate 22** + `DR-008`'s remaining machinery · **Gate 14's word-number hole.**
+- [ ] **`[c]` Gate 22** + `DR-008`'s remaining machinery — see §2 for what of `DR-008` is built and
+      what is not.
+- [x] **`[v]` GATE 14'S WORD-NUMBER HOLE — BUILT, MEASURED, AND REVERTED 2026-08-25. The hole is
+      real and pattern-matching is the wrong fix.** Recorded because the next session will have the
+      same idea.
+      **What was built:** every check's `(\d+)` generalised to digits-or-words, one to ninety-nine,
+      with an `as_int` that reads `36`, `thirty-six` and `Thirty Six` alike. It worked.
+      **What it found on the real tree: 19 failures and ZERO real drift.** Every one was a subset
+      statement or history — `RULE_SPEC.md` *"Three tests, one pair of verdicts"* (three specific
+      tests), `PR-005` *"compare five gates through six exit rules"* (the study's GATING ARMS, not
+      merge gates), `CI_POLICY.md` *"the two gates whose subject is change over time"*, `DR-006`
+      *"passed sixteen gates"* (historical), and `HANDOFF.md` §2's own quotation of the defect.
+      **The reason is structural, and it is why the digit form works as well as it does.** English
+      prose spells small numbers out, and a small number in prose is almost always a count of
+      SPECIFIC THINGS rather than a census. `(\d+)` is an accidental but effective discriminator
+      between the two, and removing it removes the discrimination, not the blind spot.
+      **What actually closed the hole was generation, not matching.** The instance that motivated
+      this — *"Twenty-two gates"*, wrong for as long as it took someone to notice by eye — sat in
+      `HANDOFF.md` §2, and §2 is generated now (gate 24). A number that is recomputed cannot be
+      stale in any spelling.
+      **What is left of the hole, stated so it is not re-opened by accident:** a census spelled in
+      words, in a document that is not §2. The ownership half of gate 14 would catch it *if* the
+      pattern matched — and the measurement above is that making the pattern match costs 19 false
+      positives to buy that. `CI_POLICY.md` §3 records what a noisy gate is worth.
 - [ ] **`[c]` 6 specified components awaiting activation** — pivots (M12-T0201, M12-T0202), moving
       average (M25-T0382), regime (M30-T0450), breadth (M31-T0459), trend (M33-T0485). All have real
       implementations.
