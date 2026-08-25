@@ -1760,6 +1760,18 @@ is for where no gate can reach.
 - [x] **`[v]` Two tools claimed gate 16 — fixed 2026-08-25.** `verify_studies.py`'s docstring opened
       *"Gate 16"*; that is `verify_branches.py`'s number, and both `check_gates.py` and `CI_POLICY.md`
       call `verify_studies.py` gate 3f. One line, and the kind that sends a session to the wrong file.
+- [x] **`[v]` GATE 35 — a document naming a test must name one that exists. Built 2026-08-25.**
+      `INVARIANTS.md` §1 and `REQUIREMENTS.md` §7 both argue enforcement by naming a test, and a
+      reader takes the name as proof. **Renaming a test is ordinary, safe work that no other gate
+      would notice**, and it silently falsifies the documents a reader trusts to know what is
+      enforced. Gate 28's shape aimed at a different subject.
+      Measured before building: **23 names cited across the governed documents, 0 unresolved.** So
+      this is prevention, and it costs nothing while the answer stays zero.
+      Append-only stores are excluded — gate 20 already covers a decision record's `implemented_by`
+      marker — and a line marked as history is left alone, the same convention as gate 28.
+      ```bash
+      python tools/verify_cited_tests.py
+      ```
 - [ ] **`[c]` Gate 10** (traceability) — unblocked now that ATR is active, still to build. **Weighed
       and not built 2026-08-25**, with the reason recorded so it is not re-derived: its three checks
       are *a course id with no requirement row*, *a requirement with no test*, and *a spec id cited

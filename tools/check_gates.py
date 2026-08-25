@@ -140,6 +140,8 @@ def main() -> int:
                                  [python, "tools/verify_sibling_edits.py"]),
         "34 invariant tests": _run("the tests INVARIANTS names can actually fail",
                                    [python, "tools/verify_invariant_tests.py"]),
+        "35 cited tests": _run("a document naming a test names one that exists",
+                               [python, "tools/verify_cited_tests.py"]),
     }
 
     print("\n" + "=" * 62)

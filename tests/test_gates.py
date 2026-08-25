@@ -2729,3 +2729,56 @@ def test_date_literal_gate_does_not_flag_ordinary_numbers_or_text(tmp_path: Path
     )
     code, out = run_gate("verify_no_wall_clock.py", root)
     assert code == 0, out
+
+
+# ----------------------------------------- gate 35: a cited test must be a test that exists
+
+
+def _cited_tree(tmp_path: Path, prose: str, *, defined: str = "test_a_real_one") -> Path:
+    """One document making `prose`, and a suite defining `defined`."""
+    (tmp_path / "docs" / "06-engineering").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "06-engineering" / "SPEC.md").write_text(
+        f"# Spec\n\n{prose}\n", encoding="utf-8"
+    )
+    (tmp_path / "tests").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "tests" / "test_thing.py").write_text(
+        f"def {defined}() -> None:\n    assert True\n", encoding="utf-8"
+    )
+    return tmp_path
+
+
+def test_cited_test_gate_catches_a_test_that_no_longer_exists(tmp_path: Path) -> None:
+    """`INVARIANTS.md` §1 names a test per invariant; a rename would falsify it silently."""
+    root = _cited_tree(tmp_path, "Invariant 1 is enforced by `test_that_was_renamed`.")
+    code, out = run_gate("verify_cited_tests.py", root)
+    assert code == 1
+    assert "names `test_that_was_renamed`" in out
+
+
+def test_cited_test_gate_accepts_a_test_that_exists(tmp_path: Path) -> None:
+    """The positive control on the same fixture."""
+    root = _cited_tree(tmp_path, "Invariant 1 is enforced by `test_a_real_one`.")
+    code, out = run_gate("verify_cited_tests.py", root)
+    assert code == 0, out
+    assert "0 failure(s)" in out
+
+
+def test_cited_test_gate_leaves_a_line_marked_as_history_alone(tmp_path: Path) -> None:
+    """A removal announcing itself is not drift. Same convention as gate 28."""
+    root = _cited_tree(tmp_path, "~~Enforced by `test_that_was_renamed`~~ — REMOVED 2026-08-25.")
+    code, out = run_gate("verify_cited_tests.py", root)
+    assert code == 0, out
+
+
+def test_cited_test_gate_does_not_police_the_append_only_stores(tmp_path: Path) -> None:
+    """A decision record states what was true when accepted; gate 20 covers its markers."""
+    (tmp_path / "docs" / "decisions").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "decisions" / "DR-999-x.md").write_text(
+        "Proved by `test_that_was_renamed`.\n", encoding="utf-8"
+    )
+    (tmp_path / "tests").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "tests" / "test_thing.py").write_text(
+        "def test_a_real_one() -> None:\n    assert True\n", encoding="utf-8"
+    )
+    code, out = run_gate("verify_cited_tests.py", tmp_path)
+    assert code == 0, out
