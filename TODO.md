@@ -459,10 +459,19 @@ target is a sentence asserting something about the WORLD that nobody tested.
       may invent one**; set `SWINGDESK_EDGAR_CONTACT` and the route opens.
       **Then it is a measurement, not a study**: it describes the universe and evaluates no strategy,
       so it spends no trial.
-- [ ] **`[v]` "A fourth estimator is the same family."** `HANDOFF.md` §7's spread row. Three
-      estimators were measured and that part is evidence; the fourth-estimator clause is a
-      **prediction** and it closes the search (§15 rule 3). Either name the property that makes it
-      true of the family, or demote it from the `do not re-open` table to a prior.
+- [x] **`[v]` "A fourth estimator is the same family" — AUDITED 2026-08-25, and it SURVIVES.**
+      The clause read as a bare prediction closing a search. It is not: `PR-010` §"What this
+      establishes" carries a mechanism, and the row now states it. **Each estimator's zero-spread
+      floor is calibrated at THIS universe's measured volatility**, so the floor is a property of
+      the INPUT rather than of the estimator's construction — which is why both estimators read
+      *less* on the real universe than on a spreadless series. Any method inferring a spread from
+      daily OHLC infers it from price variation, and here volatility's contribution swamps the
+      spread's.
+      **And the "fourth" is concrete rather than hypothetical:** the same `bidask` package ships
+      Roll (1984) and the generalized OHL / OHLC / CHL / CHLO variants. The mechanism covers them,
+      so trying one is predicted to reproduce the floor, not to escape it.
+      **What would overturn it** is therefore not a new estimator but a different INPUT — intraday
+      quotes, or `PR-006`'s real fills, which is what the row already names as the only route left.
 - [ ] **`[v]` "Batching the vendor is not the next lever."** Measured and correct about batching -
       and it then names CONCURRENCY as the real lever and stops, calling it *"a different kind of
       decision"*. §15 rule 4 and §14: that is a question for the owner, not a parking space. The
