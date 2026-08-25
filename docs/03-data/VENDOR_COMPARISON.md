@@ -205,6 +205,12 @@ That satisfies a course requirement that Yahoo alone cannot meet.
 7. **Survivorship bias is a property of the free path, not a vendor choice.** No free source
    examined serves delisted instruments. Every backtest result on this path carries it, and the
    evidence record must say so rather than the result being quietly quoted without it.
+   **Amended 2026-08-24: this row said "examined", and a source that had not been examined answers
+   half of it.** SEC EDGAR serves every filer back to 1993, free, official, no registration - a
+   delisted issuer's submissions record carries empty ticker and exchange lists and its Form 25 or
+   25-NSE dates the event (`tools/probe_edgar.py`). So the FACT and DATE of a delisting are
+   obtainable and the PRICE PATH still is not. The row stands for prices, which is what a backtest
+   needs to compute a return, and no longer stands for the universe.
 8. **Two hard requirements have no source at all yet**: earnings `confirmed / estimated` status
    (M34-T495) and true index breadth (M31-T457). Universe-breadth computed in-house is a legitimate
    substitute only if it is labelled as what it is.

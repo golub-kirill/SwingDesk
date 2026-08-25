@@ -308,9 +308,21 @@ to everything passes a one-sided test, and that is the inert-gate defect `REQ-VA
 - [ ] **No expectation estimate exists**, so §5's probability row has no source. The agent cannot
       state an outcome probability at all until `COVERAGE_AUDIT.md`'s expectation/baseline work
       lands, and it should refuse rather than approximate.
-- [ ] **Nothing here is gated.** The prohibitions in §2 and §3 are prose. At minimum, the controlled
-      vocabulary should be checkable against agent output automatically, in the way gate 2 checks
-      verbatim blocks — a spec that only a careful reader enforces is what §1's chain diagram exists
-      to avoid.
+- [ ] **Nothing here is gated.** ~~The prohibitions in §2 and §3 are prose.~~ **HALF CLOSED
+      2026-08-24: `application/ai_guard.py` exists and is the mechanical half.** It refuses the
+      decision vocabulary, the management vocabulary and any numeral the deterministic path did not
+      produce, and it reads **both vocabularies from their enums** — `journal.DECISIONS` and
+      `ActionKind` — so adding a state extends the guard automatically rather than silently leaving
+      it behind. Covered by `tests/test_ai_guard.py`, and the drift case is proven rather than
+      asserted: hard-coding either vocabulary turns several of those tests red.
+      **It found a modelling fact while being tested:** `Pause` belongs to BOTH vocabularies, so an
+      overlap is reported under both clauses rather than under whichever check ran first —
+      `DECISION_STATE_MACHINE.md` §3 warns these enums share words for different objects.
+      **STILL OPEN, and this is why the item is not ticked.** §3a clause 1 forbids *"any synonym,
+      paraphrase, translation, colour, emoji or score that maps onto it one-to-one"*, and **none of
+      that is mechanically detectable**. An agent writing *"this one is ready to go"* passes every
+      check and has decided. The guard is **necessary and not sufficient**, two tests assert exactly
+      that hole so it stays known rather than being rediscovered, and A-001's standing condition is
+      therefore not discharged.
 - [ ] **Model governance** — the model record, evaluation suite and approved-action list from ТЗ §38
       — follows this document. It is not written and must not be written first.

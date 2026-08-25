@@ -11,6 +11,7 @@ becomes "traded on stale data".
 
 from __future__ import annotations
 
+import sys
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from typing import SupportsFloat
@@ -77,6 +78,7 @@ def fetch(
     # value is stored and read back it may come out in any timezone, and its .date() would then be
     # wrong (CALENDAR_SPEC 6).
     bars: list[Bar] = []
+    dropped: list[str] = []
     for stamp, row in frame.iterrows():
         local = stamp.to_pydatetime()
         session_date = local.date()
@@ -95,12 +97,36 @@ def fetch(
                 volume=int(row["Volume"]),
                 knowledge_time=knowledge_time,
             )
-        except (ValueError, InvalidOperation, TypeError):
-            # A malformed row is dropped and the session then fails the completeness check, which
-            # is the correct place for it to surface - as a coded DATA finding, not an exception
-            # three layers up.
+        except (ValueError, InvalidOperation, TypeError) as invalid:
+            # A malformed row is dropped rather than raised three layers up - but it is NAMED.
+            #
+            # This comment used to say the session "then fails the completeness check, which is the
+            # correct place for it to surface". That was false, and `DR-015` §2.2 had already
+            # recorded why: completeness looks for a hole INSIDE the stored window, and a series
+            # whose newest row was dropped simply ends early, which is not a hole. So the drop was
+            # invisible - the report said `completeness clean` over a series one bar short.
+            #
+            # Reported on stderr because that is where the rest of a scheduled run's vendor facts
+            # go: `daily_run.cmd` redirects it into `data/daily_run.log`. Naming the field costs a
+            # line and is the difference between "the vendor is late" and "the vendor sent
+            # something we refused", which are different problems with different fixes.
+            # Collapsed to one line: a pydantic `ValidationError` renders over several, and a log
+            # that spends six lines per refused row per instrument is one nobody reads.
+            reason = " ".join(str(invalid).split())
+            dropped.append(f"{session_date} ({type(invalid).__name__}: {reason[:120]})")
             continue
         bars.append(bar)
+
+    if dropped:
+        # Bounded, because a vendor-wide malformation would otherwise write one line per session per
+        # instrument into the evening's log. The count is the fact; the first few carry the reason.
+        shown = ", ".join(dropped[:3])
+        more = f", and {len(dropped) - 3} more" if len(dropped) > 3 else ""
+        print(
+            f"vendor row(s) refused  {instrument.vendor_symbol} {interval.value}: "
+            f"{len(dropped)} of {len(frame)} rows failed validation - {shown}{more}",
+            file=sys.stderr,
+        )
 
     if not bars:
         raise VendorUnavailable(

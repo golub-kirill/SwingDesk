@@ -1,6 +1,8 @@
 # TODO — the single open-work list
 
-**Status:** working document · **Owner:** shared · **Last reconciled:** 2026-08-17
+**Status:** working document · **Owner:** shared · **Last reconciled:** 2026-08-25
+
+**Provenance marks are a claim about THIS file, so the reconciliation date is too.** Items touched on 2026-08-24/25 carry `[v]` on the strength of a check made then; everything older kept the mark it had. A `[c]` is an *unverified* item, not a smaller one, and promoting it means checking it rather than retyping it.
 
 This is the **only** place open and pending work is listed. If a task is not here, it is not tracked.
 Sessions add and close items here; nowhere else keeps a parallel list.
@@ -26,6 +28,47 @@ retyping it.
 ---
 
 ## 1. Blocking now
+
+### THE ONLY RATIFIED LIVE CRITERION CANNOT FIRE — found 2026-08-24
+
+- [ ] **`[v]` `k.drawdown_pause` is ratified, scope `live`, and nothing enforces it.**
+      `registry/criteria.yml` ratifies it: trigger *"Realised drawdown exceeds
+      `validation.max_allowable_drawdown`"*, action *"Pause - not kill. Reduce size per the risk-off
+      ladder and review."* The threshold is **owner-set at 20** percent of equity.
+      **Nothing in `src/` computes realised drawdown.** Two matches for the word exist in the whole
+      package and both are prose inside a study's docstring. The parameter's `read_by` is `none`.
+      **And its ACTION is unreachable too:** it prescribes the risk-off ladder, and
+      `risk.risk_off_ladder` is itself `unset` with no reader.
+      **Every gate passed over it, and each for a defensible reason.** Gate 3g checks that a
+      criterion's inputs EXIST - the value is there, so it passes, and its own docstring says it
+      checks existence rather than discrimination. Gate 1 accepts `read_by: none` because `none` is
+      honest and many parameters legitimately precede their consumer. Neither asks whether a
+      RATIFIED criterion can fire.
+      **It was the only criterion with scope `live`**, so this was not one of several - it was all of
+      them. Derive the current set:
+      ```bash
+      PYTHONPATH=$PWD/src python tools/verify_parameters.py
+      ```
+      which now prints the cited-by-a-ratified-criterion subset of the unwired parameters on every
+      run, so the finding cannot be lost again the way it was found.
+      **Harmless today and only today.** `DR-014` rules no owner capital and there are no positions,
+      so no drawdown exists to breach anything. The moment a position is opened, the project's own
+      kill switch is decorative.
+      **What closing it needs is bigger than a wiring job and touches owner decisions**: realised
+      drawdown needs an account-equity concept and an equity curve, and the store holds neither.
+      Fills are recorded per position; nothing aggregates them into equity. Starting capital,
+      mark-to-market versus realised-only, and whether the curve is per-account or per-strategy are
+      all decisions, not implementation details.
+      **Do not set a number to make a gate green.** The threshold is already set; what is missing is
+      the measurement, and inventing an equity definition to satisfy a criterion would be the
+      `AGENTS.md` §3 failure - a thing looking more validated than it is.
+
+- [ ] **`[c]` `risk.liquidity_cap_order_to_adtv_pct` is owner-set at 1.0 and read by nothing.**
+      The second owner-set orphan. Measured context from `DR-003`'s addendum: at the current account
+      size a position is a median 0.0026% of one session's dollar volume, so the cap is nowhere near
+      binding and would only begin to at roughly a $2.2M account. Unenforced rather than urgent -
+      recorded so it is not rediscovered as a surprise.
+
 
 ~~**`master` went RED on its own, 2026-08-22, and it is fixed in this branch.**~~ **CLOSED
 2026-08-22** — merged as `7f3568a` and verified on `master` 2026-08-24. Four tests in `test_cli.py`
@@ -334,6 +377,177 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
 
 ## 2. Picked work
 
+### The second pass is conditional now; its TIME is still wrong and that part is the owner's
+
+**`DR-019` built the condition** — the 19:30 pass asks the journal whether the first run refused
+anything a retry could repair, runs when it did, declines cleanly when it did not, and **runs anyway
+when it cannot tell**. Measured before building: across every evening that ran both passes the two
+runs decided byte-identically, and the failure the pass insures against has never been observed in
+this repository.
+
+- [ ] **`[v]` Move the pass later — needs the owner, and it costs an evening rather than code.**
+      Measured 2026-08-24, times local against a 15:00 close: the tail of names had no Monday bar at
+      **~3.5 h** (first pass) or **~4.5 h** (second pass), and every one of them had it at
+      **~7.1 h**. So a pass at 19:30 will keep missing what it exists to catch.
+      `docs/runbooks/README.md` §1a makes registering a scheduled task the owner's step, and the
+      task is `Logon Mode: Interactive only` — a later pass means being logged in later. That is a
+      decision about the owner's evening, not about the software.
+- [ ] **`[v]` Measure the arrival curve before moving anything.** The window above rests on **one**
+      session. Probing the vendor hourly after the close for a week costs nothing but patience and
+      turns a single observation into a distribution — and `AGENTS.md` §15 rule 1 asks exactly that
+      of a claim this load-bearing. Cheap shape: for the names the run refused, ask the vendor again
+      each hour and record when the session first appears.
+- [ ] **`[c]` The `E11` event calendar has no source.** `application/checklist.py` records that no
+      event calendar is wired **and** that the course supplies no buffer to apply if one were —
+      `screen.earnings_buffer_days` needs a decision record or a study, not a transcription. It is
+      one of the eight items keeping every candidate at `Research`
+      (`docs/08-pm/plans/2026-08-24-the-trade-flow.md` §2).
+
+
+### THE MOST EXPENSIVE IMPOSSIBILITY IN THE AUDIT: "Canada cannot be enumerated" — REFUTED 2026-08-25
+
+- [x] **`[v]` It can be enumerated. Free, no account, no key.** `python tools/probe_canada.py --full`.
+      TMX's own listed-company directory is backed by a JSON endpoint — one call per leading
+      character per exchange, returning symbol and name, and stamping its own `last_updated`.
+      **How the claim hardened, which is the transferable part.** `DR-003` gap 1 was careful and
+      honest: *"Canada has no free symbol directory **in hand** … this project **cannot presently**
+      enumerate them."* That says nobody had one, not that none exists. `PR-002`'s report then cites
+      it as *"Canada cannot be enumerated (`DR-003`)"* — unqualified — and **drops §6's requirement
+      of significance in both countries independently**, which is the requirement whose failure is
+      why `PR-002` could not reach an affirmative verdict.
+      **A qualified "not in hand" became an unqualified "cannot", and a study lost half its scope
+      to it.** Nothing was dishonest at any step; the qualifier simply did not survive the citation.
+      That is `AGENTS.md` §15 in one example, and §12's citation trap in another.
+- [ ] **`[v]` What this does NOT settle, stated before anyone over-reads it.**
+      **Point-in-time membership is untouched.** The endpoint serves TODAY's directory, and applying
+      it to old data is survivorship bias with extra steps — the same objection `DR-003`'s own table
+      raises against index membership. So this does not retroactively repair `PR-002`.
+      **Bar coverage is a separate question.** Whether the vendor serves usable history for a given
+      `.TO` symbol is not asked here, and the Canadian half of the store is empty today.
+      **It is an unofficial endpoint on a consumer site**, exactly like the bar source (`ADR-0001`),
+      and carries the same caveat: undocumented, unversioned, free to change without notice.
+- [ ] **`[v]` What it DOES unblock, and this is the reason it matters.** `DR-003` gap 1 says the
+      liquidity rule *"applies to `.TO` instruments identically"* and that the Canadian universe is
+      *"a list rather than a rule"* only because it could not be enumerated. With enumeration the
+      universe becomes a RULE on both sides, which is what `BR-9` and `AGENTS.md` §3's
+      never-merge non-negotiable both assume. A future study CAN carry a two-country requirement
+      instead of declaring it unmeetable.
+      **Needs an owner decision before anything is built**: adding a second directory source is a
+      change to what the daily run does, and `DR-008` governs how a directory is pulled, attributed
+      and audited. This entry records the refutation, not a plan.
+
+### AUDIT THE IMPOSSIBILITY CLAIMS — owner instruction, 2026-08-24, and `AGENTS.md` §15 is the rule
+
+**The ask:** *"Мы очень часто верим, что у нас нет возможности или не получается, и зарубаем на
+корню, не проверяя. Это уже не первый раз... Плюс, в планах у нас бы сделать аудит всего
+пройденного, потому что вот на таких моментах мы могли уже попадаться в других исследованиях."*
+
+**Derive the surface, never quote it from here** — every `cannot`, `no free source`, `not
+obtainable`, `impossible`, `will never`, `not the lever` in a governed document:
+
+```bash
+git ls-files '*.md' | xargs grep -nEi "cannot be|can never|is not obtainable|no free source|not possible|impossible|there is no legal|is not the (next )?lever|will never|no way to"
+```
+
+**What this is NOT.** An owner decision is not an impossibility claim. `D1` (no orders), `D10` (no
+paid data) and `CHARTER.md` §3's non-goals are *chosen*, and §15 rule 5 keeps them closed. The
+target is a sentence asserting something about the WORLD that nobody tested.
+
+**Ranked by what the claim is load-bearing for, sharpest first:**
+
+- [x] **`[v]` "No free source serves delisted history" — TESTED 2026-08-24, and it was half false.**
+      It was the load-bearing premise under the survivorship bound that erases `PR-002`, and the
+      project had named a candidate refutation — the EDGAR backfill — and parked it, so the claim
+      and its test coexisted here without anyone running one against the other.
+      **Run it yourself: `python tools/probe_edgar.py`.** SEC EDGAR keeps every filer back to 1993,
+      **free, official, no registration and no cost**. A delisted issuer's submissions record shows
+      empty ticker and exchange lists, and Form `25` / `25-NSE` dates the event. Verified against a
+      real delisting (Eagle Bulk Shipping) with a still-listed control.
+      **Access terms, measured:** no `User-Agent` returns **403**, a descriptive one returns
+      **200**. The probe transmits no address unless the operator sets `SWINGDESK_EDGAR_CONTACT`.
+      **What the CONTROL taught, and it changes how the data must be used:** Apple files Form 25 and
+      25-NSE too and is listed — those retire individual securities, not the company. So a Form 25
+      is **not** a company delisting; the field that discriminates is the empty ticker/exchange
+      list, and the form dates it.
+      **What is now measurable and what is not.** How many names vanished, and when: measurable.
+      What those trades would have returned: not — no free source serves the price path of a symbol
+      that has gone, so the −2R assumption stays an assumption. `VENDOR_COMPARISON.md` §7 and
+      `EVIDENCE_SUMMARY.md` §3 are both amended in place.
+- [ ] **`[v]` NEXT, and it needs ONE owner action first — a contact address for the SEC header.**
+      *(This item replaces a more optimistic version written an hour earlier the same day, before
+      the host boundary was measured. `AGENTS.md` §15 applies to one's own claims too.)*
+      **The measurement worth having:** `directory.duckdb` holds 18 pulls, and **87 symbols present
+      at the first pull are absent at the last** — over three weeks. `DR-008` c3 records that a
+      departure is an observation and not a delisting, *because a ticker change looks the same*.
+      **EDGAR resolves exactly that ambiguity**: a company that still files and still lists moved or
+      renamed; one with empty ticker and exchange lists and a Form 25 delisted. Classifying those 87
+      turns the project's own departure record from ambiguous into counted, and it is the first
+      empirical purchase anyone has had on the survivorship question.
+      **Eyeballing the sample already shows it is a mixture**, which is why it is worth doing rather
+      than assuming: `BBBY` plainly delisted, `AVB` is a large S&P 500 REIT and cannot have, and a
+      good share of the rest are SPAC units and warrants that "depart" on separation.
+      **The blocker, measured rather than guessed.** Lookup by CIK works today. Lookup by TICKER
+      needs `www.sec.gov/files/company_tickers.json`, and `www.sec.gov` returns **403** to a
+      descriptive `User-Agent` while `data.sec.gov` returns **200** — two probes each way. The SEC
+      asks for a contact address in the header. **That address is the owner's to supply and no agent
+      may invent one**; set `SWINGDESK_EDGAR_CONTACT` and the route opens.
+      **Then it is a measurement, not a study**: it describes the universe and evaluates no strategy,
+      so it spends no trial.
+- [x] **`[v]` "A fourth estimator is the same family" — AUDITED 2026-08-25, and it SURVIVES.**
+      The clause read as a bare prediction closing a search. It is not: `PR-010` §"What this
+      establishes" carries a mechanism, and the row now states it. **Each estimator's zero-spread
+      floor is calibrated at THIS universe's measured volatility**, so the floor is a property of
+      the INPUT rather than of the estimator's construction — which is why both estimators read
+      *less* on the real universe than on a spreadless series. Any method inferring a spread from
+      daily OHLC infers it from price variation, and here volatility's contribution swamps the
+      spread's.
+      **And the "fourth" is concrete rather than hypothetical:** the same `bidask` package ships
+      Roll (1984) and the generalized OHL / OHLC / CHL / CHLO variants. The mechanism covers them,
+      so trying one is predicted to reproduce the floor, not to escape it.
+      **What would overturn it** is therefore not a new estimator but a different INPUT — intraday
+      quotes, or `PR-006`'s real fills, which is what the row already names as the only route left.
+- [x] **`[v]` "Batching is not the lever; the lever would be concurrency" — AUDITED 2026-08-25.
+      Correct about batching, and the concurrency half needs no owner decision at all.**
+      It read as a lever named and parked, which §15 rule 4 treats as a decision nobody took. It is
+      not: **`NFR.md` §3 already rules on it, in both directions.** The table says *"Incremental
+      daily refresh ≤ 20 min ... vendor rate-limited. I/O-bound; **concurrency applies here**"* and,
+      one row down, *"Decision path ≤ 5 min ... **Not a place to optimise with concurrency**"*. So
+      whether concurrency is permitted at the fetch stage was settled before the question was asked.
+      **What blocks it is that nothing needs it.** The vendor phase is about three minutes against
+      a twenty-minute refresh budget, and the whole run about six against forty-five end to end.
+      Derive both with `python tools/measure_latency.py`. Concurrency would buy time **no
+      requirement asks for** — the same reasoning that removed the calendar cache, where 23 seconds
+      cost 228 MB and discharged no requirement.
+      **So it is correctly not done, for a better reason than the one recorded.** The old wording
+      implied a pending owner decision and would have sent a future session to ask about something
+      that needs no asking. The vendor-relationship concern — parallel requests against an
+      unofficial scrape on a free tier — is real and stays real; it simply is not the binding
+      constraint, because the speed is not wanted.
+      **What would change it:** universe growth. The budgets bind at roughly seven times the current
+      fetch count, and coverage is 28% of the directory.
+- [x] **`[c]→[v]` "There is no legal source of probability" — AUDITED 2026-08-25, and it is the
+      one closure that was never really an impossibility claim.**
+      It is a statement about this system's own evidence, not about the world, and it is therefore
+      **derivable**: a probability needs a validated expectation, and a parameter reaches
+      `validated` only by citing a study that ACCEPTed. Both are counted by tools that already run
+      on every gate pass — `verify_studies.py` for accepted verdicts, `verify_parameters.py` for
+      validated parameters — and both report none today.
+      `EVIDENCE_SUMMARY.md` §4 now names those commands, so the sentence **stops being true the day
+      either changes**, with nobody having to remember to revisit it. That is what §15 rule 1 asks
+      for, and it is why this row needed an amendment rather than an investigation.
+- [ ] **`[c]` Everything else the command above returns**, read once and marked: tested, untested,
+      or an owner decision. A claim that survives with a test named beside it is worth more than one
+      that was merely never challenged.
+
+**Widen it past documents when the document pass is done.** The same shape lives in code comments
+and in study scope sections - `PR-002`'s report alone carries several - and a study that narrowed
+its own scope on an untested "cannot" is the most expensive instance of this there could be.
+
+**Already overturned, 2026-08-24, and it is why this exists.** The evening run refused a block of
+candidates reading *"a refetch did not bring it current"*. Re-asking the same vendor the same
+evening returned every one of those sessions, clean. The owner asked; nobody had checked.
+
+
 - [x] **`[v]` Task 8 — PR-005 trade-log replay. Done 2026-08-16.**
       `tools/run_pr005_replay.py` + `docs/prereg/results/PR-005-trades.csv` (26,351 trades) +
       `PR-005-trades-provenance.json`. **PR-009, the exit card and the EDGAR backfill are
@@ -515,6 +729,8 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       it with that command; this line deliberately does not repeat it (`AGENTS.md` §10.5).
 
 ### DONE 2026-08-24: slim `AGENTS.md` — owner instruction, cut and verified
+
+**A one-off instruction, not a standing rule** — an editorial request about one artefact, so it cites no `AGENTS.md` section and gate 30 accepts it on that mark rather than on a pointer that would have to be invented.
 
 **The ask:** *"У нас agents выглядят уже как книжка... Можно ли его сделать нормальным, чистеньким,
 без прозы? Правила, конвенции, всё как есть."* Yes. The brief is below so a fresh session starts

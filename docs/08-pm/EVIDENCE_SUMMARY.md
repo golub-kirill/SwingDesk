@@ -48,7 +48,16 @@ Treat 25bp as "materially more than 5", never as a measurement of 25.
 ## 3. The one positive finding is fragile at a plausible magnitude
 
 `PR-002` — breadth separates breakout outcomes — is erased by **1.6–2.3% of trades missing at −2R**,
-and Yahoo serves no delisted history, so that exposure can never be confirmed on the free tier.
+and Yahoo serves no delisted history. ~~so that exposure can never be confirmed on the free tier.~~
+
+**Corrected 2026-08-24, and only half of it was true.** The bound has two halves and the free tier
+closes one of them. **How many names vanished** is measurable: SEC EDGAR keeps every filer back to
+1993, free and official, and dates each delisting by Form 25 or 25-NSE — demonstrated by
+`tools/probe_edgar.py`. **What those trades would have returned** is not: no free source serves the
+price path of a symbol that has gone, so the −2R assumption stays an assumption. So the exposure's
+SIZE can be constrained by measurement and its MAGNITUDE cannot, where the sentence struck above
+said neither could. Struck rather than rewritten, per `AGENTS.md` §15: it was an impossibility
+asserted without a test.
 
 **And its verdict does not follow its own decision rule.** `PR-002` §6 permits `accept` only on both
 countries independently; the third amendment, dated before the run, states that a single-market
@@ -60,6 +69,21 @@ limitation was registered before the data was seen. Tracked in `TODO.md` §5.
 
 No expectation estimate exists and no calibrated model exists (`EXPECTATION_MODEL.md` §9c). Any
 probability displayed would be manufactured.
+
+**Audited 2026-08-25 under `AGENTS.md` §15 rule 1, which asks an impossibility to name the check
+that establishes it. This one can, and that changes its character.** It is not a claim about the
+world — it is a claim about this system's own evidence, and it is DERIVED:
+
+```bash
+PYTHONPATH=$PWD/src python tools/verify_studies.py      # accepted verdicts
+PYTHONPATH=$PWD/src python tools/verify_parameters.py   # validated parameters
+```
+
+A probability of an outcome needs a validated expectation, and a parameter reaches `validated` only
+by citing a study that ACCEPTed. **So the sentence above is true exactly while those two commands
+report none, and it stops being true the day either changes — without anyone having to remember to
+revisit it.** That is the difference between a closure that names its check and one that does not,
+and it is why this row does not need the audit the other three did.
 
 ## 5. Historical results carry a universe caveat that has not been discharged
 

@@ -470,3 +470,114 @@ Two things follow, and they are the enforceable part:
 The general form: **when the owner asks for something whose right answer is theirs to give, the
 helpful move is the question, not the guess.** Do the parts that do not depend on the answer, then
 ask — do not silently pick a default and proceed.
+
+## 15. An impossibility is a claim — owner instruction, 2026-08-24
+
+> *"Мы очень часто верим, что у нас нет возможности или не получается, и зарубаем на корню, не
+> проверяя."*
+
+**A sentence saying something cannot be done is the one kind of claim this repository does not
+check.** Everything else is disciplined: a measured count has one owner (§10.5) and a generator
+(§10.6), a causal claim in a report names a check (§10.4), a parameter names the code that reads it
+(§7). *"The vendor does not have it"*, *"no free source serves this"*, *"a fourth estimator would be
+the same family"* — each passes every gate, and each permanently closes a search.
+
+**The asymmetry is what makes this a section.** A wrong positive costs one wasted check. A wrong
+impossibility costs everything downstream of it, silently, and is then cited as settled — the rows
+in `HANDOFF.md` §7 exist specifically to stop work.
+
+**What paid for it, 2026-08-24.** The evening run refused a block of candidates with *"a refetch did
+not bring it current"*, which reads as *the vendor is late*. Re-asking the same vendor the same
+evening, with the run's own request shape, returned every one of those sessions, clean. The refusal
+was right and the explanation was wrong, and nothing had tested it because it read as a fact rather
+than as a claim. The owner asked the question that found it.
+
+The rules:
+
+1. **An impossibility claim names the test that established it, or is marked untested.** §10.4's
+   shape, aimed at *cannot* instead of *because*.
+2. **A claim about what a SOURCE holds is tested against the source**, never inferred from what our
+   code received. Those are different statements, and the second is a proxy (§12).
+3. **A prediction is not a closure.** *"A fourth estimator would be the same family"* forecloses a
+   search nobody ran. That belongs in the record as a prior, not as a `do not re-open` row.
+4. **"Not the lever" is a measurement about ONE lever, never about the space.** Naming a better
+   lever and stopping is how a lever gets parked without a decision — §14 says ask.
+5. **A constraint that comes from the owner is a decision and stays closed.** D1, D10 and the
+   charter non-goals are not impossibility claims and this section does not reopen them. The
+   difference: a decision is *chosen*, an impossibility is *asserted about the world*.
+
+**The goal is the result, by any legitimate means.** Where a route is legal, honest and reachable,
+"we cannot" needs a measurement behind it before it is written down.
+
+## 16. The course is a requirements source, not an evidence source — owner instruction, 2026-08-24
+
+> *"Чек-листам не верь. Их писал не профессионал, любитель такой, как я. Лучше researchить интернет,
+> трейдерские форумы, то, о чём реально успешные люди говорят... В книги, техническую научную
+> литературу нам стоило бы отсылаться больше. У нас полный интернет информации, и мы не должны
+> опираться только на наши бумажечки."*
+
+**What does not change.** The course is still what this system is specified FROM. The component
+catalogue, the controlled vocabulary, the checklists, `CHARTER.md` and gate 2's verbatim discipline
+all rest on it, and none of that is weakened by this section. Transcribing it accurately still
+matters exactly as much — an inaccurate copy of a weak source is worse than an accurate one.
+
+**What changes is what a course sentence licenses.** A rule appearing in the course is an
+`Operational Course Rule` — the vocabulary already has that claim type, alongside
+`Untested Hypothesis` and `Empirical Result`. It is **not** an `Empirical Result`, and the fact that
+it is written down here does not raise it. Appendix E's items are a competent amateur's list, and
+their authority is that they name what to look at, never that looking there works.
+
+**§10.3 said to search the outside world before AUTHORING. This extends it to ACCEPTING.** The
+existing rule covers inventing an estimator; it never covered adopting a course rule as a design
+constraint, which is how most of this system's shape was actually decided.
+
+The rules:
+
+1. **Before a course rule becomes a design constraint, look for what the literature says about it.**
+   Journals, books, practitioners with a verifiable record. Cite what you find where it lands, the
+   way §10.3 already requires for a borrowed method.
+2. **Rank the source and say which rank you used.** Peer-reviewed or a published dataset outranks a
+   practitioner with a track record, which outranks a forum post, which outranks an anonymous claim.
+   A finding that rests on the bottom rank is marked as resting on it.
+3. **§10.3's boundary is unchanged and it is the load-bearing half.** External work supplies
+   *method*, *calibration* and *known limitations*. It is **not** evidence about this system's
+   parameters: only a pre-registered study against this universe makes one `validated`. A famous
+   trader's rule is a hypothesis here, exactly like the course's.
+4. **Where the course and the literature disagree, record both and say which the system follows.**
+   The disagreement is information; silently picking one and moving on destroys it.
+5. **A checklist item with no external support is still worth keeping** — it costs a line and names
+   something to look at. What it may not do is stand as the reason a threshold has its value.
+
+**The asymmetry that makes this worth a section, and it is §15's.** Treating the course as evidence
+costs nothing visible: every gate stays green, because the gates check that we copied it correctly,
+not that it is true. There is no mechanism anywhere in this repository that can notice a faithfully
+transcribed rule that does not work.
+
+## 17. Verify at the right granularity — owner instruction, 2026-08-24
+
+> *"Каждый мердж стоит нам 10-15-20 минут времени... Ты запускаешь мердж, сидишь, ждёшь, потом
+> меняешь одно слово, снова запускаешь мердж и снова сидишь, ждёшь. Целый день так было."*
+
+**The checks in this repository are strong and they are not free.** The full suite runs hundreds of
+tests; a pull request costs several minutes of CI before `master` will accept it. Running either
+after every edit converts a session into waiting.
+
+1. **Run the check whose subject you touched.** A document edit is answered by `verify_docs.py`,
+   `verify_counts.py` or `verify_project_manifest.py` in seconds. Reach for the whole suite once, on
+   the batch, before committing — not after each edit inside it.
+2. **Accumulate on one branch and merge once.** Three pull requests in an evening cost three CI
+   waits; one costs one. `master` is protected and only advances on a green check, so the merge is a
+   deliberate act with a price, not a save button.
+3. **Never sit and watch CI.** If a pull request is open, keep working while it runs. The result
+   arrives whether or not it is being watched.
+4. **A local green suite is the real check.** CI exists so `master` cannot advance on an unproven
+   commit; it is not the thing that tells you your change is right, and treating it as such buys
+   confidence that the local run already gave you.
+
+**What paid for it, 2026-08-24:** three merges in one evening, each with its own CI wait, one of
+them for three regenerated numbers in a block that the same session then taught the scheduled run to
+regenerate by itself. The check was correct every time. The granularity was not.
+
+**Where this does NOT apply.** Anything touching `src/`, `tools/` or a frozen file gets the full
+suite before it is committed — those are the changes a targeted check cannot bound, and §12's first
+trap is a suite that went green while testing the wrong tree.

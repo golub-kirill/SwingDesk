@@ -166,6 +166,8 @@ def main() -> int:
                                     [python, "tools/verify_parameter_claims.py"]),
         "29 prereg ids": _run("a pre-registration id is reserved once and listed where it is owed",
                               [python, "tools/verify_prereg_ids.py"]),
+        "30 rules home": _run("a rule lives in AGENTS.md and nowhere else",
+                              [python, "tools/verify_rules_home.py"]),
     }
 
     print("\n" + "=" * 62)

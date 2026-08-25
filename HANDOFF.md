@@ -5,28 +5,52 @@ rules that were each paid for, and §12, traps that each cost real time — then
 
 ## 0. The first thing, and it is not code
 
-**That branch merged.** `claude/swingdesk-tasks-cl-perf-707e67` landed on 2026-08-24 as pull
-request #49, `master` is `55dcfe5`, and both `gates` runs were green in CI before it went in. So
-`master` now runs the six-minute pipeline rather than the twenty-minute one, has the gate count
-§2 reports, and no longer carries the documentation defects that branch corrected. §5's *What it
-carried* says what landed. **The main checkout was fast-forwarded to it**, so the next scheduled
-evening runs the fast path.
+**Everything is merged.** The 2026-08-24/25 session landed as a pull request onto `master`; the main
+checkout is fast-forwarded and the code graph re-indexed against it (`AGENTS.md` §9 rule 3). Nothing
+is held in a branch waiting for a decision.
 
-**The code graph was re-indexed against the merge** (`AGENTS.md` §9 rule 3) and describes `master`.
+**Read these four before touching the flow, the registry or the criteria. Each changes what you
+would otherwise assume, and each was measured rather than argued.**
 
-**Three superseded branches were deleted the same day**, local and on `origin`, on the owner's
-instruction: `claude/correctness-fx-and-r-denominator` (`c0f10a6`), `claude/open-position-command`
-(`309621e`), `claude/full-cycle-trade-dev-c6b1f1` (`a01aaeb`). Each was 81–86 commits behind, and
-its content was verified present in `master` marker by marker before anything was removed — merging
-any of them would have **resurrected the dated session-handoff files that the same day's owner ruling
-deleted**. The SHAs are written here because that is all it takes to bring one back.
+1. **`Trade` is unreachable in code, and that is now explained rather than merely observed.**
+   Across the live application layer the decision token `Skip` appears in seventeen places, `Watch`
+   in one, **`Trade` in none**, and every decision in `journal.duckdb` is `Watch` or `Skip`. The
+   nightly `Trade 0` is a property of the code. The cause is one gap seen from three sides: the
+   course specifies nine watchlist states, the transitions between them were never authored
+   (`DECISION_STATE_MACHINE.md` §6, open since 2026-08-01), and Appendix E cannot return `Ready`
+   because eight of its items are unanswerable. **`DR-020` authors the graph and decides no number;
+   `docs/08-pm/plans/2026-08-24-the-trade-flow.md` is the plan.**
+   *(`Pause` is absent from the candidate path CORRECTLY — the state machine models it as
+   account-wide.)*
+2. **The only ratified criterion with scope `live` cannot fire.** `k.drawdown_pause`'s threshold is
+   owner-set at 20% and **nothing in `src/` computes realised drawdown**; its prescribed action
+   names `risk.risk_off_ladder`, which is `unset`. Every gate passed over it for a defensible
+   reason — 3g checks that inputs EXIST, 1 accepts `none` as honest — and neither asks whether a
+   ratified criterion can FIRE. Gate 1 now prints that subset on every run.
+3. **"Canada cannot be enumerated" is false, and a study lost half its scope to it.** `DR-003`
+   wrote *"no free symbol directory in hand … cannot presently enumerate"*; `PR-002` cited it
+   unqualified and dropped §6's two-country requirement — the one whose failure is why that study
+   could not reach an affirmative verdict. TMX serves the directory free, no account:
+   `python tools/probe_canada.py --full`. **It does not repair `PR-002`** — the endpoint is today's
+   membership, and applying it to old data is survivorship bias with extra steps.
+4. **"No free source serves delisted history" is half false.** SEC EDGAR serves the FACT and DATE of
+   a delisting, free and official, back to 1993 (`tools/probe_edgar.py`). Prices for a delisted name
+   are still unobtainable, so the bound's RETURN half stands untouched.
 
-**Both scheduled passes ran on 2026-08-24 and decided identically.** 18:30 `exit 0`, 19:30 `exit 0`,
-same `output_hash`, both against a clean tree. §5 has what that establishes and what it does not.
+**Three new rules and one new gate**, owner instructions of 2026-08-24: `AGENTS.md` **§15** an
+impossibility is a claim, **§16** the course is a requirements source and not an evidence source,
+**§17** verify at the right granularity. **Gate 30** makes a second rulebook impossible. The
+`AGENTS.md` cut of the same day removed roughly a third of it with every heading byte-identical and
+all its section references still resolving.
 
-**Everything else is committed.** `master` is protected on `github.com/golub-kirill/SwingDesk`
-(public) and requires the `gates` check, so it only ever advances to a commit CI has already
-passed.
+**The evening of 2026-08-24, which matters because it is the first clean one since 08-18:** both
+passes ran `exit 0` and decided **identically** — same `output_hash` an hour apart on the real
+universe, the first live observation of a property `DR-015` §3 only asserted. `DR-019` makes the
+second pass conditional, because it has never changed an outcome and the failure it insures against
+has never occurred here.
+
+**`master` is protected** on `github.com/golub-kirill/SwingDesk` (public) and requires the `gates`
+check, so it only ever advances to a commit CI has already passed.
 
 Everything below is measured from the tree, not remembered. **§2 is the only place a measured count
 lives** (`AGENTS.md` §10.5); a figure here that disagrees with `python tools/check_gates.py` is this
@@ -64,11 +88,11 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 
 | | |
 |---|---|
-| Merge gates | **34**, one command: `python tools/check_gates.py` |
-| Tests | **847**, fully offline |
-| Docs | 119 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
+| Merge gates | **35**, one command: `python tools/check_gates.py` |
+| Tests | **887**, fully offline |
+| Docs | 122 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 459 registered · 5 `specified` · **1 `active`** |
-| Parameters | 105 - 60 `unset`, 34 `assumed`, 11 `owner`, **0 `validated`** |
+| Parameters | 106 - 61 `unset`, 34 `assumed`, 11 `owner`, **0 `validated`** |
 | Golden vectors | 25 vectors across 6 components |
 | Studies | 9 registered · 7 reported |
 | Criteria | `registry/criteria.yml` **v1.1.1** |
@@ -129,7 +153,7 @@ once did).
 
 - `claude/handoff-2026-08-24`
 - `claude/handoff-final`
-- `claude/state-block-after-the-evening`
+- `claude/state-block-from-the-run`
 - `claude/swingdesk-tasks-cl-perf-707e67`
 
 *Tip and merge state deliberately absent - both move under this document's own feet. `python tools/verify_branches.py` prints them.*
@@ -267,27 +291,41 @@ longer matches a fresh replay, because seven bars arrived three hours after it w
 **The code graph was re-indexed once it merged** — `src/` and `tools/` both changed (`AGENTS.md`
 §9 rule 3). It is named `swingdesk`, rooted at the main checkout, and now describes `master`.
 
-### What to pick up, ranked — 2026-08-24
+### What to pick up, ranked — 2026-08-25
 
-**Three items closed on 2026-08-24 and are gone from this list**: the branch decision (merged,
-#49), the `a.run_completes` / gate 26 question (both passes ran, counter started, and gate 26's
-mid-run false red is fixed), and the `AGENTS.md` cut — every heading byte-identical, every section
-reference still resolving, §13's owner block untouched, and the owner ruling on 2026-08-24 that the
-result stands rather than being cut further. What is left:
+**Everything below needs the owner except items 5 and 6.** The session that produced them
+deliberately built no value into a threshold and took no decision that was the owner's.
 
-1. **The AI guard, which `CHARTER.md` A-001 makes a PRECONDITION.** §3a permits advice on an open
-   position; A-001 says nothing may be implemented before the authority model is *gated*, and
-   `AI_AUTHORITY_MODEL.md` §11 records that its prohibitions are prose. The two vocabularies —
-   decisions and management actions — are mechanically checkable and nothing checks them. **This is
-   the next build, not the AI itself.**
-2. **The `PR-005` trade log needs an owner ruling** — the published CSV no longer matches a fresh
-   replay because seven bars arrived three hours after it was published. Three options in
-   `TODO.md` §5; `docs/prereg/results/` was deliberately not touched.
-3. **The next pre-registration, if there is one.** `PR-013` looked at one lookback and one horizon
-   and found nothing at that pair; it did not refute the family. Whoever writes the next one owes it
-   a decision rule with a branch for *both arm and control are losing*, which `PR-013`'s lacked.
-4. **Everything owner-pending is in `TODO.md` §4** — the trial budget, `account.fx_rate_cad`,
-   `data.staleness_action_threshold`, the successor timebox, `DR-016`/`DR-017`.
+1. **Ratify or reject `DR-019` and `DR-020`.** Both are `proposed` and both are already built or
+   authored — the conditional second pass runs today, and the transition graph is what makes `Trade`
+   reachable in principle. `DECISION_STATE_MACHINE.md` §6 stays open until `DR-020` is ratified,
+   because a proposed record constrains nothing.
+2. **`entry.maximum_entry_atr` and the trigger definitions need values.** A value is a study or a
+   ruling, never a guess (`AGENTS.md` §8). `DR-020` §7 measured what the pivot parameters cost and
+   **refuted the hypothesis it was built to test** — confirmation does not spend the entry budget,
+   the drift is negative at every setting — so one argument that would have been made from a false
+   premise is gone. No value moved.
+3. **`k.drawdown_pause` needs a measurement, and the measurement needs owner decisions.** Realised
+   drawdown requires an account-equity concept the store does not hold: fills are recorded per
+   position and nothing aggregates them. Starting capital, mark-to-market versus realised-only, and
+   per-account versus per-strategy are definitions, not implementation details. `TODO.md` §1 states
+   why inventing one to green a gate would be the wrong move.
+4. **The `PR-005` trade log** — the published CSV no longer matches a fresh replay because seven
+   bars arrived three hours after publication. Three options in `TODO.md`; `docs/prereg/results/`
+   was deliberately not touched.
+5. **`SWINGDESK_EDGAR_CONTACT` is one line and unblocks a real measurement.** `data.sec.gov` answers
+   a descriptive `User-Agent` and `www.sec.gov` does not, so lookup by CIK works and lookup by
+   TICKER needs the contact the SEC asks for. With it, the **87 symbols that left the directory in
+   three weeks** can be classified into delistings and renames — which `DR-008` c3 records as
+   currently indistinguishable, and which is the first empirical purchase anyone has had on the
+   survivorship question.
+6. **The AI guard exists and is half of what A-001 requires.** `application/ai_guard.py` refuses
+   both controlled vocabularies and any numeral the deterministic path did not produce, reading the
+   vocabularies from their enums so they cannot drift. **It cannot see paraphrase**, two tests
+   assert that hole, and `AI_AUTHORITY_MODEL.md` §11 stays open because of it. A-001's standing
+   condition is **not** discharged.
+7. **Everything owner-pending is in `TODO.md` §4**, and the impossibility audit's long tail is in
+   §2 — four ranked claims are closed, the rest are a command away.
 
 ### The clock, and the freeze that protects it
 
@@ -474,7 +512,7 @@ owner rulings live there with everything else that is open — one list, not fiv
 | | Why |
 |---|---|
 | Trend-definition family | PR-001 (definitions select different instruments) and PR-005 (those populations then behave the same) both refuted. `screen.trend_definition` stays `unset` |
-| **The spread LEVEL from daily OHLC** | Three estimators — Corwin-Schultz 2012, Abdi-Ranaldo 2017, EDGE 2024 — cannot resolve it here. `PR-010` reports 25.65bp per side against its own 41.87bp zero-spread floor at this universe's measured volatility; Abdi-Ranaldo's 25.44bp sits under a 33.85bp floor. They agree to 0.21bp **inside their shared noise**, and neither declines with liquidity. `PR-006` — real fills — is the only route left. **A fourth estimator is the same family** |
+| **The spread LEVEL from daily OHLC** | Three estimators — Corwin-Schultz 2012, Abdi-Ranaldo 2017, EDGE 2024 — cannot resolve it here. `PR-010` reports 25.65bp per side against its own 41.87bp zero-spread floor at this universe's measured volatility; Abdi-Ranaldo's 25.44bp sits under a 33.85bp floor. They agree to 0.21bp **inside their shared noise**, and neither declines with liquidity. `PR-006` — real fills — is the only route left. **A fourth estimator is the same family, and the reason is a mechanism rather than a tally** (audited 2026-08-25 under `AGENTS.md` §15 rule 3, which forbids a prediction standing as a closure): each floor is calibrated at THIS universe's measured volatility, so it is a property of the INPUT and not of the estimator's construction — any method inferring a spread from daily OHLC infers it from price variation, and here the variation from volatility swamps the variation from the spread. That is why both read LESS on the real universe than on a spreadless series. Concrete rather than hypothetical: `bidask` also ships Roll 1984 and the generalized OHL/OHLC/CHL/CHLO variants, and the mechanism covers them |
 | Paid market data | Owner decision D10, taken with the survivorship cost known |
 | Tuning the current parameters | PR-005 measured the strategy flat at assumed costs and negative under stress — both net |
 | New entry filters | Same family, same evidence |

@@ -199,11 +199,51 @@ def check(entries: list[dict]) -> list[str]:
     return failures
 
 
+#: Statuses that make a criterion binding. Same set `verify_criteria.py` uses; a criterion still
+#: being drafted makes no claim on the code.
+_BINDING = frozenset({"ratified", "owner-set"})
+
+
+def _criterion_citations(registry_path: Path) -> dict[str, list[str]]:
+    """Parameter id -> the binding criteria that cite it. Empty if `criteria.yml` is unreadable.
+
+    Reads the criteria beside the parameters rather than taking a path, because the two registries
+    always live together and a criteria file found somewhere else would describe a different tree.
+    """
+    import yaml
+
+    path = registry_path.parent / "criteria.yml"
+    if not path.is_file():
+        return {}
+    try:
+        criteria = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        return {}
+    if not isinstance(criteria, dict):
+        return {}
+
+    citations: dict[str, list[str]] = {}
+    for items in criteria.values():
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, dict) or item.get("status") not in _BINDING:
+                continue
+            text = " ".join(
+                str(item.get(field, ""))
+                for field in ("criterion", "trigger", "value", "measured_by", "action", "note")
+            )
+            for parameter_id in set(re.findall(r"\b[a-z_]+\.[a-z_0-9]+\b", text)):
+                citations.setdefault(parameter_id, []).append(str(item.get("id")))
+    return citations
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--registry", type=Path, default=DEFAULT_REGISTRY)
     args = parser.parse_args()
 
+    registry_path = args.registry
     entries = load_entries(args.registry)
     failures = check(entries)
 
@@ -233,6 +273,27 @@ def main() -> int:
             by_provenance[key] = by_provenance.get(key, 0) + 1
         for provenance, count in sorted(by_provenance.items(), key=lambda kv: -kv[1]):
             print(f"  {count:>3}  {provenance}")
+
+        # The subset that is NOT merely ahead of its consumer. A parameter cited by a RATIFIED
+        # criterion and read by nothing means that criterion cannot fire - the criterion is real,
+        # its threshold is set, and no code compares anything to it.
+        #
+        # Gate 3g cannot see this and says so in its own docstring: it checks that a criterion's
+        # inputs EXIST, not that its logic discriminates. Existence and enforceability are different
+        # claims, exactly as `named_in` and `read_by` are (section 7).
+        #
+        # FOUND 2026-08-24 by reading the registry by hand, which is the detection method
+        # REQ-VALIDATION-001 says does not scale: `k.drawdown_pause` is ratified, scope `live`, its
+        # threshold `validation.max_allowable_drawdown` is owner-set at 20, and nothing in `src/`
+        # computes realised drawdown at all. It was the ONLY live criterion, so it was all of them.
+        cited = _criterion_citations(registry_path)
+        blocked = sorted({e["id"] for e in orphans} & set(cited))
+        if blocked:
+            print("")
+            print(f"  of those, {len(blocked)} is/are cited by a RATIFIED criterion, which "
+                  f"therefore cannot fire:")
+            for parameter_id in blocked:
+                print(f"    {parameter_id}  <- {', '.join(cited[parameter_id])}")
 
     unset = by_status.get("unset", 0)
     if unset:

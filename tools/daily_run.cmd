@@ -85,6 +85,40 @@ REM full one, it is a different thing. Two passes a day roughly halves the
 REM window this holds, which is still comfortably over a fortnight.
 for %%F in ("%LOG%") do if %%~zF GTR 50000000 move /Y "%LOG%" "%LOG%.1" >nul 2>&1
 
+REM ---------------------------------------------------------------------------
+REM THE SECOND PASS IS CONDITIONAL - owner instruction, 2026-08-24
+REM ---------------------------------------------------------------------------
+REM It ran unconditionally from DR-015 section 3 until here, and MEASURED across
+REM every evening that ran both passes, it never once changed an outcome: the two
+REM runs carry the same output_hash every time. The failure it insures against -
+REM a fetch erroring - has not been observed here in ~11,200 instrument-fetches.
+REM
+REM So it now asks the journal first: did tonight's run refuse anything a later
+REM attempt could plausibly repair? A DATA refusal is that class. RISK, STOP and
+REM LIQ are decisions about the trade and no amount of waiting moves them.
+REM
+REM UNAVAILABLE RUNS THE PASS. If the journal cannot be read, the condition is
+REM unmeasured - and an unmeasured condition must not silently suppress a pass.
+REM AGENTS.md section 12: unavailable is not fail, and it is not pass either.
+REM
+REM WHY GOTO AND NOT AN IF BLOCK: `set X=%ERRORLEVEL%` inside a parenthesised
+REM block needs delayed expansion and silently reads the wrong value without it.
+REM Flat, descending errorlevel tests avoid the whole trap.
+REM
+REM TRACK A IS UNAFFECTED. Its parser counts only the attempt starting within
+REM +-30 minutes of 18:30, and this branch is reachable only when the wrapper was
+REM invoked with `second-pass`.
+if not "%SECOND%"=="1" goto :attempt
+"%PY%" -X utf8 "%REPO%\tools\retry_needed.py" --data "%REPO%\data" >> "%LOG%" 2>&1
+if errorlevel 4 goto :attempt
+if errorlevel 1 goto :nothing_to_retry
+goto :attempt
+
+:nothing_to_retry
+echo ===== [%DATE% %TIME%] second pass skipped, nothing to retry >> "%LOG%"
+exit /b 0
+
+:attempt
 echo. >> "%LOG%"
 echo ===== [%DATE% %TIME%] %PASS% starting >> "%LOG%"
 
@@ -106,5 +140,28 @@ REM record whose whole value is being auditable.
 if "%SECOND%"=="0" (
   "%PY%" -X utf8 "%REPO%\tools\fetch_directory.py" --scheduled --data "%REPO%\data" >> "%LOG%" 2>&1
 )
+
+REM State block (AGENTS.md 10.6). Same placement discipline as the sidecar above: after
+REM `set RC=%ERRORLEVEL%` and before `exit /b %RC%`, so nothing here can move the run's exit code
+REM or the Track A counter. Measured at about 4 seconds, against a pass that takes six minutes.
+REM
+REM WHY THE MACHINE AND NOT A PERSON. HANDOFF section 2's runtime block is derived from data/, and
+REM this pass is what moves data/ - so every evening the schedule ran left gate 24 red the next
+REM morning, on a document that had been correct when it was written, and the fix was a person
+REM noticing and running the tool by hand. AGENTS.md 10.6 rule 1 says a fact a tool can derive is
+REM derived AND written by that tool; the tool already existed and calling it was the last hand step.
+REM
+REM BOTH PASSES, unlike the directory pull above. The 19:30 pass writes journal rows and decisions
+REM too, so rebuilding only after the first one reproduces the same staleness an hour later.
+REM
+REM THE COST, recorded rather than left to be discovered: this leaves HANDOFF.md modified and
+REM uncommitted in the main checkout most evenings. Gate 21 reports uncommitted governed files and
+REM is ADVISORY, so that is a standing note rather than a red gate - the cheaper of the two, since
+REM gate 24 was blocking and red every morning for a reason nobody needed to investigate.
+REM
+REM A HELD STORE IS NOT A FAILURE HERE. build_state.py catches duckdb.IOException, reports the
+REM runtime block UNAVAILABLE and leaves it alone (AGENTS.md 12), so an overlapping refresh pass
+REM costs a log line rather than a traceback.
+"%PY%" -X utf8 "%REPO%\tools\build_state.py" >> "%LOG%" 2>&1
 
 exit /b %RC%
