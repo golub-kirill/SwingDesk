@@ -614,3 +614,98 @@ def test_the_digest_cannot_be_fooled_by_moving_bytes_between_the_two_FILES() -> 
     import fetch_directory
 
     assert fetch_directory.digest("ab", "c") != fetch_directory.digest("a", "bc")
+
+
+# ------------------------------------------- DR-008's process lock (2026-08-25)
+#
+# "It does not bypass local disablement, the NYSE calendar, source allowlist, response cap,
+# validation, PROCESS LOCK or audit" - said of the forced pull, about a lock that did not exist.
+
+
+def _lock_dir(tmp_path: Path) -> Path:
+    directory = tmp_path / "data"
+    directory.mkdir(exist_ok=True)
+    return directory
+
+
+def test_a_second_collector_is_refused_while_the_first_holds_the_lock(tmp_path: Path) -> None:
+    import fetch_directory
+
+    now = datetime(2026, 8, 25, 18, 30, tzinfo=UTC)
+    directory = _lock_dir(tmp_path)
+    with fetch_directory.process_lock(directory, now):
+        with pytest.raises(fetch_directory.LockHeld):
+            with fetch_directory.process_lock(directory, now):
+                pass
+
+
+def test_the_lock_is_released_on_the_way_out(tmp_path: Path) -> None:
+    import fetch_directory
+
+    now = datetime(2026, 8, 25, 18, 30, tzinfo=UTC)
+    directory = _lock_dir(tmp_path)
+    with fetch_directory.process_lock(directory, now):
+        assert (directory / "directory-pull.lock").is_file()
+    assert not (directory / "directory-pull.lock").is_file()
+
+
+def test_the_lock_is_released_even_when_the_body_raises(tmp_path: Path) -> None:
+    """A collector that dies mid-pull must not leave the next evening blocked.
+
+    This is the ordinary case of the stale-lock problem, and the `finally` is what keeps it
+    ordinary rather than requiring the timeout below to rescue it.
+    """
+    import fetch_directory
+
+    now = datetime(2026, 8, 25, 18, 30, tzinfo=UTC)
+    directory = _lock_dir(tmp_path)
+    with pytest.raises(RuntimeError), fetch_directory.process_lock(directory, now):
+        raise RuntimeError("the vendor hung up")
+    assert not (directory / "directory-pull.lock").is_file()
+
+
+def test_a_STALE_lock_is_reclaimed_and_says_so(tmp_path: Path) -> None:
+    """The design decision, and getting it wrong would be worse than having no lock at all.
+
+    `DR-008` gives the forced pull no way past this lock, so one left by a KILLED process - where
+    the `finally` above never ran - would refuse every pull for ever. A missed pull is permanently
+    unrecoverable because the vendor publishes current state and not an archive, so a lock that
+    never expires would cost the departure record to prevent a duplicate request. Reclaimed, and
+    reported: it means a previous run died, which is worth seeing.
+    """
+    import fetch_directory
+
+    now = datetime(2026, 8, 25, 18, 30, tzinfo=UTC)
+    directory = _lock_dir(tmp_path)
+    abandoned = now - timedelta(seconds=fetch_directory.LOCK_STALE_AFTER + 5)
+    (directory / "directory-pull.lock").write_text(abandoned.isoformat(), encoding="utf-8")
+
+    with fetch_directory.process_lock(directory, now) as note:
+        assert "stale" in note
+
+
+def test_a_lock_just_inside_the_timeout_is_still_held(tmp_path: Path) -> None:
+    """The positive control for the reclamation above: the timeout is a boundary, not a bypass."""
+    import fetch_directory
+
+    now = datetime(2026, 8, 25, 18, 30, tzinfo=UTC)
+    directory = _lock_dir(tmp_path)
+    recent = now - timedelta(seconds=fetch_directory.LOCK_STALE_AFTER - 5)
+    (directory / "directory-pull.lock").write_text(recent.isoformat(), encoding="utf-8")
+
+    with pytest.raises(fetch_directory.LockHeld):
+        with fetch_directory.process_lock(directory, now):
+            pass
+
+
+def test_an_UNREADABLE_lock_is_reclaimed_rather_than_treated_as_held_for_ever(tmp_path: Path) -> None:
+    """A lock that cannot be dated cannot be trusted to be live, and "cannot tell" must not mean
+    "blocked permanently" for a resource whose loss is unrecoverable."""
+    import fetch_directory
+
+    now = datetime(2026, 8, 25, 18, 30, tzinfo=UTC)
+    directory = _lock_dir(tmp_path)
+    (directory / "directory-pull.lock").write_text("not a timestamp", encoding="utf-8")
+
+    with fetch_directory.process_lock(directory, now) as note:
+        assert "unreadable" in note

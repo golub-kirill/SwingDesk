@@ -49,6 +49,9 @@ REQUIRED: dict[str, dict[str, tuple[type, bool]]] = {
     "limits": {
         "max_response_bytes": (int, True),
         "request_timeout_seconds": (int, True),
+        # A lock that never goes stale refuses every pull for ever after one killed
+        # process, and DR-008 gives the forced pull no way past it. Required and positive.
+        "lock_stale_after_seconds": (int, True),
         "max_retries_per_attempt": (int, False),
         "retry_after_seconds": (int, False),
     },

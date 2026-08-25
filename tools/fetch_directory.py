@@ -33,13 +33,15 @@ recorded nothing left the store unable to tell "declined" from "never ran".
 from __future__ import annotations
 
 import argparse
+import contextlib
 import hashlib
 import itertools
 import json
+import os
 import re
 import sys
 import urllib.request
-from collections.abc import Sequence
+from collections.abc import Callable, Iterator, Sequence
 from datetime import UTC, date, datetime, timedelta
 from email.utils import parsedate_to_datetime
 from pathlib import Path
@@ -106,6 +108,7 @@ _CORROBORATION_TOLERANCE = timedelta(minutes=5)
 #: read, so a server that omits or misstates the header cannot bypass it.
 MAX_RESPONSE_BYTES: int = POLICY["limits"]["max_response_bytes"]
 REQUEST_TIMEOUT_SECONDS: int = POLICY["limits"]["request_timeout_seconds"]
+LOCK_STALE_AFTER: int = POLICY["limits"]["lock_stale_after_seconds"]
 WARNING_AT: int = POLICY["staleness"]["warning_at_consecutive_misses"]
 ERROR_AT: int = POLICY["staleness"]["error_at_consecutive_misses"]
 
@@ -128,6 +131,63 @@ def collection_enabled(root: Path) -> bool:
         return False
     value = loaded.get("directory_pull_enabled") if isinstance(loaded, dict) else None
     return value is True
+
+
+class LockHeld(Exception):
+    """Another collector holds the lock, and this one must not run."""
+
+
+@contextlib.contextmanager
+def process_lock(directory: Path, now: datetime) -> Iterator[str]:
+    """`DR-008`'s process lock. Yields a note about what it did, for the audit row.
+
+    **`O_CREAT | O_EXCL` is the whole mechanism** - one atomic syscall, no check-then-create window,
+    and it behaves the same on Windows where this actually runs.
+
+    **The stale-lock problem is the real design question, and getting it wrong is worse than having
+    no lock.** `DR-008` says even the forced pull does not bypass this, so a lock left behind by a
+    killed process would refuse every pull for ever, with no override - and a missed pull is
+    permanently unrecoverable, because the vendor publishes current state and not an archive. That
+    trade is the wrong way round: the lock prevents duplicate REQUESTS, and a stale one would cost
+    the departure record itself.
+
+    So a lock older than `limits.lock_stale_after_seconds` is reclaimed, and the reclamation is
+    **reported rather than silent** - it means a previous run died, which is a fact worth seeing.
+    The bound is generous by two orders of magnitude: a pull is two files and a few seconds.
+    """
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / "directory-pull.lock"
+    note = "acquired"
+
+    if path.is_file():
+        try:
+            age = now - datetime.fromisoformat(path.read_text(encoding="utf-8").strip())
+        except (OSError, ValueError):
+            # An unreadable lock cannot be dated, and a lock that cannot be dated cannot be trusted
+            # to be live. Reclaimed and said out loud, never treated as held for ever.
+            age = timedelta(seconds=LOCK_STALE_AFTER + 1)
+            note = "reclaimed an unreadable lock"
+        if age.total_seconds() <= LOCK_STALE_AFTER:
+            raise LockHeld(
+                f"another directory pull holds {path.name} and started "
+                f"{age.total_seconds():.0f}s ago"
+            )
+        if note == "acquired":
+            note = f"reclaimed a stale lock {age.total_seconds():.0f}s old"
+        path.unlink(missing_ok=True)
+
+    try:
+        handle = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError as error:
+        # Lost the race between the staleness check and the create. Refusing is right: the other
+        # process won, and two collectors is exactly what this prevents.
+        raise LockHeld(f"another directory pull took {path.name} first") from error
+    try:
+        os.write(handle, now.isoformat().encode("utf-8"))
+        os.close(handle)
+        yield note
+    finally:
+        path.unlink(missing_ok=True)
 
 
 def _download(url: str) -> tuple[str, str | None]:
@@ -294,6 +354,15 @@ def main() -> int:
         if not cal.is_open(Exchange.NYSE, started_at.date()):
             print("not an NYSE session - nothing to collect")
             return _finish("NOT_A_SESSION")
+        # `DR-008`: eligible "only on an NYSE trading date, AFTER THE LATEST SESSION HAS COMPLETED".
+        # Only the first half was checked, so a run at 09:00 on a trading day was eligible and would
+        # have pulled a file describing YESTERDAY - then attributed it to yesterday, correctly, and
+        # spent the day's pull on a session already recorded. Not reachable from the 18:30 trigger,
+        # which is why this is a correctness fix rather than an outage: measured 2026-08-25, both
+        # scheduled passes sit after the 16:00 ET close and stay eligible.
+        if cal.last_completed_session(Exchange.NYSE, started_at).session_date != started_at.date():
+            print("today's NYSE session has not completed yet - nothing to collect (DR-008)")
+            return _finish("SESSION_NOT_COMPLETE")
 
     if forced:
         with DirectoryStore(store_path) as guard_store:
@@ -324,6 +393,38 @@ def main() -> int:
         else:
             superseded = already
 
+    # The lock is taken here rather than at the top: every branch above makes no request and writes
+    # no snapshot, so holding a lock across them would let a declining run block a working one.
+    # `DR-008` says the forced pull does not bypass it either, so this sits outside the `forced`
+    # check deliberately.
+    try:
+        with process_lock(args.data, started_at) as lock_note:
+            if lock_note != "acquired":
+                print(f"process lock: {lock_note} - a previous pull did not finish cleanly")
+            return _collect(
+                store_path=store_path, reason=reason, superseded=superseded,
+                target_session=target_session, finish=_finish,
+            )
+    except LockHeld as held:
+        print(f"process lock: {held} - declining (DR-008)")
+        return _finish("LOCK_HELD")
+
+
+def _collect(
+    *,
+    store_path: Path,
+    reason: str | None,
+    superseded: datetime | None,
+    target_session: date,
+    finish: Callable[..., int],
+) -> int:
+    """The part that touches the network and writes a snapshot, under the process lock.
+
+    Split out of `main` so the lock has an obvious scope: everything in here runs holding it,
+    everything above it makes no request and writes no snapshot. A lock held across the
+    declining branches would let a run that decided to do nothing block one that would have
+    worked.
+    """
     nasdaq_text, nasdaq_modified = _download(FILES["nasdaqlisted.txt"])
     other_text, other_modified = _download(FILES["otherlisted.txt"])
     received = len(nasdaq_text.encode("utf-8")) + len(other_text.encode("utf-8"))
@@ -410,7 +511,7 @@ def main() -> int:
                       + (f" and {len(gaps) - 10} more" if len(gaps) > 10 else ""))
                 print("A gap is permanent - the vendor publishes current state, not an archive.")
 
-    return _finish(
+    return finish(
         "RECORDED", requests=2, attempts=1, received=received, snapshot=knowledge_time,
     )
 

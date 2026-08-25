@@ -812,11 +812,24 @@ decision names an implementer, never that the implementer implements the decisio
       **The guard fails OPEN by construction** — it keys on the ATTRIBUTED session, so a pull whose
       trailer did not corroborate is invisible to it and the next pass fetches again. That is the
       correct direction: the failure mode is today's behaviour, never something worse.
-- [ ] **`[v]` What is still NOT implemented, each verified against the code rather than assumed.**
-      Listed so the next session does not have to re-derive it, and so nobody reads the item above
-      as "`DR-008` is done".
-      • **Process lock** — no lock of any kind. `DR-008` says even the forced pull does not bypass
-      it, and there is nothing to bypass. Two collectors can run at once today.
+- [x] **`[v]` EVERY CLAUSE IS NOW IMPLEMENTED — the audit that opened this section is closed the
+      same day, 2026-08-25.** Kept in full rather than collapsed to a tick: the list is the evidence
+      that each clause was checked against the code, and one entry below (`retry`) is a correction
+      of this audit's own reading rather than a gap. Struck items were built this session.
+      • ~~**Process lock**~~ **BUILT 2026-08-25.** `O_CREAT | O_EXCL` — one atomic syscall, no
+      check-then-create window, same behaviour on Windows where this runs. Taken around the fetch
+      and the write only, never across the declining branches: a run that decided to do nothing
+      must not block one that would have worked.
+      **The stale-lock problem was the real design question and getting it wrong is worse than
+      having no lock.** `DR-008` gives the forced pull no way past this lock, so one left by a
+      KILLED process would refuse every pull **for ever, with no override** — and a missed pull is
+      permanently unrecoverable, because the vendor publishes current state and not an archive. That
+      trade is backwards: the lock prevents duplicate REQUESTS and a stale one would cost the
+      departure record itself. So a lock older than `limits.lock_stale_after_seconds` (600, generous
+      by two orders of magnitude) is **reclaimed and reported** — it means a previous run died,
+      which is worth seeing — and an unreadable lock is reclaimed too, because *cannot tell* must
+      not mean *blocked permanently* for a resource whose loss is unrecoverable. Six tests including
+      the boundary control: a lock just INSIDE the timeout is still held.
       • ~~**Checksums**~~ **BUILT 2026-08-25.** One SHA-256 over both response bodies, stored on
       the pull. **One digest over the PAIR, not one each**, because a pull is a complete snapshot —
       the record's own framing, and the reason `as_of` reads the latest pull rather than unioning.
@@ -873,9 +886,13 @@ decision names an implementer, never that the implementer implements the decisio
       CONSECUTIVE sessions.** Counting calendar days would report an `ERROR` every Monday; counting
       them as non-adjacent would miss a two-session outage across a weekend, which is the most
       likely shape of one.
-      • **"After the latest session has completed"** — eligibility checks `cal.is_open(NYSE, today)`
-      only, so a scheduled run at 09:00 would be eligible. Not reachable today because the task
-      fires at 18:30, which is why this is recorded rather than ranked.
+      • ~~**"After the latest session has completed"**~~ **BUILT 2026-08-25.** Eligibility checked
+      `cal.is_open(NYSE, today)` only, so a scheduled run at 09:00 on a trading day was eligible and
+      would have pulled a file describing YESTERDAY. Now `last_completed_session(...) == today`.
+      **Measured before changing it rather than after:** both scheduled passes (18:30 and 19:30
+      local = 19:30 and 20:30 ET) sit after the 16:00 ET close and stay eligible; a 09:00 run does
+      not, which is the defect. Not reachable from today's trigger, so this is a correctness fix and
+      never was an outage.
 - [ ] **`[v]` The MANUAL mode is outside `DR-008` entirely, and that is a gap in the RECORD.**
       The bare form honours neither the local switch nor the calendar. `DR-008` describes scheduled
       collection and the forced pull and never mentions a third mode, so the code is not violating

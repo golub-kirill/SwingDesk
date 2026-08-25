@@ -2567,6 +2567,7 @@ source:
 limits:
   max_response_bytes: 2097152
   request_timeout_seconds: 30
+  lock_stale_after_seconds: 600
   max_retries_per_attempt: 1
   retry_after_seconds: 60
 staleness:
