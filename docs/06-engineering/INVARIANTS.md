@@ -30,6 +30,22 @@ honest statement that nothing does.**
 not are §2 and §3, and both are defensible — but they are defensible for stated reasons rather than
 by assumption, which is the difference this document exists to make.
 
+**That sentence was an assumption until 2026-08-25, and it was false.** The test named for
+invariant 1 asserted `r_multiple(net, sized) * sized.planned_risk == net` — `(net / x) * x == net`,
+an identity true for every non-zero `x`, so it held whatever the denominator contained. Measured
+2026-08-17: replacing `planned_risk` with `Decimal("42")` left it green. The test is rewritten and
+**gate 34 now checks the claim instead of restating it** — it breaks each invariant in a scratch
+copy of `src/` and requires the named test to go red. All ten mutants are killed today; derive it,
+never quote it from here:
+
+```bash
+python tools/verify_invariant_tests.py
+```
+
+The two uncovered invariants are 4 and 7, and the gate names them on every run for the reasons §2
+gives and because a mutation that made a pure function non-deterministic would be testing Python
+rather than this code.
+
 ## 2. Invariant 4 is structural, not tested
 
 `RISK_SPEC.md` §3 fixes the order: invalidation → stop → risk per share → allowed risk → shares.

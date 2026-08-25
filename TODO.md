@@ -1699,6 +1699,21 @@ is for where no gate can reach.
       ```bash
       python tools/verify_sibling_edits.py
       ```
+- [x] **`[v]` GATE 34 — the tests `INVARIANTS.md` names must be able to fail. Built 2026-08-25.**
+      `INVARIANTS.md` §1 said *"seven of nine are enforced by a test that would fail if the
+      invariant broke"*, and for invariant 1 that was false for three weeks — the named test
+      asserted `(net/x)*x == net`. Gate 8 says the tests pass; **nothing said they could fail**, and
+      the document is what a reader trusts.
+      Ten mutants over seven invariants, each a committed source edit applied to a **scratch copy**
+      of `src/` — which matters here because two of them land in `trade_management/sizing.py`, a
+      frozen file. All ten are killed today. Runtime ~15 s.
+      **A mutation site that no longer matches is a FAILURE, not a skip**: refactoring the line a
+      mutant targets is exactly when the check must speak up.
+      Invariants 4 and 7 have no mutant — a signature and a pure function — and the gate names them
+      every run rather than reporting a pass over them.
+      ```bash
+      PYTHONPATH=$PWD/src python tools/verify_invariant_tests.py
+      ```
 - [ ] **`[c]` Gate 10** (traceability) — unblocked now that ATR is active, still to build.
 - [ ] **`[c]` Gate 22** + `DR-008`'s remaining machinery · **Gate 14's word-number hole.**
 - [ ] **`[c]` 6 specified components awaiting activation** — pivots (M12-T0201, M12-T0202), moving

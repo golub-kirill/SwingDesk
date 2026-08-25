@@ -172,6 +172,8 @@ def main() -> int:
                                       [python, "tools/verify_checklist_blockers.py"]),
         "33 sibling edits": _run("no live branch is rewriting the same lines (advisory)",
                                  [python, "tools/verify_sibling_edits.py"]),
+        "34 invariant tests": _run("the tests INVARIANTS names can actually fail",
+                                   [python, "tools/verify_invariant_tests.py"]),
     }
 
     print("\n" + "=" * 62)

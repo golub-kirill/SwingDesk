@@ -2578,3 +2578,67 @@ def test_sibling_gate_says_it_did_not_run_rather_than_reporting_clean(tmp_path: 
     assert code == 0
     assert "DID NOT RUN" in out
     assert "not a clean result" in out
+
+
+# ------------------------------------------- gate 34: the invariant tests must be able to fail
+
+
+def _mutant(**overrides: object):
+    """A gate-34 mutant, defaulting to one that is real and is caught."""
+    from verify_invariant_tests import Mutant
+
+    fields = {
+        "invariant": 2,
+        "breaks": "open risk is clamped at zero",
+        "path": "swingdesk/contracts/position.py",
+        "old": "return (self.entry_price - self.current_stop) * self.shares",
+        "new": 'return max(Decimal("0"), (self.entry_price - self.current_stop) * self.shares)',
+        "tests": ("tests/test_positions.py::test_open_risk_is_recomputed_and_may_go_negative",),
+    }
+    fields.update(overrides)
+    return Mutant(**fields)  # type: ignore[arg-type]
+
+
+def test_invariant_gate_reports_a_mutant_that_survives(tmp_path: Path) -> None:
+    """The defect this gate exists for, staged deliberately.
+
+    The same real mutation, guarded by a test that cannot see it. That is the shape
+    `test_r_denominator_is_the_planned_risk` had for three weeks while `INVARIANTS.md` named it as
+    the enforcement of invariant 1.
+    """
+    import verify_invariant_tests
+
+    problem = verify_invariant_tests._run_mutant(
+        _mutant(tests=("tests/test_positions.py::test_costs_cannot_be_negative",)), tmp_path, 0
+    )
+    assert problem is not None
+    assert "SURVIVED" in problem
+
+
+def test_invariant_gate_treats_a_moved_mutation_site_as_a_failure(tmp_path: Path) -> None:
+    """A mutant that cannot be applied proves nothing, and a silent skip would hide that."""
+    import verify_invariant_tests
+
+    problem = verify_invariant_tests._run_mutant(
+        _mutant(old="this line is not in the source"), tmp_path, 1
+    )
+    assert problem is not None
+    assert "no longer matches" in problem
+
+
+def test_invariant_gate_does_not_read_a_missing_test_as_a_passing_one(tmp_path: Path) -> None:
+    """pytest exits non-zero on an uncollectable id, which would otherwise read as `killed`."""
+    import verify_invariant_tests
+
+    problem = verify_invariant_tests._run_mutant(
+        _mutant(tests=("tests/test_positions.py::test_that_does_not_exist",)), tmp_path, 2
+    )
+    assert problem is not None
+    assert "did not run" in problem
+
+
+def test_invariant_gate_reports_nothing_when_the_named_test_catches_it(tmp_path: Path) -> None:
+    """The positive control: without it a red result could come from a broken harness."""
+    import verify_invariant_tests
+
+    assert verify_invariant_tests._run_mutant(_mutant(), tmp_path, 3) is None
