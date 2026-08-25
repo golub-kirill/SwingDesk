@@ -355,6 +355,14 @@ rather than the 2.2 recorded, against a design target of 2.5. `DR-006` §18 carr
   not any more.
 - **`PR-001` §10, `PR-002`'s report, `PR-009` §10 and `DR-006` §18** are corrected forward. No
   verdict, sample or number moves, and each says so in the file.
+- **Nine fail-closed refusals had never been executed by the suite** — five of them in the frozen
+  `trade_management/sizing.py`. All 45 refusal and decision sites in `src/` are now accounted for,
+  and `tools/measure_refusal_coverage.py` is the command that says so. **No source changed**: they
+  were missing tests, not missing guards.
+- **`k.drawdown_pause` is one owner question, not three** (§0 finding 3 above), and `TODO.md` §4
+  carries the pattern this session kept finding: **§10.5 gives every COUNT an owner and nothing does
+  that for a STATUS** — twenty-odd stale ones across fifteen governed documents in a day, none of
+  them wrong when written.
 
 ### What to pick up, ranked — 2026-08-25
 
@@ -473,6 +481,13 @@ a report.
 **`exit 0`.** The 18:30 pass ran 18:30:00.82 → 18:49:59.38 — **19 min 59 s** — and completed. The
 fault that killed every evening from 2026-08-18 was `positions.open_as_of` binding a column the
 table on disk did not have; `positions.duckdb` carries it again and the run proves it in production.
+
+**That outage is also what §2's `incomplete` runs are, and nothing said so** — checked 2026-08-25
+against `journal.duckdb` rather than inferred. Every run with no `completed_at` started between
+2026-08-18 18:30 and 2026-08-21 19:30, which is the outage window exactly. They are journalled
+starts that never finished, they are immutable, and there is nothing to investigate. The same query
+independently confirms the sleep finding two sections down: **2026-08-20 has a 19:30 run and no
+18:30 run at all.**
 
 **The 19:30 second pass then ran, 19:30:00.77 → 19:49:56.92, `exit 0`, and gate 26 is green.**
 `tools/track_a_streak.py` reads **1/20** — it had read 0 straight after the 18:30 pass because it
