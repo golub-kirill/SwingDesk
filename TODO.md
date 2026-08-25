@@ -602,10 +602,19 @@ evening returned every one of those sessions, clean. The owner asked; nobody had
       three sessions — 2026-07-21, 07-22, 07-31 — not one, for six of eight instruments. 26 rows,
       no bar inside the window revised. It restored the missing VGK trade and corrected an FBNC
       exit from `stop_gap`/07-23 to `stop`/07-22.
-      **`LEG` and `NDSN` have no 2026-07-31 bar and the vendor does not supply one** — refetched
+      ~~**`LEG` and `NDSN` have no 2026-07-31 bar and the vendor does not supply one** — refetched
       successfully, the session simply is not there while 60 other instruments have it. A standing
-      data-quality fact about this source. It affects no trade: neither has an `end_of_data` exit
+      data-quality fact about this source.~~ It affects no trade: neither has an `end_of_data` exit
       in any arm (checked, after the opposite hypothesis was tested and refuted).
+      **STRUCK 2026-08-25, and it was false about three hours after it was written.** The store
+      holds both bars: `LEG` 2026-07-31 close **9.80**, `NDSN` **297.78**, both stamped
+      `knowledge_time` **2026-08-17 18:30:46** — the ordinary scheduled pass, the same evening.
+      It was vendor **LAG**, not vendor absence, and the difference is the whole claim: a lag is
+      waited out, an absence is a property of the source. The item further down found this on
+      2026-08-24 and said it *"should stop being repeated"*; it was still here until now, which is
+      the citation sweep `AGENTS.md` §12 asks for and nobody ran on this file.
+      Re-verified against the live store before striking, rather than taken from the item that
+      reported it.
       **Publishing took two keys, deliberately.** `--write` alone still refuses; `--accept-drift`
       is required and writes the cell-by-cell comparison beside the log. **`PR-009` must register
       against this replay's vintage, not against PR-005's published aggregate** — they are now
