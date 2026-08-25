@@ -806,3 +806,147 @@ def test_pending_still_lists_a_live_proposal(tmp_path, capsys) -> None:
     out = capsys.readouterr().out
     assert "1 proposal(s) awaiting your answer" in out
     assert "EXPIRED" not in out
+
+
+# ------------------------------------------- the refusals `record-fill` can raise and nobody saw
+#
+# Measured 2026-08-25 by tracing `cli.py` while the suite ran: four of its five `Refusal`
+# constructions had never been executed. These are the three that need no monkeypatch - all three
+# block the recording of a fill that has ALREADY happened at the broker, which is why each says
+# plainly what is missing rather than failing quietly.
+
+
+def _caps_registry(**overrides: object):
+    """The parameters `_capacity_for` reads, and nothing else.
+
+    Built here rather than shared: a `None` value means UNSET and a MISSING key means the code and
+    the registry disagree, and these tests are precisely about telling those two apart.
+    """
+    from swingdesk.platform.parameters import ParameterRegistry
+
+    base: dict[str, object] = {
+        "risk.max_open_risk": 4,
+        "risk.max_concurrent_positions": 4,
+        "account.equity": 10000,
+        "account.base_currency": "USD",
+        "risk.per_trade_pct": "1.0",
+    }
+    base.update(overrides)
+    return ParameterRegistry({
+        key: {
+            "id": key, "value": value,
+            "provenance": "assumed:test" if value is not None else None,
+            "status": "assumed" if value is not None else "unset",
+            "unit": "", "named_in": ["test"], "read_by": "none", "ui_editable": False,
+        }
+        for key, value in base.items()
+    })
+
+
+def _held_position():
+    from datetime import UTC, date, datetime
+
+    from swingdesk.contracts.position import Position
+
+    return Position(
+        position_id="POS-1", version=1, instrument_id="TEST.1",
+        opened_on=date(2025, 12, 1), entry_price=Decimal(100), shares=50,
+        initial_stop=Decimal(96), current_stop=Decimal(96),
+        initial_costs_per_share=Decimal("0.50"),
+        knowledge_time=datetime(2025, 12, 1, tzinfo=UTC),
+    )
+
+
+def test_recording_a_fill_refuses_when_a_cap_has_no_value(tmp_path: Path) -> None:
+    """`unset` is not `no limit`. The book cannot be judged against a cap nobody set."""
+    from datetime import UTC, datetime
+
+    from swingdesk.journal_evidence.positions import PositionStore
+    from swingdesk.trade_management.sizing import Refusal
+
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        result = cli._capacity_for(
+            store, _held_position(), _caps_registry(**{"risk.max_open_risk": None}),
+            datetime(2026, 1, 5, tzinfo=UTC),
+        )
+    assert isinstance(result, Refusal)
+    assert result.code == "RISK"
+    assert result.parameter_id == "risk.max_open_risk"
+
+
+def test_recording_a_fill_refuses_when_one_R_cannot_be_valued(tmp_path: Path) -> None:
+    """The cap is denominated in R, so an unset equity blocks judging the book at all.
+
+    Worth its own case because it WIDENS what can stop a fill being recorded: before the cap
+    existed this command needed only the `DR-010` cost parameters.
+    """
+    from datetime import UTC, datetime
+
+    from swingdesk.journal_evidence.positions import PositionStore
+    from swingdesk.trade_management.sizing import Refusal
+
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        result = cli._capacity_for(
+            store, _held_position(), _caps_registry(**{"account.equity": None}),
+            datetime(2026, 1, 5, tzinfo=UTC),
+        )
+    assert isinstance(result, Refusal)
+    assert result.code == "RISK"
+    assert "one R cannot be valued" in result.reason
+    assert result.parameter_id == "account.equity"
+
+
+def test_expiry_refuses_for_a_proposal_whose_position_is_not_in_the_store(tmp_path: Path) -> None:
+    """The exchange comes from the POSITION, so no position means no calendar to date against.
+
+    Refusing beats guessing: `DR-013`'s window is in SESSIONS, and picking the wrong calendar is
+    the worst way for a date rule to be wrong.
+    """
+    from datetime import UTC, datetime
+
+    from swingdesk.contracts.position import ManagementAction
+    from swingdesk.journal_evidence.positions import PositionStore
+    from swingdesk.trade_management.sizing import Refusal
+
+    action = ManagementAction(
+        action_id="ACT-1", position_id="POS-MISSING", kind=_ActionKind.MOVE_STOP,
+        proposed_at=datetime(2026, 1, 2, tzinfo=UTC), run_id="R1",
+        reason="stop moved to breakeven", old_stop=Decimal(96), new_stop=Decimal(98),
+    )
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        result = cli._expiry(store, action, datetime(2026, 1, 5, tzinfo=UTC))
+    assert isinstance(result, Refusal)
+    assert result.code == "DATA"
+    assert "POS-MISSING" in result.reason
+
+
+def test_expiry_refuses_when_the_window_itself_is_unset(tmp_path: Path, monkeypatch) -> None:
+    """The last of `cli.py`'s five refusals, and the only one needing a monkeypatch.
+
+    `_expiry` reads `ParameterRegistry.load()` itself rather than taking a registry the way
+    `_capacity_for` does, so there is no injection point and the guard is unreachable from a
+    fixture. What it asserts is still real and is the fail-closed rule: an unset window becomes a
+    CODED refusal naming the parameter, never a default number of sessions.
+    """
+    from datetime import UTC, datetime
+
+    from swingdesk.contracts.position import ManagementAction
+    from swingdesk.journal_evidence.positions import PositionStore
+    from swingdesk.platform.parameters import ParameterUnset
+    from swingdesk.trade_management.sizing import Refusal
+
+    def _refuse_to_load():
+        raise ParameterUnset("management.proposal_expiry_days")
+
+    monkeypatch.setattr(cli.ParameterRegistry, "load", staticmethod(_refuse_to_load))
+
+    action = ManagementAction(
+        action_id="ACT-1", position_id="POS-1", kind=_ActionKind.MOVE_STOP,
+        proposed_at=datetime(2026, 1, 2, tzinfo=UTC), run_id="R1",
+        reason="stop moved to breakeven", old_stop=Decimal(96), new_stop=Decimal(98),
+    )
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        result = cli._expiry(store, action, datetime(2026, 1, 5, tzinfo=UTC))
+    assert isinstance(result, Refusal)
+    assert result.code == "RISK"
+    assert result.parameter_id == "management.proposal_expiry_days"

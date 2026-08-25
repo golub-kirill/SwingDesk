@@ -1936,6 +1936,18 @@ is for where no gate can reach.
       **Method, so it can be repeated without adding a dependency:** `sys.settrace` scoped to
       `pipeline.py` alone while the suite runs, ~3 minutes. `coverage` is not a declared dependency
       and adding one to answer a question once would be the wrong trade (gates 17, 18).
+      **Widened the same day to every `Refusal` in the live modules, and this half found real
+      gaps.** 27 refusal sites across `pipeline`, `universe`, `cli`, `portfolio`, `sizing`,
+      `freshness` and `store`: **18 executed, 9 never**. All nine now are — 27 of 27.
+      **Five were in `sizing.py`**, which is the most safety-critical file in the tree and frozen:
+      an unsupported currency, an unset cost parameter, a non-positive risk-per-share after costs, an
+      unset position-value cap, and a cap too small to buy one share. Each was reachable and each
+      now has a test asserting the code and the wording that reaches the owner. **No source
+      changed** — these were missing tests, not missing guards.
+      **Four were in `cli.py`**, and all four block the recording of a fill that has ALREADY
+      happened at the broker, which is what makes their wording matter. Three needed no monkeypatch;
+      the fourth does, and **that is a design observation worth keeping**: `_expiry` loads the
+      registry itself while `_capacity_for` takes one, so only the second has an injection point.
       **What it does NOT establish:** that each site is exercised for the right REASON. A line
       executed is not a branch asserted, and the two are the same distance apart as gate 8 and gate
       34.

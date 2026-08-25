@@ -19,7 +19,12 @@ from hypothesis import strategies as st
 from swingdesk.contracts.market import Bar, BarSeries, Interval, Series
 from swingdesk.derived_observations import atr
 from swingdesk.platform.parameters import ParameterRegistry
-from swingdesk.trade_management.sizing import Refusal, r_multiple, size_long
+from swingdesk.trade_management.sizing import (
+    Refusal,
+    costs_per_share,
+    r_multiple,
+    size_long,
+)
 
 
 def _registry(**overrides: object) -> ParameterRegistry:
@@ -612,3 +617,74 @@ def test_every_estimator_moves_with_the_real_spread(true_spread: float) -> None:
             f"{name} median {median:.6f} against a true spread of {true_spread} - "
             f"an estimator that cannot see a spread this large is not measuring one"
         )
+
+
+# ------------------------------------------------- the sizing refusals nobody had ever seen fire
+#
+# Measured 2026-08-25 by tracing `sizing.py` while the suite ran: five of its twelve `Refusal`
+# constructions had never been executed. A fail-closed refusal nobody has seen fire is a refusal
+# nobody knows fires, which is the whole subject of `FAIL_CLOSED_POLICY.md` and of
+# `REQ-VALIDATION-001`. These are the five, each with the wording that travels to the owner.
+
+
+def test_an_unsupported_currency_refuses_rather_than_pricing_it_as_usd() -> None:
+    """Cost parameters exist per currency, so a third one has no schedule at all.
+
+    Unreachable through `size_long` — `to_base_currency` refuses an unknown currency first — and
+    reachable directly, which is why the guard is here rather than assumed away.
+    """
+    result = costs_per_share(Decimal("100"), "EUR", _registry())
+    assert isinstance(result, Refusal)
+    assert result.code == "RISK"
+    assert "EUR" in result.reason
+
+
+def test_an_unset_cost_parameter_refuses_and_names_itself() -> None:
+    """Understating cost is the unsafe direction: a smaller `costs` produces MORE shares."""
+    result = size_long(
+        Decimal("100"), Decimal("95"), "USD", _registry(**{"risk.costs_bp_usd": None})
+    )
+    assert isinstance(result, Refusal)
+    assert result.code == "RISK"
+    assert result.parameter_id == "risk.costs_bp_usd"
+
+
+def test_a_negative_cost_cannot_produce_a_non_positive_risk_per_share() -> None:
+    """The denominator guard, against a registry rather than against a price.
+
+    `entry - stop` is positive by the checks above it, so this fires only when `costs` is negative -
+    which needs a negative floor AND a negative bp, since the cost is `max(floor, proportional)`.
+    Nothing validates the sign of either, so the guard is the only thing between a bad registry and
+    a share count divided by a negative number.
+    """
+    result = size_long(
+        Decimal("100"), Decimal("95"), "USD",
+        _registry(**{"risk.costs_floor_usd": "-10", "risk.costs_bp_usd": "-100000"}),
+    )
+    assert isinstance(result, Refusal)
+    assert result.code == "STOP"
+    assert "not positive after costs" in result.reason
+
+
+def test_an_unset_position_value_cap_refuses_rather_than_sizing_uncapped() -> None:
+    """`unset` is not `no limit`. Sizing without a cap is not permitted."""
+    result = size_long(
+        Decimal("100"), Decimal("95"), "USD", _registry(**{"risk.max_position_value": None})
+    )
+    assert isinstance(result, Refusal)
+    assert result.code == "RISK"
+    assert result.parameter_id == "risk.max_position_value"
+
+
+def test_a_cap_too_small_for_one_share_refuses_with_liq_rather_than_rounding_to_zero() -> None:
+    """The cap is applied AFTER the raw share count and can take it to zero.
+
+    A cap of 50 at an entry of 100 buys no share at all. Returning a zero-share snapshot would be a
+    trade proposal for nothing; `LIQ` says the instrument is too expensive for the cap.
+    """
+    result = size_long(
+        Decimal("100"), Decimal("95"), "USD", _registry(**{"risk.max_position_value": 50})
+    )
+    assert isinstance(result, Refusal)
+    assert result.code == "LIQ"
+    assert "buys 0 shares" in result.reason
