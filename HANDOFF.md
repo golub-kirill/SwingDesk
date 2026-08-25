@@ -5,24 +5,37 @@ rules that were each paid for, and §12, traps that each cost real time — then
 
 ## 0. The first thing, and it is not code
 
-**That branch merged.** `claude/swingdesk-tasks-cl-perf-707e67` landed on 2026-08-24 as pull
-request #49, `master` is `55dcfe5`, and both `gates` runs were green in CI before it went in. So
-`master` now runs the six-minute pipeline rather than the twenty-minute one, has the gate count
-§2 reports, and no longer carries the documentation defects that branch corrected. §5's *What it
-carried* says what landed. **The main checkout was fast-forwarded to it**, so the next scheduled
-evening runs the fast path.
+**A branch holds twelve commits and is NOT merged:** `claude/state-block-from-the-run`, worktree
+`.claude/worktrees/swingdesk-session-continuation-39adaa`. It is zero commits behind `master`
+(`4385eaf`) and its local gate run is clean. **Nothing below §2 that it produced is on `master`.**
+`python tools/verify_branches.py` prints the census.
 
-**The code graph was re-indexed against the merge** (`AGENTS.md` §9 rule 3) and describes `master`.
+**Read this before touching the flow, the registry or the criteria — three findings change what you
+would otherwise assume.**
 
-**Three superseded branches were deleted the same day**, local and on `origin`, on the owner's
-instruction: `claude/correctness-fx-and-r-denominator` (`c0f10a6`), `claude/open-position-command`
-(`309621e`), `claude/full-cycle-trade-dev-c6b1f1` (`a01aaeb`). Each was 81–86 commits behind, and
-its content was verified present in `master` marker by marker before anything was removed — merging
-any of them would have **resurrected the dated session-handoff files that the same day's owner ruling
-deleted**. The SHAs are written here because that is all it takes to bring one back.
+1. **`Trade` is unreachable in code.** Measured across the live application layer: the decision
+   token `Skip` appears in seventeen places, `Watch` in one, **`Trade` in none**, and every decision
+   ever recorded in `journal.duckdb` is `Watch` or `Skip`. The nightly `Trade 0` is a property of
+   the code, not of the market. `DR-020` authors the missing transitions;
+   `plans/2026-08-24-the-trade-flow.md` is the plan. *(`Pause` is absent from the candidate path
+   CORRECTLY — the state machine models it as account-wide.)*
+2. **The only ratified criterion with scope `live` cannot fire.** `k.drawdown_pause`'s threshold is
+   owner-set at 20% and **nothing in `src/` computes realised drawdown**; its prescribed action
+   names `risk.risk_off_ladder`, which is itself `unset`. Every gate passed over it for a defensible
+   reason. Gate 1 now prints the cited-by-a-ratified-criterion subset on every run.
+3. **"No free source serves delisted history" is half false.** SEC EDGAR serves the FACT and DATE of
+   a delisting, free and official, back to 1993 — `tools/probe_edgar.py`. Prices for a delisted name
+   are still unobtainable, so the bound's return half stands. `VENDOR_COMPARISON.md` §7 and
+   `EVIDENCE_SUMMARY.md` §3 are amended.
 
-**Both scheduled passes ran on 2026-08-24 and decided identically.** 18:30 `exit 0`, 19:30 `exit 0`,
-same `output_hash`, both against a clean tree. §5 has what that establishes and what it does not.
+**Three new rules and one new gate**, all owner instructions of 2026-08-24: `AGENTS.md` **§15** an
+impossibility is a claim, **§16** the course is a requirements source and not an evidence source,
+**§17** verify at the right granularity. **Gate 30** makes a second rulebook impossible.
+
+**The evening of 2026-08-24 in one line:** both passes ran, `exit 0`, and decided **identically** —
+same `output_hash` an hour apart on the real universe, the first live observation of a property
+`DR-015` §3 only asserted. `DR-019` makes the second pass conditional, because it has never changed
+an outcome and the failure it insures against has never occurred here.
 
 **Everything else is committed.** `master` is protected on `github.com/golub-kirill/SwingDesk`
 (public) and requires the `gates` check, so it only ever advances to a commit CI has already
@@ -267,27 +280,28 @@ longer matches a fresh replay, because seven bars arrived three hours after it w
 **The code graph was re-indexed once it merged** — `src/` and `tools/` both changed (`AGENTS.md`
 §9 rule 3). It is named `swingdesk`, rooted at the main checkout, and now describes `master`.
 
-### What to pick up, ranked — 2026-08-24
+### What to pick up, ranked — 2026-08-25
 
-**Three items closed on 2026-08-24 and are gone from this list**: the branch decision (merged,
-#49), the `a.run_completes` / gate 26 question (both passes ran, counter started, and gate 26's
-mid-run false red is fixed), and the `AGENTS.md` cut — every heading byte-identical, every section
-reference still resolving, §13's owner block untouched, and the owner ruling on 2026-08-24 that the
-result stands rather than being cut further. What is left:
+**First: decide about the branch in §0.** Everything below assumes it either merges or does not.
 
-1. **The AI guard, which `CHARTER.md` A-001 makes a PRECONDITION.** §3a permits advice on an open
+1. **Ratify or reject `DR-019` and `DR-020`.** Both are `proposed` and both are already built or
+   authored: the conditional second pass runs today, and the transition graph is what makes `Trade`
+   reachable in principle. `DECISION_STATE_MACHINE.md` §6 stays open until `DR-020` is ratified.
+2. **`entry.maximum_entry_atr` and the trigger definitions need values**, and a value is a study or
+   a ruling — never a guess (`AGENTS.md` §8). `DR-020` §7 measured what the pivot parameters cost
+   and removed one argument that would have been made from a false premise; it moved no value.
+3. **The AI guard, which `CHARTER.md` A-001 makes a PRECONDITION.** §3a permits advice on an open
    position; A-001 says nothing may be implemented before the authority model is *gated*, and
-   `AI_AUTHORITY_MODEL.md` §11 records that its prohibitions are prose. The two vocabularies —
-   decisions and management actions — are mechanically checkable and nothing checks them. **This is
-   the next build, not the AI itself.**
-2. **The `PR-005` trade log needs an owner ruling** — the published CSV no longer matches a fresh
-   replay because seven bars arrived three hours after it was published. Three options in
-   `TODO.md` §5; `docs/prereg/results/` was deliberately not touched.
-3. **The next pre-registration, if there is one.** `PR-013` looked at one lookback and one horizon
-   and found nothing at that pair; it did not refute the family. Whoever writes the next one owes it
-   a decision rule with a branch for *both arm and control are losing*, which `PR-013`'s lacked.
-4. **Everything owner-pending is in `TODO.md` §4** — the trial budget, `account.fx_rate_cad`,
-   `data.staleness_action_threshold`, the successor timebox, `DR-016`/`DR-017`.
+   `AI_AUTHORITY_MODEL.md` §11 records that its prohibitions are prose.
+4. **`k.drawdown_pause` needs a measurement, and the measurement needs owner decisions** — realised
+   drawdown requires an account-equity concept the store does not hold. `TODO.md` §1 states what
+   closing it needs and why inventing an equity definition to green a gate would be the wrong move.
+5. **The `PR-005` trade log needs an owner ruling** — the published CSV no longer matches a fresh
+   replay because seven bars arrived three hours after it was published. Three options in `TODO.md`.
+6. **`SWINGDESK_EDGAR_CONTACT` is one line and it unblocks a real measurement** — classifying the 87
+   symbols that left the directory in three weeks into delistings and renames, which `DR-008` c3
+   records as currently indistinguishable.
+7. **Everything owner-pending is in `TODO.md` §4.**
 
 ### The clock, and the freeze that protects it
 

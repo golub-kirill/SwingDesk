@@ -112,9 +112,15 @@ Two enums, two object types:
 
 ## 6. Open items
 
-- [ ] **Watchlist transition graph is unspecified** (§3). The nine states exist; the legal
-      transitions do not. Authored work — must be designed, recorded here, and enforced, because an
-      unconstrained status field degrades into free text.
+- [ ] **Watchlist transition graph — AUTHORED 2026-08-24 in `DR-020`, awaiting ratification** (§3).
+      The nine states exist; the legal transitions did not, and that gap is why `Trade` is
+      unreachable in code — measured across the live application layer, the decision token `Skip`
+      appears in seventeen places, `Watch` in one, and `Trade` in none.
+      `DR-020` authors the graph and decides no number: `Trade` is reachable only through
+      `Ready → Triggered → Trade`, `Skip` from every pre-position state, and `Late`/`Invalid`/`Skip`
+      end the CYCLE rather than the instrument. **It stays open here until the record is ratified**,
+      at which point the graph is transcribed into §3 and enforced — an unconstrained status field
+      still degrades into free text, and a proposed record does not constrain anything yet.
 - [ ] **`Pause` scope** (§1). Modelled here as account-wide, which follows from its criteria and its
       action, but the course does not say so explicitly. Confirm with the owner before implementing.
 - [ ] Confirm no sixth enum exists in the modules not yet swept (M45–58, M88–93 were sampled for
