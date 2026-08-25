@@ -472,10 +472,25 @@ target is a sentence asserting something about the WORLD that nobody tested.
       so trying one is predicted to reproduce the floor, not to escape it.
       **What would overturn it** is therefore not a new estimator but a different INPUT — intraday
       quotes, or `PR-006`'s real fills, which is what the row already names as the only route left.
-- [ ] **`[v]` "Batching the vendor is not the next lever."** Measured and correct about batching -
-      and it then names CONCURRENCY as the real lever and stops, calling it *"a different kind of
-      decision"*. §15 rule 4 and §14: that is a question for the owner, not a parking space. The
-      equality half is already measured, so whoever asks does not have to re-establish it.
+- [x] **`[v]` "Batching is not the lever; the lever would be concurrency" — AUDITED 2026-08-25.
+      Correct about batching, and the concurrency half needs no owner decision at all.**
+      It read as a lever named and parked, which §15 rule 4 treats as a decision nobody took. It is
+      not: **`NFR.md` §3 already rules on it, in both directions.** The table says *"Incremental
+      daily refresh ≤ 20 min ... vendor rate-limited. I/O-bound; **concurrency applies here**"* and,
+      one row down, *"Decision path ≤ 5 min ... **Not a place to optimise with concurrency**"*. So
+      whether concurrency is permitted at the fetch stage was settled before the question was asked.
+      **What blocks it is that nothing needs it.** The vendor phase is about three minutes against
+      a twenty-minute refresh budget, and the whole run about six against forty-five end to end.
+      Derive both with `python tools/measure_latency.py`. Concurrency would buy time **no
+      requirement asks for** — the same reasoning that removed the calendar cache, where 23 seconds
+      cost 228 MB and discharged no requirement.
+      **So it is correctly not done, for a better reason than the one recorded.** The old wording
+      implied a pending owner decision and would have sent a future session to ask about something
+      that needs no asking. The vendor-relationship concern — parallel requests against an
+      unofficial scrape on a free tier — is real and stays real; it simply is not the binding
+      constraint, because the speed is not wanted.
+      **What would change it:** universe growth. The budgets bind at roughly seven times the current
+      fetch count, and coverage is 28% of the directory.
 - [ ] **`[c]` "There is no legal source of probability in this system today."** Likely sound - it is
       a statement about this system's own evidence rather than about the world - but it is the
       single strongest closure in the tree and has never been stated with a test beside it.
