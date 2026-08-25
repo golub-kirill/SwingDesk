@@ -636,6 +636,31 @@ target is a sentence asserting something about the WORLD that nobody tested.
       is governed by `AUDIT_AND_IMMUTABILITY.md`, so this is a different kind of task from editing a
       live document and should not be done casually.
 
+### A STALE COUNT IN A DOCSTRING, AND WHY GATE 14 STILL SHOULD NOT SCAN CODE — 2026-08-25
+
+- [x] **`[v]` `reference_data/directory.py` said "the six pulls made before this existed" and the
+      answer was SEVEN.** A hand-typed measured count, in code, invisible to gate 14 — that gate
+      scans markdown only. `AGENTS.md` §10.5's disease one file type over.
+      **Fixed the way §10.5 says rather than by widening a gate:** the docstring no longer carries
+      the number, it names the derivation. A count that is derived cannot go stale in any file type.
+- [x] **`[v]` MEASURED AND DELIBERATELY NOT BUILT: gate 14 over `.py`.** The obvious response to the
+      above, tested before adopting. Across 133 tracked Python files the existing patterns produce
+      **7 hits, of which 6 disagree with the tree — and all six are false positives.**
+      • `check_gates.py`'s `"8 tests"` is the **gate's NAME**, not a test count.
+      • `verify_prereg_conformance.py`'s *"condition 4 gates rather than reports"* — *"4 gates"*
+      where `gates` is a **verb**.
+      • Three are illustrations inside `verify_counts.py`'s own comments, and one of those is a
+      quotation of a past defect.
+      • `verify_study_summary.py`'s is a comment reading *"'465 registered' is a component count,
+      and a gate that flagged it would be noise"* — **the comment predicting this false positive was
+      flagged by it.**
+      **And the real defect above was NOT among the hits**, because it is spelled *"six"* and
+      because *"directory pulls"* is not a quantity gate 14 derives. So the extension costs six
+      false positives and catches zero real defects including the one that prompted it.
+      **Same shape as the word-number experiment, same conclusion, and now twice measured:** gate
+      14's precision comes from being narrow, and the way out of a stale count is `AGENTS.md` §10.5
+      — name the command, not the number — not a wider net.
+
 ### THE AUDIT'S OWN BASE RATE — measured 2026-08-25, and the owner's hypothesis holds
 
 **The ask was whether this project had been stopping itself on untested "cannot"s.** Seven

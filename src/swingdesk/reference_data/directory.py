@@ -28,9 +28,14 @@ Three limits, stated because they bound every result computed from this store:
      response's `Last-Modified` header - not assumed), and stores a date only when the two agree
      within tolerance on every file, every pull. Disagreement, a missing header, or a
      not-strictly-increasing date against prior pulls all refuse the CLAIM - the rows are still
-     recorded (`AGENTS.md`: fail closed on the claim, not the data). The six pulls made before this
+     recorded (`AGENTS.md`: fail closed on the claim, not the data). The pulls made before this
      existed have no trailer preserved (`DR-008` forbids archiving raw responses) and stay
      permanently `NULL` - `DR-008` consequence 3 forbids backfilling a date they never stored.
+     **How many is a measured count and this docstring does not carry it**: it read *"the six
+     pulls"* and the answer was seven by 2026-08-25. Derive it with `attributed_sessions()` and the
+     pull list, or with `python tools/build_state.py`, whose directory row splits the unattributed
+     pulls by REASON. A count typed into a docstring is `AGENTS.md` §10.5's disease one file type
+     over, and gate 14 cannot see it - that gate scans markdown only.
 
 Fetching lives in `tools/fetch_directory.py`, so nothing in the layer graph reaches the network to
 answer a question about eligibility (CI_POLICY 4).
