@@ -1,6 +1,6 @@
 # The merge gates, executed off this machine.
 #
-# Until 2026-08-10 all 22 gates ran only on the owner's laptop, by hand. `master` carried zero
+# Until 2026-08-10 every gate ran only on the owner's laptop, by hand. `master` carried zero
 # commit statuses and no branch protection, so "22 gates, all green" was a claim about a habit
 # rather than about the published commit - the exact shape of defect the gates themselves exist to
 # catch, one level up (CI_POLICY 3).
@@ -10,10 +10,14 @@
 # logic in two places: the copy drifts, and the drift is invisible until a gate silently stops
 # running.
 #
-# Two of the 22 cannot run here and are reported UNAVAILABLE, not PASS: gates 2 and 3 re-extract the
-# owner's 116 course PDFs, which are the requirements source and are not in the repository. The
-# runner prints which gates did not run and never claims "all gates pass" when any did not. Treat a
-# green run here as 20 of 22.
+# Some gates cannot run here and are reported UNAVAILABLE, not PASS: gates 2 and 3 re-extract the
+# owner's 116 course PDFs, which are the requirements source and are not in the repository, and
+# gates 23, 24 and 26 need `data/` or the scheduling machine. The runner prints which gates did not
+# run and never claims "all gates pass" when any did not.
+#
+# The COUNT is deliberately not written here - it lives in `HANDOFF.md` section 2, generated
+# (`AGENTS.md` section 10.5). This comment read "all 22 gates" and "20 of 22" until 2026-08-25, by
+# which point neither figure had been right for two weeks, and nothing scans a YAML comment.
 
 name: gates
 
