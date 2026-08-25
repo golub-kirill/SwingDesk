@@ -309,8 +309,17 @@ longer matches a fresh replay, because seven bars arrived three hours after it w
 
 ### What `claude/inspiring-colden-2e8e16` carries — unmerged, 2026-08-25
 
-Three gates and two corrections. **None of it moves a decision output, sets a value, or touches a
-frozen file**, so it spends no `a.run_completes` counter.
+Four new gates, one extracted, and three corrections. **None of it moves a decision output, sets a
+value, or touches a frozen file**, so it spends no `a.run_completes` counter.
+
+**The finding to read first: a superseded threshold was the arithmetic under a wired risk cap for
+thirteen days.** `DR-007` §3.7 proposed `validation.max_allowable_drawdown` = −15R; the owner set
+20 percent of equity and the 2026-08-09 reconciliation superseded §3.7. The registry has never held
+−15R — git settles it. But `DR-006` §1 anchors the book cap on a ratio against −15R, and §9 moved
+that cap from 6R to 4R to restore the ratio; `ALLOCATION_SPEC.md` quoted it forward; `PR-009` is
+*titled* after it. **The ratified 4R does not move and the error ran conservative** — 1R is exactly
+1 percent of equity today, so the pause is 20R and the ratified anchor is 3.0 gap-sessions away
+rather than the 2.2 recorded, against a design target of 2.5. `DR-006` §18 carries the working.
 
 - **Gate 32 — a checklist item's stated blocker must still be blocking.** The eight `UNAVAILABLE`
   pre-trade items each carry a sentence saying what the system waits on, and re-reading them was a
@@ -324,10 +333,23 @@ frozen file**, so it spends no `a.run_completes` counter.
   over `INVARIANTS.md` §1 and `REQ-VALIDATION-001`'s five live vetoes. It exists because the test
   `INVARIANTS.md` named for invariant 1 asserted `(net / x) * x == net` and could not fail; that
   test is rewritten and pinned to a value.
+- **Gate 35 — a document naming a test must name one that exists.** `INVARIANTS.md` §1 and
+  `REQUIREMENTS.md` §7 both argue enforcement by naming a test and a reader takes the name as proof.
+  23 cited, 0 unresolved; renaming a test is ordinary work no other gate would notice.
+- **Gate 7 moved out of `check_gates.py` into a tool**, because while it was an inline function it
+  could not be pointed at a fixture — so it was the one gate of this repository's own making with no
+  failure test, **and the audit that closed that class could not see it**: that audit's own
+  derivation was *"grep `tests/` for each `tools/verify_*.py`"*. It now also enforces
+  `REQ-DATA-001`'s *"no event date as a literal in executable code"*, a MUST whose status cell read
+  "verified", once, by hand.
+- **`REQUIREMENTS.md` §7** — each requirement paired with the test or gate that would go red, or the
+  honest statement that nothing would. Six of nine have something; three have nothing, correctly.
+  It is the artefact gate 10 has been waiting for, and the table says what gate 10 should *not*
+  check.
 - **The Canada row in §2**, and the `TODO.md` §6 item that was blocked on `DR-003` gap 1 and is
   not any more.
-- **`PR-001` §10 and `PR-002`'s report** are corrected forward for the refuted enumeration claim.
-  No verdict, sample or number moves, and both say so in the file.
+- **`PR-001` §10, `PR-002`'s report, `PR-009` §10 and `DR-006` §18** are corrected forward. No
+  verdict, sample or number moves, and each says so in the file.
 
 ### What to pick up, ranked — 2026-08-25
 
