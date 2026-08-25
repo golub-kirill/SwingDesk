@@ -48,7 +48,16 @@ Treat 25bp as "materially more than 5", never as a measurement of 25.
 ## 3. The one positive finding is fragile at a plausible magnitude
 
 `PR-002` — breadth separates breakout outcomes — is erased by **1.6–2.3% of trades missing at −2R**,
-and Yahoo serves no delisted history, so that exposure can never be confirmed on the free tier.
+and Yahoo serves no delisted history. ~~so that exposure can never be confirmed on the free tier.~~
+
+**Corrected 2026-08-24, and only half of it was true.** The bound has two halves and the free tier
+closes one of them. **How many names vanished** is measurable: SEC EDGAR keeps every filer back to
+1993, free and official, and dates each delisting by Form 25 or 25-NSE — demonstrated by
+`tools/probe_edgar.py`. **What those trades would have returned** is not: no free source serves the
+price path of a symbol that has gone, so the −2R assumption stays an assumption. So the exposure's
+SIZE can be constrained by measurement and its MAGNITUDE cannot, where the sentence struck above
+said neither could. Struck rather than rewritten, per `AGENTS.md` §15: it was an impossibility
+asserted without a test.
 
 **And its verdict does not follow its own decision rule.** `PR-002` §6 permits `accept` only on both
 countries independently; the third amendment, dated before the run, states that a single-market

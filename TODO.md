@@ -421,13 +421,30 @@ target is a sentence asserting something about the WORLD that nobody tested.
 
 **Ranked by what the claim is load-bearing for, sharpest first:**
 
-- [ ] **`[v]` "No free source serves delisted history."** `VENDOR_COMPARISON.md` §7 and
-      `EVIDENCE_SUMMARY.md` — and it is the load-bearing premise under the survivorship bound that
-      erases `PR-002`, the one positive finding this project has. **The project has already named a
-      candidate route and parked it:** the EDGAR delisting backfill, deferred in the 2026-08-11
-      plan and named as unblocked in the entry below. So the claim and a possible refutation of it
-      have coexisted in this repository without anyone testing one against the other. Test EDGAR
-      against a handful of known delistings before anything else on this list.
+- [x] **`[v]` "No free source serves delisted history" — TESTED 2026-08-24, and it was half false.**
+      It was the load-bearing premise under the survivorship bound that erases `PR-002`, and the
+      project had named a candidate refutation — the EDGAR backfill — and parked it, so the claim
+      and its test coexisted here without anyone running one against the other.
+      **Run it yourself: `python tools/probe_edgar.py`.** SEC EDGAR keeps every filer back to 1993,
+      **free, official, no registration and no cost**. A delisted issuer's submissions record shows
+      empty ticker and exchange lists, and Form `25` / `25-NSE` dates the event. Verified against a
+      real delisting (Eagle Bulk Shipping) with a still-listed control.
+      **Access terms, measured:** no `User-Agent` returns **403**, a descriptive one returns
+      **200**. The probe transmits no address unless the operator sets `SWINGDESK_EDGAR_CONTACT`.
+      **What the CONTROL taught, and it changes how the data must be used:** Apple files Form 25 and
+      25-NSE too and is listed — those retire individual securities, not the company. So a Form 25
+      is **not** a company delisting; the field that discriminates is the empty ticker/exchange
+      list, and the form dates it.
+      **What is now measurable and what is not.** How many names vanished, and when: measurable.
+      What those trades would have returned: not — no free source serves the price path of a symbol
+      that has gone, so the −2R assumption stays an assumption. `VENDOR_COMPARISON.md` §7 and
+      `EVIDENCE_SUMMARY.md` §3 are both amended in place.
+- [ ] **`[v]` NEXT, and it is now unblocked: measure the delisting rate over the admitted universe.**
+      The survivorship bound's exposure is currently assumed. With EDGAR the count is derivable —
+      for each historical window, how many names that the screen would have admitted later
+      delisted. That converts one half of the bound from an assumption into a measurement and needs
+      no new vendor relationship. It is a measurement, not a study: it describes the universe and
+      evaluates no strategy.
 - [ ] **`[v]` "A fourth estimator is the same family."** `HANDOFF.md` §7's spread row. Three
       estimators were measured and that part is evidence; the fourth-estimator clause is a
       **prediction** and it closes the search (§15 rule 3). Either name the property that makes it
