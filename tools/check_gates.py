@@ -168,6 +168,8 @@ def main() -> int:
                               [python, "tools/verify_prereg_ids.py"]),
         "30 rules home": _run("a rule lives in AGENTS.md and nowhere else",
                               [python, "tools/verify_rules_home.py"]),
+        "32 checklist blockers": _run("a checklist item's stated blocker is still blocking",
+                                      [python, "tools/verify_checklist_blockers.py"]),
     }
 
     print("\n" + "=" * 62)

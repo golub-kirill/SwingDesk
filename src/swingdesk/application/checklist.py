@@ -14,7 +14,7 @@ Five of eighteen are genuinely answerable today. That number is meant to be read
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
@@ -132,10 +132,26 @@ def _no_skip_condition(context: Context) -> tuple[ItemState, str]:
     return ItemState.PASS, f"no skip condition fired; decision {decision.decision}"
 
 
-def _unavailable(reason: str) -> Evaluator:
-    def evaluate(_context: Context) -> tuple[ItemState, str]:
-        return ItemState.UNAVAILABLE, reason
-    return evaluate
+class Unavailable:
+    """An item the system cannot answer, and the registry facts that reason rests on.
+
+    `blocked_by` maps a parameter id to the status it must still have for `reason` to be true. It
+    is not documentation: gate 32 reads it and goes red the day the registry disagrees, so a reason
+    cannot outlive the fact it cites. That is the failure `AGENTS.md` §12 names as this repository's
+    most persistent one - a citation correct when written, still standing after the cited fact moved
+    - and the pre-trade checklist is where it costs the most, because a stale reason keeps an item
+    `UNAVAILABLE` after the thing blocking it was supplied.
+
+    An empty mapping is honest rather than exempt: the blocker is a missing capability, not a
+    parameter, and the gate names those every run instead of passing over them.
+    """
+
+    def __init__(self, reason: str, blocked_by: Mapping[str, str] | None = None) -> None:
+        self.reason = reason
+        self.blocked_by: Mapping[str, str] = dict(blocked_by or {})
+
+    def __call__(self, _context: Context) -> tuple[ItemState, str]:
+        return ItemState.UNAVAILABLE, self.reason
 
 
 #: Evidence key -> evaluator. Every key in registry/checklists.yml must appear here, and the ones
@@ -147,39 +163,58 @@ EVALUATORS: dict[str, Evaluator] = {
     "time_stop_recorded": _time_stop_recorded,
     "no_skip_condition": _no_skip_condition,
 
-    "data_freshness": _unavailable(
+    "data_freshness": Unavailable(
         "session completeness is checked, but corporate actions are not - and this item requires "
-        "both. Half an answer is not an answer"
+        "both. Half an answer is not an answer. The blocker is a capability rather than a value: "
+        "DR-016 fetches actions for HELD names only, so a candidate has none"
     ),
-    "regime_recorded": _unavailable(
+    "regime_recorded": Unavailable(
         "the regime classifier exists (M30-T0450) and is not wired into the daily run; "
-        "regime.breadth_cutoffs is unset"
+        "regime.breadth_cutoffs is unset",
+        {"regime.breadth_cutoffs": "unset"},
     ),
-    "sector_benchmark": _unavailable(
+    "sector_benchmark": Unavailable(
         "a sector is now known for a classified instrument (DR-006 12) and this item needs more "
         "than that: comparing a candidate to its sector requires a BENCHMARK series per sector, "
         "and no sector-to-index mapping exists. The classification is also today's, not the one "
-        "in force on an older date"
+        "in force on an older date. The blocker is that missing mapping, which is a registry "
+        "table nobody has authored rather than a parameter anyone can set"
     ),
-    "trigger_not_late": _unavailable(
-        "the run has no trigger and no maximum entry, so `Late` is not computable (CODES LATE)"
+    "trigger_not_late": Unavailable(
+        "the run has no trigger and no maximum entry, so `Late` is not computable (CODES LATE). "
+        "The trigger is screen.breakout_definition and its pullback and contraction siblings, all "
+        "unset and all needing a pre-registration; the ceiling is entry.maximum_entry_atr, which "
+        "DR-020 3 authored and deliberately left unset",
+        {
+            "screen.breakout_definition": "unset",
+            "screen.pullback_definition": "unset",
+            "screen.contraction_definition": "unset",
+            "entry.maximum_entry_atr": "unset",
+        },
     ),
-    "entry_zone_recorded": _unavailable(
-        "entry is recorded; maximum entry is not, and this item requires both"
+    "entry_zone_recorded": Unavailable(
+        "entry is recorded; maximum entry is not, and this item requires both. "
+        "entry.maximum_entry_atr is the value it waits on",
+        {"entry.maximum_entry_atr": "unset"},
     ),
-    "event_proximity": _unavailable(
+    "event_proximity": Unavailable(
         "no event calendar is wired, AND the course supplies no buffer to apply if one were: "
         "M34/M40 give one criterion for all 20 catalyst types and no lead time at all (EVENT_SPEC). "
-        "screen.earnings_buffer_days needs a decision record or a study, not a transcription"
+        "screen.earnings_buffer_days needs a decision record or a study, not a transcription",
+        {"screen.earnings_buffer_days": "unset"},
     ),
-    "liquidity_acceptable": _unavailable(
+    "liquidity_acceptable": Unavailable(
         "dollar volume is computable from stored bars; spread and expected slippage are not "
-        "observable on free data (costs.slippage_model is a MODEL, not a measurement)"
+        "observable on free data (costs.slippage_model is a MODEL, not a measurement)",
+        {"costs.slippage_model": "assumed"},
     ),
-    "exposure_within_limits": _unavailable(
+    "exposure_within_limits": Unavailable(
         "open risk, correlation to the book and sector are all enforced at step 6 - but sector "
         "only for a candidate whose classification has been fetched, and the CURRENCY and EVENT "
-        "buckets this item also requires are not enforced at all. Half an answer is not an answer"
+        "buckets this item also requires are not enforced at all. Half an answer is not an answer. "
+        "The currency bucket waits on account.fx_rate_cad; the event bucket waits on the same "
+        "absent calendar as E11",
+        {"account.fx_rate_cad": "unset"},
     ),
 }
 
@@ -239,9 +274,9 @@ def machine_coverage(appendix: str = "E") -> tuple[int, int]:
     answerable = sum(
         1 for row in rows
         if row.get("evidence") and EVALUATORS.get(row["evidence"]) is not None
-        and getattr(EVALUATORS[row["evidence"]], "__name__", "") != "evaluate"
+        and not isinstance(EVALUATORS[row["evidence"]], Unavailable)
     )
     return answerable, len(rows)
 
 
-__all__ = ["EVALUATORS", "generate", "machine_coverage"]
+__all__ = ["EVALUATORS", "Unavailable", "generate", "machine_coverage"]

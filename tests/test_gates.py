@@ -2406,3 +2406,90 @@ def test_a_missing_journal_is_unmeasurable_rather_than_zero(tmp_path: Path) -> N
     import datetime as dt
 
     assert retry_needed.count_repairable(tmp_path / "absent.duckdb", dt.date(2026, 8, 24)) is None
+
+
+# ------------------------------------------------ gate 32: a checklist blocker is still blocking
+
+
+def _blocker_tree(tmp_path: Path, parameters: str) -> Path:
+    """A tree carrying only a registry.
+
+    The pins live in `application/checklist.py` and the statuses live in the registry, so a fixture
+    that varies the registry alone reproduces exactly the event this gate exists for: a parameter
+    gains a value and the sentence citing it does not move. With no `src/` of its own the gate reads
+    the real evaluators, which is what makes these cases about the shipped pins rather than about a
+    mock of them.
+    """
+    (tmp_path / "registry").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "registry" / "parameters.yml").write_text(parameters, encoding="utf-8")
+    return tmp_path
+
+
+#: Every parameter the shipped `Unavailable` evaluators pin, all at the status they pin.
+_PINNED_UNSET = (
+    "regime.breadth_cutoffs",
+    "screen.breakout_definition",
+    "screen.pullback_definition",
+    "screen.contraction_definition",
+    "entry.maximum_entry_atr",
+    "screen.earnings_buffer_days",
+    "account.fx_rate_cad",
+)
+
+
+def _registry_yaml(**overrides: str) -> str:
+    """The pinned parameters as the registry holds them, with named rows replaced."""
+    rows = [f"  - id: {pid}\n    value:\n    provenance:\n" for pid in _PINNED_UNSET]
+    rows.append("  - id: costs.slippage_model\n    value: 25bps\n    provenance: assumed:DR-005\n")
+    text = "parameters:\n" + "".join(rows)
+    for pid, replacement in overrides.items():
+        pid = pid.replace("__", ".")
+        start = text.index(f"  - id: {pid}\n")
+        end = text.index("  - id: ", start + 1) if "  - id: " in text[start + 1:] else len(text)
+        text = text[:start] + replacement + text[end:]
+    return text
+
+
+def test_blocker_gate_is_quiet_when_every_pin_still_holds(tmp_path: Path) -> None:
+    root = _blocker_tree(tmp_path, _registry_yaml())
+    code, out = run_gate("verify_checklist_blockers.py", root)
+    assert code == 0, out
+    assert "0 failure(s)" in out
+
+
+def test_blocker_gate_catches_a_blocker_that_has_been_supplied(tmp_path: Path) -> None:
+    """The imminent instance, and the reason this gate exists.
+
+    `DR-020` §3 created `entry.maximum_entry_atr` `unset` and two pre-trade items wait on it — `E08`
+    (trigger measurable and not yet `Late`) and `E09` (entry zone and maximum entry recorded). The
+    day it is ruled, both reasons become false. Nothing connected the registry row to those two
+    sentences before this gate, and the flow would have stayed stalled on a discharged cause.
+    """
+    root = _blocker_tree(tmp_path, _registry_yaml(
+        entry__maximum_entry_atr=(
+            "  - id: entry.maximum_entry_atr\n    value: 0.5\n    provenance: assumed:DR-999\n"
+        ),
+    ))
+    code, out = run_gate("verify_checklist_blockers.py", root)
+    assert code == 1
+    assert "E08 trigger_not_late" in out
+    assert "E09 entry_zone_recorded" in out
+    assert "`entry.maximum_entry_atr` being `unset`; the registry has `assumed`" in out
+
+
+def test_blocker_gate_catches_a_pin_the_registry_cannot_resolve(tmp_path: Path) -> None:
+    """A pin naming an id the registry does not define constrains nothing and would pass forever."""
+    root = _blocker_tree(tmp_path, "parameters:\n  - id: risk.max_open_risk\n    value: 4\n"
+                                   "    provenance: owner\n")
+    code, out = run_gate("verify_checklist_blockers.py", root)
+    assert code == 1
+    assert "does not define" in out
+
+
+def test_blocker_gate_names_the_reasons_it_cannot_pin(tmp_path: Path) -> None:
+    """`UNAVAILABLE`, never a silent pass. Two reasons rest on a capability, not on a value."""
+    root = _blocker_tree(tmp_path, _registry_yaml())
+    code, out = run_gate("verify_checklist_blockers.py", root)
+    assert code == 0, out
+    assert "E03 data_freshness" in out
+    assert "E05 sector_benchmark" in out

@@ -50,6 +50,7 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 28 | `verify_parameter_claims.py` | a document stating a parameter status the registry contradicts — **six live on the day it was written, every one a parameter that gained a value while the prose still called it `unset`** |
 | 29 | `verify_prereg_ids.py` | a study document missing from its own index, an id reserved by reference only, or two **unmerged** branches numbering different studies the same — `AGENTS.md` §10.2 as a check rather than a habit. **In CI the third check cannot run** (a shallow clone has no other branches) and the gate prints that it did not, so a green 29 on GitHub is not evidence about collisions |
 | 30 | `verify_rules_home.py` | a rule recorded anywhere but `AGENTS.md`. A heading declaring an owner instruction outside it must name the section that carries the rule, or mark itself `one-off` — **added after the owner asked whether rules could end up in a second place; they had not, and nothing made it so** |
+| 32 | `verify_checklist_blockers.py` | a pre-trade checklist item whose stated blocker has since been supplied. Each `UNAVAILABLE` evaluator pins the registry statuses its reason rests on, and the gate goes red when one moves — **written for `entry.maximum_entry_atr`, which `DR-020` created `unset` and two items (`E08`, `E09`) wait on**. Two reasons rest on a missing capability with no registry row to pin; the gate names those every run rather than passing over them |
 
 ### Three states, not two
 
@@ -114,6 +115,7 @@ Not busywork — each maps to a specific way this project could quietly go wrong
 | 27 | a card that reads as runnable while depending on a value nothing has set — the "specified, wired to nothing" shape one layer up from the components it cites |
 | 28 | prose drifting from the registry. Gate 1 checks the registry against itself and against the code; nothing checked the SENTENCES, and a stale `unset` is the exact claim a reader acts on |
 | 29 | two efforts numbering different studies the same. `POSTMORTEM-2026-08-09.md` root cause A: each tree was internally consistent, so nothing in either could see it |
+| 32 | a reason for not knowing something outliving the thing that caused it. `Trade` is unreachable because eight checklist items cannot be answered; the day one of their blockers is supplied and the sentence still says otherwise, the flow stays stalled for a cause that no longer exists and re-reading eight prose strings by hand is what would have caught it |
 
 ## 3. Merge rules
 

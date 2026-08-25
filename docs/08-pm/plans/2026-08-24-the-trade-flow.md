@@ -87,6 +87,14 @@ citation, or a pre-registration. **Not a guess, and not this plan's to pick.**
 **Stage 4 — wire what is already built**, re-checking each `_unavailable` reason first, since two
 were suspected stale and a third may be by the time this is worked. Then `Trade` becomes reachable.
 
+*That re-check stopped being a chore on 2026-08-25.* Each `UNAVAILABLE` evaluator now declares the
+registry statuses its reason rests on, and **gate 32** goes red the day one moves — nine pins across
+six of the eight items. The two it cannot pin (`E03`, `E05`) rest on a missing capability rather than
+a missing value, and the gate names them every run instead of passing over them. The instance it was
+written for is the one this plan is waiting on: `entry.maximum_entry_atr` is what `E08` and `E09`
+wait on, and until the gate existed nothing connected that registry row to the two sentences citing
+it.
+
 ~~and a reachability gate over every controlled vocabulary stops the class of defect rather than the
 instance.~~ **Withdrawn 2026-08-25, having been measured.** The gate is not buildable without noise,
 and `CI_POLICY.md` §3 records what happens to a noisy gate.
