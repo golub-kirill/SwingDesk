@@ -1948,6 +1948,14 @@ is for where no gate can reach.
       happened at the broker, which is what makes their wording matter. Three needed no monkeypatch;
       the fourth does, and **that is a design observation worth keeping**: `_expiry` loads the
       registry itself while `_capacity_for` takes one, so only the second has an injection point.
+      **The measurement is a committed tool now, so it is a command rather than a memory** —
+      `TEST_STRATEGY.md` §5 documents it and says why it is not a merge gate:
+      ```bash
+      PYTHONPATH=$PWD/src python tools/measure_refusal_coverage.py
+      ```
+      It reads a comment saying a branch is unreachable and counts it separately, which is what
+      keeps it from being permanently red over branches that are defensive by design — and it makes
+      those two comments load-bearing rather than decorative.
       **What it does NOT establish:** that each site is exercised for the right REASON. A line
       executed is not a branch asserted, and the two are the same distance apart as gate 8 and gate
       34.

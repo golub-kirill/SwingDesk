@@ -202,9 +202,15 @@ before anyone had a chance to trust the thing it was checking.
       already green passes; so does a pull request, where the check runs on the merge result. This
       binds the owner too, which is the point of `enforce_admins` in a project whose founding
       premise is that the failures happen upstream of the code.
-- [ ] **Gate 10 (traceability) would pass vacuously today, which is why it is still not wired.**
-      Its strongest available check is "every `active` component has a test", and there are
-      **zero** `active` components — five are blocked on an unset parameter, which is the
+- [ ] **Gate 10 (traceability) is still not wired**, and the reason moved on 2026-08-25.
+      ~~It would pass vacuously today. Its strongest available check is "every `active` component
+      has a test", and there are **zero** `active` components~~ — derive the count from
+      `HANDOFF.md` §2 rather than from here; ATR activated and it is no longer zero. **The current
+      reason is different and is recorded in `TODO.md` §6:** the check "a requirement with no test"
+      would fire immediately on the requirements that are deliberately NOT met, and what it needs
+      first is `REQUIREMENTS.md` §7 — written 2026-08-25 — which pairs each requirement with the
+      test or gate that would go red, or states that nothing would. The rest of this item still
+      stands — five are blocked on an unset parameter, which is the
       fail-closed design working. A green gate that asserts nothing trains the operator to
       trust it. It lands with the first `active` component.
 - [ ] **`mypy --strict` covers `src` only.** `tools/` carries **100 errors in 21 of 28 files**

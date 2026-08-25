@@ -122,6 +122,31 @@ Uniform coverage targets are noise. Targets by what the code is:
 Appendix C and D arithmetic sits in the first row. They are eleven formulas each, they are the whole
 computational basis of the system, and they are cheap to cover exhaustively.
 
+### The one coverage number this project actually derives — added 2026-08-25
+
+The tiers above are targets and nothing computes them. **One number is computed**, because it
+answers a question the tiers do not: *has the suite ever seen the system say no?*
+
+```bash
+PYTHONPATH=$PWD/src python tools/measure_refusal_coverage.py
+```
+
+Every `Refusal(...)` and `DecisionRecord(...)` **construction** in `src/` — found by parsing, so a
+type annotation or an `isinstance` check is not one — traced while the suite runs. A fail-closed
+refusal nobody has seen fire is a refusal nobody knows fires, which is §6's subject one level down
+from the scenario table.
+
+**Its first run found nine unexecuted refusals**, five of them in `trade_management/sizing.py`.
+They were missing tests, not missing guards; no source changed.
+
+**A branch may declare itself unreachable and the check reads the declaration** — a comment saying
+so above the site. That is the difference between a defensive branch and a gap, and putting it in a
+comment rather than a registry keeps the reason where the next reader will be standing.
+
+**Not a merge gate, and the reason is runtime rather than principle**: it runs the suite a second
+time, and `CI_POLICY.md` §1 orders the gates fastest-first. It exits non-zero on an undeclared miss,
+so it could become one without changing meaning.
+
 ## 6. Chaos scenarios
 
 The fail-closed paths must be *tested*, not assumed. One scenario per row of the degradation table
