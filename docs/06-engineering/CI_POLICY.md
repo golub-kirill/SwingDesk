@@ -49,6 +49,7 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 27 | `verify_cards.py` | a strategy card claiming more than it has: a component or parameter reference that does not resolve, `Validated` without an evidence id, or an `unset` input missing from `blocked_by` |
 | 28 | `verify_parameter_claims.py` | a document stating a parameter status the registry contradicts — **six live on the day it was written, every one a parameter that gained a value while the prose still called it `unset`** |
 | 29 | `verify_prereg_ids.py` | a study document missing from its own index, an id reserved by reference only, or two **unmerged** branches numbering different studies the same — `AGENTS.md` §10.2 as a check rather than a habit. **In CI the third check cannot run** (a shallow clone has no other branches) and the gate prints that it did not, so a green 29 on GitHub is not evidence about collisions |
+| 30 | `verify_rules_home.py` | a rule recorded anywhere but `AGENTS.md`. A heading declaring an owner instruction outside it must name the section that carries the rule, or mark itself `one-off` — **added after the owner asked whether rules could end up in a second place; they had not, and nothing made it so** |
 
 ### Three states, not two
 

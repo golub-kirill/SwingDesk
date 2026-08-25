@@ -566,6 +566,8 @@ evening returned every one of those sessions, clean. The owner asked; nobody had
 
 ### DONE 2026-08-24: slim `AGENTS.md` — owner instruction, cut and verified
 
+**A one-off instruction, not a standing rule** — an editorial request about one artefact, so it cites no `AGENTS.md` section and gate 30 accepts it on that mark rather than on a pointer that would have to be invented.
+
 **The ask:** *"У нас agents выглядят уже как книжка... Можно ли его сделать нормальным, чистеньким,
 без прозы? Правила, конвенции, всё как есть."* Yes. The brief is below so a fresh session starts
 cutting rather than measuring.

@@ -552,3 +552,32 @@ The rules:
 costs nothing visible: every gate stays green, because the gates check that we copied it correctly,
 not that it is true. There is no mechanism anywhere in this repository that can notice a faithfully
 transcribed rule that does not work.
+
+## 17. Verify at the right granularity — owner instruction, 2026-08-24
+
+> *"Каждый мердж стоит нам 10-15-20 минут времени... Ты запускаешь мердж, сидишь, ждёшь, потом
+> меняешь одно слово, снова запускаешь мердж и снова сидишь, ждёшь. Целый день так было."*
+
+**The checks in this repository are strong and they are not free.** The full suite runs hundreds of
+tests; a pull request costs several minutes of CI before `master` will accept it. Running either
+after every edit converts a session into waiting.
+
+1. **Run the check whose subject you touched.** A document edit is answered by `verify_docs.py`,
+   `verify_counts.py` or `verify_project_manifest.py` in seconds. Reach for the whole suite once, on
+   the batch, before committing — not after each edit inside it.
+2. **Accumulate on one branch and merge once.** Three pull requests in an evening cost three CI
+   waits; one costs one. `master` is protected and only advances on a green check, so the merge is a
+   deliberate act with a price, not a save button.
+3. **Never sit and watch CI.** If a pull request is open, keep working while it runs. The result
+   arrives whether or not it is being watched.
+4. **A local green suite is the real check.** CI exists so `master` cannot advance on an unproven
+   commit; it is not the thing that tells you your change is right, and treating it as such buys
+   confidence that the local run already gave you.
+
+**What paid for it, 2026-08-24:** three merges in one evening, each with its own CI wait, one of
+them for three regenerated numbers in a block that the same session then taught the scheduled run to
+regenerate by itself. The check was correct every time. The granularity was not.
+
+**Where this does NOT apply.** Anything touching `src/`, `tools/` or a frozen file gets the full
+suite before it is committed — those are the changes a targeted check cannot bound, and §12's first
+trap is a suite that went green while testing the wrong tree.

@@ -2228,3 +2228,78 @@ def test_the_state_builder_needs_no_pythonpath_and_no_working_directory() -> Non
     """
     source = (TOOLS / "build_state.py").read_text(encoding="utf-8")
     assert "Path(__file__).resolve().parents[1]" in source
+
+
+# --------------------------------------------------------- gate 30: a rule lives in AGENTS.md
+#
+# The owner asked whether rules could end up anywhere but `AGENTS.md`. They had not - checked - but
+# nothing made it so, and a second rules store is worse than a second copy of a number: an agent
+# reads `AGENTS.md` and would never learn a contradicting rule existed elsewhere.
+#
+# The distinction the gate rests on is `AGENTS.md` §10.7's: a rule is a habit and lives in
+# `AGENTS.md`; the WORK an instruction creates is an item and lives in `TODO.md`, pointing back.
+
+
+def _rules_tree(root: Path, *, other: str) -> None:
+    """`AGENTS.md` with a rule in it, plus one other document carrying `other`.
+
+    The files are STAGED, not merely written: the gate reads `git ls-files`, so an unstaged fixture
+    presents an empty tree and every assertion about a failure passes for the wrong reason. Two of
+    these tests did exactly that before this line existed.
+    """
+    (root / "AGENTS.md").write_text(
+        "# AGENTS\n\n## 14. Force the answer — owner instruction, 2026-08-17\n\nAsk.\n",
+        encoding="utf-8",
+    )
+    (root / "TODO.md").write_text(other, encoding="utf-8")
+    _git_init(root)
+    subprocess.run(["git", "-C", str(root), "add", "-A"], capture_output=True, check=True)
+
+
+def test_a_rule_recorded_outside_agents_is_a_failure(tmp_path: Path) -> None:
+    """The defect itself: a second place that reads as the rulebook."""
+    _rules_tree(tmp_path, other="## 9. Always pin the clock — owner instruction, 2026-08-24\n\nDo it.\n")
+    code, out = run_gate("verify_rules_home.py", tmp_path)
+    assert code == 1, out
+    assert "TODO.md" in out and "owner instruction" in out
+
+
+def test_work_that_points_back_at_the_rule_passes(tmp_path: Path) -> None:
+    """`TODO.md` tracking the WORK is correct and must not be flagged - §10.7 requires it there."""
+    _rules_tree(
+        tmp_path,
+        other="### Audit the claims — owner instruction, 2026-08-24, and `AGENTS.md` §15 is the "
+              "rule\n\nGo.\n",
+    )
+    code, out = run_gate("verify_rules_home.py", tmp_path)
+    assert code == 0, out
+
+
+def test_an_instruction_marked_one_off_passes(tmp_path: Path) -> None:
+    """*"Cut this document in half"* creates work and no habit, so it can cite no section.
+
+    The escape hatch is a claim the author makes, not a default - which is what stops it becoming
+    the vacuous marker §10.4 warns about.
+    """
+    _rules_tree(
+        tmp_path,
+        other="### Slim the file — owner instruction, 2026-08-24\n\nA one-off, not a standing rule.\n",
+    )
+    code, out = run_gate("verify_rules_home.py", tmp_path)
+    assert code == 0, out
+
+
+def test_the_rulebook_itself_is_never_flagged(tmp_path: Path) -> None:
+    """Every rule in `AGENTS.md` declares an owner instruction; that is the point, not a defect."""
+    _rules_tree(tmp_path, other="nothing here\n")
+    code, out = run_gate("verify_rules_home.py", tmp_path)
+    assert code == 0, out
+    assert "1 declared owner instruction" in out
+
+
+def test_the_pointer_must_be_near_the_heading(tmp_path: Path) -> None:
+    """A citation forty lines away is one a reader will not connect to the heading."""
+    far = "### A rule — owner instruction, 2026-08-24\n" + ("filler\n" * 30) + "`AGENTS.md` §15\n"
+    _rules_tree(tmp_path, other=far)
+    code, out = run_gate("verify_rules_home.py", tmp_path)
+    assert code == 1, out
