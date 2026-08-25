@@ -1956,6 +1956,22 @@ is for where no gate can reach.
       choice about which is authoritative rather than a bug fix, on a file already under the freeze.
       It is still one quantity with two implementations, which is what Production Rule 3.8 forbids.
       The test asserts agreement to the cent and names the asymmetry inline.
+      **Measured 2026-08-25 and it changes the urgency, not the diagnosis: NEITHER implementation
+      has a production caller.** `sizing.r_multiple` is called from `trade_management/__init__`'s
+      re-export and from one test; `Position.r_at` from two tests. Nothing in `src/` outside their
+      own modules calls either — asked of the code graph and then **verified against the files**,
+      because the graph reports `freshness.assess` at zero fan-in too and that one is called twice
+      in `pipeline.py` under an alias (`AGENTS.md` §9: a null result is evidence only after a
+      positive control).
+      **Why they are dead is not a defect**: the live path has never opened a position, so no code
+      has ever needed R. The consequence for this item is that a change to either **cannot move
+      decision output today**, which is the thing that would otherwise make it expensive on a frozen
+      file.
+      **And the backtest's third R is NOT a third implementation of this quantity** — checked
+      before assuming it was. `validation/backtest/engine.py` divides by `entry_price - stop` where
+      `entry_price` already carries slippage and commission rides on the `Trade`; the registry's
+      `costs.commission_model` note names that split explicitly (*"this is what a backtest
+      charges"*). Two cost MODELS by design, not one quantity written twice.
 - [x] **`[v]` A test fixture disagreed with DR-010 at its own entry price — fixed 2026-08-17.**
       `tests/test_positions.py::_position` set `initial_costs_per_share=0.25` and its comment called
       that "DR-010's USD floor", but DR-010 charges `max(floor 0.25, 50bp × entry)` and at the
