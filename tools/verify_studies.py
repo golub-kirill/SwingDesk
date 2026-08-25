@@ -1,4 +1,8 @@
-"""Gate 16: the study record, and every count quoted from it.
+"""Gate 3f: the study record, and every count quoted from it.
+
+*(Numbered 16 in this docstring until 2026-08-25, which is `verify_branches.py`'s number. Two tools
+claimed one gate number; `check_gates.py` and `CI_POLICY.md` both call this one 3f, so that is the
+one that stands.)*
 
 Written after a defect of the standard shape - a claim that reads as correct and is not. Five
 documents stated `4 studies, 3 refuted`. The tree holds three pre-registrations with three reports,

@@ -1742,7 +1742,33 @@ is for where no gate can reach.
       ```bash
       PYTHONPATH=$PWD/src python tools/verify_invariant_tests.py
       ```
-- [ ] **`[c]` Gate 10** (traceability) — unblocked now that ATR is active, still to build.
+- [x] **`[v]` GATE 7 WAS THE ONE GATE OF THIS REPOSITORY'S OWN MAKING WITH NO FAILURE TEST, AND THE
+      AUDIT THAT CLOSED THAT CLASS COULD NOT SEE IT. Fixed 2026-08-25.**
+      The closed item above derives its list by *"grep `tests/` for each `tools/verify_*.py` name"*.
+      Gate 7 lived as an inline function in `check_gates.py`, so it had no tool file to grep for and
+      no way to be pointed at a fixture — **a derivation method with a blind spot exactly the shape
+      of the thing it was deriving.** Extracted to `tools/verify_no_wall_clock.py`, honouring
+      `SWINGDESK_ROOT`, with seven failure tests including two positive controls.
+      **It also now enforces `REQ-DATA-001`'s second clause** — *"No event date may appear as a
+      literal in executable code"* — which was a MUST whose status cell read *"verified"*, once, by
+      hand. Measured before building: **zero** date literals across all 70 modules in `src/`, so
+      this is prevention rather than repair. A hard-coded earnings date is what arrives under time
+      pressure and it makes a point-in-time claim false in a way no test notices.
+      Both halves are AST-parsed: a `date` built from variables passes, a docstring mentioning
+      `datetime.now()` passes, and `market_data` may read the clock because only three packages are
+      pure.
+- [x] **`[v]` Two tools claimed gate 16 — fixed 2026-08-25.** `verify_studies.py`'s docstring opened
+      *"Gate 16"*; that is `verify_branches.py`'s number, and both `check_gates.py` and `CI_POLICY.md`
+      call `verify_studies.py` gate 3f. One line, and the kind that sends a session to the wrong file.
+- [ ] **`[c]` Gate 10** (traceability) — unblocked now that ATR is active, still to build. **Weighed
+      and not built 2026-08-25**, with the reason recorded so it is not re-derived: its three checks
+      are *a course id with no requirement row*, *a requirement with no test*, and *a spec id cited
+      by no test*. The middle one would fire immediately on requirements that are deliberately
+      **NOT met** (`REQ-AI-001`, `REQ-AI-002`, `REQ-EVIDENCE-001`), and the third has one active
+      component to range over. What it needs first is the linkage `REQUIREMENTS.md` §6 names — each
+      requirement paired with the test or gate that enforces it, or an honest "nothing does", the
+      way `INVARIANTS.md` §1 already does for its nine. **That artefact is the work; the gate is the
+      easy part after it.**
 - [ ] **`[c]` Gate 22** + `DR-008`'s remaining machinery · **Gate 14's word-number hole.**
 - [ ] **`[c]` 6 specified components awaiting activation** — pivots (M12-T0201, M12-T0202), moving
       average (M25-T0382), regime (M30-T0450), breadth (M31-T0459), trend (M33-T0485). All have real

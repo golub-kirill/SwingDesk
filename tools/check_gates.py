@@ -32,17 +32,11 @@ state is for, and extending it here is the alternative to a gate that lies quiet
 
 from __future__ import annotations
 
-import ast
 import subprocess
 import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
-
-#: Packages that must stay pure: no I/O, no journal, and above all no wall clock
-#: (DETERMINISM_SPEC 3.1, ARCHITECTURE 3).
-PURE_PACKAGES = ("derived_observations", "decision_logic", "trade_management")
-FORBIDDEN_CALLS = {("datetime", "now"), ("datetime", "utcnow"), ("date", "today"), ("time", "time")}
 
 PASS, FAIL, UNAVAILABLE = "PASS", "FAIL", "UNAVAILABLE"
 
@@ -69,35 +63,6 @@ def _run(name: str, argv: list[str], key: str = "") -> str:
     else:
         status = FAIL
     print(f"--- {name}: {status}")
-    return status
-
-
-def check_no_wall_clock() -> str:
-    """Grep the pure packages for wall-clock calls.
-
-    Parsed rather than string-matched, so a mention in a docstring or a comment does not trip it -
-    a gate with false positives gets bypassed, and a bypassed gate teaches that red is normal.
-    """
-    print("\n=== no wall clock in pure packages")
-    offenders: list[str] = []
-    for package in PURE_PACKAGES:
-        root = REPO / "src" / "swingdesk" / package
-        if not root.is_dir():
-            continue
-        for path in root.rglob("*.py"):
-            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-            for node in ast.walk(tree):
-                if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Attribute):
-                    continue
-                owner = node.func.value
-                if isinstance(owner, ast.Name) and (owner.id, node.func.attr) in FORBIDDEN_CALLS:
-                    offenders.append(
-                        f"{path.relative_to(REPO)}:{node.lineno}: {owner.id}.{node.func.attr}()"
-                    )
-    for offender in offenders:
-        print(f"  {offender}")
-    status = FAIL if offenders else PASS
-    print(f"--- no wall clock: {status} ({len(PURE_PACKAGES)} packages checked)")
     return status
 
 
@@ -138,7 +103,8 @@ def main() -> int:
         "5 mypy": _run("mypy --strict", [python, "-m", "mypy"]),
         "6 import contracts": _run("import-linter architecture contracts",
                                  [python, "-m", "importlinter.cli", "lint-imports"]),
-        "7 no wall clock": check_no_wall_clock(),
+        "7 no wall clock": _run("no wall clock in the pure packages, no date literal in src",
+                                [python, "tools/verify_no_wall_clock.py"]),
         "7b golden vectors": _run("golden vectors", [python, "tools/golden.py"]),
         "8 tests": _run("pytest", [python, "-m", "pytest", "tests/", "-q"]),
         "9 determinism replay": _run("determinism replay", [python, "tools/replay.py"]),

@@ -2642,3 +2642,90 @@ def test_invariant_gate_reports_nothing_when_the_named_test_catches_it(tmp_path:
     import verify_invariant_tests
 
     assert verify_invariant_tests._run_mutant(_mutant(), tmp_path, 3) is None
+
+
+# ------------------------------- gate 7: no wall clock in pure code, no date literal in src
+
+
+def _clock_tree(tmp_path: Path, package: str, body: str, *, module: str = "thing.py") -> Path:
+    """A minimal `src/swingdesk/<package>/` carrying one module."""
+    root = tmp_path / "src" / "swingdesk" / package
+    root.mkdir(parents=True, exist_ok=True)
+    (root / module).write_text(body, encoding="utf-8")
+    return tmp_path
+
+
+def test_wall_clock_gate_catches_a_clock_read_in_a_pure_package(tmp_path: Path) -> None:
+    """`AGENTS.md` §5: a pure package that reads the clock cannot be replayed."""
+    root = _clock_tree(
+        tmp_path, "trade_management",
+        "from datetime import datetime\n\n\ndef when():\n    return datetime.now()\n",
+    )
+    code, out = run_gate("verify_no_wall_clock.py", root)
+    assert code == 1
+    assert "wall clock:" in out
+    assert "datetime.now()" in out
+
+
+def test_wall_clock_gate_ignores_a_clock_mentioned_in_a_docstring(tmp_path: Path) -> None:
+    """Parsed, not grepped. A gate with false positives gets bypassed."""
+    root = _clock_tree(
+        tmp_path, "trade_management",
+        '"""Never call datetime.now() here - the time is injected."""\n\n\ndef when(now):\n'
+        "    return now\n",
+    )
+    code, out = run_gate("verify_no_wall_clock.py", root)
+    assert code == 0, out
+    assert "0 clock read(s)" in out
+
+
+def test_wall_clock_gate_leaves_an_impure_package_alone(tmp_path: Path) -> None:
+    """Only three packages are pure. `market_data` reads the clock legitimately."""
+    root = _clock_tree(
+        tmp_path, "market_data",
+        "from datetime import datetime\n\n\ndef when():\n    return datetime.now()\n",
+    )
+    code, out = run_gate("verify_no_wall_clock.py", root)
+    assert code == 0, out
+
+
+def test_date_literal_gate_catches_a_constructed_date(tmp_path: Path) -> None:
+    """`REQ-DATA-001`: no event date may appear as a literal in executable code."""
+    root = _clock_tree(
+        tmp_path, "decision_logic",
+        "from datetime import date\n\nEARNINGS = date(2026, 8, 25)\n",
+    )
+    code, out = run_gate("verify_no_wall_clock.py", root)
+    assert code == 1
+    assert "date literal:" in out
+    assert "date(2026, 8, 25)" in out
+
+
+def test_date_literal_gate_catches_an_iso_string(tmp_path: Path) -> None:
+    """A date written as text is still a date, and is how one usually arrives."""
+    root = _clock_tree(tmp_path, "decision_logic", 'EARNINGS = "2026-08-25"\n')
+    code, out = run_gate("verify_no_wall_clock.py", root)
+    assert code == 1
+    assert "'2026-08-25'" in out
+
+
+def test_date_literal_gate_allows_a_date_built_from_values(tmp_path: Path) -> None:
+    """A date computed from inputs is the correct construction and must not be flagged."""
+    root = _clock_tree(
+        tmp_path, "decision_logic",
+        "from datetime import date\n\n\ndef make(year, month, day):\n"
+        "    return date(year, month, day)\n",
+    )
+    code, out = run_gate("verify_no_wall_clock.py", root)
+    assert code == 0, out
+    assert "0 date literal(s)" in out
+
+
+def test_date_literal_gate_does_not_flag_ordinary_numbers_or_text(tmp_path: Path) -> None:
+    """The positive control: a red result must come from the planted defect, not the fixture."""
+    root = _clock_tree(
+        tmp_path, "decision_logic",
+        'PERIOD = 14\nNAME = "breakout"\nVERSION = "1.0.0"\nRATIO = 0.647\n',
+    )
+    code, out = run_gate("verify_no_wall_clock.py", root)
+    assert code == 0, out

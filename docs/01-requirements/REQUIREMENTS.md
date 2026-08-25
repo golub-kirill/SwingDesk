@@ -22,7 +22,7 @@ justified deviation, **MAY** is an option.
 
 | id | Requirement | Status in this tree |
 |---|---|---|
-| `REQ-DATA-001` | The event calendar MUST be a point-in-time dataset with the same bitemporal semantics as market data. **No event date may appear as a literal in executable code.** Every record carries `source_id`, `known_from`, `checksum`. | **partially met** — no date literals in `src/` (verified); no event calendar exists at all (`EVENT_SPEC.md` §4) |
+| `REQ-DATA-001` | The event calendar MUST be a point-in-time dataset with the same bitemporal semantics as market data. **No event date may appear as a literal in executable code.** Every record carries `source_id`, `known_from`, `checksum`. | **partially met** — the date-literal clause is **enforced by gate 7** since 2026-08-25 and reads zero across all 70 modules in `src/`; ~~verified~~ once by hand before that, on a MUST with no mechanism. No event calendar exists at all (`EVENT_SPEC.md` §4) |
 | `REQ-DATA-002` | A missing or stale critical input MUST NOT silently become zero or a neutral value. It MUST produce `UNKNOWN`; on a live path a critical `UNKNOWN` MUST produce `NO_TRADE`. | **met** — components refuse rather than default (`INVARIANTS.md` #9); ATR emits `None` before warm-up |
 | `REQ-VALIDATION-001` | Every gate, veto or eligibility filter MUST have a pair of inputs producing different verdicts. An object whose verdict is invariant across all inputs MUST NOT reach runtime. | **partially met** — gate 3g enforces the narrow half for criteria (2026-08-08), and **gate 34 mutation-tests the five vetoes that evaluate on the live path** (2026-08-25), each forced to admit everything. Still partial: `k.drawdown_pause` is ratified and cannot fire, so the criteria half has no verdict to flip. See §2 |
 | `REQ-VALIDATION-002` | For an identical bar and an identical versioned config, the backtest path and the live path MUST produce an identical `Decision`. Divergence MUST fail the build. | **NOT met, and structurally so** — see §3 |
@@ -127,12 +127,16 @@ The ТЗ's vocabulary, mapped to what runs here:
 | `static_validation` | gates 1, 3e, 3f, 3g, 6, 7, 11 — registries, references, criteria, layers, wall clock |
 | `unit_test` / `integration_test` | gate 8 |
 | `replay_test` | gate 9 — a stored manifest must reproduce its `output_hash` |
-| `mutation_test` | **does not exist** — the gap `REQ-VALIDATION-001` names. Gate 3g closes the input half of it, not the verdict half |
+| `mutation_test` | ~~**does not exist** — the gap `REQ-VALIDATION-001` names.~~ **gate 34, built 2026-08-25.** Gate 3g closes the input half; gate 34 closes the verdict half for the five vetoes that evaluate on the live path, each forced to admit everything, plus `INVARIANTS.md` §1's named tests. Ratified CRITERIA are still uncovered — `k.drawdown_pause` has no verdict to flip |
 
 ## 6. Open items
 
-- [x] ~~`REQ-VALIDATION-001` needs a gate~~ — **narrow version landed 2026-08-08, gate 3g.** The
-      mutation half remains, and remains blocked on a corpus of evaluated criteria.
+- [x] ~~`REQ-VALIDATION-001` needs a gate~~ — **narrow version landed 2026-08-08, gate 3g**, and the
+      ~~mutation half remains, and remains blocked on a corpus of evaluated criteria~~ **mutation
+      half landed 2026-08-25 as gate 34.** The corpus arrived without anyone noticing: `DR-015`
+      wired the staleness gate and `DR-006` the book, correlation and sector caps. **Still open for
+      criteria** — `k.drawdown_pause` cannot fire, so it has no verdict to flip; that is `TODO.md`
+      §1's item, not a gate's.
 - [ ] `REQ-VALIDATION-002` needs the trigger to exist once rather than twice, **before** the live
       path gets one.
 - [ ] `REQ-EVIDENCE-001` is met by practice and not by a check. Gate 11 already verifies that an
