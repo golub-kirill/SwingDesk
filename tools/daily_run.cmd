@@ -107,4 +107,27 @@ if "%SECOND%"=="0" (
   "%PY%" -X utf8 "%REPO%\tools\fetch_directory.py" --scheduled --data "%REPO%\data" >> "%LOG%" 2>&1
 )
 
+REM State block (AGENTS.md 10.6). Same placement discipline as the sidecar above: after
+REM `set RC=%ERRORLEVEL%` and before `exit /b %RC%`, so nothing here can move the run's exit code
+REM or the Track A counter. Measured at about 4 seconds, against a pass that takes six minutes.
+REM
+REM WHY THE MACHINE AND NOT A PERSON. HANDOFF section 2's runtime block is derived from data/, and
+REM this pass is what moves data/ - so every evening the schedule ran left gate 24 red the next
+REM morning, on a document that had been correct when it was written, and the fix was a person
+REM noticing and running the tool by hand. AGENTS.md 10.6 rule 1 says a fact a tool can derive is
+REM derived AND written by that tool; the tool already existed and calling it was the last hand step.
+REM
+REM BOTH PASSES, unlike the directory pull above. The 19:30 pass writes journal rows and decisions
+REM too, so rebuilding only after the first one reproduces the same staleness an hour later.
+REM
+REM THE COST, recorded rather than left to be discovered: this leaves HANDOFF.md modified and
+REM uncommitted in the main checkout most evenings. Gate 21 reports uncommitted governed files and
+REM is ADVISORY, so that is a standing note rather than a red gate - the cheaper of the two, since
+REM gate 24 was blocking and red every morning for a reason nobody needed to investigate.
+REM
+REM A HELD STORE IS NOT A FAILURE HERE. build_state.py catches duckdb.IOException, reports the
+REM runtime block UNAVAILABLE and leaves it alone (AGENTS.md 12), so an overlapping refresh pass
+REM costs a log line rather than a traceback.
+"%PY%" -X utf8 "%REPO%\tools\build_state.py" >> "%LOG%" 2>&1
+
 exit /b %RC%

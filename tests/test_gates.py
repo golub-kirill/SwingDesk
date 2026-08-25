@@ -2175,3 +2175,56 @@ def test_a_complete_set_of_enum_documents_passes(tmp_path: Path) -> None:
         doc.parent.mkdir(parents=True, exist_ok=True)
         doc.write_text(" ".join(members), encoding="utf-8")
     assert verify_transcription.check_enums(tmp_path) == []
+
+
+# ------------------------------- the state block is rebuilt BY the run (owner instruction 2026-08-24)
+#
+# `HANDOFF.md` §2's runtime block is derived from `data/` and the scheduled pass is what moves
+# `data/`, so every evening the schedule ran left gate 24 red the next morning and a person had to
+# notice and run the tool. `AGENTS.md` §10.6 rule 1 is explicit that a derivable fact is written by
+# the tool that derives it; the tool existed and the hand step was calling it.
+#
+# `daily_run.cmd` is a FROZEN file (`DR-015` §3). This step runs strictly after the decision output
+# exists and after the exit code is captured, so it moves no decision and spends no `a.run_completes`
+# counter - which is what the two tests below pin, because that is the whole argument for it being
+# allowed to live in a frozen file at all.
+
+
+def test_the_state_build_cannot_move_the_runs_exit_code() -> None:
+    """It must sit after `set RC=%ERRORLEVEL%` and before `exit /b %RC%`, like the DR-008 sidecar.
+
+    A step that could change the exit code could change the Track A counter, and this one was added
+    to a frozen file on the argument that it cannot.
+    """
+    wrapper = (TOOLS / "daily_run.cmd").read_text(encoding="utf-8")
+    captured = wrapper.index("set RC=%ERRORLEVEL%")
+    build = wrapper.index('"%REPO%\\tools\\build_state.py"')
+    final = wrapper.rindex("exit /b %RC%")
+    assert captured < build < final
+
+
+def test_the_state_build_runs_on_both_passes() -> None:
+    """Unlike the directory pull, which `DR-008` c3 confines to the first pass.
+
+    The 19:30 pass writes journal rows and decisions of its own, so rebuilding only after the 18:30
+    one reproduces the same staleness an hour later - the exact defect this step removes. The guard
+    block indents the lines it contains, so an unindented invocation is one outside it.
+    """
+    wrapper = (TOOLS / "daily_run.cmd").read_text(encoding="utf-8")
+    invocations = [
+        line for line in wrapper.splitlines()
+        if "build_state.py" in line and not line.strip().startswith("REM")
+    ]
+    assert len(invocations) == 1, invocations
+    assert not invocations[0].startswith(" "), "an indented line sits inside the first-pass guard"
+
+
+def test_the_state_builder_needs_no_pythonpath_and_no_working_directory() -> None:
+    """The wrapper calls it by absolute path with no `pushd` in scope and no `PYTHONPATH` set.
+
+    `AGENTS.md` §12's first trap is that the venv resolves to the main checkout, which is what makes
+    that safe *there* and is exactly why it is asserted rather than assumed: the tool has to locate
+    the repository from its own path, not from the caller's.
+    """
+    source = (TOOLS / "build_state.py").read_text(encoding="utf-8")
+    assert "Path(__file__).resolve().parents[1]" in source
