@@ -514,6 +514,44 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       so the coverage figure is recomputed on every run and cannot be ~10 days stale again. Derive
       it with that command; this line deliberately does not repeat it (`AGENTS.md` §10.5).
 
+### PICK THIS UP FIRST: slim `AGENTS.md` — owner instruction 2026-08-24, measured and briefed
+
+**The ask:** *"У нас agents выглядят уже как книжка... Можно ли его сделать нормальным, чистеньким,
+без прозы? Правила, конвенции, всё как есть."* Yes. The brief is below so a fresh session starts
+cutting rather than measuring.
+
+**The hard constraint, measured 2026-08-24: section numbers CANNOT change.** 153 references across
+the repository point at `AGENTS.md` sections, and **16 of them sit in files that may not be
+edited** — accepted decision records, ADRs, pre-registrations. Renumbering means rewriting ratified
+documents to chase a heading, which §11 rule 2 forbids. Most-cited: §12 (28 references), §3 (26),
+§10.5 (25), §7 (17), §10.6 (15).
+
+**So: same headings, same numbers, same rules. Cut the narrative inside them, nothing else.**
+
+**Where the weight actually is** — 7,146 words total:
+
+| words | section |
+|---:|---|
+| **2,185** | §12 traps — **a third of the file** |
+| 659 | §10 the four rules of 2026-08-09 |
+| 477 | §5 conventions |
+| 402 | §10.6 |
+| 389 | §9 finding things in the code |
+
+**The cutting rule: one rule, one line, plus ONE clause saying what paid for it.** Not a paragraph
+retelling the incident. Worked example — the worktree/`PYTHONPATH` trap goes from 130 words to
+about 25 without losing either the instruction or the reason to believe it.
+
+**Target: ~3,000-3,500 words.** Roughly half.
+
+**The one objection, and it is not rhetorical.** In this repository the war stories are load-bearing:
+the culture rests on *every rule was paid for*, and a bare rule with no price reads as arbitrary and
+gets ignored — which is the failure mode §12 exists to prevent. So **keep one price clause per rule**
+and say in the file that the full accounts remain reachable through `git log -p AGENTS.md`.
+
+**Deliberately not started at the end of a long session.** It is the most-cited document in the
+tree; a large edit made tired is how this repository has been burned before.
+
 ### The dated session-handoff files are outside the document map, and one has already broken a record
 
 **Owner question, 2026-08-24: why a permanent `HANDOFF.md` AND a dated `SESSION-HANDOFF-<date>.md`,

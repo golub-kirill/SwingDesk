@@ -274,23 +274,28 @@ have.
 
 ### What to pick up, ranked — 2026-08-24
 
-1. **Decide about the branch in §0.** Everything below assumes it either merges or does not, and
+1. **Slim `AGENTS.md` — owner instruction, briefed and ready to start.** `TODO.md` §3 carries the
+   measurement and the cutting rule. The one thing not to get wrong: **153 references point at its
+   section numbers and 16 sit in files that may not be edited**, so headings and numbers stay
+   exactly as they are and only the narrative inside them is cut. Target roughly half of 7,146
+   words.
+2. **Decide about the branch in §0.** Everything below assumes it either merges or does not, and
    the two worlds differ. Opening a pull request is the owner's call and was not made.
-2. **`a.run_completes` and gate 26.** The outage that began 2026-08-18 was a schema drift, the
+3. **`a.run_completes` and gate 26.** The outage that began 2026-08-18 was a schema drift, the
    repair is verified, and the evening pass is what proves it in production. Read
    `python tools/track_a_streak.py` before anything else operational.
-3. **The AI guard, which `CHARTER.md` A-001 makes a PRECONDITION.** §3a permits advice on an open
+4. **The AI guard, which `CHARTER.md` A-001 makes a PRECONDITION.** §3a permits advice on an open
    position; A-001 says nothing may be implemented before the authority model is *gated*, and
    `AI_AUTHORITY_MODEL.md` §11 records that its prohibitions are prose. The two vocabularies —
    decisions and management actions — are mechanically checkable and nothing checks them. **This is
    the next build, not the AI itself.**
-4. **The `PR-005` trade log needs an owner ruling** — the published CSV no longer matches a fresh
+5. **The `PR-005` trade log needs an owner ruling** — the published CSV no longer matches a fresh
    replay because seven bars arrived three hours after it was published. Three options in
    `TODO.md` §5; `docs/prereg/results/` was deliberately not touched.
-5. **The next pre-registration, if there is one.** `PR-013` looked at one lookback and one horizon
+6. **The next pre-registration, if there is one.** `PR-013` looked at one lookback and one horizon
    and found nothing at that pair; it did not refute the family. Whoever writes the next one owes it
    a decision rule with a branch for *both arm and control are losing*, which `PR-013`'s lacked.
-6. **Everything owner-pending is in `TODO.md` §4** — the trial budget, `account.fx_rate_cad`,
+7. **Everything owner-pending is in `TODO.md` §4** — the trial budget, `account.fx_rate_cad`,
    `data.staleness_action_threshold`, the successor timebox, `DR-016`/`DR-017`.
 
 ### The clock, and the freeze that protects it
