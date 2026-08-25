@@ -5,41 +5,52 @@ rules that were each paid for, and §12, traps that each cost real time — then
 
 ## 0. The first thing, and it is not code
 
-**A branch holds twelve commits and is NOT merged:** `claude/state-block-from-the-run`, worktree
-`.claude/worktrees/swingdesk-session-continuation-39adaa`. It is zero commits behind `master`
-(`4385eaf`) and its local gate run is clean. **Nothing below §2 that it produced is on `master`.**
-`python tools/verify_branches.py` prints the census.
+**Everything is merged.** The 2026-08-24/25 session landed as a pull request onto `master`; the main
+checkout is fast-forwarded and the code graph re-indexed against it (`AGENTS.md` §9 rule 3). Nothing
+is held in a branch waiting for a decision.
 
-**Read this before touching the flow, the registry or the criteria — three findings change what you
-would otherwise assume.**
+**Read these four before touching the flow, the registry or the criteria. Each changes what you
+would otherwise assume, and each was measured rather than argued.**
 
-1. **`Trade` is unreachable in code.** Measured across the live application layer: the decision
-   token `Skip` appears in seventeen places, `Watch` in one, **`Trade` in none**, and every decision
-   ever recorded in `journal.duckdb` is `Watch` or `Skip`. The nightly `Trade 0` is a property of
-   the code, not of the market. `DR-020` authors the missing transitions;
-   `plans/2026-08-24-the-trade-flow.md` is the plan. *(`Pause` is absent from the candidate path
-   CORRECTLY — the state machine models it as account-wide.)*
+1. **`Trade` is unreachable in code, and that is now explained rather than merely observed.**
+   Across the live application layer the decision token `Skip` appears in seventeen places, `Watch`
+   in one, **`Trade` in none**, and every decision in `journal.duckdb` is `Watch` or `Skip`. The
+   nightly `Trade 0` is a property of the code. The cause is one gap seen from three sides: the
+   course specifies nine watchlist states, the transitions between them were never authored
+   (`DECISION_STATE_MACHINE.md` §6, open since 2026-08-01), and Appendix E cannot return `Ready`
+   because eight of its items are unanswerable. **`DR-020` authors the graph and decides no number;
+   `docs/08-pm/plans/2026-08-24-the-trade-flow.md` is the plan.**
+   *(`Pause` is absent from the candidate path CORRECTLY — the state machine models it as
+   account-wide.)*
 2. **The only ratified criterion with scope `live` cannot fire.** `k.drawdown_pause`'s threshold is
    owner-set at 20% and **nothing in `src/` computes realised drawdown**; its prescribed action
-   names `risk.risk_off_ladder`, which is itself `unset`. Every gate passed over it for a defensible
-   reason. Gate 1 now prints the cited-by-a-ratified-criterion subset on every run.
-3. **"No free source serves delisted history" is half false.** SEC EDGAR serves the FACT and DATE of
-   a delisting, free and official, back to 1993 — `tools/probe_edgar.py`. Prices for a delisted name
-   are still unobtainable, so the bound's return half stands. `VENDOR_COMPARISON.md` §7 and
-   `EVIDENCE_SUMMARY.md` §3 are amended.
+   names `risk.risk_off_ladder`, which is `unset`. Every gate passed over it for a defensible
+   reason — 3g checks that inputs EXIST, 1 accepts `none` as honest — and neither asks whether a
+   ratified criterion can FIRE. Gate 1 now prints that subset on every run.
+3. **"Canada cannot be enumerated" is false, and a study lost half its scope to it.** `DR-003`
+   wrote *"no free symbol directory in hand … cannot presently enumerate"*; `PR-002` cited it
+   unqualified and dropped §6's two-country requirement — the one whose failure is why that study
+   could not reach an affirmative verdict. TMX serves the directory free, no account:
+   `python tools/probe_canada.py --full`. **It does not repair `PR-002`** — the endpoint is today's
+   membership, and applying it to old data is survivorship bias with extra steps.
+4. **"No free source serves delisted history" is half false.** SEC EDGAR serves the FACT and DATE of
+   a delisting, free and official, back to 1993 (`tools/probe_edgar.py`). Prices for a delisted name
+   are still unobtainable, so the bound's RETURN half stands untouched.
 
-**Three new rules and one new gate**, all owner instructions of 2026-08-24: `AGENTS.md` **§15** an
+**Three new rules and one new gate**, owner instructions of 2026-08-24: `AGENTS.md` **§15** an
 impossibility is a claim, **§16** the course is a requirements source and not an evidence source,
-**§17** verify at the right granularity. **Gate 30** makes a second rulebook impossible.
+**§17** verify at the right granularity. **Gate 30** makes a second rulebook impossible. The
+`AGENTS.md` cut of the same day removed roughly a third of it with every heading byte-identical and
+all its section references still resolving.
 
-**The evening of 2026-08-24 in one line:** both passes ran, `exit 0`, and decided **identically** —
-same `output_hash` an hour apart on the real universe, the first live observation of a property
-`DR-015` §3 only asserted. `DR-019` makes the second pass conditional, because it has never changed
-an outcome and the failure it insures against has never occurred here.
+**The evening of 2026-08-24, which matters because it is the first clean one since 08-18:** both
+passes ran `exit 0` and decided **identically** — same `output_hash` an hour apart on the real
+universe, the first live observation of a property `DR-015` §3 only asserted. `DR-019` makes the
+second pass conditional, because it has never changed an outcome and the failure it insures against
+has never occurred here.
 
-**Everything else is committed.** `master` is protected on `github.com/golub-kirill/SwingDesk`
-(public) and requires the `gates` check, so it only ever advances to a commit CI has already
-passed.
+**`master` is protected** on `github.com/golub-kirill/SwingDesk` (public) and requires the `gates`
+check, so it only ever advances to a commit CI has already passed.
 
 Everything below is measured from the tree, not remembered. **§2 is the only place a measured count
 lives** (`AGENTS.md` §10.5); a figure here that disagrees with `python tools/check_gates.py` is this
@@ -282,26 +293,39 @@ longer matches a fresh replay, because seven bars arrived three hours after it w
 
 ### What to pick up, ranked — 2026-08-25
 
-**First: decide about the branch in §0.** Everything below assumes it either merges or does not.
+**Everything below needs the owner except items 5 and 6.** The session that produced them
+deliberately built no value into a threshold and took no decision that was the owner's.
 
 1. **Ratify or reject `DR-019` and `DR-020`.** Both are `proposed` and both are already built or
-   authored: the conditional second pass runs today, and the transition graph is what makes `Trade`
-   reachable in principle. `DECISION_STATE_MACHINE.md` §6 stays open until `DR-020` is ratified.
-2. **`entry.maximum_entry_atr` and the trigger definitions need values**, and a value is a study or
-   a ruling — never a guess (`AGENTS.md` §8). `DR-020` §7 measured what the pivot parameters cost
-   and removed one argument that would have been made from a false premise; it moved no value.
-3. **The AI guard, which `CHARTER.md` A-001 makes a PRECONDITION.** §3a permits advice on an open
-   position; A-001 says nothing may be implemented before the authority model is *gated*, and
-   `AI_AUTHORITY_MODEL.md` §11 records that its prohibitions are prose.
-4. **`k.drawdown_pause` needs a measurement, and the measurement needs owner decisions** — realised
-   drawdown requires an account-equity concept the store does not hold. `TODO.md` §1 states what
-   closing it needs and why inventing an equity definition to green a gate would be the wrong move.
-5. **The `PR-005` trade log needs an owner ruling** — the published CSV no longer matches a fresh
-   replay because seven bars arrived three hours after it was published. Three options in `TODO.md`.
-6. **`SWINGDESK_EDGAR_CONTACT` is one line and it unblocks a real measurement** — classifying the 87
-   symbols that left the directory in three weeks into delistings and renames, which `DR-008` c3
-   records as currently indistinguishable.
-7. **Everything owner-pending is in `TODO.md` §4.**
+   authored — the conditional second pass runs today, and the transition graph is what makes `Trade`
+   reachable in principle. `DECISION_STATE_MACHINE.md` §6 stays open until `DR-020` is ratified,
+   because a proposed record constrains nothing.
+2. **`entry.maximum_entry_atr` and the trigger definitions need values.** A value is a study or a
+   ruling, never a guess (`AGENTS.md` §8). `DR-020` §7 measured what the pivot parameters cost and
+   **refuted the hypothesis it was built to test** — confirmation does not spend the entry budget,
+   the drift is negative at every setting — so one argument that would have been made from a false
+   premise is gone. No value moved.
+3. **`k.drawdown_pause` needs a measurement, and the measurement needs owner decisions.** Realised
+   drawdown requires an account-equity concept the store does not hold: fills are recorded per
+   position and nothing aggregates them. Starting capital, mark-to-market versus realised-only, and
+   per-account versus per-strategy are definitions, not implementation details. `TODO.md` §1 states
+   why inventing one to green a gate would be the wrong move.
+4. **The `PR-005` trade log** — the published CSV no longer matches a fresh replay because seven
+   bars arrived three hours after publication. Three options in `TODO.md`; `docs/prereg/results/`
+   was deliberately not touched.
+5. **`SWINGDESK_EDGAR_CONTACT` is one line and unblocks a real measurement.** `data.sec.gov` answers
+   a descriptive `User-Agent` and `www.sec.gov` does not, so lookup by CIK works and lookup by
+   TICKER needs the contact the SEC asks for. With it, the **87 symbols that left the directory in
+   three weeks** can be classified into delistings and renames — which `DR-008` c3 records as
+   currently indistinguishable, and which is the first empirical purchase anyone has had on the
+   survivorship question.
+6. **The AI guard exists and is half of what A-001 requires.** `application/ai_guard.py` refuses
+   both controlled vocabularies and any numeral the deterministic path did not produce, reading the
+   vocabularies from their enums so they cannot drift. **It cannot see paraphrase**, two tests
+   assert that hole, and `AI_AUTHORITY_MODEL.md` §11 stays open because of it. A-001's standing
+   condition is **not** discharged.
+7. **Everything owner-pending is in `TODO.md` §4**, and the impossibility audit's long tail is in
+   §2 — four ranked claims are closed, the rest are a command away.
 
 ### The clock, and the freeze that protects it
 
