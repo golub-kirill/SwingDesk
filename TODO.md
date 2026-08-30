@@ -1978,6 +1978,14 @@ is for where no gate can reach.
       ```bash
       PYTHONPATH=$PWD/src python tools/verify_invariant_tests.py
       ```
+      **And this file had already said so, in another section, six days earlier.** §1's R-denominator
+      entry carries *"RE-MEASURED 2026-08-23 … the survivor count is 0 of 11"*, with the same three
+      mutants and the same causes. Two sections of one document held opposite answers to one
+      question, and the stale one is the entry a reader meets under **Code & gates** — which is
+      where someone goes to decide what to build. `AGENTS.md` §10.5's disease does not need two
+      documents; one is enough. Nothing catches it: gate 14 owns counts in `HANDOFF.md` §2, and a
+      survivor count has no owner at all, which is §4's open question about STATUS restated as a
+      number.
       **What this does NOT overturn:** the build order below. Every kill came from a test written
       for a *feature*, not from a mutant list — which is the entry's own conclusion, confirmed
       rather than refuted. The mutant list is cheap insurance against those tests being weakened,
