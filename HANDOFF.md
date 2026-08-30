@@ -1,7 +1,8 @@
 # HANDOFF — start here in a fresh session
 
-Written 2026-08-04; **brought current 2026-08-24**. Read this, then `AGENTS.md` — especially §10,
-rules that were each paid for, and §12, traps that each cost real time — then `docs/README.md`.
+Written 2026-08-04; **brought current 2026-08-29**. Read this, then **`AGENTS.md`'s rule index** —
+every rule in one line, and the column saying which ones nothing will catch — then §12's traps, then
+`docs/README.md`.
 
 ## 0. The first thing, and it is not code
 
@@ -66,11 +67,11 @@ would otherwise assume, and each was measured rather than argued.**
    a delisting, free and official, back to 1993 (`tools/probe_edgar.py`). Prices for a delisted name
    are still unobtainable, so the bound's RETURN half stands untouched.
 
-**Three new rules and one new gate**, owner instructions of 2026-08-24: `AGENTS.md` **§15** an
-impossibility is a claim, **§16** the course is a requirements source and not an evidence source,
-**§17** verify at the right granularity. **Gate 30** makes a second rulebook impossible. The
-`AGENTS.md` cut of the same day removed roughly a third of it with every heading byte-identical and
-all its section references still resolving.
+**The rules are not listed here any more, and that is the point.** `AGENTS.md` opens with an index
+— one line per rule, with the gate that catches you or the word **honour** when nothing does — and
+gate 37 keeps it from drifting from the rules it lists. Enumerating them here would be the second
+copy §10.5 forbids. **Owner instruction, 2026-08-25: that file governs, and it is to be followed
+strictly.**
 
 **The evening of 2026-08-24, which matters because it is the first clean one since 08-18:** both
 passes ran `exit 0` and decided **identically** — same `output_hash` an hour apart on the real
@@ -318,9 +319,12 @@ longer matches a fresh replay, because seven bars arrived three hours after it w
 **The code graph was re-indexed once it merged** — `src/` and `tools/` both changed (`AGENTS.md`
 §9 rule 3). It is named `swingdesk`, rooted at the main checkout, and now describes `master`.
 
-### What `claude/inspiring-colden-2e8e16` carries — landing on `master` 2026-08-25
+### What `claude/inspiring-colden-2e8e16` carries — landed on `master` 2026-08-25 and 08-29
 
-Five new gates, one extracted into a tool it can be tested through, and a run of corrections.
+**Read this section first if you are a fresh session.** It is the whole of two working days.
+
+**Six new gates (32-37), one extracted into a tool it can be tested through, and a run of
+corrections.**
 **None of it moves a decision output, sets a value, or touches a frozen file** — the one source edit
 inside the freeze is a comment — so it spends no `a.run_completes` counter, and gate 9's determinism
 replay confirms the output is unmoved.
@@ -371,6 +375,13 @@ rather than the 2.2 recorded, against a design target of 2.5. `DR-006` §18 carr
   carries the pattern this session kept finding: **§10.5 gives every COUNT an owner and nothing does
   that for a STATUS** — twenty-odd stale ones across fifteen governed documents in a day, none of
   them wrong when written.
+- **Gate 37 and the rule index, on owner instruction 2026-08-25** — *"AGENTS это твоя библия… раздели
+  список правил и прозу"*. `AGENTS.md` now opens by saying it governs, and carries a one-line-per-rule
+  index whose third column names the gate that catches you, or **honour** when nothing does. The
+  measurement behind it: **about a dozen rules are honour-only**, including §1, §13, §14 and §5's
+  *"say the name, not the code"*. Gate 37 keeps the index from drifting from the rules.
+  **What paid for it:** this session read §5 and §13 — both owner instructions — and broke both for
+  a whole day while building five gates that catch other things.
 
 **The code graph describes `master`, not this branch** — `AGENTS.md` §9 rule 3 says to re-index
 after a MERGE, and this is not merged, so that is correct rather than an oversight. It does not know
@@ -388,6 +399,29 @@ two rows exist. **That is the gate working on its first real merge, not a defect
 the fix is two rows, and the descriptions are already in the runner entries. Neither branch can add
 them alone: a row for a gate the other branch registers would fail gate 36 here, in the other
 direction.
+
+### Five questions waiting on the owner — restated 2026-08-29 with names, not codes
+
+**`AGENTS.md` §5: say the name, not the code.** These five are the whole of what is blocked on a
+human, and each is one decision:
+
+1. **The conditional second evening pass** (`DR-019`) — the 19:30 run fires every evening
+   unconditionally; the record proposes firing it only when the first pass refused something a retry
+   could fix. Built and running. **Ratify or reject.** *(And see the third live risk below: on a
+   catch-up day it does not run at all.)*
+2. **The nine watchlist states and the transitions between them** (`DR-020`) — the course names the
+   states, nobody ever wrote the edges, and that is why `Trade` is unreachable in code. The record
+   draws the graph and **decides no number**. **Ratify or reject.**
+3. **The maximum entry distance** (`entry.maximum_entry_atr`) — how far past a fired trigger an entry
+   may still be taken, in ATR units. Inside it a plan becomes `Trade`, beyond it `Late`. The unit is
+   decided; **the value is not, and without it two pre-trade checklist items cannot answer.** A
+   ruling with a reason, or permission to register a study.
+4. **One word in the drawdown kill switch** (`k.drawdown_pause`) — it reads *"Realised drawdown"*.
+   Closed trades only, or the drawdown that actually happened including open positions? The drawdown
+   study uses the word in the second sense. **This is all that is left of what were three questions.**
+5. **The published trade log of the base-strategy study** (`PR-005`) — 26,351 trades that no longer
+   reproduce, because seven bars arrived three hours after publication. Leave it and date it,
+   republish it, or publish the new one alongside. `TODO.md` §5 has the three.
 
 ### What to pick up, ranked — 2026-08-25
 
