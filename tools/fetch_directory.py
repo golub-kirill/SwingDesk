@@ -9,16 +9,39 @@ runs does not lose accuracy today; it loses the departure record permanently.
 
 Network tool. Never imported by anything in src/, never run in CI (CI_POLICY 4).
 
+**Three modes, and `DR-008` ratified all three.** `SCHEDULED` honours the local switch, the NYSE
+calendar and the already-recorded-session guard. `MANUAL` — the bare form — honours none of them,
+because a human asked. `FORCED` is the emergency re-pull: it honours the switch and the calendar
+like the scheduled form and bypasses **only** the already-recorded guard, which is the whole reason
+it exists.
+
+**The already-recorded guard and the forced pull are one change, built together 2026-08-25.**
+Neither works alone: a guard with no override strands an operator whose first pull was malformed,
+and an override with nothing to override is decoration. Until they existed the collector re-pulled
+a session it already held — measured on the live store, 3 of 18 pulls were same-session duplicates
+that `DirectoryStore.record` then stripped of their session date, and `DR-008` says those should
+have made **zero requests**.
+
+**Every invocation writes one audit row**, including the ones that make no request. A refusal that
+recorded nothing left the store unable to tell "declined" from "never ran".
+
     python tools/fetch_directory.py
+    python tools/fetch_directory.py --scheduled
+    python tools/fetch_directory.py --emergency-repull --reason "first pull returned a truncated file"
 """
 
 from __future__ import annotations
 
 import argparse
+import contextlib
+import hashlib
+import itertools
 import json
+import os
 import re
 import sys
 import urllib.request
+from collections.abc import Callable, Iterator, Sequence
 from datetime import UTC, date, datetime, timedelta
 from email.utils import parsedate_to_datetime
 from pathlib import Path
@@ -31,12 +54,39 @@ from swingdesk.reference_data import calendar as cal
 from swingdesk.reference_data import universe
 from swingdesk.reference_data.directory import DirectoryStore
 
-SOURCE = "nasdaqtrader.com/SymDir"
-USER_AGENT = "swingdesk/0.0"
-FILES = {
-    "nasdaqlisted.txt": "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt",
-    "otherlisted.txt": "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt",
-}
+REPO = Path(__file__).resolve().parents[1]
+
+#: `DR-008`: "The source URLs, retry budget, timeouts, cap and staleness levels live in one committed
+#: machine-readable policy and are merge-gated." Until 2026-08-25 they were literals here and nothing
+#: gated them. Loaded at import so a malformed policy stops the collector rather than being noticed
+#: at the moment it would have bounded a request - fail closed, the same rule the local switch uses.
+POLICY_PATH = REPO / "registry" / "directory_pull_policy.yml"
+
+
+def _load_policy(path: Path) -> dict:
+    """The network policy, or a refusal naming what is wrong with it.
+
+    No defaults and no `.get(..., fallback)`: a missing limit must stop the collector, because a
+    limit that silently falls back to a built-in is the second copy this file was moved out of the
+    source to eliminate.
+    """
+    import yaml
+
+    loaded = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(loaded, dict):
+        raise ValueError(f"{path}: the directory pull policy must be a mapping")
+    for section in ("source", "limits", "staleness"):
+        if not isinstance(loaded.get(section), dict):
+            raise ValueError(f"{path}: missing or malformed `{section}` section")
+    if not loaded["source"].get("files"):
+        raise ValueError(f"{path}: `source.files` is empty - there is nothing to fetch")
+    return loaded
+
+
+POLICY = _load_policy(POLICY_PATH)
+SOURCE = POLICY["source"]["label"]
+USER_AGENT = POLICY["source"]["user_agent"]
+FILES: dict[str, str] = dict(POLICY["source"]["files"])
 
 #: The vendor's own end-of-day marker, e.g. "File Creation Time: 0813202621:31".
 _TRAILER = re.compile(r"File Creation Time:\s*(\d{2})(\d{2})(\d{4})(\d{2}):(\d{2})")
@@ -54,14 +104,20 @@ _TRAILER_ZONE = ZoneInfo("America/New_York")
 #: trailer that merely happens to land on the right calendar date for the wrong reason.
 _CORROBORATION_TOLERANCE = timedelta(minutes=5)
 
-#: Response cap (DR-008). Applied to Content-Length AND to bytes actually read, so a server that
-#: omits or misstates the header cannot bypass it.
-MAX_RESPONSE_BYTES = 2 * 1024 * 1024
+#: Response cap (DR-008), read from the policy. Applied to Content-Length AND to bytes actually
+#: read, so a server that omits or misstates the header cannot bypass it.
+MAX_RESPONSE_BYTES: int = POLICY["limits"]["max_response_bytes"]
+REQUEST_TIMEOUT_SECONDS: int = POLICY["limits"]["request_timeout_seconds"]
+LOCK_STALE_AFTER: int = POLICY["limits"]["lock_stale_after_seconds"]
+WARNING_AT: int = POLICY["staleness"]["warning_at_consecutive_misses"]
+ERROR_AT: int = POLICY["staleness"]["error_at_consecutive_misses"]
 
 #: Per-machine switch. Ignored by git, never committed, and absent means OFF - the same
 #: fail-closed rule the parameter registry uses. There is deliberately no committed default.
+#: NOT in the policy file: the policy is what this project commits to doing to somebody else's
+#: server, and the switch is one machine's own state. Committing it would make an operator's local
+#: choice a repository fact.
 LOCAL_CONFIG = ".swingdesk-local.json"
-REPO = Path(__file__).resolve().parents[1]
 
 
 def collection_enabled(root: Path) -> bool:
@@ -77,10 +133,67 @@ def collection_enabled(root: Path) -> bool:
     return value is True
 
 
+class LockHeld(Exception):
+    """Another collector holds the lock, and this one must not run."""
+
+
+@contextlib.contextmanager
+def process_lock(directory: Path, now: datetime) -> Iterator[str]:
+    """`DR-008`'s process lock. Yields a note about what it did, for the audit row.
+
+    **`O_CREAT | O_EXCL` is the whole mechanism** - one atomic syscall, no check-then-create window,
+    and it behaves the same on Windows where this actually runs.
+
+    **The stale-lock problem is the real design question, and getting it wrong is worse than having
+    no lock.** `DR-008` says even the forced pull does not bypass this, so a lock left behind by a
+    killed process would refuse every pull for ever, with no override - and a missed pull is
+    permanently unrecoverable, because the vendor publishes current state and not an archive. That
+    trade is the wrong way round: the lock prevents duplicate REQUESTS, and a stale one would cost
+    the departure record itself.
+
+    So a lock older than `limits.lock_stale_after_seconds` is reclaimed, and the reclamation is
+    **reported rather than silent** - it means a previous run died, which is a fact worth seeing.
+    The bound is generous by two orders of magnitude: a pull is two files and a few seconds.
+    """
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / "directory-pull.lock"
+    note = "acquired"
+
+    if path.is_file():
+        try:
+            age = now - datetime.fromisoformat(path.read_text(encoding="utf-8").strip())
+        except (OSError, ValueError):
+            # An unreadable lock cannot be dated, and a lock that cannot be dated cannot be trusted
+            # to be live. Reclaimed and said out loud, never treated as held for ever.
+            age = timedelta(seconds=LOCK_STALE_AFTER + 1)
+            note = "reclaimed an unreadable lock"
+        if age.total_seconds() <= LOCK_STALE_AFTER:
+            raise LockHeld(
+                f"another directory pull holds {path.name} and started "
+                f"{age.total_seconds():.0f}s ago"
+            )
+        if note == "acquired":
+            note = f"reclaimed a stale lock {age.total_seconds():.0f}s old"
+        path.unlink(missing_ok=True)
+
+    try:
+        handle = os.open(path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+    except FileExistsError as error:
+        # Lost the race between the staleness check and the create. Refusing is right: the other
+        # process won, and two collectors is exactly what this prevents.
+        raise LockHeld(f"another directory pull took {path.name} first") from error
+    try:
+        os.write(handle, now.isoformat().encode("utf-8"))
+        os.close(handle)
+        yield note
+    finally:
+        path.unlink(missing_ok=True)
+
+
 def _download(url: str) -> tuple[str, str | None]:
     """The decoded body, and the response's own `Last-Modified` header (or None if absent)."""
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-    with urllib.request.urlopen(request, timeout=30) as response:
+    with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT_SECONDS) as response:
         declared = response.headers.get("Content-Length")
         if declared is not None and int(declared) > MAX_RESPONSE_BYTES:
             raise ValueError(f"{url}: declared {declared} bytes exceeds the cap")
@@ -127,6 +240,53 @@ def _corroborated_session_date(text: str, last_modified: str | None) -> date | N
     return trailer.date()
 
 
+def digest(*bodies: str) -> str:
+    """A `DR-008` checksum over the response bodies, in the order they were fetched.
+
+    **One digest over both files, not one each.** A pull is a complete snapshot - the record's own
+    framing, and the reason `DirectoryStore.as_of` reads the latest pull rather than unioning - so
+    the thing worth identifying is the pair. Two files whose contents swapped between them would be
+    a different snapshot and must not collide, which is what the length prefix prevents.
+    """
+    hasher = hashlib.sha256()
+    for body in bodies:
+        encoded = body.encode("utf-8")
+        hasher.update(str(len(encoded)).encode("ascii"))
+        hasher.update(b":")
+        hasher.update(encoded)
+    return hasher.hexdigest()
+
+
+def gap_severity(gaps: Sequence[date]) -> str | None:
+    """`DR-008`: one consecutive miss is a `WARNING`; two or more are an `ERROR`.
+
+    Both thresholds are read from `registry/directory_pull_policy.yml`, never from a literal
+    here - `DR-008` puts the staleness levels in the policy alongside the network limits.
+
+    **Consecutive is the word that matters** and it is about a RUN, not a total. Eight isolated
+    single misses over two months are eight recoverable evenings; two in a row means whatever
+    stopped the collector was still stopping it the next day, and the departure record has a hole no
+    later run can fill. Returns `None` when there is nothing to say, because a collector that
+    announced "0 gaps" every evening would train its reader to skip the line.
+    """
+    if not gaps:
+        return None
+    ordered = sorted(gaps)
+    longest = run = 1
+    for earlier, later in itertools.pairwise(ordered):
+        # Consecutive SESSIONS, not consecutive dates - a Friday and the Monday after it are
+        # adjacent here, and treating the weekend as a gap would report one every week.
+        run = run + 1 if _adjacent_sessions(earlier, later) else 1
+        longest = max(longest, run)
+    return "ERROR" if longest >= ERROR_AT else "WARNING"
+
+
+def _adjacent_sessions(earlier: date, later: date) -> bool:
+    """True when no NYSE session sits strictly between the two."""
+    between = cal.sessions(Exchange.NYSE, earlier, later)
+    return len(between) == 2
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="fetch_directory")
     parser.add_argument("--data", type=Path, default=Path("data"))
@@ -136,18 +296,139 @@ def main() -> int:
         help="honour the local switch and the exchange calendar; the manual form ignores both, "
              "because a human asked for it",
     )
+    parser.add_argument(
+        "--emergency-repull",
+        action="store_true",
+        help="DR-008's forced pull: one two-file attempt, no internal retry, recorded as FORCED. "
+             "Bypasses ONLY the already-recorded-session guard and the retry budget - never the "
+             "local switch, the NYSE calendar, the response cap, validation or the audit row. "
+             "Requires --reason, and a reason that differs from the last forced pull's",
+    )
+    parser.add_argument(
+        "--reason",
+        default=None,
+        help="why this forced pull is being made. Required by --emergency-repull, non-empty, and "
+             "must not repeat the previous forced pull's reason",
+    )
     args = parser.parse_args()
 
-    if args.scheduled:
-        if not collection_enabled(REPO):
-            print(f"directory pull disabled - no {LOCAL_CONFIG} with directory_pull_enabled: true")
-            return 0
-        if not cal.is_open(Exchange.NYSE, datetime.now(UTC).date()):
-            print("not an NYSE session - nothing to collect")
-            return 0
+    started_at = datetime.now(UTC)
+    forced = args.emergency_repull
+    mode = "FORCED" if forced else ("SCHEDULED" if args.scheduled else "MANUAL")
+    reason = (args.reason or "").strip() or None
+    store_path = args.data / "directory.duckdb"
 
+    # Usage errors, not policy refusals, and they write no audit row on purpose: argparse rejects an
+    # unknown flag with exit 2 and no record either, and these are the same class of mistake. A
+    # refusal the COLLECTOR makes - disabled, closed, already recorded, reason repeated - is a fact
+    # about the evening and is audited below.
+    if args.reason is not None and not forced:
+        print("--reason is only meaningful with --emergency-repull")
+        return 2
+    if forced and reason is None:
+        print("--emergency-repull requires a non-empty --reason (DR-008)")
+        return 2
+
+    # An invocation that makes zero requests still writes its audit row, so `_finish` is the single
+    # exit for every branch below. A refusal that recorded nothing would leave the store unable to
+    # distinguish "declined" from "never ran" - which is the state this table was added to end.
+    enabled = collection_enabled(REPO)
+
+    def _finish(result: str, *, requests: int = 0, attempts: int = 0,
+                received: int = 0, snapshot: datetime | None = None, code: int = 0) -> int:
+        with DirectoryStore(store_path) as audit_store:
+            audit_store.record_audit(
+                started_at=started_at, finished_at=datetime.now(UTC), mode=mode, reason=reason,
+                enabled=enabled, attempts=attempts, requests=requests, received_bytes=received,
+                result=result, snapshot=snapshot,
+            )
+        return code
+
+    # `DR-008`: the forced form "does not bypass local disablement, the NYSE calendar, source
+    # allowlist, response cap, validation, process lock or audit". So these two gates bind it as
+    # tightly as they bind the scheduled form; only the already-recorded guard below is bypassed.
+    if args.scheduled or forced:
+        if not enabled:
+            print(f"directory pull disabled - no {LOCAL_CONFIG} with directory_pull_enabled: true")
+            return _finish("DISABLED")
+        if not cal.is_open(Exchange.NYSE, started_at.date()):
+            print("not an NYSE session - nothing to collect")
+            return _finish("NOT_A_SESSION")
+        # `DR-008`: eligible "only on an NYSE trading date, AFTER THE LATEST SESSION HAS COMPLETED".
+        # Only the first half was checked, so a run at 09:00 on a trading day was eligible and would
+        # have pulled a file describing YESTERDAY - then attributed it to yesterday, correctly, and
+        # spent the day's pull on a session already recorded. Not reachable from the 18:30 trigger,
+        # which is why this is a correctness fix rather than an outage: measured 2026-08-25, both
+        # scheduled passes sit after the 16:00 ET close and stay eligible.
+        if cal.last_completed_session(Exchange.NYSE, started_at).session_date != started_at.date():
+            print("today's NYSE session has not completed yet - nothing to collect (DR-008)")
+            return _finish("SESSION_NOT_COMPLETE")
+
+    if forced:
+        with DirectoryStore(store_path) as guard_store:
+            previous_reason = guard_store.last_forced_reason()
+        if previous_reason is not None and previous_reason == reason:
+            print("--reason repeats the previous forced pull's reason; DR-008 requires a new one")
+            return _finish("REASON_REPEATED", code=2)
+
+    # `DR-008`: "A successful session is not fetched again automatically ... an already-recorded
+    # session makes zero requests." Decided from the CALENDAR against what is already attributed,
+    # because the vendor's own session date does not arrive until the file does.
+    #
+    # **The guard keys on the ATTRIBUTED session, so it fails OPEN, and that is the right
+    # direction.** A pull whose trailer and `Last-Modified` did not corroborate stores a NULL date,
+    # so this guard does not see it and the next pass fetches again - which is correct, because an
+    # unattributed pull is precisely the case where we do not know whether we hold that session.
+    # The failure mode is therefore today's behaviour, never something worse.
+    superseded: datetime | None = None
+    target_session = cal.last_completed_session(Exchange.NYSE, started_at).session_date
+    with DirectoryStore(store_path) as guard_store:
+        already = guard_store.pull_for_session(target_session)
+    if already is not None:
+        if not forced:
+            if args.scheduled:
+                print(f"session {target_session} is already recorded - no requests made "
+                      f"(DR-008). Use --emergency-repull --reason ... to override")
+                return _finish("ALREADY_RECORDED")
+        else:
+            superseded = already
+
+    # The lock is taken here rather than at the top: every branch above makes no request and writes
+    # no snapshot, so holding a lock across them would let a declining run block a working one.
+    # `DR-008` says the forced pull does not bypass it either, so this sits outside the `forced`
+    # check deliberately.
+    try:
+        with process_lock(args.data, started_at) as lock_note:
+            if lock_note != "acquired":
+                print(f"process lock: {lock_note} - a previous pull did not finish cleanly")
+            return _collect(
+                store_path=store_path, reason=reason, superseded=superseded,
+                target_session=target_session, finish=_finish,
+            )
+    except LockHeld as held:
+        print(f"process lock: {held} - declining (DR-008)")
+        return _finish("LOCK_HELD")
+
+
+def _collect(
+    *,
+    store_path: Path,
+    reason: str | None,
+    superseded: datetime | None,
+    target_session: date,
+    finish: Callable[..., int],
+) -> int:
+    """The part that touches the network and writes a snapshot, under the process lock.
+
+    Split out of `main` so the lock has an obvious scope: everything in here runs holding it,
+    everything above it makes no request and writes no snapshot. A lock held across the
+    declining branches would let a run that decided to do nothing block one that would have
+    worked.
+    """
     nasdaq_text, nasdaq_modified = _download(FILES["nasdaqlisted.txt"])
     other_text, other_modified = _download(FILES["otherlisted.txt"])
+    received = len(nasdaq_text.encode("utf-8")) + len(other_text.encode("utf-8"))
+    checksum = digest(nasdaq_text, other_text)
     entries = [
         *universe.parse_nasdaq_listed(nasdaq_text),
         *universe.parse_other_listed(other_text),
@@ -164,31 +445,75 @@ def main() -> int:
         print("source_session_date unattributable - trailer/Last-Modified did not corroborate "
               "on one or both files, or the two files disagreed")
 
-    with DirectoryStore(args.data / "directory.duckdb") as store:
+    with DirectoryStore(store_path) as store:
         previous = store.latest_pull(knowledge_time)
-        stored_date = store.record(entries, knowledge_time, SOURCE, claimed_date)
+        # The digest is compared BEFORE the pull is recorded, or the pull just written would be
+        # the latest one and every evening would report "identical to itself".
+        previous_checksum = store.latest_checksum()
+        stored_date = store.record(
+            entries, knowledge_time, SOURCE, claimed_date,
+            supersedes=superseded, checksum=checksum,
+        )
         print(f"recorded {len(entries)} rows ({len(eligible)} eligible) at {knowledge_time:%Y-%m-%d %H:%M}Z")
+        if superseded is not None:
+            # Appended, never overwritten: the superseded pull stays in `directory` and in
+            # `directory_pulls`, and this row is the only thing that says it is no longer the
+            # answer. `DR-008`: "The previous snapshot remains stored but is no longer canonical."
+            store.record_supersession(
+                recorded_at=knowledge_time, superseded=superseded,
+                replacement=knowledge_time, reason=reason or "",
+            )
+            print(f"FORCED: replaces the pull of {superseded:%Y-%m-%d %H:%M}Z for session "
+                  f"{target_session}; that snapshot remains stored and is no longer canonical")
         if claimed_date is not None and stored_date is None:
             print(f"source_session_date {claimed_date} rejected - not strictly after the last "
                   "stored session date; the vendor file may not have regenerated")
+        if previous_checksum is not None:
+            # Says which of the two an unattributed pull was, instead of leaving it ambiguous.
+            if previous_checksum == checksum:
+                print("checksum: byte-identical to the previous pull - the vendor served the same "
+                      "files, so this adds no observation the store did not already hold")
+            else:
+                print("checksum: differs from the previous pull")
         elif stored_date is not None:
             print(f"source_session_date confirmed: {stored_date}")
 
         if previous is None:
             print("first pull - no departures to report, and none are recoverable for earlier dates")
-            return 0
+        else:
+            gone = store.departures(previous, knowledge_time)
+            arrived = len(
+                {e.symbol for e in entries} - {e.symbol for e in store.as_of(previous)}
+            )
+            print(f"since {previous:%Y-%m-%d}: {len(gone)} symbol(s) gone, {arrived} new")
+            for symbol in gone[:20]:
+                print(f"    gone: {symbol}")
+            if len(gone) > 20:
+                print(f"    ... and {len(gone) - 20} more")
+            print("\nA departure is an observation, not a delisting - a ticker change looks the same.")
 
-        gone = store.departures(previous, knowledge_time)
-        arrived = len(
-            {e.symbol for e in entries} - {e.symbol for e in store.as_of(previous)}
-        )
-        print(f"since {previous:%Y-%m-%d}: {len(gone)} symbol(s) gone, {arrived} new")
-        for symbol in gone[:20]:
-            print(f"    gone: {symbol}")
-        if len(gone) > 20:
-            print(f"    ... and {len(gone) - 20} more")
-        print("\nA departure is an observation, not a delisting - a ticker change looks the same.")
-    return 0
+        # `DR-008`: gaps are recorded, never backdated, and research claiming continuous coverage
+        # must disclose them. Reported over the ATTRIBUTED window only - before the first attributed
+        # pull there is no session to be missing from, and calling that a gap would report ten
+        # phantom ones.
+        attributed = store.attributed_sessions()
+        if attributed:
+            window = [s.session_date for s in cal.sessions(Exchange.NYSE, attributed[0], attributed[-1])]
+            gaps = store.gaps(window)
+            severity = gap_severity(gaps)
+            if severity is None:
+                print(f"coverage: {len(attributed)} attributed session(s), "
+                      f"{attributed[0]} to {attributed[-1]}, no gaps")
+            else:
+                print(f"{severity}: {len(gaps)} session(s) with no attributed pull inside "
+                      f"{attributed[0]}..{attributed[-1]}: "
+                      + ", ".join(str(g) for g in gaps[:10])
+                      + (f" and {len(gaps) - 10} more" if len(gaps) > 10 else ""))
+                print("A gap is permanent - the vendor publishes current state, not an archive.")
+
+    return finish(
+        "RECORDED", requests=2, attempts=1, received=received, snapshot=knowledge_time,
+    )
 
 
 if __name__ == "__main__":

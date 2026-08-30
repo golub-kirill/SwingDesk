@@ -318,11 +318,35 @@ to everything passes a one-sided test, and that is the inert-gate defect `REQ-VA
       **It found a modelling fact while being tested:** `Pause` belongs to BOTH vocabularies, so an
       overlap is reported under both clauses rather than under whichever check ran first —
       `DECISION_STATE_MACHINE.md` §3 warns these enums share words for different objects.
-      **STILL OPEN, and this is why the item is not ticked.** §3a clause 1 forbids *"any synonym,
-      paraphrase, translation, colour, emoji or score that maps onto it one-to-one"*, and **none of
-      that is mechanically detectable**. An agent writing *"this one is ready to go"* passes every
-      check and has decided. The guard is **necessary and not sufficient**, two tests assert exactly
-      that hole so it stays known rather than being rediscovered, and A-001's standing condition is
-      therefore not discharged.
+      **STILL OPEN, and this is why the item is not ticked** — but the hole is smaller than this
+      item claimed, and the claim itself was the finding.
+      ~~§3a clause 1 forbids *"any synonym, paraphrase, translation, colour, emoji or score that
+      maps onto it one-to-one"*, and **none of that is mechanically detectable**.~~
+      **Measured 2026-08-25 under `AGENTS.md` §15 and false for half of what it names.** That
+      sentence was an impossibility claim about a *class*, asserted with no test, closing a search.
+      The six routes are not one thing — three of them are **finite sets** and one was never open:
+      • **translation — CLOSED.** This project is written in two languages, so a Russian verdict is
+      the likeliest way the guard gets walked past, not an exotic case. `Пауза` and `Пропустить` map
+      one-to-one onto the enum. They were invisible because `_tokens` matched `[A-Za-z_]+`, so
+      Cyrillic was never tokenised at all. **The test that was supposed to record this hole
+      contained a Russian PARAPHRASE and no translated decision word**, so the route had never once
+      been exercised — the limitation was documented and untested at the same time.
+      • **emoji — CLOSED.** A finite set of verdict signals. The finding deliberately does not say
+      WHICH decision a red circle meant; that would be a guess printed as a finding, the same
+      restraint the `Pause` overlap is handled with.
+      • **colour — CLOSED FOR THE PHRASES** (`green light`, `red flag`) and deliberately not for
+      bare `green`, which is a chart line as often as a verdict. A check that fires on ordinary
+      prose gets switched off rather than fixed.
+      • **score — never open.** Clause 3's numeral rule already refuses every numeric form of one
+      (`8/10`, `0.82`). Now asserted by a test rather than assumed.
+      **What is genuinely undetectable, and it is the real limitation: paraphrase, and open-ended
+      synonym.** An agent writing *"this one is ready to go"* passes every check and has decided. A
+      curated synonym list would close the entries someone thought of while reading as though it
+      closed the class, which is worse than an honest hole.
+      **Every added table is checked against its enum** — adding a state without translating it
+      turns `test_every_decision_state_has_a_translation` red, confirmed by removing an entry from
+      each table and watching both fail. So the guard is **still necessary and not sufficient**, and
+      **A-001's standing condition is still NOT discharged** — but a fresh session should now go
+      looking for paraphrase, not for "everything".
 - [ ] **Model governance** — the model record, evaluation suite and approved-action list from ТЗ §38
       — follows this document. It is not written and must not be written first.

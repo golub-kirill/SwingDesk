@@ -32,11 +32,21 @@ assumption that does not smuggle in a ranking the system refuses to make.
 clustering need a trade log; only a backtest over a wider sample moves those.
 
 Network tool only in the sense that its INPUT came from one: classifications are read from a saved
-file, or from the store `tools/refresh_classifications.py` fills. Re-run offline.
+JSON snapshot, or from the live `.duckdb` store `tools/refresh_classifications.py` fills. Re-run
+offline either way. `--classifications` picks the route by suffix and is REQUIRED - there is no
+default, because guessing which of the two a reader meant is the silent default this project
+refuses everywhere else.
+
+Against the dated snapshot, which is what `DR-006`'s measurements were taken from and stays
+byte-reproducible:
 
     python tools/measure_sector_cap.py --wide \\
         --classifications docs/decisions/measurements/sector-classifications-2026-08-23.json \\
         --out docs/decisions/measurements/sector-cap-calibration-2026-08-23.json
+
+Against the live store, which is what the daily run enforces against:
+
+    python tools/measure_sector_cap.py --wide --classifications data/classifications.duckdb
 """
 
 from __future__ import annotations
@@ -107,7 +117,22 @@ UNIVERSE_DRAWS = 20_000
 
 
 def _exposures(path: Path) -> dict[str, Exposure]:
-    """Saved vendor classifications, judged by the same guard the run uses."""
+    """Vendor classifications, judged by the same guard the run uses.
+
+    **Two routes, and the suffix picks.** A `.json` file is a dated snapshot - that is how the
+    `DR-006` measurements were taken and it stays byte-reproducible, which is the only reason the
+    route survives. A `.duckdb` is the live `ClassificationStore`, read through the *same* reader
+    the pipeline uses.
+
+    **The store route was documented before it existed.** This module's docstring said
+    classifications are read "from a saved file, or from the store `tools/refresh_classifications.py`
+    fills" while `--classifications` accepted JSON only and `refresh_classifications.py` writes no
+    JSON at all - so the sentence named a route with no code under it. Built 2026-08-25 rather than
+    the sentence being deleted, because the store is what the daily run enforces against and a
+    measurement of the cap should read what the cap reads.
+    """
+    if path.suffix == ".duckdb":
+        return _exposures_from_store(path)
     raw = json.loads(path.read_text(encoding="utf-8"))
     now = datetime.now(UTC)
     judged: dict[str, Exposure] = {}
@@ -125,6 +150,23 @@ def _exposures(path: Path) -> dict[str, Exposure]:
             knowledge_time=now,
         )
         judged[symbol] = look_through(classification, symbol)
+    return judged
+
+
+def _exposures_from_store(path: Path) -> dict[str, Exposure]:
+    """The live store, read as-of now and judged by `look_through`.
+
+    Reading through `ClassificationStore.as_of` rather than querying the tables directly is the
+    point: an instrument the store cannot place as-of that instant produces the SAME unavailable
+    `Exposure` the pipeline would see, so a coverage number measured here is the coverage the cap
+    actually has. Querying `classification_weights` for a row count would answer a different
+    question and read as this one.
+    """
+    now = datetime.now(UTC)
+    judged: dict[str, Exposure] = {}
+    with ClassificationStore(path) as store:
+        for symbol in store.instrument_ids(now):
+            judged[symbol] = look_through(store.as_of(symbol, now), symbol)
     return judged
 
 

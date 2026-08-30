@@ -1091,9 +1091,17 @@ per closed trade with the columns above, under the seed from Step 1.
 - [ ] **Step 4: Generate and verify**
 
 ```bash
-PYTHONPATH=$PWD/src python tools/run_pr005_replay.py --out docs/prereg/results/PR-005-trades.csv
+PYTHONPATH=$PWD/src python tools/run_pr005_replay.py --write
 python -m pytest tests/test_trade_log.py -q
 ```
+
+**Corrected 2026-08-25 by gate 31.** This step read `--out docs/prereg/results/PR-005-trades.csv`
+and that flag was never built: the destination is the module constant `TRADES`, and publishing is
+gated behind `--write` — plus `--accept-drift`, which the tool demands separately once a cell
+disagrees. **The plan asked for one key and the tool shipped two, deliberately**, so the planned
+command was not merely renamed, it was overtaken by a decision the plan did not anticipate. Left in
+place and corrected rather than struck: the step ran and produced the published log, so what was
+wrong is the transcription of how, not the work.
 
 Expected: PASS. **If the mean-R test fails, stop this plan and write the mismatch up as a finding.**
 

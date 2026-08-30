@@ -282,3 +282,70 @@ def test_identity_stays_the_directory_symbol() -> None:
     assert instrument.id == "BRK.B"
     assert instrument.ticker == "BRK-B"
     assert instrument.vendor_symbol == "BRK-B"
+
+
+# ------------------------------------- DR-008's "exact header shape", built 2026-08-25
+#
+# Row shape was checked from the start and refuses a short row. The HEADER was dropped unchecked, so
+# a vendor that reordered its columns would have been parsed silently BY POSITION - `parts[6]` read
+# as `ETF` while holding something else. The store's whole value is that a change in it means
+# something, and this was the one way it could change meaninglessly.
+
+
+def test_the_expected_headers_pass_and_that_is_the_positive_control() -> None:
+    """Without this, every refusal below could be a broken checker rather than a planted defect."""
+    assert universe.parse_nasdaq_listed(NASDAQ_LISTED)
+    assert universe.parse_other_listed(OTHER_LISTED)
+
+
+def test_a_REORDERED_nasdaq_header_is_refused() -> None:
+    """The defect itself: same columns, same row length, different order.
+
+    Nothing about the rows is malformed, so the row-shape check passes them and every `is_etf` and
+    `is_test_issue` in the file comes out wrong.
+    """
+    swapped = NASDAQ_LISTED.replace(
+        "Symbol|Security Name|Market Category|Test Issue|Financial Status|Round Lot Size|ETF|NextShares",
+        "Symbol|Security Name|Market Category|ETF|Financial Status|Round Lot Size|Test Issue|NextShares",
+    )
+    with pytest.raises(ValueError, match="header"):
+        universe.parse_nasdaq_listed(swapped)
+
+
+def test_a_REORDERED_other_header_is_refused() -> None:
+    """`otherlisted.txt` carries BOTH an `ACT Symbol` and a `NASDAQ Symbol` column.
+
+    Reading the wrong one is not hypothetical - `parse_other_listed`'s own docstring warns that it
+    produces a universe of symbols that fetch empty.
+    """
+    swapped = OTHER_LISTED.replace(
+        "ACT Symbol|Security Name|Exchange|CQS Symbol|ETF|Round Lot Size|Test Issue|NASDAQ Symbol",
+        "NASDAQ Symbol|Security Name|Exchange|CQS Symbol|ETF|Round Lot Size|Test Issue|ACT Symbol",
+    )
+    with pytest.raises(ValueError, match="header"):
+        universe.parse_other_listed(swapped)
+
+
+def test_the_refusal_names_the_column_that_moved() -> None:
+    """A refusal that says only "bad header" sends someone diffing a 13,000-line file by hand."""
+    swapped = NASDAQ_LISTED.replace("|Test Issue|", "|Test Issue Flag|", 1)
+    with pytest.raises(ValueError) as caught:
+        universe.parse_nasdaq_listed(swapped)
+    assert "column 3" in str(caught.value)
+    assert "'Test Issue'" in str(caught.value) and "'Test Issue Flag'" in str(caught.value)
+
+
+def test_a_TRAILING_column_the_vendor_adds_is_accepted() -> None:
+    """`NextShares` was appended once already, and a column nothing reads cannot change an answer.
+
+    The check is tied to the positions the parser actually reads, not to the header as a string, so
+    it refuses what would corrupt the parse and tolerates what cannot.
+    """
+    widened = NASDAQ_LISTED.replace("|NextShares\n", "|NextShares|SomethingNew\n", 1)
+    assert universe.parse_nasdaq_listed(widened)
+
+
+def test_an_empty_file_is_refused_by_the_header_check() -> None:
+    """An empty body has no header, and "no header" must not read as "header fine"."""
+    with pytest.raises(ValueError, match="header"):
+        universe.parse_nasdaq_listed("")

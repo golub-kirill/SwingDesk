@@ -29,13 +29,36 @@ when the caller declares it as one the deterministic path produced (`restatable`
 burden where the authority model puts it: the agent restates with provenance or it says nothing.
 A guard that guessed would be the silent-default this project refuses everywhere else.
 
-**WHAT THIS CANNOT DO, and it is the load-bearing limitation.** §3a clause 1 forbids the decision
-vocabulary *"and any synonym, paraphrase, translation, colour, emoji or score that maps onto it
-one-to-one"*. **None of that is mechanically detectable**, and this guard does not pretend
-otherwise: an agent writing *"this one is ready to go"* passes every check here and has decided.
-So the guard is NECESSARY AND NOT SUFFICIENT - it closes the exact-token route and leaves the
-paraphrase route open, which is a fact about the guard that must travel with it rather than being
-discovered later. `AGENTS.md` §12: `unavailable` is not `pass`.
+**WHAT THIS CANNOT DO, and the limitation is now SMALLER than it was written.** §3a clause 1 forbids
+the decision vocabulary *"and any synonym, paraphrase, translation, colour, emoji or score that maps
+onto it one-to-one"*. This module and `AI_AUTHORITY_MODEL.md` §11 both said **none of that is
+mechanically detectable**. That was an impossibility claim asserted without a test - `AGENTS.md` §15
+- and it was measured on 2026-08-25 and is wrong for half of what it names. The six routes are not
+one thing:
+
+* **translation** - a FINITE set, and this project is written in two languages. `Пауза` and
+  `Пропустить` map one-to-one onto the enum and were invisible only because `_tokens` matched
+  `[A-Za-z_]+`. **Closed.**
+* **emoji** - a finite set of verdict signals. **Closed.**
+* **colour** - the one-to-one forms are PHRASES (`green light`, `red flag`), not bare colour words.
+  **Closed for the phrases**, deliberately not for bare `green`, which is a chart line as often as
+  a verdict.
+* **score** - the NUMERIC form (`8/10`, `0.82`) was already refused by clause 3's numeral rule, so
+  this route was never open. A verbal "score" is paraphrase, below.
+* **synonym** - open-ended. A curated list would close the entries someone thought of and read as
+  though it closed the class, which is worse than an honest hole.
+* **paraphrase** - **genuinely undetectable by exact matching, and this is the real limitation.** An
+  agent writing *"this one is ready to go"* passes every check here and has decided.
+
+So the guard is still NECESSARY AND NOT SUFFICIENT, and A-001's standing condition is still not
+discharged - but the hole is paraphrase and synonym, not "everything". A fact about the guard that
+must travel with it rather than being discovered later. `AGENTS.md` §12: `unavailable` is not
+`pass`.
+
+**Every added table is checked against its enum by a test**, exactly as the two vocabularies are:
+adding a state to `DECISIONS` or `ActionKind` without translating it turns those tests red. A
+hand-authored mapping that could silently fall behind the enum would be the one-logic-in-two-places
+failure this module's docstring already refuses.
 
 Pure. No I/O, no clock.
 """
@@ -53,6 +76,45 @@ from swingdesk.journal_evidence.journal import DECISIONS
 #: Deliberately greedy: a guard that missed a number would permit exactly what clause 3 forbids, and
 #: a false positive costs the caller one entry in `restatable`.
 NUMERAL = re.compile(r"[-+]?\d[\d,]*(?:\.\d+)?%?")
+
+#: Decision and management words in the OTHER language this project is written in. The course, the
+#: ТЗ and the owner's instructions are Russian, so a Russian verdict is not an exotic case - it is
+#: the likeliest way this guard would be walked past.
+#:
+#: Keyed by the enum member each translation maps onto, so `test_every_state_has_a_translation` can
+#: assert coverage in both directions. Several forms per member because an agent writes prose, not
+#: enum names: the infinitive, the noun and the imperative all say the same thing.
+DECISION_TRANSLATIONS: dict[str, tuple[str, ...]] = {
+    "Trade": ("торговать", "торгуем", "сделка", "торгуй"),
+    "Watch": ("наблюдать", "наблюдаем", "наблюдение", "watchlist"),
+    "Skip": ("пропустить", "пропускаем", "пропуск", "пропускай"),
+    "Pause": ("пауза", "приостановить", "приостанавливаем"),
+}
+
+MANAGEMENT_TRANSLATIONS: dict[str, tuple[str, ...]] = {
+    "HOLD": ("держать", "удерживать", "держим"),
+    "MOVE_STOP": ("перенести стоп", "передвинуть стоп", "переносим стоп"),
+    "PARTIAL_EXIT": ("частичный выход", "частично выйти", "частично закрыть"),
+    "EXIT_NOW": ("выйти сейчас", "закрыть позицию", "выходим"),
+    "PAUSE": ("пауза", "приостановить"),
+}
+
+#: Emoji that signal a verdict. Finite, unambiguous, and no reason for an advisory to carry one.
+#: Not mapped to a specific decision on purpose: §3a forbids a signal that maps onto the vocabulary
+#: one-to-one, and asserting WHICH one a red circle means would be a guess printed as a finding.
+VERDICT_EMOJI = frozenset(
+    "\U0001F7E2\U0001F534\U0001F7E1\U0001F7E0✅❌✔✖⛔\U0001F6A6"
+    "\U0001F44D\U0001F44E\U0001F3AF\U0001F4A1⏸"
+)
+
+#: Colour used as a verdict. **Phrases only.** `green` alone is a chart line as often as a decision,
+#: and a guard that refused it would be refusing the language the reports are written in - which is
+#: how a check gets switched off rather than fixed.
+COLOUR_PHRASES: tuple[str, ...] = (
+    "green light", "green-light", "greenlight", "red light", "red-light",
+    "red flag", "amber light", "traffic light", "зелёный свет", "зеленый свет",
+    "красный флаг", "красный свет",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,8 +148,15 @@ def management_words() -> frozenset[str]:
 
 
 def _tokens(text: str) -> list[str]:
-    """Word-ish tokens, keeping underscores so `move_stop` survives as one token."""
-    return re.findall(r"[A-Za-z_]+", text)
+    """Word-ish tokens, keeping underscores so `move_stop` survives as one token.
+
+    `[^\\W\\d]` is every word character that is not a digit - letters in ANY alphabet, plus the
+    underscore. This read `[A-Za-z_]+` until 2026-08-25, which made every Cyrillic word invisible:
+    `Пауза` was not merely unmatched, it was never tokenised. The test that was supposed to record
+    that hole (`test_a_translated_decision_word_passes_too`) contained a Russian *paraphrase* and no
+    translated decision word at all, so the route had never actually been exercised.
+    """
+    return re.findall(r"[^\W\d]+", text)
 
 
 def check(text: str, *, restatable: Iterable[str] = ()) -> tuple[GuardFinding, ...]:
@@ -121,6 +190,9 @@ def check(text: str, *, restatable: Iterable[str] = ()) -> tuple[GuardFinding, .
                 "deterministic path's to make (DR-013)",
             ))
 
+    findings.extend(_translated(text))
+    findings.extend(_signalled(text))
+
     for numeral in NUMERAL.findall(text):
         if numeral.strip() not in allowed_numbers:
             findings.append(GuardFinding(
@@ -130,6 +202,67 @@ def check(text: str, *, restatable: Iterable[str] = ()) -> tuple[GuardFinding, .
             ))
 
     return tuple(findings)
+
+
+def _translated(text: str) -> list[GuardFinding]:
+    """Decision or management words in the project's other language.
+
+    §3a clause 1 forbids a *translation* that maps onto the vocabulary one-to-one, and a translation
+    is a finite set - which is why this is checkable where paraphrase is not.
+    """
+    findings: list[GuardFinding] = []
+    folded = {token.casefold() for token in _tokens(text)}
+    lowered = text.casefold()
+
+    for state, forms in DECISION_TRANSLATIONS.items():
+        for form in forms:
+            hit = form in lowered if " " in form else form in folded
+            if hit:
+                findings.append(GuardFinding(
+                    "AI_AUTHORITY_MODEL 3a.1", form,
+                    f"the decision vocabulary in translation - it maps one-to-one onto `{state}`, "
+                    f"and deciding is human-only (A-001)",
+                ))
+                break
+
+    for kind, forms in MANAGEMENT_TRANSLATIONS.items():
+        for form in forms:
+            hit = form in lowered if " " in form else form in folded
+            if hit:
+                findings.append(GuardFinding(
+                    "AI_AUTHORITY_MODEL 3a.2", form,
+                    f"the management vocabulary in translation - it maps one-to-one onto "
+                    f"`{kind}`, and a proposal is the deterministic path's to make (DR-013)",
+                ))
+                break
+
+    return findings
+
+
+def _signalled(text: str) -> list[GuardFinding]:
+    """A verdict carried by an emoji or a colour phrase rather than by a word.
+
+    Both are finite sets. Neither is attributed to a PARTICULAR decision: §3a forbids a signal that
+    maps onto the vocabulary one-to-one, and naming which one a red circle meant would be a guess
+    printed as a finding - the same restraint the `Pause` overlap above is handled with.
+    """
+    findings: list[GuardFinding] = []
+    for character in dict.fromkeys(text):
+        if character in VERDICT_EMOJI:
+            findings.append(GuardFinding(
+                "AI_AUTHORITY_MODEL 3a.1", character,
+                "a verdict carried by an emoji. §3a forbids a signal that maps onto the decision "
+                "vocabulary one-to-one, whatever it is spelled with",
+            ))
+    lowered = text.casefold()
+    for phrase in COLOUR_PHRASES:
+        if phrase in lowered:
+            findings.append(GuardFinding(
+                "AI_AUTHORITY_MODEL 3a.1", phrase,
+                "a verdict carried by a colour. Bare colour words are NOT refused - a chart line is "
+                "green too - but this phrase says only one thing",
+            ))
+    return findings
 
 
 def permitted(text: str, *, restatable: Iterable[str] = ()) -> bool:
