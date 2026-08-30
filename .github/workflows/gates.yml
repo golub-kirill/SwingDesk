@@ -41,7 +41,19 @@ jobs:
     # a .cmd wrapper driven by Task Scheduler - and CI whose platform differs from the only machine
     # that matters would test a configuration nobody runs.
     runs-on: windows-latest
-    timeout-minutes: 20
+    # Raised from 20 on 2026-08-30, after a run was CANCELLED at 20m05s while its twin on the same
+    # commit passed at 15m10s. The cap was set when the suite was half this size; it is now 44
+    # gates, over a thousand tests and a mutation gate that copies `src/` once per mutant, and the
+    # job needs about fifteen minutes with runner-speed variance on top.
+    #
+    # **A cap the healthy suite brushes against is not a check, it is a coin flip**, and a red
+    # `gates` on `master` for no reason is exactly the noise `CI_POLICY.md` §3 says gets a gate
+    # bypassed. The cancellation is still there to stop a hung job burning minutes - that is what
+    # this number is for, and thirty-five keeps it while leaving real headroom.
+    #
+    # The log located it exactly: the cancelled run stopped inside gate 34, the mutation gate, which
+    # is the most expensive one and the last heavy thing in the sequence.
+    timeout-minutes: 35
 
     steps:
       - uses: actions/checkout@v4
