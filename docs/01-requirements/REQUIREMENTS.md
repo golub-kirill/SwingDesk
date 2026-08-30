@@ -90,8 +90,19 @@ counting it as covered, and `TODO.md` §1 carries it as open work. **The status 
 
 ## 3. `REQ-VALIDATION-002` — backtest and live are two code paths today
 
-`validation/backtest/engine.py` owns `breakout_high` and the entry decision. `application/pipeline.py`
-owns the live path and reaches `"sized; awaiting a trigger"` — **it has no trigger at all.**
+~~`validation/backtest/engine.py` owns `breakout_high` and the entry decision.~~ **Moved
+2026-08-30 to `decision_logic/triggers.py`**, which is the layer both paths may import.
+`application/pipeline.py` owns the live path and reaches `"sized; awaiting a trigger"` — **it still
+has no trigger at all.**
+
+**The move was not tidiness, and the reason was measured rather than argued.** `pyproject.toml`'s
+layered contract orders `validation` **above** `application`, so `pipeline.py` could not import
+`validation.backtest.engine` at all — gate 6 refuses it. With the trigger living there, the live
+path's only legal options were a second implementation or a broken contract. **The duplication this
+requirement forbids was not a risk, it was mandatory**, enforced by a gate, and nothing had noticed.
+`decision_logic` sits below both, which makes it the one home both may call — and it is where an
+entry rule belongs by name. Moved unchanged: same comparisons, same windows, same `None` on a short
+window, and gate 9's determinism replay confirms the output is unmoved.
 
 So there is no divergence *yet*, and only because the live path implements no strategy. The moment
 it does, this repository will hold two independently written implementations of one strategy —
@@ -102,9 +113,14 @@ TradAlert's version of the failure: "current date" came from the system clock on
 bar date in backtest, so the two paths selected different trade populations, and the measured edge
 described a program that could not have taken the trade it claimed.
 
-**This is cheap to fix now and expensive later.** The trigger should be written once, in a layer both
-paths call, before the live path acquires one. Recorded here rather than in a backlog because the
-window in which it is cheap is open now and closes on the next feature.
+~~**This is cheap to fix now and expensive later.** The trigger should be written once, in a layer
+both paths call, before the live path acquires one.~~ **DONE 2026-08-30, inside the window.** The
+trigger is written once, in `decision_logic/triggers.py`, and both layers may import it.
+
+**What that does and does not discharge.** It removes the structural forcing — a live trigger can
+now legally call the same implementation the backtest runs. It does **not** make this requirement
+met: nothing yet asserts the two paths agree, because the live path still has no trigger to compare
+against and a divergence test needs two things to diverge. §7's row is unchanged and correct.
 
 ## 4. `REQ-RISK-001` — why `unset` is not the same as `enabled: false`
 

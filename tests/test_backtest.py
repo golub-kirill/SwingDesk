@@ -14,14 +14,16 @@ import pytest
 from swingdesk.contracts.market import Bar, BarSeries, Interval, Series
 from swingdesk.contracts.observation import Observation, ObservationSeries
 from swingdesk.contracts.trade import ExitReason, Trade
+from swingdesk.decision_logic.triggers import (
+    BreakoutHigh,
+    CloseBelowLow,
+    breakout_high,
+    lowest_low,
+)
 from swingdesk.validation.backtest import CostModel, ExitPolicy
 from swingdesk.validation.backtest.engine import (
     BacktestConfig,
-    BreakoutHigh,
-    CloseBelowLow,
     Skipped,
-    breakout_high,
-    lowest_low,
     run_arm,
 )
 
