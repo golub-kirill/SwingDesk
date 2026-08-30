@@ -1231,7 +1231,48 @@ own convention.
 
 Each of these is a silent wrong-answer generator: a session reads one, acts, and is wrong.
 
-**EMPTY as of 2026-08-24 — every item below is closed, and four of them were not what they
+### THE DEGENERACY GUARD REFUSES THE INSTRUMENTS ITS OWN RECORD SAYS IT PROTECTS — measured 2026-08-30
+
+- [ ] **`[v]` `DR-006` §12.1 argues the guard is EXACT so a genuine sector ETF clears it. Five of
+      the eleven do not.**
+      ```bash
+      PYTHONPATH=$PWD/src python tools/probe_sector_benchmarks.py --data data
+      ```
+      §12.1's words: *"A genuine sector ETF is legitimately almost all one sector, so a tolerance
+      would refuse the instruments this cap most needs."* The reasoning is sound and the premise is
+      half wrong — **almost** all is doing the work, and the SPDR Select Sector funds for
+      communication services, energy, healthcare, real estate and utilities each report **exactly**
+      one sector at exactly 100%, which is `_degenerate_sector`'s signature exactly.
+      **What actually happens is not silent, and that matters for how alarmed to be.** A refused
+      look-through makes `SectorCapacity.is_unavailable` true, which **admits** the candidate by
+      design (`DR-006` §3: a check the system could not perform must not refuse everything) and puts
+      *"UNAVAILABLE — the look-through is degenerate"* on the record. So the system behaves
+      correctly given the guard, and the reason travels. **Nothing is fabricated and nothing is
+      hidden.**
+      **What is wrong is the REASON, and it is wrong in the same way gate 24's was.** The refusal
+      text reads *"which is how this vendor describes a fund holding no equity at all"*. For `XLU`
+      that sentence is false: it holds almost nothing else. `AGENTS.md` §15 rule 1 and §10.4 both
+      say an explanation is itself a claim, and this one is attached to a live risk control.
+      **A discriminator exists and it is measured rather than proposed from memory.** The guard
+      infers *holds no equity* from the SHAPE of the sector weights; the same vendor call serves the
+      fact directly. `funds_data.asset_classes["stockPosition"]` reads **0.0% for `NEAR`**, the bond
+      fund the guard was written for, and **99.7–100% for every refused sector proxy**. That is
+      `AGENTS.md` §12's proxy trap with the direct measurement sitting beside it in the same
+      response.
+      **Deliberately NOT changed here.** `DR-006` is accepted, §8.7 is one of its rules, and
+      swapping the discriminator changes what the sector cap admits — a decision output. That is an
+      amendment to a ratified record and belongs to the owner (§8, §14). What is done is the
+      measurement, the command that reproduces it, and the note that the cost is bounded today:
+      **none of the five is in the admitted universe**, because none of the eleven has bars stored.
+      **What it also settles, and this is `E05`'s first half.** The blocker recorded in
+      `application/checklist.py` is *"no sector-to-index mapping exists"* — true of this repository.
+      A mapping now exists as a measurement rather than an assertion: **all eleven pairings are
+      confirmed by the vendor's own look-through, zero contradicted**, and all eleven are listed and
+      not test issues in `directory.duckdb`. What remains for `E05` is authoring the mapping as a
+      record and storing the series — and, separately, whether a sector-relative comparison helps at
+      all, which is a study and which `PR-012` has already found decorative point-to-point.
+
+**Everything below was EMPTY as of 2026-08-24 — closed, and four of them were not what they
 said.** Kept for the reasoning, because the reasoning is the transferable part:
 
 - **`G0 status` and `k.project_timebox` were never disagreements.** One was a stale open item whose
