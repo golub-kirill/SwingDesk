@@ -256,5 +256,21 @@ before anyone had a chance to trust the thing it was checking.
       what the gate does *not* cover was the one figure in the policy no gate could check. It was
       the fifth hand-maintained count to drift here, and the answer was never a better habit — the
       row names the command now, and the part of `tools/` that matters is under the gate.
-- [ ] Runtime budget. Gates 1–3 take about a minute (dominated by re-extracting 116 PDFs). If that
-      becomes friction, cache extraction by file hash rather than weakening the check.
+- [ ] Runtime budget. Gates 1–3 take about a minute locally (dominated by re-extracting 116 PDFs).
+      If that becomes friction, cache extraction by file hash rather than weakening the check —
+      and note it is **not** the CI cost, because 2 and 3 report `UNAVAILABLE` there.
+
+      **The CI budget became live on 2026-08-30 and it was cumulative growth, not one change.** A
+      run was **cancelled at 20m05s** against `timeout-minutes: 20` while its twin on the same
+      commit passed at **15m10s**. The log locates it exactly: it stopped inside **gate 34**, the
+      mutation gate, which copies `src/` once per mutant and is the last heavy thing in the
+      sequence. The cap was raised to 35 — a cap the healthy suite brushes against is a coin flip
+      rather than a check, and a red `gates` on `master` for no reason is the noise §3 says gets a
+      gate bypassed. What the cancellation is *for* — stopping a hung job — is unchanged.
+
+      **What this does not do is make the suite faster**, and the next lever is named here rather
+      than left to be rediscovered: gate 34 pays a `src/` copy and a pytest start per mutant, and it
+      runs seventeen. Sharing one scratch tree across mutants, or batching the named tests into one
+      pytest invocation, would take the largest bite. Neither is done, and neither should be done
+      without measuring first — the gate's value is that a mutation site which no longer matches is
+      a FAILURE, and a faster version that quietly skips one would be worth less than the minutes.

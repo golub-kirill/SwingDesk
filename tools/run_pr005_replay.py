@@ -144,7 +144,17 @@ def main() -> int:
 
     recorded = json.loads(RESULT.read_text(encoding="utf-8"))
     instruments = recorded["instruments"]
-    window = tuple(date.fromisoformat(d) for d in recorded["window"])
+    # The recorded window's SHAPE is checked, not assumed. A generator comprehension produces
+    # `tuple[date, ...]` and `_load` clips with `window[0]` and `window[1]`, so a result file
+    # carrying one date or three would replay over a window nobody chose - and this tool exists to
+    # say whether a PUBLISHED result still reproduces, which makes a silently wrong window the one
+    # answer it must never give. Refused with a reason rather than clamped (`AGENTS.md` §3).
+    dates = [date.fromisoformat(d) for d in recorded["window"]]
+    if len(dates) != 2:
+        print(f"\nREFUSED: {RESULT.name} records a window of {len(dates)} date(s); a replay needs "
+              f"exactly a start and an end.")
+        return 2
+    window: tuple[date, date] = (dates[0], dates[1])
     print(f"PR-005 recorded {len(instruments)} admitted instruments, "
           f"window {window[0]} -> {window[1]}, run at {recorded['run_at']}")
 
