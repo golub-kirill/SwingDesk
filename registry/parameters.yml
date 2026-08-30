@@ -1164,7 +1164,7 @@ parameters:
     value: 20
     status: owner
     provenance: owner
-    read_by: none
+    read_by: swingdesk.trade_management.drawdown:measure
     named_in: [M75-T1122]
     note: >-
       Owner decision, 2026-08-05. M75-T1122 names "Максимальная допустимая просадка" and gives no
@@ -1173,6 +1173,15 @@ parameters:
       Choosing the unit was part of the decision - the registry carried "R or percent" until now.
       Setting this makes the ratified `k.drawdown_pause` evaluable; while it was unset that
       criterion could not fire, which is the inert-gate failure REQ-VALIDATION-001 names.
+      AND THE VALUE WAS STILL NOT ENOUGH, which took until 2026-08-30 to notice. The number was set
+      but nothing computed the quantity to compare it against - read_by was `none` for 25 days, so
+      the criterion remained exactly as unfireable as it had been while the threshold was unset,
+      one layer further in. swingdesk.trade_management.drawdown now measures it and
+      tools/measure_drawdown.py reports it, against the meaning criteria.yml amendment v1.1.2
+      fixes: peak-to-trough drawdown of account equity INCLUDING open positions marked to market.
+      NOT read by the decision path, deliberately. The criterion's prescribed action is the
+      risk-off ladder, risk.risk_off_ladder is unset, and writing it is the owner's. This is
+      measurement, not enforcement.
     ui_editable: true
 
   - id: validation.go_live_criteria

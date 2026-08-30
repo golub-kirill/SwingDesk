@@ -87,6 +87,21 @@ retyping it.
       **And it is not urgent, which is measured rather than assumed:** the position store is empty
       on every table, so either definition reports 0.00% today.
 
+      **RULED AND BUILT 2026-08-30.** The owner settled the open half: `k.drawdown_pause` means the
+      drawdown that actually OCCURRED, **including open positions marked to market** - the reading
+      `PR-009` was already using, not the closed-trades one the word suggests. `criteria.yml`
+      carries it as amendment **v1.1.2**, with a pointer comment at the field, because the file is
+      frozen and amendments are appended rather than applied in place.
+      **A separate decision record was considered for this and deliberately NOT used**, and that is
+      recorded here so the absence is a choice rather than an omission. The question was what one
+      word in one ratified criterion means; a DR is the instrument for a choice with alternatives to
+      reject, and this had a right answer once the two readings were written down. The amendment
+      mechanism is the one this file already owns for exactly this.
+      **The measurement is built and wired to nothing.** It reads the position store only - not the
+      journal - and reports 0.00% against zero positions, which is the point: the criterion stops
+      being unevaluable. `risk.risk_off_ladder` stays `unset` and the prescribed ACTION stays the
+      owner's; making the kill switch measurable is not the same as making it automatic.
+
 - [ ] **`[v]` `risk.liquidity_cap_order_to_adtv_pct` is owner-set at 1.0 and read by nothing.**
       **Promoted from `[c]` 2026-08-30 by reading the registry**: `provenance: owner`, `value: 1.0`,
       `read_by: none`. Gate 1 prints the whole orphan list on every run, so derive it there rather
@@ -401,6 +416,18 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       of 100. Waiting for the cycle and waiting for the evidence are the same wait, and it is longer
       than the horizon.
       **Still suspended:** everything else on the list above. This override is one study, named.
+      **LIFTED ENTIRELY BY THE OWNER 2026-08-30, and NOTHING IS REGISTERED AGAINST IT.**
+      The reason is the one already written two paragraphs up and never acted on: the exit condition
+      waits on a real end-to-end cycle through a `Trade`, `Trade` is unreachable on the live path,
+      and a suspension that cannot end is a permanent stop nobody voted for. The council voted to
+      pause research until the system could carry a cycle; it did not vote to stop research
+      forever, and by 2026-08-24 those had become the same thing. Lifting it is the honest reading
+      of what was decided, not a reversal of it.
+      **It is permission, not a plan.** No study is registered here and none should be registered
+      casually: every study competes with Track A for the same evening window and the same
+      single-writer stores, and Track A is inside a ratified 120-day timebox whose binding
+      constraint is measured to be machine availability. The next study needs its own case for
+      going ahead of that, made at the time.
 - [x] **`[v]` Gate 16 was RED — fixed 2026-08-15.** Both undeclared worktrees are now named in
       `HANDOFF.md` §2. `python tools/verify_branches.py` exits 0.
 - [x] **`[v]` `HANDOFF.md` §2's stale rows — fixed at the mechanism, 2026-08-15.** §2 is now
@@ -2384,6 +2411,12 @@ is for where no gate can reach.
       is. An agent measuring the subject is right; an agent widening what counts as evidence is not.
       **What cannot be recovered either way:** the journal stores one boolean per run, so which
       files were dirty on any past evening is gone. A narrowed check would apply forward only.
+      **ANSWERED AND BUILT 2026-08-30 — `DR-022`.** The owner ratified the narrowing and it is in
+      `pipeline.DECIDING_PATHS`: `src/`, `tools/`, `registry/`, `golden/`. The permissive-direction
+      objection above is the one the record had to answer, and §5 answers it by measurement rather
+      than by argument — `code_dirty` is not in `output_hash`, so narrowing it moves no decision and
+      resets no counter. The 18 already-flagged runs keep their flags; `DR-022` §4 records the
+      discontinuity that leaves and why re-deriving them is not on offer.
 - [ ] **`[v]` GATE 10 IS NOW TWO CHECKS, NOT THREE, AND THE THIRD WAS BUILT UNDER ANOTHER NUMBER —
       re-derived 2026-08-30.** `REQUIREMENTS.md` §7 exists (the linkage the entry below says gate 10
       needs first) and it names what gate 10 should check: *"a row here naming a test or a gate that
