@@ -128,3 +128,88 @@ the sector known is today's, not the one in force on an older date) is addressed
 output, and `AGENTS.md` §14 says an agent does not take a decision that is the owner's by calling it
 a defect. **The measurement is not the owner's; the amendment is.** Until this is ratified, §8.7
 stands as written and the guard behaves as it does today.
+
+## 8. Measured against the live universe, 2026-08-30 — §6's "no instrument" is wrong
+
+§6 says this change *"moves no decision output the day it lands"* and asks for exactly one thing
+before that is believed: **"it must be measured against the live universe before it is called
+cosmetic."** Measured. It is not cosmetic, and the record should not be ratified on the belief that
+it is.
+
+### 8.1 Twenty-three admitted instruments are refused by this guard today
+
+Every member of the live universe, run through `look_through`:
+
+| Outcome | Members |
+|---|---|
+| sector spendable | 1,018 |
+| **degenerate — refused by `DR-006` §8.7** | **23** |
+| no sector served at all | 101 |
+| nothing stored | 44 |
+| **total** | **1,186** |
+
+**Robust to `DR-017`'s lag**, checked both ways so the number cannot be an artefact of the change
+that landed the same day: 23 under `adtv_lag=0` (1,128 members) and 23 under `adtv_lag=3` (1,186).
+
+### 8.2 Why §6 got it wrong, and it is a sampling error rather than a reasoning one
+
+§6 reasons about *"a candidate or an open position in one of those five funds"* — the five SPDR
+Select Sector funds §2 measured. **None of the eleven SPDR funds is in the universe**, for a reason
+that has nothing to do with this record: coverage is still an alphabetical prefix of the directory
+and the letter X has not been reached, the same reason `DR-018` §2b found the benchmark ETFs
+missing.
+
+So §6 measured the population the record was *written about* and not the population the guard
+actually runs on. The guard fires on **any** fund whose sector weights are degenerate, and 23 of
+those are admitted today.
+
+### 8.3 How many would flip is NOT measured here, and it is certainly not zero
+
+The 23, with the sector the vendor puts at exactly 100%:
+
+| | Reported sector at 100% |
+|---|---|
+| `CURE`, `ARKG` | healthcare |
+| `DPST`, `BIZD`, `DFAR`(realestate), `ANGL`, `BCI`, `BINC`, `BOND`, `COMT` | financial_services / realestate |
+| `AAPU`, `AMUU`, `AVL`, `CHPY`, `BNDW`, `BNDX` | technology |
+| `AMZU` | consumer_cyclical |
+| `DFEN` | industrials |
+| `DRN` | realestate |
+| `CARY` | basic_materials |
+| `FIXD` | utilities |
+| `UITB` | energy |
+| `NEAR` | healthcare |
+
+**The split is inference, not measurement, and is marked as such** (`AGENTS.md` §10.4). Some are
+plainly equity funds whose reported sector is *correct* and which this guard is wrongly refusing —
+`CURE` is a 3× healthcare equity fund reported as healthcare, `DPST` a 3× regional-bank fund
+reported as financial services, `DRN` a 3× real-estate fund reported as real estate. Others are
+plainly the `NEAR` signature — `BNDW` and `BNDX` are global bond index funds reported as
+**technology**, `UITB` a core bond fund reported as **energy**, `FIXD` an active bond fund reported
+as **utilities**.
+
+**The exact count needs `stockPosition`, and that is §8.4.** What is settled is that it is not zero,
+because at least the first group exists.
+
+### 8.4 The discriminator reads a field this project does not store
+
+`still_to_build: the discriminator itself` understates the work. `Classification` carries
+`quote_type`, `industry` and the sector weights; the `classifications` table carries the same. The
+vendor adapter reads `funds_data.sector_weightings` and nothing else. **`asset_classes` is read in
+exactly one place — `tools/probe_sector_benchmarks.py`, live, over the network.**
+
+So building §4 requires, before the discriminator: a field on the contract, a column on the store, a
+vendor-adapter change, and a **refetch of every stored classification** to populate it. None of that
+is in the header.
+
+### 8.5 What follows for ratification
+
+**Nothing here disagrees with §4.** The defect is real, the proposal is right, and §8.1 makes the
+case stronger rather than weaker — the guard is wrongly refusing instruments that are actually in
+the universe, not hypothetical ones.
+
+What changes is the **cost and the timing**. Building this moves decision output on the live
+universe today, so it spends a Track A `a.run_completes` reset. `DR-017` and `DR-023` took this
+window's reset on 2026-08-30, and the standing rule is that a second one either joins that merge
+before it lands or waits. It did not join it. **So this waits for the next window**, and §6's
+"no decision output" is no longer available as an argument for landing it cheaply.
