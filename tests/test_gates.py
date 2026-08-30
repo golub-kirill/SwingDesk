@@ -880,6 +880,54 @@ def test_ownership_rule_allows_the_owner_section(tmp_path: Path) -> None:
     assert code == 0, out
 
 
+def test_an_unbackticked_activation_count_is_caught_when_components_are_the_subject(
+    tmp_path: Path,
+) -> None:
+    """The form that got past this gate: `TODO.md` read "6 specified components" for twelve days.
+
+    The backticked patterns could not see it, and the guard word is what makes the bare form safe.
+    """
+    root = _counts_tree(tmp_path, "docs/NOTES.md",
+                        "There are 3 specified components awaiting activation.\n")
+    code, out = run_gate("verify_counts.py", root)
+    assert code == 1
+    assert "3 specified" in out
+
+
+def test_the_guard_word_is_what_keeps_the_bare_form_quiet(tmp_path: Path) -> None:
+    """Without it, every "1 active position" in the tree is a finding. The guard is the gate."""
+    root = _counts_tree(tmp_path, "docs/NOTES.md",
+                        "The book holds 1 active position and 2 specified exits.\n")
+    code, out = run_gate("verify_counts.py", root)
+    assert code == 0, out
+
+
+def test_todo_is_scanned_for_an_activation_count(tmp_path: Path) -> None:
+    """`AGENTS.md` §10.7 governs this file and, until 2026-08-30, no gate could see it."""
+    root = _counts_tree(tmp_path, "docs/NOTES.md", "no counts here\n")
+    (root / "TODO.md").write_text("- [ ] 4 registered components are waiting.\n",
+                                  encoding="utf-8")
+    code, out = run_gate("verify_counts.py", root)
+    assert code == 1
+    assert "TODO.md" in out
+
+
+def test_todo_is_not_scanned_for_the_families_measured_as_noise(tmp_path: Path) -> None:
+    """The 2026-08-24 rejection is preserved rather than reversed.
+
+    All 8 of its live false positives came from the tests/gates/vectors family - "11 tests, 5
+    mutants killed" describes what a change ADDED, and `gate 25's condition 4 gates` uses `gates`
+    as a verb. Only the status keys were widened here, and a test asserting the rest still passes
+    is what stops the next session widening it back.
+    """
+    root = _counts_tree(tmp_path, "docs/NOTES.md", "no counts here\n")
+    (root / "TODO.md").write_text(
+        "- [ ] That change took 11 tests with it, and gate 25's condition 4 gates rather than "
+        "reports.\n", encoding="utf-8")
+    code, out = run_gate("verify_counts.py", root)
+    assert code == 0, out
+
+
 # ------------------------------------------------------------- gate 23: track A streak
 
 #: A real, verified NYSE trading week (Mon-Fri, no holiday) - the calendar itself is not

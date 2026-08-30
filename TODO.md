@@ -2326,9 +2326,27 @@ is for where no gate can reach.
       words, in a document that is not §2. The ownership half of gate 14 would catch it *if* the
       pattern matched — and the measurement above is that making the pattern match costs 19 false
       positives to buy that. `CI_POLICY.md` §3 records what a noisy gate is worth.
-- [ ] **`[c]` 6 specified components awaiting activation** — pivots (M12-T0201, M12-T0202), moving
-      average (M25-T0382), regime (M30-T0450), breadth (M31-T0459), trend (M33-T0485). All have real
-      implementations.
+- [ ] **`[v]` The `specified` components awaiting activation** — pivots (M12-T0201, M12-T0202),
+      moving average (M25-T0382), breadth (M31-T0459) and relative strength (M31-T0464). Every one
+      carries an `implements` that gate 11 resolves against real code. Derive the roster, never from
+      here:
+      ```bash
+      PYTHONPATH=$PWD/src python tools/verify_components.py
+      ```
+      **This line was `[c]` and wrong at both edges for twelve days, and the corrections were in
+      this same file the whole time.** It named `regime` (M30-T0450) and `trend` (M33-T0485), both
+      **demoted** to `registered` on 2026-08-18 because neither module carries the specification
+      record the ladder requires — §6 says so in a closed item. And it never gained
+      `M31-T0464`, which became `specified` on 2026-08-24 — §5 says *that* in a closed item.
+      **Two sections of one document, opposite answers, twice in one file**, which is the same shape
+      as the mutant-survivor entry corrected on 2026-08-29.
+      **It is caught now.** Gate 14 reads `TODO.md` for the parameter statuses and the component
+      activation states — and only those; the 2026-08-24 probe that rejected the whole pattern set
+      here measured its noise entirely in the tests/gates family, and never separated the patterns
+      that produced it. Measured before adding: 2 hits over this file, 1 real drift and 1 quotation
+      of the earlier probe's own evidence, which is in the gate's `ALLOWED` rather than paraphrased.
+      **Activation itself stays demand-driven** (`HANDOFF.md` §4): the test before activating one is
+      naming the strategy card that consumes it. No card, and `registered` costs nothing.
 - [ ] **`[v]` `tools/` under mypy** ~~(100 errors, 21/28 files)~~ — **re-measured 2026-08-25:
       242 errors across 43 files**, and the old figure was stale in both terms because `tools/` grew.
       Derive it, never from here: `PYTHONPATH=$PWD/src python -m mypy tools/`. **Most are
