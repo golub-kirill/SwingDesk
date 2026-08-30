@@ -101,6 +101,9 @@ def rule_from_registry(registry: ParameterRegistry) -> BuiltRule | Refusal:
         min_price, price_use = registry.decimal_value("universe.min_price")
         min_adtv, adtv_use = registry.decimal_value("universe.min_adtv_20d")
         min_history, history_use = registry.int_value("universe.min_bar_history")
+        # DR-017. Read like the other three - unset refuses rather than defaulting to 0 - because a
+        # zero lag is not "no policy", it is the non-reproducible universe this record replaced.
+        adtv_lag, lag_use = registry.int_value("universe.adtv_lag_sessions")
     except ParameterUnset as unset:
         return Refusal(
             code="UNIVERSE",
@@ -114,8 +117,9 @@ def rule_from_registry(registry: ParameterRegistry) -> BuiltRule | Refusal:
         min_adtv=min_adtv,
         adtv_window=ADTV_WINDOW,
         min_history=min_history,
+        adtv_lag=adtv_lag,
     )
-    return rule, (price_use, adtv_use, history_use)
+    return rule, (price_use, adtv_use, history_use, lag_use)
 
 
 def select(
@@ -147,7 +151,12 @@ def select(
     # measured and then rejected, which reported coverage the rule could not actually deliver. No
     # such instrument exists today - the two agree at 3,718 of 13,136 eligible, measured
     # 2026-08-24 - and the narrower reading is the honest one if one ever does.
-    tails = store.tails(Interval.DAY, Series.RAW, as_of, rule.adtv_window)
+    #
+    # `adtv_window + adtv_lag`, not `adtv_window` (DR-017): the window ENDS `adtv_lag` sessions back,
+    # so a tail of exactly twenty bars would leave the lagged window three bars short and
+    # `admits` would fail-closed on every instrument in the universe. The lag widens what is read;
+    # it does not widen what is averaged.
+    tails = store.tails(Interval.DAY, Series.RAW, as_of, rule.adtv_window + rule.adtv_lag)
 
     members: list[Membership] = []
     measured = 0
@@ -164,7 +173,11 @@ def select(
         # every instrument in the universe.
         if not rule.admits(series, history=bars):
             continue
-        adtv = rules.average_dollar_volume(series, rule.adtv_window)
+        # The SAME index `admits` just judged on, not the tail's last bar: the member carries the
+        # number that admitted it, and after DR-017 those are different bars. Recomputing at the end
+        # of the tail would report an unlagged ADTV beside a lagged admission - two numbers for one
+        # decision, which is the failure `Membership` exists to prevent.
+        adtv = rules.average_dollar_volume(series, rule.adtv_window, len(series.bars) - 1 - rule.adtv_lag)
         if adtv is None:  # unreachable while admits() requires a full window; belt and braces
             continue
         members.append(

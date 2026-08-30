@@ -2,13 +2,16 @@
 
 ```
 date:            2026-08-18
-status:          proposed — needs an owner ruling on the lag
-parameters:      universe.adtv_lag_sessions (new, proposed value 3)
+status:          accepted — ratified by the owner 2026-08-30
+parameters:      universe.adtv_lag_sessions = 3, provenance `owner` — NOT `assumed:DR-017`;
+                 §3.1 anticipated the wrong one and §7.1 records why
 components:      none — the universe builder already windows the bars it averages
 supersedes:      nothing. DR-003 set the threshold; this decides which bars it is applied to
-implementation:  none
-still_to_build:  the lag itself, where the universe builder picks its window,
-                 once the number is ruled
+implemented_by:  src/swingdesk/reference_data/universe.py :: def admits
+also_built:      application/universe.py (rule_from_registry reads the lag and refuses when it is
+                 unset; select widens the tail it reads by it), registry/parameters.yml (the entry)
+built:           2026-08-30. §7 records what landed, the two things this record left open that
+                 building it forced shut, and the one claim in it that was wrong.
 ```
 
 ## 1. The defect
@@ -88,6 +91,13 @@ this would otherwise create, and it is worse than the defect being fixed.
 
 ### 3.1 The parameter is not in the registry yet, and that is not an oversight
 
+> **Overtaken 2026-08-30 by ratification.** The id is now in `registry/parameters.yml` and carries
+> `provenance: owner`, not the `assumed:DR-017` this section expected. The rest of the section still
+> stands — in particular the `named_in` argument, which is the part the owner had to weigh, and which
+> the registry entry restates rather than hides. §7.1 has the reasoning. Left as written and
+> corrected forward rather than rewritten, per `AGENTS.md` §11 rule 2.
+
+
 Gate 3e refuses a document that cites a parameter id the registry does not hold, and it refused this
 record's index row until the id was taken out of it. The id enters `registry/parameters.yml` **when
 this record is ratified**, carrying `assumed:DR-017`.
@@ -145,3 +155,65 @@ An observation regime with no gaps that still shows revisions at 3+ sessions. Th
 eight sessions of daily observation; it is enough to place the cliff and not enough to call it
 permanent. The check is cheap and should be re-run after a quarter of scheduled evenings — the same
 query, the same buckets, against a longer store.
+
+## 7. What was built, 2026-08-30
+
+Ratified and implemented in the same change, merged with `DR-023` as one Track A counter reset —
+`STREAK_RESTARTS` carries the row and `DR-015` §3 carries the argument for merging.
+
+**`LiquidityRule` gained `adtv_lag`, and `admits` measures ADTV over the window ending that many
+sessions before the bar it is judging.** `rule_from_registry` reads
+`universe.adtv_lag_sessions`; `application.universe.select` widens the tail it pulls from the store
+to `adtv_window + adtv_lag`, because a twenty-bar tail cannot carry a twenty-bar window that stops
+three bars early — without that, the fail-closed branch would have refused *every* instrument in
+the universe.
+
+### 7.1 The provenance is `owner`, and §3.1 said it would be `assumed:DR-017`
+
+§3.1 was written while this record was proposed, and it assumed ratification would leave the value
+where a decision record leaves one: `assumed:DR-017`, per the decision-record README's rule 5. The
+owner ratified the value directly on 2026-08-30, which is a different act and a stronger claim —
+the same distinction `DR-003` drew when the owner ratified `universe.min_adtv_20d` on 2026-08-23
+and left the other two `assumed`, and the one `DR-006` set the precedent for.
+
+**It is not cosmetic.** `is_assumed` drives the daily report's *"ASSUMED, not evidence"* flag, so
+the two provenances put different words next to the number in front of the owner. A value the owner
+ruled on should not be shown back to them as an assumption this project made.
+
+`README.md` rule 5 — *"`assumed` is where a DR leaves a parameter — never `validated`"* — is not
+contradicted: `owner` is not `validated`, no study has measured the lag, and nothing here claims
+evidence. The rule exists to stop a considered guess acquiring the authority of a measurement, and
+an owner ruling does not acquire that either.
+
+### 7.2 The lag moves the ADTV window and NOT the price test
+
+§3 says "the 20-day ADTV window ends three sessions before the run" and says nothing about the
+close. Building it made the question unavoidable, because `admits` tests both at one index.
+
+**The close is read at the run; only ADTV is lagged.** §1's own measurement is the argument: closes
+move by 0.02% at p90 where volume moves 32%, so lagging the price buys no reproducibility worth
+having — and `universe.min_price` is a claim about what an instrument costs to trade *now*. An
+instrument whose price collapsed yesterday should be refused today, not in three sessions.
+Widening the lag to the price test would be a second decision, and nobody has taken it.
+
+### 7.3 The parameter has no default, in code as well as in the registry
+
+`rule_from_registry` refuses when the lag is unset, exactly as it does for the other three
+thresholds. `LiquidityRule.adtv_lag` has no default value either, so the seventeen study,
+measurement and test call sites that construct a rule directly each had to state one.
+
+**Both possible defaults are wrong, which is why there is none.** A default of `0` hands a caller
+that has never heard of this record the old, non-reproducible universe. A default of `3` silently
+rewrites what an already-reported study ran under. §3's "one universe and one lag" is enforced by
+making every caller name the lag it means, not by picking one for them.
+
+Every study and measurement tool that predates this record pins `adtv_lag=0` — that is the rule it
+actually ran under, and pinning it is what `LiquidityRule`'s own docstring says the record is for.
+**Re-running those studies under the lag is not decided here**, and would be a change to what their
+evidence records describe.
+
+### 7.4 A negative lag raises
+
+It would end the window *after* the run — lookahead, in the one direction that makes a screen look
+better rather than worse, and therefore the direction least likely to be noticed downstream.
+`__post_init__` refuses it.

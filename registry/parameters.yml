@@ -108,6 +108,36 @@ parameters:
       instrument that cannot warm up its inputs produces a candidate that silently never qualifies.
     ui_editable: true
 
+  - id: universe.adtv_lag_sessions
+    unit: sessions
+    value: 3
+    status: owner
+    provenance: owner
+    read_by: swingdesk.application.universe:rule_from_registry
+    named_in: [M33-T0481, Appendix A - Dollar volume]
+    note: >-
+      How far back the ADTV window ENDS, not how long it is. The 20-session average that
+      universe.min_adtv_20d is tested against stops three sessions before the run rather than at the
+      last completed session. Ratified by the owner 2026-08-30 with DR-017, which measured why: of
+      5,980 volume revisions over the daily-run era, 16.9% arrived on bars 0 sessions old, 80.1% on
+      1, 3.0% on 2 and NONE on 3 or more, so a window ending three sessions back averages only bars
+      the vendor has never been observed to rewrite. Three and not two because two is the oldest age
+      at which a revision was actually seen.
+      WHAT IT BUYS, and this is the only claim made for it: an IDEMPOTENT screen. Replay the same
+      as-of date and admission returns what the live run returned, which today it cannot, because
+      the bars underneath keep moving - 6 of 1,172 instruments cross the $5M line between first
+      sight and settlement, all six in the same direction. It does NOT protect the owner from an
+      unfillable position; DR-017 section 3 measures the sizing rule at 0.046% of one session's
+      dollar volume, more than two hundred times inside a 10%-of-ADV limit.
+      named_in cites the ADTV source it modifies rather than a course passage of its own: the course
+      names dollar volume as the liquidity measure and says nothing about which VINTAGE of volume to
+      read. DR-017 section 3.1 puts that stretch on the record rather than hiding it - this is a
+      correction to how a course-named quantity is computed, in the same class as counting sessions
+      rather than calendar days.
+      The lag is one number for live admission AND for studies. Two universes is a worse defect than
+      the one being fixed.
+    ui_editable: true
+
   # ---- derived observations (docs/02-domain/ALGORITHM_SPEC.md) ----
   - id: atr.period
     unit: bars

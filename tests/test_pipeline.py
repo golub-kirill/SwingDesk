@@ -291,7 +291,7 @@ def _universe_selection(instruments):
     return UniverseSelection(
         as_of=AS_OF,
         rule=LiquidityRule(min_price=Decimal("5.00"), min_adtv=Decimal("5000000"),
-                           adtv_window=20, min_history=250),
+                           adtv_window=20, min_history=250, adtv_lag=0),
         parameters=(), directory_pull=AS_OF,
         eligible=len(instruments), measured=len(instruments),
         members=tuple(
@@ -355,7 +355,7 @@ def test_the_universe_hash_moves_when_the_rule_moves(stores, registry) -> None:
     strict = replace(
         loose,
         rule=LiquidityRule(min_price=Decimal("5.00"), min_adtv=Decimal("25000000"),
-                           adtv_window=20, min_history=250),
+                           adtv_window=20, min_history=250, adtv_lag=0),
     )
 
     one = run([], FixedClock(AS_OF), registry, store, journal, mode=MODE, fetcher=fetcher, universe=loose)

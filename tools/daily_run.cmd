@@ -122,6 +122,34 @@ exit /b 0
 echo. >> "%LOG%"
 echo ===== [%DATE% %TIME%] %PASS% starting >> "%LOG%"
 
+REM Directory pull (DR-008), BEFORE the pipeline (DR-023). It used to sit after the scan, and that
+REM is what made the two evening passes decide on different universes: 18:30 read YESTERDAY's symbol
+REM directory and 19:30 read today's, because the pull that produced today's ran between them.
+REM Measured 2026-08-24 to 08-27, decision by decision rather than by hash: not one decision ever
+REM differed between the passes, and `output_hash` diverged anyway because 1-3 instruments left the
+REM universe each evening. The directory is an INPUT to the decision, so it is pulled before the
+REM decision reads it. DR-023 carries the measurement.
+REM
+REM FIRST PASS ONLY. The directory is a once-a-session pull, not a per-run one: DR-008 c3 attributes
+REM each pull to the session date the vendor's own `Last-Modified` reports, and a second pull an
+REM hour later can only produce a duplicate row or a refusal - noise in the log either way, on the
+REM record whose whole value is being auditable.
+REM
+REM IT MUST NOT FAIL THE RUN, and that used to be structural rather than stated: sitting after
+REM `set RC=%ERRORLEVEL%` put it out of the exit code's reach entirely. Here it is in that path, so
+REM the guarantee is made explicit instead. A failed pull is logged and the pass proceeds on the
+REM directory already stored - which is what every pass did before this move anyway. `ver > nul`
+REM clears the errorlevel afterwards so nothing between here and `set RC` can read this one's.
+REM
+REM WHY GOTO AND NOT A PARENTHESISED BLOCK: the same trap the second-pass condition above avoids.
+REM Flat, and it keeps `if errorlevel` out of a block where a future `set` would need delayed
+REM expansion to read the right value.
+if not "%SECOND%"=="0" goto :directory_done
+"%PY%" -X utf8 "%REPO%\tools\fetch_directory.py" --scheduled --data "%REPO%\data" >> "%LOG%" 2>&1
+if errorlevel 1 echo ===== [%DATE% %TIME%] directory pull failed; the pass continues on the stored directory >> "%LOG%"
+:directory_done
+ver > nul
+
 pushd "%REPO%"
 "%PY%" -X utf8 -m swingdesk.presentation.cli scan --universe --data "%REPO%\data" >> "%LOG%" 2>&1
 set RC=%ERRORLEVEL%
@@ -129,21 +157,10 @@ popd
 
 echo ===== [%DATE% %TIME%] %PASS% finished, exit %RC% >> "%LOG%"
 
-REM Sidecar (DR-008). Placed AFTER `set RC=%ERRORLEVEL%` and before `exit /b %RC%`, so no outcome
-REM here can change the run's exit code or the Track A counter. --scheduled honours the local
-REM switch and the NYSE calendar; both refuse loudly into this same log.
-REM
-REM FIRST PASS ONLY. The directory is a once-a-session pull, not a per-run one: DR-008 c3 attributes
-REM each pull to the session date the vendor's own `Last-Modified` reports, and a second pull an
-REM hour later can only produce a duplicate row or a refusal - noise in the log either way, on the
-REM record whose whole value is being auditable.
-if "%SECOND%"=="0" (
-  "%PY%" -X utf8 "%REPO%\tools\fetch_directory.py" --scheduled --data "%REPO%\data" >> "%LOG%" 2>&1
-)
-
-REM State block (AGENTS.md 10.6). Same placement discipline as the sidecar above: after
-REM `set RC=%ERRORLEVEL%` and before `exit /b %RC%`, so nothing here can move the run's exit code
-REM or the Track A counter. Measured at about 4 seconds, against a pass that takes six minutes.
+REM State block (AGENTS.md 10.6). After `set RC=%ERRORLEVEL%` and before `exit /b %RC%`, so nothing
+REM here can move the run's exit code or the Track A counter. Measured at about 4 seconds, against a
+REM pass that takes six minutes. The DR-008 sidecar used to keep this placement discipline company;
+REM DR-023 moved it above the pipeline, because unlike this block it is an INPUT to the decision.
 REM
 REM WHY THE MACHINE AND NOT A PERSON. HANDOFF section 2's runtime block is derived from data/, and
 REM this pass is what moves data/ - so every evening the schedule ran left gate 24 red the next

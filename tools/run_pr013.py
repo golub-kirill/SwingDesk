@@ -161,6 +161,7 @@ def main() -> int:
         rule = rules.LiquidityRule(
             min_price=Decimal("5.00"), min_adtv=Decimal(5_000_000),
             adtv_window=ADTV_WINDOW, min_history=250,
+            adtv_lag=0,  # DR-017's lag postdates this study; 0 is the rule it ran under
         )
         stored = set(store.instrument_ids(as_of))
         universe: dict[str, BarSeries] = {}

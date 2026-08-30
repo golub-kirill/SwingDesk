@@ -1844,11 +1844,69 @@ def test_the_wrapper_and_the_parser_agree_on_the_marker_words() -> None:
 def test_the_second_pass_does_not_pull_the_directory_again() -> None:
     """`DR-008` c3 attributes a pull to the session date the vendor's own `Last-Modified` reports.
     A second pull an hour later can only add a duplicate row or a refusal, on the one record whose
-    entire value is being auditable."""
+    entire value is being auditable.
+
+    The guard reads `if not ... goto` since `DR-023` moved the pull above the pipeline: flat, so
+    `if errorlevel` beside it is not inside a parenthesised block needing delayed expansion.
+    """
     wrapper = (TOOLS / "daily_run.cmd").read_text(encoding="utf-8")
-    guard = wrapper.index('if "%SECOND%"=="0"')
+    guard = wrapper.index('if not "%SECOND%"=="0" goto :directory_done')
     fetch = wrapper.index("fetch_directory.py")
-    assert guard < fetch, "the directory pull must sit inside the first-pass guard"
+    done = wrapper.index("\n:directory_done")
+    assert guard < fetch < done, "the directory pull must sit inside the first-pass guard"
+
+
+# ------------------------------------- the directory is pulled BEFORE the decision reads it (DR-023)
+#
+# It used to run after the scan, which meant the 18:30 pass decided on YESTERDAY's symbol directory
+# and the 19:30 pass on today's. Measured 2026-08-24 to 08-27 decision by decision: not one decision
+# ever differed between the passes, and `output_hash` diverged anyway because 1-3 instruments left
+# the universe each evening. The directory is an INPUT; these two pin that it is fetched as one, and
+# that moving it into the exit code's path did not put the run at its mercy.
+
+
+def test_the_directory_is_pulled_before_the_pipeline_reads_it() -> None:
+    """`DR-023`. A pull that lands after the scan is an input to TOMORROW's first pass."""
+    wrapper = (TOOLS / "daily_run.cmd").read_text(encoding="utf-8")
+    attempt = wrapper.index("\n:attempt")
+    fetch = wrapper.index("fetch_directory.py")
+    scan = wrapper.index("swingdesk.presentation.cli scan")
+    assert attempt < fetch < scan, "the pull must run inside the attempt and before the scan"
+
+
+def test_the_directory_pull_cannot_fail_the_run() -> None:
+    """It used to be out of the exit code's reach by position; now it is in that path.
+
+    `set RC=%ERRORLEVEL%` still reads the scan and only the scan, and the pull's own errorlevel is
+    cleared before anything else can read it. A failed pull is logged and the pass proceeds on the
+    directory already stored, which is what every pass did before `DR-023` moved it - so the move
+    changed WHEN the directory is fetched and nothing about what a failed fetch costs.
+    """
+    wrapper = (TOOLS / "daily_run.cmd").read_text(encoding="utf-8")
+    # By LINE NUMBER over the statements only. `str.index` over the whole text finds the prose
+    # first: the comment block above the pull names `ver > nul` three lines before the pull runs,
+    # which made the first version of this test fail on its own explanation.
+    statements = [
+        (number, line) for number, line in enumerate(wrapper.splitlines())
+        if line.strip() and not line.startswith("REM")
+    ]
+
+    def _line(needle: str) -> int:
+        return next(number for number, line in statements if needle in line)
+
+    fetch = _line("fetch_directory.py")
+    cleared = _line("ver > nul")
+    scan = _line("swingdesk.presentation.cli scan")
+    captured = _line("set RC=%ERRORLEVEL%")
+    assert fetch < cleared < scan < captured, "the pull's errorlevel must not survive to `set RC`"
+
+    # A failure has to say so. A pull that fails silently leaves the run deciding on a stale
+    # directory with nothing in the log to explain a universe that did not move.
+    reported = [
+        line for line in wrapper.splitlines()
+        if line.startswith("if errorlevel 1 echo") and "directory pull failed" in line
+    ]
+    assert len(reported) == 1, reported
 
 
 def test_the_track_a_row_never_renders_a_bare_zero_after_a_restart() -> None:

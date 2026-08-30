@@ -22,7 +22,8 @@ from swingdesk.reference_data.universe import LiquidityRule
 NOW = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
 
 RULE = LiquidityRule(
-    min_price=Decimal("5.00"), min_adtv=Decimal("5000000"), adtv_window=20, min_history=20
+    min_price=Decimal("5.00"), min_adtv=Decimal("5000000"), adtv_window=20, min_history=20,
+    adtv_lag=0,
 )
 
 

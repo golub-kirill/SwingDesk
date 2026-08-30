@@ -79,7 +79,9 @@ def main() -> int:
     # the one contemporaneous with them. Filtering an older window with a newer listing file is
     # survivorship bias with extra steps (application/universe.py select()).
     rule = rules.LiquidityRule(
-        min_price=MIN_PRICE, min_adtv=MIN_ADTV, adtv_window=ADTV_WINDOW, min_history=MIN_HISTORY
+        min_price=MIN_PRICE, min_adtv=MIN_ADTV, adtv_window=ADTV_WINDOW,
+        min_history=MIN_HISTORY,
+        adtv_lag=0,  # DR-017's lag postdates this measurement; 0 is what it ran under
     )
     selection = selection_rules.select(directory, store, rule, as_of)
     a_tier = {member.instrument.id for member in selection.members}

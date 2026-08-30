@@ -24,7 +24,8 @@ AS_OF = datetime(2026, 1, 15, 21, 0, tzinfo=UTC)
 
 #: Deliberately small so a fixture can satisfy it. The shipped values are DR-003's.
 RULE = LiquidityRule(
-    min_price=Decimal("5.00"), min_adtv=Decimal("5000000"), adtv_window=20, min_history=30
+    min_price=Decimal("5.00"), min_adtv=Decimal("5000000"), adtv_window=20, min_history=30,
+    adtv_lag=0,
 )
 
 
@@ -74,7 +75,7 @@ def test_an_unset_threshold_refuses_and_names_itself() -> None:
 
 
 def test_the_shipped_registry_builds_the_dr003_rule() -> None:
-    """DR-003 set all three, so the real registry must produce a rule rather than a refusal."""
+    """DR-003 set three and DR-017 added the fourth, so the real registry must build, not refuse."""
     built = builder.rule_from_registry(ParameterRegistry.load())
     assert not isinstance(built, Refusal)
     rule, parameters = built
@@ -82,8 +83,10 @@ def test_the_shipped_registry_builds_the_dr003_rule() -> None:
     assert rule.min_adtv == Decimal("5000000")
     assert rule.min_history == 250
     assert rule.adtv_window == builder.ADTV_WINDOW == 20
+    assert rule.adtv_lag == 3
     assert {p.id for p in parameters} == {
-        "universe.min_price", "universe.min_adtv_20d", "universe.min_bar_history"
+        "universe.min_price", "universe.min_adtv_20d", "universe.min_bar_history",
+        "universe.adtv_lag_sessions",
     }
 
     # Provenance is asserted PER PARAMETER, not across the set. It stopped being uniform when the
@@ -97,6 +100,36 @@ def test_the_shipped_registry_builds_the_dr003_rule() -> None:
     assert not by_id["universe.min_adtv_20d"].is_assumed
     assert by_id["universe.min_price"].is_assumed
     assert by_id["universe.min_bar_history"].is_assumed
+    # The lag was ratified BY the owner on 2026-08-30, not left at `assumed:DR-017` the way the
+    # record's own §3.1 anticipated. The distinction is the one above: a ratified value does not
+    # carry the report's "ASSUMED, not evidence" flag, and the owner should not be shown one.
+    assert by_id["universe.adtv_lag_sessions"].provenance == "owner"
+    assert not by_id["universe.adtv_lag_sessions"].is_assumed
+
+
+def test_an_unset_lag_refuses_rather_than_defaulting_to_no_lag() -> None:
+    """0 is not "no policy" - it is the non-reproducible universe DR-017 replaced.
+
+    The other three thresholds have always refused when unset, on the argument that a guessed
+    liquidity floor puts every downstream result on an unrecorded assumption. The lag is the same
+    kind of claim: a run that silently fell back to 0 would decide on volume the vendor is still
+    rewriting and say nothing about it. The other three are SET here, so the refusal can only come
+    from the lag - the test above already covers the case where the first one is missing.
+    """
+    registry = ParameterRegistry({
+        "universe.min_price": {"id": "universe.min_price", "value": "5.00", "provenance": "owner"},
+        "universe.min_adtv_20d": {
+            "id": "universe.min_adtv_20d", "value": "5000000", "provenance": "owner"
+        },
+        "universe.min_bar_history": {
+            "id": "universe.min_bar_history", "value": 250, "provenance": "owner"
+        },
+        "universe.adtv_lag_sessions": {"id": "universe.adtv_lag_sessions", "value": None},
+    })
+    built = builder.rule_from_registry(registry)
+    assert isinstance(built, Refusal)
+    assert built.code == "UNIVERSE"
+    assert built.parameter_id == "universe.adtv_lag_sessions"
 
 
 # ------------------------------------------------------------------ selection
