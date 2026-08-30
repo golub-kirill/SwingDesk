@@ -2894,3 +2894,81 @@ def test_inventory_gate_catches_one_number_claimed_twice(tmp_path: Path) -> None
     code, out = run_gate("verify_gate_inventory.py", root)
     assert code == 1
     assert "claimed by two rows" in out
+
+
+# ------------------------------- gate 37: the rule index and the rulebook name the same rules
+
+
+_INDEX_HEADING = "### The rules, in one place — the index"
+
+
+def _rulebook(tmp_path: Path, rows: str, sections: str, entries: str = '"1 parameters"') -> Path:
+    """An `AGENTS.md` with an index and some numbered sections, plus a gate registry."""
+    (tmp_path / "tools").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "tools" / "check_gates.py").write_text(
+        f"def main():\n    results = {{\n        {entries}: _run(\"x\", []),\n    }}\n",
+        encoding="utf-8",
+    )
+    (tmp_path / "AGENTS.md").write_text(
+        f"# AGENTS.md\n\n{_INDEX_HEADING}\n\n| § | Rule | Caught by |\n|---|---|---|\n{rows}\n"
+        f"{sections}",
+        encoding="utf-8",
+    )
+    return tmp_path
+
+
+def test_rules_index_gate_catches_a_section_with_no_row(tmp_path: Path) -> None:
+    """A rule added to the rulebook and not to the index is a rule the short list hides."""
+    root = _rulebook(
+        tmp_path,
+        "| 1 | Verify before asserting | honour |\n",
+        "## 1. Trust discipline\n\nprose\n\n## 2. Verify before you commit\n\nprose\n",
+    )
+    code, out = run_gate("verify_rules_index.py", root)
+    assert code == 1
+    assert "§2 is a section of the rulebook and has no row" in out
+
+
+def test_rules_index_gate_catches_a_row_for_a_section_that_does_not_exist(tmp_path: Path) -> None:
+    """A row for a rule nobody wrote is a rule nobody can read."""
+    root = _rulebook(
+        tmp_path,
+        "| 1 | Verify before asserting | honour |\n| 9 | Something | honour |\n",
+        "## 1. Trust discipline\n\nprose\n",
+    )
+    code, out = run_gate("verify_rules_index.py", root)
+    assert code == 1
+    assert "row for §9, and no such section exists" in out
+
+
+def test_rules_index_gate_catches_a_cited_gate_that_is_not_registered(tmp_path: Path) -> None:
+    """A row promising that gate 33 catches something must mean the gate 33 that runs."""
+    root = _rulebook(
+        tmp_path,
+        "| 1 | Verify before asserting | 33 |\n",
+        "## 1. Trust discipline\n\nprose\n",
+    )
+    code, out = run_gate("verify_rules_index.py", root)
+    assert code == 1
+    assert "cites gate 33" in out
+
+
+def test_rules_index_gate_is_quiet_when_the_two_agree(tmp_path: Path) -> None:
+    """The positive control: without it a red result could come from a broken fixture."""
+    root = _rulebook(
+        tmp_path,
+        "| 1 | Verify before asserting | honour |\n| 2 | Run the gates | 1 |\n",
+        "## 1. Trust discipline\n\nprose\n\n## 2. Verify before you commit\n\nprose\n",
+    )
+    code, out = run_gate("verify_rules_index.py", root)
+    assert code == 0, out
+    assert "0 failure(s)" in out
+
+
+def test_rules_index_gate_refuses_a_rulebook_with_no_index(tmp_path: Path) -> None:
+    """The index is not optional, and its heading is the anchor everything else hangs from."""
+    (tmp_path / "AGENTS.md").write_text("# AGENTS.md\n\n## 1. Trust discipline\n\nprose\n",
+                                        encoding="utf-8")
+    code, out = run_gate("verify_rules_index.py", root=tmp_path)
+    assert code == 1
+    assert "has no index" in out

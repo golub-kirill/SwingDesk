@@ -1,11 +1,68 @@
-# AGENTS.md — working guide for SwingDesk
+# AGENTS.md — the rulebook for SwingDesk
 
-Rules, conventions and traps. Read it before changing anything.
+**This file governs. Follow it strictly.** — owner instruction, 2026-08-25.
 
-**Fresh session?** Read `HANDOFF.md` first — measured state and what to do next, ranked.
+Everything else in the repository is a specification, a record or a measurement. **This is the only
+file that tells an agent how to act**, and gate 30 makes it the only one that may. Where it conflicts
+with anything else, it wins — except §3, which nothing overrides.
+
+**A rule you disagree with is fixed or removed, never quietly skipped.** That is §2's rule about
+gates applied to this file: skipping teaches that the rulebook is advisory, and an advisory rulebook
+is what this project has already paid for.
+
+**Fresh session?** Read `HANDOFF.md` first — measured state and what to do next, ranked. Then the
+index below, then §12.
 
 **Every rule here was paid for**, and each carries one clause saying what by. Full accounts are in
 `git log -p AGENTS.md`; a rule with no price reads as arbitrary and gets ignored.
+
+### The rules, in one place — the index
+
+**Added 2026-08-25 on owner instruction: *"раздели список правил и прозу"*.** Every rule in this
+file, one line each, with the thing that catches you when you break it. The prose stays where it is;
+this is what you hold in mind while acting, and the section is where you go for the reason.
+
+**The third column is the point.** A rule with a gate behind it is one you can forget safely. A rule
+marked **honour** is one nothing will catch — and the measurement that produced this table is that
+**most of them are honour**. Those are the ones to re-read.
+
+**What paid for it, and it is this session.** §5 says *"say the name, not the code"*; §13 says
+*answer briefly, directly, in Russian*. Both are owner instructions, both were read, and both were
+broken for a whole session — by the same session that built five gates. Nothing surfaced them,
+because a rule sits in a 650-line file and a working session acts from memory.
+
+| § | The rule, in one line | Caught by |
+|---|---|---|
+| 0 | What this project is — decision support, never an order | — *(context)* |
+| **1** | **Never trust a document's claim about the code, or the code's claim about the course. Verify before asserting** | **honour** · 3e, 28, 35 catch instances |
+| 2 | Run the gates before you commit. A wrong gate is fixed or removed, never skipped | CI + protected `master` |
+| **3** | **The seven non-negotiables override any request** | partial · 1, 3g, 20, 34 |
+| 4 | A document goes in a tier, never in a directory named after the tool that made it | 15 |
+| 5 | Conventions — **say the name, not the code** · English in artifacts · no Russian in code · money exact · time injected · `TEST.n` instruments | partial · 7 (clock), 5 (money) · **the naming rule is honour** |
+| 6 | A `verbatim` document declares its sources and is diffed against the PDFs | 2 |
+| 7 | Every parameter carries `named_in`, `provenance` and `read_by` | 1 |
+| 8 | A threshold the course does not supply needs a pre-registration, never a guess | honour |
+| 9 | Use the code graph first for structure — and a null result is evidence only after a positive control | honour |
+| 10 | The four rules of 2026-08-09 | — *(container)* |
+| 10.1 | You are not the only effort. List the siblings **and read their diff**, before you write | 16, 33 |
+| 10.2 | Before a study, search the other branches for the same question | partial · 29 |
+| 10.3 | Search the outside world before authoring anything | honour |
+| 10.4 | A causal claim cites a check, or is marked conjecture | honour |
+| 10.5 | A measured count lives in exactly one place; everywhere else names the command | 14, 24 |
+| 10.6 | And that one place is generated, not typed | 24 |
+| 10.7 | Open work lives in `TODO.md`, state in `HANDOFF.md`, rules here | 15, 30 |
+| 10.8 | A claim that something is CHECKED is itself a claim — run the check before writing it | 34, 35 |
+| 11 | Never delete a protected record. Correct forward by superseding or amending | 20, 21 |
+| 12 | The traps — instances, not rules. Read once, then again when something feels familiar | — |
+| **13** | **Talk to the owner in Russian: short, direct, answer first. Profanity at situations, never at people, never inside code** | **honour** |
+| **14** | **Force the answer. Never proceed on an assumption when the call is the owner's** | **honour** |
+| 15 | An impossibility is a claim. Test it before recording it | honour |
+| 16 | The course is a requirements source, not an evidence source | honour |
+| 17 | Verify at the right granularity — run the check whose subject you touched | honour |
+
+**Gate 37 keeps this table honest**: every numbered section appears here exactly once, every row
+points at a section that exists, and every gate number cited resolves to a registered gate. A rule
+added below and not added here fails the build — which is the only reason an index is worth having.
 
 ### The four documents, and which question each answers
 

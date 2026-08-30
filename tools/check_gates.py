@@ -144,6 +144,8 @@ def main() -> int:
                                [python, "tools/verify_cited_tests.py"]),
         "36 gate inventory": _run("the inventory and the runner name the same gates",
                                   [python, "tools/verify_gate_inventory.py"]),
+        "37 rules index": _run("the rule index and the rulebook name the same rules",
+                               [python, "tools/verify_rules_index.py"]),
     }
 
     print("\n" + "=" * 62)

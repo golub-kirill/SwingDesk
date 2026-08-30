@@ -1857,6 +1857,27 @@ is for where no gate can reach.
       ```bash
       python tools/verify_cited_tests.py
       ```
+- [ ] **`[v]` THE SECOND PASS DOES NOT RUN ON EXACTLY THE DAYS IT IS FOR — measured 2026-08-29.**
+      Both scheduled tasks report the same last run, `2026-08-29 18:50:57`: `StartWhenAvailable`
+      caught up the missed triggers together, the first pass started, and the second exited
+      **`-2147020576`** = `0x80070420` = `ERROR_SERVICE_ALREADY_RUNNING`.
+      **The two failures are not independent, which is the whole finding.** A catch-up happens on
+      the days the machine was asleep or logged out; those are the days most likely to carry stale
+      data; and the retry that exists to repair stale data is the thing the catch-up kills. Gate 26
+      reports it, CI cannot see it (`UNAVAILABLE` off the scheduling machine).
+      **A scheduling decision, not a code one**, and it belongs with `DR-019` (the conditional second
+      pass), which is still `proposed`: a delay or start-boundary on the second task, or making it
+      conditional on the first having finished.
+- [ ] **`[v]` MY OWN UNCOMMITTED WORK MARKED THREE EVENINGS OF SCHEDULED RUNS `code_dirty` —
+      2026-08-25 to 08-27.** `code_dirty` is computed from the repository, and a repository is shared
+      across worktrees, so an agent leaving a worktree dirty overnight poisons the reproducibility
+      field of runs it never touched. Five of the six runs recorded in that window are dirty; the one
+      clean run is the 18:30 pass of 08-25, before this session started editing.
+      **`a.reproducible` is the criterion that pays for it** — a manifest pointing at a dirty tree
+      cannot be replayed from its SHA, and those three evenings are immutable.
+      **Gate 21 already warns about this and is advisory** (`no finished work left uncommitted`).
+      This is the measured cost of ignoring it, and the argument for committing at the end of a
+      working block rather than at the end of a session.
 - [ ] **`[c]` Gate 10** (traceability) — unblocked now that ATR is active, still to build. **Weighed
       and not built 2026-08-25**, with the reason recorded so it is not re-derived: its three checks
       are *a course id with no requirement row*, *a requirement with no test*, and *a spec id cited
