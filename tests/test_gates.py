@@ -19,6 +19,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -30,10 +31,14 @@ TOOLS = REPO / "tools"
 sys.path.insert(0, str(TOOLS))
 
 
-def run_gate(tool: str, root: Path) -> tuple[int, str]:
-    """Run a verifier against `root`. Returns its exit code and combined output."""
+def run_gate(tool: str, root: Path, args: list[str] | None = None) -> tuple[int, str]:
+    """Run a verifier against `root`. Returns its exit code and combined output.
+
+    `args` exists for the generators, whose gate is `--check-only` rather than the
+    default invocation. Every other caller passes nothing and is unaffected.
+    """
     result = subprocess.run(
-        [sys.executable, str(TOOLS / tool)],
+        [sys.executable, str(TOOLS / tool), *(args or [])],
         capture_output=True, text=True,
         env={**os.environ, "SWINGDESK_ROOT": str(root)},
     )
@@ -991,6 +996,54 @@ def test_gate_citation_does_not_read_a_year_as_a_gate(tmp_path: Path) -> None:
     root = _citation_tree(tmp_path, "docs/NOTES.md", "FIXED AT THE GATE 2026-08-24, not later.")
     code, out = run_gate("verify_gate_citations.py", root)
     assert code == 0, out
+
+
+# ---------------------------------------- gates 3b/3c/3ci/3d: the --check-only generators
+#
+# `AGENTS.md` §10.6 rule 1 is the reason these matter more than their size: *"if a fact can be
+# derived, a tool derives it and `--check-only` gates it"*. Four of the five generators had never
+# been seen red, which is what `tests/test_gates.py`'s own docstring calls proving nothing - and
+# the obstacle was structural rather than neglect, exactly as it was for `verify_studies`: without
+# a fixture root the only way to make one fail is to edit the real tree, which this suite must
+# never do. All four honour `SWINGDESK_ROOT` now.
+#
+# The fixture copies the REAL inputs and lets the generator write its own output, so the test
+# exercises the real parsing rather than a hand-built stand-in that could agree with a broken
+# generator. Then it corrupts the output. A generator whose check compared nothing would pass
+# step 2 and step 4 alike.
+GENERATORS = [
+    ("build_frd.py", "docs/01-requirements/FRD.md"),
+    ("build_checklists.py", "registry/checklists.yml"),
+    ("build_coverage.py", "docs/08-pm/COVERAGE_MATRIX.md"),
+    ("build_components.py", "registry/components.yml"),
+]
+
+
+def _generator_tree(tmp_path: Path) -> Path:
+    """The real `registry/` and `docs/` under a scratch root. Read from the tree, written nowhere."""
+    for name in ("registry", "docs"):
+        shutil.copytree(REPO / name, tmp_path / name,
+                        ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    return tmp_path
+
+
+@pytest.mark.parametrize(("tool", "generated"), GENERATORS)
+def test_a_check_only_generator_goes_red_on_a_drifted_file(
+    tmp_path: Path, tool: str, generated: str,
+) -> None:
+    """Each generator writes its own output, agrees with it, and then must object to one edit."""
+    root = _generator_tree(tmp_path)
+
+    code, out = run_gate(tool, root)
+    assert code == 0, f"{tool} could not regenerate into a fixture: {out}"
+
+    code, out = run_gate(tool, root, args=["--check-only"])
+    assert code == 0, f"{tool} disagrees with what it just wrote: {out}"
+
+    target = root / generated
+    target.write_text(target.read_text(encoding="utf-8") + "drift" + chr(10), encoding="utf-8")
+    code, out = run_gate(tool, root, args=["--check-only"])
+    assert code != 0, f"{tool} --check-only passed over a drifted {generated}"
 
 
 # ------------------------------------------------------------- gate 23: track A streak
