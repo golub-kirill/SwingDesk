@@ -55,6 +55,26 @@ NO_RESULT_YET = {
     "267011": "has not run yet",   # SCHED_S_TASK_HAS_NOT_RUN, 0x00041303
 }
 
+#: Failure codes this gate can NAME. The verdict stays `crash` - these are real failures and the
+#: gate is right to be red - but a raw negative HRESULT tells an operator nothing, and this gate's
+#: own history is that an unexplained number is how it lost credibility once already (see the note
+#: above). Naming a cause is not the same act as fixing one: the scheduling decision stays the
+#: owner's, and `TODO.md` section 6 holds it.
+#:
+#: **What paid for the first row, 2026-08-29.** Both tasks reported the same last run time, and the
+#: second pass carried this code. `StartWhenAvailable` catches missed triggers up TOGETHER, so on a
+#: day the machine was asleep the 18:30 pass starts and the 19:30 pass cannot start at all - and
+#: those are exactly the days whose stale data the second pass exists to repair. The two failures
+#: are not independent, which is the whole finding, and it was reachable only because somebody read
+#: the number.
+DIAGNOSED = {
+    "-2147020576": (
+        "the other pass was already running (0x80070420, ERROR_SERVICE_ALREADY_RUNNING). A "
+        "catch-up fires both triggers together, so this is the day the retry was most needed and "
+        "least able to run - TODO.md section 6"
+    ),
+}
+
 #: Settings that make a task silently not run, and that only the verbose query shows. Neither is a
 #: fault this can fix - both are the owner's environment - but both explain an evening with no log
 #: line, which is otherwise indistinguishable from a run that did nothing.
@@ -93,6 +113,9 @@ def verdict(last_result: str) -> tuple[str, str]:
         return "clean", f"exit {code}"
     if code in NO_RESULT_YET:
         return "pending", NO_RESULT_YET[code]
+    if code in DIAGNOSED:
+        # Still a crash. Still red. It just says what happened.
+        return "crash", DIAGNOSED[code]
     return "crash", f"exited {code}"
 
 
@@ -131,7 +154,7 @@ def main() -> int:
             print(f"      NOTE        {phrase} - this check says nothing about that run")
         elif judgement == "crash":
             failures.append(
-                f"{task}: last run {last_run} exited {last_result} - see data/daily_run.log"
+                f"{task}: last run {last_run} failed - {phrase}. See data/daily_run.log"
             )
 
     for failure in failures:

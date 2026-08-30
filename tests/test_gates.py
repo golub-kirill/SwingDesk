@@ -2065,6 +2065,26 @@ def test_a_genuine_failure_is_still_a_crash(code: str) -> None:
     assert verify_schedule.verdict(code)[0] == "crash"
 
 
+def test_a_diagnosed_failure_is_still_a_crash_and_now_says_what_happened() -> None:
+    """Naming a cause must not soften a verdict, and that is the whole risk in this table.
+
+    `0x80070420` is the second pass finding the first one already running, which happens on a
+    catch-up day — the day whose stale data the second pass exists to repair. It is a real failure
+    and stays red; what changes is that the gate stops printing a bare negative number at an
+    operator, which is how it lost credibility once already.
+    """
+    judgement, phrase = verify_schedule.verdict("-2147020576")
+    assert judgement == "crash"
+    assert "already running" in phrase
+    assert phrase != "exited -2147020576"
+
+
+def test_a_diagnosed_code_is_not_a_code_the_wrapper_can_return() -> None:
+    """Same guard the two pending statuses carry: a named code must not shadow a real exit code."""
+    assert not set(verify_schedule.DIAGNOSED) & set(verify_schedule.CLEAN_RESULTS)
+    assert not set(verify_schedule.DIAGNOSED) & set(verify_schedule.NO_RESULT_YET)
+
+
 def test_no_named_status_can_collide_with_a_wrapper_exit_code() -> None:
     """What makes special-casing these two safe, asserted rather than asserted-in-a-comment.
 
