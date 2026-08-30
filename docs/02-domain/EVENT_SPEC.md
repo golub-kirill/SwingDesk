@@ -112,7 +112,7 @@ event-driven patterns are conjecture, and that label should survive into anythin
 
 | Capability | State |
 |---|---|
-| Detect an event at all | **no source.** No free point-in-time earnings calendar is in hand, and none is wired |
+| Detect an event at all | ~~**no source.**~~ **A FORWARD source exists and is not wired** — measured 2026-08-30, `python tools/probe_events.py`: a free keyless endpoint serving the scheduled calendar with a session bucket, which is what a live check at 18:30 needs. **The point-in-time half of the original sentence stands and is the half that matters for a study**: querying an old date returns what the source says about it TODAY, so the schedule *as known* on an earlier date is not recoverable. The bold lead is struck because it is the phrase that propagated — `REQUIREMENTS.md` §7 read it as *no event calendar exists* |
 | `screen.earnings_buffer_days` | **`unset`, and the course gives no value or shape** — see §2. Any number is authored |
 | Separate event fact from market reaction (M40-T0623) | **computable in principle** from bars alone — a gap and relative volume need no event feed. The *fact* does not |
 | Per-catalyst-type handling | **not supported by the source.** One criterion covers all twenty types |
@@ -128,8 +128,12 @@ well-documented dead end. It is not proposed; it is noted so the choice is delib
 
 ## 5. Open items
 
-- [ ] **No event source.** Until one exists, everything in §3 is catalogue, not capability. The
-      constraint is D8/D10 (free tier), so this is a sourcing problem rather than a modelling one.
+- [ ] ~~**No event source.**~~ **A forward source exists; nothing is wired to it — 2026-08-30.**
+      Everything in §3 is still catalogue rather than capability, and the reason has changed: it is
+      no longer sourcing. What is left is wiring, a buffer value that needs a record or a study, and
+      — for any BACKTEST of an event rule — the point-in-time schedule, which no free source serves
+      and which this one does not either. **D8/D10 (free tier) never blocked the forward calendar**,
+      and that had gone untested since this line was written.
 - [ ] **`screen.earnings_buffer_days` has no course basis.** It stays `unset`. Setting it requires a
       decision record with a stated rationale, or a study — not a transcription.
 - [ ] Whether the gap/relative-volume half of M40-T0623 is worth implementing without an event feed.
