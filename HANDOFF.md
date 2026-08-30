@@ -411,6 +411,42 @@ still carried the form that exits 2. Regenerating §2 fixed it — so gate 31 ar
 merge as a live instance of the defect it was built for, in the block whose whole promise is that a
 reader can derive the number instead of trusting the row.
 
+### The session of 2026-08-30: three claims tested, and every one of them was already false
+
+**Read this if you are wondering what to test next.** The pattern is the session, not the findings:
+every item below came from re-running a check somebody had already written down the answer to.
+
+- **Three mutants recorded as surviving the suite were all dead**, and had been for up to twelve
+  days. `TODO.md` §6 carried it `[v]` and it steered a build order; §1 of the same file had recorded
+  the opposite six days earlier. Two of the three are now gate 34 mutants, so the kills stop being
+  incidental. **The control is the transferable part**: the first attempt produced a false kill,
+  because `src/` alone in a scratch tree makes `test_checklist.py` fail on a registry it resolves
+  through the package, and that looks exactly like a dead mutant.
+- **Gate 24 named the wrong cause on every CI run it has ever made.** `data/` exists in GitHub
+  Actions and holds no store; the tool reported *"a store is open in another process — the scheduled
+  run holds them"*, over a duckdb error reading *database does not exist*. Verdict right every time,
+  reason wrong every time — `AGENTS.md` §10.6 rule 2 aimed at confidence rather than alarm. The two
+  states are told apart from the filesystem now.
+- **"The `E11` event calendar has no source" was three claims of different strength and only the
+  weakest was true.** The code said *not wired* (true), `TODO.md` said *no source*, `REQUIREMENTS.md`
+  said *does not exist*. `tools/probe_events.py` asks the source: Nasdaq serves the forward schedule
+  with a session bucket, free and keyless. It settles the SOURCE and not the RULE —
+  `screen.earnings_buffer_days` stays `unset`, and the literature recorded with it cuts against the
+  obvious framing, because the earnings announcement premium is positive and peer-reviewed.
+- **The degeneracy guard refuses five of the eleven sector ETFs, and its stated reason is false for
+  them.** `tools/probe_sector_benchmarks.py`. `DR-006` §12.1 argued the guard is exact so a genuine
+  sector ETF clears it; five report exactly one sector at exactly 100%. The behaviour is right —
+  the candidate is admitted and the reason travels — and the sentence *"a fund holding no equity at
+  all"* is not, for a fund holding 99.7% equity. A measured discriminator exists in the same vendor
+  response. **Not changed: that is a `DR-006` amendment and the owner's.**
+- **Gate 14 now reads `TODO.md`**, for the parameter statuses and component activation states only.
+  The 2026-08-24 rejection of the whole pattern set stands and a test pins it; what reopened the
+  narrow half is that the rejection bounded its cost on stale counts sitting in CLOSED items, and
+  the instance was in an open one.
+
+**What none of it touched:** no parameter gained a value, no ratified record was amended, no frozen
+file changed, and gate 9 confirms decision output is unmoved.
+
 ### Five questions waiting on the owner — restated 2026-08-29 with names, not codes
 
 **`AGENTS.md` §5: say the name, not the code.** These five are the whole of what is blocked on a
