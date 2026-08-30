@@ -444,6 +444,24 @@ every item below came from re-running a check somebody had already written down 
   narrow half is that the rejection bounded its cost on stale counts sitting in CLOSED items, and
   the instance was in an open one.
 
+- **The layer contract made the backtest/live duplication MANDATORY, and both documents describing
+  that risk were pointing at the wrong cause.** `REQUIREMENTS.md` §3 reads as a discipline problem -
+  write the trigger once before the live path acquires one. But `validation` sits ABOVE
+  `application` in the layered contract, so `pipeline.py` could not import the backtest's trigger at
+  all: gate 6 refuses it. The live path's only legal options were a second implementation or a
+  broken contract. `EntryTrigger` and its three implementations now live in
+  `decision_logic/triggers.py`, below both, moved unchanged and confirmed by gate 9's replay.
+  **It does not meet `REQ-VALIDATION-002`** - nothing asserts the two paths agree, because the live
+  path still has no trigger to compare against.
+- **Twelve decision records are `proposed`, and §5 said five were "the whole of what is blocked on a
+  human".** Gate 20 prints the list on every run now, as a standing measurement rather than a
+  failure. That is `TODO.md` §4's open question answered for one instance: §10.5 gives every COUNT an
+  owner and nothing did that for a STATUS.
+- **Gate 38** - a gate number cited in prose must be one the inventory knows. Row 12's shape, one
+  layer out from gate 36. Measured first: 363 citations, 0 unresolved. It also settles what is left
+  of gate 10, which is two checks rather than three, because §7's recommended narrow check turned
+  out to be gate 35, built the same day §7 was.
+
 **What none of it touched:** no parameter gained a value, no ratified record was amended, no frozen
 file changed, and gate 9 confirms decision output is unmoved.
 
