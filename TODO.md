@@ -2320,6 +2320,24 @@ is for where no gate can reach.
       **Not fixed here.** `tools/daily_run.cmd` is a frozen file, and the options — commit the
       regenerated block, or move the regeneration out of the wrapper — are a decision about what the
       scheduled run is allowed to do to the repository.
+      **A THIRD option, and it is the one that says what is really wrong — measured 2026-08-30.**
+      `pipeline.py` computes `code_dirty=bool(_git("status", "--porcelain"))` — **the whole working
+      tree**, documents included — while `code_hash` is just `rev-parse --short HEAD` and says
+      nothing about which files moved. So a modified `HANDOFF.md` marks a run unreplayable by
+      exactly the same mechanism a modified `sizing.py` does, and the field's own description says
+      it is about *"the code"*. **The verdict is defensible and the SUBJECT is wider than the
+      name**, which is the third time today that shape has turned up (gate 24's cause, `DR-006`
+      §8.7's reason).
+      **What a narrowed check would have to keep**, so this is a proposal rather than a complaint:
+      `src/`, `tools/`, `registry/` and `golden/` all feed a run and a dirty one there genuinely
+      breaks replay. What does not feed it is `docs/` and the root documents — and the root
+      documents are the only thing the wrapper dirties.
+      **Still the owner's, and for a better reason than the freeze.** Narrowing moves runs from
+      *not replayable* to *replayable*, which is the permissive direction on `a.reproducible`, one
+      of the four ratified Track A criteria. `AGENTS.md` §3: nothing may look more validated than it
+      is. An agent measuring the subject is right; an agent widening what counts as evidence is not.
+      **What cannot be recovered either way:** the journal stores one boolean per run, so which
+      files were dirty on any past evening is gone. A narrowed check would apply forward only.
 - [ ] **`[v]` GATE 10 IS NOW TWO CHECKS, NOT THREE, AND THE THIRD WAS BUILT UNDER ANOTHER NUMBER —
       re-derived 2026-08-30.** `REQUIREMENTS.md` §7 exists (the linkage the entry below says gate 10
       needs first) and it names what gate 10 should check: *"a row here naming a test or a gate that
