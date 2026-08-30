@@ -2531,6 +2531,28 @@ is for where no gate can reach.
       where a parallel effort is most likely to be editing and 43 files of annotation churn is the
       worst possible merge surface"*. True when written; today nothing is unmerged. Derive the
       remaining count, never from here: `PYTHONPATH=$PWD/src python -m mypy tools/`.
+- [ ] **`[v]` THE NINE NEWLY-VISIBLE ARGUMENT ERRORS: two were real, seven were inference, four
+      are UNCHECKED — and the split is stated rather than rounded off.** Adding `py.typed` raised
+      `arg-type` in `tools/` from 7 to 16. What each turned out to be, checked one at a time:
+      • **Real, and fixed** — `verify_reproducible.py` comparing two `str | None` hashes declared
+      `list[str]`; and `run_pr005_replay.py` building the replay window with a generator, so a
+      recorded window of one or three dates would have replayed over a window nobody chose. That
+      second one is small and it is in the tool whose whole job is to say whether a PUBLISHED result
+      still reproduces, which makes a silently wrong window the one answer it must never give. It
+      refuses with a reason now.
+      • **Inference, not defects** — `run_pr002` (`min(key=...)` and two reuse sites), `run_pr005`
+      (`Decimal` from an `object`), `run_pr013` (a cascade from one heterogeneous dict),
+      `measure_correlation_cap` (a dict literal mixing `int`, `float` and `list`), `measure_pivots`
+      (a local `_Series` test-double passed to the real component). Every one is mypy narrowing a
+      variable from a first assignment, in a runner whose result completed. Recorded so the next
+      session does not re-chase them.
+      • **NOT checked, and this line is the whole of what is left:** `measure_benchmark.py`
+      (two sites), `measure_sector_relative.py` (two), `run_pr008.py` (two), `run_pr012.py` (two).
+      Same shape as the ones cleared, and that is a prior rather than a finding — nobody has
+      opened them.
+      ```bash
+      PYTHONPATH=$PWD/src python -m mypy tools/
+      ```
 - [ ] **`[c]` The rest of that line, untouched:** structured logging · backup/restore ·
       chaos scenarios · breadth card (parked) · `sizing.py` cost-model swap.
 
