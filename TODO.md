@@ -737,6 +737,32 @@ target is a sentence asserting something about the WORLD that nobody tested.
       scans markdown only. `AGENTS.md` §10.5's disease one file type over.
       **Fixed the way §10.5 says rather than by widening a gate:** the docstring no longer carries
       the number, it names the derivation. A count that is derived cannot go stale in any file type.
+- [x] **`[v]` MEASURED AND DELIBERATELY NOT BUILT: a gate over CITED FILE PATHS — 2026-08-30.**
+      **The idea came from a real instance**, which is why it deserved measuring rather than
+      dismissing: the entry trigger moved to `decision_logic/triggers.py` and `RULE_SPEC.md` still
+      pointed at its old home. Nothing in the tree could have caught that — gate 3e resolves *ids*,
+      gate 35 *test names*, gate 38 *gate numbers*, and a file path is none of those.
+      **Measured over every tracked document:** 364 backticked repository paths, 107 distinct,
+      **5 unresolved**. And every one of the five is legitimate:
+      • `registry/rules.yml` (×2), `registry/external_services.yml` and `tests/test_trade_log.py`
+      are forward references — planned files a document names before they exist, which is a
+      document doing its job.
+      • `src/core/freshness.py` in `ADR-0002` is **not a stale path at all**. It is a path in
+      **TradAlert, the owner's prior system**, cited as precedent. I read it as stale on the first
+      pass and the ADR's own sentence says otherwise; git has never known any of the four, which is
+      what sent me to read the line.
+      **So the gate would arrive RED over five true sentences**, and the only way to ship it is a
+      hand-kept allowlist of exceptions — three of which are plans that will land and then need
+      removing again, and one that points at a different repository. That is the shape of the three
+      widenings rejected on 2026-08-25, and `CI_POLICY.md` §3's cost applies: a gate whose first run
+      is all false positives teaches its reader to skim.
+      **The contrast is the useful part.** Gates 35 and 38 shipped on the same shape of measurement
+      and cost nothing, because both found **zero** live hits — prevention with an empty exception
+      set. This one is prevention with a maintained one, and that is a different trade.
+      ```bash
+      # the measurement, if anyone wants to re-run it before proposing this again
+      git ls-files '*.md' | xargs grep -ohE '`(src|tools|tests|docs|registry|golden)/[A-Za-z0-9_./-]+`'
+      ```
 - [x] **`[v]` MEASURED AND DELIBERATELY NOT BUILT: gate 14 over `.py`.** The obvious response to the
       above, tested before adopting. Across 133 tracked Python files the existing patterns produce
       **7 hits, of which 6 disagree with the tree — and all six are false positives.**
