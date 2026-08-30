@@ -1013,6 +1013,20 @@ evening returned every one of those sessions, clean. The owner asked; nobody had
       what turns on the answer** — it was told to register against *"this replay's vintage, not
       PR-005's published aggregate … they are now known not to be the same thing"*, and on the
       current store they ARE the same thing while the CSV on disk is not.
+      **RULED 2026-08-30: LEAVE IT AND DATE IT.** The first of the three options. `PR-005-trades.csv`
+      and its provenance stay exactly as published; nothing under `docs/prereg/results/` is
+      rewritten. What was missing was never the bytes - it was the vintage, stated where a reader
+      meets the file: the log was generated at series `knowledge_time` **2026-08-17T15:58**, and the
+      scheduled run at 18:30:46 that evening wrote 7 bars inside the study window that it had not
+      seen. Both the log and a fresh replay are correct about their own vintage, and re-publishing
+      would trade a reproducible discrepancy for an unreproducible one.
+      **The `why_not` line stays too, and stays falsified in its practical implication** - that is
+      what correcting forward means. The bytes are gone; the RESULT came back on the next scheduled
+      run, and the note above is the record of it.
+      **What still turns on this is `PR-009`.** It was told to register against this replay's
+      vintage rather than `PR-005`'s published aggregate, and on the current store those agree while
+      the CSV on disk does not. That instruction is unchanged by this ruling: register against a
+      replay anyone can reproduce today, and cite the dated vintage above for why the CSV differs.
 - [ ] **`[c]` UDR-004 — regime ontology.** Three candidate lists now: ТЗ's 8, course v5.0's 11,
       v7.0's 7 (`RECONCILIATION_PLAN.md` §5). Ties to `USER_STORIES.md`:304 (US-004 unsatisfiable
       while `regime.classifier_rule` is contested).
