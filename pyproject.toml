@@ -64,21 +64,49 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+# PEP 561. Without this marker mypy treats THIS project's own fully-typed package as untyped the
+# moment it is imported from outside `src/` - so every `tools/` script got `Any` for every symbol
+# it imported from `swingdesk`, and 142 of the 247 errors `mypy tools/` reported were that one
+# fact repeated. Worse than the count: the type checker was blind at the one boundary where a tool
+# meets the system, which is where a wrong argument actually gets written.
+[tool.setuptools.package-data]
+swingdesk = ["py.typed"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
 [tool.mypy]
 strict = true
-# The shipped package only. `tools/` was in scope before mypy was ever run and carried further
-# errors, all in research runners and gate scripts. Narrowing is recorded rather than quietly
-# done: a gate covering src cleanly is worth more than one covering everything and failing, and
-# CI_POLICY 7 tracks the rest as an open item with the two suspicious sites named.
+# The shipped package, AND the machinery that checks it - the gates, the generators and the state
+# builder. The research runners stay out.
 #
-# MEASURED 2026-08-10: `mypy --strict tools/` reports 100 errors in 21 of 28 files. The figure
-# recorded here and in CI_POLICY 7 said 53, and had drifted unnoticed because nothing recomputes
-# it - gate 5 runs over `src` only, so the number describing what the gate does NOT cover is the
-# one number in this file no gate can check. Re-measure it when quoting it.
-files = ["src"]
+# ~~The shipped package only.~~ That was the position from 2026-08-10 to 2026-08-30, and the
+# argument for it was sound: a gate covering `src` cleanly is worth more than one covering
+# everything and failing. What changed is the size of the job, and it changed because of one
+# missing file rather than because anyone annotated 140 lines.
+#
+# **`src/swingdesk/py.typed` did not exist.** Without that PEP 561 marker mypy treats this
+# project's own fully-typed package as UNTYPED the moment it is imported from outside `src/`, so
+# every `tools/` script got `Any` for every symbol it imported from `swingdesk`. 142 of the 247
+# errors were that one fact repeated - and far worse than the count, the checker was blind at the
+# one boundary where a tool meets the system, which is exactly where a wrong argument gets
+# written. With the marker the whole of `tools/` reports 113, and the checking machinery reports
+# ZERO once the annotations below it were added.
+#
+# It found one thing immediately that review could not: `verify_reproducible.py` compared two
+# `str | None` hashes declared as `list[str]`, so two passes that produced NOTHING would have
+# compared equal and printed byte-identical evidence for `a.reproducible`.
+#
+# The research runners (`run_pr*.py`, `measure_*.py`, `probe_*.py`) are still out of scope and
+# `CI_POLICY.md` §7 tracks them. Derive the remaining count, never quote it from here:
+# `PYTHONPATH=$PWD/src python -m mypy tools/`.
+files = [
+    "src",
+    "tools/verify_*.py",
+    "tools/build_*.py",
+    "tools/check_gates.py",
+    "tools/track_a_streak.py",
+]
 
 # Third-party packages that ship no type information. Listed one by one rather than with a global
 # `ignore_missing_imports`, so adding an untyped dependency is a visible decision rather than

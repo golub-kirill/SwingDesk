@@ -2508,14 +2508,30 @@ is for where no gate can reach.
       of the earlier probe's own evidence, which is in the gate's `ALLOWED` rather than paraphrased.
       **Activation itself stays demand-driven** (`HANDOFF.md` §4): the test before activating one is
       naming the strategy card that consumes it. No card, and `registered` costs nothing.
-- [ ] **`[v]` `tools/` under mypy** ~~(100 errors, 21/28 files)~~ — **re-measured 2026-08-25:
-      242 errors across 43 files**, and the old figure was stale in both terms because `tools/` grew.
-      Derive it, never from here: `PYTHONPATH=$PWD/src python -m mypy tools/`. **Most are
-      `Missing type arguments for generic type`**, which is volume rather than risk. The tools this
-      session added are clean, checked individually; the sweep itself is deliberately not started,
-      because `tools/` is where a parallel effort is most likely to be editing at any moment and 43
-      files of annotation churn is the worst possible merge surface (`AGENTS.md` §10.1) ·
-      structured logging · backup/restore ·
+- [x] **`[v]` ~~`tools/` under mypy~~ — THE CHECKING MACHINERY IS UNDER GATE 5 AS OF 2026-08-30,
+      and the sweep everyone was dreading was one missing file.**
+      Every `verify_*`, every `build_*`, `check_gates.py` and `track_a_streak.py` type-check clean
+      and gate 5 covers them. The research runners (`run_pr*`, `measure_*`, `probe_*`) stay out.
+      **`src/swingdesk/py.typed` did not exist.** Without that PEP 561 marker mypy treats this
+      project's own fully-typed package as UNTYPED the moment a tool imports it, so every script in
+      `tools/` got `Any` for every `swingdesk` symbol. **142 of the 247 errors were that one fact
+      repeated** — and the count is the least of it: the checker was blind at the one boundary
+      where a tool meets the system, which is exactly where a wrong argument gets written. Adding
+      the marker took the total to 113 and raised `arg-type` from 7 to **16**: nine real argument
+      errors that had been invisible the whole time. What was left in the machinery after that was
+      34 annotations, not 242.
+      **It caught a fail-open on its first run, in a verification tool.**
+      `verify_reproducible.py` declared `hashes: list[str]` and appended `manifest.output_hash`,
+      which is `str | None`. Two passes that produced NOTHING compare `None == None` and print
+      *"byte-identical output"* as evidence for `a.reproducible`. **Latent rather than live** —
+      `run()` has exactly one exit today and always sets the hash — and now guarded, because the
+      comparison was unprotected against a state its own type declares. It could not have been
+      found by reading: the line is correct-looking.
+      **The old deferral reason is also gone and worth recording as such.** It was *"`tools/` is
+      where a parallel effort is most likely to be editing and 43 files of annotation churn is the
+      worst possible merge surface"*. True when written; today nothing is unmerged. Derive the
+      remaining count, never from here: `PYTHONPATH=$PWD/src python -m mypy tools/`.
+- [ ] **`[c]` The rest of that line, untouched:** structured logging · backup/restore ·
       chaos scenarios · breadth card (parked) · `sizing.py` cost-model swap.
 
 ### Correctness findings from the 2026-08-15 review — all `[v]`

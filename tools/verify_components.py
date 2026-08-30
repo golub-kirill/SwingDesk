@@ -33,6 +33,7 @@ import importlib
 import re
 import sys
 from pathlib import Path
+from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
 COMPONENTS = REPO / "registry" / "components.yml"
@@ -43,7 +44,7 @@ ACTIVATIONS = ("registered", "specified", "active")
 VERIFICATIONS = ("golden vectors", "property test", "review")
 
 
-def _load(path: Path):
+def _load(path: Path) -> Any:
     try:
         import yaml
     except ModuleNotFoundError:
@@ -104,7 +105,11 @@ def spec_failure(component: str, spec: str) -> str | None:
     return None
 
 
-def check(rows: list[dict], parameters: dict[str, dict], course: list[dict]) -> list[str]:
+def check(
+    rows: list[dict[str, Any]],
+    parameters: dict[str, dict[str, Any]],
+    course: list[dict[str, Any]],
+) -> list[str]:
     failures: list[str] = []
     by_id = {row["component"]: row for row in rows}
 

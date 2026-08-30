@@ -66,6 +66,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
+from typing import Any
 
 REPO = Path(os.environ.get("SWINGDESK_ROOT") or Path(__file__).resolve().parents[1])
 RESULTS = REPO / "docs" / "prereg" / "results"
@@ -81,7 +82,7 @@ AFFIRMATIVE = frozenset({"accept"})
 SHORTFALL_FLAGS = ("single_market",)
 
 
-def _results() -> list[tuple[Path, dict]]:
+def _results() -> list[tuple[Path, dict[str, Any]]]:
     """Result files that are studies. A file without a `prereg` id and a `verdict` is a supporting
     analysis - `PR-002-survivorship-bound.json` is one - and carries no verdict to check."""
     studies = []
@@ -96,7 +97,7 @@ def _results() -> list[tuple[Path, dict]]:
     return studies
 
 
-def _shortfalls(record: dict) -> list[str]:
+def _shortfalls(record: dict[str, Any]) -> list[str]:
     found = [flag for flag in SHORTFALL_FLAGS if record.get(flag)]
     unmet = record.get("scope_unmet")
     if isinstance(unmet, list) and unmet:

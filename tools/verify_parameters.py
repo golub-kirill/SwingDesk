@@ -49,6 +49,7 @@ import re
 import sys
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
+from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
 DEFAULT_REGISTRY = REPO / "registry" / "parameters.yml"
@@ -103,7 +104,7 @@ def numerically_read_ids() -> set[str]:
     }
 
 
-def load_entries(path: Path) -> list[dict]:
+def load_entries(path: Path) -> list[dict[str, Any]]:
     try:
         import yaml
     except ModuleNotFoundError:
@@ -117,7 +118,7 @@ def load_entries(path: Path) -> list[dict]:
     return data.get("parameters") or []
 
 
-def reader_failure(entry: dict) -> str | None:
+def reader_failure(entry: dict[str, Any]) -> str | None:
     """`None` when `read_by` resolves, or is the explicit `none`.
 
     Mirrors `verify_decisions.py`'s `implemented_by` / `implementation: none` pair, which caught a
@@ -143,7 +144,7 @@ def reader_failure(entry: dict) -> str | None:
     return None
 
 
-def check(entries: list[dict]) -> list[str]:
+def check(entries: list[dict[str, Any]]) -> list[str]:
     failures: list[str] = []
     seen: set[str] = set()
 
@@ -338,9 +339,11 @@ def main() -> int:
         if not provenance.startswith("assumed:"):
             continue
         for reference in DECISION_REF.findall(provenance):
-            status = decision_record_status(reference)
-            if status is not None and status.startswith("proposed"):
-                unratified.append((str(entry["id"]), reference, status))
+            record_status = decision_record_status(reference)
+            if record_status is not None and record_status.startswith("proposed"):
+                unratified.append(
+                    (str(entry["id"]), reference, record_status)
+                )
     if unratified:
         print("")
         print(f"{len(unratified)} parameter(s) rest on a decision record still `proposed` - a value "

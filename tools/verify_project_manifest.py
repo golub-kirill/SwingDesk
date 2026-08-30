@@ -24,6 +24,7 @@ import os
 import re
 import sys
 from pathlib import Path
+from typing import Any
 
 #: Root of the tree being checked. Overridable so a test can point the gate at a fixture and
 #: assert it goes red - a gate nobody has seen fail is a gate nobody has tested. Never set in
@@ -53,7 +54,7 @@ OWN_STATUS = re.compile(r"\*\*Status:\*\*\s*([a-z-]+)")
 ROW = re.compile(r"^\|\s*(\d{1,2}[a-z]?)\s*\|")
 
 
-def _load_yaml(path: Path):
+def _load_yaml(path: Path) -> Any:
     import yaml
 
     return yaml.safe_load(path.read_text(encoding="utf-8"))

@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
 COMPONENTS = REPO / "registry" / "components.yml"
@@ -57,7 +58,7 @@ PARAMETER_LAYERS = {
 }
 
 
-def _load(path: Path):
+def _load(path: Path) -> Any:
     try:
         import yaml
     except ModuleNotFoundError:
@@ -74,8 +75,8 @@ def _bar(part: int, whole: int, width: int = 10) -> str:
     return "█" * filled + "·" * (width - filled)
 
 
-def render(rows: list[dict], parameters: list[dict]) -> str:
-    by_layer: dict[str, list[dict]] = {layer: [] for layer in LAYER_ORDER}
+def render(rows: list[dict[str, Any]], parameters: list[dict[str, Any]]) -> str:
+    by_layer: dict[str, list[dict[str, Any]]] = {layer: [] for layer in LAYER_ORDER}
     for row in rows:
         by_layer.setdefault(row["layer"], []).append(row)
 
