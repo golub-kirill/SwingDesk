@@ -351,8 +351,9 @@ rather than the 2.2 recorded, against a design target of 2.5. `DR-006` §18 carr
 - **Gate 33 — a live branch is rewriting the lines you are rewriting.** Advisory. Gate 16 makes a
   sibling worktree visible; it does not say the sibling is editing your paragraph, and on this day
   two trees corrected the same two table rows two hours apart with gate 16 green.
-- **Gate 34 — an enforcement the tree CLAIMS must be able to fail.** 15 mutants, 20 s, 0 survivors,
-  over `INVARIANTS.md` §1 and `REQ-VALIDATION-001`'s five live vetoes. It exists because the test
+- **Gate 34 — an enforcement the tree CLAIMS must be able to fail.** 15 mutants and 0 survivors
+  **as it landed on 2026-08-25**; two more were added on 08-29 and the tool prints the current
+  figure. Over `INVARIANTS.md` §1 and `REQ-VALIDATION-001`'s five live vetoes. It exists because the test
   `INVARIANTS.md` named for invariant 1 asserted `(net / x) * x == net` and could not fail; that
   test is rewritten and pinned to a value.
 - **Gate 35 — a document naming a test must name one that exists.** `INVARIANTS.md` §1 and

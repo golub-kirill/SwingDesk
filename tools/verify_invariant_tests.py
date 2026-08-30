@@ -93,6 +93,14 @@ MUTANTS: tuple[Mutant, ...] = (
         tests=("tests/test_positions.py::test_r_denominator_survives_a_stop_move",),
     ),
     Mutant(
+        claim="invariant 1",
+        breaks="the denominator stops carrying round-trip costs, so 1R understates the loss",
+        path="swingdesk/trade_management/sizing.py",
+        old="    risk_per_share = entry - stop + costs\n",
+        new="    risk_per_share = entry - stop\n",
+        tests=("tests/test_invariants.py::test_sizing_and_position_agree_on_the_denominator",),
+    ),
+    Mutant(
         claim="invariant 2",
         breaks="open risk is clamped at zero instead of recomputed",
         path="swingdesk/contracts/position.py",
@@ -207,6 +215,14 @@ MUTANTS: tuple[Mutant, ...] = (
         new="    elif False and behind >= allowed:",
         tests=("tests/test_freshness.py::"
                "test_the_window_is_reached_at_two_and_drops_the_instrument",),
+    ),
+    Mutant(
+        claim="REQ-VALIDATION-001 veto",
+        breaks="the session count the staleness gate compares is off by one",
+        path="swingdesk/reference_data/calendar.py",
+        old="    return max(0, len(window) - 1)\n",
+        new="    return max(0, len(window))\n",
+        tests=("tests/test_freshness.py::test_friday_to_monday_is_one_session_not_three_days",),
     ),
 )
 

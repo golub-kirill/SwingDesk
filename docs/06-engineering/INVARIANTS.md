@@ -35,8 +35,9 @@ invariant 1 asserted `r_multiple(net, sized) * sized.planned_risk == net` — `(
 an identity true for every non-zero `x`, so it held whatever the denominator contained. Measured
 2026-08-17: replacing `planned_risk` with `Decimal("42")` left it green. The test is rewritten and
 **gate 34 now checks the claim instead of restating it** — it breaks each invariant in a scratch
-copy of `src/` and requires the named test to go red. All ten mutants are killed today; derive it,
-never quote it from here:
+copy of `src/` and requires the named test to go red. **Every mutant is killed today, and how
+many there are is the tool's output rather than this page's** - the sentence this replaced named
+a number and then told the reader not to quote it, which had already drifted twice:
 
 ```bash
 python tools/verify_invariant_tests.py

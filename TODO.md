@@ -1950,7 +1950,40 @@ is for where no gate can reach.
       not silence. 4 new tests against the story's own gherkin, `verify_docs.py` gate 3e passes
       (citing US-022 without checking it was live). Every gate and every test passed, DONE
       2026-08-11.
-- [ ] **`[v]` MEASURED 2026-08-17: 3 of 11 mutants survive the entire test suite.** The council's
+- [x] **`[v]` ~~MEASURED 2026-08-17: 3 of 11 mutants survive the entire test suite.~~ RE-MEASURED
+      2026-08-29: ALL THREE ARE DEAD, AND NONE OF THEM DIED ON PURPOSE.** The entry was `[v]` and
+      steered a build order for twelve days; nothing had re-run it, which is the shape this file
+      exists to catch.
+      **Method, and the control is the part that matters.** `src/` copied to a scratch root beside
+      `registry/`, `golden/` and `docs/`, one mutation applied there, the **whole** suite run against
+      the copy. The unmutated copy runs green first — without that, a red result is evidence about
+      the fixture rather than the mutation (`AGENTS.md` §9). The first attempt did produce exactly
+      that false kill: `src/` alone in a scratch directory makes `test_checklist.py` fail on a
+      registry it resolves through the package, and it looks like a dead mutant.
+      **What killed each, and it is a different mechanism every time:**
+      • `planned_risk` → `Decimal('42')` — killed by the invariant-1 test, which was **rewritten**
+      on 2026-08-25 because gate 34 found it asserting `(net/x)*x == net`. The mutant is now one of
+      gate 34's own.
+      • `risk_per_share = entry - stop + costs` → `entry - stop` — killed by **five** tests, three
+      invariants and both replay cases. PR #9 made the R denominator cost-inclusive on 2026-08-17
+      and the tests came with it; the survivor died the same day this entry was written.
+      • `calendar.sessions_behind` off by one — killed by **seven** freshness tests. `DR-015` wired
+      the staleness gate on 2026-08-18, so the *"spec rule implemented in dead code"* half of this
+      entry is stale too: `market_data/freshness.py` calls it and `pipeline.py` reaches it from
+      there. That is the same false null `AGENTS.md` §12 records the graph reporting for
+      `freshness.assess`.
+      **Both of the two not already covered are now gate 34 mutants**, so the kills stop being
+      incidental: the cost term under invariant 1, the session count under the staleness veto.
+      Derive the list and the count from the tool, never from here:
+      ```bash
+      PYTHONPATH=$PWD/src python tools/verify_invariant_tests.py
+      ```
+      **What this does NOT overturn:** the build order below. Every kill came from a test written
+      for a *feature*, not from a mutant list — which is the entry's own conclusion, confirmed
+      rather than refuted. The mutant list is cheap insurance against those tests being weakened,
+      and that is exactly what putting these two into gate 34 buys.
+      **The original measurement, kept because the method and the three non-negotiables are the
+      transferable part:** The council's
       own flip condition, turned from an assumption into a number. Method: patch one computed
       quantity per module in committed source, run the **whole** suite, restore, record whether
       anything died. **`git stash push -- src/` cannot do this** — it reverts *uncommitted* work, so
@@ -2079,9 +2112,10 @@ is for where no gate can reach.
       invariant broke"*, and for invariant 1 that was false for three weeks — the named test
       asserted `(net/x)*x == net`. Gate 8 says the tests pass; **nothing said they could fail**, and
       the document is what a reader trusts.
-      Fifteen mutants, each a committed source edit applied to a **scratch copy** of `src/` — which
-      matters here because two of them land in `trade_management/sizing.py`, a frozen file. All
-      fifteen are killed today. Runtime ~20 s.
+      Fifteen mutants **on the day it landed**, each a committed source edit applied to a **scratch
+      copy** of `src/` — which matters here because two of them land in
+      `trade_management/sizing.py`, a frozen file. All were killed, and the list has grown since;
+      the tool prints what it holds rather than this line carrying a copy.
       **It also closes the half of `REQ-VALIDATION-001` that `REQUIREMENTS.md` §2 called impossible.**
       That paragraph said mutation testing *"needs a corpus of evaluated criteria before it can.
       Nothing evaluates these yet, so a mutation gate here would have nothing to flip."* It was
