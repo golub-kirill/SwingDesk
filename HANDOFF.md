@@ -462,6 +462,14 @@ every item below came from re-running a check somebody had already written down 
   of gate 10, which is two checks rather than three, because §7's recommended narrow check turned
   out to be gate 35, built the same day §7 was.
 
+- **One shape turned up three times, and it is worth holding in mind before the findings are.**
+  Gate 24 said the scheduled run held the stores when no scheduled run existed. `DR-006` §8.7 says
+  a refused sector ETF is *"a fund holding no equity at all"* when it holds 99.7% equity.
+  `pipeline.py` computes `code_dirty` from the whole working tree while being named for the code.
+  **In all three the verdict is defensible and the stated subject is wrong or wider than the name**
+  — and a stated subject is a claim (§15 rule 1, §10.4). None of the three is findable by review;
+  each came from measuring the sentence against the thing it describes.
+
 **What none of it touched:** no parameter gained a value, no ratified record was amended, no frozen
 file changed, and gate 9 confirms decision output is unmoved.
 
