@@ -2546,10 +2546,22 @@ is for where no gate can reach.
       (a local `_Series` test-double passed to the real component). Every one is mypy narrowing a
       variable from a first assignment, in a runner whose result completed. Recorded so the next
       session does not re-chase them.
-      • **NOT checked, and this line is the whole of what is left:** `measure_benchmark.py`
-      (two sites), `measure_sector_relative.py` (two), `run_pr008.py` (two), `run_pr012.py` (two).
-      Same shape as the ones cleared, and that is a prior rather than a finding — nobody has
-      opened them.
+      • ~~**NOT checked, and this line is the whole of what is left:** `measure_benchmark.py`
+      (two sites), `measure_sector_relative.py` (two), `run_pr008.py` (two), `run_pr012.py` (two).~~
+      **CHECKED 2026-08-30, all eight, and all eight are clean.** Seven are the same
+      heterogeneous-dict shape as the cleared ones — a `dict[str, object]` whose values are then
+      read as numbers, with the `None` cases already guarded at the call site.
+      **The eighth was worth opening and is the reason this line existed.** `run_pr012.py:382`
+      passes `dict[str, list[bool]]` where `run_book` declares `list[bool | None]`, and a signal
+      series with no `None` in it would be the `UNKNOWN`-becomes-`FALSE` collapse `RULE_SPEC.md` §4
+      forbids — the exact defect the engine's own docstring is written against. **It is not that.**
+      The argument is the per-bar `gates` FILTER, not the trigger; the trigger is
+      `AlwaysEligible(LOOKBACK)`, passed separately, and an all-`True` filter is "no filter". The
+      three-state type belongs to the gate for its own reason (`engine.py`: *"a None gate does not
+      trade: it is not a rejection"*), and mypy's complaint is list invariance. **Recorded because
+      the check was worth making and the answer was no** — a prior that eight sites look alike is
+      not the same claim as having opened them, which is why this line was written as open rather
+      than closed.
       ```bash
       PYTHONPATH=$PWD/src python -m mypy tools/
       ```
