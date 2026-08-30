@@ -928,6 +928,71 @@ def test_todo_is_not_scanned_for_the_families_measured_as_noise(tmp_path: Path) 
     assert code == 0, out
 
 
+#: A runner whose results mapping is the shape `registered_ids` looks for: more than five keys and
+#: every key `<id> <name>`. Parsed from the syntax tree, so it never has to be importable.
+_CITATION_RUNNER = '''"""stub"""
+results = {
+    "1 a": True, "2 b": True, "3 c": True,
+    "4 d": True, "5 e": True, "3g f": True,
+}
+'''
+
+_CITATION_POLICY = '''# CI POLICY
+
+| # | Gate | Catches | Status |
+|---|---|---|---|
+| 1 | `a.py` | x | **exists** |
+'''
+
+
+def _citation_tree(tmp_path: Path, doc: str, body: str, *, inventory: str = "") -> Path:
+    """A tracked tree carrying a runner, an inventory and one document.
+
+    `git ls-files` is the file list, so the fixture has to be a repository with the file ADDED - an
+    untracked note is invisible to this gate by design, and a fixture that forgot to add it would
+    pass for the wrong reason.
+    """
+    (tmp_path / "tools").mkdir()
+    (tmp_path / "tools" / "check_gates.py").write_text(_CITATION_RUNNER, encoding="utf-8")
+    (tmp_path / "docs" / "06-engineering").mkdir(parents=True)
+    (tmp_path / "docs" / "06-engineering" / "CI_POLICY.md").write_text(
+        _CITATION_POLICY + inventory, encoding="utf-8")
+    (tmp_path / doc).parent.mkdir(parents=True, exist_ok=True)
+    (tmp_path / doc).write_text(body, encoding="utf-8")
+    _git_init(tmp_path)
+    subprocess.run(["git", "-C", str(tmp_path), "add", "-A"], capture_output=True, check=True)
+    return tmp_path
+
+
+def test_gate_citation_rejects_a_number_nothing_knows(tmp_path: Path) -> None:
+    """Row 12's shape: a sentence naming a gate that does not exist still reads as protection."""
+    root = _citation_tree(tmp_path, "docs/NOTES.md", "This one is caught by gate 99.")
+    code, out = run_gate("verify_gate_citations.py", root)
+    assert code == 1
+    assert "gate 99" in out
+    assert "docs/NOTES.md" in out
+
+
+def test_gate_citation_accepts_a_number_only_the_inventory_carries(tmp_path: Path) -> None:
+    """The design decision, pinned.
+
+    About twenty documents refer to the unbuilt gate 10 as the linkage they are waiting for, and
+    every one of those sentences is true. The vocabulary is the inventory rather than the runner, so
+    a row marked `to build` makes its number citable.
+    """
+    root = _citation_tree(tmp_path, "docs/NOTES.md", "Gate 10 would catch it.",
+                          inventory="| 10 | traceability | x | to build |")
+    code, out = run_gate("verify_gate_citations.py", root)
+    assert code == 0, out
+
+
+def test_gate_citation_does_not_read_a_year_as_a_gate(tmp_path: Path) -> None:
+    """The one real false positive the measurement found: "FIXED AT THE GATE 2026-08-24"."""
+    root = _citation_tree(tmp_path, "docs/NOTES.md", "FIXED AT THE GATE 2026-08-24, not later.")
+    code, out = run_gate("verify_gate_citations.py", root)
+    assert code == 0, out
+
+
 # ------------------------------------------------------------- gate 23: track A streak
 
 #: A real, verified NYSE trading week (Mon-Fri, no holiday) - the calendar itself is not
