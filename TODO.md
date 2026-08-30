@@ -430,10 +430,68 @@ this repository.
       turns a single observation into a distribution — and `AGENTS.md` §15 rule 1 asks exactly that
       of a claim this load-bearing. Cheap shape: for the names the run refused, ask the vendor again
       each hour and record when the session first appears.
-- [ ] **`[c]` The `E11` event calendar has no source.** `application/checklist.py` records that no
-      event calendar is wired **and** that the course supplies no buffer to apply if one were —
-      `screen.earnings_buffer_days` needs a decision record or a study, not a transcription. It is
-      one of the eight items keeping every candidate at `Research`
+- [x] **`[v]` ~~The `E11` event calendar has no source.~~ REFUTED 2026-08-30 — a free, keyless
+      source exists and this claim was never tested.**
+      ```bash
+      python tools/probe_events.py --days 5
+      ```
+      Nasdaq's own calendar is backed by a JSON endpoint taking one date per call. It serves the
+      **forward** schedule with a session bucket — before the open, after the close, or not supplied
+      — which is the field this system actually needs, because the question at 18:30 is whether
+      tonight's position carries an event over the next session. It also serves past dates with the
+      realised figure. No account, no key, two headers.
+      **The claim drifted through three strengths and only the weakest was true.**
+      `application/checklist.py` said the calendar is not **wired** — correct. This line said it has
+      no **source**. `REQUIREMENTS.md` §7 said no event calendar **exists**. Nobody was careless at
+      any step and the qualifier simply did not survive the copy, which is `DR-003` gap 1 and the
+      Canada refutation repeating in a different subject. `AGENTS.md` §15 rule 2 is the rule: a
+      claim about what a SOURCE holds is tested against the source, never inferred from what our
+      code received. All three sites are corrected.
+      **What it does NOT settle, stated before anyone over-reads it.**
+      • **The schedule AS KNOWN on an earlier date is not recoverable.** An old date returns what
+      the source says about it today, so a study can know an announcement happened on a session and
+      cannot know the date was already published five sessions earlier, or revised. `E11` asks the
+      forward question at decision time and is unaffected; a **backtest** of any event rule is not.
+      Same survivorship-shaped bound `probe_canada.py` records for TMX.
+      • **A row mixes an event-dated fact with a current-state one** — `marketCap` does not vary
+      with the announcement date, which the probe demonstrates rather than asserts by finding a
+      symbol on two dates and comparing. Reading it as the capitalisation at announcement would be
+      an invariant-6 violation.
+      • **Canadian coverage is UNTESTED.** Every symbol in the sampled window sat inside
+      `directory.duckdb`, which is consistent with a US-only calendar and does not establish one.
+      The test that would settle it is a TSX-only name, and the probe does not make it. Not written
+      as a "cannot".
+      • **It settles the SOURCE and not the RULE.** `screen.earnings_buffer_days` stays `unset` and
+      nothing here proposes a value.
+- [ ] **`[v]` The buffer needs a ruling or a study, and the literature says the obvious framing is
+      backwards — searched 2026-08-30 under `AGENTS.md` §16.** Recorded before anyone sets the
+      value, because the reason a threshold has its value is what §16 rule 1 governs.
+      **Peer-reviewed, top rank (§16 rule 2), and it points AGAINST a blanket avoid-earnings
+      rule on return grounds.** Prices *rise* around scheduled announcements on average: Frazzini &
+      Lamont, *The Earnings Announcement Premium and Trading Volume* (NBER w13090, 2007), put the
+      premium above 7% a year and tie it to the volume surge and limited investor attention; Savor &
+      Wilson, *Earnings Announcements and Systematic Risk* (**Journal of Finance**, 2016), measure
+      an annualised abnormal return near 9.9% for scheduled announcers, persistent across stocks
+      over long horizons and priced as risk; Barber, De George, Lehavy & Trueman find the same
+      premium internationally (**JFE**, 2013). **So a rule that flattens before every announcement
+      gives up a documented positive mean.** The course names the catalyst check and quantifies
+      nothing (`EVENT_SPEC`), which is §16's situation exactly: an `Operational Course Rule`, not an
+      `Empirical Result`.
+      **What the literature does not touch, and it is why the rule may still be right here.** A mean
+      is not a stop. `PR-007` fixes the exit at 2.0 × ATR(14) with no trailing, and an overnight
+      announcement gap opens through a stop rather than at it — so the realised loss on that trade
+      is not 1R, and **1R is the unit every validation threshold in this system is expressed in**.
+      That is a claim about the denominator, not about expectancy. **Marked conjecture
+      (`AGENTS.md` §10.4): nothing here measures it.** The check that would settle it is a
+      pre-registered study over the stored bars — realised loss versus 1R on trades held through an
+      announcement, against trades that were not — and it is registrable today because the forward
+      calendar is only needed for the LIVE rule, while the historical side needs just the
+      announcement dates, which the same source serves.
+      **§16 rule 4 applies and is not discharged here:** the course and the literature disagree,
+      both are recorded, and which one the system follows is the owner's or a study's. The trap to
+      avoid is setting the buffer and letting it read as alpha; on this evidence it would be
+      variance and tail control, bought with a known cost.
+      `E11` remains one of the eight items keeping every candidate at `Research`
       (`docs/08-pm/plans/2026-08-24-the-trade-flow.md` §2).
 
 
