@@ -1185,6 +1185,28 @@ def _build_state():
     return module
 
 
+def test_an_absent_store_is_not_reported_as_one_held_by_the_evening_run(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """UNAVAILABLE was right and the REASON was false, on every CI run gate 24 has ever made.
+
+    `data/` exists in GitHub Actions and holds no store, and no scheduled run has ever existed
+    there - yet the tool printed that the scheduled run was holding the stores, over a duckdb error
+    reading `database does not exist`. `AGENTS.md` §10.6 rule 2 in the direction of confidence, and
+    §15's rule that an explanation is a claim. The two states are told apart from the filesystem
+    now, never from the vendor's error text.
+    """
+    monkeypatch.setenv("SWINGDESK_DATA", str(tmp_path))
+    monkeypatch.delenv("SWINGDESK_ROOT", raising=False)
+    state = _build_state()
+    assert state.runtime_rows() is None
+    printed = capsys.readouterr().out
+    assert "holds no" in printed
+    assert "open in another process" not in printed
+
+
 def test_handoff_still_carries_all_generated_markers() -> None:
     """Delete a marker pair and gate 24 stops checking that section in silence.
 
