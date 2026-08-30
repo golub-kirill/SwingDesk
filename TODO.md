@@ -1868,16 +1868,23 @@ is for where no gate can reach.
       **A scheduling decision, not a code one**, and it belongs with `DR-019` (the conditional second
       pass), which is still `proposed`: a delay or start-boundary on the second task, or making it
       conditional on the first having finished.
-- [ ] **`[v]` MY OWN UNCOMMITTED WORK MARKED THREE EVENINGS OF SCHEDULED RUNS `code_dirty` —
-      2026-08-25 to 08-27.** `code_dirty` is computed from the repository, and a repository is shared
-      across worktrees, so an agent leaving a worktree dirty overnight poisons the reproducibility
-      field of runs it never touched. Five of the six runs recorded in that window are dirty; the one
-      clean run is the 18:30 pass of 08-25, before this session started editing.
-      **`a.reproducible` is the criterion that pays for it** — a manifest pointing at a dirty tree
-      cannot be replayed from its SHA, and those three evenings are immutable.
-      **Gate 21 already warns about this and is advisory** (`no finished work left uncommitted`).
-      This is the measured cost of ignoring it, and the argument for committing at the end of a
-      working block rather than at the end of a session.
+- [ ] **`[v]` THE DAILY RUN MAKES THE NEXT DAILY RUN `code_dirty`, AND NOBODY PRICED THAT — found
+      2026-08-29.** ~~My own uncommitted work marked three evenings of scheduled runs dirty.~~
+      **That attribution was wrong and is corrected here**; the worktree was clean from the evening
+      of 08-25 onward, and the runs went on being dirty anyway.
+      **The real cause is in `daily_run.cmd`'s own comment.** Its last step regenerates
+      `HANDOFF.md` §2, and the comment says so plainly: *"this leaves `HANDOFF.md` modified and
+      uncommitted in the main checkout most evenings."* The manifest's `code_dirty` is computed while
+      the pipeline runs — **before** that regeneration — so the flag each evening records the
+      PREVIOUS evening's leftover. The chain is visible in the journal: 08-24 both passes clean, the
+      08-25 18:30 pass clean, and every pass from 08-25 19:30 onward dirty.
+      **The wrapper weighed two costs and there is a third.** Its comment trades an advisory gate-21
+      note against gate 24 being red every morning, and picks the note. It does not mention that the
+      leftover spends **`a.reproducible`** — one of the four Track A criteria — because a manifest
+      pointing at a dirty tree cannot be replayed from its SHA. Those evenings are immutable.
+      **Not fixed here.** `tools/daily_run.cmd` is a frozen file, and the options — commit the
+      regenerated block, or move the regeneration out of the wrapper — are a decision about what the
+      scheduled run is allowed to do to the repository.
 - [ ] **`[c]` Gate 10** (traceability) — unblocked now that ATR is active, still to build. **Weighed
       and not built 2026-08-25**, with the reason recorded so it is not re-derived: its three checks
       are *a course id with no requirement row*, *a requirement with no test*, and *a spec id cited

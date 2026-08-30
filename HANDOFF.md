@@ -135,9 +135,9 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 
 | | |
 |---|---|
-| Journal | 30 runs, 7 incomplete · **17 run(s) recorded against a dirty tree** and therefore not replayable from their SHA |
-| Decisions | 20351 recorded · 0 uncoded refusals (`a.no_uncoded_failures` requires 0) |
-| Bar store | 3,604,175 rows across 3,743 instruments |
+| Journal | 31 runs, 7 incomplete · **18 run(s) recorded against a dirty tree** and therefore not replayable from their SHA |
+| Decisions | 21485 recorded · 0 uncoded refusals (`a.no_uncoded_failures` requires 0) |
+| Bar store | 3,606,438 rows across 3,743 instruments |
 | PIT integrity | **CLEAN** - bars whose `event_time` postdates their `knowledge_time`: 0 |
 | Directory | **21 pulls** · **11 confirmed** against the response's own `Last-Modified` (`source_session_date`); the rest predate the field and stay permanently unattributed (`DR-008` c3) |
 | Universe coverage | bars stored for 3,743 of 13,184 listed symbols - **28.4%** |
@@ -145,7 +145,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | Classifications | 1,148 instrument(s) carry a sector · 1,046 (**91.1%**) report at least one non-zero weight. The stricter `look_through` count, which also drops a degenerate ETF look-through (`DR-006` §8.7), is lower - derive it with `python tools/measure_sector_cap.py --wide` |
 | Track A clock | **0/20** consecutive clean sessions · most recent break 2026-08-28 · counting from a **deliberate restart on 2026-08-22**, not an outage - `python tools/track_a_streak.py` prints why · `a.run_completes`, computed by `tools/track_a_streak.py` |
 
-*Measured from `data/` on 2026-08-29.*
+*Measured from `data/` on 2026-08-30.*
 
 <!-- END GENERATED: state:runtime -->
 
@@ -619,6 +619,15 @@ two are not independent: the condition that creates the need also removes the re
 **Not fixed here, and it is a scheduling decision rather than a code one.** The options are a delay
 or a start-boundary on the second task, or making it conditional on the first having finished, which
 is `DR-019`'s subject. Recorded rather than acted on; `DR-019` is still `proposed`.
+
+**And the run makes the NEXT run unreproducible — found the same evening.** `daily_run.cmd`'s last
+step regenerates §2 and its own comment records the cost: *"this leaves `HANDOFF.md` modified and
+uncommitted in the main checkout most evenings."* `code_dirty` is stamped while the pipeline runs,
+**before** that regeneration, so each evening's flag records the previous evening's leftover. The
+journal shows the chain starting 2026-08-25 19:30 and unbroken since. The comment weighs an advisory
+gate-21 note against a red gate 24 and picks the note; **it does not mention that the leftover spends
+`a.reproducible`**, one of the four Track A criteria, and those manifests are immutable. `TODO.md`
+§6 carries it. `daily_run.cmd` is frozen, so the fix is the owner's.
 
 **`Logon Mode: Interactive only`** — the task runs only while the user is logged on, and changing
 that needs stored credentials. Whether `StartWhenAvailable` makes a logged-out 18:30 *late* rather
