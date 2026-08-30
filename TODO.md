@@ -87,7 +87,10 @@ retyping it.
       **And it is not urgent, which is measured rather than assumed:** the position store is empty
       on every table, so either definition reports 0.00% today.
 
-- [ ] **`[c]` `risk.liquidity_cap_order_to_adtv_pct` is owner-set at 1.0 and read by nothing.**
+- [ ] **`[v]` `risk.liquidity_cap_order_to_adtv_pct` is owner-set at 1.0 and read by nothing.**
+      **Promoted from `[c]` 2026-08-30 by reading the registry**: `provenance: owner`, `value: 1.0`,
+      `read_by: none`. Gate 1 prints the whole orphan list on every run, so derive it there rather
+      than from this line.
       The second owner-set orphan. Measured context from `DR-003`'s addendum: at the current account
       size a position is a median 0.0026% of one session's dollar volume, so the cap is nowhere near
       binding and would only begin to at roughly a $2.2M account. Unenforced rather than urgent -
@@ -1607,8 +1610,23 @@ is for where no gate can reach.
       net-of-costs figure this project has published is denominated in two records nobody ratified —
       including `HANDOFF.md` §2's *"slippage **measured** — 25bps per side (`DR-005`)"*, where
       *measured* is true of the number and not of the record's standing.
-- [ ] **`[c]` DR-009** · **`[c]` DR-001 / DR-002 / DR-005** — proposed since 08-02, used as
-      working fact throughout.
+- [ ] **`[v]` Records still `proposed` whose values the system is already using.** ~~DR-009 ·
+      DR-001 / DR-002 / DR-005~~ — **that hand-typed list was checked 2026-08-30 and was wrong in
+      both directions**, so it is replaced by the command that derives it. Gate 1 has printed this
+      subset on every run since 2026-08-25 and no reader had compared the two:
+      ```bash
+      PYTHONPATH=$PWD/src python tools/verify_parameters.py
+      ```
+      **What the comparison found.** `DR-004` and `DR-018` each carry a live parameter and were
+      **missing** from the list; `DR-009` is `proposed` but **no parameter rests on it**, so it
+      belongs with the unratified records in §4 rather than here. The distinction is the whole
+      point of the entry: a proposed record with a parameter behind it is a value whose only
+      authority is a record nobody ratified, and a proposed record with none is a decision waiting
+      to be taken. Ratifying is the owner's act in both cases and neither is an agent's to force.
+      **Why the list rotted the way it did.** It was typed on 2026-08-02 and every subsequent record
+      — `DR-018`'s benchmark, `DR-010` superseding half of `DR-004` — moved the answer without
+      touching the line. `AGENTS.md` §10.6 in one sentence: concentrating a fact makes it findable,
+      not true, and the only fix that holds is the tool deriving it.
       **`DR-003` left this list 2026-08-23: RATIFIED**, on the population measurement and on the
       quality-proxy argument, after the same measurement refuted the plateau argument it had been
       standing on since 08-02. Only `universe.min_adtv_20d` moves `assumed` → `owner`;
@@ -1896,7 +1914,10 @@ is for where no gate can reach.
       family. `CloseBelowLow` exists to prove the seam and is **not a proposed strategy** — no card
       declares it and no study registers it. Spending a trial on a family needs `ROADMAP` P5 first.
 
-- [ ] **`[c]` PR-007** registered, unreported.
+- [ ] **`[v]` PR-007** registered, unreported — **checked 2026-08-30 against the files rather than
+      the mark**: `docs/prereg/PR-007-base-strategy-measured-costs.md` exists and
+      `docs/prereg/results/` holds no `PR-007-report.md`. It and `PR-009` are the two registered
+      studies with no report, which is what `HANDOFF.md` §2's studies row counts.
 - [ ] **`[v]` PR-009 — ~~blocked on Task 8~~. TASK 8 IS DONE, AND THE STUDY IS NAMED AFTER A
       SUPERSEDED THRESHOLD.** Re-checked 2026-08-25.
       **Its title and §1 say −15R.** The registry holds `validation.max_allowable_drawdown` = **20,
@@ -1913,8 +1934,11 @@ is for where no gate can reach.
       New research is also suspended, overridden for `PR-013` only.
       Corrected forward in `PR-009` §10, `prereg/README.md`, `DR-006` §18, `ALLOCATION_SPEC.md`,
       `GO_LIVE_GATES.md` and `CI_POLICY.md`.
-- [ ] **`[c]` Four prereg ids unwritten:** PR-001b (unblocked, writable now) · PR-003 (needs a daily
-      return series) · PR-004 (needs ~100 journalled trades) · PR-006 (needs a forward test).
+- [ ] **`[v]` Reserved prereg ids with nothing written yet:** PR-001b (unblocked, writable now) ·
+      PR-003 (needs a daily return series) · PR-004 (needs ~100 journalled trades) · PR-006 (needs a
+      forward test). **Checked 2026-08-30 against `docs/prereg/README.md`**, which is the index gate
+      3f keeps honest and the only place this belongs; `PR-011` is also unwritten and is tracked in
+      its own item two rows down, which is why it is absent here rather than missing.
 - [ ] **`[v]` `PR-011` — screening out the instrument classes that cannot hold a stop — IS NOT
       WRITTEN.** Migrated here 2026-08-22 from `SESSION-HANDOFF-2026-08-22.md` §3 before that file
       was deleted; it lived nowhere else, which is why it is now in the one open-work list
