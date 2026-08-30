@@ -150,3 +150,25 @@ changes together and not to this one.
 **The verification is the next evening's journal**, not a test: `universe_hash` for the 18:30 and
 19:30 passes of the same date should agree, where for the last four measured evenings the 18:30 hash
 instead matched the *previous* evening's 19:30 hash.
+
+### 7.1 The prediction above is not unconditional, and saying so now is the point
+
+**One of §3's seven departures survives both changes, and it would be dishonest to let the next
+evening's journal discover that for us.** `ANNX` left the universe on 2026-08-26 because the
+session's bar had not arrived by 18:30; when it did, the close was 4.99 against a $5.00 price floor.
+Neither change touches that:
+
+- `DR-017` lags the **ADTV window**. It deliberately does **not** lag the price test — §7.2 of that
+  record explains why, and a stale close is not something either record wants.
+- `DR-023` fixes the **directory**, and the directory said nothing about `ANNX` either way.
+
+So **a bar arriving between the two passes can still move the universe**, and on an evening it does,
+`universe_hash` will differ with both fixes working exactly as designed. That is `DR-019` §2's late
+arrival, measured at 4.8 to 7.1 hours after the close, and it is the one thing an hour's gap between
+the passes is genuinely for.
+
+**What the two changes remove is the two causes that were NOT that**: a day-stale directory, and a
+liquidity screen decided on volume the vendor was still rewriting. If the passes disagree again, the
+question to ask the journal is *which* instrument moved and why — not whether the fix landed.
+Comparing the passes **decision by decision** is what §3 had to do to get a true answer, and it
+remains the right comparison.
