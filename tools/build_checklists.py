@@ -19,6 +19,7 @@ import argparse
 import re
 import sys
 from pathlib import Path
+from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
 SPEC = REPO / "docs" / "04-journal" / "CHECKLIST_SPEC.md"
@@ -75,7 +76,7 @@ HEADER = """# Checklist registry.
 """
 
 
-def parse() -> list[dict]:
+def parse() -> list[dict[str, Any]]:
     text = SPEC.read_text(encoding="utf-8")
     blocks = FENCE.findall(text)
     if len(blocks) < len(BLOCKS):
@@ -84,7 +85,7 @@ def parse() -> list[dict]:
             f"{len(blocks)}"
         )
 
-    items: list[dict] = []
+    items: list[dict[str, Any]] = []
     for index, (appendix, expected) in enumerate(BLOCKS):
         lines = [line.strip() for line in blocks[index].splitlines() if line.strip()]
         if len(lines) != expected:
@@ -104,7 +105,7 @@ def parse() -> list[dict]:
     return items
 
 
-def render(items: list[dict]) -> str:
+def render(items: list[dict[str, Any]]) -> str:
     out = [HEADER, "items:\n"]
     for item in items:
         out.append(f"\n  - id: {item['id']}\n")

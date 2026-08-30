@@ -24,7 +24,7 @@ Ordered fastest-first, so a cheap failure does not wait behind an expensive suit
 | 3f | `verify_studies.py` | a report with no pre-registration; the prereg index disagreeing with the report it points at; a `validated:` parameter citing a study that did not ACCEPT; a `\| Studies \|` row whose numbers do not match the reports on disk | **exists** — caught `the study census, 3 refuted` quoted in five documents against three reports with two REJECTs |
 | 3g | `verify_criteria.py` | a criterion in force referencing a parameter with no value; a reference to a parameter or criterion that does not exist; a status outside the ladder | **exists** — the narrow half of `REQ-VALIDATION-001` |
 | 4 | `ruff` | unused imports, naive datetimes, blind excepts, import order | **exists** — 10 rule families, chosen deliberately |
-| 5 | `mypy --strict` | type errors | **exists** — clean over `src`; `tools/` is out of scope, see §7 |
+| 5 | `mypy --strict` | type errors | **exists** — clean over `src` **and over the checking machinery**: every `verify_*`, every `build_*`, `check_gates.py` and `track_a_streak.py`. **Widened 2026-08-30, and the job was small because of one missing file rather than because anyone annotated a hundred lines**: `src/swingdesk/py.typed` did not exist, so mypy treated this project's own fully-typed package as untyped the moment a tool imported it — the checker was blind at the one boundary where a tool meets the system. The research runners are still out, see §7 |
 | 6 | `lint-imports` | a package importing across a layer or forbidden boundary | **exists** — 4 contracts. Caught a reversed layer order on first run |
 | 7 | `verify_no_wall_clock.py` | `datetime.now` / `date.today` / `time.time` in `derived_observations`, `decision_logic`, `trade_management`; **and any date literal anywhere in `src/`** — a constructed `date(2026, 8, 25)` or an ISO string constant (`REQ-DATA-001`) | **exists** — AST-parsed, not string-matched, so a mention in a docstring does not trip it. **Moved out of `check_gates.py` into its own tool 2026-08-25**: while it was an inline function it could not be pointed at a fixture, so it was the one gate of this repository's own making with no failure test — and the audit that closed that class derived its list by grepping `tests/` for each `tools/verify_*.py`, which is a list gate 7 could not appear on |
 | 7b | `golden.py` | a component's output changing without its version and vectors changing with it | **exists** — count in `HANDOFF.md` §2 |
@@ -219,21 +219,42 @@ before anyone had a chance to trust the thing it was checking.
       stands — five are blocked on an unset parameter, which is the
       fail-closed design working. A green gate that asserts nothing trains the operator to
       trust it. It lands with the first `active` component.
-- [ ] **`mypy --strict` covers `src` only.** `tools/` carries **100 errors in 21 of 28 files**
-      (measured 2026-08-10), mostly `type-arg` and `no-any-return` in study runners. Two sites are
-      worth a look rather than a blanket annotation pass: `run_pr002.py:209` calls `min(key=...)`
-      over a key that can return `None`, and `run_pr005.py:267` builds a `Decimal` from an
-      `object`. Neither affected a reported result — checked, not assumed — because the runs
-      completed.
+- [ ] ~~**`mypy --strict` covers `src` only.**~~ **It covers the checking machinery too as of
+      2026-08-30** — every `verify_*`, every `build_*`, `check_gates.py`, `track_a_streak.py`.
+      What is still out is the research runners (`run_pr*`, `measure_*`, `probe_*`).
 
-      **This row said 53 from 2026-08-02 until 2026-08-10, and so did `pyproject.toml`.** Nothing
-      recomputes it: gate 5 runs over `src`, so the number describing what the gate does *not*
-      cover is the one figure in the policy no gate can check. It is the fifth hand-maintained
-      count to drift here (HANDOFF §8) and the first that no gate can be pointed at without
-      bringing `tools/` into scope — which is the open item itself. Re-measure before quoting:
+      **What made it cheap, and it is the finding rather than the annotation work.**
+      `src/swingdesk/py.typed` did not exist. Without that PEP 561 marker mypy treats this
+      project's own fully-typed package as UNTYPED the moment it is imported from outside `src/`,
+      so every tool got `Any` for every symbol it imported from `swingdesk`. **142 of 247 errors
+      were that one fact repeated**, and the count is the least of it: the checker could not see
+      the one boundary where a tool meets the system, which is precisely where a wrong argument is
+      written. Adding the marker took the total to 113 and raised `arg-type` from 7 to 16 — nine
+      real argument errors that had been invisible.
+
+      **It found one thing on its first run that review could not.** `verify_reproducible.py`
+      declared `hashes: list[str]` and appended `manifest.output_hash`, which is `str | None`. Two
+      passes that produced NOTHING compare `None == None` and would have printed *byte-identical
+      output* as evidence for `a.reproducible`. Latent rather than live — `run()` has exactly one
+      exit today and always sets the hash — and now guarded, because the comparison was unprotected
+      against a state its own type declares.
+
+      **Two sites this row named as worth a look were checked and are not defects**: `run_pr002`'s
+      `min(key=...)` and `run_pr005`'s `Decimal` from an `object` are both variable reuse that mypy
+      cannot narrow, in runners whose results completed. Recorded so the next session does not
+      re-chase them.
+
+      Derive the remaining count, never quote it from here:
 
       ```bash
-      python -m mypy --strict tools/
+      PYTHONPATH=$PWD/src python -m mypy tools/
       ```
+
+      **Kept because it is the reason the count is gone from this row.** This row said 53 from
+      2026-08-02 until 2026-08-10, then 100 until 2026-08-30, and `pyproject.toml` carried the same
+      figure both times. Nothing recomputed it: gate 5 ran over `src`, so the number describing
+      what the gate does *not* cover was the one figure in the policy no gate could check. It was
+      the fifth hand-maintained count to drift here, and the answer was never a better habit — the
+      row names the command now, and the part of `tools/` that matters is under the gate.
 - [ ] Runtime budget. Gates 1–3 take about a minute (dominated by re-extracting 116 PDFs). If that
       becomes friction, cache extraction by file hash rather than weakening the check.

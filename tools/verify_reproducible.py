@@ -124,7 +124,10 @@ def main() -> int:
         # different questions and the difference would look like non-determinism.
         clock = FixedClock(snapshot)
 
-        hashes: list[str] = []
+        # `str | None`, because that is what the manifest promises. Declaring it `list[str]`
+        # is what hid the guard below: two passes that produced NOTHING compare `None ==
+        # None` and read as byte-identical.
+        hashes: list[str | None] = []
         manifests: list[RunManifest] = []
         for pass_number in (1, 2):
             with tempfile.TemporaryDirectory() as scratch:
@@ -140,6 +143,21 @@ def main() -> int:
             manifests.append(result.manifest)
             hashes.append(result.manifest.output_hash)
             print(f"  pass {pass_number}: output_hash {result.manifest.output_hash}")
+
+    # An absent hash is not a matching hash. `RunManifest.output_hash` is `str | None` and
+    # `is_complete` turns on it, so a run that produced no output is a state the contract permits -
+    # and two of them compare equal. Today `run()` has exactly one exit and always sets the hash,
+    # so this is LATENT rather than live, and it is written as such: the point is that the
+    # comparison was unguarded against a state its own type declares, and that a future early
+    # return would have turned "produced nothing, twice" into evidence for `a.reproducible`.
+    #
+    # Found 2026-08-30 by mypy, the moment `src/swingdesk/py.typed` let it see this project's own
+    # types from `tools/`. It could not have been found by review: the line reads correctly.
+    if any(value is None for value in hashes):
+        missing = [str(index + 1) for index, value in enumerate(hashes) if value is None]
+        print(f"\n--- reproducible: UNAVAILABLE - pass {', '.join(missing)} produced no "
+              f"output_hash, so there is nothing to compare. Two absent hashes are not a match.")
+        return UNAVAILABLE
 
     if hashes[0] == hashes[1]:
         scope = "capped" if args.limit else "full"

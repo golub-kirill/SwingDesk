@@ -24,6 +24,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any
 
 #: Root of the tree being checked. Overridable so a test can point the gate at a fixture and
 #: assert it goes red - a gate nobody has seen fail is a gate nobody has tested. Never set in
@@ -33,7 +34,7 @@ DOCS = REPO / "docs"
 ROOT_DOCS = ("README.md", "AGENTS.md", "HANDOFF.md")
 
 
-def _load_yaml(path: Path):
+def _load_yaml(path: Path) -> Any:
     import yaml
 
     return yaml.safe_load(path.read_text(encoding="utf-8"))

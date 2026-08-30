@@ -17,6 +17,7 @@ import argparse
 import sys
 from collections import Counter, defaultdict
 from pathlib import Path
+from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
 REGISTRY = REPO / "registry" / "course_index.yml"
@@ -28,19 +29,20 @@ STAGE_ORDER = ["Context", "Candidate", "Setup", "Trigger", "Entry", "Risk",
                "Management", "Exit", "Review", "Validation"]
 
 
-def load_rows() -> list[dict]:
+def load_rows() -> list[dict[str, Any]]:
     try:
         import yaml
     except ModuleNotFoundError:
         print("PyYAML required (pip install pyyaml)", file=sys.stderr)
         raise SystemExit(2) from None
     data = yaml.safe_load(REGISTRY.read_text(encoding="utf-8"))
-    return data["topics"]
+    topics: list[dict[str, Any]] = data["topics"]
+    return topics
 
 
-def render(rows: list[dict]) -> str:
+def render(rows: list[dict[str, Any]]) -> str:
     computable = [r for r in rows if r["claim_type"] != EXCLUDED_CLAIM]
-    by_layer: dict[str, list[dict]] = defaultdict(list)
+    by_layer: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in computable:
         by_layer[row["layer"]].append(row)
 
@@ -94,7 +96,7 @@ def render(rows: list[dict]) -> str:
         if not items:
             continue
         out += [f"## Layer — {layer}", "", f"{len(items)} requirements.", ""]
-        by_module: dict[int, list[dict]] = defaultdict(list)
+        by_module: dict[int, list[dict[str, Any]]] = defaultdict(list)
         for row in items:
             by_module[row["source_number"]].append(row)
         for module in sorted(by_module):

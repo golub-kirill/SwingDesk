@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import Any
 
 REPO = Path(__file__).resolve().parents[1]
 COURSE = REPO / "registry" / "course_index.yml"
@@ -38,7 +39,7 @@ GENERATED = ("component", "name", "layer", "stage", "claim_type", "validation")
 #: Authored as a component advances. Carried forward verbatim.
 AUTHORED = ("activation", "implements", "parameters", "consumers", "owner", "verification", "spec")
 
-DEFAULTS = {
+DEFAULTS: dict[str, Any] = {
     "activation": "registered",
     "implements": None,
     "parameters": [],
@@ -71,7 +72,7 @@ HEADER = """# Component registry.
 """
 
 
-def _load_yaml(path: Path):
+def _load_yaml(path: Path) -> Any:
     try:
         import yaml
     except ModuleNotFoundError:
@@ -80,12 +81,15 @@ def _load_yaml(path: Path):
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
-def course_rows() -> list[dict]:
+def course_rows() -> list[dict[str, Any]]:
     data = _load_yaml(COURSE)
-    return data["topics"] if isinstance(data, dict) and "topics" in data else data
+    rows: list[dict[str, Any]] = (
+        data["topics"] if isinstance(data, dict) and "topics" in data else data
+    )
+    return rows
 
 
-def existing_authored() -> dict[str, dict]:
+def existing_authored() -> dict[str, dict[str, Any]]:
     if not OUT.exists():
         return {}
     data = _load_yaml(OUT) or {}
@@ -96,11 +100,11 @@ def existing_authored() -> dict[str, dict]:
     }
 
 
-def build() -> list[dict]:
+def build() -> list[dict[str, Any]]:
     authored = existing_authored()
     implemented = set(authored)
 
-    rows: list[dict] = []
+    rows: list[dict[str, Any]] = []
     for topic in course_rows():
         component = topic["component"]
         is_computable = topic["claim_type"] != "Definition"
@@ -124,7 +128,7 @@ def build() -> list[dict]:
     return rows
 
 
-def render(rows: list[dict]) -> str:
+def render(rows: list[dict[str, Any]]) -> str:
     lines = [HEADER, "components:\n"]
     for row in rows:
         lines.append(f"\n  - component: {row['component']}\n")
@@ -143,14 +147,14 @@ def render(rows: list[dict]) -> str:
     return "".join(lines)
 
 
-def _scalar(value) -> str:
+def _scalar(value: Any) -> str:
     if value is None:
         return "null"
     text = str(value)
     return f'"{text}"' if any(c in text for c in ':#"\'') else text
 
 
-def _list(values) -> str:
+def _list(values: Any) -> str:
     return "[]" if not values else "[" + ", ".join(str(v) for v in values) + "]"
 
 

@@ -38,6 +38,7 @@ import os
 import re
 import sys
 from pathlib import Path
+from typing import cast
 
 REPO = Path(os.environ.get("SWINGDESK_ROOT") or Path(__file__).resolve().parents[1])
 POLICY = REPO / "registry" / "directory_pull_policy.yml"
@@ -94,7 +95,10 @@ def _policy_failures() -> list[str]:
                 failures.append(
                     f"{POLICY.name}: `{section}.{key}` is missing or not {kind.__name__}"
                 )
-            elif positive and value <= 0:
+            # `isinstance(value, kind)` above narrows at runtime and not for mypy, because `kind`
+            # is a variable rather than a literal type. `positive` is set only for the `int` keys
+            # in REQUIRED, so the cast is sound by construction rather than by hope.
+            elif positive and cast(int, value) <= 0:
                 failures.append(f"{POLICY.name}: `{section}.{key}` must be positive, is {value!r}")
 
     files = (loaded.get("source") or {}).get("files")

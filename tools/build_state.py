@@ -59,6 +59,7 @@ import os
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -186,7 +187,7 @@ def worktree_rows() -> list[tuple[str, str]]:
 STORES: tuple[str, ...] = ("journal.duckdb", "bars.duckdb", "directory.duckdb")
 
 
-def _connect(name: str):
+def _connect(name: str) -> Any:
     """Read-only handle. Never opened for write: this tool reports state, it never changes it."""
     import duckdb
 
