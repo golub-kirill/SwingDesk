@@ -120,6 +120,9 @@ def main() -> int:
                                       [python, "tools/verify_decisions.py"]),
         "21 worktree clean": _run("no finished work left uncommitted (advisory)",
                                [python, "tools/verify_worktree_clean.py"]),
+        "22 directory policy": _run("the directory collector's network limits live in the "
+                                    "committed policy and nowhere else",
+                                    [python, "tools/verify_directory_policy.py"]),
         "23 track A streak": _run("the a.run_completes streak, computed not hand-kept (advisory)",
                                [python, "tools/track_a_streak.py"], "23 track A streak"),
         "24 state block": _run("HANDOFF section 2 is generated, not typed",
@@ -134,6 +137,8 @@ def main() -> int:
                               [python, "tools/verify_prereg_ids.py"]),
         "30 rules home": _run("a rule lives in AGENTS.md and nowhere else",
                               [python, "tools/verify_rules_home.py"]),
+        "31 commands run": _run("a command a document tells you to run accepts the arguments given",
+                                [python, "tools/verify_commands.py"]),
         "32 checklist blockers": _run("a checklist item's stated blocker is still blocking",
                                       [python, "tools/verify_checklist_blockers.py"]),
         "33 sibling edits": _run("no live branch is rewriting the same lines (advisory)",

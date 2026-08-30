@@ -15,9 +15,13 @@ python tools/verify_branches.py          # every live branch, and whether it is 
 python tools/verify_sibling_edits.py     # what another live branch is editing, before you edit it
 ```
 
-**`claude/swingdesk-open-tasks-2001c8` is unmerged and holds real work** — the directory collector,
-the AI guard's vocabulary half, gates 22 and 31, and the EDGAR departure classifier; read its own
-log. `claude/inspiring-colden-2e8e16` is summarised in §5 below.
+~~**`claude/swingdesk-open-tasks-2001c8` is unmerged and holds real work**~~ — **merged
+2026-08-29** into `claude/swingdesk-open-tasks-f2773d`, with the two `CI_POLICY.md` rows gate 36
+required and that neither branch could write alone. It carried the directory collector, the AI
+guard's vocabulary half, gates 22 and 31, and the EDGAR departure classifier; §5 below now
+summarises it alongside `claude/inspiring-colden-2e8e16`. **Do not read that from here either** —
+the two commands above are the only answer that cannot rot, and this line is struck rather than
+deleted for the same reason §0 opens the way it does.
 
 **Run the second command before editing anything another branch might be editing.** On 2026-08-25
 two trees rewrote the same two table rows two hours apart with gate 16 green, because gate 16's
@@ -118,9 +122,9 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 
 | | |
 |---|---|
-| Merge gates | **41**, one command: `python tools/check_gates.py` |
-| Tests | **932**, fully offline |
-| Docs | 122 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
+| Merge gates | **43**, one command: `python tools/check_gates.py` |
+| Tests | **1012**, fully offline |
+| Docs | 123 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 459 registered · 5 `specified` · **1 `active`** |
 | Parameters | 106 - 61 `unset`, 34 `assumed`, 11 `owner`, **0 `validated`** |
 | Golden vectors | 25 vectors across 6 components |
@@ -139,10 +143,10 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | Decisions | 21485 recorded · 0 uncoded refusals (`a.no_uncoded_failures` requires 0) |
 | Bar store | 3,606,438 rows across 3,743 instruments |
 | PIT integrity | **CLEAN** - bars whose `event_time` postdates their `knowledge_time`: 0 |
-| Directory | **21 pulls** · **11 confirmed** against the response's own `Last-Modified` (`source_session_date`); the rest predate the field and stay permanently unattributed (`DR-008` c3) |
+| Directory | **21 pulls** · **11 confirmed** against the response's own `Last-Modified` (`source_session_date`); of the rest, **7** predate the field and stay permanently unattributed (`DR-008` c3); **3** do NOT - they were taken after the field existed and the vendor file had not regenerated, so `DirectoryStore.record`'s monotonicity check dropped the claim. Each of those is a re-pull of an already-recorded session, which `DR-008` says should make **zero requests** |
 | Universe coverage | bars stored for 3,743 of 13,184 listed symbols - **28.4%** |
 | Canada | **1 instrument** with bars, 252 bars over one fetch, last 2026-08-02 · **0** `.TO` symbol(s) listed in `directory.duckdb`. `BR-9`'s per-country requirement is unmet in every reported study. Since `DR-003` gap 1 was refuted (2026-08-25) a FORWARD result is blocked by this row rather than by a missing source; a HISTORICAL one also needs point-in-time membership, which the TMX endpoint cannot supply at any price |
-| Classifications | 1,148 instrument(s) carry a sector · 1,046 (**91.1%**) report at least one non-zero weight. The stricter `look_through` count, which also drops a degenerate ETF look-through (`DR-006` §8.7), is lower - derive it with `python tools/measure_sector_cap.py --wide` |
+| Classifications | 1,148 instrument(s) carry a sector · 1,046 (**91.1%**) report at least one non-zero weight. The stricter `look_through` count, which also drops a degenerate ETF look-through (`DR-006` §8.7), is lower - derive it with `python tools/measure_sector_cap.py --wide --classifications data/classifications.duckdb` |
 | Track A clock | **0/20** consecutive clean sessions · most recent break 2026-08-28 · counting from a **deliberate restart on 2026-08-22**, not an outage - `python tools/track_a_streak.py` prints why · `a.run_completes`, computed by `tools/track_a_streak.py` |
 
 *Measured from `data/` on 2026-08-30.*
@@ -154,7 +158,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | | As of | |
 |---|---|---|
 | `master` | 2026-08-10 | **protected** — required check `gates`, admins included, no force-push. A new merge commit is refused until its check reports; fast-forward a green commit, or use a PR |
-| CI | 2026-08-24 | `gates`, windows-latest. **Five** `UNAVAILABLE`, verified against run `32757431015`: gates 2 and 3 need the course PDFs, which are not in the repo; gates 23, 24 and **26** need `data/` or the scheduling machine. Everything else must be green. ~~Exactly **four** … verified against run `32093559374`~~ — that row was written 2026-08-17 and gate 26 landed on the 18th, so it asserted four for six days while CI reported five. Gates 28 and 29 were added after this run and both execute in CI; **29's cross-branch half cannot**, and prints that it did not run rather than passing for a check it never made. **Gates 32-36, added 2026-08-25, all run in CI and none is `UNAVAILABLE`** — but **33 is a second case of 29's shape**: a shallow clone has no sibling branches, so it prints `DID NOT RUN` and returns 0, which the summary shows as `PASS`. It is advisory by design and vetoing was never on the table; the honest reading is that a green 33 on GitHub says nothing about overlaps. **The count of five is unverified since that run** and needs a CI pass to confirm |
+| CI | 2026-08-24 | `gates`, windows-latest. **Five** `UNAVAILABLE`, verified against run `32757431015`: gates 2 and 3 need the course PDFs, which are not in the repo; gates 23, 24 and **26** need `data/` or the scheduling machine. Everything else must be green. ~~Exactly **four** … verified against run `32093559374`~~ — that row was written 2026-08-17 and gate 26 landed on the 18th, so it asserted four for six days while CI reported five. Gates 28 and 29 were added after this run and both execute in CI; **29's cross-branch half cannot**, and prints that it did not run rather than passing for a check it never made. **Gates 32-36, added 2026-08-25, all run in CI and none is `UNAVAILABLE`** — but **33 is a second case of 29's shape**: a shallow clone has no sibling branches, so it prints `DID NOT RUN` and returns 0, which the summary shows as `PASS`. It is advisory by design and vetoing was never on the table; the honest reading is that a green 33 on GitHub says nothing about overlaps. ~~**The count of five is unverified since that run** and needs a CI pass to confirm~~ - **confirmed, see above** | **RE-VERIFIED 2026-08-30 against run `33293707486`**, the first CI pass carrying gates 22 and 31: still **Five** and still the same five - 2, 3, 23, 24 and 26 - with 22 and 31 both green there. So the row's own open question is closed, and the two gates the sibling branch added are proven to run off this machine. **One thing that pass exposed:** gate 24 reported `UNAVAILABLE` for the right reason and printed the WRONG one - it said the scheduled run was holding the stores, in an environment that has no scheduled run and no store, over a duckdb error reading *database does not exist*. Fixed the same day and pinned by a test; the verdict was never wrong, the explanation was.
 | Daily run | 2026-08-24 | **SCHEDULED** — Windows Task Scheduler, `SwingDesk daily run`, weekdays 18:30 local, wrapper `tools/daily_run.cmd`, log `data/daily_run.log`. **~6 min per pass** over 1,141 members, of which **160 s** is compute and ~3 min is 1,141 sequential vendor fetches — measured 2026-08-24 by `tools/verify_reproducible.py`, which ran two full passes in 11m40s. It was ~24 min that morning; the row read ~5 min and had been right on 2026-08-09 |
 | Costs | 2026-08-09 | slippage **measured** — 25bps per side (`DR-005`); commission still assumed |
 | ТЗ coverage | 2026-08-24 | FULL 29 · PARTIAL 26 · ABSENT 0 · DEFERRED 2 — recounted from `SPEC_GAP_ANALYSIS.md` §3 by gate 3e. Two rows moved: §32 out of DEFERRED because charter amendment A-001 put the AI contour in scope, and §18 out of FULL because `PR-002`'s verdict — its only stated evidence — was corrected to `inconclusive` |
@@ -183,6 +187,7 @@ once did).
 *Generated by `tools/build_state.py` (gate 24). Do not edit between the markers - an edit here is overwritten and fails the gate.*
 
 - `claude/inspiring-colden-2e8e16`
+- `claude/swingdesk-open-tasks-f2773d`
 
 *Tip and merge state deliberately absent - both move under this document's own feet. `python tools/verify_branches.py` prints them.*
 
@@ -346,8 +351,9 @@ rather than the 2.2 recorded, against a design target of 2.5. `DR-006` §18 carr
 - **Gate 33 — a live branch is rewriting the lines you are rewriting.** Advisory. Gate 16 makes a
   sibling worktree visible; it does not say the sibling is editing your paragraph, and on this day
   two trees corrected the same two table rows two hours apart with gate 16 green.
-- **Gate 34 — an enforcement the tree CLAIMS must be able to fail.** 15 mutants, 20 s, 0 survivors,
-  over `INVARIANTS.md` §1 and `REQ-VALIDATION-001`'s five live vetoes. It exists because the test
+- **Gate 34 — an enforcement the tree CLAIMS must be able to fail.** 15 mutants and 0 survivors
+  **as it landed on 2026-08-25**; two more were added on 08-29 and the tool prints the current
+  figure. Over `INVARIANTS.md` §1 and `REQ-VALIDATION-001`'s five live vetoes. It exists because the test
   `INVARIANTS.md` named for invariant 1 asserted `(net / x) * x == net` and could not fail; that
   test is rewritten and pinned to a value.
 - **Gate 35 — a document naming a test must name one that exists.** `INVARIANTS.md` §1 and
@@ -391,14 +397,55 @@ session and **one was wrong**: `freshness.assess` reports zero fan-in and is cal
 looks clean because the property is absent. §9's *"a null result is evidence only once a positive
 control shows the query works"* is not a formality.
 
-**One thing to do at merge time, and gate 36 will insist on it.** The sibling branch registers gates
-**22** (`verify_directory_policy.py`) and **31** (`verify_commands.py`) in `check_gates.py` and adds
-**no rows** to `CI_POLICY.md` §1 — checked 2026-08-25 against its tip. Gate 36 requires the
-inventory and the runner to name the same gates, so a merge of both branches goes red until those
-two rows exist. **That is the gate working on its first real merge, not a defect in either branch**;
-the fix is two rows, and the descriptions are already in the runner entries. Neither branch can add
-them alone: a row for a gate the other branch registers would fail gate 36 here, in the other
-direction.
+**~~One thing to do at merge time~~ — DONE 2026-08-29, and the prediction was exact.** The merge
+of `claude/swingdesk-open-tasks-2001c8` went red on gate 36 and on nothing else of its own making,
+because that branch registers **22** (`verify_directory_policy.py`) and **31**
+(`verify_commands.py`) in `check_gates.py` and added no rows to `CI_POLICY.md` §1, while neither
+branch could add them alone — a row for a gate the other side registers fails gate 36 from the
+other direction. **The gate working on its first real merge, not a defect in either branch.** Both
+rows are written, from the two tools rather than from the runner's one-line labels.
+
+**And the merge repaired something nobody predicted.** The sibling had taught `tools/build_state.py`
+to emit the classification command with the flag it actually requires; this side's generated §2 row
+still carried the form that exits 2. Regenerating §2 fixed it — so gate 31 arrived on the same
+merge as a live instance of the defect it was built for, in the block whose whole promise is that a
+reader can derive the number instead of trusting the row.
+
+### The session of 2026-08-30: three claims tested, and every one of them was already false
+
+**Read this if you are wondering what to test next.** The pattern is the session, not the findings:
+every item below came from re-running a check somebody had already written down the answer to.
+
+- **Three mutants recorded as surviving the suite were all dead**, and had been for up to twelve
+  days. `TODO.md` §6 carried it `[v]` and it steered a build order; §1 of the same file had recorded
+  the opposite six days earlier. Two of the three are now gate 34 mutants, so the kills stop being
+  incidental. **The control is the transferable part**: the first attempt produced a false kill,
+  because `src/` alone in a scratch tree makes `test_checklist.py` fail on a registry it resolves
+  through the package, and that looks exactly like a dead mutant.
+- **Gate 24 named the wrong cause on every CI run it has ever made.** `data/` exists in GitHub
+  Actions and holds no store; the tool reported *"a store is open in another process — the scheduled
+  run holds them"*, over a duckdb error reading *database does not exist*. Verdict right every time,
+  reason wrong every time — `AGENTS.md` §10.6 rule 2 aimed at confidence rather than alarm. The two
+  states are told apart from the filesystem now.
+- **"The `E11` event calendar has no source" was three claims of different strength and only the
+  weakest was true.** The code said *not wired* (true), `TODO.md` said *no source*, `REQUIREMENTS.md`
+  said *does not exist*. `tools/probe_events.py` asks the source: Nasdaq serves the forward schedule
+  with a session bucket, free and keyless. It settles the SOURCE and not the RULE —
+  `screen.earnings_buffer_days` stays `unset`, and the literature recorded with it cuts against the
+  obvious framing, because the earnings announcement premium is positive and peer-reviewed.
+- **The degeneracy guard refuses five of the eleven sector ETFs, and its stated reason is false for
+  them.** `tools/probe_sector_benchmarks.py`. `DR-006` §12.1 argued the guard is exact so a genuine
+  sector ETF clears it; five report exactly one sector at exactly 100%. The behaviour is right —
+  the candidate is admitted and the reason travels — and the sentence *"a fund holding no equity at
+  all"* is not, for a fund holding 99.7% equity. A measured discriminator exists in the same vendor
+  response. **Not changed: that is a `DR-006` amendment and the owner's.**
+- **Gate 14 now reads `TODO.md`**, for the parameter statuses and component activation states only.
+  The 2026-08-24 rejection of the whole pattern set stands and a test pins it; what reopened the
+  narrow half is that the rejection bounded its cost on stale counts sitting in CLOSED items, and
+  the instance was in an open one.
+
+**What none of it touched:** no parameter gained a value, no ratified record was amended, no frozen
+file changed, and gate 9 confirms decision output is unmoved.
 
 ### Five questions waiting on the owner — restated 2026-08-29 with names, not codes
 
@@ -422,6 +469,35 @@ human, and each is one decision:
 5. **The published trade log of the base-strategy study** (`PR-005`) — 26,351 trades that no longer
    reproduce, because seven bars arrived three hours after publication. Leave it and date it,
    republish it, or publish the new one alongside. `TODO.md` §5 has the three.
+### The session of 2026-08-25 (afternoon): a ratified record was half unimplemented
+
+**`DR-008` was ratified 2026-08-10 and roughly half of it had never been built. Every clause reaches
+code now**, and `TODO.md` §2 carries the audit clause by clause — see §5 for the full list of what
+landed. One item in that audit turned out to be a misreading of the record rather than a gap: *"it
+**may** retry one failed attempt"* is a ceiling, not an obligation, so retrying zero times is
+compliant.
+
+**Gate 20 exists BECAUSE of `DR-008` — its own docstring says so — and passed the whole time.** It
+checks that a record NAMES an implementer, not that the implementer implements the record. That is
+`AGENTS.md` §17 in one example and the sharpest one here.
+
+**How it was found matters more than the finding.** Not by reading the record: by **gate 31**, new
+this session, which checks that a command a document tells you to run accepts the arguments given.
+`DR-008`'s emergency block named two flags argparse had never had — the only mechanically checkable
+sentence in an otherwise prose record. The same gate caught `HANDOFF.md` §2's own **generated**
+census naming a command that exits 2, which is the one promise §2 makes.
+
+**The guard has a measured cost behind it:** 3 of 18 directory pulls were same-session duplicates,
+each spending two requests and storing a ~13,000-row snapshot that was then stripped of its session
+date. `DR-008` says zero requests. It fires today.
+
+**Four already-REFUTED claims were still standing unqualified in live documents** and are corrected:
+`RISK_REGISTER.md` D-3 and `UX_TASK_FLOWS.md` both still said Canada cannot be enumerated a day
+after that was refuted; `UX_TASK_FLOWS.md` said no free point-in-time sector source is in hand,
+false since 2026-08-23; and `REGIME_SPEC.md` carried the exact sentence `EVIDENCE_SUMMARY.md` §3
+struck on 08-24. Both refutations were **re-verified from the source** before anything was edited.
+The mechanism is one sentence: a correction lands in the document that owns the claim and the copies
+elsewhere keep the refuted wording — §10.5's disease applied to claims instead of counts.
 
 ### What to pick up, ranked — 2026-08-25
 
@@ -451,12 +527,16 @@ deliberately built no value into a threshold and took no decision that was the o
 4. **The `PR-005` trade log** — the published CSV no longer matches a fresh replay because seven
    bars arrived three hours after publication. Three options in `TODO.md`; `docs/prereg/results/`
    was deliberately not touched.
-5. **`SWINGDESK_EDGAR_CONTACT` is one line and unblocks a real measurement.** `data.sec.gov` answers
-   a descriptive `User-Agent` and `www.sec.gov` does not, so lookup by CIK works and lookup by
-   TICKER needs the contact the SEC asks for. With it, the **87 symbols that left the directory in
-   three weeks** can be classified into delistings and renames — which `DR-008` c3 records as
-   currently indistinguishable, and which is the first empirical purchase anyone has had on the
-   survivorship question.
+5. ~~**`SWINGDESK_EDGAR_CONTACT` is one line and unblocks a real measurement.**~~ **DONE
+   2026-08-25, and it needed no owner action: the blocker was false.** `www.sec.gov` requires a
+   `User-Agent` **and an `Accept` header** — the original comparison sent `Accept` to one host and
+   not the other, attributed the difference to the host, and parked a measurement behind an owner
+   action nobody needed. `python tools/classify_departures.py` classifies the 87 departures: **26
+   confirmed delistings**, 11 structured symbols, 1 rename, 40 unresolved. The methodological
+   finding outranks the count — the filer's TICKER LIST lags the vendor by more than the window
+   (34 of 36) while the **Form 25 date does not**, landing on the same pull the symbol vanished at.
+   `tools/probe_edgar.py` re-derives the host table on every run now instead of carrying it as
+   prose. Setting the contact is still good citizenship and no longer blocks anything.
 6. **The AI guard exists and is half of what A-001 requires.** `application/ai_guard.py` refuses
    both controlled vocabularies and any numeral the deterministic path did not produce, reading the
    vocabularies from their enums so they cannot drift. **It cannot see paraphrase**, two tests
@@ -667,9 +747,31 @@ also the exact failure §2 exists to prevent, surviving in the one part of this 
 generate — hand-written prose next to a generated table that already contradicted it.
 
 **What remains true:** 2026-08-10's departures are lost permanently, and 2026-08-11 was captured by
-hand (six departures). Whether every clause of `DR-008` (gating, calendar eligibility, response cap,
-audit) is implemented has **not** been re-verified here — only that the collector runs and records.
-That check is open, and it is a different claim from the one struck above.
+hand (six departures).
+
+~~Whether every clause of `DR-008` (gating, calendar eligibility, response cap, audit) is implemented
+has **not** been re-verified here — only that the collector runs and records. That check is open.~~
+
+**CLOSED 2026-08-25, and the answer was that roughly half of it had never been built.** The audit is
+in `TODO.md` §2, clause by clause against the code. Built the same day: the per-invocation audit
+row, `--emergency-repull --reason`, the already-recorded-session guard, the append-only supersession
+record, response checksums, exact header validation, gap recording with its `WARNING`/`ERROR`
+severities, the committed network policy (`registry/directory_pull_policy.yml` + **gate 22**), the
+process lock, and eligibility *after the latest session has completed* rather than merely on a
+trading date. **Every clause now reaches code.**
+
+**Gate 20 exists BECAUSE of `DR-008` — its own docstring says so — and passed the whole time**, because
+it checks that a record NAMES an implementer, not that the implementer implements the record
+(`AGENTS.md` §17). What finally found it was **gate 31**, from a completely different direction: the
+record's emergency command named two argparse flags that had never existed, and a command block was
+the one mechanically checkable sentence in an otherwise prose record.
+
+**One measured cost, so the guard is not taken on faith:** 3 of the 18 stored pulls were same-session
+duplicates — 2026-08-13 22:09 and the 19:30 second passes of 08-18 and 08-19 — each spending two
+requests and storing a ~13,000-row snapshot that was then stripped of its session date. `DR-008` says
+zero requests. **Coverage measured at the same time: zero gaps inside the attributed window** (8
+sessions, 08-13 to 08-24), and coverage starts at the first ATTRIBUTED pull rather than the first
+pull, so the 8 NYSE sessions between 08-03 and 08-13 stay uncountable — c3 forbids backfilling them.
 
 ## 6. Open — the owner's, not mine
 

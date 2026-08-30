@@ -87,7 +87,10 @@ retyping it.
       **And it is not urgent, which is measured rather than assumed:** the position store is empty
       on every table, so either definition reports 0.00% today.
 
-- [ ] **`[c]` `risk.liquidity_cap_order_to_adtv_pct` is owner-set at 1.0 and read by nothing.**
+- [ ] **`[v]` `risk.liquidity_cap_order_to_adtv_pct` is owner-set at 1.0 and read by nothing.**
+      **Promoted from `[c]` 2026-08-30 by reading the registry**: `provenance: owner`, `value: 1.0`,
+      `read_by: none`. Gate 1 prints the whole orphan list on every run, so derive it there rather
+      than from this line.
       The second owner-set orphan. Measured context from `DR-003`'s addendum: at the current account
       size a position is a median 0.0026% of one session's dollar volume, so the cap is nowhere near
       binding and would only begin to at roughly a $2.2M account. Unenforced rather than urgent -
@@ -430,10 +433,68 @@ this repository.
       turns a single observation into a distribution — and `AGENTS.md` §15 rule 1 asks exactly that
       of a claim this load-bearing. Cheap shape: for the names the run refused, ask the vendor again
       each hour and record when the session first appears.
-- [ ] **`[c]` The `E11` event calendar has no source.** `application/checklist.py` records that no
-      event calendar is wired **and** that the course supplies no buffer to apply if one were —
-      `screen.earnings_buffer_days` needs a decision record or a study, not a transcription. It is
-      one of the eight items keeping every candidate at `Research`
+- [x] **`[v]` ~~The `E11` event calendar has no source.~~ REFUTED 2026-08-30 — a free, keyless
+      source exists and this claim was never tested.**
+      ```bash
+      python tools/probe_events.py --days 5
+      ```
+      Nasdaq's own calendar is backed by a JSON endpoint taking one date per call. It serves the
+      **forward** schedule with a session bucket — before the open, after the close, or not supplied
+      — which is the field this system actually needs, because the question at 18:30 is whether
+      tonight's position carries an event over the next session. It also serves past dates with the
+      realised figure. No account, no key, two headers.
+      **The claim drifted through three strengths and only the weakest was true.**
+      `application/checklist.py` said the calendar is not **wired** — correct. This line said it has
+      no **source**. `REQUIREMENTS.md` §7 said no event calendar **exists**. Nobody was careless at
+      any step and the qualifier simply did not survive the copy, which is `DR-003` gap 1 and the
+      Canada refutation repeating in a different subject. `AGENTS.md` §15 rule 2 is the rule: a
+      claim about what a SOURCE holds is tested against the source, never inferred from what our
+      code received. All three sites are corrected.
+      **What it does NOT settle, stated before anyone over-reads it.**
+      • **The schedule AS KNOWN on an earlier date is not recoverable.** An old date returns what
+      the source says about it today, so a study can know an announcement happened on a session and
+      cannot know the date was already published five sessions earlier, or revised. `E11` asks the
+      forward question at decision time and is unaffected; a **backtest** of any event rule is not.
+      Same survivorship-shaped bound `probe_canada.py` records for TMX.
+      • **A row mixes an event-dated fact with a current-state one** — `marketCap` does not vary
+      with the announcement date, which the probe demonstrates rather than asserts by finding a
+      symbol on two dates and comparing. Reading it as the capitalisation at announcement would be
+      an invariant-6 violation.
+      • **Canadian coverage is UNTESTED.** Every symbol in the sampled window sat inside
+      `directory.duckdb`, which is consistent with a US-only calendar and does not establish one.
+      The test that would settle it is a TSX-only name, and the probe does not make it. Not written
+      as a "cannot".
+      • **It settles the SOURCE and not the RULE.** `screen.earnings_buffer_days` stays `unset` and
+      nothing here proposes a value.
+- [ ] **`[v]` The buffer needs a ruling or a study, and the literature says the obvious framing is
+      backwards — searched 2026-08-30 under `AGENTS.md` §16.** Recorded before anyone sets the
+      value, because the reason a threshold has its value is what §16 rule 1 governs.
+      **Peer-reviewed, top rank (§16 rule 2), and it points AGAINST a blanket avoid-earnings
+      rule on return grounds.** Prices *rise* around scheduled announcements on average: Frazzini &
+      Lamont, *The Earnings Announcement Premium and Trading Volume* (NBER w13090, 2007), put the
+      premium above 7% a year and tie it to the volume surge and limited investor attention; Savor &
+      Wilson, *Earnings Announcements and Systematic Risk* (**Journal of Finance**, 2016), measure
+      an annualised abnormal return near 9.9% for scheduled announcers, persistent across stocks
+      over long horizons and priced as risk; Barber, De George, Lehavy & Trueman find the same
+      premium internationally (**JFE**, 2013). **So a rule that flattens before every announcement
+      gives up a documented positive mean.** The course names the catalyst check and quantifies
+      nothing (`EVENT_SPEC`), which is §16's situation exactly: an `Operational Course Rule`, not an
+      `Empirical Result`.
+      **What the literature does not touch, and it is why the rule may still be right here.** A mean
+      is not a stop. `PR-007` fixes the exit at 2.0 × ATR(14) with no trailing, and an overnight
+      announcement gap opens through a stop rather than at it — so the realised loss on that trade
+      is not 1R, and **1R is the unit every validation threshold in this system is expressed in**.
+      That is a claim about the denominator, not about expectancy. **Marked conjecture
+      (`AGENTS.md` §10.4): nothing here measures it.** The check that would settle it is a
+      pre-registered study over the stored bars — realised loss versus 1R on trades held through an
+      announcement, against trades that were not — and it is registrable today because the forward
+      calendar is only needed for the LIVE rule, while the historical side needs just the
+      announcement dates, which the same source serves.
+      **§16 rule 4 applies and is not discharged here:** the course and the literature disagree,
+      both are recorded, and which one the system follows is the owner's or a study's. The trap to
+      avoid is setting the buffer and letting it read as alpha; on this evidence it would be
+      variance and tail control, bought with a known cost.
+      `E11` remains one of the eight items keeping every candidate at `Research`
       (`docs/08-pm/plans/2026-08-24-the-trade-flow.md` §2).
 
 
@@ -506,7 +567,43 @@ target is a sentence asserting something about the WORLD that nobody tested.
       What those trades would have returned: not — no free source serves the price path of a symbol
       that has gone, so the −2R assumption stays an assumption. `VENDOR_COMPARISON.md` §7 and
       `EVIDENCE_SUMMARY.md` §3 are both amended in place.
-- [ ] **`[v]` NEXT, and it needs ONE owner action first — a contact address for the SEC header.**
+- [x] **`[v]` DONE 2026-08-25 — and it needed NO owner action. The blocker was false.**
+      This item read *"it needs ONE owner action first — a contact address for the SEC header"*, on
+      the strength of a measurement that `www.sec.gov` returns 403 to a descriptive `User-Agent`
+      while `data.sec.gov` returns 200. **Retested with the header held constant, and the host was
+      never the variable: `www.sec.gov` requires a `User-Agent` AND an `Accept` header.** Six
+      probes, one header isolated at a time, repeated against flakiness.
+      **How the wrong conclusion was reached is the transferable part.** `probe_edgar.fetch()` has
+      always sent `Accept: application/json`; the `www.sec.gov` probe was made separately and sent
+      only a `User-Agent`. **The two hosts were compared with different headers**, the difference
+      was attributed to the host, and a real measurement waited fifteen days on an owner action
+      nobody needed. `AGENTS.md` §17 — verify at the right granularity — and §15's asymmetry: a
+      wrong impossibility costs everything downstream of it, silently.
+      `tools/probe_edgar.py` now **re-derives that table on every run** rather than carrying it as
+      prose, which is §10.6's argument applied to a reachability fact.
+      **THE MEASUREMENT, taken: `python tools/classify_departures.py`.** Of the **87** symbols that
+      left the directory between 2026-08-03 and 2026-08-24, **26 are confirmed delistings of that
+      security**, 11 are structured symbols (warrants, units, rights, classes) that depart on
+      separation, 1 is a rename, 40 are unresolved and 9 report *still listed at EDGAR*. Derive the
+      numbers with the command; never from this line.
+      **The methodological finding is worth more than the count, and it corrects `probe_edgar`'s
+      own validated method.** Two discriminators disagree at short horizons: the filer's TICKER LIST
+      is **not timely** — 34 of the 36 resolvable names still carried their departed ticker in EDGAR
+      metadata while absent from the vendor's live directory — while the **Form 25 / 25-NSE DATE
+      is**, and it lands on the same pull the symbol vanished at. `AVB` left between the 08-14 and
+      08-17 pulls and filed on 08-17; `WBS` left between 08-19 and 08-20 and filed on 08-20. So a
+      RECENT departure is classified by the form date; the ticker list is right for history only.
+      **And it refutes this file's own eyeball.** The earlier version of this item read *"`AVB` is a
+      large S&P 500 REIT and cannot have [delisted]"*. AvalonBay filed a 25-NSE the day it left, is
+      absent from both live vendor files, and so is Equity Residential — which reports **no ticker
+      at all** at EDGAR. An eyeball is a claim too.
+      **What it does NOT establish**, stated so the number is not over-read: `unresolved` is not
+      *not delisted*; *still listed at EDGAR* is not survival, because the metadata lags; and the
+      RETURN half of the survivorship bound is untouched, so −2R stays an assumption.
+- [ ] **`[v]` ~~NEXT, and it needs ONE owner action first — a contact address for the SEC header.~~**
+      **Struck 2026-08-25 — see above.** Kept visible rather than deleted, per §10.5's convention:
+      an item that parked a measurement behind an owner action for fifteen days on an untested
+      premise is worth more visible than absent.
       *(This item replaces a more optimistic version written an hour earlier the same day, before
       the host boundary was measured. `AGENTS.md` §15 applies to one's own claims too.)*
       **The measurement worth having:** `directory.duckdb` holds 18 pulls, and **87 symbols present
@@ -568,9 +665,121 @@ target is a sentence asserting something about the WORLD that nobody tested.
       `EVIDENCE_SUMMARY.md` §4 now names those commands, so the sentence **stops being true the day
       either changes**, with nobody having to remember to revisit it. That is what §15 rule 1 asks
       for, and it is why this row needed an amendment rather than an investigation.
-- [ ] **`[c]` Everything else the command above returns**, read once and marked: tested, untested,
-      or an owner decision. A claim that survives with a test named beside it is worth more than one
-      that was merely never challenged.
+- [x] **`[v]` THE DOCUMENT PASS RAN 2026-08-25, and it found the OPPOSITE of what it looked for.**
+      182 hits across 74 files. Almost all are **definitions, not claims about the world** — *"a
+      result that cannot be reproduced is not a result"*, *"a prohibiting condition can never be
+      outvoted"* — and §15 rule 5 keeps owner decisions (`D1`, `D10`, the charter non-goals) closed.
+      The surface is far smaller than 182 suggests.
+      **What it did find is a different disease, and a worse one: four claims already REFUTED that
+      were still standing, unqualified, in live documents.** Not untested claims — *corrected* ones
+      whose correction never propagated. All four fixed:
+      • `RISK_REGISTER.md` **D-3** rated *"Canada cannot be enumerated"* **high / accepted** in a
+      live risk register, the day after the refutation. Restated: enumeration is settled, the
+      residual is point-in-time membership and empty Canadian coverage, and the rating fell.
+      • `UX_TASK_FLOWS.md` carried the same claim in the USA/Canada row.
+      • `UX_TASK_FLOWS.md` also read *"no free point-in-time sector source is in hand"* — false
+      since `DR-006` §12 built `ClassificationStore` on 2026-08-23. **Its EVIDENCE was true and its
+      CONCLUSION was false**: `Instrument.sector` really is `None` and nothing sets it, but the live
+      path reads the STORE, never that field, so the field said nothing about the source.
+      • `REGIME_SPEC.md` carried the exact sentence `EVIDENCE_SUMMARY.md` §3 struck on 2026-08-24 —
+      *"that exposure can never be confirmed or ruled out"* — refuted by `tools/probe_edgar.py`.
+      **Both refutations were re-verified from the source before anything was edited** (§15 rule 2,
+      applied to this session's own trust): `probe_canada.py` returned 842 symbols stamped
+      `last_updated 2026-08-25 03:55`, and `probe_edgar.py` reproduced the Eagle Bulk delisting
+      against the still-listed Apple control.
+      **The mechanism is one sentence and it is why gate 31 exists**: a correction lands in the
+      document that owns the claim, and the copies elsewhere keep the refuted wording. That is
+      `AGENTS.md` §10.5's disease applied to CLAIMS instead of counts, and §10.5's own answer — one
+      owner, and a gate — had never been extended to them.
+- [ ] **`[c]` The remaining surface, and it is now small enough to name.** The document pass above
+      cleared the refuted-but-standing class. What is left is the ORIGINAL question — a claim about
+      the world that nobody tested — and the honest position is that it has been sampled, not
+      swept. Re-derive with the command above; a claim that survives with a test named beside it is
+      worth more than one that was merely never challenged.
+- [x] **`[v]` FIRST INSTANCE PAST DOCUMENTS: "none of that is mechanically detectable" — AUDITED
+      AND REFUTED FOR HALF OF WHAT IT NAMES, 2026-08-25.** `AI_AUTHORITY_MODEL.md` §11 and
+      `application/ai_guard.py` both said none of §3a clause 1's six routes — synonym, paraphrase,
+      translation, colour, emoji, score — is mechanically detectable. **Three of them are finite
+      sets and one was never open.** Closed: translation, emoji, colour-as-a-phrase. Never open:
+      the numeric form of a score, already refused by clause 3's numeral rule. Genuinely
+      undetectable and still the real limitation: paraphrase and open-ended synonym.
+      **The sharpest part is what the TEST said.** The case recording the translation hole was
+      called *"a translated decision word passes too"* and **contained no translated decision
+      word** — it was the paraphrase case in Russian. So the route had never been exercised, and
+      when it finally was the guard failed it outright: `_tokens` matched `[A-Za-z_]+`, so Cyrillic
+      was never tokenised at all. **A limitation can be documented and untested at the same time**,
+      and a test named after a hole is not the same thing as a test of it.
+      **A-001's standing condition is still NOT discharged** and the guard is still necessary and
+      not sufficient. What changed is where a fresh session should look: paraphrase, not
+      "everything".
+      Drift is guarded the way the vocabularies are — every enum member must carry a translation,
+      **confirmed red** by removing one entry from each table.
+- [x] **`[v]` THE CODE PASS RAN 2026-08-25 and found nothing.** `src/` and `tools/` carry about
+      thirty matches and essentially all are **design invariants or coded refusals** — *"a fill can
+      never exist without the acknowledgement that let it in"*, *"management cannot be evaluated"* —
+      not claims about the world. That is the discipline working: a refusal in this code names the
+      input it lacked rather than asserting the input cannot exist.
+      **One is a real claim and it survives, narrowed.** `contracts/reference.py` justifies
+      ticker-as-label with *"we cannot detect reuse from price continuity because no free source
+      serves delisted history"*. Still true of PRICES, which is what the sentence rests on. Worth
+      recording that EDGAR now makes the WEAKER form checkable — a Form 25 dates the death of the
+      old security, so a ticker appearing after that date is a reuse candidate — but nothing in this
+      project needs that today and building it would be speculative.
+- [ ] **`[c]` Study scope sections — still open, and deliberately last.** `PR-002`'s report is the
+      known instance and its Canada citation is already recorded above. Amending a published report
+      is governed by `AUDIT_AND_IMMUTABILITY.md`, so this is a different kind of task from editing a
+      live document and should not be done casually.
+
+### A STALE COUNT IN A DOCSTRING, AND WHY GATE 14 STILL SHOULD NOT SCAN CODE — 2026-08-25
+
+- [x] **`[v]` `reference_data/directory.py` said "the six pulls made before this existed" and the
+      answer was SEVEN.** A hand-typed measured count, in code, invisible to gate 14 — that gate
+      scans markdown only. `AGENTS.md` §10.5's disease one file type over.
+      **Fixed the way §10.5 says rather than by widening a gate:** the docstring no longer carries
+      the number, it names the derivation. A count that is derived cannot go stale in any file type.
+- [x] **`[v]` MEASURED AND DELIBERATELY NOT BUILT: gate 14 over `.py`.** The obvious response to the
+      above, tested before adopting. Across 133 tracked Python files the existing patterns produce
+      **7 hits, of which 6 disagree with the tree — and all six are false positives.**
+      • `check_gates.py`'s `"8 tests"` is the **gate's NAME**, not a test count.
+      • `verify_prereg_conformance.py`'s *"condition 4 gates rather than reports"* — *"4 gates"*
+      where `gates` is a **verb**.
+      • Three are illustrations inside `verify_counts.py`'s own comments, and one of those is a
+      quotation of a past defect.
+      • `verify_study_summary.py`'s is a comment reading *"'465 registered' is a component count,
+      and a gate that flagged it would be noise"* — **the comment predicting this false positive was
+      flagged by it.**
+      **And the real defect above was NOT among the hits**, because it is spelled *"six"* and
+      because *"directory pulls"* is not a quantity gate 14 derives. So the extension costs six
+      false positives and catches zero real defects including the one that prompted it.
+      **Same shape as the word-number experiment, same conclusion, and now twice measured:** gate
+      14's precision comes from being narrow, and the way out of a stale count is `AGENTS.md` §10.5
+      — name the command, not the number — not a wider net.
+
+### THE AUDIT'S OWN BASE RATE — measured 2026-08-25, and the owner's hypothesis holds
+
+**The ask was whether this project had been stopping itself on untested "cannot"s.** Seven
+impossibility claims have now actually been TESTED rather than read. **Four were false.**
+
+| Claim | Outcome |
+|---|---|
+| *"No free source serves delisted history"* | **half false** — EDGAR gives the fact and date, free and official; prices stay closed |
+| *"Canada cannot be enumerated"* | **false** — TMX serves its directory free, no account |
+| *"None of §3a's six routes is mechanically detectable"* | **false for three of six**, and a fourth was never open |
+| *"`www.sec.gov` 403s, so a lookup by ticker needs an owner-supplied contact"* | **false** — it needed an `Accept` header |
+| *"A fourth spread estimator is the same family"* | **survives**, and now carries the mechanism rather than the prediction |
+| *"There is no legal source of probability in this system"* | **survives**, and is now derivable from two gates rather than asserted |
+| *"Batching is not the lever"* | **the claim survives; the PARKING did not** — `NFR.md` §3 had already ruled on concurrency in both directions |
+
+**Three of the four refutations came from testing at a FINER GRANULARITY than the original test**,
+which is `AGENTS.md` §17 and is the transferable lesson: the header rather than the host, the six
+routes rather than "none of it", *"no directory in hand"* rather than *"cannot be enumerated"*. The
+original measurements were not sloppy — each was correct about what it actually measured, and each
+conclusion was drawn one level coarser than the evidence supported.
+
+**And the cost was never symmetric.** Every refuted claim had closed real work: a study dropped half
+its scope, a measurement waited fifteen days on an owner action nobody needed, a guard was described
+as hopeless when half of it was a finite set. `AGENTS.md` §15's asymmetry is not a theory here; it
+is the measured outcome of seven tests.
 
 **Widen it past documents when the document pass is done.** The same shape lives in code comments
 and in study scope sections - `PR-002`'s report alone carries several - and a study that narrowed
@@ -782,6 +991,128 @@ evening returned every one of those sessions, clean. The owner asked; nobody had
       so the coverage figure is recomputed on every run and cannot be ~10 days stale again. Derive
       it with that command; this line deliberately does not repeat it (`AGENTS.md` §10.5).
 
+### `DR-008` IS RATIFIED AND ROUGHLY HALF UNIMPLEMENTED — measured 2026-08-25
+
+**`HANDOFF.md` §5 named this check open and nobody had run it.** It is run now, clause by clause
+against the code, and the answer is worse than the open question implied.
+
+**How it was found is the part worth keeping.** Not by reading the record — by gate 31, which
+checks that a command a document tells you to run accepts the arguments given. `DR-008`'s emergency
+block names `python tools/fetch_directory.py --emergency-repull --reason "..."`, and argparse has
+never had either flag. **The command block was the one mechanically checkable sentence in an
+otherwise prose record**, and it was the thread that pulled the rest out.
+
+**Gate 20 exists BECAUSE of `DR-008` and passed the whole time.** Its own docstring says so: *"the
+defect this exists for, 2026-08-11: `DR-008` was ratified 2026-08-10 ... and specified a collector
+with config gating, calendar eligibility, a response cap, validation and audit rows. None of it was
+built."* Gate 20 checks that a record names an implementer and that the token appears in that file.
+`implemented_by: tools/daily_run.cmd :: fetch_directory.py` satisfies it. **It verifies that a
+decision names an implementer, never that the implementer implements the decision** — `AGENTS.md`
+§17 in one example, and the sharpest one this repository has.
+
+- [x] **`[v]` BUILT 2026-08-25 — the audit row, the forced pull, the already-recorded guard and the
+      supersession record.** They are one change because none works alone: a guard with no override
+      strands an operator whose first pull was malformed, an override with nothing to override is
+      decoration, and both need the audit table to record a mode and a reason at all.
+      **The guard has a measured cost behind it, not a tidiness argument.** `directory.duckdb` holds
+      18 pulls of which **3 were same-session duplicates** — 2026-08-13 22:09, and the 19:30 second
+      passes of 08-18 and 08-19 — each spending two HTTP requests and storing a full ~13,000-row
+      snapshot that `DirectoryStore.record` then stripped of its session date. `DR-008` says an
+      already-recorded session makes **zero requests**. Verified against a copy of the live store:
+      the guard fires today for session 2026-08-24.
+      **`record(..., supersedes=...)` is the one documented exception to monotonicity**, and it had
+      to exist: without it a forced replacement stored a NULL date and `pull_for_session` went on
+      answering with the snapshot the operator had just corrected.
+      **The guard fails OPEN by construction** — it keys on the ATTRIBUTED session, so a pull whose
+      trailer did not corroborate is invisible to it and the next pass fetches again. That is the
+      correct direction: the failure mode is today's behaviour, never something worse.
+- [x] **`[v]` EVERY CLAUSE IS NOW IMPLEMENTED — the audit that opened this section is closed the
+      same day, 2026-08-25.** Kept in full rather than collapsed to a tick: the list is the evidence
+      that each clause was checked against the code, and one entry below (`retry`) is a correction
+      of this audit's own reading rather than a gap. Struck items were built this session.
+      • ~~**Process lock**~~ **BUILT 2026-08-25.** `O_CREAT | O_EXCL` — one atomic syscall, no
+      check-then-create window, same behaviour on Windows where this runs. Taken around the fetch
+      and the write only, never across the declining branches: a run that decided to do nothing
+      must not block one that would have worked.
+      **The stale-lock problem was the real design question and getting it wrong is worse than
+      having no lock.** `DR-008` gives the forced pull no way past this lock, so one left by a
+      KILLED process would refuse every pull **for ever, with no override** — and a missed pull is
+      permanently unrecoverable, because the vendor publishes current state and not an archive. That
+      trade is backwards: the lock prevents duplicate REQUESTS and a stale one would cost the
+      departure record itself. So a lock older than `limits.lock_stale_after_seconds` (600, generous
+      by two orders of magnitude) is **reclaimed and reported** — it means a previous run died,
+      which is worth seeing — and an unreadable lock is reclaimed too, because *cannot tell* must
+      not mean *blocked permanently* for a resource whose loss is unrecoverable. Six tests including
+      the boundary control: a lock just INSIDE the timeout is still held.
+      • ~~**Checksums**~~ **BUILT 2026-08-25.** One SHA-256 over both response bodies, stored on
+      the pull. **One digest over the PAIR, not one each**, because a pull is a complete snapshot —
+      the record's own framing, and the reason `as_of` reads the latest pull rather than unioning.
+      A length prefix separates the two bodies so that moving bytes between the files cannot
+      collide, which is pinned by a test.
+      **What it is FOR is one question:** whether the vendor served the same bytes again. An
+      unattributed pull is ambiguous between *the file did not regenerate* and *the trailer was
+      unreadable*, and those want different responses — the first is the vendor being slow, the
+      second is a parsing problem on our side. Raw bodies are never archived (`DR-008` forbids it),
+      so the digest is the only trace there can be. The eighteen existing pulls read `None`, which
+      is the honest answer and must not be read as an empty digest.
+      • **Retry — NOT a gap, and this line said otherwise for an hour.** *"It **may** retry one
+      failed attempt after 60 seconds"* is a CEILING, not an obligation — §"rejected alternatives"
+      lists *"unlimited retry inside one command"* as the thing it bounds. `_download` retries zero
+      times, which is inside the ceiling and therefore compliant. Recorded rather than deleted
+      because reading a permission as a requirement is how a clean implementation acquires an
+      imaginary defect, and this audit was written to stop the opposite error.
+      • ~~**The committed machine-readable policy**~~ **BUILT 2026-08-25 as
+      `registry/directory_pull_policy.yml` + GATE 22.** Neither the filename nor the gate number is
+      invented — `plans/2026-08-11-evidence-foundation.md` names both, deferred rather than
+      dismissed.
+      **The clause is not "put constants in YAML", and the reason matters.** These are the limits on
+      what this project's software may ask of somebody else's free server. A limit in a literal is
+      changed by editing a line; a limit in a committed, gated policy is changed by a commit a gate
+      reads and a reviewer sees. `DR-008`'s own rejected-alternatives table names what it guards:
+      *"unlimited retry inside one command — can hammer the source without a new human decision."*
+      **The new human decision is the point.**
+      **Gate 22's second check is the one with teeth:** a source URL left as a literal in
+      `tools/fetch_directory.py` fails **even when it agrees with the policy**, because agreeing
+      today is how every drift here has looked on the day it was written (`AGENTS.md` §10.5). Read
+      from the syntax tree, so a gate about a network tool never imports one. Both check classes
+      **confirmed red** — a planted URL literal, and a zero cap.
+      **`.swingdesk-local.json` is deliberately NOT in the policy**: the policy is what this project
+      commits to doing to someone else's server, and the switch is one machine's own state.
+      Committing it would turn an operator's local choice into a repository fact.
+      • ~~**Exact HEADER validation**~~ **BUILT 2026-08-25.** Row shape was checked from the start
+      and refuses a short row; the header was `splitlines()[1:]`-ed away without being compared to
+      anything, so a vendor that reordered its columns would have been parsed silently **by
+      position** — `parts[6]` read as `ETF` while holding something else. `otherlisted.txt` is why
+      this is not hypothetical: it carries BOTH an `ACT Symbol` and a `NASDAQ Symbol` column, and
+      `parse_other_listed`'s own docstring already warned that reading the wrong one produces a
+      universe of symbols that fetch empty. The read positions are now a named mapping the header is
+      checked against, so `parts[6]` says what it is; a TRAILING column the vendor adds is accepted,
+      because a column nothing reads cannot change an answer, and `NextShares` was appended once
+      already. Four tests, **all confirmed red** with the check removed.
+      • ~~**Gap recording, and its severities**~~ **BUILT 2026-08-25.** `attributed_sessions()` and
+      `gaps(expected)`; the caller supplies the sessions so the store never learns about exchanges,
+      which is the layer contract *and* the reason the withdrawn version was wrong.
+      **Measured on the live store: zero gaps inside the attributed window** — 8 sessions,
+      2026-08-13 to 2026-08-24, every one present. **Coverage starts at the first ATTRIBUTED pull,
+      not the first pull**: 8 NYSE sessions between 2026-08-03 and 2026-08-13 are covered only by
+      pulls that could not be placed on a session, and `DR-008` c3 forbids backfilling them.
+      The severity rule turns on one subtlety worth keeping: **a Friday and the Monday after it are
+      CONSECUTIVE sessions.** Counting calendar days would report an `ERROR` every Monday; counting
+      them as non-adjacent would miss a two-session outage across a weekend, which is the most
+      likely shape of one.
+      • ~~**"After the latest session has completed"**~~ **BUILT 2026-08-25.** Eligibility checked
+      `cal.is_open(NYSE, today)` only, so a scheduled run at 09:00 on a trading day was eligible and
+      would have pulled a file describing YESTERDAY. Now `last_completed_session(...) == today`.
+      **Measured before changing it rather than after:** both scheduled passes (18:30 and 19:30
+      local = 19:30 and 20:30 ET) sit after the 16:00 ET close and stay eligible; a 09:00 run does
+      not, which is the defect. Not reachable from today's trigger, so this is a correctness fix and
+      never was an outage.
+- [ ] **`[v]` The MANUAL mode is outside `DR-008` entirely, and that is a gap in the RECORD.**
+      The bare form honours neither the local switch nor the calendar. `DR-008` describes scheduled
+      collection and the forced pull and never mentions a third mode, so the code is not violating
+      the record — the record does not cover it. Deliberately left alone: narrowing what a human
+      operator can do by hand is a decision, not a defect, and `AGENTS.md` §14 says ask.
+
 ### DONE 2026-08-24: slim `AGENTS.md` — owner instruction, cut and verified
 
 **A one-off instruction, not a standing rule** — an editorial request about one artefact, so it cites no `AGENTS.md` section and gate 30 accepts it on that mark rather than on a pointer that would have to be invented.
@@ -900,7 +1231,48 @@ own convention.
 
 Each of these is a silent wrong-answer generator: a session reads one, acts, and is wrong.
 
-**EMPTY as of 2026-08-24 — every item below is closed, and four of them were not what they
+### THE DEGENERACY GUARD REFUSES THE INSTRUMENTS ITS OWN RECORD SAYS IT PROTECTS — measured 2026-08-30
+
+- [ ] **`[v]` `DR-006` §12.1 argues the guard is EXACT so a genuine sector ETF clears it. Five of
+      the eleven do not.**
+      ```bash
+      PYTHONPATH=$PWD/src python tools/probe_sector_benchmarks.py --data data
+      ```
+      §12.1's words: *"A genuine sector ETF is legitimately almost all one sector, so a tolerance
+      would refuse the instruments this cap most needs."* The reasoning is sound and the premise is
+      half wrong — **almost** all is doing the work, and the SPDR Select Sector funds for
+      communication services, energy, healthcare, real estate and utilities each report **exactly**
+      one sector at exactly 100%, which is `_degenerate_sector`'s signature exactly.
+      **What actually happens is not silent, and that matters for how alarmed to be.** A refused
+      look-through makes `SectorCapacity.is_unavailable` true, which **admits** the candidate by
+      design (`DR-006` §3: a check the system could not perform must not refuse everything) and puts
+      *"UNAVAILABLE — the look-through is degenerate"* on the record. So the system behaves
+      correctly given the guard, and the reason travels. **Nothing is fabricated and nothing is
+      hidden.**
+      **What is wrong is the REASON, and it is wrong in the same way gate 24's was.** The refusal
+      text reads *"which is how this vendor describes a fund holding no equity at all"*. For `XLU`
+      that sentence is false: it holds almost nothing else. `AGENTS.md` §15 rule 1 and §10.4 both
+      say an explanation is itself a claim, and this one is attached to a live risk control.
+      **A discriminator exists and it is measured rather than proposed from memory.** The guard
+      infers *holds no equity* from the SHAPE of the sector weights; the same vendor call serves the
+      fact directly. `funds_data.asset_classes["stockPosition"]` reads **0.0% for `NEAR`**, the bond
+      fund the guard was written for, and **99.7–100% for every refused sector proxy**. That is
+      `AGENTS.md` §12's proxy trap with the direct measurement sitting beside it in the same
+      response.
+      **Deliberately NOT changed here.** `DR-006` is accepted, §8.7 is one of its rules, and
+      swapping the discriminator changes what the sector cap admits — a decision output. That is an
+      amendment to a ratified record and belongs to the owner (§8, §14). What is done is the
+      measurement, the command that reproduces it, and the note that the cost is bounded today:
+      **none of the five is in the admitted universe**, because none of the eleven has bars stored.
+      **What it also settles, and this is `E05`'s first half.** The blocker recorded in
+      `application/checklist.py` is *"no sector-to-index mapping exists"* — true of this repository.
+      A mapping now exists as a measurement rather than an assertion: **all eleven pairings are
+      confirmed by the vendor's own look-through, zero contradicted**, and all eleven are listed and
+      not test issues in `directory.duckdb`. What remains for `E05` is authoring the mapping as a
+      record and storing the series — and, separately, whether a sector-relative comparison helps at
+      all, which is a study and which `PR-012` has already found decorative point-to-point.
+
+**Everything below was EMPTY as of 2026-08-24 — closed, and four of them were not what they
 said.** Kept for the reasoning, because the reasoning is the transferable part:
 
 - **`G0 status` and `k.project_timebox` were never disagreements.** One was a stale open item whose
@@ -1222,7 +1594,7 @@ is for where no gate can reach.
       together more often, but they gapped out on the SAME session 4.94× as often, CI [2.32, 7.56].
       §15.4 concludes the size adjustment is unnecessary rather than merely unauthored.
       **The sector half is measured too** (`DR-006` §14).
-      Derive the figures with `python tools/measure_sector_cap.py`, never from this line. The
+      Derive the figures with `python tools/measure_sector_cap.py --classifications data/classifications.duckdb`, never from this line. The
       headline: `PR-005` held a median of 20 positions at once and 95% of its days were over four,
       so it never simulated a capped book and cannot be replayed as one — what §14 samples is the
       POPULATION such a book would have drawn from. §14.4 recommends keeping 2R on a new argument
@@ -1279,8 +1651,23 @@ is for where no gate can reach.
       net-of-costs figure this project has published is denominated in two records nobody ratified —
       including `HANDOFF.md` §2's *"slippage **measured** — 25bps per side (`DR-005`)"*, where
       *measured* is true of the number and not of the record's standing.
-- [ ] **`[c]` DR-009** · **`[c]` DR-001 / DR-002 / DR-005** — proposed since 08-02, used as
-      working fact throughout.
+- [ ] **`[v]` Records still `proposed` whose values the system is already using.** ~~DR-009 ·
+      DR-001 / DR-002 / DR-005~~ — **that hand-typed list was checked 2026-08-30 and was wrong in
+      both directions**, so it is replaced by the command that derives it. Gate 1 has printed this
+      subset on every run since 2026-08-25 and no reader had compared the two:
+      ```bash
+      PYTHONPATH=$PWD/src python tools/verify_parameters.py
+      ```
+      **What the comparison found.** `DR-004` and `DR-018` each carry a live parameter and were
+      **missing** from the list; `DR-009` is `proposed` but **no parameter rests on it**, so it
+      belongs with the unratified records in §4 rather than here. The distinction is the whole
+      point of the entry: a proposed record with a parameter behind it is a value whose only
+      authority is a record nobody ratified, and a proposed record with none is a decision waiting
+      to be taken. Ratifying is the owner's act in both cases and neither is an agent's to force.
+      **Why the list rotted the way it did.** It was typed on 2026-08-02 and every subsequent record
+      — `DR-018`'s benchmark, `DR-010` superseding half of `DR-004` — moved the answer without
+      touching the line. `AGENTS.md` §10.6 in one sentence: concentrating a fact makes it findable,
+      not true, and the only fix that holds is the tool deriving it.
       **`DR-003` left this list 2026-08-23: RATIFIED**, on the population measurement and on the
       quality-proxy argument, after the same measurement refuted the plateau argument it had been
       standing on since 08-02. Only `universe.min_adtv_20d` moves `assumed` → `owner`;
@@ -1568,7 +1955,10 @@ is for where no gate can reach.
       family. `CloseBelowLow` exists to prove the seam and is **not a proposed strategy** — no card
       declares it and no study registers it. Spending a trial on a family needs `ROADMAP` P5 first.
 
-- [ ] **`[c]` PR-007** registered, unreported.
+- [ ] **`[v]` PR-007** registered, unreported — **checked 2026-08-30 against the files rather than
+      the mark**: `docs/prereg/PR-007-base-strategy-measured-costs.md` exists and
+      `docs/prereg/results/` holds no `PR-007-report.md`. It and `PR-009` are the two registered
+      studies with no report, which is what `HANDOFF.md` §2's studies row counts.
 - [ ] **`[v]` PR-009 — ~~blocked on Task 8~~. TASK 8 IS DONE, AND THE STUDY IS NAMED AFTER A
       SUPERSEDED THRESHOLD.** Re-checked 2026-08-25.
       **Its title and §1 say −15R.** The registry holds `validation.max_allowable_drawdown` = **20,
@@ -1585,8 +1975,11 @@ is for where no gate can reach.
       New research is also suspended, overridden for `PR-013` only.
       Corrected forward in `PR-009` §10, `prereg/README.md`, `DR-006` §18, `ALLOCATION_SPEC.md`,
       `GO_LIVE_GATES.md` and `CI_POLICY.md`.
-- [ ] **`[c]` Four prereg ids unwritten:** PR-001b (unblocked, writable now) · PR-003 (needs a daily
-      return series) · PR-004 (needs ~100 journalled trades) · PR-006 (needs a forward test).
+- [ ] **`[v]` Reserved prereg ids with nothing written yet:** PR-001b (unblocked, writable now) ·
+      PR-003 (needs a daily return series) · PR-004 (needs ~100 journalled trades) · PR-006 (needs a
+      forward test). **Checked 2026-08-30 against `docs/prereg/README.md`**, which is the index gate
+      3f keeps honest and the only place this belongs; `PR-011` is also unwritten and is tracked in
+      its own item two rows down, which is why it is absent here rather than missing.
 - [ ] **`[v]` `PR-011` — screening out the instrument classes that cannot hold a stop — IS NOT
       WRITTEN.** Migrated here 2026-08-22 from `SESSION-HANDOFF-2026-08-22.md` §3 before that file
       was deleted; it lived nowhere else, which is why it is now in the one open-work list
@@ -1680,7 +2073,48 @@ is for where no gate can reach.
       not silence. 4 new tests against the story's own gherkin, `verify_docs.py` gate 3e passes
       (citing US-022 without checking it was live). Every gate and every test passed, DONE
       2026-08-11.
-- [ ] **`[v]` MEASURED 2026-08-17: 3 of 11 mutants survive the entire test suite.** The council's
+- [x] **`[v]` ~~MEASURED 2026-08-17: 3 of 11 mutants survive the entire test suite.~~ RE-MEASURED
+      2026-08-29: ALL THREE ARE DEAD, AND NONE OF THEM DIED ON PURPOSE.** The entry was `[v]` and
+      steered a build order for twelve days; nothing had re-run it, which is the shape this file
+      exists to catch.
+      **Method, and the control is the part that matters.** `src/` copied to a scratch root beside
+      `registry/`, `golden/` and `docs/`, one mutation applied there, the **whole** suite run against
+      the copy. The unmutated copy runs green first — without that, a red result is evidence about
+      the fixture rather than the mutation (`AGENTS.md` §9). The first attempt did produce exactly
+      that false kill: `src/` alone in a scratch directory makes `test_checklist.py` fail on a
+      registry it resolves through the package, and it looks like a dead mutant.
+      **What killed each, and it is a different mechanism every time:**
+      • `planned_risk` → `Decimal('42')` — killed by the invariant-1 test, which was **rewritten**
+      on 2026-08-25 because gate 34 found it asserting `(net/x)*x == net`. The mutant is now one of
+      gate 34's own.
+      • `risk_per_share = entry - stop + costs` → `entry - stop` — killed by **five** tests, three
+      invariants and both replay cases. PR #9 made the R denominator cost-inclusive on 2026-08-17
+      and the tests came with it; the survivor died the same day this entry was written.
+      • `calendar.sessions_behind` off by one — killed by **seven** freshness tests. `DR-015` wired
+      the staleness gate on 2026-08-18, so the *"spec rule implemented in dead code"* half of this
+      entry is stale too: `market_data/freshness.py` calls it and `pipeline.py` reaches it from
+      there. That is the same false null `AGENTS.md` §12 records the graph reporting for
+      `freshness.assess`.
+      **Both of the two not already covered are now gate 34 mutants**, so the kills stop being
+      incidental: the cost term under invariant 1, the session count under the staleness veto.
+      Derive the list and the count from the tool, never from here:
+      ```bash
+      PYTHONPATH=$PWD/src python tools/verify_invariant_tests.py
+      ```
+      **And this file had already said so, in another section, six days earlier.** §1's R-denominator
+      entry carries *"RE-MEASURED 2026-08-23 … the survivor count is 0 of 11"*, with the same three
+      mutants and the same causes. Two sections of one document held opposite answers to one
+      question, and the stale one is the entry a reader meets under **Code & gates** — which is
+      where someone goes to decide what to build. `AGENTS.md` §10.5's disease does not need two
+      documents; one is enough. Nothing catches it: gate 14 owns counts in `HANDOFF.md` §2, and a
+      survivor count has no owner at all, which is §4's open question about STATUS restated as a
+      number.
+      **What this does NOT overturn:** the build order below. Every kill came from a test written
+      for a *feature*, not from a mutant list — which is the entry's own conclusion, confirmed
+      rather than refuted. The mutant list is cheap insurance against those tests being weakened,
+      and that is exactly what putting these two into gate 34 buys.
+      **The original measurement, kept because the method and the three non-negotiables are the
+      transferable part:** The council's
       own flip condition, turned from an assumption into a number. Method: patch one computed
       quantity per module in committed source, run the **whole** suite, restore, record whether
       anything died. **`git stash push -- src/` cannot do this** — it reverts *uncommitted* work, so
@@ -1809,9 +2243,10 @@ is for where no gate can reach.
       invariant broke"*, and for invariant 1 that was false for three weeks — the named test
       asserted `(net/x)*x == net`. Gate 8 says the tests pass; **nothing said they could fail**, and
       the document is what a reader trusts.
-      Fifteen mutants, each a committed source edit applied to a **scratch copy** of `src/` — which
-      matters here because two of them land in `trade_management/sizing.py`, a frozen file. All
-      fifteen are killed today. Runtime ~20 s.
+      Fifteen mutants **on the day it landed**, each a committed source edit applied to a **scratch
+      copy** of `src/` — which matters here because two of them land in
+      `trade_management/sizing.py`, a frozen file. All were killed, and the list has grown since;
+      the tool prints what it holds rather than this line carrying a copy.
       **It also closes the half of `REQ-VALIDATION-001` that `REQUIREMENTS.md` §2 called impossible.**
       That paragraph said mutation testing *"needs a corpus of evaluated criteria before it can.
       Nothing evaluates these yet, so a mutation gate here would have nothing to flip."* It was
@@ -1918,7 +2353,18 @@ is for where no gate can reach.
       ```bash
       python tools/verify_gate_inventory.py
       ```
-- [ ] **`[v]` AT MERGE: gates 22 and 31 need `CI_POLICY.md` rows, and gate 36 will insist.**
+- [x] **`[v]` AT MERGE: gates 22 and 31 needed `CI_POLICY.md` rows, and gate 36 insisted. DONE
+      2026-08-29 — the two branches are merged and both rows are written.** The prediction held
+      exactly: the merge went red on gate 36 and on nothing else of its own making, and the fix was
+      the two rows. They are written from the two tools' docstrings rather than copied out of the
+      runner's one-line descriptions, because a row a reader consults to learn what is protected
+      should say what the gate checks, not what its label says.
+      **What the merge also repaired, and it was not predicted.** The sibling had taught
+      `tools/build_state.py` to emit the classification command with the flag it requires; this
+      side's generated row still carried the form that exits 2. Regenerating §2 fixed it — so gate
+      31 arrived and its motivating defect was still live in the block that promises a reader can
+      derive the number.
+      **The original entry, kept because the reasoning is the transferable part:**
       Checked 2026-08-25 against `claude/swingdesk-open-tasks-2001c8`'s tip: it registers **22**
       (`verify_directory_policy.py`) and **31** (`verify_commands.py`) in `check_gates.py` and adds
       no rows to the inventory. Gate 36 requires the two to name the same gates, so a merge of both
@@ -1926,10 +2372,104 @@ is for where no gate can reach.
       entries.** Neither branch can add them alone — a row here for a gate this branch does not
       register fails gate 36 from the other side, which is the check being symmetric rather than
       awkward.
-- [ ] **`[c]` Gate 22** + `DR-008`'s remaining machinery · **Gate 14's word-number hole.**
-- [ ] **`[c]` 6 specified components awaiting activation** — pivots (M12-T0201, M12-T0202), moving
-      average (M25-T0382), regime (M30-T0450), breadth (M31-T0459), trend (M33-T0485). All have real
-      implementations.
+- [x] ~~**`[c]` Gate 22** + `DR-008`'s remaining machinery · **Gate 14's word-number hole.**~~ **All three CLOSED by the 2026-08-29 merge, and none of them the way this line
+      expected.** Gate 22 is built; `DR-008`'s audit is in §2 clause by clause, with the
+      MANUAL-mode gap the only open item left from it; and gate 14's word-number hole was
+      built, measured and deliberately reverted — the entry two rows down records why, so
+      the next session does not re-derive it. **A one-line `[c]` item naming three
+      unrelated things is why this took a merge to notice**: it could not go stale in
+      parts, so it read as live in whole.
+- [x] **`[v]` GATE 31 BUILT 2026-08-25 — a command a document tells you to run is a command that
+      runs.** `HANDOFF.md` §2's **generated** census told a reader to derive the classification
+      coverage by running `measure_sector_cap.py` with `--wide` and nothing else. That exits 2:
+      `--classifications` is required and has no default. **The one promise §2 makes — derive it
+      rather than trust the row — was unkeepable for anyone who tried**, and `tools/build_state.py`
+      had emitted it that way since the block was built.
+      *(The broken form is described here rather than quoted, because gate 31 objects to a
+      document reproducing it — correctly. Quoting a defective command verbatim is how this one
+      spread in the first place, and the gate declining to make an exception for its own write-up
+      is the property working, not a false positive.)*
+      **Three of the five mentions of that tool were unrunnable, and the third is the finding:**
+      `UX_TASK_FLOWS.md` got its copy from a session reading §2 and quoting it. This session then
+      did exactly the same thing — copied the broken form out of §2 into a row it was writing — and
+      the gate caught its own author. A broken command propagates precisely like a stale count.
+      **Nothing caught it because a command is neither a citation nor a count.** Gate 3e resolves
+      references, gate 24 regenerates numbers. It looked checked from three directions and was
+      checked from none.
+      **What it found on its first run, all true positives:** the generated row above; `DR-008`'s
+      emergency command (two flags argparse never had — see §2); and
+      `plans/2026-08-11-evidence-foundation.md` Step 4 naming `--out` on `run_pr005_replay.py`,
+      which shipped with `--write` + `--accept-drift` instead. **The plan asked for one key and the
+      tool deliberately shipped two**, so that command was overtaken by a decision, not renamed.
+      **It also produced two FALSE positives on its first run and they are pinned by a test.**
+      `python a.py && python b.py --flag` was read as `a.py --flag`, reporting `AGENTS.md` §2 and
+      `docs/README.md` — both correct — as defects. Argument capture now stops at a shell operator.
+      A gate whose output must be skimmed is how a real finding gets skipped.
+      **Static only, and that is a tested property rather than a claim.** The parser is read out of
+      the tool's syntax tree; nothing is imported and nothing is executed, so a gate about running
+      commands cannot breach `CI_POLICY.md` §4. `test_the_gate_never_executes_the_tool_it_checks`
+      plants a tool that writes a file at import time and was **confirmed red** against a deliberate
+      `runpy.run_path` implementation before being accepted green.
+      **The honest limitation, stated so nobody over-reads it:** it proves the ARGUMENTS are
+      accepted, never that the command succeeds. It is a spelling check on the invocation, not a
+      smoke test. It does not check positionals — no tool has a required one today, and a tool that
+      grows one is a hole in it.
+- [x] **`[v]` `tools/measure_sector_cap.py` can read the STORE — built 2026-08-25.** Its docstring
+      already said classifications are read *"from a saved file, or from the store
+      `tools/refresh_classifications.py` fills"*, and there was no store route:
+      `--classifications` took JSON only, and `refresh_classifications.py` writes no JSON at all.
+      **The sentence named a route with no code under it.** Built rather than deleted, because the
+      store is what the daily run enforces against and the dated JSON snapshot is a 68-name trade
+      slice. `--classifications` now dispatches on suffix, and the `.duckdb` route reads through
+      `ClassificationStore.as_of` + `look_through` — the same reader the pipeline uses, so a
+      coverage number measured there is the coverage the cap actually has.
+- [x] **`[v]` Gate 22 BUILT 2026-08-25** — `registry/directory_pull_policy.yml` and
+      `tools/verify_directory_policy.py`. See §2 for the whole `DR-008` audit: five clauses built
+      this session, two still open (the process lock, and eligibility checking *"after the latest
+      session has completed"* rather than merely that today is a session).
+- [x] **`[v]` GATE 14'S WORD-NUMBER HOLE — BUILT, MEASURED, AND REVERTED 2026-08-25. The hole is
+      real and pattern-matching is the wrong fix.** Recorded because the next session will have the
+      same idea.
+      **What was built:** every check's `(\d+)` generalised to digits-or-words, one to ninety-nine,
+      with an `as_int` that reads `36`, `thirty-six` and `Thirty Six` alike. It worked.
+      **What it found on the real tree: 19 failures and ZERO real drift.** Every one was a subset
+      statement or history — `RULE_SPEC.md` *"Three tests, one pair of verdicts"* (three specific
+      tests), `PR-005` *"compare five gates through six exit rules"* (the study's GATING ARMS, not
+      merge gates), `CI_POLICY.md` *"the two gates whose subject is change over time"*, `DR-006`
+      *"passed sixteen gates"* (historical), and `HANDOFF.md` §2's own quotation of the defect.
+      **The reason is structural, and it is why the digit form works as well as it does.** English
+      prose spells small numbers out, and a small number in prose is almost always a count of
+      SPECIFIC THINGS rather than a census. `(\d+)` is an accidental but effective discriminator
+      between the two, and removing it removes the discrimination, not the blind spot.
+      **What actually closed the hole was generation, not matching.** The instance that motivated
+      this — *"Twenty-two gates"*, wrong for as long as it took someone to notice by eye — sat in
+      `HANDOFF.md` §2, and §2 is generated now (gate 24). A number that is recomputed cannot be
+      stale in any spelling.
+      **What is left of the hole, stated so it is not re-opened by accident:** a census spelled in
+      words, in a document that is not §2. The ownership half of gate 14 would catch it *if* the
+      pattern matched — and the measurement above is that making the pattern match costs 19 false
+      positives to buy that. `CI_POLICY.md` §3 records what a noisy gate is worth.
+- [ ] **`[v]` The `specified` components awaiting activation** — pivots (M12-T0201, M12-T0202),
+      moving average (M25-T0382), breadth (M31-T0459) and relative strength (M31-T0464). Every one
+      carries an `implements` that gate 11 resolves against real code. Derive the roster, never from
+      here:
+      ```bash
+      PYTHONPATH=$PWD/src python tools/verify_components.py
+      ```
+      **This line was `[c]` and wrong at both edges for twelve days, and the corrections were in
+      this same file the whole time.** It named `regime` (M30-T0450) and `trend` (M33-T0485), both
+      **demoted** to `registered` on 2026-08-18 because neither module carries the specification
+      record the ladder requires — §6 says so in a closed item. And it never gained
+      `M31-T0464`, which became `specified` on 2026-08-24 — §5 says *that* in a closed item.
+      **Two sections of one document, opposite answers, twice in one file**, which is the same shape
+      as the mutant-survivor entry corrected on 2026-08-29.
+      **It is caught now.** Gate 14 reads `TODO.md` for the parameter statuses and the component
+      activation states — and only those; the 2026-08-24 probe that rejected the whole pattern set
+      here measured its noise entirely in the tests/gates family, and never separated the patterns
+      that produced it. Measured before adding: 2 hits over this file, 1 real drift and 1 quotation
+      of the earlier probe's own evidence, which is in the gate's `ALLOWED` rather than paraphrased.
+      **Activation itself stays demand-driven** (`HANDOFF.md` §4): the test before activating one is
+      naming the strategy card that consumes it. No card, and `registered` costs nothing.
 - [ ] **`[v]` `tools/` under mypy** ~~(100 errors, 21/28 files)~~ — **re-measured 2026-08-25:
       242 errors across 43 files**, and the old figure was stale in both terms because `tools/` grew.
       Derive it, never from here: `PYTHONPATH=$PWD/src python -m mypy tools/`. **Most are

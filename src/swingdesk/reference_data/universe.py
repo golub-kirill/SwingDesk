@@ -60,8 +60,51 @@ class DirectoryEntry:
         return not self.is_test_issue and self.venue in US_VENUE_CALENDAR
 
 
+#: The columns each parser reads, by the position it reads them at.
+#:
+#: **`DR-008` requires "exact header and row shape" and only the row shape was ever checked.** The
+#: header line was `splitlines()[1:]`-ed away without being compared to anything, so a vendor that
+#: reordered its columns would have been parsed silently BY POSITION: `parts[6]` would go on being
+#: read as `ETF` while holding something else, and the universe would be wrong in a way no gate and
+#: no test could see. Row shape refuses a short row; nothing refused a rearranged one.
+#:
+#: Written as index -> name so the binding is stated where the read happens rather than being an
+#: unexplained literal, and so `_require_header` can check exactly the dependency the parser has.
+#: Trailing columns the vendor may add later are permitted - `NextShares` was appended once already
+#: - because a column nothing reads cannot change an answer.
+NASDAQ_COLUMNS = {0: "Symbol", 1: "Security Name", 3: "Test Issue", 6: "ETF"}
+OTHER_COLUMNS = {0: "ACT Symbol", 1: "Security Name", 2: "Exchange", 4: "ETF", 6: "Test Issue"}
+
+
+def _require_header(text: str, columns: dict[int, str], filename: str) -> None:
+    """Refuse the whole file unless every column the parser reads is where it expects it.
+
+    Refusing beats warning for the same reason a malformed row does: a misread `ETF` flag is
+    indistinguishable from the vendor reclassifying a fund, and this store's whole value is that a
+    change in it means something.
+    """
+    first = text.splitlines()[0] if text.splitlines() else ""
+    header = [cell.strip() for cell in first.split("|")]
+    wrong = {
+        index: (columns[index], header[index] if index < len(header) else "<absent>")
+        for index in sorted(columns)
+        if index >= len(header) or header[index] != columns[index]
+    }
+    if wrong:
+        detail = ", ".join(
+            f"column {index} should be {expected!r} and is {found!r}"
+            for index, (expected, found) in sorted(wrong.items())
+        )
+        raise ValueError(
+            f"{filename}: the vendor's header is not the one this parser reads by position - "
+            f"{detail}. Refusing the file: parsing it anyway would put the wrong field in every "
+            f"row and look exactly like a directory that changed (DR-008, exact header shape)."
+        )
+
+
 def parse_nasdaq_listed(text: str) -> tuple[DirectoryEntry, ...]:
     """Parse `nasdaqlisted.txt`: pipe-delimited, with a trailing file-creation line."""
+    _require_header(text, NASDAQ_COLUMNS, "nasdaqlisted.txt")
     entries: list[DirectoryEntry] = []
     malformed = 0
     for line in text.splitlines()[1:]:
@@ -96,8 +139,11 @@ def parse_other_listed(text: str) -> tuple[DirectoryEntry, ...]:
 
     Uses the ACT symbol rather than the NASDAQ symbol - it is the one that matches the vendor's
     ticker for these venues, and picking the wrong column silently produces a universe of symbols
-    that fetch empty.
+    that fetch empty. This file is the reason the header check exists: it carries BOTH an
+    `ACT Symbol` and a `NASDAQ Symbol` column, so reading the wrong position here is not a
+    hypothetical failure mode, it is the one the docstring above already warns about.
     """
+    _require_header(text, OTHER_COLUMNS, "otherlisted.txt")
     entries: list[DirectoryEntry] = []
     malformed = 0
     for line in text.splitlines()[1:]:

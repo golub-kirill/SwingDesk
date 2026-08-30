@@ -53,7 +53,7 @@ corporate actions for HELD names only, so a candidate has none; `DR-018` chose o
 | `E05` | sector/industry and benchmark checked | needs a benchmark series **per sector**; no sector→index map | classification yes, mapping no |
 | **`E08`** | **trigger measurable and not yet `Late`** | **there is no trigger and no maximum entry** | **no** |
 | **`E09`** | **entry zone and maximum entry recorded** | **entry is recorded, maximum entry is not** | **no** |
-| `E11` | earnings and events checked | no event calendar, and no buffer value to apply | no |
+| `E11` | earnings and events checked | no calendar **wired**, and no buffer value to apply. A free keyless source exists — `python tools/probe_events.py`, 2026-08-30 — so what blocks this is the buffer and the wiring, never the data | no |
 | `E12` | spread, dollar volume, expected slippage acceptable | volume yes; spread and slippage are not observable on free data | partial, and capped by evidence |
 | `E14` | open risk, sector, currency, event exposure | risk/correlation/sector enforced; currency and event buckets are not | **mostly** — `DR-006` |
 

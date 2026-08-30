@@ -200,7 +200,9 @@ EVALUATORS: dict[str, Evaluator] = {
     "event_proximity": Unavailable(
         "no event calendar is wired, AND the course supplies no buffer to apply if one were: "
         "M34/M40 give one criterion for all 20 catalyst types and no lead time at all (EVENT_SPEC). "
-        "screen.earnings_buffer_days needs a decision record or a study, not a transcription",
+        "screen.earnings_buffer_days needs a decision record or a study, not a transcription. "
+        "A free keyless source for the calendar itself was found 2026-08-30 (tools/probe_events.py), "
+        "so the blocker is the buffer and the wiring rather than the data",
         {"screen.earnings_buffer_days": "unset"},
     ),
     "liquidity_acceptable": Unavailable(
@@ -213,7 +215,7 @@ EVALUATORS: dict[str, Evaluator] = {
         "only for a candidate whose classification has been fetched, and the CURRENCY and EVENT "
         "buckets this item also requires are not enforced at all. Half an answer is not an answer. "
         "The currency bucket waits on account.fx_rate_cad; the event bucket waits on the same "
-        "absent calendar as E11",
+        "unwired calendar as E11",
         {"account.fx_rate_cad": "unset"},
     ),
 }

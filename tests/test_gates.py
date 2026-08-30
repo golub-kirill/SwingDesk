@@ -880,6 +880,54 @@ def test_ownership_rule_allows_the_owner_section(tmp_path: Path) -> None:
     assert code == 0, out
 
 
+def test_an_unbackticked_activation_count_is_caught_when_components_are_the_subject(
+    tmp_path: Path,
+) -> None:
+    """The form that got past this gate: `TODO.md` read "6 specified components" for twelve days.
+
+    The backticked patterns could not see it, and the guard word is what makes the bare form safe.
+    """
+    root = _counts_tree(tmp_path, "docs/NOTES.md",
+                        "There are 3 specified components awaiting activation.\n")
+    code, out = run_gate("verify_counts.py", root)
+    assert code == 1
+    assert "3 specified" in out
+
+
+def test_the_guard_word_is_what_keeps_the_bare_form_quiet(tmp_path: Path) -> None:
+    """Without it, every "1 active position" in the tree is a finding. The guard is the gate."""
+    root = _counts_tree(tmp_path, "docs/NOTES.md",
+                        "The book holds 1 active position and 2 specified exits.\n")
+    code, out = run_gate("verify_counts.py", root)
+    assert code == 0, out
+
+
+def test_todo_is_scanned_for_an_activation_count(tmp_path: Path) -> None:
+    """`AGENTS.md` §10.7 governs this file and, until 2026-08-30, no gate could see it."""
+    root = _counts_tree(tmp_path, "docs/NOTES.md", "no counts here\n")
+    (root / "TODO.md").write_text("- [ ] 4 registered components are waiting.\n",
+                                  encoding="utf-8")
+    code, out = run_gate("verify_counts.py", root)
+    assert code == 1
+    assert "TODO.md" in out
+
+
+def test_todo_is_not_scanned_for_the_families_measured_as_noise(tmp_path: Path) -> None:
+    """The 2026-08-24 rejection is preserved rather than reversed.
+
+    All 8 of its live false positives came from the tests/gates/vectors family - "11 tests, 5
+    mutants killed" describes what a change ADDED, and `gate 25's condition 4 gates` uses `gates`
+    as a verb. Only the status keys were widened here, and a test asserting the rest still passes
+    is what stops the next session widening it back.
+    """
+    root = _counts_tree(tmp_path, "docs/NOTES.md", "no counts here\n")
+    (root / "TODO.md").write_text(
+        "- [ ] That change took 11 tests with it, and gate 25's condition 4 gates rather than "
+        "reports.\n", encoding="utf-8")
+    code, out = run_gate("verify_counts.py", root)
+    assert code == 0, out
+
+
 # ------------------------------------------------------------- gate 23: track A streak
 
 #: A real, verified NYSE trading week (Mon-Fri, no holiday) - the calendar itself is not
@@ -1135,6 +1183,28 @@ def _build_state():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def test_an_absent_store_is_not_reported_as_one_held_by_the_evening_run(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """UNAVAILABLE was right and the REASON was false, on every CI run gate 24 has ever made.
+
+    `data/` exists in GitHub Actions and holds no store, and no scheduled run has ever existed
+    there - yet the tool printed that the scheduled run was holding the stores, over a duckdb error
+    reading `database does not exist`. `AGENTS.md` §10.6 rule 2 in the direction of confidence, and
+    §15's rule that an explanation is a claim. The two states are told apart from the filesystem
+    now, never from the vendor's error text.
+    """
+    monkeypatch.setenv("SWINGDESK_DATA", str(tmp_path))
+    monkeypatch.delenv("SWINGDESK_ROOT", raising=False)
+    state = _build_state()
+    assert state.runtime_rows() is None
+    printed = capsys.readouterr().out
+    assert "holds no" in printed
+    assert "open in another process" not in printed
 
 
 def test_handoff_still_carries_all_generated_markers() -> None:
@@ -2972,3 +3042,258 @@ def test_rules_index_gate_refuses_a_rulebook_with_no_index(tmp_path: Path) -> No
     code, out = run_gate("verify_rules_index.py", root=tmp_path)
     assert code == 1
     assert "has no index" in out
+# ------------------------- gate 31: a command a document tells you to run is a command that runs
+#
+# What paid for it, 2026-08-25: `HANDOFF.md` §2's GENERATED census told a reader to derive the
+# classification coverage with `python tools/measure_sector_cap.py --wide`, and that exits 2 -
+# `--classifications` is required. Three of the five mentions of that tool were unrunnable, and the
+# third was copied out of §2 by a session that trusted it. A broken command propagates exactly like
+# a stale count.
+
+
+#: A tool whose parser is read out of its syntax tree, never by importing or running it. The body
+#: is deliberately import-free: if the gate ever regressed to importing its subject, this fixture
+#: would still work and the regression would be invisible - so the assertion that it does not
+#: import is carried by `test_the_gate_never_executes_the_tool_it_checks` below.
+_TOOL_WITH_A_REQUIRED_FLAG = '''"""A fixture tool."""
+import argparse
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(prog="sample")
+    parser.add_argument("--classifications", required=True)
+    parser.add_argument("--wide", action="store_true")
+    parser.parse_args()
+    return 0
+'''
+
+
+def _commands_tree(root: Path, *, doc: str, tool: str = _TOOL_WITH_A_REQUIRED_FLAG) -> None:
+    """A fixture repository: one tool with a known parser, one document naming it.
+
+    STAGED, not merely written - the gate reads `git ls-files`, and an unstaged fixture presents an
+    empty tree in which every failure assertion passes for the wrong reason.
+    """
+    (root / "tools").mkdir(exist_ok=True)
+    (root / "tools" / "sample.py").write_text(tool, encoding="utf-8")
+    (root / "DOC.md").write_text(doc, encoding="utf-8")
+    _git_init(root)
+    subprocess.run(["git", "-C", str(root), "add", "-A"], capture_output=True, check=True)
+
+
+def test_a_required_flag_left_out_is_a_failure(tmp_path: Path) -> None:
+    """The defect itself: the document promises a derivation the reader cannot run."""
+    _commands_tree(tmp_path, doc="Derive it with `python tools/sample.py --wide`.\n")
+    code, out = run_gate("verify_commands.py", tmp_path)
+    assert code == 1, out
+    assert "--classifications" in out and "required" in out
+
+
+def test_the_complete_command_passes(tmp_path: Path) -> None:
+    """The positive control on the same fixture, so a red result cannot come from a broken tree."""
+    _commands_tree(tmp_path, doc="Derive it with `python tools/sample.py --wide --classifications x`.\n")
+    code, out = run_gate("verify_commands.py", tmp_path)
+    assert code == 0, out
+    assert "1 invocation(s)" in out
+
+
+def test_a_flag_the_tool_does_not_declare_is_a_failure(tmp_path: Path) -> None:
+    """`DR-008` names `--emergency-repull`, which `fetch_directory.py` has never declared."""
+    _commands_tree(tmp_path, doc="Run `python tools/sample.py --classifications x --emergency`.\n")
+    code, out = run_gate("verify_commands.py", tmp_path)
+    assert code == 1, out
+    assert "--emergency" in out
+
+
+def test_a_tool_that_does_not_exist_is_a_failure(tmp_path: Path) -> None:
+    """A rename that misses a citation is otherwise silent across ninety-odd mentions."""
+    _commands_tree(tmp_path, doc="Run `python tools/renamed_away.py`.\n")
+    code, out = run_gate("verify_commands.py", tmp_path)
+    assert code == 1, out
+    assert "does not exist" in out
+
+
+def test_chained_commands_do_not_leak_flags_to_the_first_tool(tmp_path: Path) -> None:
+    """The gate's own first run produced two false positives of exactly this shape.
+
+    `python a.py && python b.py --flag` was read as `a.py --flag`, reporting `AGENTS.md` §2 and
+    `docs/README.md` - both correct - as defects. A gate whose output has to be skimmed is how a
+    real finding gets skipped, so this is pinned rather than remembered.
+    """
+    _commands_tree(
+        tmp_path,
+        doc="```bash\npython tools/sample.py --classifications x && python tools/other.py --wide\n```\n",
+    )
+    _code, out = run_gate("verify_commands.py", tmp_path)
+    # `other.py` does not exist, so the run fails - but it must fail for THAT and not for `--wide`.
+    assert "does not exist" in out
+    assert "passes `--wide` to `tools/sample.py`" not in out
+
+
+def test_a_line_marked_partial_is_not_read_as_an_invocation(tmp_path: Path) -> None:
+    """The escape hatch: a document showing a command SHAPE says so, and it is a claim on the record."""
+    _commands_tree(
+        tmp_path,
+        doc="<!-- partial-command -->\nThe shape is `python tools/sample.py --wide`.\n",
+    )
+    code, out = run_gate("verify_commands.py", tmp_path)
+    assert code == 0, out
+    assert "0 invocation(s)" in out
+
+
+def test_naming_a_tool_as_a_file_is_not_an_invocation(tmp_path: Path) -> None:
+    """`tools/foo.py` in a sentence is a reference - gate 3e's business, not this one's."""
+    _commands_tree(tmp_path, doc="See `tools/sample.py` for the measurement.\n")
+    code, out = run_gate("verify_commands.py", tmp_path)
+    assert code == 0, out
+    assert "0 invocation(s)" in out
+
+
+def test_the_gate_never_executes_the_tool_it_checks(tmp_path: Path) -> None:
+    """`verify_commands.py` claims it reads a parser statically. This is what makes that a fact.
+
+    The fixture tool writes a file at IMPORT time. If the gate ever imported or ran its subject to
+    inspect the parser - the obvious implementation, and the one that would pass every other test
+    here - the file would appear. A `CI_POLICY.md` §4 tool that quietly started executing network
+    scripts to check them would be a real incident, and nothing else in the suite would notice.
+    """
+    tripwire = tmp_path / "IT_RAN"
+    tool = (
+        '"""A fixture tool that announces execution."""\n'
+        "import argparse, pathlib\n\n"
+        f"pathlib.Path({str(tripwire)!r}).write_text('executed', encoding='utf-8')\n\n\n"
+        "def main() -> int:\n"
+        '    parser = argparse.ArgumentParser(prog="sample")\n'
+        '    parser.add_argument("--classifications", required=True)\n'
+        "    parser.parse_args()\n"
+        "    return 0\n"
+    )
+    _commands_tree(
+        tmp_path,
+        doc="Run `python tools/sample.py --classifications x`.\n",
+        tool=tool,
+    )
+    code, out = run_gate("verify_commands.py", tmp_path)
+    assert code == 0, out
+    assert not tripwire.exists(), (
+        "verify_commands.py executed the tool it was checking - it must read the parser from the "
+        "syntax tree only"
+    )
+
+
+# ------------------------- gate 22: DR-008's network limits live in the committed policy
+#
+# Ratified 2026-08-10, built 2026-08-25. `plans/2026-08-11-evidence-foundation.md` names both the
+# file and the gate number, so neither is invented here.
+#
+# The clause is not "put constants in YAML". These are the limits on what this project's software
+# may ask of somebody else's free server, and DR-008's rejected-alternatives table names what it
+# guards: "unlimited retry inside one command - can hammer the source without a new human
+# decision." A committed, gated policy is what makes a new human decision happen.
+
+_GOOD_POLICY = """version: 1
+source:
+  host: example.invalid
+  label: example/SymDir
+  user_agent: swingdesk/0.0
+  files:
+    a.txt: https://example.invalid/a.txt
+limits:
+  max_response_bytes: 2097152
+  request_timeout_seconds: 30
+  lock_stale_after_seconds: 600
+  max_retries_per_attempt: 1
+  retry_after_seconds: 60
+staleness:
+  warning_at_consecutive_misses: 1
+  error_at_consecutive_misses: 2
+"""
+
+_CLEAN_COLLECTOR = '''"""A collector that reads its limits."""
+POLICY_PATH = "registry/directory_pull_policy.yml"
+LOCAL_CONFIG = ".swingdesk-local.json"
+'''
+
+
+def _policy_tree(root: Path, *, policy: str = _GOOD_POLICY, collector: str = _CLEAN_COLLECTOR) -> None:
+    (root / "registry").mkdir(exist_ok=True)
+    (root / "tools").mkdir(exist_ok=True)
+    (root / "registry" / "directory_pull_policy.yml").write_text(policy, encoding="utf-8")
+    (root / "tools" / "fetch_directory.py").write_text(collector, encoding="utf-8")
+
+
+def test_a_complete_policy_and_a_clean_collector_pass(tmp_path: Path) -> None:
+    """The positive control: every refusal below must be the planted defect, not a broken fixture."""
+    _policy_tree(tmp_path)
+    code, out = run_gate("verify_directory_policy.py", tmp_path)
+    assert code == 0, out
+
+
+def test_a_missing_policy_is_a_failure(tmp_path: Path) -> None:
+    """The state DR-008 was in for fifteen days: the clause ratified, the file absent."""
+    (tmp_path / "tools").mkdir()
+    (tmp_path / "tools" / "fetch_directory.py").write_text(_CLEAN_COLLECTOR, encoding="utf-8")
+    code, out = run_gate("verify_directory_policy.py", tmp_path)
+    assert code == 1, out
+    assert "does not exist" in out
+
+
+def test_a_missing_limit_is_a_failure(tmp_path: Path) -> None:
+    """A policy missing a limit must fail HERE, not at the moment that limit would have bounded a
+    request - by then the request has been made."""
+    _policy_tree(tmp_path, policy=_GOOD_POLICY.replace("  request_timeout_seconds: 30\n", ""))
+    code, out = run_gate("verify_directory_policy.py", tmp_path)
+    assert code == 1, out
+    assert "request_timeout_seconds" in out
+
+
+def test_a_nonpositive_cap_is_a_failure(tmp_path: Path) -> None:
+    """A zero cap reads as "configured" and refuses every response. Present is not the same as sane."""
+    _policy_tree(tmp_path, policy=_GOOD_POLICY.replace("2097152", "0"))
+    code, out = run_gate("verify_directory_policy.py", tmp_path)
+    assert code == 1, out
+    assert "must be positive" in out
+
+
+def test_a_boolean_is_not_accepted_as_an_integer_limit(tmp_path: Path) -> None:
+    """`True` is an `int` in Python, and a boolean cap is nonsense that would pass a naive check."""
+    _policy_tree(tmp_path, policy=_GOOD_POLICY.replace("  request_timeout_seconds: 30",
+                                                       "  request_timeout_seconds: true"))
+    code, out = run_gate("verify_directory_policy.py", tmp_path)
+    assert code == 1, out
+    assert "request_timeout_seconds" in out
+
+
+def test_a_non_https_source_is_a_failure(tmp_path: Path) -> None:
+    _policy_tree(tmp_path, policy=_GOOD_POLICY.replace("https://example.invalid/a.txt",
+                                                       "http://example.invalid/a.txt"))
+    code, out = run_gate("verify_directory_policy.py", tmp_path)
+    assert code == 1, out
+    assert "https" in out
+
+
+def test_a_URL_literal_left_in_the_collector_is_a_failure(tmp_path: Path) -> None:
+    """The check with teeth. A copy that AGREES with the policy today is still refused.
+
+    Agreeing today is exactly how every drift in this repository has looked on the day it was
+    written - `AGENTS.md` §10.5.
+    """
+    _policy_tree(
+        tmp_path,
+        collector=_CLEAN_COLLECTOR + 'FALLBACK = "https://example.invalid/a.txt"\n',
+    )
+    code, out = run_gate("verify_directory_policy.py", tmp_path)
+    assert code == 1, out
+    assert "as a literal" in out
+
+
+def test_a_broken_policy_is_reported_before_the_collector_is_blamed(tmp_path: Path) -> None:
+    """Blaming the collector for a limit the policy never defined sends someone to the wrong file."""
+    _policy_tree(
+        tmp_path,
+        policy="version: 1\n",
+        collector=_CLEAN_COLLECTOR + 'FALLBACK = "https://example.invalid/a.txt"\n',
+    )
+    code, out = run_gate("verify_directory_policy.py", tmp_path)
+    assert code == 1, out
+    assert "as a literal" not in out

@@ -115,6 +115,16 @@ CHECKS: tuple[tuple[str, str, str | None], ...] = (
     (_LEAD + r"(\d+)\s+registered\b", "components:registered", "component"),
     (_LEAD + r"(\d+)\s+`specified`", "components:specified", None),
     (_LEAD + r"(\d+)\s+`active`", "components:active", None),
+    # The same two states WITHOUT backticks, guarded by "component" on the line the way the
+    # `registered` check above already is. Measured before adding, because three earlier widenings
+    # of this gate were rejected on their own numbers and one of them was this gate's:
+    # across every tracked `.md`, the guarded unbackticked form produces **one** hit for
+    # `specified` and **none** for `active` - and that one hit is real drift, `TODO.md` reading 6
+    # against a registry holding 5, which had also gone stale in two directions at once.
+    # Zero false positives is what separates this from the three that were thrown away; the guard
+    # word is doing the work, and without it "1 active position" would be noise on every run.
+    (_LEAD + r"(\d+)\s+specified\b", "components:specified", "component"),
+    (_LEAD + r"(\d+)\s+active\b", "components:active", "component"),
     (_LEAD + r"(\d+)\s+(?:merge\s+)?gates\b", "gates", None),
     (_LEAD + r"(\d+)\s+tests\b", "tests", None),
     (_LEAD + r"(\d+)\s+vectors\b", "golden vectors", None),
@@ -131,7 +141,33 @@ CHECKS: tuple[tuple[str, str, str | None], ...] = (
 HISTORICAL = re.compile(r"~~|\b(DONE|CLOSED|REACHED)\s+20\d\d-\d\d-\d\d")
 
 #: Statements that legitimately use one of these numbers for something else. Each is a decision.
-ALLOWED: set[tuple[str, str]] = set()
+ALLOWED: set[tuple[str, str]] = {
+    # `TODO.md` records the 2026-08-24 measurement that rejected gate 14 over `.py`, and one of
+    # the six false positives it lists is `verify_study_summary.py`'s comment predicting exactly
+    # this flag. The quoted string IS the evidence; paraphrasing it to satisfy this gate would
+    # destroy the record of why that widening was thrown away.
+    ("TODO.md", "465 registered"),
+}
+
+#: `TODO.md` is scanned, but only for these keys. The 2026-08-24 probe added the whole pattern set
+#: to this file and measured **8 live false positives**, every one from the tests/gates/vectors
+#: family - "11 tests, 5 mutants killed" is what a change ADDED, and `gate 25's condition 4 gates`
+#: uses `gates` as a VERB. None came from a backticked parameter status or a component activation
+#: state, and the rejection recorded the noise without separating the patterns that produced it.
+#:
+#: **What reopened it**, 2026-08-30: the rejection bounded the cost by arguing a stale count here
+#: sits in a closed `[x]` item and "only reads wrong". The instance that motivated this subset was
+#: in an OPEN item - *"6 specified components awaiting activation"* against a registry holding a
+#: different number, stale in two directions at once, in the section a session reads to decide what
+#: to build. An open item is acted on, so that bound does not hold for one.
+#:
+#: Measured before adding, over this file: **2 hits, 1 real drift, 1 quotation** - and the
+#: quotation is in `ALLOWED` above rather than rewritten.
+NARROW_DOCS = frozenset({"TODO.md"})
+NARROW_KEYS = frozenset({
+    "parameters:unset", "parameters:assumed", "parameters:owner", "parameters:validated",
+    "components:registered", "components:specified", "components:active",
+})
 
 #: The single owner of a measured count, and the section of it that owns them (owner decision,
 #: 2026-08-10). Every other document names the source instead of the number.
@@ -158,6 +194,8 @@ OWNERSHIP_HINT = (
 def main() -> int:
     counts = measure()
     markdown = sorted(DOCS.rglob("*.md")) + [REPO / name for name in ROOT_DOCS]
+    markdown += [REPO / name for name in sorted(NARROW_DOCS)]
+    markdown = [path for path in markdown if path.is_file()]
 
     failures: list[str] = []
     for path in markdown:
@@ -175,6 +213,8 @@ def main() -> int:
             if not (rel in GENERATED or (rel == OWNER and section.startswith(OWNER_SECTION))):
                 for pattern, key, guard in CHECKS:
                     if key not in counts or (guard and guard not in line.lower()):
+                        continue
+                    if rel in NARROW_DOCS and key not in NARROW_KEYS:
                         continue
                     for match in re.finditer(pattern, line, re.IGNORECASE):
                         phrase = re.sub(r"\s+", " ", match.group(0)).strip().replace("`", "")

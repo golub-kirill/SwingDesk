@@ -377,3 +377,335 @@ def test_departures_are_directional(store) -> None:
 
     assert store.departures(MONDAY, FRIDAY) == ()
     assert store.departures(FRIDAY, MONDAY) == ("TEST2",)
+
+
+# ---------------------------------------------- DR-008's audit, guard and forced pull (2026-08-25)
+#
+# All three were ratified 2026-08-10 and none was built. Gate 20 exists BECAUSE of that omission and
+# passed the whole time, because it checks that a record names an implementer, not that the
+# implementer implements the record - `AGENTS.md` §17, verify at the right granularity. Gate 31
+# found it from the other side: the record's emergency command names flags argparse never had.
+
+
+def test_an_invocation_that_makes_no_request_still_records_an_audit_row(store) -> None:
+    """A refusal that recorded nothing left "declined" and "never ran" indistinguishable."""
+    started = datetime(2026, 8, 25, 18, 30, tzinfo=UTC)
+    store.record_audit(
+        started_at=started, finished_at=started, mode="SCHEDULED", reason=None,
+        enabled=False, attempts=0, requests=0, received_bytes=0,
+        result="DISABLED", snapshot=None,
+    )
+    rows = store.audit()
+    assert len(rows) == 1
+    assert rows[0][2] == "SCHEDULED"
+    assert rows[0][8] == "DISABLED"
+    assert rows[0][6] == 0, "a declined invocation must record zero requests, not no row"
+
+
+def test_at_most_one_audit_row_per_invocation(store) -> None:
+    """`DR-008` says "at most one", and the primary key is what makes that true rather than hoped."""
+    started = datetime(2026, 8, 25, 18, 30, tzinfo=UTC)
+    for result in ("DISABLED", "RECORDED"):
+        store.record_audit(
+            started_at=started, finished_at=started, mode="SCHEDULED", reason=None,
+            enabled=True, attempts=0, requests=0, received_bytes=0,
+            result=result, snapshot=None,
+        )
+    assert len(store.audit()) == 1
+    assert store.audit()[0][8] == "RECORDED"
+
+
+def test_pull_for_session_is_what_makes_the_guard_decidable_before_the_network(store) -> None:
+    """The vendor's session date arrives WITH the file, so the guard cannot wait for it.
+
+    Until this existed the collector downloaded both files and then let `record` strip the date -
+    two requests spent to learn something the store already knew.
+    """
+    store.record([_entry("AAA")], MONDAY, "src", date(2026, 8, 24))
+    assert store.pull_for_session(date(2026, 8, 24)) == MONDAY
+    assert store.pull_for_session(date(2026, 8, 25)) is None
+
+
+def test_a_repeated_forced_reason_is_visible_to_the_caller(store) -> None:
+    """`DR-008` requires a NEW reason per forced pull; a reason that repeats is one nobody reads."""
+    assert store.last_forced_reason() is None
+    first = datetime(2026, 8, 25, 18, 30, tzinfo=UTC)
+    store.record_audit(
+        started_at=first, finished_at=first, mode="FORCED", reason="truncated first response",
+        enabled=True, attempts=1, requests=2, received_bytes=10,
+        result="RECORDED", snapshot=first,
+    )
+    assert store.last_forced_reason() == "truncated first response"
+
+    # A later SCHEDULED row must not become the answer - the requirement is about forced pulls only.
+    later = first + timedelta(hours=1)
+    store.record_audit(
+        started_at=later, finished_at=later, mode="SCHEDULED", reason=None,
+        enabled=True, attempts=0, requests=0, received_bytes=0,
+        result="ALREADY_RECORDED", snapshot=None,
+    )
+    assert store.last_forced_reason() == "truncated first response"
+
+
+def test_the_monotonicity_check_still_refuses_a_repeat_session_by_default(store) -> None:
+    """The positive control for the exception below: without `supersedes`, nothing changes."""
+    store.record([_entry("AAA")], MONDAY, "src", date(2026, 8, 24))
+    again = MONDAY + timedelta(hours=1)
+    assert store.record([_entry("AAA")], again, "src", date(2026, 8, 24)) is None
+
+
+def test_a_forced_replacement_keeps_its_session_date(store) -> None:
+    """A correction and a second observation are different claims, and only one may repeat a date.
+
+    Without this the replacement stored a NULL date and `pull_for_session` went on answering with
+    the snapshot the operator had just corrected - the forced pull would have been a no-op dressed
+    as a repair.
+    """
+    store.record([_entry("AAA")], MONDAY, "src", date(2026, 8, 24))
+    later = MONDAY + timedelta(hours=1)
+    stored = store.record([_entry("AAA"), _entry("BBB")], later, "src", date(2026, 8, 24),
+                          supersedes=MONDAY)
+    assert stored == date(2026, 8, 24)
+    assert store.pull_for_session(date(2026, 8, 24)) == later
+
+
+def test_the_superseded_pull_remains_stored_and_the_note_is_appended(store) -> None:
+    """`DR-008`: "The previous snapshot remains stored but is no longer canonical."
+
+    Append, never overwrite - `AUDIT_AND_IMMUTABILITY.md` §2. A correction that erased its
+    predecessor would present the corrected state as though it had always been so.
+    """
+    store.record([_entry("AAA")], MONDAY, "src", date(2026, 8, 24))
+    later = MONDAY + timedelta(hours=1)
+    store.record([_entry("AAA"), _entry("BBB")], later, "src", date(2026, 8, 24), supersedes=MONDAY)
+    store.record_supersession(
+        recorded_at=later, superseded=MONDAY, replacement=later, reason="truncated first response",
+    )
+
+    notes = store.supersessions()
+    assert len(notes) == 1
+    assert notes[0][1] == MONDAY and notes[0][2] == later
+    assert notes[0][3] == "truncated first response"
+
+    # The superseded snapshot is still readable at its own knowledge time - that is what makes the
+    # supersession evidence rather than a rewrite.
+    assert {e.symbol for e in store.as_of(MONDAY)} == {"AAA"}
+    assert {e.symbol for e in store.as_of(later)} == {"AAA", "BBB"}
+
+
+# ------------------------------------------- DR-008's gap record and its severities (2026-08-25)
+#
+# "Subsequent missing NYSE sessions are recorded as gaps, never backdated observations. One
+# consecutive miss is a log WARNING; two or more are ERROR. Research claiming continuous
+# survivorship coverage must query and disclose those gaps."
+#
+# A gaps() built on knowledge_time was written and withdrawn on 2026-08-12 for misattributing
+# evening pulls that cross UTC midnight. source_session_date is what makes a correct one possible.
+
+
+def test_only_an_ATTRIBUTED_pull_counts_as_coverage(store) -> None:
+    """An unattributed pull is a real snapshot and an unknown session. It cannot fill a gap.
+
+    DR-008 c3 forbids backfilling a date a pull never stored, so counting one here would manufacture
+    exactly the coverage the record refuses to claim.
+    """
+    store.record([_entry("AAA")], MONDAY, "src", None)
+    assert store.attributed_sessions() == ()
+
+    later = MONDAY + timedelta(days=1)
+    store.record([_entry("AAA")], later, "src", date(2026, 8, 24))
+    assert store.attributed_sessions() == (date(2026, 8, 24),)
+
+
+def test_gaps_are_the_expected_sessions_no_pull_is_attributed_to(store) -> None:
+    store.record([_entry("AAA")], MONDAY, "src", date(2026, 8, 24))
+    expected = [date(2026, 8, 24), date(2026, 8, 25), date(2026, 8, 26)]
+    assert store.gaps(expected) == (date(2026, 8, 25), date(2026, 8, 26))
+
+
+def test_gaps_asks_the_caller_for_the_sessions_and_never_a_calendar(store) -> None:
+    """The store must not learn about exchanges - the layer contract, and the reason the withdrawn
+    version was wrong. Passing an empty window yields no gaps rather than inventing a calendar."""
+    store.record([_entry("AAA")], MONDAY, "src", date(2026, 8, 24))
+    assert store.gaps([]) == ()
+
+
+def test_one_isolated_miss_is_a_WARNING_and_two_in_a_ROW_are_an_ERROR() -> None:
+    """`DR-008` says CONSECUTIVE, and consecutive is about a run rather than a total.
+
+    Eight isolated misses are eight recoverable evenings. Two in a row means whatever stopped the
+    collector was still stopping it the next day.
+    """
+    import fetch_directory
+
+    assert fetch_directory.gap_severity([]) is None
+    assert fetch_directory.gap_severity([date(2026, 8, 17)]) == "WARNING"
+    assert fetch_directory.gap_severity([date(2026, 8, 17), date(2026, 8, 20)]) == "WARNING"
+    assert fetch_directory.gap_severity([date(2026, 8, 17), date(2026, 8, 18)]) == "ERROR"
+
+
+def test_a_friday_and_the_monday_after_it_are_CONSECUTIVE_sessions() -> None:
+    """The subtlety that decides whether this rule is usable at all.
+
+    Counting calendar days would call every weekend a two-day gap and report an ERROR every Monday.
+    Counting them as non-adjacent would miss a genuine two-session outage across a weekend, which is
+    the most likely shape of one. Sessions, not days.
+    """
+    import fetch_directory
+
+    friday, monday = date(2026, 8, 21), date(2026, 8, 24)
+    assert fetch_directory.gap_severity([friday, monday]) == "ERROR"
+
+
+def test_a_weekend_is_never_itself_a_gap(store) -> None:
+    """Saturday is not a missing session, and a window built from the calendar never offers one."""
+    from swingdesk.contracts.reference import Exchange
+    from swingdesk.reference_data import calendar as cal
+
+    store.record([_entry("AAA")], MONDAY, "src", date(2026, 8, 21))
+    later = MONDAY + timedelta(days=1)
+    store.record([_entry("AAA")], later, "src", date(2026, 8, 24))
+    window = [s.session_date for s in cal.sessions(Exchange.NYSE, date(2026, 8, 21), date(2026, 8, 24))]
+    assert store.gaps(window) == ()
+
+
+# ------------------------------------------------- DR-008's checksum (2026-08-25)
+#
+# "Both files must pass ... non-empty parse and checksum creation before either becomes canonical",
+# and "only validated parsed fields, source timestamps and checksums are stored with a snapshot".
+# Raw bodies are never archived, so the digest is the only trace of what the vendor actually served.
+
+
+def test_a_checksum_is_stored_with_the_pull_and_read_back(store) -> None:
+    store.record([_entry("AAA")], MONDAY, "src", None, checksum="abc123")
+    assert store.checksum_at(MONDAY) == "abc123"
+    assert store.latest_checksum() == "abc123"
+
+
+def test_a_pull_predating_the_column_reads_None_rather_than_failing(store) -> None:
+    """The column was added to a store that already held eighteen pulls. `None` is the honest
+    answer for those, and it must not be confused with a pull whose digest was empty."""
+    store.record([_entry("AAA")], MONDAY, "src", None)
+    assert store.checksum_at(MONDAY) is None
+    assert store.latest_checksum() is None
+
+
+def test_latest_checksum_skips_the_pulls_that_have_none(store) -> None:
+    store.record([_entry("AAA")], MONDAY, "src", None)
+    later = MONDAY + timedelta(hours=1)
+    store.record([_entry("AAA")], later, "src", None, checksum="deadbeef")
+    assert store.latest_checksum() == "deadbeef"
+
+
+def test_identical_bodies_digest_identically_and_different_ones_do_not() -> None:
+    import fetch_directory
+
+    assert fetch_directory.digest("a", "b") == fetch_directory.digest("a", "b")
+    assert fetch_directory.digest("a", "b") != fetch_directory.digest("b", "a")
+
+
+def test_the_digest_cannot_be_fooled_by_moving_bytes_between_the_two_FILES() -> None:
+    """One digest covers the PAIR, because a pull is a complete snapshot.
+
+    Concatenating without a length prefix would make ("ab", "c") and ("a", "bc") collide - two
+    genuinely different snapshots reported as the same one, which is the exact claim the digest
+    exists to make.
+    """
+    import fetch_directory
+
+    assert fetch_directory.digest("ab", "c") != fetch_directory.digest("a", "bc")
+
+
+# ------------------------------------------- DR-008's process lock (2026-08-25)
+#
+# "It does not bypass local disablement, the NYSE calendar, source allowlist, response cap,
+# validation, PROCESS LOCK or audit" - said of the forced pull, about a lock that did not exist.
+
+
+def _lock_dir(tmp_path: Path) -> Path:
+    directory = tmp_path / "data"
+    directory.mkdir(exist_ok=True)
+    return directory
+
+
+def test_a_second_collector_is_refused_while_the_first_holds_the_lock(tmp_path: Path) -> None:
+    import fetch_directory
+
+    now = datetime(2026, 8, 25, 18, 30, tzinfo=UTC)
+    directory = _lock_dir(tmp_path)
+    with fetch_directory.process_lock(directory, now):
+        with pytest.raises(fetch_directory.LockHeld):
+            with fetch_directory.process_lock(directory, now):
+                pass
+
+
+def test_the_lock_is_released_on_the_way_out(tmp_path: Path) -> None:
+    import fetch_directory
+
+    now = datetime(2026, 8, 25, 18, 30, tzinfo=UTC)
+    directory = _lock_dir(tmp_path)
+    with fetch_directory.process_lock(directory, now):
+        assert (directory / "directory-pull.lock").is_file()
+    assert not (directory / "directory-pull.lock").is_file()
+
+
+def test_the_lock_is_released_even_when_the_body_raises(tmp_path: Path) -> None:
+    """A collector that dies mid-pull must not leave the next evening blocked.
+
+    This is the ordinary case of the stale-lock problem, and the `finally` is what keeps it
+    ordinary rather than requiring the timeout below to rescue it.
+    """
+    import fetch_directory
+
+    now = datetime(2026, 8, 25, 18, 30, tzinfo=UTC)
+    directory = _lock_dir(tmp_path)
+    with pytest.raises(RuntimeError), fetch_directory.process_lock(directory, now):
+        raise RuntimeError("the vendor hung up")
+    assert not (directory / "directory-pull.lock").is_file()
+
+
+def test_a_STALE_lock_is_reclaimed_and_says_so(tmp_path: Path) -> None:
+    """The design decision, and getting it wrong would be worse than having no lock at all.
+
+    `DR-008` gives the forced pull no way past this lock, so one left by a KILLED process - where
+    the `finally` above never ran - would refuse every pull for ever. A missed pull is permanently
+    unrecoverable because the vendor publishes current state and not an archive, so a lock that
+    never expires would cost the departure record to prevent a duplicate request. Reclaimed, and
+    reported: it means a previous run died, which is worth seeing.
+    """
+    import fetch_directory
+
+    now = datetime(2026, 8, 25, 18, 30, tzinfo=UTC)
+    directory = _lock_dir(tmp_path)
+    abandoned = now - timedelta(seconds=fetch_directory.LOCK_STALE_AFTER + 5)
+    (directory / "directory-pull.lock").write_text(abandoned.isoformat(), encoding="utf-8")
+
+    with fetch_directory.process_lock(directory, now) as note:
+        assert "stale" in note
+
+
+def test_a_lock_just_inside_the_timeout_is_still_held(tmp_path: Path) -> None:
+    """The positive control for the reclamation above: the timeout is a boundary, not a bypass."""
+    import fetch_directory
+
+    now = datetime(2026, 8, 25, 18, 30, tzinfo=UTC)
+    directory = _lock_dir(tmp_path)
+    recent = now - timedelta(seconds=fetch_directory.LOCK_STALE_AFTER - 5)
+    (directory / "directory-pull.lock").write_text(recent.isoformat(), encoding="utf-8")
+
+    with pytest.raises(fetch_directory.LockHeld):
+        with fetch_directory.process_lock(directory, now):
+            pass
+
+
+def test_an_UNREADABLE_lock_is_reclaimed_rather_than_treated_as_held_for_ever(tmp_path: Path) -> None:
+    """A lock that cannot be dated cannot be trusted to be live, and "cannot tell" must not mean
+    "blocked permanently" for a resource whose loss is unrecoverable."""
+    import fetch_directory
+
+    now = datetime(2026, 8, 25, 18, 30, tzinfo=UTC)
+    directory = _lock_dir(tmp_path)
+    (directory / "directory-pull.lock").write_text("not a timestamp", encoding="utf-8")
+
+    with fetch_directory.process_lock(directory, now) as note:
+        assert "unreadable" in note

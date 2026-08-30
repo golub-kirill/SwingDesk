@@ -181,6 +181,11 @@ def worktree_rows() -> list[tuple[str, str]]:
 # ------------------------------------------------------------------------ runtime facts
 
 
+#: The stores the runtime block reads. Named here so the failure path can tell "not here" from
+#: "held by the evening run" out of the filesystem, rather than out of duckdb's error text.
+STORES: tuple[str, ...] = ("journal.duckdb", "bars.duckdb", "directory.duckdb")
+
+
 def _connect(name: str):
     """Read-only handle. Never opened for write: this tool reports state, it never changes it."""
     import duckdb
@@ -305,14 +310,45 @@ def _directory_facts(measured_instruments: int) -> list[tuple[str, str]]:
         latest = connection.execute(
             "SELECT rows FROM directory_pulls ORDER BY knowledge_time DESC LIMIT 1"
         ).fetchone()
+        # The two reasons a pull carries no session date are DIFFERENT facts and this row asserted
+        # one of them for both until 2026-08-25. A pull taken BEFORE the field existed is
+        # permanently unattributable (`DR-008` c3). A pull taken AFTER it and still null was
+        # REJECTED by the monotonicity check in `DirectoryStore.record` - the vendor file had not
+        # regenerated, so it is a re-pull of a session already recorded. Three of the ten were the
+        # second kind while the row said all ten were the first, which is the drift §10.6 exists to
+        # stop, living inside the generator that exists to stop it.
+        boundary = connection.execute(
+            "SELECT MIN(knowledge_time) FROM directory_pulls WHERE source_session_date IS NOT NULL"
+        ).fetchone()[0]
+        if boundary is None:
+            predating, rejected = pulls - confirmed, 0
+        else:
+            predating = connection.execute(
+                "SELECT COUNT(*) FROM directory_pulls "
+                "WHERE source_session_date IS NULL AND knowledge_time < ?", [boundary]
+            ).fetchone()[0]
+            rejected = connection.execute(
+                "SELECT COUNT(*) FROM directory_pulls "
+                "WHERE source_session_date IS NULL AND knowledge_time > ?", [boundary]
+            ).fetchone()[0]
     finally:
         connection.close()
     listed = int(latest[0]) if latest else 0
     coverage = f"{measured_instruments / listed:.1%}" if listed else "n/a"
+    unattributed = (
+        f"**{predating}** predate the field and stay permanently unattributed (`DR-008` c3)"
+        if predating else "none predate the field"
+    )
+    if rejected:
+        unattributed += (
+            f"; **{rejected}** do NOT - they were taken after the field existed and the vendor "
+            f"file had not regenerated, so `DirectoryStore.record`'s monotonicity check dropped "
+            f"the claim. Each of those is a re-pull of an already-recorded session, which "
+            f"`DR-008` says should make **zero requests**"
+        )
     return [
         ("Directory", f"**{pulls} pulls** · **{confirmed} confirmed** against the response's own "
-                      f"`Last-Modified` (`source_session_date`); the rest predate the field and "
-                      f"stay permanently unattributed (`DR-008` c3)"),
+                      f"`Last-Modified` (`source_session_date`); of the rest, {unattributed}"),
         ("Universe coverage", f"bars stored for {measured_instruments:,} of {listed:,} listed "
                               f"symbols - **{coverage}**"),
     ]
@@ -357,7 +393,8 @@ def _classification_facts() -> list[tuple[str, str]]:
                             f"(**{share}**) report at least one non-zero weight. The stricter "
                             f"`look_through` count, which also drops a degenerate ETF "
                             f"look-through (`DR-006` §8.7), is lower - derive it with "
-                            f"`python tools/measure_sector_cap.py --wide`"),
+                            f"`python tools/measure_sector_cap.py --wide "
+                            f"--classifications data/classifications.duckdb`"),
     ]
 
 
@@ -419,15 +456,27 @@ def runtime_rows() -> list[tuple[str, str]] | None:
             _track_a_row(),
         ]
     except duckdb.IOException as error:
-        # A store held by another process is the SAME third state as a store that is not here: this
+        # A store that cannot be opened is the SAME third state as one that is not here: this
         # checkout cannot measure the runtime block, so it must not rewrite it. `ADR-0004` makes the
         # stores single-writer, so the evening run holding `bars.duckdb` is the design working - and
         # `AGENTS.md` §12 names the right response: "UNAVAILABLE, never a traceback". This tool
         # raised one instead, caught 2026-08-24 at 18:31 while the scheduled 18:30 pass was mid-run.
-        # Reported rather than swallowed, because a silent None here would be indistinguishable
-        # from having no `data/` at all.
-        print(f"state: a store in {DATA} is open in another process - the scheduled run holds them "
-              f"while it works. The runtime block is UNAVAILABLE from here and is left alone.")
+        #
+        # **Which of the two it is must be MEASURED, not assumed**, and until 2026-08-30 it was
+        # assumed. The message said the scheduled run held the stores, and in GitHub Actions - where
+        # `data/` exists but holds no store at all, and no scheduled run has ever existed - it said
+        # so on every run, over a duckdb error reading `database does not exist`. The verdict was
+        # right and the explanation was false, which is `AGENTS.md` §10.6 rule 2 in the direction of
+        # confidence rather than alarm, and §15's rule that an explanation is itself a claim.
+        # Decided from the filesystem rather than by parsing a vendor's error text.
+        absent = [name for name in STORES if not (DATA / name).is_file()]
+        if absent:
+            print(f"state: {DATA} holds no {', '.join(absent)}. The runtime block is UNAVAILABLE "
+                  f"from here and is left alone.")
+        else:
+            print(f"state: a store in {DATA} is open in another process - the scheduled run holds "
+                  f"them while it works. The runtime block is UNAVAILABLE from here and is left "
+                  f"alone.")
         print(f"       {error}")
         return None
 
