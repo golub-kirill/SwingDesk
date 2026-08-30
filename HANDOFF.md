@@ -15,9 +15,13 @@ python tools/verify_branches.py          # every live branch, and whether it is 
 python tools/verify_sibling_edits.py     # what another live branch is editing, before you edit it
 ```
 
-**`claude/swingdesk-open-tasks-2001c8` is unmerged and holds real work** — the directory collector,
-the AI guard's vocabulary half, gates 22 and 31, and the EDGAR departure classifier; read its own
-log. `claude/inspiring-colden-2e8e16` is summarised in §5 below.
+~~**`claude/swingdesk-open-tasks-2001c8` is unmerged and holds real work**~~ — **merged
+2026-08-29** into `claude/swingdesk-open-tasks-f2773d`, with the two `CI_POLICY.md` rows gate 36
+required and that neither branch could write alone. It carried the directory collector, the AI
+guard's vocabulary half, gates 22 and 31, and the EDGAR departure classifier; §5 below now
+summarises it alongside `claude/inspiring-colden-2e8e16`. **Do not read that from here either** —
+the two commands above are the only answer that cannot rot, and this line is struck rather than
+deleted for the same reason §0 opens the way it does.
 
 **Run the second command before editing anything another branch might be editing.** On 2026-08-25
 two trees rewrote the same two table rows two hours apart with gate 16 green, because gate 16's
@@ -392,14 +396,19 @@ session and **one was wrong**: `freshness.assess` reports zero fan-in and is cal
 looks clean because the property is absent. §9's *"a null result is evidence only once a positive
 control shows the query works"* is not a formality.
 
-**One thing to do at merge time, and gate 36 will insist on it.** The sibling branch registers gates
-**22** (`verify_directory_policy.py`) and **31** (`verify_commands.py`) in `check_gates.py` and adds
-**no rows** to `CI_POLICY.md` §1 — checked 2026-08-25 against its tip. Gate 36 requires the
-inventory and the runner to name the same gates, so a merge of both branches goes red until those
-two rows exist. **That is the gate working on its first real merge, not a defect in either branch**;
-the fix is two rows, and the descriptions are already in the runner entries. Neither branch can add
-them alone: a row for a gate the other branch registers would fail gate 36 here, in the other
-direction.
+**~~One thing to do at merge time~~ — DONE 2026-08-29, and the prediction was exact.** The merge
+of `claude/swingdesk-open-tasks-2001c8` went red on gate 36 and on nothing else of its own making,
+because that branch registers **22** (`verify_directory_policy.py`) and **31**
+(`verify_commands.py`) in `check_gates.py` and added no rows to `CI_POLICY.md` §1, while neither
+branch could add them alone — a row for a gate the other side registers fails gate 36 from the
+other direction. **The gate working on its first real merge, not a defect in either branch.** Both
+rows are written, from the two tools rather than from the runner's one-line labels.
+
+**And the merge repaired something nobody predicted.** The sibling had taught `tools/build_state.py`
+to emit the classification command with the flag it actually requires; this side's generated §2 row
+still carried the form that exits 2. Regenerating §2 fixed it — so gate 31 arrived on the same
+merge as a live instance of the defect it was built for, in the block whose whole promise is that a
+reader can derive the number instead of trusting the row.
 
 ### Five questions waiting on the owner — restated 2026-08-29 with names, not codes
 

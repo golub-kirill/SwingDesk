@@ -2188,7 +2188,18 @@ is for where no gate can reach.
       ```bash
       python tools/verify_gate_inventory.py
       ```
-- [ ] **`[v]` AT MERGE: gates 22 and 31 need `CI_POLICY.md` rows, and gate 36 will insist.**
+- [x] **`[v]` AT MERGE: gates 22 and 31 needed `CI_POLICY.md` rows, and gate 36 insisted. DONE
+      2026-08-29 — the two branches are merged and both rows are written.** The prediction held
+      exactly: the merge went red on gate 36 and on nothing else of its own making, and the fix was
+      the two rows. They are written from the two tools' docstrings rather than copied out of the
+      runner's one-line descriptions, because a row a reader consults to learn what is protected
+      should say what the gate checks, not what its label says.
+      **What the merge also repaired, and it was not predicted.** The sibling had taught
+      `tools/build_state.py` to emit the classification command with the flag it requires; this
+      side's generated row still carried the form that exits 2. Regenerating §2 fixed it — so gate
+      31 arrived and its motivating defect was still live in the block that promises a reader can
+      derive the number.
+      **The original entry, kept because the reasoning is the transferable part:**
       Checked 2026-08-25 against `claude/swingdesk-open-tasks-2001c8`'s tip: it registers **22**
       (`verify_directory_policy.py`) and **31** (`verify_commands.py`) in `check_gates.py` and adds
       no rows to the inventory. Gate 36 requires the two to name the same gates, so a merge of both
@@ -2196,7 +2207,13 @@ is for where no gate can reach.
       entries.** Neither branch can add them alone — a row here for a gate this branch does not
       register fails gate 36 from the other side, which is the check being symmetric rather than
       awkward.
-- [ ] **`[c]` Gate 22** + `DR-008`'s remaining machinery · **Gate 14's word-number hole.**
+- [x] ~~**`[c]` Gate 22** + `DR-008`'s remaining machinery · **Gate 14's word-number hole.**~~ **All three CLOSED by the 2026-08-29 merge, and none of them the way this line
+      expected.** Gate 22 is built; `DR-008`'s audit is in §2 clause by clause, with the
+      MANUAL-mode gap the only open item left from it; and gate 14's word-number hole was
+      built, measured and deliberately reverted — the entry two rows down records why, so
+      the next session does not re-derive it. **A one-line `[c]` item naming three
+      unrelated things is why this took a merge to notice**: it could not go stale in
+      parts, so it read as live in whole.
 - [x] **`[v]` GATE 31 BUILT 2026-08-25 — a command a document tells you to run is a command that
       runs.** `HANDOFF.md` §2's **generated** census told a reader to derive the classification
       coverage by running `measure_sector_cap.py` with `--wide` and nothing else. That exits 2:
