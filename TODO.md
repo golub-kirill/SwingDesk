@@ -2204,6 +2204,26 @@ is for where no gate can reach.
       `SWINGDESK_ROOT`; `verify_studies` did not, and now does.
       Every defect test has a positive control on the same fixture, so a red result cannot come from
       a broken fixture instead of the planted defect.
+- [x] **`[v]` THE FOUR `--check-only` GENERATORS COULD NOT BE SEEN RED, AND NOW CAN — 2026-08-30.**
+      `tests/test_gates.py`'s own docstring sets the bar: *"a gate that has never been seen red
+      proves nothing"*. Gates **3b**, **3c**, **3ci** and **3d** were the last of ours below it, and
+      the obstacle was structural rather than neglect — the same one `verify_studies` had: without
+      a fixture root the only way to make a `--check-only` fail is to edit the real tree, which the
+      suite must never do. All four honour `SWINGDESK_ROOT` now, and each has a failure test.
+      **`AGENTS.md` §10.6 rule 1 is why these mattered more than their size** — *"if a fact can be
+      derived, a tool derives it and `--check-only` gates it"* is the load-bearing sentence under
+      every generated document, and four of the five instances had never been exercised.
+      **The fixture copies the REAL inputs and lets the generator write its own output**, so the
+      test exercises real parsing rather than a stand-in that could agree with a broken generator.
+      Then it corrupts the output. **Proven, not assumed:** disabling one generator's comparison
+      turns exactly that parameterisation red and leaves the other three green.
+      **The audit that found them was wrong the first time, and the correction is the lesson.**
+      Matching each gate's tool as `<name>.py` in `tests/` reported **14** gates without a test.
+      Five of those were false — the tests name the module without the `.py`, and four more are
+      third-party (`ruff`, `mypy`, `import-linter`, `pytest`), whose ability to fail is not this
+      repository's claim to prove. The real answer is four, all one class. A proxy that looks like
+      a measurement is `AGENTS.md` §12's trap, and the positive control is what caught it — the
+      same §9 discipline, applied to an audit instead of to the graph.
 - [x] **`[v]` GATE 32 — a checklist item's stated blocker must still be blocking. Built 2026-08-25.**
       `plans/2026-08-24-the-trade-flow.md` §3 stage 4 opens by asking for each `_unavailable` reason
       to be re-checked *"since two were suspected stale and a third may be by the time this is

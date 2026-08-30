@@ -16,12 +16,16 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
 from typing import Any
 
-REPO = Path(__file__).resolve().parents[1]
+#: Overridable so the gate can be pointed at a fixture. Without it a --check-only gate could
+#: only be tested by editing the real tree, which the suite must never do - the same
+#: structural obstacle that kept four gates unproven until verify_studies gained a root.
+REPO = Path(os.environ.get("SWINGDESK_ROOT") or Path(__file__).resolve().parents[1])
 SPEC = REPO / "docs" / "04-journal" / "CHECKLIST_SPEC.md"
 OUT = REPO / "registry" / "checklists.yml"
 

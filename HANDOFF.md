@@ -123,7 +123,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | | |
 |---|---|
 | Merge gates | **44**, one command: `python tools/check_gates.py` |
-| Tests | **1015**, fully offline |
+| Tests | **1019**, fully offline |
 | Docs | 123 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 459 registered · 5 `specified` · **1 `active`** |
 | Parameters | 106 - 61 `unset`, 34 `assumed`, 11 `owner`, **0 `validated`** |
