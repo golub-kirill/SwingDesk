@@ -57,9 +57,17 @@ def main() -> int:
 
     failures: list[str] = []
     checked = 0
+    awaiting: list[tuple[str, str]] = []
     for record in sorted(DECISIONS.glob("DR-*.md")):
         fields = parse_header(record.read_text(encoding="utf-8"))
         status = fields.get("status", "")
+        if status.startswith("proposed"):
+            # A standing measurement, never a failure: ratifying is the owner's act and this gate
+            # has no opinion about when. It is printed because nothing derived it, and `HANDOFF.md`
+            # section 5 carried a hand-typed list saying "these five are the whole of what is
+            # blocked on a human" while `docs/decisions/` held twelve. `AGENTS.md` 10.5 gives a
+            # measured COUNT one owner; a STATUS had none, and this is that answer for this one.
+            awaiting.append((record.stem, status))
         if not status.startswith("accepted"):
             continue
         checked += 1
@@ -92,6 +100,11 @@ def main() -> int:
     for failure in failures:
         print(f"  {failure}")
     print(f"\ndecisions: {checked} accepted, {len(failures)} unverifiable")
+    if awaiting:
+        print(f"\n{len(awaiting)} record(s) still `proposed` - awaiting the owner, and not a "
+              f"failure. Ratifying is the owner's act:")
+        for name, status in awaiting:
+            print(f"  {name:<44} {status}")
     if failures:
         print("\nAn accepted decision promises something. Name the file and token that prove it, "
               "or declare `implementation: none`.")

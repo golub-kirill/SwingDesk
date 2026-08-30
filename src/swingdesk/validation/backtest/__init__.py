@@ -13,6 +13,12 @@ Two properties are structural rather than tested-for:
     reason nobody defined, and a run cannot end with positions quietly dropped.
 """
 
+from swingdesk.decision_logic.triggers import (
+    AlwaysEligible,
+    BreakoutHigh,
+    CloseBelowLow,
+    EntryTrigger,
+)
 from swingdesk.trade_management.exits import ExitPolicy
 from swingdesk.validation.backtest.book import (
     BookResult,
@@ -24,12 +30,8 @@ from swingdesk.validation.backtest.book import (
 )
 from swingdesk.validation.backtest.costs import CostModel
 from swingdesk.validation.backtest.engine import (
-    AlwaysEligible,
     ArmResult,
     BacktestConfig,
-    BreakoutHigh,
-    CloseBelowLow,
-    EntryTrigger,
     Skipped,
     run_arm,
 )

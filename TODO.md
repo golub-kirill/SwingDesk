@@ -2320,7 +2320,27 @@ is for where no gate can reach.
       **Not fixed here.** `tools/daily_run.cmd` is a frozen file, and the options — commit the
       regenerated block, or move the regeneration out of the wrapper — are a decision about what the
       scheduled run is allowed to do to the repository.
-- [ ] **`[c]` Gate 10** (traceability) — unblocked now that ATR is active, still to build. **Weighed
+- [ ] **`[v]` GATE 10 IS NOW TWO CHECKS, NOT THREE, AND THE THIRD WAS BUILT UNDER ANOTHER NUMBER —
+      re-derived 2026-08-30.** `REQUIREMENTS.md` §7 exists (the linkage the entry below says gate 10
+      needs first) and it names what gate 10 should check: *"a row here naming a test or a gate that
+      no longer exists"*. **That is gate 35**, built the same day §7 was, and its docstring already
+      names `REQUIREMENTS.md` §7 as one of its two subjects. So the narrow check §7 asks for is
+      done, and neither document had noticed the other.
+      **What is left of gate 10 is checks 1 and 3** — a course id with no requirement row, and a
+      spec id cited by no test. Check 2 (a requirement with no test) stays rejected on §7's own
+      reasoning: three of the nine correctly have none, and a gate reddening on those would demand
+      a test for a capability that does not exist.
+      **The half nobody had covered was gate NUMBERS, not test names, and it is gate 38 now.** Gate
+      35 resolves a cited TEST; gate 36 keeps the inventory and the runner in step; nothing checked
+      a gate number cited in prose, which is exactly what row 12 was — `exists` for seventeen days
+      over a number `check_gates.py` has never registered. Measured before building: 363 citations
+      across every tracked document, **0 unresolved** once a year and a date are excluded, both from
+      one real false positive.
+      **Row 10 stays `to build` deliberately.** About twenty documents refer to gate 10 as the thing
+      they are waiting for and every one of those sentences is true; gate 38's vocabulary is the
+      inventory rather than the runner precisely so those stay legal. Retiring the row would make
+      twenty documents stale to save one line.
+      **The original entry, kept because its reasoning is what narrowed this:** **Weighed
       and not built 2026-08-25**, with the reason recorded so it is not re-derived: its three checks
       are *a course id with no requirement row*, *a requirement with no test*, and *a spec id cited
       by no test*. The middle one would fire immediately on requirements that are deliberately

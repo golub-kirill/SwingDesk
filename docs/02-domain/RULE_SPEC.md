@@ -293,7 +293,7 @@ Eight decision points produce verdicts. Measured against §2, not against intent
 | # | Rule | Where | Class | 3-valued | Discriminating pair | Gap |
 |---|---|---|---|---|---|---|
 | 1 | Trend filter (5 candidate definitions) | `swingdesk.decision_logic.trend` | `HARD_GATE` | yes | `test_trend.py::test_definition_a_b_c_on_the_same_inputs` | no vectors; `consumed_by` empty; no `scope` |
-| 2 | Breakout trigger | `validation/backtest/engine.py` | `HARD_GATE` | **yes, since 2026-08-08** | `test_backtest.py::test_a_bar_with_no_lookback_window_is_not_a_rejected_signal` | no `scope`; the live path has no trigger at all |
+| 2 | Breakout trigger | `decision_logic/triggers.py` (moved there 2026-08-30 from `validation/backtest/engine.py`, so the live path can legally call the same one) | `HARD_GATE` | **yes, since 2026-08-08** | `test_backtest.py::test_a_bar_with_no_lookback_window_is_not_a_rejected_signal` | no `scope`; the live path has no trigger at all |
 | 3 | Exit policy (protective, gap, time) | `swingdesk.trade_management.exits` | `STATE_TRANSITION` | n/a | `test_backtest.py`, `test_positions.py` | two of four course slots implemented (`EXIT_MODEL_SPEC.md`) |
 | 4 | Sizing refusals | `swingdesk.trade_management.sizing` | `HARD_GATE` | yes | `test_invariants.py::test_stop_at_or_above_entry_always_refuses` | — |
 | 5 | Liquidity / universe rule | `swingdesk.application.universe`, `DR-003` | `HARD_GATE` | yes | `test_universe_selection.py::test_a_symbol_the_store_has_never_seen_is_not_measured_and_not_admitted` | plateau re-check pending full coverage |

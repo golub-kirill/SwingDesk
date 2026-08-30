@@ -151,6 +151,8 @@ def main() -> int:
                                   [python, "tools/verify_gate_inventory.py"]),
         "37 rules index": _run("the rule index and the rulebook name the same rules",
                                [python, "tools/verify_rules_index.py"]),
+        "38 gate citations": _run("a document citing a gate number cites one that is known",
+                                  [python, "tools/verify_gate_citations.py"]),
     }
 
     print("\n" + "=" * 62)
