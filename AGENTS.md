@@ -507,6 +507,17 @@ open question that follows: §10.5 gives every COUNT an owner and nothing does t
   `subprocess.run` whose output you parse passes `encoding="utf-8", errors="replace"`.** The same
   default bites a heredoc: `python - <<'PY'` loses non-ASCII on the way to stdin, so a patch script
   matching on `§` silently matches nothing. Use `§`, or write the file and run it.
+- **A heredoc also eats one level of BACKSLASH, and the quiet failure is a regex that cannot
+  match.** Measured 2026-08-30: a patch script written into `<<'PY'` and containing `r"...\\b"`
+  reached Python as `r"...\b"`, which is a **backspace**, not a word boundary. It happened three
+  times in one session and only one was loud — a `\\n` inside a string literal became a real
+  newline and raised `SyntaxError`. The other two shipped: gate 14's widened pattern was written as
+  `(\d+)\s+specified\b` and stored as `specified\x08`, so the gate ran, printed **"0 failures"**,
+  and could never have matched anything. **That is §10.6 rule 2's manufactured confidence produced
+  by a shell quoting rule**, and it is the same shape as the cp1252 trap above: a clean result over
+  bytes that were never what you wrote. **Never write a backslash escape inside a heredoc.** Build
+  it — `chr(92) + "b"` — or write the file with an editor tool and run it. And after any patch that
+  contains a regex, print the pattern back with `repr()` before believing a green result.
 - **A number you worked out in your head is still a number.** Two reached prose on 2026-08-25: an
   interval written as sixteen days that was one day, and a tally of the studies that had narrowed
   their scope on the same refuted citation, written as one more than the list holds. Neither came
