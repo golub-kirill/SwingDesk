@@ -68,7 +68,9 @@ And what it looks like if FALSE. If both look the same, stop here - the study ca
   survivorship:  present / absent - and if absent, that the result is biased upward
 
 ## 5. Method
-  split:         train / validation / test dates
+  split:         train / validation / test dates - or `none`, which is a legitimate answer
+  split buys:    what the split protects against. If the selection rule is "nothing", say what
+                 there is to protect and why a split is worth its sample cost (section 7)
   selection rule: how a parameter set is chosen from the validation window
   perturbations:  which of the six (WALKFORWARD_SPEC 4) are run, with magnitudes
   statistic:      the exact figure that decides, and its convention
@@ -76,6 +78,8 @@ And what it looks like if FALSE. If both look the same, stop here - the study ca
 ## 6. Decision rule
   accept if:     <threshold, fixed now>
   reject if:     <threshold, fixed now>
+  both negative: what the verdict is when the arm AND the control are both below zero
+                 (section 8) - a required branch, not an optional one
   inconclusive:  everything else - a legitimate and expected outcome
 
 ## 7. Stopping rule
@@ -113,6 +117,12 @@ and downgrades the result to exploratory.
    interchangeable, and a convention dressed as a hypothesis produces a study that cannot fail.
 6. **`inconclusive` is a first-class outcome.** A decision rule with only accept and reject
    guarantees one of them, which is how a coin flip becomes a finding.
+7. **A split is a cost and must say what it buys.** §7 has the accounting; the short version is that
+   a holdout copied from a study with a different shape looks like rigour and behaves like a sample
+   cut. `none` is a legitimate answer for a study that fits and selects nothing.
+8. **A decision rule needs a branch for "both the arm and the control are negative".** §8 has the
+   case. Comparing two losers on which loses less is not a finding, and a rule without that branch
+   files it as `inconclusive`.
 
 ## 4. Section 0 deserves its own explanation
 
@@ -164,7 +174,9 @@ definition.
       **What a new study owes this section:** state how many configurations it will evaluate,
       before it runs. An undeclared trial inflates the true denominator while the reported one
       stays flat, which is the one direction that manufactures significance.
-- [ ] **What a `split` is FOR when the `selection rule` is "nothing".** §2's form asks for both as
+- [x] ~~**What a `split` is FOR when the `selection rule` is "nothing".**~~ **CLOSED 2026-08-30 —
+      §7, and the form now carries a `split buys` field with `none` as a legitimate answer.**
+      The original entry is kept below because the accounting in it is what the field is for. §2's form asks for both as
       separate fields and never relates them. `PR-012` copied a 70/30 holdout from `PR-005` - which
       had five arms and a genuine selection problem - into a study that fits nothing and selects
       nothing, so train and validation were empty by construction and the split discarded **70% of
@@ -179,3 +191,51 @@ definition.
       generated from their front matter is the obvious next step, alongside the component registry.
 - [ ] Whether an abandoned pre-registration stays in the repository. It should: a study abandoned
       after seeing partial data is exactly the kind of thing that vanishes from an honest record.
+
+## 7. `split buys` — a split is a cost, and this one is paid for
+
+**Added 2026-08-30, and a study paid for it.** `PR-012` copied a 70/30 holdout from `PR-005` and
+refused a verdict for want of sample. The two fields §2's form asks for — `split` and
+`selection rule` — were never related to each other, and that is the whole defect.
+
+`WALKFORWARD_SPEC.md` §1 says what a split is *for*: *"Walk-forward separates tuning from subsequent
+checking in time. It fails when the choice saw the data it is later judged on."* §2 makes the
+mechanism explicit — parameters are **fitted** on train, **selected** on validation, **judged** on
+test.
+
+**`PR-012` fitted nothing and selected nothing**, and said so in its own §5: *"NOTHING is selected
+from the data. All three arms and the single lookback are fixed here, before the run."* So train and
+validation were empty by construction, and the split discarded **70% of the judged sample in
+exchange for a protection there was nothing to protect** — roughly 600 trades per arm became roughly
+185, against a floor of 200.
+
+**Carried into a study with no selection, a holdout looks like rigour and behaves like a sample
+cut.** `none` is therefore a legitimate and often correct answer, and the field exists so that
+answering it is a decision somebody made rather than a question nobody asked.
+
+**The cost is paid either way once it is noticed**, which is the part worth internalising. Rule 3
+downgrades a redesign made after seeing the data to exploratory, so the pooled re-run `PR-012`'s
+report identifies as the honest fix **cannot be run confirmatorily by whoever notices** — including
+by reading this section. That is why the question belongs on the form, before the run, and not in a
+report afterwards.
+
+## 8. `both negative` — comparing two losers is not a finding
+
+**Added 2026-08-30, and a second study paid for this one.** `PR-013`'s registered decision rule had
+two reject clauses: *the CI includes zero*, or *the point estimate is at or below the control's*.
+
+Its `MARKET` arm's holdout CI **excluded** zero — entirely **below** it — while its mean
+(−0.007595) sat very slightly **above** the control's (−0.007938). Neither reject clause fired, so
+**an arm sitting wholly in negative territory landed in `inconclusive`.** Confirmed against the
+registered function rather than inferred.
+
+The rule was written to catch an arm that fails to beat the control. It did not anticipate an arm
+that **loses to zero while marginally out-performing a control that is also losing to zero**.
+
+**And `PR-013` could not fix it**, for the same reason `PR-012` could not fix its split: patching a
+decision rule after seeing the data is the redesign rule 3 downgrades. It disclosed the gap and left
+it, which is correct and is why the fix has to live here.
+
+So the form now requires the branch in advance. A study whose arms could plausibly be negative
+should say — before running — whether that is a `reject`, an `inconclusive`, or a refusal to
+report a comparison at all.

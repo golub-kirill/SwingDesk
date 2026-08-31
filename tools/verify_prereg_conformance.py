@@ -50,6 +50,13 @@ Four failures and one report:
      is not, because it is indistinguishable from nobody having looked. This is the condition that
      makes the gate bite on the present tree rather than on a hypothetical future study.
 
+  6. A reported study must DECLARE what its `split` BUYS. Added 2026-08-30 and a study paid for it:
+     `PR-012` copied a 70/30 holdout into a design that fits nothing and selects nothing, so train
+     and validation were empty by construction and the holdout cut 70% of the judged sample for a
+     protection there was nothing to protect - the whole reason it missed its minimum and refused.
+     `registered: none` is legitimate; an absent block is not. The DATES are not the declaration:
+     `PR-002` carried a full three-way split while the question of what it bought went unasked.
+
   5. REPORTED, not failed: registered perturbations left unrun under a NON-affirmative verdict.
      `PR-001` and `PR-002` are both in this state. It is not a failure - concluding LESS than you
      registered is always permitted, and failing here would push a study toward claiming more - but
@@ -134,6 +141,24 @@ def main() -> int:
                 f"{name}: verdict {verdict!r} while the record declares a scope shortfall "
                 f"({', '.join(shortfalls)}). The prereg's affirmative branch requires the scope it "
                 f"registered; a shortfall belongs in the inconclusive branch."
+            )
+
+        # 6. The split must say what it BUYS. `PR-012` paid for this one: it copied a 70/30 holdout
+        # from `PR-005`, fitted nothing and selected nothing, and so discarded 70% of its judged
+        # sample for a protection there was nothing to protect - which is the entire reason it
+        # missed its own minimum and refused a verdict.
+        #
+        # Same shape as condition 4, and for the same reason. A `registered: none` is a legitimate
+        # declaration - `PR-001`, `PR-008` and `PR-010` are all correctly split-free - but an ABSENT
+        # block is not, because it cannot be told apart from nobody having asked. What is required
+        # is `buys`: the DATES alone say what the split IS and never what it is FOR, and `PR-002`
+        # carried exactly those dates while the question went unasked.
+        split = record.get("split")
+        if not isinstance(split, dict) or not str(split.get("buys") or "").strip():
+            failures.append(
+                f"{name}: declares no `split.buys`. A split is a cost, and one copied from a study "
+                f"of a different shape looks like rigour and behaves like a sample cut "
+                f"(PREREG_TEMPLATE 7). `registered: none` is a legitimate answer; silence is not."
             )
 
         # 3 and 4. Robustness checks: the declaration is mandatory, and an affirmative verdict may

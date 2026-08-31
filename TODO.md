@@ -1840,6 +1840,36 @@ is for where no gate can reach.
       **The template gap is filed with it:** §2's form asks for `split` and `selection rule` as
       separate fields and never relates them, so a split copied from a study of a different shape
       looks like rigour and behaves like a sample cut.
+      **CLOSED 2026-08-30 at the template AND at the gate.** `PREREG_TEMPLATE` §5's form now carries
+      a `split buys` field with `none` as an explicitly legitimate answer, §7 carries the accounting,
+      and rule 7 states it. Gate 25 gained condition 6: a reported study must DECLARE `split.buys`,
+      the same shape as the `perturbations` condition and for the same reason - `none` is a
+      declaration, silence is not. All seven reported studies now carry it, read from each
+      pre-registration's own §5 and marked `recorded`; no measurement changed.
+      **The DATES were never the declaration**, and that is what the gate had to be written around:
+      `PR-002` carried a full three-way train/validation/test block from the day it ran while the
+      question of what it bought went unasked for the study's whole life. A condition satisfied by
+      the presence of a `split` key would have passed `PR-002` and `PR-012` both. A test pins that.
+      **What is NOT closed:** the pooled re-run. Rule 3 still downgrades it to exploratory for
+      whoever has read the numbers, and this session has.
+
+- [ ] **`[v]` A DECISION RULE NEEDS A BRANCH FOR "BOTH THE ARM AND THE CONTROL ARE NEGATIVE" —
+      `PR-013` found it, could not fix it, and the template now asks for it.**
+      `PR-013`'s two reject clauses were *the CI includes zero* and *the point estimate is at or
+      below the control's*. Its `MARKET` arm's holdout CI **excluded** zero — entirely **below** it
+      — while its mean (-0.007595) sat very slightly **above** the control's (-0.007938). Neither
+      clause fired, so an arm sitting wholly in negative territory landed in `inconclusive`.
+      Confirmed against the registered function rather than inferred.
+      **It could not be fixed by the study that found it.** Patching a decision rule after seeing
+      the data is the redesign `PREREG_TEMPLATE` rule 3 downgrades, so `PR-013` disclosed the gap
+      and left it — correctly.
+      **Closed at the template 2026-08-30:** §6's form now requires a `both negative` branch and
+      rule 8 states why. Comparing two losers on which loses less is not a finding.
+      **NOT closed at a gate, and the reason is stated rather than left as an omission.** Gate 25
+      checks declarations against a verdict; this one needs the arm's and the control's point
+      estimates declared in a comparable shape, and the seven reported studies do not share one.
+      Requiring it retrospectively would mean inventing a schema for results already published. The
+      next study to register a comparison should declare both, and the gate can bite from there.
 
 - [ ] **`[v]` PR-013 RAN, THE SAMPLE RULE WAS MET, AND THE ORDERING CARRIES NOTHING BEFORE COSTS.**
       2026-08-24, owner direction (variant C). `docs/prereg/results/PR-013-report.md`; derive every

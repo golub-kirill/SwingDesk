@@ -20,5 +20,10 @@
     "registered": [],
     "run": [],
     "recorded": "2026-08-16, read from each study's pre-registration and its runner's source. Recorded when gate 25 made the declaration mandatory; no measurement changed."
+  },
+  "split": {
+    "registered": "none",
+    "buys": "Nothing to protect, as PR-008. EDGE is transcribed from a reference implementation and compared against a floor fixed in §3; no parameter is chosen from the data.",
+    "recorded": "2026-08-30, read from each study's pre-registration section 5. Recorded when gate 25 made the declaration mandatory; no measurement changed."
   }
 }

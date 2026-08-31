@@ -9289,5 +9289,10 @@
     "registered": [],
     "run": [],
     "recorded": "2026-08-16, read from each study's pre-registration and its runner's source. Recorded when gate 25 made the declaration mandatory; no measurement changed."
+  },
+  "split": {
+    "registered": "none",
+    "buys": "Nothing to protect. A measurement study: two spread estimators are transcribed and applied, nothing is fitted and nothing is selected, so the pre-registration names no split and needs none.",
+    "recorded": "2026-08-30, read from each study's pre-registration section 5. Recorded when gate 25 made the declaration mandatory; no measurement changed."
   }
 }

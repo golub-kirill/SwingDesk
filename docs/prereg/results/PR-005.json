@@ -585,5 +585,10 @@
       "holdout_period"
     ],
     "recorded": "2026-08-16, read from each study's pre-registration and its runner's source. Recorded when gate 25 made the declaration mandatory; no measurement changed."
+  },
+  "split": {
+    "registered": "first 70% of sessions = primary, last 30% = holdout",
+    "buys": "STABILITY across periods, not protection from selection. PR-005 §5 says so in advance: 'Nothing is FITTED on either ... so the holdout exists to test the STABILITY of a' result. Five gate arms make that a real question.",
+    "recorded": "2026-08-30, read from each study's pre-registration section 5. Recorded when gate 25 made the declaration mandatory; no measurement changed."
   }
 }

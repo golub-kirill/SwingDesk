@@ -165,5 +165,10 @@
   "window": [
     "2017-02-22",
     "2026-08-21"
-  ]
+  ],
+  "split": {
+    "registered": "the last 30% of sessions in the window is the HOLDOUT",
+    "buys": "NOTHING - and this study is what the field was added for. Its §5 states 'NOTHING is selected from the data', so train and validation were empty by construction and the holdout discarded 70% of the judged sample for a protection there was nothing to protect. It is the entire reason §8's minimum was missed and the verdict refused. Declared retrospectively 2026-08-30 from the pre-registration's own text; the report's appended section carries the accounting.",
+    "recorded": "2026-08-30, read from each study's pre-registration section 5. Recorded when gate 25 made the declaration mandatory; no measurement changed."
+  }
 }
