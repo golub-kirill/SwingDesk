@@ -123,11 +123,76 @@ def compute(series: BarSeries, benchmark: BarSeries) -> ObservationSeries:
             )
         )
 
+    return _series_of(series, tuple(observations))
+
+
+def latest(series: BarSeries, benchmark: BarSeries) -> ObservationSeries:
+    """The RS line's LAST value and only that - the same definition, evaluated at one point.
+
+    **Identical to `compute(series, benchmark).observations[-1]`, and a test proves it** rather than
+    this docstring asserting it. The formula, the rebasing and the missing-denominator rule are
+    `compute`'s; nothing is redefined here. What changes is that 2,516 `Observation` objects are not
+    built to use one.
+
+    **Measured 2026-08-30 on the live universe, which is why this exists.** `compute` over 1,186
+    candidates against a 2,516-bar benchmark took **41.8 seconds** and produced 2.6 million
+    observations, of which the run reads 1,186 - the last one per candidate. `DR-024` §7 named run
+    duration as its own overturning condition and this is it: 41.8s against a six-minute pass is
+    about 12% of the evening, spent building objects nobody reads. The same values cost **2.2s**
+    here.
+
+    **The empty-observation case is the whole reason this is not a two-line loop.** `compute` emits
+    an observation for EVERY bar, so its last one is the observation for the series' last BAR - and
+    that is empty when the benchmark has no session for it, which happens whenever the benchmark is
+    one session behind the candidate. A "last non-empty value" shortcut is faster still, returns a
+    different number, and would differ only on the days a stale benchmark makes it matter.
+
+    `compute` remains the component's canonical form: it is the RS LINE, and a caller that wants the
+    line rather than today's reading should keep using it.
+    """
+    if series.interval is not benchmark.interval:
+        raise ValueError(
+            f"interval mismatch: {series.interval} against {benchmark.interval}. An RS line over "
+            f"two timeframes compares nothing."
+        )
+    if not series.bars:
+        return _series_of(series, ())
+
+    closes: dict[date, Decimal] = {
+        bar.session_date: bar.close for bar in benchmark.bars if bar.close > 0
+    }
+
+    # The base is the FIRST shared session's ratio, so the search stops at the first hit rather
+    # than walking the history the way `compute` must.
+    base: Decimal | None = None
+    for bar in series.bars:
+        denominator = closes.get(bar.session_date)
+        if denominator is None or bar.close <= 0:
+            continue
+        base = bar.close / denominator
+        break
+
+    final = series.bars[-1]
+    denominator = closes.get(final.session_date)
+    if base is None or denominator is None or final.close <= 0:
+        return _series_of(series, (_empty(series, final),))
+
+    return _series_of(series, (
+        Observation(
+            component=COMPONENT, component_version=VERSION, instrument_id=series.instrument_id,
+            event_time=final.event_time, value=(final.close / denominator) / base, units=UNITS,
+            knowledge_time=series.knowledge_time,
+        ),
+    ))
+
+
+def _series_of(series: BarSeries, observations: tuple[Observation, ...]) -> ObservationSeries:
+    """The wrapper both entry points return, so the two cannot drift on anything but the values."""
     return ObservationSeries(
         component=COMPONENT, component_version=VERSION, instrument_id=series.instrument_id,
         units=UNITS, parameters=(), validation_status=VALIDATION,
-        knowledge_time=series.knowledge_time, observations=tuple(observations),
+        knowledge_time=series.knowledge_time, observations=observations,
     )
 
 
-__all__ = ["COMPONENT", "SPEC", "SPECS", "UNITS", "VALIDATION", "VERSION", "compute"]
+__all__ = ["COMPONENT", "SPEC", "SPECS", "UNITS", "VALIDATION", "VERSION", "compute", "latest"]

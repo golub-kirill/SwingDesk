@@ -1010,7 +1010,11 @@ def run(
         # `_benchmark`. A candidate the benchmark has no session for gets an empty observation from
         # the component itself, which is the missing-denominator rule and not an error here.
         if benchmark.series is not None:
-            outcome.relative_strength = relative_strength.compute(stored, benchmark.series)
+            # `latest`, not `compute`: the report and `output_hash` read the last value and nothing
+            # reads the line. Measured 2026-08-30 over the live universe, `compute` here cost 41.8s
+            # against a six-minute pass - 2.6 million observations built to use 1,186 - and `latest`
+            # returns the identical values in 2.2s. The equivalence is asserted by a test, not here.
+            outcome.relative_strength = relative_strength.latest(stored, benchmark.series)
 
         # 5. Risk. Stop derived from the observation BY THE RUN'S EXIT POLICY, then size. Stop
         # before size, always - and the same policy that will later exit the position, so the
