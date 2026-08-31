@@ -101,7 +101,13 @@ def test_case_covers_every_branch(case_dir) -> None:
     assert "dropped from this run" in branches.reason("TEST.5")
 
     assert len(case.instruments) == 5
-    assert len(case.bars) == 4, "TEST.4 is deliberately absent so the fetcher refuses"
+    # Named rather than counted. This read `len(case.bars) == 4` until `DR-024` added the benchmark
+    # series, and a count cannot say WHICH series is missing - it went red for the one reason that
+    # was not a defect. `SPY` is in `bars` and NOT in `instruments` on purpose: it is the
+    # denominator the RS line is measured against, not a candidate the run decides on.
+    assert set(case.bars) == {"TEST.1", "TEST.2.TO", "TEST.3", "TEST.5", "SPY"}
+    assert "TEST.4" not in case.bars, "TEST.4 is deliberately absent so the fetcher refuses"
+    assert "SPY" not in {i.id for i in case.instruments}, "the benchmark is not a candidate"
 
 
 def test_edited_inputs_are_not_called_non_determinism(case_dir) -> None:
@@ -147,3 +153,28 @@ def test_missing_manifest_is_a_failure(case_dir, tmp_path) -> None:
     _rewrite(case_dir, lambda document: document.update({"manifest": None}))
     failures = harness.verify(tmp_path)
     assert any("no recorded manifest" in failure for failure in failures)
+
+
+def test_the_case_exercises_the_relative_strength_path(case_dir) -> None:
+    """`DR-024`. The gate must cover the RS line, not merely pin its absence.
+
+    When the RS field was added to `output_hash` the recorded case had no `rs.benchmark`, so it
+    replayed with the measure UNAVAILABLE and would have frozen that as the reference - a gate
+    covering a new computation only in the branch where it does not run. The fixture was extended
+    with a benchmark instead, and this asserts the extension survives.
+
+    The benchmark walks the ZIGZAG path deliberately. On the rising path every fixture instrument is
+    the same arithmetic, so the RS line would be exactly 1.0 on every session and the recorded hash
+    would pin the plumbing and none of the measure.
+    """
+    import json
+
+    case = json.loads((case_dir / "case.json").read_text(encoding="utf-8"))
+    bars = json.loads((case_dir / "bars.json").read_text(encoding="utf-8"))
+
+    benchmark = case["parameters"].get("rs.benchmark")
+    assert benchmark == "SPY", "the case must name a benchmark or it pins only the unavailable path"
+    assert benchmark in bars, "the benchmark is named but has no bars, which IS the unavailable path"
+
+    closes = [row[4] for row in bars[benchmark]["bars"]]
+    assert len(set(closes)) > 1, "a flat benchmark makes every RS line constant"

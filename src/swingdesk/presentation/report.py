@@ -63,6 +63,34 @@ def _universe_block(result: RunResult) -> list[str]:
     return lines
 
 
+def _benchmark_block(result: RunResult) -> list[str]:
+    """What the RS line was measured against, or why there was none (`DR-024`).
+
+    Run-level and printed ONCE. The alternative - a reason repeated on all 1,186 candidates - is how
+    a report teaches its reader to skip a line, and this one has to stay readable on the day it
+    changes.
+
+    Silent when the run never looked. A run given an explicit instrument list has no benchmark
+    question, and printing "benchmark: none" there would report an absence nobody asked about.
+    """
+    benchmark = result.benchmark
+    if benchmark is None:
+        return []
+
+    lines = ["BENCHMARK (rs.benchmark, DR-018)", _RULE]
+    if benchmark.series is not None and benchmark.series.bars:
+        last = benchmark.series.bars[-1].session_date
+        lines.append(
+            f"  {benchmark.instrument_id}   {len(benchmark.series.bars)} bars, last session {last}"
+        )
+    if benchmark.unavailable is not None:
+        # Both branches can fire at once, and that pairing is the useful case: a stored-but-stale
+        # benchmark prints its series AND the reason it is not today's.
+        lines.append(f"  UNAVAILABLE          {benchmark.unavailable}")
+    lines.append("")
+    return lines
+
+
 def render_empty_universe(selection: UniverseSelection) -> str:
     """What to say when the rule admits nobody. Not an error, and not silence either."""
     return "\n".join([
@@ -393,6 +421,8 @@ def render(result: RunResult) -> str:
         lines.extend(universe)
         lines.append("")
 
+    lines.extend(_benchmark_block(result))
+
     lines.extend(_positions_block(result))
     lines.extend(_capacity_block(result))
     lines.extend(_correlation_block(result))
@@ -424,6 +454,24 @@ def render(result: RunResult) -> str:
                 lines.append(
                     f"      {parameter.id:<18} {parameter.value}   [{parameter.provenance}]{flag}"
                 )
+
+        # The RS line (`M31-T0464`, `DR-024`). `COMPONENT_REGISTRY_SPEC` §3: an ACTIVE component
+        # displays its validation status wherever its output appears, so the status line is not
+        # decoration - it is the condition this component was activated under.
+        #
+        # And the second line is load-bearing in the other direction. `DR-018` §1 measured that
+        # ranking a cross-section by this value is identical to ranking by raw return, Spearman
+        # 1.000000; the number is a legitimate thing to read and a decorative thing to sort by. A
+        # report that printed it beside the decisions without saying so would be inviting exactly
+        # the misuse the component's own docstring calls natural.
+        rs = outcome.relative_strength
+        if rs is not None and rs.observations:
+            latest_rs = rs.observations[-1]
+            reading = "none (no shared session)" if latest_rs.value is None else f"{latest_rs.value:.4f}"
+            lines.append(f"  {rs.component} v{rs.component_version}")
+            lines.append(f"      RS vs benchmark    {reading}  {rs.units}")
+            lines.append(f"      validation         {rs.validation_status}")
+            lines.append("      selects nothing    rs.benchmark_form is unset; CARD-001 is blocked")
 
         risk = outcome.risk
         if isinstance(risk, Refusal):
