@@ -1900,6 +1900,48 @@ is for where no gate can reach.
 
 ## 5. Studies
 
+- [ ] **`[v]` THE HOLDING HORIZON IS WHY BOTH STUDIES FOUND NOTHING — measured 2026-08-31,
+      EXPLORATORY, sets nothing.** `python tools/measure_momentum_horizon.py --data <store>`.
+      **The literature first** (`AGENTS.md` §10.3 — searched before authoring). Jegadeesh (1990)
+      documents short-term REVERSAL at the one-month horizon; Lehmann (1990) the same weekly;
+      Jegadeesh & Titman (1993) document MOMENTUM over 3–12 month formation **and 3–12 month
+      holding** periods, their shortest reported hold being **three months**. The standard "12-2"
+      construction skips the most recent month to keep the reversal window out of the signal.
+      **`PR-012` held 20 sessions and `PR-013` held 5. Both are inside the reversal band, and
+      neither skipped the recent month.** Their nulls are what the literature predicts.
+      **Measured on this store, restricted to the `DR-003` liquidity rule, gross, deciles, formation
+      252 sessions, non-overlapping formation dates:**
+
+      | horizon | skip 0 | 95% interval | skip 21 | 95% interval |
+      |---|---|---|---|---|
+      | 5 sessions | +0.215% | [−0.150, +0.561] | +0.268% | [−0.076, +0.610] |
+      | 20 sessions | +1.016% | [−0.321, +2.263] | +0.908% | [−0.255, +2.059] |
+      | 63 sessions | +3.148% | [−0.007, +6.207] | +2.184% | [−0.783, +5.153] |
+      | **126 sessions** | **+7.271%** | **[+1.899, +12.512]** | **+6.444%** | **[+0.700, +12.214]** |
+
+      **The spread rises monotonically with horizon and only excludes zero at 126 sessions.** That
+      is the horizon structure J&T report, reproduced on this project's own data.
+      **So the binding constraint is `exit.max_holding_period` = 20 sessions** (`DR-012`, ratified,
+      about one month) — below where the effect is measurable here and inside the band where the
+      literature documents the opposite sign.
+      **AND THE COST OF MOVING IT, so the trade is visible:** at four concurrent positions, a
+      20-session hold allows about 50 entries a year and a 126-session hold about **16**. Reaching
+      the horizon where the signal is measurable makes `b.min_sample` slower to reach, not faster.
+      That tension is real and is the owner's to weigh.
+      **A METHOD ERROR OF MINE, recorded because it inverted the sign.** The first run measured
+      every name in the store with enough history — 2,742 — rather than the ~1,100 the liquidity
+      rule admits. Every spread came out NEGATIVE at every horizon. Restricting to the rule flipped
+      all eight. The unrestricted set is loaded with leveraged and inverse ETFs whose 12-month
+      returns are large and whose reversals are violent, so it measured the store rather than the
+      universe. **The liquidity rule is doing more work than a liquidity filter appears to.**
+      **What this is NOT.** Gross, not net — at 126 sessions the rebalance drag is far smaller than
+      at 5, but it is unmeasured. n = 17 formation dates at 126 sessions. Survivorship is today's
+      directory, which biases every figure upward. Exploratory by construction: designed after
+      `PR-012`'s and `PR-013`'s numbers were seen, so `PREREG_TEMPLATE` rule 3 applies and it
+      advances no validation status and sets no parameter.
+      **The skip made it slightly WORSE at every horizon** (7.27 vs 6.44 at 126), which is contrary
+      to the convention's rationale and well inside the interval. Reported rather than explained.
+
 - [x] **`[v]` `ROADMAP` P5 — THE FIRST STRATEGY CARD EXISTS, 2026-08-24.** Load-bearing since
       2026-08-02 and untouched until now. Family chosen by the owner: **cross-sectional relative
       strength** — deliberately not the time-series breakout `PR-005` refuted.
@@ -2992,6 +3034,34 @@ is for where no gate can reach.
 - [ ] **Tests cover the safe branch of the risky code, three times over.** See §8.
 
 ## 6b. The operational chain — what a full cycle needs
+
+- [ ] **`[v]` ALPACA PAPER TRADING — owner instruction 2026-08-31. Wire it as the broker so
+      strategies, guesses and the whole chain can be tested against a real venue.**
+      <https://docs.alpaca.markets/us/docs/paper-trading>. Researched 2026-08-31:
+      endpoint `https://paper-api.alpaca.markets` (env `APCA_API_BASE_URL`); paper keys are
+      DISTINCT from live keys; accounts are free and open to anyone globally; default balance
+      **$100k**, settable at creation and not changeable afterwards without a reset; **IEX market
+      data included at no cost** and the Market Data API is identical between paper and live; the
+      API specification is the same as live, so migration is a base-URL change.
+      **IT FITS `DR-014` EXACTLY.** That record rules no owner capital in the observable state of
+      the project — paper only. An Alpaca paper account is that, with a real venue's fills, halts,
+      partial fills and rejects instead of a fixture.
+      **AND IT CROSSES D1, WHICH IS THE DECISION TO TAKE.** This system PROPOSES and never
+      executes — `ActionKind`'s own docstring says *"Nothing here has an execute verb. `EXIT_NOW`
+      proposes that the owner exits; it does not exit."* Giving it an API that can place orders
+      changes that constraint, and that is an owner ruling and a decision record, not a wiring task.
+      **SO SPLIT IT, and the first half needs no ruling at all:**
+      **(a) READ-ONLY first.** Poll Alpaca for positions, orders and fills and feed them into
+      `PositionStore`. This replaces the hand-typed `record-fill` step — today the only way a fill
+      enters the system is the owner typing it — with the broker's own record. It executes nothing,
+      crosses no constraint, and closes the loop `TODO.md` §6b's step 5 currently closes by hand.
+      **(b) ORDER PLACEMENT second**, if and when the owner rules D1 changed. Needs: a decision
+      record, an approval gate that survives the change, and a kill switch.
+      **Constraints already binding on this work:** `SECURITY.md` §2.1 — no secret in the repo, env
+      vars or an OS keyring only, and this repository is public (`tools/verify_secrets.py` says so).
+      `CI_POLICY` §4 — CI must never touch the network, so every Alpaca test runs against a recorded
+      fixture. `DR-011` §6 keeps the notice surface send-only and this must not quietly become an
+      inbound control channel.
 
 **COMPLETE as of 2026-08-18.** Every buildable item below is done, and the one remaining open entry
 (3c, off-desk reach) is a deliberate non-goal rather than a gap — `DR-011` decided it and preserves
