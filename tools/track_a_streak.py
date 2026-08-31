@@ -197,6 +197,19 @@ STREAK_RESTARTS: tuple[tuple[date, str], ...] = (
      "row above measured ZERO when this landed. Two rows dated one day truncate the identical "
      "window. That is a fact about this day and not a licence - from 2026-08-31 the one-reset rule "
      "applies again in full"),
+    (date(2026, 8, 31),
+     "DR-025 - the sector guard stops reading the look-through's SHAPE. DR-006 8.7 refused a fund "
+     "reporting one sector at exactly 100%, inferring it holds no equity. Measured over 35 funds: "
+     "the vendor's sector weights sum to 1.0000 for EVERY fund regardless of holdings, including "
+     "the ten that report 0% equity - they are normalised over what the vendor could classify, not "
+     "over the fund's assets, so the shape never carried the information. It refused 23 admitted "
+     "universe members including five SPDR Select Sector funds at 99.7%+ equity, and a refusal "
+     "reports unavailable, which DR-006 3 ADMITS UNCHECKED - so the guard was maximally permissive "
+     "on the most concentrated instruments it had. Now only a vendor-declared 0% equity refuses. "
+     "Moves decision output: sector-spendable universe members go 1018 -> 1041, every one of them "
+     "in the conservative direction. NOT scaled by the equity share - stockPosition is physical "
+     "equity, not economic exposure, and AAPU reads 0.074 while being 2x Apple. Taken on the "
+     "owner's grant of a restart for this date"),
 )
 
 

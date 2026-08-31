@@ -26,7 +26,7 @@ holds.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -268,29 +268,28 @@ def look_through(classification: Classification | None, instrument_id: str) -> E
        after the knowledge time being read at. `unavailable` - the check did not run.
     2. **No sector at all.** The vendor answered and served no sector. Common for an index, a
        warrant, or a name it does not cover.
-    3. **A degenerate look-through that the vendor does not say holds equity** (`DR-006` §8.7 as
-       amended by `DR-021`). A fund reporting exactly ONE sector at exactly 1 with every other at
-       exactly 0 is the `NEAR` signature: a short-maturity bond fund the vendor describes as
-       healthcare 100.0%. That SHAPE is the trigger; what settles it is `equity_share`, which the
-       vendor serves in the same response. Refused and reported `unavailable`, never consumed.
+    3. **A fund the vendor says holds no equity** (`DR-006` §8.7, ruled by `DR-025`). `NEAR` is a
+       short-maturity bond fund the vendor describes as healthcare 100.0%, and it answers **0%
+       equity** in the same response. Consumed naively one bond fund would spend an entire sector
+       budget on a fiction. Refused and reported `unavailable`, never consumed.
 
-    **Why the shape alone was not enough, measured.** *"A genuine sector ETF is legitimately almost
-    all one sector"* is true, and §8.7 concluded from it that an EXACT test was safe because a real
-    single-sector ETF carries a remainder. It does not always: over the SPDR Select Sector family on
-    2026-08-30, **five of eleven** report exactly one sector at exactly 100% - `XLC`, `XLE`, `XLV`,
-    `XLRE`, `XLU` - and each is 99.7% or more equity. The exact test refused all five for a reason
-    that is false for them, and 23 admitted members of the live universe sat in that state.
+    **The SHAPE is not consulted, and deleting that inference is what `DR-025` did.** §8.7 read "one
+    sector at exactly 100%" as meaning a fund holds no equity. Measured over 35 funds on 2026-08-31:
+    the vendor's sector weights sum to **1.0000 for every fund regardless of what it holds**,
+    including funds reporting 0% equity. They are normalised over whatever the vendor could
+    classify, not over the fund's assets — so the shape carries no information about holdings, and
+    it refused five SPDR Select Sector funds that are 99.7%+ equity.
 
-    **Why the test is still EXACT in both halves.** A tolerance on the sector weight would need a
-    number the course does not supply, and it inverts the problem - it would refuse `XLK` at 99.3%
-    today and more of the family as they drift. `DR-021` §5 introduces no parameter: the shape must
-    be degenerate, and the equity share must be POSITIVELY reported. 0.997 against 0.0 is not a
-    close call.
+    **`None` does not refuse, and that runs opposite to `DR-021`'s asymmetry on purpose.** A refusal
+    here reports `unavailable`, and `DR-006` §3 ADMITS an unavailable candidate unchecked — so
+    widening the refusal is the PERMISSIVE direction, not the safe one. Only the vendor's own
+    declared zero refuses.
 
-    **`None` is not zero, and the asymmetry is the guard.** An unanswered `equity_share` is a fact
-    about the vendor, not about the fund, so it does not clear the refusal. A classification stored
-    before that field existed therefore behaves exactly as it did, and this change can only ever
-    ADMIT on an affirmative answer - never on silence.
+    **The look-through is NOT scaled by the equity share.** `stockPosition` measures physical
+    equity, not economic exposure: `AAPU` holds ~15% Apple stock plus a ~12.6% Apple swap against
+    ~67% cash collateral, reading 0.074 while being economically 2x Apple. Scaling would undercharge
+    the most concentrated instrument in the universe by ~27x. A fund that over-charges its sector
+    errs the safe way — it binds the cap early and costs an entry, where undercharging costs the cap.
 
     A partial look-through is NOT refused. Weights summing to less than 1 spend what they report and
     leave the remainder unattributed, because normalising invents composition the vendor did not
@@ -342,49 +341,39 @@ def look_through(classification: Classification | None, instrument_id: str) -> E
         SectorWeight(sector=sector, weight=merged[sector]) for sector in sorted(merged)
     )
 
-    degenerate = (
-        _degenerate_sector(canonical)
-        if classification.quote_type.upper() in FUND_KINDS
-        else None
-    )
-    # `DR-021`: the shape is the TRIGGER, the vendor's own answer is the DISCRIMINATOR.
+    # `DR-025`: the vendor's own answer, and the SHAPE is not consulted at all.
     #
-    # The shape alone was refusing real sector ETFs. Measured 2026-08-30 over the SPDR Select Sector
-    # family, five of eleven report exactly one sector at exactly 100% - `XLC`, `XLE`, `XLV`, `XLRE`
-    # and `XLU` - and every one of them is 99.7% or more EQUITY. They were refused with a reason
-    # that is false for them, and 23 admitted members of the live universe were in that state.
+    # `DR-006` §8.7 inferred "holds no equity" from a look-through of one sector at exactly 100%,
+    # and `DR-021` kept that shape as a trigger. Both are superseded, by a measurement rather than a
+    # preference: the vendor's sector weights sum to 1.0000 for EVERY fund regardless of what it
+    # holds - measured over 35 funds on 2026-08-31, including funds reporting 0% equity. They are
+    # normalised over whatever the vendor could classify, not over the fund's assets, so the shape
+    # carries no information about holdings and never did. It refused five SPDR Select Sector funds
+    # that are 99.7%+ equity - exactly the instruments a sector cap exists to catch.
     #
-    # A POSITIVE equity share is the only thing that clears it. `None` does not, and that asymmetry
-    # is the whole guard: `NEAR` answers 0.0 and is a bond fund, an unanswered field is a fact about
-    # the vendor, and neither is evidence of equity. So a classification stored before this field
-    # existed behaves exactly as it did - refused - and the change can only ever ADMIT on an
-    # affirmative answer, never on silence.
-    holds_equity = classification.equity_share is not None and classification.equity_share > 0
-    if degenerate is not None and not holds_equity:
-        answered = (
-            "the vendor reports 0% equity"
-            if classification.equity_share is not None
-            else "the vendor did not answer what share is equity, and absence is not evidence of it"
-        )
+    # A DECLARED ZERO is the only refusal left. `NEAR` answers 0.0% and is the bond fund §8.7 was
+    # written about; that is evidence about the FUND. `None` is a fact about the VENDOR and does not
+    # refuse - and that asymmetry runs the opposite way to `DR-021`'s, on purpose. A refusal here
+    # reports `unavailable`, which `DR-006` §3 ADMITS unchecked, so widening the refusal is the
+    # PERMISSIVE direction. Refusing on silence would be the dangerous half, not the safe one.
+    #
+    # NOT SCALED by the equity share, deliberately. `stockPosition` is physical equity, not economic
+    # exposure: `AAPU` holds ~15% Apple stock plus a ~12.6% Apple swap against ~67% cash collateral,
+    # so it reads 0.074 while being economically 2x Apple. Scaling by it would undercharge the most
+    # concentrated instrument in the universe by about 27x, in the permissive direction. A fund that
+    # over-charges its sector (`BINC` at 0.01% equity, `ALLW` at 21%) errs the safe way: it binds
+    # the cap early and costs an entry, where undercharging costs the cap itself.
+    if classification.equity_share is not None and classification.equity_share == 0:
         return Exposure(
             instrument_id=instrument_id,
             weights=(),
             unavailable=(
-                f"the look-through is degenerate - {degenerate} at exactly 100% and every other "
-                f"sector at exactly 0% - and {answered} (DR-006 8.7, DR-021). Refused rather than "
-                f"consumed"
+                "the vendor reports this fund holds 0% equity, so its sector look-through "
+                "describes nothing that can be spent against a sector budget (DR-006 8.7 as "
+                "ruled by DR-025). Refused rather than consumed"
             ),
         )
 
     # Already sorted by sector above, because these feed a decision reason and an unordered
     # iteration reaching output is the named determinism hazard (`DETERMINISM_SPEC` §3.2).
     return Exposure(instrument_id=instrument_id, weights=canonical)
-
-
-def _degenerate_sector(weights: Sequence[SectorWeight]) -> str | None:
-    """The sector at exactly 1 when every other is exactly 0, else `None` - the `NEAR` signature."""
-    full = [weight for weight in weights if weight.weight == 1]
-    rest = [weight for weight in weights if weight.weight != 1]
-    if len(full) == 1 and all(weight.weight == 0 for weight in rest):
-        return full[0].sector
-    return None
