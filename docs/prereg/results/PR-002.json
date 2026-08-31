@@ -10,6 +10,8 @@
     "2026-07-31"
   ],
   "split": {
+    "buys": "A genuine selection problem. PR-002 fits classifiers and SELECTS among them, so train and validation are non-empty by construction and the split protects the judged sample from the choice that was made on it.",
+    "recorded": "2026-08-30, read from each study's pre-registration section 5. Recorded when gate 25 made the declaration mandatory; no measurement changed.",
     "train": [
       "2016-08-01",
       "2021-07-28",

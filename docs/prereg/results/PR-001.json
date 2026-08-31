@@ -185,5 +185,10 @@
       "overlap_per_regime": "Conditional at registration - 'once a classifier exists'. No regime classifier existed at the 2026-08-03 run, so this was not runnable rather than skipped."
     },
     "recorded": "2026-08-16, read from each study's pre-registration and its runner's source. Recorded when gate 25 made the declaration mandatory; no measurement changed."
+  },
+  "split": {
+    "registered": "none",
+    "buys": "Nothing. PR-001 §5: 'none - this is descriptive, not fitted. No parameter is being chosen from the data.' Its own note that 'a study with no split usually means someone forgot one' is why the absence was argued rather than left blank.",
+    "recorded": "2026-08-30, read from each study's pre-registration section 5. Recorded when gate 25 made the declaration mandatory; no measurement changed."
   }
 }

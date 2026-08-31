@@ -1488,6 +1488,8 @@ def test_conformance_gate_accepts_an_empty_perturbation_registration(tmp_path: P
     root = _conformance_tree(tmp_path, {
         "prereg": "PR-999", "verdict": "reject", "country": "US",
         "perturbations": {"registered": [], "run": []},
+        # Condition 6 is not what this test is about, so the fixture satisfies it explicitly.
+        "split": {"registered": "none", "buys": "nothing is fitted"},
     })
     code, out = run_gate("verify_prereg_conformance.py", root)
     assert code == 0, out
@@ -1499,6 +1501,7 @@ def test_conformance_gate_allows_a_shortfall_on_a_non_affirmative_verdict(tmp_pa
     root = _conformance_tree(tmp_path, {
         "prereg": "PR-999", "verdict": "inconclusive", "country": "US", "single_market": True,
         "perturbations": {"registered": [], "run": []},
+        "split": {"registered": "none", "buys": "nothing is fitted"},
     })
     code, out = run_gate("verify_prereg_conformance.py", root)
     assert code == 0, out
@@ -3602,3 +3605,50 @@ def test_a_broken_policy_is_reported_before_the_collector_is_blamed(tmp_path: Pa
     code, out = run_gate("verify_directory_policy.py", tmp_path)
     assert code == 1, out
     assert "as a literal" not in out
+
+
+def test_conformance_gate_requires_the_split_to_say_what_it_buys(tmp_path: Path) -> None:
+    """`PR-012` paid for this condition, and the cost was a whole study.
+
+    It copied a 70/30 holdout from `PR-005` into a design that fits nothing and selects nothing, so
+    train and validation were empty by construction and the holdout discarded 70% of the judged
+    sample for a protection there was nothing to protect. That is the entire reason it missed its
+    own minimum and refused a verdict.
+    """
+    root = _conformance_tree(tmp_path, {
+        "prereg": "PR-999", "verdict": "reject", "country": "US",
+        "perturbations": {"registered": [], "run": []},
+    })
+    code, out = run_gate("verify_prereg_conformance.py", root)
+    assert code == 1
+    assert "split.buys" in out
+
+
+def test_conformance_gate_accepts_a_declared_absence_of_a_split(tmp_path: Path) -> None:
+    """`none` is a legitimate answer and often the right one - `PR-001`, `PR-008` and `PR-010` are
+    all correctly split-free. A condition that forced every study to HAVE a split would be worse
+    than the gap it closes."""
+    root = _conformance_tree(tmp_path, {
+        "prereg": "PR-999", "verdict": "reject", "country": "US",
+        "perturbations": {"registered": [], "run": []},
+        "split": {"registered": "none", "buys": "nothing is fitted and nothing is selected"},
+    })
+    code, out = run_gate("verify_prereg_conformance.py", root)
+    assert code == 0, out
+
+
+def test_conformance_gate_is_not_satisfied_by_the_split_dates_alone(tmp_path: Path) -> None:
+    """The DATES say what the split IS and never what it is FOR.
+
+    `PR-002` carried a full three-way train/validation/test block from the day it ran, and the
+    question of what that bought went unasked for the entire life of the study. A gate satisfied by
+    the presence of a `split` key would have passed it and passed `PR-012` too.
+    """
+    root = _conformance_tree(tmp_path, {
+        "prereg": "PR-999", "verdict": "reject", "country": "US",
+        "perturbations": {"registered": [], "run": []},
+        "split": {"train": ["2016-08-01", "2021-07-28"], "test": ["2023-07-28", "2026-07-31"]},
+    })
+    code, out = run_gate("verify_prereg_conformance.py", root)
+    assert code == 1
+    assert "split.buys" in out
