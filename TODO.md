@@ -1480,6 +1480,11 @@ is for where no gate can reach.
       **And a third nobody has measured:** refusal is not neutral. Dropping members tilts the
       universe toward funds the vendor happens to classify, which is a selection effect the cap
       itself never sees.
+      **AND THE MIGRATION COST IS ZERO RIGHT NOW, measured 2026-08-31.** The review's sharpest
+      objection was that refusing instruments already HELD produces a book the guard says cannot
+      exist. The position store holds **zero** open positions, so that cost does not exist today and
+      will the moment one is opened. If this is to be flipped, the cheap window is while the book is
+      empty.
       Ruling this is the owner's. It changes a ratified rule and it costs a Track A restart.
 
 - [ ] **`[c]` Is a SECTOR cap the right unit for a single-name leveraged ETF?** Raised in council
