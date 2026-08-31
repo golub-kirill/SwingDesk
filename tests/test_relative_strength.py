@@ -133,3 +133,87 @@ def test_the_component_claims_exactly_ONE_catalogue_row_and_no_parameters() -> N
     computed = relative_strength.compute(_series("AAA", ["50", "55"]), benchmark)
     assert computed.parameters == ()
     assert computed.validation_status == "Not Applicable"
+
+
+# ---------------------------------------------- `latest` is `compute`'s last value, and only that
+
+def test_latest_equals_computes_last_observation() -> None:
+    """The optimisation is only allowed if it changes nothing, so that is what is asserted.
+
+    `latest` exists because `compute` over the live universe cost 41.8 seconds and built 2.6 million
+    observations to use 1,186 of them. It may return a different NUMBER of observations; it may not
+    return a different value.
+    """
+    cases = [
+        (["10.00", "11.00", "12.00", "13.00"], ["100.00", "101.00", "102.00", "103.00"]),
+        (["50.00", "50.00", "50.00"], ["100.00", "100.00", "100.00"]),
+        (["10.00", "9.00", "8.00"], ["100.00", "110.00", "121.00"]),
+        # A session the benchmark is missing in the MIDDLE - an empty observation that is not last.
+        (["10.00", "11.00", "12.00"], ["100.00", None, "102.00"]),
+    ]
+    for closes, benchmark_closes in cases:
+        series = _series("TEST.1", closes)
+        benchmark = _series("BENCH", benchmark_closes)
+
+        full = relative_strength.compute(series, benchmark).observations
+        one = relative_strength.latest(series, benchmark).observations
+
+        assert len(one) == 1, closes
+        assert one[0].value == full[-1].value, closes
+        assert one[0].event_time == full[-1].event_time, closes
+        assert one[0].instrument_id == full[-1].instrument_id
+        assert one[0].component == full[-1].component
+
+
+def test_latest_is_empty_when_the_benchmark_lacks_the_final_session() -> None:
+    """The case a "last non-empty value" shortcut gets wrong, and why `latest` is not one.
+
+    `compute` emits an observation per BAR, so its last is the observation for the series' last bar
+    - empty when the benchmark has no session for it. That is what a benchmark one session behind
+    the candidate looks like, which is an ordinary evening rather than an exotic case, so a shortcut
+    returning the last value that DID compute would differ exactly on the days it matters.
+    """
+    series = _series("TEST.1", ["10.00", "11.00", "12.00"])
+    benchmark = _series("BENCH", ["100.00", "101.00", None])
+
+    full = relative_strength.compute(series, benchmark).observations
+    one = relative_strength.latest(series, benchmark).observations
+
+    assert full[-1].value is None, "the fixture must exercise the empty case"
+    assert len(one) == 1
+    assert one[0].value is None
+    assert one[0].event_time == full[-1].event_time
+
+    # The shortcut this test forbids would have found a number: earlier sessions ARE shared.
+    assert [o.value for o in full if o.value is not None], "earlier shared sessions exist"
+
+
+def test_latest_carries_the_same_series_metadata_as_compute() -> None:
+    """Both entry points return the component's own identity - version, units, validation status.
+
+    They share one wrapper so they cannot drift, and this is what pins that they do.
+    """
+    series = _series("TEST.1", ["10.00", "11.00"])
+    benchmark = _series("BENCH", ["100.00", "101.00"])
+
+    full = relative_strength.compute(series, benchmark)
+    one = relative_strength.latest(series, benchmark)
+
+    for field in ("component", "component_version", "units", "validation_status", "instrument_id"):
+        assert getattr(one, field) == getattr(full, field), field
+
+
+def test_latest_refuses_a_timeframe_mismatch_like_compute_does() -> None:
+    """Two entry points to one component must refuse the same nonsense the same way."""
+    series = _series("TEST.1", ["10.00", "11.00"])
+    hourly = _series("BENCH", ["100.00", "101.00"], interval=Interval.HOUR)
+    with pytest.raises(ValueError, match="interval mismatch"):
+        relative_strength.latest(series, hourly)
+
+
+def test_latest_on_an_empty_series_returns_no_observation() -> None:
+    """`compute` returns an empty tuple for a series with no bars; so must this."""
+    empty = _series("TEST.1", [])
+    benchmark = _series("BENCH", ["100.00"])
+    assert relative_strength.latest(empty, benchmark).observations == ()
+    assert relative_strength.compute(empty, benchmark).observations == ()

@@ -177,3 +177,45 @@ worth printing, not to stop reporting it.
 
 And the obvious one: **`rs.benchmark_form` getting a value.** The moment a pre-registration sets the
 form, this record's "selects nothing" line becomes false and the report must stop saying it.
+
+## 8. Amendment, 2026-08-30 — §7's overturning condition fired the same day
+
+§7 named the condition that would overturn this: *"A measured cost to the run's duration."* It then
+waved at the number — *"one pass over each candidate's stored bars; on the live universe that is
+1,186 candidates against a six-minute pass"* — without measuring it. **Measured, and it was
+material.**
+
+| | candidates | observations built | time |
+|---|---|---|---|
+| `compute` — the full RS line | 1,186 | **2,637,134** | **39.0s** |
+| `latest` — the last value only | 1,186 | 1,186 | **0.59s** |
+
+**39 seconds against a 360-second pass is about 11% of the evening**, spent building 2.6 million
+`Observation` objects to read 1,186 of them — one per candidate. The report shows the last value;
+`output_hash` takes the last value; **nothing reads the line**.
+
+### 8.1 The fix is not the one §7 proposed
+
+§7 said: *"If it ever bound, the answer is to compute the line only for candidates that reach a
+decision worth printing, not to stop reporting it."* **That is superseded by a cheaper answer that
+costs no coverage at all**: compute the last value for *every* candidate rather than the whole line
+for a subset. `relative_strength.latest` is the same definition evaluated at one point, and every
+candidate keeps its measure.
+
+### 8.2 Identical, and the determinism gate is what says so
+
+**Zero disagreement across all 1,186 live candidates** — the full population, not a sample — and
+gate 9 replays the recorded case to the **same `output_hash`** it was recorded with before this
+change. So this moves no decision output and spends no Track A reset, which is the one claim an
+optimisation on the decision path has to make good.
+
+### 8.3 The trap that makes this more than a two-line loop
+
+`compute` emits an observation for **every bar**, so its last is the observation for the series'
+last *bar* — and that is **empty** when the benchmark holds no session for it. A "last non-empty
+value" shortcut is faster still, returns a different number, and differs **precisely on the days a
+benchmark one session behind the candidate makes it matter**. `latest` reproduces the empty case,
+and a test fails on the shortcut rather than a docstring warning about it.
+
+`compute` remains the component's canonical form. A caller that wants the RS *line* rather than
+today's reading keeps using it, and the two share one wrapper so their metadata cannot drift.
