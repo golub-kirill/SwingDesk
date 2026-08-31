@@ -1467,6 +1467,28 @@ is for where no gate can reach.
 
 ## 4. Pending decisions
 
+- [ ] **`[v]` `DR-006` §3 ADMITS AN UNAVAILABLE CANDIDATE UNCHECKED, AND A CAP THAT FAILS OPEN IS
+      NOT A CAP — five of five council advisors, 2026-08-31, unanimous and the only thing they all
+      volunteered.** 145 admitted universe members have no sector served or nothing stored, and
+      every one of them is admitted with no sector charged. The constraint this project writes down
+      is *"unavailable must never masquerade as pass"*; §3 is that masquerade, ratified.
+      **Two costs nobody had priced, both surfaced in peer review, and they are why this is not a
+      one-line flip:** (1) fail-closed makes a single vendor field a TRADING DEPENDENCY — a vendor
+      outage or schema change becomes a book-wide halt, and there is no staleness or
+      last-known-good policy to fall back on; (2) refusing instruments that are already HELD
+      produces a book the guard says cannot exist, so it is a migration rather than a branch.
+      **And a third nobody has measured:** refusal is not neutral. Dropping members tilts the
+      universe toward funds the vendor happens to classify, which is a selection effect the cap
+      itself never sees.
+      Ruling this is the owner's. It changes a ratified rule and it costs a Track A restart.
+
+- [ ] **`[c]` Is a SECTOR cap the right unit for a single-name leveraged ETF?** Raised in council
+      review 2026-08-31 and not settled anywhere. `AAPU` is 2x one company; charging it to
+      "technology" answers a different question from the one its risk poses, which is
+      concentration. Related: `R` contains leverage for SIZING but not for sector AGGREGATION — a
+      1R `AAPU` and a 1R `XLK` charge technology identically while `AAPU`'s economic exposure is
+      twice `XLK`'s. `DR-025` §4.1 records the seam and does not close it.
+
 **Decision records** — DR-007 / DR-008 / DR-010 / **DR-012 / DR-013 / DR-014** are accepted, and
 2026-08-30 added **DR-011 / DR-016 / DR-017 / DR-018 / DR-022 / DR-023**.
 
@@ -1503,7 +1525,20 @@ is for where no gate can reach.
       classifications have `equity_share` NULL, and only a POSITIVE share clears the guard - absence
       is a fact about the vendor, not evidence about the fund. Gate 9 replays to the same hash; no
       Track A restart was spent, and the owner's grant for 2026-08-31 is UNSPENT.
-      **THE BACKFILL IS HELD, AND IT NEEDS ONE OWNER RULING.** Measured against a COPY of the store
+      **RULED 2026-08-31 BY `DR-025`, after a five-advisor council and a web check.** The shape is
+      not the evidence and never was: the vendor's sector weights sum to 1.0000 for EVERY fund
+      regardless of holdings, including the ten reporting 0% equity. The guard stops reading the
+      shape; only a vendor-declared 0% equity refuses. Sector-spendable universe members go
+      1018 -> 1041, all in the conservative direction.
+      **`DR-021`'s fail-closed polarity was backwards**, and that is the correction worth carrying:
+      it made silence REFUSE, but a refusal reports `unavailable` and `DR-006` 3 ADMITS an
+      unavailable candidate unchecked - so widening a refusal is the PERMISSIVE direction here, not
+      the safe one. `None` therefore does not refuse.
+      **Not scaled by the equity share**, and `AAPU` is why: physical equity 0.074 against an
+      economic 2x Apple, so scaling would undercharge the most concentrated instrument in the
+      universe by ~27x. `DR-025` section 4 has the distribution and the dissent.
+      **STILL OPEN, and both are the owner's** - see the two items below.
+      ~~**THE BACKFILL IS HELD, AND IT NEEDS ONE OWNER RULING.**~~ Measured against a COPY of the store
       before touching the live one - all 23 re-classified, 0 vendor failures - the equity shares are
       not the two-valued population `DR-021` section 5 assumed:
       the ten genuine bond and commodity funds all report **exactly 0.0000** (`NEAR`, `BNDW`,

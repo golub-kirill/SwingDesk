@@ -139,24 +139,27 @@ def test_the_bond_fund_look_through_is_refused_and_not_consumed() -> None:
     entire sector budget on a fiction, silently - which is worse than the check not existing."""
     exposure = look_through(
         _classification("NEAR.1", "ETF",
-                        {"healthcare": "1", "technology": "0", "energy": "0"}),
+                        {"healthcare": "1", "technology": "0", "energy": "0"},
+                        equity_share="0"),
         "NEAR.1",
     )
     assert not exposure.is_available
     assert exposure.weights == (), "a refused look-through must carry no weights to spend"
     assert exposure.unavailable is not None
-    assert "healthcare" in exposure.unavailable and "degenerate" in exposure.unavailable
+    # What refuses it is the vendor's DECLARED 0% equity, not the shape (`DR-025`). The fixture
+    # carries that answer because without it this fund is admitted - which is the whole change.
+    assert "0% equity" in exposure.unavailable
 
 
-def test_the_degeneracy_test_is_exact_so_a_real_sector_etf_still_passes() -> None:
-    """Exactness is load-bearing. A genuine sector ETF is legitimately almost all one sector, so a
-    tolerance would refuse the instruments this cap most needs to see. The bond funds §8.7 measured
-    come back at exactly 1 with every other sector at exactly 0."""
+def test_a_nearly_single_sector_fund_still_passes() -> None:
+    """Unchanged by `DR-025` and kept as the control: a 99.8% technology fund is a real fund. It
+    used to pass because the degeneracy test was EXACT; it now passes because the shape is not
+    consulted at all, and the assertion is the same either way."""
     almost = look_through(
         _classification("XLK.1", "ETF", {"technology": "0.998", "industrials": "0.002"}),
         "XLK.1",
     )
-    assert almost.is_available, "a 99.8% technology fund is a real fund, not a vendor artefact"
+    assert almost.is_available
 
 
 def test_a_single_sector_equity_is_not_treated_as_a_degenerate_look_through() -> None:
@@ -671,15 +674,21 @@ def test_an_unset_cap_refuses_every_candidate_and_names_the_parameter(wired, reg
     assert isinstance(result.sector_limit, Refusal)
 
 
-def test_a_degenerate_look_through_admits_unchecked_rather_than_spending_the_budget(
+def test_a_fund_declaring_no_equity_admits_unchecked_rather_than_spending_the_budget(
     wired, registry
 ) -> None:
-    """§8.7 end to end. A bond fund the vendor calls healthcare 100% must not consume the healthcare
-    budget - and must not refuse either. It is `unavailable`, and it is loud."""
+    """§8.7 end to end, on `DR-025`'s evidence rather than §8.7's inference. A bond fund the vendor
+    calls healthcare 100% AND 0% equity must not consume the healthcare budget - and must not refuse
+    the candidate either. It is `unavailable`, and it is loud.
+
+    The fixture now carries `equity_share="0"`. Without it the fund is admitted and spends the
+    budget, which is exactly what `DR-025` changed: the shape alone no longer refuses anything.
+    """
     bars, journal, positions, classifications = wired
     positions.record(_position("NEAR.1", index=1, shares=50, stop="96"))   # 2.00R
     classifications.record([
-        _classification("NEAR.1", "ETF", {"healthcare": "1", "technology": "0"}),
+        _classification("NEAR.1", "ETF", {"healthcare": "1", "technology": "0"},
+                        equity_share="0"),
         _equity(TEST_US.id, "healthcare"),
     ])
     sessions = _sessions()
@@ -762,85 +771,87 @@ def test_the_report_says_when_nothing_could_be_classified(wired, registry) -> No
     assert "admitted UNCHECKED" in text
 
 
-# ------------------------------- the guard asks instead of inferring (DR-021, ratified 2026-08-31)
+# --------------------------- the shape was never the evidence (DR-025, ruled 2026-08-31)
+#
+# `DR-006` §8.7 inferred "holds no equity" from a look-through of one sector at exactly 100%.
+# Measured over 35 funds: the vendor's weights sum to 1.0000 for EVERY fund regardless of holdings,
+# including funds reporting 0% equity. The shape carries no information about holdings, so the
+# inference is gone and only the vendor's own declared zero refuses.
 
 
-def test_a_real_sector_etf_at_exactly_100_percent_is_admitted_when_the_vendor_says_it_holds_equity(
-) -> None:
-    """The defect `DR-021` was written for, and the exact test was not enough to avoid it.
-
-    §8.7 reasoned that a real single-sector ETF carries a remainder in other sectors, so an EXACT
-    test could not catch one. Measured over the SPDR Select Sector family 2026-08-30: **five of
-    eleven** report exactly one sector at exactly 100% - XLC, XLE, XLV, XLRE, XLU - and each is
-    99.7% or more equity. All five were refused with a reason that is false for them.
-    """
+def test_a_real_sector_etf_at_exactly_100_percent_is_admitted() -> None:
+    """Five of the eleven SPDR Select Sector funds report exactly one sector at exactly 100% and
+    are 99.7%+ equity. They were refused with a reason false for them - and they are precisely the
+    instruments a sector cap exists to catch."""
     exposure = look_through(
         _classification("XLU.1", "ETF",
                         {"utilities": "1", "technology": "0", "energy": "0"},
                         equity_share="0.997"),
         "XLU.1",
     )
-    assert exposure.is_available, "the vendor says it is 99.7% equity; the shape is not the answer"
-    # The whole look-through is spendable, zero-weight sectors included - the guard narrowed a
-    # refusal and changed nothing about what a cleared exposure carries.
+    assert exposure.is_available
     spent = {w.sector: w.weight for w in exposure.weights}
     assert spent["utilities"] == Decimal(1)
-    assert spent["technology"] == Decimal(0) and spent["energy"] == Decimal(0)
 
 
-def test_the_bond_fund_is_still_refused_when_the_vendor_reports_no_equity() -> None:
-    """`NEAR`'s behaviour must not change. It is the instrument the guard was written for: a
-    short-maturity bond fund the vendor describes as healthcare 100.0%, and it answers 0.0%
-    equity in the same response."""
+def test_the_same_shape_is_admitted_even_with_no_equity_answer_at_all() -> None:
+    """The shape is not consulted, so an unanswered equity share cannot refuse on its own.
+
+    This is the reverse of `DR-021`'s asymmetry and is deliberate: a refusal reports `unavailable`,
+    `DR-006` §3 ADMITS an unavailable candidate unchecked, so WIDENING the refusal is the permissive
+    direction. Refusing on silence would be the dangerous half.
+    """
+    exposure = look_through(
+        _classification("XLE.1", "ETF", {"energy": "1", "technology": "0"}),  # equity_share None
+        "XLE.1",
+    )
+    assert exposure.is_available, "silence must not refuse - a refusal here admits unchecked"
+
+
+def test_a_fund_the_vendor_says_holds_no_equity_is_refused() -> None:
+    """`NEAR` is the bond fund §8.7 was written about, and it answers 0.0% equity in the same
+    response. That is evidence about the FUND, where the shape never was."""
     exposure = look_through(
         _classification("NEAR.1", "ETF",
-                        {"healthcare": "1", "technology": "0", "energy": "0"},
-                        equity_share="0"),
+                        {"healthcare": "1", "technology": "0"}, equity_share="0"),
         "NEAR.1",
     )
     assert not exposure.is_available
     assert exposure.weights == ()
     assert exposure.unavailable is not None
-    assert "reports 0% equity" in exposure.unavailable
+    assert "0% equity" in exposure.unavailable
 
 
-def test_an_unanswered_equity_share_is_refused_because_absence_is_not_evidence() -> None:
-    """The asymmetry that makes this change safe to ship, and the reason `None` is not zero.
-
-    Every one of the 1,148 classifications stored before 2026-08-31 has no answer here. If absence
-    cleared the guard, this record would have admitted all of them the moment it merged - silently,
-    on no evidence at all. Fail-closed means only a POSITIVE share clears it (`DR-021` §4).
-    """
+def test_a_declared_zero_refuses_whatever_the_shape_is() -> None:
+    """The refusal keys on the vendor's answer alone, so a bond fund with an ORDINARY multi-sector
+    look-through is refused too. Its sector weights describe an equity sleeve that does not exist."""
     exposure = look_through(
-        _classification("UNKNOWN.1", "ETF",
-                        {"healthcare": "1", "technology": "0"}),  # equity_share defaults to None
-        "UNKNOWN.1",
+        _classification("BOND.1", "ETF",
+                        {"financial_services": "0.6", "technology": "0.4"}, equity_share="0"),
+        "BOND.1",
     )
     assert not exposure.is_available
-    assert exposure.unavailable is not None
-    assert "did not answer" in exposure.unavailable
-    assert "absence is not evidence" in exposure.unavailable
 
 
-def test_the_equity_share_only_matters_when_the_shape_is_degenerate() -> None:
-    """The shape stays the TRIGGER. A fund with an ordinary look-through is spent on its weights
-    whatever the equity share says, so a bond fund with a real multi-sector answer is unaffected -
-    this record narrows a refusal and must not widen one."""
-    ordinary = look_through(
-        _classification("XLK.1", "ETF",
-                        {"technology": "0.998", "industrials": "0.002"}, equity_share="0"),
-        "XLK.1",
+def test_the_look_through_is_not_scaled_by_the_equity_share() -> None:
+    """`stockPosition` is PHYSICAL equity, not economic exposure.
+
+    `AAPU` holds ~15% Apple stock plus a ~12.6% Apple swap against ~67% cash collateral, so it reads
+    0.074 while being economically 2x Apple. Scaling by it would undercharge the most concentrated
+    instrument in the universe by about 27x - in the permissive direction, which is the one that
+    matters. A fund that over-charges its sector binds the cap early and costs an entry.
+    """
+    exposure = look_through(
+        _classification("AAPU.1", "ETF",
+                        {"technology": "1", "energy": "0"}, equity_share="0.074"),
+        "AAPU.1",
     )
-    assert ordinary.is_available, "a non-degenerate look-through was never this guard's subject"
+    assert exposure.is_available
+    spent = {w.sector: w.weight for w in exposure.weights}
+    assert spent["technology"] == Decimal(1), "charged in full, never scaled down to 0.074"
 
 
-def test_a_zero_equity_share_and_an_absent_one_read_differently() -> None:
-    """Both refuse, and they are different facts: one is about the FUND, the other about the
-    VENDOR. A reason that collapsed them would send someone re-fetching a fund that answered."""
-    answered = look_through(
-        _classification("A.1", "ETF", {"healthcare": "1", "energy": "0"}, equity_share="0"), "A.1")
-    unanswered = look_through(
-        _classification("B.1", "ETF", {"healthcare": "1", "energy": "0"}), "B.1")
-
-    assert not answered.is_available and not unanswered.is_available
-    assert answered.unavailable != unanswered.unavailable
+def test_a_single_sector_equity_share_is_unaffected() -> None:
+    """The guard applies to FUNDS. An ordinary share at 100% of its own sector carries no equity
+    share at all and must keep being admitted."""
+    assert look_through(_equity("AAA.1", "energy"), "AAA.1").is_available
