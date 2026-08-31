@@ -93,6 +93,18 @@ class Classification(BaseModel):
     weights: tuple[SectorWeight, ...] = ()
     """Empty means the vendor served no sector at all, which is `unavailable` and not `none`."""
 
+    equity_share: Decimal | None = Field(
+        default=None,
+        ge=0,
+        le=1,
+        description="What share of the fund the vendor says is EQUITY - "
+                    "`funds_data.asset_classes.stockPosition` (`DR-021`). `None` means the vendor "
+                    "did not answer, which is not the same as answering zero: `NEAR` reports 0.0 "
+                    "and is a bond fund, while an unanswered field is a fact about the vendor. "
+                    "`look_through` treats both as a refusal and only a POSITIVE share as evidence "
+                    "of equity, so absence stays fail-closed.",
+    )
+
     knowledge_time: datetime = Field(description="When this was learned. Timezone-aware.")
 
     @property

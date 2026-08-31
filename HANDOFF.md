@@ -123,7 +123,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | | |
 |---|---|
 | Merge gates | **44**, one command: `python tools/check_gates.py` |
-| Tests | **1061**, fully offline |
+| Tests | **1069**, fully offline |
 | Docs | 126 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 459 registered · 4 `specified` · **2 `active`** |
 | Parameters | 107 - 61 `unset`, 34 `assumed`, 12 `owner`, **0 `validated`** |
@@ -188,7 +188,7 @@ once did).
 
 - `claude/inspiring-colden-2e8e16`
 - `claude/swingdesk-continuation-dfc5fe`
-- `claude/the-rs-line-costs-a-tenth-of-what-it-did`
+- `claude/the-guard-asks-instead-of-inferring`
 - `claude/swingdesk-agents-handoff-8d4d71`
 - `claude/gate-26-explains-itself-in-handoff`
 

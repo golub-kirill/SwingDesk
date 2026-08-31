@@ -1494,9 +1494,42 @@ is for where no gate can reach.
       `tools/probe_sector_benchmarks.py`, live over the network. So `still_to_build: the
       discriminator itself` understates it: a contract field, a store column, a vendor-adapter
       change and a refetch of every stored classification come first.
-      **So it waits for the next window.** `DR-017` and `DR-023` took 2026-08-30's counter reset;
-      the standing rule is that a second one joins that merge before it lands or waits, and this did
-      not join it. Nothing here disagrees with `DR-021` section 4 — the defect is real and section 8.1
+      ~~**So it waits for the next window.**~~ **BUILT AND RATIFIED 2026-08-31**, on the owner's
+      grant of a restart for that date - which is what "the next window" turned out to mean.
+      `Classification` gained `equity_share`, read from the same vendor response the sector weights
+      already came from, and `look_through` refuses a degenerate look-through only when the vendor
+      does not positively report equity. `DR-021` section 9 records it.
+      **The code alone moves nothing, and that is by construction.** All 1,148 stored
+      classifications have `equity_share` NULL, and only a POSITIVE share clears the guard - absence
+      is a fact about the vendor, not evidence about the fund. Gate 9 replays to the same hash; no
+      Track A restart was spent, and the owner's grant for 2026-08-31 is UNSPENT.
+      **THE BACKFILL IS HELD, AND IT NEEDS ONE OWNER RULING.** Measured against a COPY of the store
+      before touching the live one - all 23 re-classified, 0 vendor failures - the equity shares are
+      not the two-valued population `DR-021` section 5 assumed:
+      the ten genuine bond and commodity funds all report **exactly 0.0000** (`NEAR`, `BNDW`,
+      `BNDX`, `UITB`, `FIXD`, `BOND`, `ANGL`, `BCI`, `CARY`, `COMT`) and stay refused, correctly;
+      eight are unambiguous equity at 0.626 to 1.000; and then it runs continuously down through
+      `AMZU` 0.317, `AVL` 0.172, `AMUU` 0.160, `AAPU` 0.074 to **`BINC` at 0.0001**.
+      **`BINC` is a bond fund reporting 0.01% equity.** Under "a positive share admits" its
+      `financial_services 100%` look-through is spent in FULL - which is exactly the `NEAR` fiction
+      this record exists to stop, at 0.0001 instead of 0.0.
+      Section 5's *"0.997 versus 0.0 is not a close call and nothing in this record turns on where a
+      line between them would sit"* is therefore FALSE on the live population, and it is the same
+      sampling error section 8.2 already records for section 6, in the same record: measured over
+      the eleven SPDR funds, concluded over the universe.
+      **The ruling, and it is the owner's twice over.** Admitting on any positive share spends a
+      sector budget on a bond fund. Picking a floor is a threshold, and section 5 forbids one
+      without a citation - and `risk.max_sector_risk` is a `DR-006` cap, which binds a real account.
+      A third option exists and is a different design: SCALE the look-through by the equity share,
+      so a 7%-equity fund places 7% of its value, which needs no threshold and no admit/refuse - but
+      it changes what every fund contributes, not just the degenerate ones, so it is a new record
+      rather than an amendment.
+      **One thing fell out of it:** `platform/schema.py` refused to open any store missing a
+      declared column while it held rows, but its own argument is about `NOT NULL` - filling one
+      invents a value. NULL invents nothing. The reconciler now adds a missing NULLABLE column to a
+      populated table and still refuses a `NOT NULL` one, naming only the column that cannot be
+      added. Without it this record needed a hand migration of the shipped store to record a fact
+      already true of every row in it. Nothing here disagrees with `DR-021` section 4 — the defect is real and section 8.1
       makes the case STRONGER, because the guard is wrongly refusing instruments actually in the
       universe rather than hypothetical ones. What is gone is the argument for landing it cheaply.
       **`DR-021` section 8 carries the tables.** The record stays `proposed`; ratifying is the owner's.

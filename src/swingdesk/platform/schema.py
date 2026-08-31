@@ -15,10 +15,15 @@ Nothing noticed, because the failure was a stack trace in a log file rather than
 
 - Missing column, table EMPTY -> migrate it. Lossless and unambiguous: there are no rows to invent a
   value for, and refusing here would make a first-run store unusable for no reason.
-- Missing column, table HAS ROWS -> **refuse, naming the drift**. Filling a `NOT NULL` column on
-  existing rows means inventing a value, and "unset is not a default" (`AGENTS.md` §3) is exactly as
-  true of a backfill as of a parameter. That is a migration a human decides, not one a constructor
-  performs on the way past.
+- Missing NULLABLE column, table HAS ROWS -> **add it**. This invents nothing: NULL is not a
+  default, it is "this row was written before the column existed and nobody asked". Added 2026-08-31
+  for `DR-021`, whose `classifications.equity_share` is nullable precisely so an unasked question
+  reads as unasked. Refusing here would make a store unopenable to record a fact already true of
+  every row in it.
+- Missing NOT NULL column, table HAS ROWS -> **refuse, naming the drift**. Filling one on existing
+  rows means inventing a value, and "unset is not a default" (`AGENTS.md` §3) is exactly as true of
+  a backfill as of a parameter. That is a migration a human decides, not one a constructor performs
+  on the way past.
 
 Extra columns on disk are left alone. A column the code stopped reading is not a fault - it is what
 an append-only history looks like after a field is retired.
@@ -107,7 +112,26 @@ def reconcile(connection: _Connection, schema_sql: str) -> list[str]:
 
         rows = connection.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
         if rows:
-            raise SchemaDrift(table, missing, rows)
+            declared = dict(columns)
+            required = [name for name in missing if "NOT NULL" in declared[name].upper()]
+            if required:
+                raise SchemaDrift(table, required, rows)
+
+            # A NULLABLE column added to a populated table INVENTS NOTHING, and that is the whole
+            # of why this branch exists. The refusal above is about `NOT NULL`: filling one on
+            # existing rows means choosing a value nobody measured, and "unset is not a default"
+            # (`AGENTS.md` §3). NULL is not a default - it is precisely "this row was written
+            # before the column existed, and nobody asked". Refusing here would have made a store
+            # unopenable to record a fact that is already true of every row in it.
+            #
+            # `DR-021` is what surfaced the distinction: `classifications.equity_share` is nullable
+            # by design, because a classification stored before the vendor was asked what share is
+            # equity has no answer and must not be given one. `ALTER` rather than the DROP below
+            # for the obvious reason - there are rows to keep.
+            for name in missing:
+                connection.execute(f"ALTER TABLE {table} ADD COLUMN {name} {declared[name]}")
+            migrated.extend(f"{table}.{name}" for name in missing)
+            continue
 
         # DROP and re-create rather than ALTER, for two reasons. DuckDB refuses
         # `ADD COLUMN ... NOT NULL` outright ("adding columns with constraints not yet supported"),

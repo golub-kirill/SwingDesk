@@ -180,6 +180,7 @@ def fetch_classification(instrument: Instrument, knowledge_time: datetime) -> Cl
         )
 
     weights: list[SectorWeight] = []
+    equity_share: Decimal | None = None
     if quote_type.upper() in FUND_KINDS:
         try:
             reported = ticker.funds_data.sector_weightings or {}
@@ -192,6 +193,20 @@ def fetch_classification(instrument: Instrument, knowledge_time: datetime) -> Cl
             weight = _weight(share)
             if weight is not None:
                 weights.append(SectorWeight(sector=str(sector), weight=weight))
+
+        # `DR-021`: the fact the degeneracy guard was inferring, asked for directly. It arrives in
+        # the SAME response as the sector weights, which is what made the inference avoidable all
+        # along - `AGENTS.md` §12's named trap, a proxy standing in for a measurement that was
+        # sitting in the same payload.
+        #
+        # Its own `except`, not folded into the one above: a vendor that serves sector weights and
+        # no asset classes must keep the weights. Sharing a handler would discard both over the
+        # half that is optional.
+        try:
+            classes = ticker.funds_data.asset_classes or {}
+            equity_share = _weight(classes.get("stockPosition"))
+        except Exception:  # noqa: BLE001 - an unanswered field is a fact, not a failure
+            equity_share = None
     else:
         sector = str(info.get("sector") or "").strip()
         if sector:
@@ -203,6 +218,7 @@ def fetch_classification(instrument: Instrument, knowledge_time: datetime) -> Cl
         quote_type=quote_type,
         industry=industry,
         weights=tuple(weights),
+        equity_share=equity_share,
         knowledge_time=knowledge_time,
     )
 
