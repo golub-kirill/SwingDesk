@@ -2,12 +2,18 @@
 
 ```
 date:            2026-08-30
-status:          proposed — owner ratification required. It amends an ACCEPTED record
+status:          accepted — ratified by the owner 2026-08-31
 parameters:      none. Deliberately - see section 5
 components:      reference_data.classification:look_through
-supersedes:      nothing. It AMENDS DR-006 section 8.7, which stays in force until this is ratified
-implementation:  none
-still_to_build:  the discriminator itself, once ruled
+supersedes:      nothing. It AMENDS DR-006 section 8.7, which is corrected forward here rather than
+                 edited (AGENTS.md section 11 rule 2)
+implemented_by:  src/swingdesk/reference_data/classification.py :: def look_through
+also_built:      contracts/reference.py (Classification.equity_share),
+                 reference_data/classification.py (the column), market_data/vendor_yahoo.py (the
+                 fetch), platform/schema.py (a nullable column may now be added to a populated
+                 table - section 9.3)
+built:           2026-08-31. Section 9 records what landed, what it cost, and the one claim in
+                 section 6 that was wrong.
 ```
 
 ## 1. What `DR-006` §8.7 does today, and why it exists
@@ -213,3 +219,63 @@ universe today, so it spends a Track A `a.run_completes` reset. `DR-017` and `DR
 window's reset on 2026-08-30, and the standing rule is that a second one either joins that merge
 before it lands or waits. It did not join it. **So this waits for the next window**, and §6's
 "no decision output" is no longer available as an argument for landing it cheaply.
+
+## 9. Built and ratified 2026-08-31
+
+Ratified with §8's correction attached: §6's *"on today's stored universe that is no instrument"* was
+measured false on 2026-08-30 — **23 admitted members of the live universe** sit in the refused state,
+not zero — and §8.2 records that the error was sampling rather than reasoning.
+
+### 9.1 The shape is the trigger; the vendor's own answer is the discriminator
+
+`look_through` refuses a degenerate look-through **only when the vendor does not positively report
+equity**. `Classification` gained `equity_share`, read from `funds_data.asset_classes.stockPosition`
+in the same response the sector weights already came from — which is what made the inference
+avoidable all along, and is `AGENTS.md` §12's named trap with the measurement sitting in the payload.
+
+§5's promise is kept: **no parameter, and no tolerance in either half.** The shape must be degenerate
+and the equity share must be positive. 0.997 against 0.0 is not a close call.
+
+### 9.2 `None` is not zero, and that asymmetry is what makes this safe to ship
+
+An unanswered `equity_share` is a fact about the **vendor**; a reported `0.0` is a fact about the
+**fund**. Neither is evidence of equity, so neither clears the refusal — and the two print
+differently, because a reason that collapsed them would send someone re-fetching a fund that
+answered.
+
+**The consequence is that the code change alone moves nothing.** Every one of the 1,148
+classifications stored before today has `equity_share = NULL` and behaves exactly as it did. Only an
+affirmative answer can admit, never silence, so the rollout is incremental and fail-closed by
+construction. What moves admission is the **backfill** — §9.4.
+
+### 9.3 A nullable column may now be added to a populated table
+
+`platform/schema.py` refused to open any store missing a declared column while it held rows. Its own
+reasoning is about `NOT NULL`: *"filling one on existing rows means inventing a value, and unset is
+not a default."* **That argument does not reach a nullable column.** NULL is not a default — it is
+"this row was written before the column existed and nobody asked", which is exactly true of all
+1,148 rows here.
+
+So the reconciler now adds a missing **nullable** column to a populated table and still refuses a
+missing `NOT NULL` one, naming only the column that actually cannot be added. Without it this record
+would have required a hand migration of the shipped store to record a fact already true of every row
+in it. Both branches are tested, including that the exemption does not leak into the `NOT NULL` case
+— which would silently re-open the four-day defect that module was written for.
+
+### 9.4 What it costs on Track A, and what actually spends it
+
+**A restart, taken 2026-08-31 on the owner's grant.** The code alone changes no admission (§9.2);
+the **backfill** of the 23 degenerate-shaped instruments is what does, by giving the guard an answer
+to read. The two land together because separately the first is inert and the second is unexplained.
+
+Of the 23, some are equity funds refused on a reason false for them — `CURE` (3× healthcare equity,
+reported healthcare), `DPST` (3× regional banks, financial services), `DRN` (3× real estate) — and
+others are the `NEAR` signature and stay refused, with `BNDW` and `BNDX` global bond funds reported
+as **technology**. **Which is which is the vendor's to say, not this record's**, and that is the
+whole point of asking instead of inferring.
+
+### 9.5 What this still does not do
+
+`risk.max_sector_risk` keeps its value and its `assumed:DR-006` provenance. `DR-006` §3's
+admit-on-unavailable rule is untouched. The point-in-time weakness of the classification — the
+sector known is today's, not the one in force on an older date — is unaddressed and stays so.

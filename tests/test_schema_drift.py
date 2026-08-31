@@ -138,3 +138,67 @@ def test_a_position_store_missing_the_costs_column_opens_and_heals(tmp_path) -> 
         ))
         stored = store.open_as_of(datetime(2026, 8, 22, tzinfo=UTC))
         assert stored[0].initial_costs_per_share == Decimal("1.50"), "and it round-trips"
+
+
+# ------------------------------------- a NULLABLE column on a populated table (DR-021, 2026-08-31)
+
+NULLABLE_SCHEMA = """
+CREATE TABLE IF NOT EXISTS thing (
+    id      VARCHAR NOT NULL,
+    note    VARCHAR,
+    PRIMARY KEY (id)
+);
+"""
+
+
+def test_a_missing_NULLABLE_column_on_a_POPULATED_table_is_added(tmp_path) -> None:
+    """This invents nothing, which is the entire distinction from the refusal above.
+
+    The refusal is about `NOT NULL`: filling one on existing rows means choosing a value nobody
+    measured. NULL is not a default - it is "this row was written before the column existed and
+    nobody asked", which is exactly true. `DR-021` surfaced it: `classifications.equity_share` is
+    nullable precisely so an unasked question reads as unasked, and refusing here would have made
+    the store unopenable in order to record a fact already true of all 1,148 rows in it.
+    """
+    con = _connect(tmp_path, "CREATE TABLE thing (id VARCHAR NOT NULL, PRIMARY KEY (id));")
+    con.execute("INSERT INTO thing VALUES ('a')")
+
+    migrated = reconcile(con, NULLABLE_SCHEMA)
+
+    assert migrated == ["thing.note"]
+    assert "note" in {r[0] for r in con.execute("DESCRIBE thing").fetchall()}
+    # The existing row survives and its new column is NULL, not a fabricated value.
+    assert con.execute("SELECT id, note FROM thing").fetchall() == [("a", None)]
+
+
+def test_a_NOT_NULL_column_still_refuses_even_beside_a_nullable_one(tmp_path) -> None:
+    """The negative control for the row above. An exemption that leaked into the NOT NULL case
+    would silently re-open the four-day defect this whole module was written for."""
+    both = """
+CREATE TABLE IF NOT EXISTS thing (
+    id       VARCHAR NOT NULL,
+    note     VARCHAR,
+    weight   DECIMAL(18,6) NOT NULL,
+    PRIMARY KEY (id)
+);
+"""
+    con = _connect(tmp_path, "CREATE TABLE thing (id VARCHAR NOT NULL, PRIMARY KEY (id));")
+    con.execute("INSERT INTO thing VALUES ('a')")
+
+    with pytest.raises(SchemaDrift) as drift:
+        reconcile(con, both)
+
+    # Only the NOT NULL column is named: it is the one that cannot be added, and reporting the
+    # nullable one beside it would send a reader migrating something that needs no decision.
+    assert drift.value.missing == ["weight"]
+    assert "note" not in str(drift.value)
+
+
+def test_the_live_classification_schema_declares_equity_share_nullable(tmp_path) -> None:
+    """`DR-021` depends on it: a NOT NULL `equity_share` would refuse to open the shipped store,
+    and a default value would assert the vendor answered when it never was asked."""
+    from swingdesk.reference_data import classification
+
+    columns = dict(declared_columns(classification._SCHEMA)["classifications"])
+    assert "equity_share" in columns
+    assert "NOT NULL" not in columns["equity_share"].upper()

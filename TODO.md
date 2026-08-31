@@ -1494,9 +1494,21 @@ is for where no gate can reach.
       `tools/probe_sector_benchmarks.py`, live over the network. So `still_to_build: the
       discriminator itself` understates it: a contract field, a store column, a vendor-adapter
       change and a refetch of every stored classification come first.
-      **So it waits for the next window.** `DR-017` and `DR-023` took 2026-08-30's counter reset;
-      the standing rule is that a second one joins that merge before it lands or waits, and this did
-      not join it. Nothing here disagrees with `DR-021` section 4 — the defect is real and section 8.1
+      ~~**So it waits for the next window.**~~ **BUILT AND RATIFIED 2026-08-31**, on the owner's
+      grant of a restart for that date - which is what "the next window" turned out to mean.
+      `Classification` gained `equity_share`, read from the same vendor response the sector weights
+      already came from, and `look_through` refuses a degenerate look-through only when the vendor
+      does not positively report equity. `DR-021` section 9 records it.
+      **The code alone moved nothing, and that is by construction.** All 1,148 stored
+      classifications have `equity_share` NULL, and only a POSITIVE share clears the guard - absence
+      is a fact about the vendor, not evidence about the fund. So what spent the restart is the
+      BACKFILL of the 23 landing with the code.
+      **One thing fell out of it:** `platform/schema.py` refused to open any store missing a
+      declared column while it held rows, but its own argument is about `NOT NULL` - filling one
+      invents a value. NULL invents nothing. The reconciler now adds a missing NULLABLE column to a
+      populated table and still refuses a `NOT NULL` one, naming only the column that cannot be
+      added. Without it this record needed a hand migration of the shipped store to record a fact
+      already true of every row in it. Nothing here disagrees with `DR-021` section 4 — the defect is real and section 8.1
       makes the case STRONGER, because the guard is wrongly refusing instruments actually in the
       universe rather than hypothetical ones. What is gone is the argument for landing it cheaply.
       **`DR-021` section 8 carries the tables.** The record stays `proposed`; ratifying is the owner's.

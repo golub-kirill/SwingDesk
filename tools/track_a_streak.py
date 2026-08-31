@@ -197,6 +197,17 @@ STREAK_RESTARTS: tuple[tuple[date, str], ...] = (
      "row above measured ZERO when this landed. Two rows dated one day truncate the identical "
      "window. That is a fact about this day and not a licence - from 2026-08-31 the one-reset rule "
      "applies again in full"),
+    (date(2026, 8, 31),
+     "DR-021 built and ratified - the sector guard asks whether a fund holds equity instead of "
+     "inferring it from the shape. One frozen file is NOT touched: this is reference_data and "
+     "contracts, not pipeline.py. It moves decision output anyway, because a candidate whose "
+     "look-through was refused as degenerate now has its sector MEASURED AND SPENT against "
+     "risk.max_sector_risk when the vendor positively reports equity. Measured 2026-08-30: 23 "
+     "admitted universe members sat in the refused state, against DR-021 section 6's prediction of "
+     "zero - it had reasoned about the five SPDR Select Sector funds, none of which is a universe "
+     "member. THE CODE ALONE MOVES NOTHING: equity_share is NULL on all 1,148 stored "
+     "classifications and only a POSITIVE share clears the guard, so what spends this restart is "
+     "the backfill of the 23 landing with it. Taken on the owner's grant for this date"),
 )
 
 

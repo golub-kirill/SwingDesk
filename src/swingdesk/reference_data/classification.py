@@ -43,6 +43,10 @@ CREATE TABLE IF NOT EXISTS classifications (
     instrument_id   VARCHAR     NOT NULL,
     quote_type      VARCHAR     NOT NULL,
     industry        VARCHAR,
+    -- DR-021. NULLABLE on purpose: every row written before 2026-08-31 has no answer here, and an
+    -- unanswered equity share is not a zero one. `look_through` reads only a POSITIVE share as
+    -- evidence of equity, so a NULL behaves exactly as the guard did before this column existed.
+    equity_share    DECIMAL(9,6),
     PRIMARY KEY (knowledge_time, instrument_id)
 );
 
@@ -142,12 +146,13 @@ class ClassificationStore:
         written = 0
         for classification in classifications:
             self._connection.execute(
-                "INSERT OR REPLACE INTO classifications VALUES (?, ?, ?, ?)",
+                "INSERT OR REPLACE INTO classifications VALUES (?, ?, ?, ?, ?)",
                 [
                     classification.knowledge_time,
                     classification.instrument_id,
                     classification.quote_type,
                     classification.industry,
+                    classification.equity_share,
                 ],
             )
             # Cleared first: a later pull reporting FEWER sectors must not leave the sectors it
@@ -179,7 +184,7 @@ class ClassificationStore:
         """
         row = self._connection.execute(
             """
-            SELECT knowledge_time, quote_type, industry
+            SELECT knowledge_time, quote_type, industry, equity_share
             FROM classifications
             WHERE instrument_id = ? AND knowledge_time <= ?
             ORDER BY knowledge_time DESC
@@ -190,7 +195,7 @@ class ClassificationStore:
         if row is None:
             return None
 
-        learned, quote_type, industry = row
+        learned, quote_type, industry, equity_share = row
         weights = self._connection.execute(
             """
             SELECT sector, weight
@@ -207,6 +212,7 @@ class ClassificationStore:
             weights=tuple(
                 SectorWeight(sector=sector, weight=weight) for sector, weight in weights
             ),
+            equity_share=equity_share,
             knowledge_time=learned,
         )
 
@@ -262,22 +268,29 @@ def look_through(classification: Classification | None, instrument_id: str) -> E
        after the knowledge time being read at. `unavailable` - the check did not run.
     2. **No sector at all.** The vendor answered and served no sector. Common for an index, a
        warrant, or a name it does not cover.
-    3. **A degenerate look-through** (`DR-006` §8.7). A fund reporting exactly ONE sector at exactly
-       1 with every other at exactly 0 is the `NEAR` signature: a short-maturity bond fund that the
-       vendor describes as healthcare 100.0%. Refused and reported `unavailable`, never consumed.
+    3. **A degenerate look-through that the vendor does not say holds equity** (`DR-006` §8.7 as
+       amended by `DR-021`). A fund reporting exactly ONE sector at exactly 1 with every other at
+       exactly 0 is the `NEAR` signature: a short-maturity bond fund the vendor describes as
+       healthcare 100.0%. That SHAPE is the trigger; what settles it is `equity_share`, which the
+       vendor serves in the same response. Refused and reported `unavailable`, never consumed.
 
-    **Why the test is EXACT rather than "close to 1".** A genuine sector ETF is legitimately almost
-    all one sector, so a tolerance would refuse the instruments the cap most needs to see. The bond
-    funds §8.7 measured come back at 1.000000 with every other sector at 0.000000; a real
-    single-sector ETF carries a remainder in other sectors. Exactness is what separates the vendor
-    answering "not applicable" in the only vocabulary it has from the vendor answering correctly.
+    **Why the shape alone was not enough, measured.** *"A genuine sector ETF is legitimately almost
+    all one sector"* is true, and §8.7 concluded from it that an EXACT test was safe because a real
+    single-sector ETF carries a remainder. It does not always: over the SPDR Select Sector family on
+    2026-08-30, **five of eleven** report exactly one sector at exactly 100% - `XLC`, `XLE`, `XLV`,
+    `XLRE`, `XLU` - and each is 99.7% or more equity. The exact test refused all five for a reason
+    that is false for them, and 23 admitted members of the live universe sat in that state.
 
-    **The known weakness, stated rather than discovered later.** `asset_classes` on the same vendor
-    object reports stock/bond/cash shares directly and would discriminate a bond fund without this
-    inference. It is the better guard and it is not used here because it has not been measured
-    against this vendor, and `DR-006` §8.7 specified the test that had been. When a false positive
-    does occur it fails toward `unavailable`, which ADMITS the candidate unchecked - the permissive
-    direction, and the reason this is carried as an open item rather than treated as settled.
+    **Why the test is still EXACT in both halves.** A tolerance on the sector weight would need a
+    number the course does not supply, and it inverts the problem - it would refuse `XLK` at 99.3%
+    today and more of the family as they drift. `DR-021` §5 introduces no parameter: the shape must
+    be degenerate, and the equity share must be POSITIVELY reported. 0.997 against 0.0 is not a
+    close call.
+
+    **`None` is not zero, and the asymmetry is the guard.** An unanswered `equity_share` is a fact
+    about the vendor, not about the fund, so it does not clear the refusal. A classification stored
+    before that field existed therefore behaves exactly as it did, and this change can only ever
+    ADMIT on an affirmative answer - never on silence.
 
     A partial look-through is NOT refused. Weights summing to less than 1 spend what they report and
     leave the remainder unattributed, because normalising invents composition the vendor did not
@@ -334,14 +347,32 @@ def look_through(classification: Classification | None, instrument_id: str) -> E
         if classification.quote_type.upper() in FUND_KINDS
         else None
     )
-    if degenerate is not None:
+    # `DR-021`: the shape is the TRIGGER, the vendor's own answer is the DISCRIMINATOR.
+    #
+    # The shape alone was refusing real sector ETFs. Measured 2026-08-30 over the SPDR Select Sector
+    # family, five of eleven report exactly one sector at exactly 100% - `XLC`, `XLE`, `XLV`, `XLRE`
+    # and `XLU` - and every one of them is 99.7% or more EQUITY. They were refused with a reason
+    # that is false for them, and 23 admitted members of the live universe were in that state.
+    #
+    # A POSITIVE equity share is the only thing that clears it. `None` does not, and that asymmetry
+    # is the whole guard: `NEAR` answers 0.0 and is a bond fund, an unanswered field is a fact about
+    # the vendor, and neither is evidence of equity. So a classification stored before this field
+    # existed behaves exactly as it did - refused - and the change can only ever ADMIT on an
+    # affirmative answer, never on silence.
+    holds_equity = classification.equity_share is not None and classification.equity_share > 0
+    if degenerate is not None and not holds_equity:
+        answered = (
+            "the vendor reports 0% equity"
+            if classification.equity_share is not None
+            else "the vendor did not answer what share is equity, and absence is not evidence of it"
+        )
         return Exposure(
             instrument_id=instrument_id,
             weights=(),
             unavailable=(
                 f"the look-through is degenerate - {degenerate} at exactly 100% and every other "
-                f"sector at exactly 0%, which is how this vendor describes a fund holding no "
-                f"equity at all (DR-006 8.7). Refused rather than consumed"
+                f"sector at exactly 0% - and {answered} (DR-006 8.7, DR-021). Refused rather than "
+                f"consumed"
             ),
         )
 
