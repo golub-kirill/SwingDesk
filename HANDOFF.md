@@ -147,7 +147,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | Universe coverage | bars stored for 3,743 of 13,184 listed symbols - **28.4%** |
 | Canada | **1 instrument** with bars, 252 bars over one fetch, last 2026-08-02 · **0** `.TO` symbol(s) listed in `directory.duckdb`. `BR-9`'s per-country requirement is unmet in every reported study. Since `DR-003` gap 1 was refuted (2026-08-25) a FORWARD result is blocked by this row rather than by a missing source; a HISTORICAL one also needs point-in-time membership, which the TMX endpoint cannot supply at any price |
 | Classifications | 1,148 instrument(s) carry a sector · 1,046 (**91.1%**) report at least one non-zero weight. The stricter `look_through` count, which also drops a degenerate ETF look-through (`DR-006` §8.7), is lower - derive it with `python tools/measure_sector_cap.py --wide --classifications data/classifications.duckdb` |
-| Track A clock | **0/20** consecutive clean sessions · counting from a **deliberate restart on 2026-08-31**, not an outage - `python tools/track_a_streak.py` prints why · `a.run_completes`, computed by `tools/track_a_streak.py` |
+| Track A clock | **0/20** consecutive clean sessions · counting from a **deliberate restart on 2026-08-30**, not an outage - `python tools/track_a_streak.py` prints why · `a.run_completes`, computed by `tools/track_a_streak.py` |
 
 *Measured from `data/` on 2026-08-31.*
 

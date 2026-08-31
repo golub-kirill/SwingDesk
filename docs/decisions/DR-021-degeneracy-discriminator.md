@@ -262,17 +262,35 @@ would have required a hand migration of the shipped store to record a fact alrea
 in it. Both branches are tested, including that the exemption does not leak into the `NOT NULL` case
 — which would silently re-open the four-day defect that module was written for.
 
-### 9.4 What it costs on Track A, and what actually spends it
+### 9.4 The backfill is HELD, and section 5's premise is why
 
-**A restart, taken 2026-08-31 on the owner's grant.** The code alone changes no admission (§9.2);
-the **backfill** of the 23 degenerate-shaped instruments is what does, by giving the guard an answer
-to read. The two land together because separately the first is inert and the second is unexplained.
+**No Track A restart was spent, because nothing moved.** The owner granted one for 2026-08-31 and it
+was not needed: with every stored `equity_share` NULL the guard behaves exactly as it did, gate 9
+replays to the same hash, and only the refusal's wording changed. The grant is unspent.
 
-Of the 23, some are equity funds refused on a reason false for them — `CURE` (3× healthcare equity,
-reported healthcare), `DPST` (3× regional banks, financial services), `DRN` (3× real estate) — and
-others are the `NEAR` signature and stay refused, with `BNDW` and `BNDX` global bond funds reported
-as **technology**. **Which is which is the vendor's to say, not this record's**, and that is the
-whole point of asking instead of inferring.
+**What stopped the backfill is a measurement, taken against a copy of the store before touching the
+live one.** All 23 degenerate-shaped instruments were re-classified — 0 vendor failures — and the
+equity shares are **not the two-valued population §5 assumed**:
+
+| | `equity_share` |
+|---|---|
+| **Still refused, correctly** — `NEAR`, `BNDW`, `BNDX`, `UITB`, `FIXD`, `BOND`, `ANGL`, `BCI`, `CARY`, `COMT` | all exactly **0.0000** |
+| Unambiguous equity — `DFAR`, `ARKG`, `CHPY`, `DPST`, `DRN`, `CURE`, `DFEN`, `BIZD` | 0.626 – 1.000 |
+| **The problem** — `AMZU`, `AVL`, `AMUU`, `AAPU` | 0.317, 0.172, 0.160, 0.074 |
+| **`BINC`** | **0.0001** |
+
+**`BINC` is a bond fund reporting 0.01% equity, and under "a positive share admits" its
+`financial_services 100%` look-through would be spent in full.** That is precisely the `NEAR`
+fiction this record exists to stop — at 0.0001 rather than 0.0.
+
+§5 says *"0.997 versus 0.0 is not a close call and nothing in this record turns on where a line
+between them would sit."* **On the live population that is false.** The shares run continuously from
+0.0001 to 1.0000, and the record's premise was measured over the eleven SPDR Select Sector funds —
+which is the same sampling error §8.2 records for §6, in the same record, over the same population.
+
+**So the discriminator ships and the backfill waits for a ruling.** Admitting on any positive share
+would spend a sector budget on a bond fund; picking a floor is a threshold, and §5 forbids one
+without a citation. Both are the owner's, and `TODO.md` carries the question with this table.
 
 ### 9.5 What this still does not do
 
