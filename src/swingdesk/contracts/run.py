@@ -55,8 +55,10 @@ class RunManifest(BaseModel):
     code_hash: str
     code_dirty: bool = Field(
         default=False,
-        description="True when the working tree had uncommitted changes. A dirty run is "
-                    "reproducible only by accident.",
+        description="True when something the run READS had uncommitted changes - src/, tools/, "
+                    "registry/ or golden/ (DR-022). A dirty run is reproducible only by accident. "
+                    "Runs journalled before 2026-08-30 answered the same question over the whole "
+                    "working tree, documents included, and their flags stand as written.",
     )
     config_hash: str = Field(description="Hash of the resolved config. Never the values.")
     snapshot_id: str = Field(description="The pinned knowledge_time this run read.")

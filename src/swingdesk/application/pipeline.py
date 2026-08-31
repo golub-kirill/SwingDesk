@@ -310,6 +310,22 @@ def _git(*args: str) -> str:
         return "unknown"
 
 
+#: The paths a run actually reads (`DR-022`). `code_dirty` asks whether THIS run could be
+#: reproduced from its `code_hash`, and only something the run consumes can make the answer no:
+#: `src/` is the decision path, `tools/` the wrapper and the runners, `registry/` every parameter
+#: and criterion, `golden/` the vectors the components are checked against.
+#:
+#: It used to read the whole working tree, documents included, and that is what this narrows. The
+#: wrapper's last step regenerates `HANDOFF.md` §2 and leaves it uncommitted in the main checkout
+#: most evenings, so every scheduled pass from 2026-08-25 19:30 onward stamped itself unreplayable
+#: over the PREVIOUS evening's leftover paperwork - spending `a.reproducible`, one of Track A's four
+#: criteria, on a modified document that no run has ever read.
+#:
+#: **The 18 runs already flagged keep their flag.** The journal is immutable and a narrowed check
+#: applies forward only; `DR-022` §4 says what that costs and why re-deriving them is not on offer.
+DECIDING_PATHS = ("src", "tools", "registry", "golden")
+
+
 def _config_hash(registry: ParameterRegistry) -> str:
     """Hash of the resolved parameter state. Values are hashed, never recorded (SECURITY 2.5).
 
@@ -523,7 +539,7 @@ def run(
         started_at=started,
         mode=mode,
         code_hash=_git("rev-parse", "--short", "HEAD"),
-        code_dirty=bool(_git("status", "--porcelain")),
+        code_dirty=bool(_git("status", "--porcelain", "--", *DECIDING_PATHS)),
         config_hash=_config_hash(registry),
         snapshot_id=snapshot_id,
         calendar_version=cal.calendar_version(),

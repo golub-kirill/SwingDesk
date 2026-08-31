@@ -12,8 +12,8 @@
 #
 # See docs/00-charter/SUCCESS_AND_KILL_CRITERIA.md.
 
-version: 1.1.1
-date: 2026-08-15
+version: 1.1.2
+date: 2026-08-30
 status: ratified          # v1.1.0 owner-ratified 2026-08-08 and frozen; see amendments below
 
 # Amendments are appended, never applied in place. v1.0.0's content stays exactly as ratified;
@@ -56,6 +56,32 @@ amendments:
       `docs/00-charter/SUCCESS_AND_KILL_CRITERIA.md` §5, corrected forward there in this same change
       using this file's own §10.5 convention (strike through, do not silently rewrite) rather than
       as a second, disconnected governance track for one fact.
+
+  - version: 1.1.2
+    date: 2026-08-30
+    status: ratified        # owner ratified 2026-08-30, in the session that asked what the word meant
+    target: k.drawdown_pause.trigger
+    change: >-
+      Fixes the meaning of "Realised drawdown" in k.drawdown_pause. It reads, in full:
+      "Peak-to-trough drawdown of account equity, INCLUDING OPEN POSITIONS MARKED TO MARKET."
+      Baseline account.equity; peak-relative, per GLOSSARY.md's definition of Drawdown as a decline
+      from the previous peak. TRIGGER and VALUE are left byte-for-byte as ratified, per this file's
+      own header rule; see the pointer comment at the field itself.
+    note: >-
+      The word was load-bearing and undefined, and the two readings are not close. "Realised" most
+      naturally means closed trades only - drawdown you have actually banked. Under that reading an
+      account can fall through the limit with every position still open and the criterion never
+      fires, because nothing has been realised. That is the M69 requirement inverted: the course
+      wants drawdown limits to reduce size and pause BEFORE the loss is locked in, and a measure
+      that waits for realisation is a measure that arrives after the event it exists to prevent.
+      A separate decision record was considered for this and deliberately not used. The question is
+      what one word in one ratified criterion means, not a choice between designs with alternatives
+      to reject, and an amendment is the instrument this file already has for it. TODO.md records
+      that route and why it was not taken, so the absence of a DR is itself on the record.
+      WHAT THIS DOES NOT DECIDE: the prescribed ACTION. risk.risk_off_ladder is unset and stays
+      unset - "reduce size per the risk-off ladder" names a ladder nobody has written, and writing
+      it is the owner's. This amendment makes the criterion MEASURABLE, not automatic. The
+      measurement is built (reading the position store) and wired to nothing.
 
 # ---------------------------------------------------------------------------
 # Track A - is the system sound?
@@ -256,6 +282,10 @@ kill:
 
   - id: k.drawdown_pause
     scope: live
+    # "Realised" here means peak-to-trough drawdown of account equity INCLUDING OPEN POSITIONS
+    # MARKED TO MARKET - see the v1.1.2 amendment above for the wording and its reason. Left
+    # untouched, byte-for-byte, per this file's own header rule; the amendment is the record and
+    # this comment is a pointer to it. Read the trigger alone and you get the wrong answer.
     trigger: Realised drawdown exceeds validation.max_allowable_drawdown
     value: see registry/parameters.yml validation.max_allowable_drawdown
     action: Pause - not kill. Reduce size per the risk-off ladder and review.

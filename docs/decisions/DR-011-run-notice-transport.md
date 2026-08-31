@@ -2,7 +2,8 @@
 
 ```
 date:            2026-08-16
-status:          proposed — mechanism chosen by the owner 2026-08-16; this record is unratified
+status:          accepted — ratified by the owner 2026-08-30. The MECHANISM was chosen by the owner
+                 on 2026-08-16 and built the same day; this ratifies the record that describes it
 parameters:      none
 components:      none - swingdesk.presentation.notify is a surface, not a measured component
 supersedes:      nothing. PRODUCT_SURFACES 3.4's Firebase remains specified and unbuilt
