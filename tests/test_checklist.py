@@ -129,7 +129,7 @@ def _selection(members=(TEST_US.id,), *, eligible=1, measured=1, capped_from=Non
     from swingdesk.reference_data.universe import LiquidityRule
 
     rule = LiquidityRule(min_price=Decimal("5.00"), min_adtv=Decimal("5000000"),
-                         adtv_window=20, min_history=250)
+                         adtv_window=20, min_history=250, adtv_lag=0)
     return UniverseSelection(
         as_of=AS_OF, rule=rule, parameters=(), directory_pull=AS_OF,
         eligible=eligible, measured=measured, capped_from=capped_from,

@@ -58,6 +58,7 @@ RULE = universe.LiquidityRule(
     min_adtv=Decimal("5000000"),
     adtv_window=20,
     min_history=250,
+    adtv_lag=0,  # DR-017's lag postdates this study; 0 is the rule it ran under
 )
 
 

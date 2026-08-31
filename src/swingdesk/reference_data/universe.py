@@ -256,6 +256,26 @@ class LiquidityRule:
     min_adtv: Decimal
     adtv_window: int
     min_history: int
+    adtv_lag: int
+    """Sessions between the run and the END of the ADTV window (`universe.adtv_lag_sessions`).
+
+    `DR-017`, ratified 2026-08-30. Vendor volume is still being written for two sessions after the
+    bar: of 5,980 revisions over the daily-run era, none landed on a bar three or more sessions old.
+    A window that stops three sessions back therefore averages only settled bars, which is what
+    makes admission IDEMPOTENT - a replayed screen returns what the live screen returned.
+
+    **No default, deliberately.** 0 would silently give a caller that has not heard of the lag the
+    old, non-reproducible universe; 3 would silently re-write what an already-reported study ran
+    under. `DR-017` §3 forbids two universes, and the way to have one is to make every caller say
+    which it means rather than inherit a guess. Studies that predate the lag pin 0 - that is the
+    rule they ran under, and pinning it is what this record is for.
+    """
+
+    def __post_init__(self) -> None:
+        # A negative lag ends the window AFTER the run - lookahead, and the one direction that would
+        # be invisible in the output because it makes the screen look better rather than worse.
+        if self.adtv_lag < 0:
+            raise ValueError(f"adtv_lag must be >= 0, got {self.adtv_lag}")
 
     def admits(
         self, series: BarSeries, as_of_index: int | None = None, *, history: int | None = None
@@ -271,12 +291,24 @@ class LiquidityRule:
 
         Leave it `None` and the count is the series' own length, which is what every other caller
         means and what this did before the parameter existed.
+
+        **The two tests read different bars, and that is deliberate.** ADTV is measured over the
+        window ending `adtv_lag` sessions before `as_of_index`, because volume at that age is still
+        being rewritten. The `min_price` test still reads the close AT `as_of_index`: `DR-017` §1
+        measured closes moving by 0.02% at p90 against volume's 32%, so a stale close buys nothing,
+        and `universe.min_price` is a claim about what an instrument costs to trade NOW. `DR-017`
+        lags the ADTV window and nothing else; widening it to the price test would be a second
+        decision nobody has taken.
+
+        A series too short for the lagged window is refused rather than measured on a partial one -
+        `average_dollar_volume` returns `None` and this returns `False`, the same fail-closed answer
+        it has always given a series too short for the unlagged window.
         """
         end = len(series.bars) - 1 if as_of_index is None else as_of_index
         total = end + 1 if history is None else history
         if total < self.min_history:
             return False
-        adtv = average_dollar_volume(series, self.adtv_window, end)
+        adtv = average_dollar_volume(series, self.adtv_window, end - self.adtv_lag)
         if adtv is None:
             return False
         return series.bars[end].close >= self.min_price and adtv >= self.min_adtv

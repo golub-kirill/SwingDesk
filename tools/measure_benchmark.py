@@ -194,6 +194,7 @@ def main() -> int:
         rule = rules.LiquidityRule(
             min_price=Decimal("5.00"), min_adtv=Decimal(5_000_000),
             adtv_window=ADTV_WINDOW, min_history=250,
+            adtv_lag=0,  # DR-017's lag postdates this measurement; 0 is what it ran under
         )
         stored = set(store.instrument_ids(as_of))
         admitted: dict[str, BarSeries] = {}

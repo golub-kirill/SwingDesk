@@ -198,7 +198,8 @@ def test_adtv_is_as_of_the_index_not_the_end_of_the_series() -> None:
 
 def test_rule_requires_price_history_and_liquidity_together() -> None:
     rule = universe.LiquidityRule(
-        min_price=Decimal("5"), min_adtv=Decimal("1000000"), adtv_window=5, min_history=8
+        min_price=Decimal("5"), min_adtv=Decimal("1000000"), adtv_window=5, min_history=8,
+        adtv_lag=0,
     )
     liquid = _series(["50.00"] * 10, [100_000] * 10)
     penny = _series(["1.00"] * 10, [100_000_000] * 10)
@@ -215,7 +216,8 @@ def test_membership_is_sorted() -> None:
     """Unordered iteration feeding output is the named determinism hazard, and universe membership
     feeds everything downstream (DETERMINISM_SPEC 3.2)."""
     rule = universe.LiquidityRule(
-        min_price=Decimal("1"), min_adtv=Decimal("1"), adtv_window=2, min_history=2
+        min_price=Decimal("1"), min_adtv=Decimal("1"), adtv_window=2, min_history=2,
+        adtv_lag=0,
     )
     series = _series(["50.00"] * 5, [1000] * 5)
     unordered = {"ZZ": series, "AA": series, "MM": series}
@@ -224,7 +226,8 @@ def test_membership_is_sorted() -> None:
 
 def test_membership_as_of_a_past_date_ignores_later_bars() -> None:
     rule = universe.LiquidityRule(
-        min_price=Decimal("5"), min_adtv=Decimal("1000000"), adtv_window=3, min_history=3
+        min_price=Decimal("5"), min_adtv=Decimal("1000000"), adtv_window=3, min_history=3,
+        adtv_lag=0,
     )
     series = _series(["1.00"] * 5 + ["50.00"] * 5, [10] * 5 + [1_000_000] * 5)
 
@@ -236,6 +239,76 @@ def test_membership_as_of_a_past_date_ignores_later_bars() -> None:
 def test_adtv_rejects_a_nonsense_window() -> None:
     with pytest.raises(ValueError, match="window must be >= 1"):
         universe.average_dollar_volume(_series(["10.00"], [1]), 0)
+
+
+# ------------------------------------------------------- the settlement lag (DR-017, ratified 08-30)
+#
+# Vendor volume is still being written for two sessions after the bar. A window ending at the last
+# completed session therefore averages numbers that will change, which is why a replayed screen
+# could not reproduce a live one. These pin the three things the lag has to get right: it moves the
+# window and not its length, it leaves the PRICE test where it was, and it refuses rather than
+# measuring a partial window when the series is too short to carry it.
+
+def _lagged(**overrides) -> universe.LiquidityRule:
+    defaults = dict(
+        min_price=Decimal("5"), min_adtv=Decimal("1000000"), adtv_window=3, min_history=3,
+        adtv_lag=3,
+    )
+    return universe.LiquidityRule(**{**defaults, **overrides})
+
+
+def test_the_lag_moves_the_window_back_without_lengthening_it() -> None:
+    """The last three bars are the ones the vendor is still rewriting, so they are not averaged.
+
+    Volume collapses over the final three sessions. Unlagged, the rule sees the collapse and
+    refuses; lagged, it averages the three settled sessions before it and admits - which is the
+    whole behavioural difference DR-017 buys, in one series.
+    """
+    series = _series(["50.00"] * 6, [100_000] * 3 + [1] * 3)
+
+    assert not _lagged(adtv_lag=0).admits(series), "unlagged, the unsettled tail decides"
+    assert _lagged().admits(series), "lagged, the settled window decides"
+
+    # And it is still a THREE-bar average, taken three sessions back - not a six-bar one.
+    assert universe.average_dollar_volume(series, 3, as_of_index=2) == Decimal("5000000")
+
+
+def test_the_lag_does_not_move_the_price_test() -> None:
+    """DR-017 §1 measured closes moving 0.02% at p90 against volume's 32%, and lags volume only.
+
+    Price is settled, and `universe.min_price` is a claim about what an instrument costs to trade
+    NOW. An instrument whose price has just collapsed below the floor must be refused today, not in
+    three sessions - so the close is read at the run, while the ADTV window is read three back.
+    """
+    fallen = _series(["50.00"] * 3 + ["1.00"] * 3, [100_000] * 6)
+
+    assert not _lagged().admits(fallen), "the close at the run is below the floor"
+    # The lagged ADTV window on its own would have admitted it - so the refusal is the price test.
+    assert _lagged(min_price=Decimal("0")).admits(fallen)
+
+
+def test_a_series_too_short_for_the_lagged_window_is_refused_not_measured() -> None:
+    """Fail-closed, the same answer a series too short for the UNLAGGED window has always got.
+
+    Five bars cannot carry a three-bar window ending three sessions back; the alternative to
+    refusing is averaging whatever bars happen to be there, which is the partial-window defect
+    `average_dollar_volume` was written to refuse in the first place.
+    """
+    series = _series(["50.00"] * 5, [100_000] * 5)
+
+    assert _lagged(min_history=3).admits(series) is False
+    assert _lagged(min_history=3, adtv_lag=0).admits(series), "the same series clears unlagged"
+
+
+def test_a_negative_lag_is_refused_at_construction() -> None:
+    """It would end the window AFTER the run - lookahead, and in the direction that flatters.
+
+    A rule that averaged volume from sessions the run cannot have seen would admit instruments on
+    information from the future and produce a BETTER-looking screen, which is exactly the kind of
+    error that survives review because nothing downstream looks wrong.
+    """
+    with pytest.raises(ValueError, match="adtv_lag must be >= 0"):
+        _lagged(adtv_lag=-1)
 
 
 # ------------------------------------------------------------------ vendor symbology

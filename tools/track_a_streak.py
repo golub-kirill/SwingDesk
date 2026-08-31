@@ -172,6 +172,19 @@ STREAK_RESTARTS: tuple[tuple[date, str], ...] = (
      "one FX rule and the one definition of 1R rather than copying either. Taken while the counter "
      "already read 0, which is DR-015 section 3's argument reused: the reset costs nothing today "
      "and would cost weeks in two weeks"),
+    (date(2026, 8, 30),
+     "DR-017 and DR-023 built and ratified together. Two frozen files changed (daily_run.cmd, "
+     "pipeline.py) and both changes move decision output. DR-017: the 20-session ADTV window now "
+     "ends 3 sessions before the run, so admission is decided on volume the vendor has never been "
+     "observed to revise; universe_hash widens to cover the lag. DR-023: the symbol directory is "
+     "pulled BEFORE the pipeline rather than after it, so the 18:30 pass stops building its "
+     "universe from the previous evening's list - 3 to 18 already-delisted instruments reached it "
+     "each night. Measured, and it is why the two merged: of the 7 instruments that left the "
+     "universe between the 18:30 and 19:30 passes over 08-25/26/27, 5 left because volume was "
+     "rewritten across the $5M floor within that hour and hold their side of it under the lag, 1 "
+     "left on a late bar, and 1 on the directory. ONE reset for both, taken while the counter "
+     "already read 0 - DR-015 section 3's argument for the third time, and here the two halves fix "
+     "one symptom between them, so neither could have been verified alone"),
 )
 
 

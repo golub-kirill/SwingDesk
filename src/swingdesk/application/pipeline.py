@@ -347,6 +347,11 @@ def _universe_hash(selection: UniverseSelection) -> str:
                 "min_adtv": str(selection.rule.min_adtv),
                 "adtv_window": selection.rule.adtv_window,
                 "min_history": selection.rule.min_history,
+                # DR-017. Every field of the rule is here for the reason the docstring gives - the
+                # rule half must move when a threshold changes on a day that happens to admit the
+                # same names. The lag is a threshold like the others: the same members selected on a
+                # window ending three sessions back were selected on different evidence.
+                "adtv_lag": selection.rule.adtv_lag,
             },
             "members": [member.instrument.id for member in selection.members],
         },
