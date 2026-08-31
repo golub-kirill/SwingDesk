@@ -1467,7 +1467,47 @@ is for where no gate can reach.
 
 ## 4. Pending decisions
 
-**Decision records** — DR-007 / DR-008 / DR-010 / **DR-012 / DR-013 / DR-014** are accepted.
+**Decision records** — DR-007 / DR-008 / DR-010 / **DR-012 / DR-013 / DR-014** are accepted, and
+2026-08-30 added **DR-011 / DR-016 / DR-017 / DR-018 / DR-022 / DR-023**.
+
+- [ ] **`[v]` `DR-021` COSTS A COUNTER RESET, AND ITS OWN SECTION 6 SAID IT WOULD NOT — measured
+      2026-08-30, which is what section 6 asked someone to do.**
+      Section 6 claims the discriminator *"moves no decision output the day it lands"* and then says
+      the honest thing: *"it must be measured against the live universe before it is called
+      cosmetic."* Measured, and it is not cosmetic.
+      **23 admitted universe members are refused by the section 8.7 guard today** — 1,018 spendable,
+      23 degenerate, 101 no sector, 44 nothing stored, of 1,186. Robust to `DR-017`'s lag: 23 under
+      `adtv_lag=0` and 23 under `adtv_lag=3`, checked both ways so it cannot be an artefact of the
+      change that landed the same day.
+      **Section 6's error is sampling, not reasoning.** It reasons about the five SPDR Select Sector
+      funds, and none of the eleven SPDR funds is in the universe at all — coverage is still an
+      alphabetical prefix and the letter X is unreached, the same reason `DR-018` section 2b found
+      the benchmark ETFs missing. The guard fires on ANY degenerate-shaped fund, and 23 are admitted.
+      **How many would flip is not measured and is certainly not zero.** `CURE` (3x healthcare
+      equity, reported healthcare), `DPST` (3x regional banks, financial services) and `DRN` (3x
+      real estate, real estate) are being refused on a reason that is false for them, while `BNDW`
+      and `BNDX` are global bond funds reported as **technology** and are refused correctly. The
+      exact split needs `stockPosition`, which is the next item.
+      **The proposed discriminator reads a field this project does not store.** `Classification`
+      carries `quote_type`, `industry` and sector weights; so does the table; the vendor adapter
+      reads `funds_data.sector_weightings` only. `asset_classes` is read in exactly one place —
+      `tools/probe_sector_benchmarks.py`, live over the network. So `still_to_build: the
+      discriminator itself` understates it: a contract field, a store column, a vendor-adapter
+      change and a refetch of every stored classification come first.
+      **So it waits for the next window.** `DR-017` and `DR-023` took 2026-08-30's counter reset;
+      the standing rule is that a second one joins that merge before it lands or waits, and this did
+      not join it. Nothing here disagrees with `DR-021` section 4 — the defect is real and section 8.1
+      makes the case STRONGER, because the guard is wrongly refusing instruments actually in the
+      universe rather than hypothetical ones. What is gone is the argument for landing it cheaply.
+      **`DR-021` section 8 carries the tables.** The record stays `proposed`; ratifying is the owner's.
+
+- [ ] **`[v]` `DR-017`'s cutover churn, logged as section 4 asked — measured 2026-08-30.**
+      *"The first lagged run will admit and refuse a different set than the last unlagged one, and
+      that difference is a fact about the fix rather than about the market."* On the live universe:
+      **1,128 members unlagged, 1,186 lagged — 58 more, about 5%.**
+      Recorded here rather than in `DR-017`, which is accepted and corrected forward only
+      (`AGENTS.md` section 11 rule 2). Expect the first evening after the merge to show a membership
+      step of roughly this size, and do not read it as instability.
 
 - [ ] **`[v]` §10.5 GIVES EVERY COUNT AN OWNER. NOTHING DOES THAT FOR A STATUS, AND ONE SESSION
       FOUND TWENTY-ODD STALE ONES — the owner's call, because the fix is a rule.**
