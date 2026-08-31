@@ -120,3 +120,37 @@ vendor happens to classify, and the cap never measures that. Raised in review; u
 inference, it is what refuses `NEAR` on the fund's own answer, and it is the seed of an instrument
 registry — ticker to asset class, leverage factor and economic exposure — that would let the guard
 charge `AAPU` what it actually carries.
+
+## 6. The declarations, supplied 2026-08-31 — this rule is inert without them
+
+**The rule reads the vendor's declared zero, so it does nothing until the vendor has been asked.**
+Every classification stored before today has `equity_share` NULL, and NULL does not refuse (§2.1) —
+so merging §2 alone would have left `NEAR` charging a healthcare budget, which is the exact fiction
+`DR-006` §8.7 exists to stop. **The backfill is not an optional follow-up; it is what makes the rule
+correct.**
+
+All 23 degenerate-shaped instruments were re-classified against the live store, 0 vendor failures.
+Measured on the live universe of 1,186 members:
+
+| | before | after |
+|---|---|---|
+| sector spendable | 1,018 | **1,031** |
+| refused — on the SHAPE | 23 | 0 |
+| refused — on a vendor-declared 0% equity | 0 | **10** |
+| no sector served / nothing stored | 145 | 145 |
+
+The ten are `ANGL`, `BCI`, `BNDW`, `BNDX`, `BOND`, `CARY`, `COMT`, `FIXD`, `NEAR`, `UITB` — every
+one a bond or commodity fund, refused on its own answer. The other thirteen carry positive equity
+and now charge their sector, `ARKG`, `CURE`, `DPST`, `DRN` and `DFAR` among them.
+
+**Safe to land hours before a scheduled run, and that was checked rather than assumed:** the
+position store holds **zero** open positions, so no held instrument's sector charge could move
+underneath it.
+
+### 6.1 The old rule and the new one agree on all 23, which is why the order did not matter
+
+`DR-021`'s rule refuses `degenerate AND NOT equity > 0`; `DR-025`'s refuses `equity == 0`. Once every
+degenerate-shaped instrument carries an answer, the two agree on every one of them — the ten zeros
+refuse under both, the thirteen positives admit under both. They diverge only where `equity_share`
+is NULL, and after the backfill none of the degenerate set is. So the declarations could be supplied
+before the code landed without either version producing a state the other would not.
