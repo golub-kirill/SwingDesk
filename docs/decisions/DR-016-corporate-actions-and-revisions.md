@@ -2,15 +2,17 @@
 
 ```
 date:            2026-08-18
-status:          proposed — owner ratification required
-parameters:      data.revision_epsilon — scoped to price, and volume taken out of the rule entirely
+status:          accepted — ratified by the owner 2026-08-30
+parameters:      data.revision_epsilon — scoped to CLOSE, and volume taken out of the rule entirely
 components:      none - swingdesk.trade_management.manage guards a held position against a split,
                  swingdesk.market_data.store holds the actions series
 supersedes:      nothing. Supplies the number DATA_QUALITY_SPEC section 4 has always required
-implementation:  partial - the actions series (2026-08-18) and the split guard (2026-08-23) are
-                 built and need no threshold; the revision comparison waits on the ruling
-still_to_build:  the revision comparison at write time. That is the only half this record's
-                 parameter gates, and section 8 revised the SCOPE it should carry.
+implemented_by:  src/swingdesk/market_data/store.py :: def close_revision
+also_built:      market_data/store.py (the actions series, 2026-08-18), trade_management/manage.py
+                 (the split guard, 2026-08-23), tools/refresh_universe.py (the one caller that
+                 supplies the epsilon — see §11)
+built:           2026-08-23. The header carried `still_to_build: the revision comparison at write
+                 time` until 2026-08-30, and it had been stale since the day §10.2 built it.
 ```
 
 > **Read §8 before acting on §3.** Re-measured 2026-08-23 under the longer capture window §6 asked
@@ -467,3 +469,34 @@ while this waits, and spending a counter reset on a path that has never fired is
 **The window is still short**, unchanged from §8.6: nine sessions of settled revisions is enough to
 separate the open from the close and thin for the tail of either. Re-run `measure_revisions.py` in a
 month; §6's overturning condition stands.
+
+## 11. Ratified 2026-08-30, and what the header was getting wrong
+
+**The record is accepted at the value and scope §10 settled**: `data.revision_epsilon = 0.001`,
+scoped to `close`, provenance `owner`, already in the registry since the 2026-08-23 ruling.
+
+**The header was stale and said so about the wrong half.** It carried
+`still_to_build: the revision comparison at write time` — but §10.2 built exactly that on
+2026-08-23. `BarStore.write` takes a `revision_epsilon`, and when it is supplied every restated
+close past the threshold comes back on `WriteResult.close_revisions`. Seven days of a record
+advertising as unbuilt something it had itself recorded building.
+
+### 11.1 Built is not the same as reached, and the distinction is worth stating precisely
+
+`BarStore.write(..., revision_epsilon=...)` is **optional**, and exactly one caller supplies it:
+`tools/refresh_universe.py`. The two writes in `application/pipeline.py` do not, so the **scheduled
+evening run stores restated closes without comparing them at all** — it does not merely decline to
+refuse on a fault, it never computes one.
+
+That is a sharper statement of §10.4 than §10.4 makes, and it does not change what §10.4 concluded:
+
+- Wiring the epsilon into `pipeline.py` is a change to a frozen file on the decision path, and it
+  would cost a Track A counter reset.
+- §8.2 measured the scoped form firing **zero** times across the whole capture window, so nothing
+  is being missed while it waits.
+- And it still needs the decision §10.4 names and does not take: does the run refuse the
+  **instrument** or the **session**?
+
+So it waits, and it waits for the reason it always did. What changes here is that the reason is now
+written where a reader will find it, instead of behind a header line claiming the comparison did not
+exist. `TODO.md` carries the open item.

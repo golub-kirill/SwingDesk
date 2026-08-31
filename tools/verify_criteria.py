@@ -82,8 +82,23 @@ def main() -> int:
     for section, items in criteria.items():
         if not isinstance(items, list):
             continue
+        if section == "amendments":
+            # An amendment is a CHANGE RECORD, not a criterion, and it carries `status: ratified`
+            # for the change rather than for anything that fires. Its prose legitimately discusses
+            # parameters that are unset - v1.1.2's note says in as many words that
+            # `risk.risk_off_ladder` stays unset and the prescribed action remains the owner's,
+            # which is the honest thing to write and was read here as a criterion that cannot fire.
+            #
+            # Latent until 2026-08-30: the first two amendments happened to name no unset parameter.
+            # The tell was in the gate's own output - it printed `amendments/None`, and a criterion
+            # always has an id.
+            continue
         for item in items:
             if not isinstance(item, dict) or item.get("status") not in BINDING:
+                continue
+            if item.get("id") is None:
+                # Same subject from the other side: this gate is about identified criteria, and an
+                # unidentified dict in a criteria list is not one.
                 continue
             checked += 1
 

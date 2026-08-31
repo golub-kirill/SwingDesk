@@ -2,7 +2,8 @@
 
 ```
 date:            2026-08-24
-status:          proposed — the CONDITION is built; the TIME needs the owner (section 6)
+status:          accepted — the CONDITION ratified by the owner 2026-08-30, WITH the §7 amendment.
+                 The TIME is untouched and remains the owner's (§6)
 parameters:      none. The condition is read from the journal, not from a threshold
 components:      none
 supersedes:      DR-015 section 3's "then one more pass at 19:30", in its UNCONDITIONAL form only.
@@ -126,3 +127,50 @@ means being logged in later. That is a decision about the owner's evening, not a
 **One evening is one evening.** The arrival window rests on a single session's measurement. Before
 moving the schedule it is worth measuring the curve over several evenings, which costs nothing but
 patience and is recorded in `TODO.md`.
+
+## 7. Amendment, 2026-08-30 — §1's headline claim is no longer true, and the conclusion survives
+
+Ratified with this amendment attached, because **§1 rests on a sentence that stopped being true the
+day after it was written**:
+
+> *2026-08-24 is the only pair where both passes were healthy, and the two runs decided
+> byte-identically.*
+
+Three more healthy pairs have run since, and none of them produced an identical `output_hash`.
+Leaving §1 as the record's only evidence would have left it standing on a one-observation claim that
+the very next evening contradicted.
+
+### 7.1 What the four evenings actually show
+
+Re-measured 2026-08-30 from `journal.duckdb`, **decision by decision** rather than by hash — which
+is the comparison §1 should have made and did not:
+
+| Session | `output_hash` | `universe_hash` | Instruments that left | Joined | **Decisions that changed** |
+|---|---|---|---|---|---|
+| 2026-08-24 | identical | identical | 0 | 0 | **0** |
+| 2026-08-25 | **differs** | **differs** | 1 | 0 | **0** |
+| 2026-08-26 | **differs** | **differs** | 3 | 0 | **0** |
+| 2026-08-27 | **differs** | **differs** | 3 | 0 | **0** |
+
+**Across all four evenings, not one instrument was ever decided differently by the two passes.** The
+hash moved because the *universe* moved — seven instruments left it between the passes over the
+three later evenings, and every one of those departures has a cause that is not the second pass:
+five were volume revised across the $5M liquidity floor within the hour (`DR-017`'s defect, fixed
+2026-08-30), one was a bar arriving late, one was the symbol directory (`DR-023`).
+
+### 7.2 So the conclusion is stronger, not weaker
+
+§1 concluded that the second pass has never changed an outcome. The byte-identity that supported it
+was a coincidence of one quiet evening; the decision-level comparison supports it **four times over,
+including on three evenings where the hash said otherwise**.
+
+**And it corrects a trap this record nearly set.** `output_hash` is the right thing to pin a run
+with and the wrong thing to ask *"did the second pass matter?"* — it moves when any input moves,
+including inputs neither pass controls. A record that had gone on citing hash identity would have
+reported the pass as newly useful on 08-25 for a reason that had nothing to do with it.
+
+### 7.3 What is NOT amended
+
+§6 stands exactly as written. The condition is ratified; the TIME is not, the 19:30 pass will keep
+missing the tail §2 measured, and moving it is a decision about the owner's evening rather than
+about the software.

@@ -2,10 +2,16 @@
 
 ```
 date:       2026-08-24
-status:     proposed
-parameters: rs.benchmark, rs.benchmark_form
+status:     accepted — ratified by the owner 2026-08-30. See §8 for what ratification did and
+            deliberately did not do to the two parameters
+parameters: rs.benchmark = SPY, provenance `assumed:DR-018` — NOT owner, by the owner's own ruling
+            (§8.1); rs.benchmark_form stays `unset`, and that absence is now ratified rather than
+            merely undrafted
 components: none - M31-T0464 supplies the measure; this record fixes what it measures against
 evidence:   measurements/benchmark-2026-08-24.json (1,148 admitted names, 3 lookbacks)
+implementation: none
+            (neither parameter is read by any code, and §1 is why: the form that would consume the
+            benchmark is the half this record refuses to fix. §8.3 records that this is by design)
 ```
 
 `CARD-001` ranks the universe by strength relative to the index and could not run: **no index series
@@ -243,3 +249,45 @@ history.
 point-to-point or path, all four combinations are now characterised and none is ratified. That is
 `ALLOCATION_SPEC` §3's rule, and having four measured options rather than one guessed one is what
 this record was for.
+
+## 8. Ratified 2026-08-30, and the two things ratification deliberately did not do
+
+The owner ratified this record on 2026-08-30. **Neither parameter changed value, and one of them
+deliberately did not change provenance either.**
+
+### 8.1 `rs.benchmark` stays `assumed:DR-018`, and that was the ruling
+
+The natural move on ratification is the one taken for `universe.adtv_lag_sessions` the same day:
+an owner ruling makes a value `provenance: owner`, which drops the report's *"ASSUMED, not
+evidence"* flag from beside it. **The owner declined it here**, and the distinction is worth having
+in writing because the two records were ratified in the same session.
+
+`SPY` is not a chosen threshold. It is a **stand-in for an index series this project does not
+have** — §0 records that the course names three indexes as Definitions and this repository stores
+none of them, so the value is a proxy for an absent thing rather than a judgement about the market.
+`assumed:DR-018` says exactly that, and `owner` would say something stronger and less true. The
+report should go on flagging it as an assumption, because it is one.
+
+The lag was different: three sessions is a measured property of vendor behaviour that the owner
+ruled on directly. Same act, different subject, and the provenance follows the subject.
+
+### 8.2 `rs.benchmark_form` stays `unset`, and the absence is now ratified rather than undrafted
+
+**Ratifying this record does not give the form a value.** It ratifies the refusal to give it one
+here. `ALLOCATION_SPEC` §3 requires a **pre-registration** for an ordering adopted from the course,
+never a decision record, and §1's measurement is why that rule bites: the point-to-point form is a
+strictly monotone transform of raw return on any single cross-section — Spearman **1.000000** across
+15 benchmark × lookback pairs over 1,148 names — while a path-dependent form reads about 0.6 against
+raw return and is a genuinely different signal. Choosing between them chooses what `CARD-001`
+trades. That is a claim which could be false, so it takes a study.
+
+**What changes is the standing of the gap.** Before today an `unset` parameter with a null
+provenance was indistinguishable from one nobody had got to yet. It is now a ratified deliberate
+absence with a written reason and a named instrument for closing it.
+
+### 8.3 Nothing moves, and that is checked rather than assumed
+
+Both parameters have `read_by: none`, so no code path changes and no decision output moves. This
+ratification spends no Track A counter reset. The header carries `implementation: none` for the same
+reason — an accepted record has to say what proves it, and the honest answer here is that nothing
+does yet, by design.
