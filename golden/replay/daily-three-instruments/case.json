@@ -53,16 +53,17 @@
     "risk.max_concurrent_positions": 4,
     "risk.correlation_threshold": "0.70",
     "risk.correlation_lookback_sessions": 60,
-    "risk.max_sector_risk": 2
+    "risk.max_sector_risk": 2,
+    "rs.benchmark": "SPY"
   },
   "manifest": {
-    "run_id": "run-20260115T210000Z-6043c3c4",
+    "run_id": "run-20260115T210000Z-221f96bf",
     "started_at": "2026-01-15T21:00:00Z",
     "mode": "replay",
-    "code_hash": "0e7dd3d",
+    "code_hash": "fe997d6",
     "code_dirty": true,
-    "config_hash": "631006e0258530b5",
-    "snapshot_id": "snap-20260115T210000Z-6043c3c4",
+    "config_hash": "ac70cbbf0a7a3d17",
+    "snapshot_id": "snap-20260115T210000Z-221f96bf",
     "component_versions": {
       "M18-T0280-v5.0": 1
     },
@@ -71,8 +72,8 @@
     "seed": null,
     "calendar_version": "pandas-market-calendars==5.4.0",
     "platform": "Windows python3.14.0",
-    "output_hash": "0a3858a76dbe8d0b",
+    "output_hash": "a2ba33b949e306b9",
     "completed_at": "2026-01-15T21:00:00Z"
   },
-  "inputs_digest": "bb0ee770c3b088d0"
+  "inputs_digest": "3ccd474c37dd145b"
 }

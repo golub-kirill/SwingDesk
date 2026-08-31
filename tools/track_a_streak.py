@@ -185,6 +185,18 @@ STREAK_RESTARTS: tuple[tuple[date, str], ...] = (
      "left on a late bar, and 1 on the directory. ONE reset for both, taken while the counter "
      "already read 0 - DR-015 section 3's argument for the third time, and here the two halves fix "
      "one symptom between them, so neither could have been verified alone"),
+    (date(2026, 8, 30),
+     "DR-024 - CARD-001's own measure reaches the run. The RS line (M31-T0464) is computed for "
+     "every candidate against rs.benchmark and printed with its validation status, which is what "
+     "COMPONENT_REGISTRY_SPEC 3 needs before the component can be `active`; it is now the second "
+     "active component and the first a live strategy card names. It DECIDES nothing - all four of "
+     "CARD-001's selection parameters are unset - but output_hash gains the RS field, so no earlier "
+     "run replays to the same hash and this moves decision output by that route. "
+     "SECOND ROW ON THE SAME DATE, DELIBERATELY, and it costs nothing: `streak` counts sessions "
+     "STRICTLY AFTER the restart date, 2026-08-30 is a Sunday, and the countable sessions after the "
+     "row above measured ZERO when this landed. Two rows dated one day truncate the identical "
+     "window. That is a fact about this day and not a licence - from 2026-08-31 the one-reset rule "
+     "applies again in full"),
 )
 
 

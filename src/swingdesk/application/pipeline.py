@@ -30,16 +30,16 @@ from swingdesk.contracts.market import BarSeries as BarSeriesLike
 from swingdesk.contracts.market import CorporateAction, Interval, Series
 from swingdesk.contracts.observation import ObservationSeries, ParameterUse
 from swingdesk.contracts.position import ActionKind, ManagementAction, Position
-from swingdesk.contracts.reference import Instrument
+from swingdesk.contracts.reference import Exchange, Instrument
 from swingdesk.contracts.run import RunManifest, RunMode
-from swingdesk.derived_observations import atr, correlation
+from swingdesk.derived_observations import atr, correlation, relative_strength
 from swingdesk.journal_evidence.journal import DecisionRecord, Journal
 from swingdesk.journal_evidence.positions import PositionStore
 from swingdesk.market_data import YAHOO, BarStore, VendorUnavailable, check, vendor_yahoo
 from swingdesk.market_data import freshness as fresh
 from swingdesk.market_data.completeness import SessionFinding
 from swingdesk.platform.clock import Clock
-from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
+from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset, UnknownParameter
 from swingdesk.reference_data import calendar as cal
 from swingdesk.reference_data import classification
 from swingdesk.reference_data.classification import ClassificationStore
@@ -60,6 +60,17 @@ class InstrumentOutcome:
     risk: RiskSnapshot | Refusal | None = None
     decision: DecisionRecord | None = None
     checklist: Checklist | None = None
+
+    relative_strength: ObservationSeries | None = None
+    """The RS line against `rs.benchmark` (`M31-T0464`, `CARD-001`'s measure, `DR-024`).
+
+    `None` means the benchmark was not available to this run, or the candidate refused before the
+    measure was reached. It is never a refusal of its own: RS **selects nothing today** -
+    `rs.benchmark_form`, `rs.lookback`, `rs.ranking_method` and `screen.relative_strength_rule` are
+    all unset and `CARD-001` is blocked on them - so a missing RS line must not cost a candidate its
+    decision. `RunResult.benchmark` carries the reason once for the whole run rather than repeating
+    it on every outcome.
+    """
 
     correlation: portfolio.Concentration | None = None
     """Whether this candidate duplicates an open position, and every pair that was looked at.
@@ -94,6 +105,25 @@ class PositionOutcome:
     """
 
 
+@dataclass(frozen=True, slots=True)
+class Benchmark:
+    """The one benchmark series this run measured every candidate against (`DR-024`).
+
+    ONE series for the whole cross-section, and that is correctness rather than caching. A
+    cross-sectional measure compares names to a common denominator; reading the benchmark inside the
+    candidate loop would compare names sorted before `SPY` against yesterday's benchmark and names
+    after it against today's, on alphabetical order alone.
+    """
+
+    instrument_id: str | None
+    series: BarSeriesLike | None = None
+    unavailable: str | None = None
+
+    @property
+    def is_available(self) -> bool:
+        return self.series is not None
+
+
 @dataclass
 class RunResult:
     manifest: RunManifest
@@ -101,6 +131,18 @@ class RunResult:
     positions: list[PositionOutcome] = field(default_factory=list)
     steps: tuple[str, ...] = ()
     universe: UniverseSelection | None = None
+
+    benchmark: Benchmark | None = None
+    """What `rs.benchmark` resolved to for this run, or why it did not (`DR-024`).
+
+    Set on every run `pipeline.run` performs, including one given an explicit instrument list: the
+    RS line is a property of a candidate against the benchmark, not of how the candidate was
+    chosen, and `scan AAPL` wanting the measure is the same wish as the scheduled run wanting it.
+
+    `None` therefore means a `RunResult` nobody ran - a fixture, or a record from before `DR-024`.
+    Distinct from a `Benchmark` carrying `unavailable`, which means the run looked and could not
+    get one.
+    """
 
     capacity: portfolio.Capacity | Refusal | None = None
     """What room the book had for one more position, or why that could not be answered.
@@ -209,6 +251,101 @@ def _exit_policy(registry: ParameterRegistry) -> ExitPolicy | Refusal:
             parameter_id=unset.parameter_id,
         )
     return ExitPolicy(multiple, holding)
+
+
+def _benchmark(
+    registry: ParameterRegistry,
+    store: BarStore,
+    fetch: Fetcher,
+    as_of: datetime,
+    lookback: str,
+) -> Benchmark:
+    """The benchmark series `M31-T0464` measures every candidate against (`DR-018`, `DR-024`).
+
+    **This one CANNOT refuse a candidate, and that is the difference between it and every other
+    helper here.** `_exit_policy` and `_freshness_window` return a `Refusal` because an unset stop
+    multiple or freshness window makes a DECISION unsafe. The RS line decides nothing: `CARD-001`'s
+    selection reads `rs.benchmark_form`, `rs.lookback`, `rs.ranking_method` and
+    `screen.relative_strength_rule`, all four are unset, and the card is blocked on them. So an
+    absent benchmark costs an observation and never a candidate - it returns a `Benchmark` carrying
+    the reason, and the run proceeds exactly as it did before this existed.
+
+    **Fetched ONCE, here, rather than read per candidate inside the loop.** Two reasons and both are
+    correctness:
+
+    1. **One denominator for the cross-section.** RS is a comparison against a common series. Read
+       inside the loop, names sorted before the benchmark's own id would be measured against
+       yesterday's benchmark and names after it against today's - a point-in-time split decided by
+       alphabetical order.
+    2. **Freshness that does not ride on luck.** `SPY` is a universe member today, so the run
+       already fetches it; that is incidental. Fetching it by name here keeps the measure working on
+       the day the benchmark drops out of the universe, which is exactly the day nobody would
+       notice it had.
+
+    Fail-open on the vendor, like every other fetch in this run: `VendorUnavailable` becomes an
+    unavailable benchmark and not a dead run.
+    """
+    try:
+        benchmark_id = str(registry.use("rs.benchmark").value)
+    except ParameterUnset:
+        return Benchmark(
+            instrument_id=None,
+            unavailable="rs.benchmark is unset, so there is no series to measure against",
+        )
+    except UnknownParameter:
+        # Caught rather than propagated, and the two reasons above and below are kept APART on
+        # purpose. `UnknownParameter` means the registry does not hold an id this code reads, which
+        # is a real defect - gates 1 and 28 exist to make it impossible in a shipped tree. But the
+        # proportionate response to it HERE is not to kill the daily run over a measure that decides
+        # nothing; it is to say so on the report, loudly, where the owner reads it. A candidate must
+        # never lose its decision to the RS line, and that includes losing it to a traceback.
+        return Benchmark(
+            instrument_id=None,
+            unavailable="rs.benchmark is not in the registry at all - code and registry disagree. "
+                        "The RS line is unavailable; every decision below is unaffected",
+        )
+
+    # Built here rather than looked up in the directory: the benchmark is named by a PARAMETER, and
+    # a run whose benchmark had to be an admitted directory row would lose the measure the day the
+    # proxy fell out of the universe - the case this function exists to survive. NYSE because
+    # `reference_data.universe` records that NASDAQ and NYSE share a session calendar, measured, and
+    # every candidate `rs.benchmark` may name is a US listing.
+    instrument = Instrument(
+        id=benchmark_id,
+        ticker=vendor_symbol(benchmark_id),
+        exchange=Exchange.NYSE,
+        currency="USD",
+        listing_venue="benchmark",
+    )
+    try:
+        fetched = fetch(instrument, Interval.DAY, as_of, period=lookback)
+    except VendorUnavailable as unavailable:
+        stored = store.as_of(benchmark_id, Interval.DAY, Series.RAW, as_of)
+        if stored.bars:
+            # The stored series is still a real benchmark, just not a refreshed one. Saying which
+            # is the point: an RS line against a stale denominator is worth reporting and worth
+            # labelling, and refusing to report one would lose a measure over a vendor blip.
+            return Benchmark(
+                instrument_id=benchmark_id,
+                series=stored,
+                unavailable=f"benchmark not refreshed this run ({str(unavailable)[:120]}); the RS "
+                            f"line is measured against the stored series, last session "
+                            f"{stored.bars[-1].session_date}",
+            )
+        return Benchmark(
+            instrument_id=benchmark_id,
+            unavailable=f"benchmark {benchmark_id} could not be fetched and the store holds none: "
+                        f"{str(unavailable)[:150]}",
+        )
+
+    store.write(fetched.bars, as_of)
+    stored = store.as_of(benchmark_id, Interval.DAY, Series.RAW, as_of)
+    if not stored.bars:
+        return Benchmark(
+            instrument_id=benchmark_id,
+            unavailable=f"benchmark {benchmark_id} returned no bars; the RS line is unavailable",
+        )
+    return Benchmark(instrument_id=benchmark_id, series=stored)
 
 
 def _freshness_window(registry: ParameterRegistry) -> int | Refusal:
@@ -427,6 +564,16 @@ def _output_hash(result: RunResult) -> str:
                 "code": o.decision.reason_code if o.decision else None,
                 "atr": str(o.observations.observations[-1].value)
                 if o.observations and o.observations.observations[-1].value is not None
+                else None,
+                # The RS line's latest value (`DR-024`). Included for the reason the four measured
+                # misses above were found: a number this run computes and PRINTS, left out of the
+                # payload, is a number gate 9 cannot see change. It selects nothing today, and that
+                # is an argument about what it is FOR rather than about whether a replay should
+                # reproduce it.
+                "rs": str(o.relative_strength.observations[-1].value)
+                if o.relative_strength
+                and o.relative_strength.observations
+                and o.relative_strength.observations[-1].value is not None
                 else None,
                 "trade": _trade_terms(o.risk),
             }
@@ -777,6 +924,16 @@ def run(
                     )
             positions.propose(managed.action, run_id=run_id)
 
+    # The benchmark, once, before any candidate is measured against it (`DR-024`). Placed here and
+    # not inside the loop so the whole cross-section shares one denominator and one vintage; the
+    # helper's docstring carries the argument. It cannot refuse a candidate.
+    # Deliberately NOT a `steps` entry. `steps` records the run's decision phases, and the
+    # Appendix T ordering rule - positions before candidates - is asserted against it; inserting a
+    # data-preparation step between the two would weaken that assertion to no purpose. What the
+    # benchmark did is on `result.benchmark`, which says more than a marker could.
+    benchmark = _benchmark(registry, store, fetch, started, lookback)
+    result.benchmark = benchmark
+
     steps.append("candidates")
 
     for instrument in instruments:
@@ -842,6 +999,18 @@ def run(
                 instrument.id, "Skip", "DATA", "warm-up incomplete; no observation emitted"
             )
             continue
+
+        # 4b. The RS line (`M31-T0464`, `CARD-001`'s measure, `DR-024`). An OBSERVATION and not a
+        # gate: there is no branch below this that reads it, deliberately, because the four
+        # parameters that would turn it into a selection are unset and `ALLOCATION_SPEC` §3 sends
+        # them to a pre-registration rather than to a decision record. It is computed and reported
+        # so the card's own measure is visible and replayable before anything is ranked by it.
+        #
+        # Against the ONE benchmark series loaded above, never a per-candidate read - see
+        # `_benchmark`. A candidate the benchmark has no session for gets an empty observation from
+        # the component itself, which is the missing-denominator rule and not an error here.
+        if benchmark.series is not None:
+            outcome.relative_strength = relative_strength.compute(stored, benchmark.series)
 
         # 5. Risk. Stop derived from the observation BY THE RUN'S EXIT POLICY, then size. Stop
         # before size, always - and the same policy that will later exit the position, so the

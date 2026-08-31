@@ -18,17 +18,17 @@ Master specification v1.0 §5. Its rule is that coverage may not be claimed with
 | Layer | Registered | Specified | Implemented | Validated | **Runtime** | Docs |
 |---|---:|---:|---:|---:|---:|---|
 | Source Facts | 9 | 0 | 0 | 0 | **0** | 2 of 2 |
-| Derived Observations | 168 | 6 | 7 | 0 | **1** | 2 of 2 |
+| Derived Observations | 168 | 6 | 7 | 0 | **2** | 2 of 2 |
 | Decision Logic | 192 | 0 | 1 | 0 | **0** | 3 of 3 |
 | Trade Management | 96 | 0 | 0 | 0 | **0** | 3 of 3 |
-| **Total** | **465** | 6 | 8 | 0 | **1** | |
+| **Total** | **465** | 6 | 8 | 0 | **2** | |
 
 ```
 registered   ██████████   465
 specified    ··········     6
 implemented  ··········     8
 validated    ··········     0
-runtime      ··········     1
+runtime      ··········     2
 ```
 
 ## 2. Parameters, by the layer that consumes them
@@ -54,7 +54,7 @@ Programme-level parameters (`validation.*`, `stats.*`) govern the validation pro
 
 ## 3. How to read the runtime column
 
-**1 of 8 implemented components are `active`.** A low number here is the design rather than a gap. A component reaches `active` only when its parameters have values, its verification exists and `implements` points at real code (`COMPONENT_REGISTRY_SPEC.md` §3). Components blocked by an `unset` parameter refuse rather than defaulting, which is the fail-closed rule working as specified.
+**2 of 8 implemented components are `active`.** A low number here is the design rather than a gap. A component reaches `active` only when its parameters have values, its verification exists and `implements` points at real code (`COMPONENT_REGISTRY_SPEC.md` §3). Components blocked by an `unset` parameter refuse rather than defaulting, which is the fail-closed rule working as specified.
 
 What the column is for is the gap between it and the one to its left: **implemented and not runtime** is the population where code exists that nothing may yet rely on. Watch that difference rather than the absolute number.
 

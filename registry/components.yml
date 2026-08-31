@@ -1888,7 +1888,7 @@ components:
     stage: Context
     claim_type: Derived Observation
     validation: Not Applicable
-    activation: specified
+    activation: active
     implements: "swingdesk.derived_observations.relative_strength:compute"
     parameters: []
     consumers: [M31-T0465-v5.0, M33-T0487-v5.0]

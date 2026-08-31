@@ -115,8 +115,9 @@ cards:
       on_stale: DR-015
       on_revised: DR-016
 
-    # Every one is `registered`. None is `active`. That is exactly what G6 measures, and this list
-    # is the first denominator it has ever had.
+    # ONE of the four is `active` as of 2026-08-30 (M31-T0464, the measure - DR-024). The other
+    # three are `registered`. That ratio is exactly what G6 measures - "every component a live
+    # strategy card needs is active" - and this list is the first denominator it has ever had.
     components:
       - M31-T0464-v5.0   # Relative strength против индекса - the measure
       - M31-T0465-v5.0   # Long strongest / short weakest - the hypothesis, flagged by the course
@@ -167,14 +168,22 @@ cards:
           form is a strategy choice and ALLOCATION_SPEC 3 sends it to a pre-registration.
       - id: components-not-active
         what: >-
-          M31-T0464 is `specified` as of 2026-08-24 - derived_observations/relative_strength.py
-          implements the RS line with an ALGORITHM_SPEC record and property tests. The other three
-          are `registered`.
+          NARROWED 2026-08-30 by DR-024: M31-T0464 is `active`. The daily run computes the RS line
+          for every candidate against rs.benchmark and the report prints it with its validation
+          status, which is the condition COMPONENT_REGISTRY_SPEC 3 attaches to `active` - a
+          component's output must appear somewhere with its status beside it. It is the second
+          active component in the project and the first a live card names.
+          The other three - M31-T0465, M33-T0487, M77-T1138 - are still `registered`.
         why: >-
           COMPONENT_REGISTRY_SPEC 3 - `active` needs parameter VALUES, and this card's selection
-          inputs come from PR-012. M31-T0464 itself declares no parameters and could activate on
-          verification alone; it is held at `specified` because activation is a decision
-          (ROADMAP section 9), not because an artefact is missing.
+          inputs come from PR-012. M31-T0464 itself declares no parameters, so artefacts alone would
+          have allowed activation from 2026-08-24; it was held at `specified` because nothing CALLED
+          it, and a component nothing calls declared active is a status claiming more than the
+          system does (AGENTS.md 3). DR-024 supplied the caller rather than flipping the flag.
+          THE MEASURE IS NOT THE SELECTION. RS is computed and reported and selects nothing: the
+          three unset-selection blockers above are untouched, and ALLOCATION_SPEC 3 still sends
+          rs.benchmark_form and the rest to a pre-registration. What changed is that the card's own
+          measure is now visible before anything is ranked by it.
           M77-T1138 is the same measure at the Setup stage and is deliberately NOT claimed by the
           same function: Production Rules 3.8 forbids two components sharing one definition and
           gate 11 enforces it. Whether that row names something distinct needs the source PDFs,

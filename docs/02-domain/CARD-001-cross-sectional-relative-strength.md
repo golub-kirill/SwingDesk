@@ -118,12 +118,21 @@ This card needs **four** components, and gate 27 prints how many are `active`:
 
 | component | what it supplies | activation |
 |---|---|---|
-| `M31-T0464-v5.0` | relative strength against the index — the measure | `registered` |
+| `M31-T0464-v5.0` | relative strength against the index — the measure | **`active`** (2026-08-30, `DR-024`) |
 | `M31-T0465-v5.0` | long strongest / short weakest — the hypothesis | `registered` |
 | `M33-T0487-v5.0` | the relative-strength screen | `registered` |
 | `M77-T1138-v4.0` | relative strength at the setup stage | `registered` |
 
-Four is the denominator. It was never 465.
+Four is the denominator. It was never 465. **One of the four is `active`**: the daily run computes
+the RS line for every candidate and the report prints it with its validation status, which is the
+condition `COMPONENT_REGISTRY_SPEC.md` §3 attaches to that state.
+
+**The measure being active does not make the card runnable, and the distinction is the whole point.**
+`M31-T0464` answers *how strong is this name against the index*; the three that remain are the
+*hypothesis*, the *screen* and the setup-stage reading — the ones that would turn the number into a
+selection. Those wait on `rs.benchmark_form`, `rs.lookback`, `rs.ranking_method` and
+`screen.relative_strength_rule`, all unset and all bound for a pre-registration under
+`ALLOCATION_SPEC.md` §3. The report says so on every candidate, in as many words: *selects nothing*.
 
 ## 4. What the card inherits rather than authors
 
