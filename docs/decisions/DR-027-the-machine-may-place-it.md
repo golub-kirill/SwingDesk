@@ -155,3 +155,38 @@ position is a thing that happened.
   `entry_price` divergence; on this path it is a stop-submitting condition, not a note.
 - **The owner arming the switch and finding the machinery submits something it should not.** The
   switch is a file for exactly this reason: the remedy is deleting it, not a release.
+
+---
+
+## 8. Amendment, 2026-09-01 — §6's standing condition is discharged
+
+**Appended rather than edited.** §6 was accurate when written and its second paragraph is now
+history; `AGENTS.md` §11 corrects a ratified record forward, and §12's rot trap is a *cited* fact
+changing while the citation stands. So this is what changed, and §6 stays as it was.
+
+**Submissions are journalled.** `journal.duckdb` grew a `submissions` table — twelve columns, keyed
+`(run_id, client_order_id)` — and `scan --submit` writes one row per eligible candidate before and
+after the wire, with a coded outcome from `SUBMISSION_OUTCOMES`: `sent`, `stopped`, `refused`,
+`rejected`.
+
+Three things about it are decisions rather than plumbing:
+
+1. **A stopped attempt gets a row, and that is most of the value.** A session on which the machine
+   would have entered three names and was stopped is otherwise indistinguishable from a session on
+   which it found nothing. Only the row tells them apart, and it carries the guard's own reason.
+2. **`(run_id, client_order_id)` and not the order id alone.** The id is derived from the session
+   and the instrument (§5), so a run the switch stopped and a later run the owner armed share one —
+   and both attempts are facts. Append-only, like everything else in that store.
+3. **`Submission` refuses to exist without its explanation.** A `sent` row must carry the venue's
+   order id, or it asserts something happened at the venue that nothing can trace back; every other
+   outcome must carry a reason, because an attempt recorded without why it failed is the sentence
+   `AGENTS.md` §10.4 is about, stored.
+
+**And the migration was proven rather than assumed.** `Journal.__init__` already reconciles its
+schema at open (`platform/schema.py`, the defect that cost four trading days), so an existing
+journal grows the table on the next open. That was checked by copying the live
+`journal.duckdb` — 33 runs and 23,819 decisions — opening the **copy**, and confirming both counts
+survived and all twelve columns appeared. The live store was not touched.
+
+**What this does NOT change.** The switch is still absent, which is still its default, so nothing
+has been submitted. §6's condition was the blocker on *arming*; arming remains the owner's act.

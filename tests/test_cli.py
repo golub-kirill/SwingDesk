@@ -18,6 +18,7 @@ import pytest
 from swingdesk.application.pipeline import RunResult
 from swingdesk.contracts.position import ActionKind as _ActionKind
 from swingdesk.contracts.run import RunManifest
+from swingdesk.journal_evidence.journal import Journal
 from swingdesk.market_data.retry import RetryingFetcher
 from swingdesk.presentation import cli, notify
 
@@ -1102,7 +1103,9 @@ def test_submit_is_stopped_by_default_and_says_what_it_would_have_sent(
     """
     sent: list = []
     _stub_submit_client(monkeypatch, sent)
-    cli._submit(_result_with_one_trade(), tmp_path, datetime(2026, 9, 1, 21, 0, tzinfo=UTC))
+    with Journal(tmp_path / 'journal.duckdb') as journal:
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal)
 
     printed = capsys.readouterr().out
     assert "1 Trade decision(s) sized and eligible" in printed
@@ -1121,7 +1124,9 @@ def test_an_armed_switch_submits_the_run_s_trade_decisions(
 
     sent: list = []
     _stub_submit_client(monkeypatch, sent)
-    cli._submit(_result_with_one_trade(), tmp_path, datetime(2026, 9, 1, 21, 0, tzinfo=UTC))
+    with Journal(tmp_path / 'journal.duckdb') as journal:
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal)
 
     printed = capsys.readouterr().out
     assert "armed" in printed
@@ -1157,6 +1162,81 @@ def test_a_watch_decision_is_never_submitted(tmp_path: Path, monkeypatch, capsys
 
     sent: list = []
     _stub_submit_client(monkeypatch, sent)
-    cli._submit(result, tmp_path, datetime(2026, 9, 1, 21, 0, tzinfo=UTC))
+    with Journal(tmp_path / 'journal.duckdb') as journal:
+        cli._submit(result, tmp_path, datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal)
+        rows = journal.submissions_for('RUN-TEST')
     assert "0 Trade decision(s)" in capsys.readouterr().out
     assert sent == []
+    # Nothing eligible means nothing attempted, so nothing to record. A row here would be the
+    # journal asserting an attempt that never happened.
+    assert rows == []
+
+
+def test_every_stopped_attempt_is_journalled(tmp_path: Path, monkeypatch) -> None:
+    """`DR-027` 6, and it is most of the record's value.
+
+    Afterwards, a session on which the machine would have entered a name and was stopped is
+    otherwise indistinguishable from a session on which it found nothing. Only the row can tell
+    them apart, and the reason it carries is the guard's own.
+    """
+    from swingdesk.journal_evidence.journal import Journal
+
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent)
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal)
+        rows = journal.submissions_for("RUN-TEST")
+
+    assert len(rows) == 1
+    assert rows[0].outcome == "stopped"
+    assert rows[0].instrument_id == "TEST.1"
+    assert rows[0].shares == 18
+    assert rows[0].limit_price == Decimal("50.25")
+    assert rows[0].detail, "a stopped row must say which guard stopped it"
+    assert rows[0].venue_order_id is None
+
+
+def test_a_sent_order_is_journalled_with_the_venue_s_id(tmp_path: Path, monkeypatch) -> None:
+    from swingdesk.broker import policy as policy_module
+    from swingdesk.journal_evidence.journal import Journal
+
+    write = policy_module.load().write
+    assert write is not None
+    (tmp_path / write.kill_switch_file).write_text(write.armed_marker, encoding="utf-8")
+
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent)
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal)
+        rows = journal.submissions_for("RUN-TEST")
+
+    assert len(rows) == 1
+    assert rows[0].outcome == "sent"
+    assert rows[0].venue_order_id == "o-1"
+    assert rows[0].venue_status == "accepted"
+    assert rows[0].client_order_id == "swingdesk-2026-09-01-TEST.1"
+
+
+def test_a_journal_that_cannot_be_written_does_not_take_the_run_down(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """The record matters and the run matters more.
+
+    `a.run_completes` measures decisions and a report, both of which happened before this point.
+    A traceback here would lose them over a store write.
+    """
+    from swingdesk.journal_evidence.journal import Journal
+
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent)
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        monkeypatch.setattr(
+            journal, "record_submission",
+            lambda submission: (_ for _ in ()).throw(RuntimeError("disk full")),
+        )
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal)
+
+    assert "NOT JOURNALLED" in capsys.readouterr().err

@@ -16,7 +16,7 @@ from swingdesk.contracts.observation import ParameterUse
 from swingdesk.contracts.position import ActionStatus, Fill, ManagementAction, Position
 from swingdesk.contracts.reference import Instrument
 from swingdesk.contracts.run import RunMode
-from swingdesk.journal_evidence.journal import Journal
+from swingdesk.journal_evidence.journal import Journal, Submission
 from swingdesk.journal_evidence.positions import CapOverride, PositionStore
 from swingdesk.market_data import BarStore, vendor_yahoo
 from swingdesk.market_data.retry import RetryingFetcher
@@ -212,19 +212,47 @@ def main(argv: list[str] | None = None) -> int:
     return 1
 
 
-def _submit(result: RunResult, data: Path, now: datetime) -> None:
-    """Send this run's `Trade` decisions to the paper venue, or say which guard stopped it.
+def _submit(result: RunResult, data: Path, now: datetime, journal: Journal) -> None:
+    """Send this run's `Trade` decisions to the paper venue, and journal every attempt.
 
     **Never fatal to the run.** `a.run_completes` measures whether the run produced its decisions
     and its report, and both happened before this is reached. A venue that refused an order is a
     fact about the venue, and resetting a twenty-day counter over one would be the `DR-011` mistake
     in a more expensive place. Loud, never fatal - the same reasoning as the report write above.
 
-    `CHARTER` A-002 authorises submission with no per-order approval; `DR-027` §2 says what may be
-    sent and §4 lists the four guards. **Nothing here decides anything**: the run already did, and
+    `CHARTER` A-002 authorises submission with no per-order approval; `DR-027` 2 says what may be
+    sent and 4 lists the four guards. **Nothing here decides anything**: the run already did, and
     this reads its decisions in the order they came out.
+
+    **Every eligible candidate gets a journal row, including the ones a guard stopped.** That is
+    `DR-027` 6 and it is most of the record's value: afterwards, a session on which the machine
+    would have entered three names and was stopped is otherwise indistinguishable from a session on
+    which it found nothing.
     """
     from swingdesk import broker as broker_pkg
+
+    run_id = result.manifest.run_id
+    session = now.date()
+
+    def _record(
+        order_id: str, instrument_id: str, shares: int, limit: Decimal, stop: Decimal,
+        outcome: str, detail: str | None = None, venue_order_id: str | None = None,
+        venue_status: str | None = None,
+    ) -> None:
+        """Write the attempt, and never let a journal failure take the run down with it.
+
+        The record matters and the run matters more: a store that could not be written is a fact
+        the operator needs on stderr, not a traceback that loses the report as well.
+        """
+        try:
+            journal.record_submission(Submission(
+                run_id=run_id, client_order_id=order_id, attempted_at=now, session_date=session,
+                instrument_id=instrument_id, shares=shares, limit_price=limit, stop_price=stop,
+                outcome=outcome, detail=detail, venue_order_id=venue_order_id,
+                venue_status=venue_status,
+            ))
+        except Exception as unwritable:  # noqa: BLE001 - loud, never fatal
+            print(f"  NOT JOURNALLED {instrument_id}  {unwritable}", file=sys.stderr)
 
     try:
         policy = broker_pkg.load_policy()
@@ -245,12 +273,8 @@ def _submit(result: RunResult, data: Path, now: datetime) -> None:
         if outcome.decision is not None and outcome.decision.decision == "Trade"
         and isinstance(outcome.risk, RiskSnapshot)
     ]
-    print(f"\nsubmission  {len(tradeable)} Trade decision(s) sized and eligible")
-
-    if arming.stopped:
-        print(f"  STOPPED  {arming.reason}")
-        return
-    print(f"  armed    {arming.reason}")
+    print()
+    print(f"submission  {len(tradeable)} Trade decision(s) sized and eligible")
 
     write = policy.write
     if write is None:  # pragma: no cover - `policy.load` refuses write_enabled without a section
@@ -258,33 +282,72 @@ def _submit(result: RunResult, data: Path, now: datetime) -> None:
               file=sys.stderr)
         return
 
-    session = now.date()
+    def _key(instrument_id: str) -> str:
+        """The order id, or a synthetic one when it cannot be derived.
+
+        An attempt that could not even be keyed is still an attempt, and a row naming the
+        instrument is worth more than no row at all.
+        """
+        try:
+            return broker_pkg.client_order_id(session, instrument_id, write)
+        except broker_pkg.PolicyRefused:
+            return f"unkeyed-{session.isoformat()}-{instrument_id}"
+
+    if arming.stopped:
+        print(f"  STOPPED  {arming.reason}")
+        for outcome in tradeable:
+            risk = outcome.risk
+            assert isinstance(risk, RiskSnapshot)
+            _record(_key(outcome.instrument.id), outcome.instrument.id, risk.shares,
+                    risk.entry, risk.stop, "stopped", arming.reason)
+        return
+
+    print(f"  armed    {arming.reason}")
+
+    halted: str | None = None
     for outcome in tradeable:
         risk = outcome.risk
         assert isinstance(risk, RiskSnapshot)
+        instrument_id = outcome.instrument.id
+
+        if halted is not None:
+            # A guard that stopped one order stops every remaining one for the same reason. They
+            # were eligible and were not attempted, and the row says which.
+            _record(_key(instrument_id), instrument_id, risk.shares, risk.entry, risk.stop,
+                    "stopped", halted)
+            continue
+
         try:
             order = broker_pkg.entry_order(
-                instrument_id=outcome.instrument.id, shares=risk.shares,
+                instrument_id=instrument_id, shares=risk.shares,
                 limit_price=risk.entry, stop_price=risk.stop,
                 session_date=session, write=write, market=policy.market,
             )
         except (broker_pkg.PolicyRefused, ValueError) as refused:
-            print(f"  REFUSED  {outcome.instrument.id}  {refused}", file=sys.stderr)
+            print(f"  REFUSED  {instrument_id}  {refused}", file=sys.stderr)
+            _record(_key(instrument_id), instrument_id, risk.shares, risk.entry, risk.stop,
+                    "refused", str(refused))
             continue
 
         try:
             placed = client.submit(order, now)
         except broker_pkg.SubmissionStopped as stopped:
-            # A guard, not a venue. It stops the whole loop rather than the one order: whatever
-            # disarmed it applies to every remaining candidate too.
-            print(f"  STOPPED  {outcome.instrument.id}  {stopped}", file=sys.stderr)
-            return
+            print(f"  STOPPED  {instrument_id}  {stopped}", file=sys.stderr)
+            halted = str(stopped)
+            _record(order.client_order_id, instrument_id, order.shares, order.limit_price,
+                    order.stop_price, "stopped", halted)
+            continue
         except broker_pkg.BrokerUnavailable as unavailable:
             # Includes the venue rejecting a duplicate `client_order_id`, which is idempotency
             # working rather than an error - the reason travels so a reader can tell which it was.
-            print(f"  NOT SENT {outcome.instrument.id}  {unavailable}", file=sys.stderr)
+            print(f"  NOT SENT {instrument_id}  {unavailable}", file=sys.stderr)
+            _record(order.client_order_id, instrument_id, order.shares, order.limit_price,
+                    order.stop_price, "rejected", str(unavailable))
             continue
 
+        _record(order.client_order_id, instrument_id, order.shares, order.limit_price,
+                order.stop_price, "sent", venue_order_id=placed.order_id,
+                venue_status=placed.status)
         print(f"  SENT     {order.instrument_id:<10} {order.shares} sh "
               f"limit {order.limit_price} stop {order.stop_price}  "
               f"{placed.status}  {placed.client_order_id}")
@@ -913,7 +976,7 @@ def _scan(args: argparse.Namespace) -> tuple[int, str | None, notify.Outcome]:
             print(f"\nreport written  {written}")
 
         if args.submit:
-            _submit(result, args.data, clock.now())
+            _submit(result, args.data, clock.now(), journal)
 
     # The outcome distinguishes "go and read it" from "there is nothing to read". Sending
     # COMPLETE unconditionally told the owner "Report on disk." after a failed write - a notice

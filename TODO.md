@@ -3122,20 +3122,17 @@ is for where no gate can reach.
       another environment can answer, and an import that fails raises instead of exiting 0.
       **Verified by planting the same import again and watching it exit 1.**
 
-- [ ] **`[!]` JOURNAL EVERY SUBMISSION BEFORE THE SWITCH IS ARMED — `DR-027` §6's standing
-      condition, and the one blocker on autonomous paper trading actually running.**
-      `CHARTER` A-002 (owner, 2026-09-01) lets the machine place a paper order nobody approved, and
-      `swingdesk scan --submit` builds and sends it. **Every attempt is currently reported on the
-      run's output and written nowhere.** `journal.duckdb` holds `runs` and `decisions`; a
-      submission is neither, so this is a schema migration — and `AGENTS.md` §12's fourth trap is
-      that a column which never reached disk killed every scheduled evening for four trading days.
-      **Why it gates ARMING rather than merging:** nothing can be submitted while the kill switch
-      file is absent, and absent is its default. So the machinery may land; it may not be switched
-      on. `SECURITY.md` §4's rule for the approval channel is the one being honoured — *an action
-      with no record did not happen* — and the `REVENGE` and `HINDSIGHT` controls both depend on
-      the ATTEMPT being recorded rather than the result.
-      Needs: a `submissions` table reconciled by `platform/schema.py`, the client order id as its
-      key, the four guards' verdict stored with it, and the venue's answer written back.
+- [x] **`[v]` EVERY SUBMISSION IS JOURNALLED - DONE 2026-09-01, and it was `DR-027` §6's standing
+      condition on ARMING.** `journal.duckdb` grew a `submissions` table keyed
+      `(run_id, client_order_id)`; `scan --submit` writes one row per eligible candidate with a
+      coded outcome - `sent`, `stopped`, `refused`, `rejected` - and `Submission` refuses to exist
+      without the venue's order id on a `sent` row or a reason on any other.
+      **The stopped rows are the point.** A session where the machine would have entered three
+      names and was stopped is otherwise indistinguishable from one where it found nothing.
+      **The migration was proven, not assumed:** the live journal was COPIED, the copy opened, and
+      both counts confirmed intact with all twelve columns present. The live store was untouched.
+      `DR-027` §8 is the amendment; §6 stays as written.
+      **Arming is still the owner's act and the switch file is still absent**, which is its default.
 
 - [ ] **`[ ]` WIRE `TECH` INTO THE DAILY RUN, or decide not to.** `swingdesk broker` reports a
       broker/journal mismatch and Appendix N's prescribed action for that code is *"pause new
