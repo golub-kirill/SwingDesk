@@ -102,15 +102,22 @@ retyping it.
       being unevaluable. `risk.risk_off_ladder` stays `unset` and the prescribed ACTION stays the
       owner's; making the kill switch measurable is not the same as making it automatic.
 
-- [ ] **`[v]` `risk.liquidity_cap_order_to_adtv_pct` is owner-set at 1.0 and read by nothing.**
-      **Promoted from `[c]` 2026-08-30 by reading the registry**: `provenance: owner`, `value: 1.0`,
-      `read_by: none`. Gate 1 prints the whole orphan list on every run, so derive it there rather
-      than from this line.
-      The second owner-set orphan. Measured context from `DR-003`'s addendum: at the current account
-      size a position is a median 0.0026% of one session's dollar volume, so the cap is nowhere near
-      binding and would only begin to at roughly a $2.2M account. Unenforced rather than urgent -
-      recorded so it is not rediscovered as a surprise.
-
+- [x] **`[v]` `risk.liquidity_cap_order_to_adtv_pct` IS ENFORCED - DONE 2026-09-01 (`DR-028`).**
+      It carried `provenance: owner`, `value: 1.0` and `read_by: none`, which is `AGENTS.md` §7's
+      own shape: a ratified decision that reaches no code is a decision that did not happen. Two
+      documents and `CARD-001` asserted a control that did not exist.
+      **What was missing was the DEFINITION, not the number.** `DR-028` supplies it: the cap TRIMS
+      the share count and refuses only at zero with the course's `LIQ`, because `M49-T0760` names a
+      liquidity *adjustment* and the position-value cap in the same function already trims. It
+      measures against the universe rule's OWN ADTV window and `DR-017` lag, so an instrument has
+      one liquidity opinion rather than two.
+      **It changes nothing at this account size and that is why it was wired now.** `DR-003`'s
+      addendum measured a position at a median 0.0026% of a session's dollar volume against a 1.0%
+      cap; it begins to bind at roughly a $2.2M account. Wired while getting it wrong is free.
+      **What made it urgent was `CHARTER` A-002**: since 2026-09-01 the machine places the order,
+      so the size that reaches a market stopped being hypothetical.
+      **The Track A streak was 0** when this landed - checked with `tools/track_a_streak.py`, not
+      assumed - so a change that moves decision output cost no counted sessions.
 
 ~~**`master` went RED on its own, 2026-08-22, and it is fixed in this branch.**~~ **CLOSED
 2026-08-22** — merged as `7f3568a` and verified on `master` 2026-08-24. Four tests in `test_cli.py`

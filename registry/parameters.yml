@@ -259,7 +259,7 @@ parameters:
     value: 1.0
     status: owner
     provenance: owner
-    read_by: none
+    read_by: swingdesk.trade_management.sizing:size_long
     named_in: [Appendix C, M49-T760]
     ui_editable: true
 

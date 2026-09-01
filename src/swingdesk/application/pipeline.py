@@ -24,7 +24,7 @@ from typing import Protocol
 from uuid import uuid4
 
 from swingdesk.application import checklist as checklist_builder
-from swingdesk.application.universe import UniverseSelection
+from swingdesk.application.universe import ADTV_WINDOW, UniverseSelection
 from swingdesk.contracts.checklist import Checklist
 from swingdesk.contracts.market import BarSeries as BarSeriesLike
 from swingdesk.contracts.market import CorporateAction, Interval, Series
@@ -43,7 +43,7 @@ from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset, Unk
 from swingdesk.reference_data import calendar as cal
 from swingdesk.reference_data import classification
 from swingdesk.reference_data.classification import ClassificationStore
-from swingdesk.reference_data.universe import vendor_symbol
+from swingdesk.reference_data.universe import average_dollar_volume, vendor_symbol
 from swingdesk.trade_management import manage, portfolio
 from swingdesk.trade_management.exits import ExitPolicy
 from swingdesk.trade_management.sizing import Refusal, RiskSnapshot, size_long, to_base_currency
@@ -346,6 +346,25 @@ def _benchmark(
             unavailable=f"benchmark {benchmark_id} returned no bars; the RS line is unavailable",
         )
     return Benchmark(instrument_id=benchmark_id, series=stored)
+
+
+def _adtv_lag(registry: ParameterRegistry) -> int | Refusal:
+    """Sessions of volume the order-size cap discounts, or a refusal naming the parameter.
+
+    The SAME `universe.adtv_lag_sessions` the `DR-003` rule admits an instrument with. `DR-017`
+    gave it no default because volume is still being written for two sessions after the close, and
+    a zero lag is not "no policy" - it is the non-reproducible universe that record replaced.
+    """
+    try:
+        lag, _ = registry.int_value("universe.adtv_lag_sessions")
+    except ParameterUnset as unset:
+        return Refusal(
+            "RISK",
+            "the ADTV settlement lag has no value, so the order-size cap has no window to read; "
+            "sizing against unbounded depth is not permitted (DR-028 2.2)",
+            parameter_id=unset.parameter_id,
+        )
+    return lag
 
 
 def _freshness_window(registry: ParameterRegistry) -> int | Refusal:
@@ -718,6 +737,12 @@ def run(
     # 2026-08-17 universe - and would answer no question the first one did not.
     freshness_window = _freshness_window(registry)
 
+    # How many sessions of volume to discount before the order-size cap reads it (`DR-017`,
+    # `DR-028` 2.2). Read once for the whole run and from the SAME parameter the universe rule
+    # uses, so a candidate is capped against the liquidity it was admitted on rather than against
+    # a second opinion computed here.
+    adtv_lag = _adtv_lag(registry)
+
     # The book's two bounds, read once for the whole run (`DR-006` §8, `RISK_SPEC` §3 step 6).
     caps = _portfolio_caps(registry)
     if isinstance(caps, Refusal):
@@ -1026,7 +1051,18 @@ def run(
             continue
         entry = stored.bars[-1].close
         stop = policy.stop_for(entry, latest.value)
-        sized = size_long(entry, stop, instrument.currency, registry)
+        # `DR-028`: the order-size cap measures against the UNIVERSE RULE's own ADTV - same window,
+        # same `DR-017` lag - so an instrument has one liquidity opinion rather than two. `None`
+        # here means the window was not full, and `size_long` refuses on it rather than sizing
+        # uncapped. An admitted candidate always has a full window; this branch is `scan <TICKER>`
+        # on a name the rule never saw, which is exactly where an uncapped order would be sized.
+        if isinstance(adtv_lag, Refusal):
+            outcome.decision = DecisionRecord(
+                instrument.id, "Skip", adtv_lag.code, adtv_lag.reason, adtv_lag.parameter_id
+            )
+            continue
+        adtv = average_dollar_volume(stored, ADTV_WINDOW, len(stored.bars) - 1 - adtv_lag)
+        sized = size_long(entry, stop, instrument.currency, registry, adtv=adtv)
         outcome.risk = sized
 
         if isinstance(sized, Refusal):

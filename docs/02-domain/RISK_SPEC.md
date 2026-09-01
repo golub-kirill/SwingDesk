@@ -106,7 +106,7 @@ is set, the owning component returns a coded refusal (`FAIL_CLOSED_POLICY.md` §
 | costs allowance (commission + slippage) | Appendix C | none |
 | squeeze/gap allowance for shorts | Appendix C | none |
 | max position value | Appendix C control | none |
-| liquidity cap (order size vs ADTV) | Appendix C control | none |
+| liquidity cap (order size vs ADTV) | Appendix C control, `M49-T0760` | none — the owner set 1.0%, `DR-028` supplied the definition |
 | max open risk | M51-T780, M93-T1326 | none |
 | max sector risk | M51-T782, M93-T1327 | none |
 | correlation threshold and its size adjustment | M49-T761, M51-T781 | none |

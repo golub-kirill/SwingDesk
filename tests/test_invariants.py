@@ -26,6 +26,11 @@ from swingdesk.trade_management.sizing import (
     size_long,
 )
 
+#: An average daily dollar volume large enough that the `DR-028` order-size cap binds on nothing.
+#: Passed explicitly by every call rather than defaulted inside `size_long`, because a default
+#: there would be the silent-oversizing failure the keyword exists to prevent.
+ADTV_ABUNDANT = Decimal(1_000_000_000)
+
 
 def _registry(**overrides: object) -> ParameterRegistry:
     """An in-memory registry. Tests never read the real one, so they cannot break when it changes."""
@@ -44,6 +49,10 @@ def _registry(**overrides: object) -> ParameterRegistry:
         "risk.costs_bp_cad": "50",
         "risk.costs_floor_cad": "0.02",
         "risk.max_position_value": 1_000_000,
+        # `DR-028`. Real value; the ADTV every call below passes is large enough that it binds
+        # on nothing, so these tests keep measuring what they were written to measure. The
+        # tests that bind it deliberately are at the foot of this file.
+        "risk.liquidity_cap_order_to_adtv_pct": "1.0",
     }
     base.update(overrides)
     # A None override means UNSET, not absent. The two are different failures: unset is an expected
@@ -102,7 +111,7 @@ def _series(closes: list[Decimal], instrument: str = "TEST.1") -> BarSeries:
 @settings(max_examples=200, deadline=None)
 def test_shares_never_round_up(entry: Decimal, distance: Decimal) -> None:
     """Appendix C rounds down. Rounding up would breach the risk budget by up to one share."""
-    result = size_long(entry, entry - distance, "USD", _registry())
+    result = size_long(entry, entry - distance, "USD", _registry(), adtv=ADTV_ABUNDANT)
     if isinstance(result, Refusal):
         return
     assert Decimal(result.shares) * result.risk_per_share <= result.allowed_risk
@@ -115,7 +124,7 @@ def test_shares_never_round_up(entry: Decimal, distance: Decimal) -> None:
 @settings(max_examples=200, deadline=None)
 def test_planned_risk_never_exceeds_allowed(entry: Decimal, distance: Decimal) -> None:
     """The whole point of sizing: the position cannot risk more than the budget permits."""
-    result = size_long(entry, entry - distance, "USD", _registry())
+    result = size_long(entry, entry - distance, "USD", _registry(), adtv=ADTV_ABUNDANT)
     if isinstance(result, Refusal):
         return
     assert result.planned_risk <= result.allowed_risk
@@ -129,7 +138,7 @@ def test_planned_risk_never_exceeds_allowed(entry: Decimal, distance: Decimal) -
 def test_stop_at_or_above_entry_always_refuses(entry: Decimal, stop: Decimal) -> None:
     """A long whose stop is not below entry has no invalidation level. Never sized, always STOP."""
     assume(stop >= entry)
-    result = size_long(entry, stop, "USD", _registry())
+    result = size_long(entry, stop, "USD", _registry(), adtv=ADTV_ABUNDANT)
     assert isinstance(result, Refusal)
     assert result.code == "STOP"
 
@@ -147,7 +156,7 @@ def test_a_nonpositive_stop_always_refuses(entry: Decimal, stop: Decimal) -> Non
     instrument whose ATR exceeds half its price at a 2.0 multiple crosses zero, and
     `universe.min_price` of 5.00 does not exclude those.
     """
-    result = size_long(entry, stop, "USD", _registry())
+    result = size_long(entry, stop, "USD", _registry(), adtv=ADTV_ABUNDANT)
     assert isinstance(result, Refusal)
     assert result.code == "STOP"
 
@@ -186,7 +195,7 @@ def test_r_denominator_is_the_planned_risk(net: Decimal) -> None:
     denominator's VALUE, and the second pins which field `r_multiple` divides by - swapping it to
     `risk_per_share` passes the first and fails the second.
     """
-    sized = size_long(Decimal("100.00"), Decimal("95.00"), "USD", _registry())
+    sized = size_long(Decimal("100.00"), Decimal("95.00"), "USD", _registry(), adtv=ADTV_ABUNDANT)
     assert not isinstance(sized, Refusal)
     assert sized.planned_risk == _PLANNED_RISK
     assert r_multiple(net, sized) == net / _PLANNED_RISK
@@ -195,8 +204,7 @@ def test_r_denominator_is_the_planned_risk(net: Decimal) -> None:
 def test_unset_parameter_refuses_and_names_itself() -> None:
     """An unset threshold produces a coded refusal naming the parameter, never a default."""
     result = size_long(
-        Decimal("100"), Decimal("95"), "USD", _registry(**{"risk.per_trade_pct": None})
-    )
+        Decimal("100"), Decimal("95"), "USD", _registry(**{"risk.per_trade_pct": None}), adtv=ADTV_ABUNDANT)
     assert isinstance(result, Refusal)
     assert result.code == "RISK"
     assert result.parameter_id == "risk.per_trade_pct"
@@ -207,14 +215,14 @@ def test_unset_parameter_refuses_and_names_itself() -> None:
 def test_costs_use_the_floor_below_the_crossover_price() -> None:
     """At 50bp and a $0.02 floor, the crossover is $4 - below it the floor governs, unchanged from
     a flat constant's behaviour at that end of the range."""
-    sized = size_long(Decimal("2.00"), Decimal("1.00"), "USD", _registry())
+    sized = size_long(Decimal("2.00"), Decimal("1.00"), "USD", _registry(), adtv=ADTV_ABUNDANT)
     assert not isinstance(sized, Refusal)
     assert sized.costs_per_share == Decimal("0.02")  # floor, not 50bp * 2.00 = 0.01
 
 
 def test_costs_scale_with_price_above_the_crossover() -> None:
     """Above the crossover the proportional term governs - the fix DR-009 confessed it needed."""
-    sized = size_long(Decimal("200.00"), Decimal("190.00"), "USD", _registry())
+    sized = size_long(Decimal("200.00"), Decimal("190.00"), "USD", _registry(), adtv=ADTV_ABUNDANT)
     assert not isinstance(sized, Refusal)
     assert sized.costs_per_share == Decimal("1.0000")  # 50bp * 200.00, not the flat floor
 
@@ -223,7 +231,7 @@ def test_understating_costs_is_impossible_by_construction() -> None:
     """max(floor, proportional) can never charge less than either term alone would - the unsafe
     direction (smaller costs -> more shares) is closed at the formula, not by a price band."""
     for entry in (Decimal("1"), Decimal("50"), Decimal("500"), Decimal("9999")):
-        sized = size_long(entry, entry - Decimal("1"), "USD", _registry())
+        sized = size_long(entry, entry - Decimal("1"), "USD", _registry(), adtv=ADTV_ABUNDANT)
         if isinstance(sized, Refusal):
             continue
         floor = Decimal("0.02")
@@ -235,7 +243,7 @@ def test_understating_costs_is_impossible_by_construction() -> None:
 def test_an_unsupported_currency_refuses_rather_than_guesses() -> None:
     """Unset is not default. A currency with no cost parameters refuses; it does not fall back to
     USD or to any other currency's numbers."""
-    result = size_long(Decimal("100"), Decimal("95"), "EUR", _registry())
+    result = size_long(Decimal("100"), Decimal("95"), "EUR", _registry(), adtv=ADTV_ABUNDANT)
     assert isinstance(result, Refusal)
     assert result.code == "RISK"
     assert "EUR" in result.reason
@@ -253,8 +261,8 @@ def test_cad_and_usd_can_be_priced_independently() -> None:
     registry = _registry(**{
         "risk.costs_bp_cad": "200", "risk.costs_floor_cad": "0.02", "account.fx_rate_cad": "0.75",
     })
-    usd = size_long(Decimal("200.00"), Decimal("190.00"), "USD", registry)
-    cad = size_long(Decimal("200.00"), Decimal("190.00"), "CAD", registry)
+    usd = size_long(Decimal("200.00"), Decimal("190.00"), "USD", registry, adtv=ADTV_ABUNDANT)
+    cad = size_long(Decimal("200.00"), Decimal("190.00"), "CAD", registry, adtv=ADTV_ABUNDANT)
     assert not isinstance(usd, Refusal)
     assert not isinstance(cad, Refusal)
     assert usd.costs_per_share != cad.costs_per_share
@@ -267,7 +275,7 @@ def test_a_foreign_currency_refuses_without_a_rate() -> None:
     """The defect itself. `account.equity` is USD; a `.TO` instrument's risk-per-share is CAD.
     Dividing one by the other sized every Canadian candidate by an unrecorded factor - no refusal,
     no flag, wrong by exactly the rate."""
-    result = size_long(Decimal("100"), Decimal("96"), "CAD", _registry())
+    result = size_long(Decimal("100"), Decimal("96"), "CAD", _registry(), adtv=ADTV_ABUNDANT)
     assert isinstance(result, Refusal)
     assert result.code == "RISK"
     assert result.parameter_id == "account.fx_rate_cad"
@@ -275,7 +283,7 @@ def test_a_foreign_currency_refuses_without_a_rate() -> None:
 
 def test_a_base_currency_instrument_needs_no_rate() -> None:
     """The common case must not be made to depend on a rate nobody needs."""
-    result = size_long(Decimal("100"), Decimal("96"), "USD", _registry())
+    result = size_long(Decimal("100"), Decimal("96"), "USD", _registry(), adtv=ADTV_ABUNDANT)
     assert not isinstance(result, Refusal)
     assert not any(p.id.startswith("account.fx_rate") for p in result.parameters)
 
@@ -289,8 +297,8 @@ def test_the_fx_rate_converts_the_budget_not_just_unblocks_it() -> None:
     registry = _registry(**{
         "account.fx_rate_cad": "0.75", "risk.costs_bp_cad": "50", "risk.costs_floor_cad": "0.02",
     })
-    usd = size_long(Decimal("100"), Decimal("96"), "USD", registry)
-    cad = size_long(Decimal("100"), Decimal("96"), "CAD", registry)
+    usd = size_long(Decimal("100"), Decimal("96"), "USD", registry, adtv=ADTV_ABUNDANT)
+    cad = size_long(Decimal("100"), Decimal("96"), "CAD", registry, adtv=ADTV_ABUNDANT)
     assert not isinstance(usd, Refusal)
     assert not isinstance(cad, Refusal)
     assert cad.shares > usd.shares, (
@@ -303,7 +311,7 @@ def test_the_fx_rate_converts_the_budget_not_just_unblocks_it() -> None:
 
 def test_a_nonpositive_fx_rate_refuses() -> None:
     result = size_long(Decimal("100"), Decimal("96"), "CAD",
-                       _registry(**{"account.fx_rate_cad": "0"}))
+                       _registry(**{"account.fx_rate_cad": "0"}), adtv=ADTV_ABUNDANT)
     assert isinstance(result, Refusal)
     assert result.parameter_id == "account.fx_rate_cad"
 
@@ -331,7 +339,7 @@ def test_sizing_and_position_agree_on_the_denominator(entry: Decimal, distance: 
     """
     from swingdesk.contracts.position import Position
 
-    sized = size_long(entry, entry - distance, "USD", _registry())
+    sized = size_long(entry, entry - distance, "USD", _registry(), adtv=ADTV_ABUNDANT)
     if isinstance(sized, Refusal):
         return
     assume(sized.shares > 0)
@@ -642,8 +650,7 @@ def test_an_unsupported_currency_refuses_rather_than_pricing_it_as_usd() -> None
 def test_an_unset_cost_parameter_refuses_and_names_itself() -> None:
     """Understating cost is the unsafe direction: a smaller `costs` produces MORE shares."""
     result = size_long(
-        Decimal("100"), Decimal("95"), "USD", _registry(**{"risk.costs_bp_usd": None})
-    )
+        Decimal("100"), Decimal("95"), "USD", _registry(**{"risk.costs_bp_usd": None}), adtv=ADTV_ABUNDANT)
     assert isinstance(result, Refusal)
     assert result.code == "RISK"
     assert result.parameter_id == "risk.costs_bp_usd"
@@ -659,8 +666,7 @@ def test_a_negative_cost_cannot_produce_a_non_positive_risk_per_share() -> None:
     """
     result = size_long(
         Decimal("100"), Decimal("95"), "USD",
-        _registry(**{"risk.costs_floor_usd": "-10", "risk.costs_bp_usd": "-100000"}),
-    )
+        _registry(**{"risk.costs_floor_usd": "-10", "risk.costs_bp_usd": "-100000"}), adtv=ADTV_ABUNDANT)
     assert isinstance(result, Refusal)
     assert result.code == "STOP"
     assert "not positive after costs" in result.reason
@@ -669,7 +675,8 @@ def test_a_negative_cost_cannot_produce_a_non_positive_risk_per_share() -> None:
 def test_an_unset_position_value_cap_refuses_rather_than_sizing_uncapped() -> None:
     """`unset` is not `no limit`. Sizing without a cap is not permitted."""
     result = size_long(
-        Decimal("100"), Decimal("95"), "USD", _registry(**{"risk.max_position_value": None})
+        Decimal("100"), Decimal("95"), "USD", _registry(**{"risk.max_position_value": None}),
+            adtv=ADTV_ABUNDANT,
     )
     assert isinstance(result, Refusal)
     assert result.code == "RISK"
@@ -683,8 +690,71 @@ def test_a_cap_too_small_for_one_share_refuses_with_liq_rather_than_rounding_to_
     trade proposal for nothing; `LIQ` says the instrument is too expensive for the cap.
     """
     result = size_long(
-        Decimal("100"), Decimal("95"), "USD", _registry(**{"risk.max_position_value": 50})
+        Decimal("100"), Decimal("95"), "USD", _registry(**{"risk.max_position_value": 50}),
+            adtv=ADTV_ABUNDANT,
     )
     assert isinstance(result, Refusal)
     assert result.code == "LIQ"
     assert "buys 0 shares" in result.reason
+
+
+# --- `DR-028`: the order-size cap adjusts, and refuses only at zero ----------------------------
+
+
+def test_the_liquidity_cap_trims_the_order_rather_than_skipping_it() -> None:
+    """`M49-T0760` names an ADJUSTMENT, and the position-value cap beside it already trims.
+
+    A name that can absorb 60% of the intended order becomes a smaller trade, not no trade.
+    """
+    # 1% of 10,000 is 100, which buys one share at 100.
+    sized = size_long(
+        Decimal("100.00"), Decimal("95.00"), "USD", _registry(), adtv=Decimal(10_000)
+    )
+    assert not isinstance(sized, Refusal)
+    assert sized.shares == 1
+    assert sized.position_value == Decimal("100.00")
+    # The R denominator is per SHARE and does not move when the count does (`RISK_SPEC` 2).
+    assert sized.planned_risk == sized.risk_per_share
+
+
+def test_an_uncapped_order_is_unchanged_by_a_deep_market() -> None:
+    """The cap must be inert where it does not bind, or every number in the suite moves."""
+    deep = size_long(
+        Decimal("100.00"), Decimal("95.00"), "USD", _registry(), adtv=ADTV_ABUNDANT
+    )
+    shallow = size_long(
+        Decimal("100.00"), Decimal("95.00"), "USD", _registry(), adtv=Decimal(100_000_000)
+    )
+    assert not isinstance(deep, Refusal) and not isinstance(shallow, Refusal)
+    assert deep.shares == shallow.shares
+
+
+def test_a_market_too_thin_for_one_share_refuses_with_liq() -> None:
+    """The floor the trim needs. Without it a candidate leaves the run `Trade` with nothing to buy."""
+    sized = size_long(
+        Decimal("100.00"), Decimal("95.00"), "USD", _registry(), adtv=Decimal(1_000)
+    )
+    assert isinstance(sized, Refusal)
+    assert sized.code == "LIQ"
+    assert sized.parameter_id == "risk.liquidity_cap_order_to_adtv_pct"
+
+
+def test_an_unmeasurable_adtv_refuses_rather_than_sizing_uncapped() -> None:
+    """`DR-028` 2.3, and the polarity was traced rather than assumed.
+
+    `DR-025` 2.1 records a guard here whose refusal ADMITTED the candidate. This one produces a
+    `Refusal`, which the pipeline turns into a coded `Skip` - the refusal actually refuses.
+    """
+    sized = size_long(Decimal("100.00"), Decimal("95.00"), "USD", _registry(), adtv=None)
+    assert isinstance(sized, Refusal)
+    assert sized.code == "LIQ"
+
+
+def test_an_unset_liquidity_cap_refuses_rather_than_sizing_uncapped() -> None:
+    """An unset cap is not "no cap" - it is a component refusing (`AGENTS.md` 3)."""
+    sized = size_long(
+        Decimal("100.00"), Decimal("95.00"), "USD",
+        _registry(**{"risk.liquidity_cap_order_to_adtv_pct": None}), adtv=ADTV_ABUNDANT,
+    )
+    assert isinstance(sized, Refusal)
+    assert sized.parameter_id == "risk.liquidity_cap_order_to_adtv_pct"

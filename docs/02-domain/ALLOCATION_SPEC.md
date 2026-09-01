@@ -42,7 +42,7 @@ So "candidates exceed capital" almost never means the cash ran out. It means one
 | total open risk across positions | `risk.max_open_risk` | 4R | yes — **enforced** |
 | how many positions can be managed at once | `risk.max_concurrent_positions` | 4 | yes — **enforced** |
 | one position's share of the account | `risk.max_position_value` | 2500 | yes |
-| order size against liquidity | `risk.liquidity_cap_order_to_adtv_pct` | 1.0% | yes |
+| order size against liquidity | `risk.liquidity_cap_order_to_adtv_pct` | 1.0% | yes — **enforced** since 2026-09-01 (`DR-028`), trimming the order rather than skipping it |
 | risk concentrated in one sector or theme | `risk.max_sector_risk` | 2R | yes — **enforced**, on classified names |
 | duplicate economic exposure | `risk.correlation_threshold` | 0.70 over 60 sessions | yes — **enforced** |
 
