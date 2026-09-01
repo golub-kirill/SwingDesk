@@ -118,3 +118,52 @@ well-built.* It is therefore specification-first like everything else here: **no
 before the authority model is written and gated.** An AI path that arrives ahead of its
 specification would be the one component in this tree whose correctness nobody could check — and it
 would be reading a system whose own documents were wrong in fourteen places three days ago.
+
+---
+
+### A-002 — autonomous submission, on a paper venue only · 2026-09-01 · owner
+
+**What changed.** A-001 §1 and §2, and the §3 non-goal they restate, are **scoped to real money**.
+They were written without qualification and read as absolute; the owner ruled on 2026-09-01 that
+they were about the owner's capital, and that a venue holding none is outside them.
+
+The question put to the owner, in those words, was: *"May the system submit a paper order that no
+human approved order-by-order?"* The answer was **yes**.
+
+**The decision, in the order it binds:**
+
+1. **On a paper venue with no owner capital behind it, the system may submit an order it decided
+   on, with no per-order human approval.** That is a change to A-001 §1: the final trading decision
+   on such a venue need not be reached by a human.
+2. **On any venue that can move the owner's money, A-001 §1 and §2 stand unchanged and unweakened.**
+   The human decides. `D1`, `BR-1`, `SECURITY.md` §3 and `DR-014` are untouched, and `DR-026` §2's
+   reading — that an *order* in `D1` is one that moves real money — is what makes this amendment
+   coherent rather than a contradiction of it.
+3. **The paper/live boundary is a committed host allowlist and nothing else, because nothing else
+   exists.** Measured against Alpaca's API reference on 2026-08-31: a brokerage account object
+   carries no field saying whether it is paper or live. Which host was called is the only
+   difference there is. `registry/broker_policy.yml` holds exactly one host and gate 39 fails the
+   build on a second one. **This amendment rests entirely on that gate**, which is a heavier load
+   than any gate in this repository has carried before, and it is stated here so that a future
+   reader weakening the allowlist can see what they are weakening.
+4. **`D6` is not touched.** It governs approval of open-position actions — stop moves and partial
+   exits — and the question answered here was about placing an order. Management actions keep their
+   approval lifecycle until a separate ruling says otherwise.
+5. **The v1 finish line (§4) is unchanged.** This adds a capability outside it, the way A-001 §5
+   did, and does not reopen what "done" means.
+
+**Why.** The reason recorded against the §3 non-goal is the course's governance model: documented
+human judgment at named points. That reason exists to protect capital and discipline. With no
+capital at stake the binding purpose inverts — the object is to **test** the system against a real
+venue's fills, partial fills, rejects and halts, and a system that needs a human for every order
+cannot be tested at any useful rate. The governance argument is not abandoned; it is applied where
+its reason applies.
+
+**Standing condition, and it is A-001's own shape.** A-001 required that nothing be implemented
+before the authority model was written and gated. The same applies here, and one thing more, from
+`AGENTS.md` §3's fail-closed rule:
+
+> **Autonomous submission is stopped by default and the owner arms it.** The kill switch is a file
+> the owner creates, not a code change and not a flag inside a command; a switch that cannot be
+> read stops submission rather than permitting it; and a switch that defaults to ON is not a kill
+> switch. `DR-027` specifies it.

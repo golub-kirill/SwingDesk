@@ -11,7 +11,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from swingdesk.application import universe as universe_builder
-from swingdesk.application.pipeline import run
+from swingdesk.application.pipeline import RunResult, run
 from swingdesk.contracts.observation import ParameterUse
 from swingdesk.contracts.position import ActionStatus, Fill, ManagementAction, Position
 from swingdesk.contracts.reference import Instrument
@@ -36,6 +36,7 @@ from swingdesk.reference_data.directory import DirectoryStore
 from swingdesk.trade_management import manage, portfolio
 from swingdesk.trade_management.sizing import (
     Refusal,
+    RiskSnapshot,
     allowed_risk,
     costs_per_share,
     to_base_currency,
@@ -84,6 +85,11 @@ def main(argv: list[str] | None = None) -> int:
                       help="ISO instant; pins the clock so the run is reproducible")
     scan.add_argument("--report-dir", type=Path, default=None,
                       help="where the run's report file is written; defaults to <data>/reports")
+    scan.add_argument("--submit", action="store_true",
+                      help="submit this run's Trade decisions to the paper venue as bracket "
+                           "orders (CHARTER A-002, DR-027). Does nothing unless the kill switch "
+                           "file has been armed - it is stopped by default and the refusal says "
+                           "which guard stopped it")
     scan.add_argument("--no-notify", action="store_true",
                       help="skip the local desktop notice (DR-011). The report is written either "
                            "way; this only suppresses the pop-up")
@@ -204,6 +210,84 @@ def main(argv: list[str] | None = None) -> int:
         return code
 
     return 1
+
+
+def _submit(result: RunResult, data: Path, now: datetime) -> None:
+    """Send this run's `Trade` decisions to the paper venue, or say which guard stopped it.
+
+    **Never fatal to the run.** `a.run_completes` measures whether the run produced its decisions
+    and its report, and both happened before this is reached. A venue that refused an order is a
+    fact about the venue, and resetting a twenty-day counter over one would be the `DR-011` mistake
+    in a more expensive place. Loud, never fatal - the same reasoning as the report write above.
+
+    `CHARTER` A-002 authorises submission with no per-order approval; `DR-027` §2 says what may be
+    sent and §4 lists the four guards. **Nothing here decides anything**: the run already did, and
+    this reads its decisions in the order they came out.
+    """
+    from swingdesk import broker as broker_pkg
+
+    try:
+        policy = broker_pkg.load_policy()
+        arming = broker_pkg.read_arming(data, policy.write)
+        client = broker_pkg.open_client(policy, arming=arming)
+    except broker_pkg.PolicyRefused as refused:
+        print(f"submit REFUSED  {refused}", file=sys.stderr)
+        return
+    except broker_pkg.CredentialsMissing as missing:
+        print(f"submit UNAVAILABLE  {missing}", file=sys.stderr)
+        return
+
+    # Counted first and printed either way. A run that would have submitted nothing and a run that
+    # was stopped from submitting something are different facts, and a line that only appeared when
+    # the switch was armed would hide the second.
+    tradeable = [
+        outcome for outcome in result.outcomes
+        if outcome.decision is not None and outcome.decision.decision == "Trade"
+        and isinstance(outcome.risk, RiskSnapshot)
+    ]
+    print(f"\nsubmission  {len(tradeable)} Trade decision(s) sized and eligible")
+
+    if arming.stopped:
+        print(f"  STOPPED  {arming.reason}")
+        return
+    print(f"  armed    {arming.reason}")
+
+    write = policy.write
+    if write is None:  # pragma: no cover - `policy.load` refuses write_enabled without a section
+        print("submit REFUSED  the policy grants writing and carries no write section",
+              file=sys.stderr)
+        return
+
+    session = now.date()
+    for outcome in tradeable:
+        risk = outcome.risk
+        assert isinstance(risk, RiskSnapshot)
+        try:
+            order = broker_pkg.entry_order(
+                instrument_id=outcome.instrument.id, shares=risk.shares,
+                limit_price=risk.entry, stop_price=risk.stop,
+                session_date=session, write=write, market=policy.market,
+            )
+        except (broker_pkg.PolicyRefused, ValueError) as refused:
+            print(f"  REFUSED  {outcome.instrument.id}  {refused}", file=sys.stderr)
+            continue
+
+        try:
+            placed = client.submit(order, now)
+        except broker_pkg.SubmissionStopped as stopped:
+            # A guard, not a venue. It stops the whole loop rather than the one order: whatever
+            # disarmed it applies to every remaining candidate too.
+            print(f"  STOPPED  {outcome.instrument.id}  {stopped}", file=sys.stderr)
+            return
+        except broker_pkg.BrokerUnavailable as unavailable:
+            # Includes the venue rejecting a duplicate `client_order_id`, which is idempotency
+            # working rather than an error - the reason travels so a reader can tell which it was.
+            print(f"  NOT SENT {outcome.instrument.id}  {unavailable}", file=sys.stderr)
+            continue
+
+        print(f"  SENT     {order.instrument_id:<10} {order.shares} sh "
+              f"limit {order.limit_price} stop {order.stop_price}  "
+              f"{placed.status}  {placed.client_order_id}")
 
 
 def _broker(args: argparse.Namespace) -> int:
@@ -827,6 +911,9 @@ def _scan(args: argparse.Namespace) -> tuple[int, str | None, notify.Outcome]:
         print(report.render(result))
         if written is not None:
             print(f"\nreport written  {written}")
+
+        if args.submit:
+            _submit(result, args.data, clock.now())
 
     # The outcome distinguishes "go and read it" from "there is nothing to read". Sending
     # COMPLETE unconditionally told the owner "Report on disk." after a failed write - a notice

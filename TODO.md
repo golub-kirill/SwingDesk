@@ -3122,6 +3122,21 @@ is for where no gate can reach.
       another environment can answer, and an import that fails raises instead of exiting 0.
       **Verified by planting the same import again and watching it exit 1.**
 
+- [ ] **`[!]` JOURNAL EVERY SUBMISSION BEFORE THE SWITCH IS ARMED — `DR-027` §6's standing
+      condition, and the one blocker on autonomous paper trading actually running.**
+      `CHARTER` A-002 (owner, 2026-09-01) lets the machine place a paper order nobody approved, and
+      `swingdesk scan --submit` builds and sends it. **Every attempt is currently reported on the
+      run's output and written nowhere.** `journal.duckdb` holds `runs` and `decisions`; a
+      submission is neither, so this is a schema migration — and `AGENTS.md` §12's fourth trap is
+      that a column which never reached disk killed every scheduled evening for four trading days.
+      **Why it gates ARMING rather than merging:** nothing can be submitted while the kill switch
+      file is absent, and absent is its default. So the machinery may land; it may not be switched
+      on. `SECURITY.md` §4's rule for the approval channel is the one being honoured — *an action
+      with no record did not happen* — and the `REVENGE` and `HINDSIGHT` controls both depend on
+      the ATTEMPT being recorded rather than the result.
+      Needs: a `submissions` table reconciled by `platform/schema.py`, the client order id as its
+      key, the four guards' verdict stored with it, and the venue's answer written back.
+
 - [ ] **`[ ]` WIRE `TECH` INTO THE DAILY RUN, or decide not to.** `swingdesk broker` reports a
       broker/journal mismatch and Appendix N's prescribed action for that code is *"pause new
       entries"* — but nothing pauses anything today, because the reconciliation is a command the

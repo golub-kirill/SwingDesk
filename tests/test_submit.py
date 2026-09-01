@@ -1,0 +1,299 @@
+"""Submitting an order: the four guards, the idempotency key, and the shape that goes on the wire.
+
+Offline like every other test here - the transport is injected and records what it was asked to
+send (`CI_POLICY.md` 4).
+
+**Most of this file asserts REFUSALS, and that is the right ratio.** `CHARTER` A-002 authorises the
+machine to place an order nobody approved; `DR-027` 4 answers that with four independent guards.
+A suite that mostly proved submission WORKS would be testing the easy half of a change whose whole
+risk is in the other one.
+"""
+
+from __future__ import annotations
+
+import json
+from datetime import UTC, date, datetime
+from decimal import Decimal
+from pathlib import Path
+
+import pytest
+
+from swingdesk.broker import armed, submit
+from swingdesk.broker import policy as policy_module
+from swingdesk.broker.alpaca import AlpacaClient, BrokerUnavailable, Credentials, SubmissionStopped
+from swingdesk.broker.armed import STOPPED, Arming
+from swingdesk.broker.policy import PolicyRefused
+from swingdesk.contracts.broker import EntryOrder
+
+OBSERVED_AT = datetime(2026, 9, 1, 21, 0, tzinfo=UTC)
+SESSION = date(2026, 9, 1)
+
+ACCEPTED = {
+    "id": "6f0b0000-0000-0000-0000-00000000000a",
+    "client_order_id": "swingdesk-2026-09-01-TEST.1",
+    "symbol": "TEST.1",
+    "status": "accepted",
+    "submitted_at": "2026-09-01T13:31:00.123456Z",
+    "filled_qty": "0",
+}
+
+
+def _write_policy():
+    write = policy_module.load().write
+    assert write is not None, "the committed policy must carry a write section"
+    return write
+
+
+def _order(instrument_id: str = "TEST.1", shares: int = 10) -> EntryOrder:
+    return submit.entry_order(
+        instrument_id=instrument_id, shares=shares,
+        limit_price=Decimal("50.25"), stop_price=Decimal("45.00"),
+        session_date=SESSION, write=_write_policy(), market="NYSE",
+    )
+
+
+def _transport(payload: object, status: int = 200):
+    sent: list[dict[str, object]] = []
+
+    def _call(method, url, headers, timeout_seconds, max_bytes, body=None):
+        sent.append({"method": method, "url": url, "headers": headers, "body": body})
+        return status, json.dumps(payload).encode("utf-8")
+
+    _call.sent = sent  # type: ignore[attr-defined]
+    return _call
+
+
+def _client(arming: Arming = STOPPED, payload: object = ACCEPTED, status: int = 200):
+    return AlpacaClient(
+        policy=policy_module.load(),
+        credentials=Credentials(key_id="k", secret="s"),
+        transport=_transport(payload, status),
+        arming=arming,
+    )
+
+
+# --- the kill switch: every path that is not an explicit yes is stopped ------------------------
+
+
+def test_a_missing_switch_file_stops_submission(tmp_path: Path) -> None:
+    decision = armed.read(tmp_path, _write_policy())
+    assert decision.stopped
+    assert "does not exist" in decision.reason
+
+
+def test_an_empty_switch_file_stops_submission(tmp_path: Path) -> None:
+    """An accidental file - a stray redirect, a touch - must not arm anything."""
+    write = _write_policy()
+    (tmp_path / write.kill_switch_file).write_text("", encoding="utf-8")
+    assert armed.read(tmp_path, write).stopped
+
+
+def test_a_switch_without_the_marker_stops_submission(tmp_path: Path) -> None:
+    write = _write_policy()
+    (tmp_path / write.kill_switch_file).write_text("yes please", encoding="utf-8")
+    decision = armed.read(tmp_path, write)
+    assert decision.stopped
+    assert write.armed_marker in decision.reason
+
+
+def test_no_write_permission_stops_submission(tmp_path: Path) -> None:
+    assert armed.read(tmp_path, None).stopped
+
+
+def test_an_unreadable_switch_stops_submission(tmp_path: Path, monkeypatch) -> None:
+    """The branch where failing OPEN would be invisible.
+
+    Nothing is wrong with the venue and nothing is wrong with the account - the machine would
+    simply trade. `DR-025` 2.1 records this project reading a polarity backwards once already.
+    """
+    write = _write_policy()
+    switch = tmp_path / write.kill_switch_file
+    switch.write_text(write.armed_marker, encoding="utf-8")
+
+    def _refuse(*args, **kwargs):
+        raise OSError("permission denied")
+
+    monkeypatch.setattr(Path, "read_text", _refuse)
+    decision = armed.read(tmp_path, write)
+    assert decision.stopped
+    assert "could not be read" in decision.reason
+
+
+def test_the_marker_arms_it(tmp_path: Path) -> None:
+    write = _write_policy()
+    (tmp_path / write.kill_switch_file).write_text(
+        f"{write.armed_marker}\npaper only\n", encoding="utf-8"
+    )
+    decision = armed.read(tmp_path, write)
+    assert decision.armed
+    assert write.kill_switch_file in decision.reason
+
+
+def test_the_default_arming_is_stopped() -> None:
+    """A client built without an arming decision cannot write. The safe state is the forgetful one."""
+    assert STOPPED.stopped
+
+
+# --- the idempotency key ------------------------------------------------------------------------
+
+
+def test_the_key_is_derived_from_the_session_and_the_instrument() -> None:
+    write = _write_policy()
+    first = submit.client_order_id(SESSION, "TEST.1", write)
+    again = submit.client_order_id(SESSION, "TEST.1", write)
+    assert first == again == f"{write.client_order_id_prefix}-2026-09-01-TEST.1"
+
+
+def test_a_different_session_is_a_different_key() -> None:
+    write = _write_policy()
+    assert submit.client_order_id(SESSION, "TEST.1", write) != submit.client_order_id(
+        date(2026, 9, 2), "TEST.1", write
+    )
+
+
+def test_an_unsafe_instrument_id_refuses_rather_than_being_rewritten() -> None:
+    """Rewriting would let two instruments derive one key, which is the collision it exists to stop."""
+    with pytest.raises(PolicyRefused, match="two instruments derive one id"):
+        submit.client_order_id(SESSION, "TEST 1/A", _write_policy())
+
+
+def test_an_overlong_key_refuses_rather_than_truncating() -> None:
+    with pytest.raises(PolicyRefused, match="Truncating"):
+        submit.client_order_id(SESSION, "T" * 200, _write_policy())
+
+
+# --- what may be built --------------------------------------------------------------------------
+
+
+def test_a_canadian_instrument_is_refused_not_translated() -> None:
+    with pytest.raises(PolicyRefused, match="never merged"):
+        _order("TEST.2.TO")
+
+
+def test_zero_shares_is_a_refusal_that_never_reaches_the_wire() -> None:
+    with pytest.raises(PolicyRefused, match="nothing to submit"):
+        _order(shares=0)
+
+
+def test_a_stop_at_or_above_the_limit_is_refused() -> None:
+    with pytest.raises(ValueError, match="not below the limit"):
+        EntryOrder(
+            client_order_id="x", session_date=SESSION, instrument_id="TEST.1", symbol="TEST.1",
+            shares=1, limit_price=Decimal("50"), stop_price=Decimal("50"),
+        )
+
+
+# --- the chokepoint -----------------------------------------------------------------------------
+
+
+def test_a_client_that_was_never_armed_cannot_submit() -> None:
+    client = _client()
+    with pytest.raises(SubmissionStopped, match="stopped by default"):
+        client.submit(_order(), OBSERVED_AT)
+    assert client.transport.sent == [], "nothing may reach the wire"  # type: ignore[attr-defined]
+
+
+def test_the_guard_runs_before_anything_that_could_fail_for_another_reason() -> None:
+    """A stopped switch must not be reported as a venue problem.
+
+    The two exceptions send a reader to different places at 18:31 - one to the network, one to the
+    switch file - and only one of them is where the answer is.
+    """
+    client = _client()
+    with pytest.raises(SubmissionStopped):
+        client.submit(_order(), OBSERVED_AT)
+
+
+def test_an_armed_client_sends_the_bracket_dr_027_specifies() -> None:
+    client = _client(Arming(True, "armed in a test"))
+    placed = client.submit(_order(), OBSERVED_AT)
+
+    sent = client.transport.sent  # type: ignore[attr-defined]
+    assert len(sent) == 1
+    assert sent[0]["method"] == "POST"
+    assert sent[0]["url"].endswith("/v2/orders")
+    body = json.loads(sent[0]["body"])
+
+    write = _write_policy()
+    assert body["symbol"] == "TEST.1"
+    assert body["qty"] == "10"
+    assert body["side"] == write.side
+    assert body["type"] == write.order_type
+    assert body["time_in_force"] == write.time_in_force
+    assert body["order_class"] == write.order_class
+    # The limit is the SIZING price, not a price chosen for the order: every R the resulting
+    # position reports is denominated in it (DR-027 3.1).
+    assert body["limit_price"] == "50.25"
+    assert body["stop_loss"] == {"stop_price": "45.00"}
+    assert body["client_order_id"] == "swingdesk-2026-09-01-TEST.1"
+
+    assert placed.client_order_id == "swingdesk-2026-09-01-TEST.1"
+    assert placed.status == "accepted"
+    assert placed.filled_shares == Decimal(0)
+
+
+def test_the_secret_travels_in_a_header_and_never_in_the_url() -> None:
+    client = _client(Arming(True, "armed in a test"))
+    client.submit(_order(), OBSERVED_AT)
+    sent = client.transport.sent[0]  # type: ignore[attr-defined]
+    assert "APCA-API-SECRET-KEY" in sent["headers"]
+    assert "secret" not in sent["url"]
+
+
+def test_a_duplicate_is_refused_by_the_venue_and_its_reason_travels() -> None:
+    """Idempotency is enforced where the knowledge is - by the party that accepted the first one."""
+    client = _client(
+        Arming(True, "armed in a test"),
+        payload={"code": 42210000, "message": "client_order_id must be unique"},
+        status=422,
+    )
+    with pytest.raises(BrokerUnavailable, match="client_order_id must be unique"):
+        client.submit(_order(), OBSERVED_AT)
+
+
+def test_a_write_disabled_policy_stops_an_armed_client(tmp_path: Path) -> None:
+    """The guards are independent: arming the switch does not overrule the committed policy."""
+    import yaml
+
+    raw = yaml.safe_load(policy_module.POLICY_PATH.read_text(encoding="utf-8"))
+    raw["access"]["write_enabled"] = False
+    raw["access"]["allowed_methods"] = ["GET"]
+    written = tmp_path / "broker_policy.yml"
+    written.write_text(yaml.safe_dump(raw), encoding="utf-8")
+
+    client = AlpacaClient(
+        policy=policy_module.load(written),
+        credentials=Credentials(key_id="k", secret="s"),
+        transport=_transport(ACCEPTED),
+        arming=Arming(True, "armed in a test"),
+    )
+    with pytest.raises(SubmissionStopped, match="write_enabled"):
+        client.submit(_order(), OBSERVED_AT)
+    assert client.transport.sent == []  # type: ignore[attr-defined]
+
+
+def test_write_enabled_without_a_write_section_will_not_load(tmp_path: Path) -> None:
+    import yaml
+
+    raw = yaml.safe_load(policy_module.POLICY_PATH.read_text(encoding="utf-8"))
+    del raw["write"]
+    written = tmp_path / "broker_policy.yml"
+    written.write_text(yaml.safe_dump(raw), encoding="utf-8")
+    with pytest.raises(PolicyRefused, match="no kill switch"):
+        policy_module.load(written)
+
+
+def test_a_policy_permitting_cancellation_will_not_load(tmp_path: Path) -> None:
+    import yaml
+
+    raw = yaml.safe_load(policy_module.POLICY_PATH.read_text(encoding="utf-8"))
+    raw["access"]["allowed_methods"] = ["GET", "POST", "DELETE"]
+    written = tmp_path / "broker_policy.yml"
+    written.write_text(yaml.safe_dump(raw), encoding="utf-8")
+    with pytest.raises(PolicyRefused, match="DR-027 covers submission only"):
+        policy_module.load(written)
+
+
+def test_the_write_verb_comes_from_the_policy_and_not_from_the_code() -> None:
+    """Which is why gate 39 can keep an absolute rule about verb literals in the package."""
+    assert policy_module.load().write_method == "POST"

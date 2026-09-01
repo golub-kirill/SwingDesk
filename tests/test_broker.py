@@ -132,10 +132,18 @@ def _holding(symbol: str = "TEST.1", **overrides: object) -> BrokerPosition:
 
 
 def test_the_committed_policy_loads() -> None:
+    """Reading is always permitted; writing is whatever the committed file currently says.
+
+    This assertion deliberately does NOT pin `write_enabled`. It was `False` until `CHARTER` A-002
+    (2026-09-01) and is `True` now, and a test that pinned it would have to be edited by the same
+    commit that changes the policy - which is a test agreeing with whatever it is shown rather than
+    checking anything. What is pinned is the invariant: GET is always there, the host is https, and
+    a policy permitting writes carries a kill switch. `test_submit.py` owns the write contract.
+    """
     loaded = policy_module.load()
-    assert loaded.allowed_methods == {"GET"}
-    assert loaded.write_enabled is False
+    assert "GET" in loaded.allowed_methods
     assert loaded.base_url.startswith("https://")
+    assert (loaded.write is not None) == loaded.write_enabled
 
 
 def test_paper_host_is_not_the_forbidden_live_host() -> None:
@@ -151,15 +159,17 @@ def test_paper_host_is_not_the_forbidden_live_host() -> None:
         assert forbidden in loaded.base_url, "the substring test this replaced would have fired"
 
 
-def test_policy_refuses_a_write_verb(tmp_path: Path) -> None:
-    """D1/BR-1 as an executable rule: a policy listing a write verb does not load."""
+def test_a_write_verb_without_the_permission_does_not_load(tmp_path: Path) -> None:
+    """The two halves must agree. A policy that lists a write verb while claiming to be read-only
+    is describing two different systems, and the loader refuses rather than picking one."""
     with pytest.raises(PolicyRefused, match="read-only"):
-        _policy(tmp_path, access__allowed_methods=["GET", "POST"])
+        _policy(tmp_path, access__write_enabled=False)
 
 
-def test_policy_refuses_write_enabled(tmp_path: Path) -> None:
-    with pytest.raises(PolicyRefused, match="DR-026"):
-        _policy(tmp_path, access__write_enabled=True)
+def test_the_permission_without_a_verb_does_not_load(tmp_path: Path) -> None:
+    """And the other way round: a permission nothing can use is a claim, not a capability."""
+    with pytest.raises(PolicyRefused, match="cannot be exercised"):
+        _policy(tmp_path, access__allowed_methods=["GET"], access__write_enabled=True)
 
 
 def test_policy_refuses_a_second_host(tmp_path: Path) -> None:
@@ -184,10 +194,16 @@ def test_policy_refuses_a_zero_limit(tmp_path: Path) -> None:
         _policy(tmp_path, limits__request_timeout_seconds=0)
 
 
-def test_check_method_refuses_anything_but_get() -> None:
+def test_check_method_refuses_every_verb_the_policy_does_not_name() -> None:
+    """Reading and the one submission verb are permitted; amending and cancelling are not.
+
+    `DR-027` 3.3 is why: every order carries `time_in_force: day`, so nothing this system placed
+    outlives the session that decided it and there is nothing to cancel.
+    """
     loaded = policy_module.load()
     loaded.check_method("GET")
-    for verb in ("POST", "PUT", "PATCH", "DELETE"):
+    loaded.check_method(loaded.write_method)
+    for verb in ("PUT", "PATCH", "DELETE"):
         with pytest.raises(PolicyRefused, match="D1/BR-1"):
             loaded.check_method(verb)
 
