@@ -196,6 +196,11 @@ layers = [
     "swingdesk.decision_logic",
     "swingdesk.derived_observations",
     "swingdesk.market_data",
+    # A brokerage account is a Source Fact in the course's sense - it says what happened at a
+    # venue, in the past tense - so it sits with the other two adapters and above
+    # `reference_data`, whose calendar it reads to tell a US instrument from a Canadian one.
+    # `ADR-0005` places it and says why it is not a service outside the chain.
+    "swingdesk.broker",
     "swingdesk.reference_data",
     "swingdesk.platform",
 ]
@@ -204,7 +209,10 @@ layers = [
 name = "Strategies do not fetch their own facts"
 type = "forbidden"
 source_modules = ["swingdesk.derived_observations", "swingdesk.decision_logic"]
-forbidden_modules = ["swingdesk.market_data"]
+# `swingdesk.broker` is here for the course rule's own reason: a strategy that could ask the
+# venue what it holds would be fetching its own version of a shared fact, and the book is the
+# most consequential shared fact this system has.
+forbidden_modules = ["swingdesk.market_data", "swingdesk.broker"]
 
 # journal_evidence is a persistence service, not a layer: trade_management, application, validation
 # and presentation write to it, but the pure layers must stay side-effect free.
@@ -220,6 +228,7 @@ type = "forbidden"
 source_modules = ["swingdesk.journal_evidence"]
 forbidden_modules = [
     "swingdesk.market_data",
+    "swingdesk.broker",
     "swingdesk.reference_data",
     "swingdesk.derived_observations",
     "swingdesk.decision_logic",

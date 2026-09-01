@@ -149,10 +149,26 @@ def main(argv: list[str] | None = None) -> int:
     opened.add_argument("--as-of", default=None,
                         help="ISO instant this is being recorded as of; defaults to now")
 
+    broker_cmd = sub.add_parser(
+        "broker",
+        help="read the paper account and reconcile it against the book. Reads only - it has no "
+             "way to place, amend or cancel anything (D1/BR-1, DR-026)",
+    )
+    broker_cmd.add_argument("--data", type=Path, default=DEFAULT_DATA)
+    broker_cmd.add_argument("--as-of", default=None,
+                            help="ISO instant this observation is recorded as of; defaults to now")
+    broker_cmd.add_argument("--fills", action="store_true",
+                            help="also list the venue's executions")
+    broker_cmd.add_argument("--since", default=None,
+                            help="ISO instant; with --fills, the earliest execution to ask for")
+
     args = parser.parse_args(argv)
 
     if args.command == "record-fill":
         return _record_fill(args)
+
+    if args.command == "broker":
+        return _broker(args)
 
     if args.command == "pending":
         return _pending(args)
@@ -188,6 +204,107 @@ def main(argv: list[str] | None = None) -> int:
         return code
 
     return 1
+
+
+def _broker(args: argparse.Namespace) -> int:
+    """Read the paper account, print it, and say whether it agrees with the book.
+
+    **Three exit codes, because there are three different answers** and collapsing any two of them
+    is the error `AGENTS.md` 12 calls the most damaging this product can make:
+
+        0  the venue and the book describe the same positions
+        2  the venue could not be read - UNAVAILABLE, which is not agreement and not disagreement
+        3  both were read and they disagree - the course's `TECH`, whose action is "pause new
+           entries"
+
+    Nothing here writes. The reconciliation prints what it found and the owner records it with
+    `open-position` or `record-fill`; a command that repaired the book from the venue would be
+    deciding what a divergence meant, and a divergence is exactly the state in which this system
+    has least right to decide anything.
+    """
+    from swingdesk import broker as broker_pkg
+
+    clock = (
+        FixedClock(datetime.fromisoformat(args.as_of).replace(tzinfo=UTC))
+        if args.as_of
+        else SystemClock()
+    )
+    now = clock.now()
+
+    try:
+        policy = broker_pkg.load_policy()
+        client = broker_pkg.open_client(policy)
+    except broker_pkg.PolicyRefused as refused:
+        print(f"broker REFUSED  {refused}", file=sys.stderr)
+        return 2
+    except broker_pkg.CredentialsMissing as missing:
+        print(f"broker UNAVAILABLE  {missing}", file=sys.stderr)
+        return 2
+
+    try:
+        account = client.account(now)
+        held = client.positions(now)
+        fills = (
+            client.fills(now, after=datetime.fromisoformat(args.since).replace(tzinfo=UTC)
+                         if args.since else None)
+            if args.fills else ()
+        )
+    except broker_pkg.BrokerUnavailable as unavailable:
+        print(f"broker UNAVAILABLE  {unavailable}", file=sys.stderr)
+        return 2
+
+    print(f"{policy.label}  {account.base_url}")
+    print(f"  account       {account.fingerprint}  {account.status}  {account.currency}")
+    print(f"  equity        {account.equity}")
+    print(f"  cash          {account.cash}")
+    print(f"  buying power  {account.buying_power}")
+    if account.trading_blocked or account.account_blocked:
+        # Printed as a finding rather than a footnote: a blocked account explains an empty
+        # position list, and an empty list read as "flat" is a book this system would trust.
+        print(f"  BLOCKED       trading={account.trading_blocked} "
+              f"account={account.account_blocked}")
+
+    print(f"\nvenue positions ({len(held)})")
+    for holding in held:
+        print(f"  {holding.symbol:<10} {holding.shares:>12} @ {holding.average_entry_price}"
+              f"  {holding.side.value}  {holding.asset_class}")
+    if not held:
+        print("  (none)")
+
+    with PositionStore(args.data / "positions.duckdb") as positions:
+        book = positions.open_as_of(now)
+    report_ = broker_pkg.reconcile(book, held, venue=policy.label, market=policy.market)
+
+    print(f"\nreconciliation against the book ({len(book)} open)")
+    for agreement in report_.agreed:
+        print(f"  AGREED     {agreement.instrument_id:<10} {agreement.shares} sh @ "
+              f"{agreement.book_entry_price}")
+    for divergence in report_.divergences:
+        print(f"  {report_.code}  {divergence.reason:<12} {divergence.instrument_id}")
+        print(f"             {divergence.detail}")
+    for instrument_id in report_.out_of_scope:
+        # Not a divergence. This venue does not trade the TSX, so its silence about a Canadian
+        # holding is not evidence of anything (AGENTS 3: USA and Canada are never merged).
+        print(f"  out of scope  {instrument_id} - {policy.label} does not trade this market")
+    if report_.agrees and not report_.out_of_scope:
+        print("  the venue and the book describe the same positions")
+
+    if args.fills:
+        print(f"\nvenue executions ({len(fills)})")
+        for fill in fills:
+            print(f"  {fill.transaction_time.isoformat()}  {fill.symbol:<10} "
+                  f"{fill.side.value:<4} {fill.shares:>10} @ {fill.price}  {fill.kind.value}")
+        orphans = broker_pkg.unrecorded_fills(fills, book)
+        if orphans:
+            print(f"\n  {len(orphans)} execution(s) for instruments the book has never opened. "
+                  f"This does NOT say which approved action they settle - the venue carries an "
+                  f"order id and `record-fill` needs a position and a sequence.")
+
+    if not report_.agrees:
+        print(f"\n{report_.code}: broker/journal mismatch. Appendix N's action for this code is "
+              f"'pause new entries' until it is resolved.", file=sys.stderr)
+        return 3
+    return 0
 
 
 def _record_fill(args: argparse.Namespace) -> int:

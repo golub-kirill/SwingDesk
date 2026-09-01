@@ -1941,6 +1941,25 @@ is for where no gate can reach.
       advances no validation status and sets no parameter.
       **The skip made it slightly WORSE at every horizon** (7.27 vs 6.44 at 126), which is contrary
       to the convention's rationale and well inside the interval. Reported rather than explained.
+      **OWNER RULING 2026-08-31 — `exit.max_holding_period` STAYS AT 20 AND IS A RULE.** *"20 tight,
+      it is a rule. Later, separately, we can test and research up to ~40 maybe."* `DR-012` is
+      unchanged and needs no supersession; this measurement does not reopen it. The horizon question
+      is not closed, it is **scheduled separately** and bounded at about 40 sessions — see the item
+      below.
+
+- [ ] **`[ ]` A SEPARATE STUDY OF THE HOLD, BOUNDED AT ~40 SESSIONS — owner ruling 2026-08-31.**
+      Not now, and not as an amendment to `DR-012`: a pre-registration of its own, run when the
+      desk is otherwise quiet. Scope fixed by the owner at **up to about 40 sessions**, so 63 and
+      126 are out of scope however the exploratory numbers read.
+      **What the existing measurement already says about that region, so the next session does not
+      re-derive it:** the tool has no 40-session point, and the two it brackets with **both include
+      zero** — 20 sessions +1.016% [−0.321, +2.263] and 63 sessions +3.148% [−0.007, +6.207]. A
+      study bounded at 40 is therefore expected to be **underpowered on this store's history**, and
+      that expectation belongs in the pre-registration as a stated prior rather than being
+      discovered as a null. It is also below Jegadeesh & Titman's shortest reported hold (three
+      months), so a null at 40 refutes nothing about the family.
+      **Do not run it as an amendment to `PR-012` or `PR-013`** — both are reported and their scope
+      is closed (§10.2, and `PREREG_TEMPLATE` §0's refutation-family check).
 
 - [x] **`[v]` `ROADMAP` P5 — THE FIRST STRATEGY CARD EXISTS, 2026-08-24.** Load-bearing since
       2026-08-02 and untouched until now. Family chosen by the owner: **cross-sectional relative
@@ -3046,22 +3065,66 @@ is for where no gate can reach.
       **IT FITS `DR-014` EXACTLY.** That record rules no owner capital in the observable state of
       the project — paper only. An Alpaca paper account is that, with a real venue's fills, halts,
       partial fills and rejects instead of a fixture.
-      **AND IT CROSSES D1, WHICH IS THE DECISION TO TAKE.** This system PROPOSES and never
-      executes — `ActionKind`'s own docstring says *"Nothing here has an execute verb. `EXIT_NOW`
-      proposes that the owner exits; it does not exit."* Giving it an API that can place orders
-      changes that constraint, and that is an owner ruling and a decision record, not a wiring task.
-      **SO SPLIT IT, and the first half needs no ruling at all:**
-      **(a) READ-ONLY first.** Poll Alpaca for positions, orders and fills and feed them into
-      `PositionStore`. This replaces the hand-typed `record-fill` step — today the only way a fill
-      enters the system is the owner typing it — with the broker's own record. It executes nothing,
-      crosses no constraint, and closes the loop `TODO.md` §6b's step 5 currently closes by hand.
-      **(b) ORDER PLACEMENT second**, if and when the owner rules D1 changed. Needs: a decision
-      record, an approval gate that survives the change, and a kill switch.
+      **THE D1 QUESTION WAS PUT TO THE OWNER AND ANSWERED, 2026-08-31** — *"treat выставление
+      заявок as not a crossing rules, because its not a real money. Order only means the real one."*
+      `DR-026` records it, and records that the ruling answers `D1` (whose stated reason is
+      *"removes the largest irreversible-risk surface"*) and **leaves three constraints standing
+      whose reason is not money at all**: `CHARTER.md` §3's automated-trading non-goal, and A-001
+      §1–§2. Read §5 of `DR-026` before building any write path.
+      **(a) READ-ONLY — DONE 2026-08-31.** `swingdesk broker` reads the paper account and reconciles
+      it against `PositionStore`, reporting in the course's own `TECH` code (Appendix N,
+      *"Broker/platform/journal mismatch"*, action *"pause new entries"*). `ADR-0005` places the
+      package; `registry/broker_policy.yml` + **gate 39** hold the limits and the one allowed host;
+      `tests/test_broker.py` runs it all against recorded fixtures.
+      **`APCA_API_KEY_ID` and `APCA_API_SECRET_KEY` are not set, so it has NEVER been run against
+      the live endpoint** — the field names come from Alpaca's published reference, not from an
+      observed response. That is the next thing to do and it is the owner's: set the two variables
+      in the environment (never in a file here — this repository is public) and run
+      `swingdesk broker`.
+      **What (a) deliberately does NOT do, and it is not a gap that more code closes.** A broker's
+      answer cannot construct a `Position`: the venue knows symbol, quantity and average entry and
+      does **not** know the STOP, which is what `RISK_SPEC.md` §2 denominates every R in. Nor can a
+      fill be joined to an approved action — the venue carries an order id, and `Fill` settles a
+      `position_id` and a `sequence`. So it reconciles and reports; `open-position` and
+      `record-fill` still take the owner's judgment. Both close only with a `client_order_id` this
+      system sets and a bracket order carrying the stop — which is to say, only with (b).
+      **(b) ORDER PLACEMENT — open, and `DR-026` §4 lists the six things it must carry.** The
+      unresolved question is §5 and it is the owner's: **may the system submit a paper order that no
+      human approved order-by-order?** An owner-approved one is already permitted by every
+      constraint; an unapproved one needs A-001 amended, which its own text says admits no
+      configuration.
       **Constraints already binding on this work:** `SECURITY.md` §2.1 — no secret in the repo, env
       vars or an OS keyring only, and this repository is public (`tools/verify_secrets.py` says so).
       `CI_POLICY` §4 — CI must never touch the network, so every Alpaca test runs against a recorded
       fixture. `DR-011` §6 keeps the notice surface send-only and this must not quietly become an
       inbound control channel.
+
+- [x] **`[v]` GATE 6 HAD NEVER RUN — found and fixed 2026-08-31.** The runner invoked import-linter
+      as `python -m importlinter.cli lint-imports`. `importlinter/cli.py` defines a Click group and
+      carries **no `if __name__ == "__main__"` block**, and the package has no `__main__.py` — so
+      `-m` imported the module, fell off the end and **exited 0 printing nothing**. Every suite run
+      since the gate was wired reported `6 import contracts PASS` over a check that never executed.
+      **Nothing could have found this by reading**, and that is the point: the failure is
+      indistinguishable from success. It surfaced only because `AGENTS.md` §10.8 was actually
+      followed — a forbidden import was planted into `derived_observations` to prove the new
+      `broker` contract could fail, and it stayed green.
+      **The tree was clean when the real runner was finally used** — 4 contracts kept, 0 broken —
+      so no violation shipped. That is luck rather than enforcement, and it is exactly what
+      `CI_POLICY` §3 rule 2 warns a confidence-manufacturing gate buys.
+      Fixed in `check_gates._lint_imports`, which resolves the console script beside the
+      interpreter. **Verified by planting the same import again and watching it exit 1.**
+
+- [ ] **`[ ]` WIRE `TECH` INTO THE DAILY RUN, or decide not to.** `swingdesk broker` reports a
+      broker/journal mismatch and Appendix N's prescribed action for that code is *"pause new
+      entries"* — but nothing pauses anything today, because the reconciliation is a command the
+      owner types and the scheduled pass never calls it.
+      **The obstacle is real and is a decision, not a wiring task:** making the 18:30 pass reconcile
+      means putting the broker network call inside the run that `a.run_completes` counts, so a venue
+      outage becomes a failed run. `DR-015`'s staleness machinery is the precedent for how to answer
+      that (refuse to DECIDE, do not fail the RUN), and `DR-019` is the precedent for asking whether
+      a pass should do a thing at all before teaching it to.
+      Blocked behind the owner setting the keys — there is nothing to reconcile against until the
+      adapter has been run once for real.
 
 **COMPLETE as of 2026-08-18.** Every buildable item below is done, and the one remaining open entry
 (3c, off-desk reach) is a deliberate non-goal rather than a gap — `DR-011` decided it and preserves
