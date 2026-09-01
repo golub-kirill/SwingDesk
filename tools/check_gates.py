@@ -66,34 +66,27 @@ def _run(name: str, argv: list[str], key: str = "") -> str:
     return status
 
 
-def _lint_imports(python: str) -> list[str]:
-    """The command that actually runs import-linter, which is NOT `-m importlinter.cli`.
-
-    **Gate 6 ran as `[python, "-m", "importlinter.cli", "lint-imports"]` until 2026-08-31 and that
-    command does nothing at all.** `importlinter/cli.py` defines the Click group and has no
-    `if __name__ == "__main__"` block, and the package has no `__main__.py` - so `-m` imported the
-    module, fell off the end and exited 0. Every gate run since the suite was wired reported
-    `6 import contracts PASS` over a check that had not executed.
-
-    Found by planting a forbidden import and watching it stay green, which is `AGENTS.md` 10.8's
-    rule and the only thing that could have found it: the failure looks exactly like success.
-    It is `CI_POLICY.md` 3 rule 2's manufactured confidence, produced this time by a packaging
-    detail rather than by an encoding default.
-
-    The console script is resolved next to the interpreter rather than from `PATH`, for the reason
-    `pyproject.toml` gives about `daily_run.cmd`: a bare name can resolve to a stale install from
-    a different environment, and this suite already has one trap about running against the wrong
-    tree.
-    """
-    script = Path(python).parent / "lint-imports"
-    candidate = script.with_suffix(".exe") if script.with_suffix(".exe").exists() else script
-    if not candidate.exists():
-        # A missing dev dependency is a FAIL and not UNAVAILABLE: the subject of this gate - the
-        # source tree - is present, and only the tool is absent. `pyproject.toml`'s `dev` extra
-        # declares it precisely so this cannot be a shrug.
-        return [python, "-c", "import sys; sys.exit('import-linter is not installed; "
-                              "pip install -e .[dev]')"]
-    return [str(candidate)]
+#: How gate 6 is actually run. Click's own command object, called through the SAME interpreter the
+#: rest of the suite uses - not `-m`, and not a script path.
+#:
+#: **Gate 6 ran as `[python, "-m", "importlinter.cli", "lint-imports"]` until 2026-08-31 and that
+#: command does nothing at all.** `importlinter/cli.py` defines Click commands and has no
+#: `if __name__ == "__main__"` block, and the package ships no `__main__.py` - so `-m` imported the
+#: module, fell off the end and exited 0. Every gate run since the suite was wired reported
+#: `6 import contracts PASS` over a check that had not executed. Found by planting a forbidden
+#: import and watching it stay green, which is `AGENTS.md` 10.8's rule and the only thing that
+#: could have found it: the failure looks exactly like success.
+#:
+#: **The first fix was wrong too, and CI is what said so.** It resolved the `lint-imports` console
+#: script as a sibling of `sys.executable`, which is true in a venv (`Scripts/python.exe` next to
+#: `Scripts/lint-imports.exe`) and false on the hosted Python the CI runner uses, where the
+#: interpreter sits at the root and scripts live in `Scripts/`. Locally green, remotely red - the
+#: mirror image of `AGENTS.md` 12's first trap.
+#:
+#: Calling the command object removes the question. There is no path to guess, no `PATH` to consult
+#: - so no stale install from another environment can answer, which is the risk `pyproject.toml`
+#: names about `daily_run.cmd` - and an import that fails raises instead of exiting 0.
+LINT_IMPORTS = "from importlinter.cli import lint_imports_command; lint_imports_command()"
 
 
 def main() -> int:
@@ -132,7 +125,7 @@ def main() -> int:
         "4 ruff": _run("ruff", [python, "-m", "ruff", "check", "."]),
         "5 mypy": _run("mypy --strict", [python, "-m", "mypy"]),
         "6 import contracts": _run("import-linter architecture contracts",
-                                 _lint_imports(python)),
+                                 [python, "-c", LINT_IMPORTS]),
         "7 no wall clock": _run("no wall clock in the pure packages, no date literal in src",
                                 [python, "tools/verify_no_wall_clock.py"]),
         "7b golden vectors": _run("golden vectors", [python, "tools/golden.py"]),

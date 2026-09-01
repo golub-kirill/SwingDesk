@@ -3111,8 +3111,16 @@ is for where no gate can reach.
       **The tree was clean when the real runner was finally used** — 4 contracts kept, 0 broken —
       so no violation shipped. That is luck rather than enforcement, and it is exactly what
       `CI_POLICY` §3 rule 2 warns a confidence-manufacturing gate buys.
-      Fixed in `check_gates._lint_imports`, which resolves the console script beside the
-      interpreter. **Verified by planting the same import again and watching it exit 1.**
+      **The first fix was wrong too, and CI caught it — worth recording, because it is the mirror
+      image of `AGENTS.md` §12's first trap.** It resolved the `lint-imports` console script as a
+      sibling of `sys.executable`, which is true in a venv (`Scripts/python.exe` beside
+      `Scripts/lint-imports.exe`) and false on the hosted Python the CI runner uses, where the
+      interpreter sits at the root and the scripts sit in `Scripts/`. **Green locally, red
+      remotely** — where §12's trap is green in a worktree and would have been red on `master`.
+      Now `check_gates.LINT_IMPORTS` calls Click's command object through the same interpreter the
+      rest of the suite uses: no path to guess, no `PATH` to consult so no stale install from
+      another environment can answer, and an import that fails raises instead of exiting 0.
+      **Verified by planting the same import again and watching it exit 1.**
 
 - [ ] **`[ ]` WIRE `TECH` INTO THE DAILY RUN, or decide not to.** `swingdesk broker` reports a
       broker/journal mismatch and Appendix N's prescribed action for that code is *"pause new
