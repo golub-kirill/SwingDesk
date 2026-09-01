@@ -66,6 +66,29 @@ def _run(name: str, argv: list[str], key: str = "") -> str:
     return status
 
 
+#: How gate 6 is actually run. Click's own command object, called through the SAME interpreter the
+#: rest of the suite uses - not `-m`, and not a script path.
+#:
+#: **Gate 6 ran as `[python, "-m", "importlinter.cli", "lint-imports"]` until 2026-08-31 and that
+#: command does nothing at all.** `importlinter/cli.py` defines Click commands and has no
+#: `if __name__ == "__main__"` block, and the package ships no `__main__.py` - so `-m` imported the
+#: module, fell off the end and exited 0. Every gate run since the suite was wired reported
+#: `6 import contracts PASS` over a check that had not executed. Found by planting a forbidden
+#: import and watching it stay green, which is `AGENTS.md` 10.8's rule and the only thing that
+#: could have found it: the failure looks exactly like success.
+#:
+#: **The first fix was wrong too, and CI is what said so.** It resolved the `lint-imports` console
+#: script as a sibling of `sys.executable`, which is true in a venv (`Scripts/python.exe` next to
+#: `Scripts/lint-imports.exe`) and false on the hosted Python the CI runner uses, where the
+#: interpreter sits at the root and scripts live in `Scripts/`. Locally green, remotely red - the
+#: mirror image of `AGENTS.md` 12's first trap.
+#:
+#: Calling the command object removes the question. There is no path to guess, no `PATH` to consult
+#: - so no stale install from another environment can answer, which is the risk `pyproject.toml`
+#: names about `daily_run.cmd` - and an import that fails raises instead of exiting 0.
+LINT_IMPORTS = "from importlinter.cli import lint_imports_command; lint_imports_command()"
+
+
 def main() -> int:
     python = sys.executable
     results = {
@@ -102,7 +125,7 @@ def main() -> int:
         "4 ruff": _run("ruff", [python, "-m", "ruff", "check", "."]),
         "5 mypy": _run("mypy --strict", [python, "-m", "mypy"]),
         "6 import contracts": _run("import-linter architecture contracts",
-                                 [python, "-m", "importlinter.cli", "lint-imports"]),
+                                 [python, "-c", LINT_IMPORTS]),
         "7 no wall clock": _run("no wall clock in the pure packages, no date literal in src",
                                 [python, "tools/verify_no_wall_clock.py"]),
         "7b golden vectors": _run("golden vectors", [python, "tools/golden.py"]),
@@ -153,6 +176,9 @@ def main() -> int:
                                [python, "tools/verify_rules_index.py"]),
         "38 gate citations": _run("a document citing a gate number cites one that is known",
                                   [python, "tools/verify_gate_citations.py"]),
+        "39 broker read-only": _run("the broker adapter reaches one allowlisted host and "
+                                    "carries no write verb",
+                                    [python, "tools/verify_broker_policy.py"]),
     }
 
     print("\n" + "=" * 62)

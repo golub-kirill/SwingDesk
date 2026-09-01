@@ -950,3 +950,76 @@ def test_expiry_refuses_when_the_window_itself_is_unset(tmp_path: Path, monkeypa
     assert isinstance(result, Refusal)
     assert result.code == "RISK"
     assert result.parameter_id == "management.proposal_expiry_days"
+
+
+# --- `swingdesk broker`: the wiring, and the three exit codes ---------------------------------
+#
+# The reconciliation itself is `test_broker.py`'s subject. What is checked here is the thing
+# `cli.py` owns: that a venue it could not read, a venue that disagrees with the book, and a venue
+# that agrees produce three DIFFERENT exit codes. Collapsing any two of them is the error
+# `AGENTS.md` 12 calls the most damaging this product can make - `unavailable` is not `fail` and it
+# is not `pass` - and an exit code is the only part of this surface a script can read.
+
+
+def _stub_broker(monkeypatch, held, *, raises=None):
+    """Point `cli._broker` at a client that serves fixtures instead of a socket."""
+    from datetime import UTC, datetime
+
+    from swingdesk import broker as broker_pkg
+    from swingdesk.contracts.broker import BrokerAccount
+
+    observed = datetime(2026, 8, 31, 21, 0, tzinfo=UTC)
+    policy = broker_pkg.load_policy()
+
+    class _Client:
+        def account(self, at):
+            if raises is not None:
+                raise raises
+            return BrokerAccount(
+                venue=policy.venue, base_url=policy.base_url, fingerprint="0123456789ab",
+                status="ACTIVE", currency="USD", cash=Decimal(100000),
+                equity=Decimal(100000), buying_power=Decimal(200000),
+                trading_blocked=False, account_blocked=False, observed_at=at or observed,
+            )
+
+        def positions(self, at):
+            return tuple(held)
+
+        def fills(self, at, after=None):
+            return ()
+
+    monkeypatch.setattr(broker_pkg, "open_client", lambda policy=None, transport=None: _Client())
+    return policy
+
+
+def test_broker_agrees_with_an_empty_book(tmp_path: Path, monkeypatch, capsys) -> None:
+    _stub_broker(monkeypatch, [])
+    assert cli.main(["broker", "--data", str(tmp_path)]) == 0
+    assert "describe the same positions" in capsys.readouterr().out
+
+
+def test_broker_reports_tech_and_exits_3_when_the_venue_holds_what_the_book_does_not(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    from datetime import UTC, datetime
+
+    from swingdesk.contracts.broker import BrokerPosition, PositionSide
+
+    _stub_broker(monkeypatch, [BrokerPosition(
+        symbol="TEST.1", asset_class="us_equity", exchange="NYSE", side=PositionSide.LONG,
+        shares=Decimal(100), average_entry_price=Decimal("50.25"),
+        observed_at=datetime(2026, 8, 31, 21, 0, tzinfo=UTC),
+    )])
+    # 3, not 2: the venue WAS read. A divergence and an unreadable venue are different claims.
+    assert cli.main(["broker", "--data", str(tmp_path)]) == 3
+    printed = capsys.readouterr()
+    assert "TECH" in printed.out
+    assert "pause new entries" in printed.err
+
+
+def test_broker_exits_2_when_the_venue_cannot_be_read(tmp_path: Path, monkeypatch, capsys) -> None:
+    from swingdesk.broker import BrokerUnavailable
+
+    _stub_broker(monkeypatch, [], raises=BrokerUnavailable("the venue is down"))
+    assert cli.main(["broker", "--data", str(tmp_path)]) == 2
+    assert "UNAVAILABLE" in capsys.readouterr().err

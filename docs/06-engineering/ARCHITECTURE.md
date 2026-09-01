@@ -9,13 +9,14 @@ architecture; this maps it onto packages and states what each owns.
 
 ## 1. Contexts
 
-Ten packages under `src/swingdesk/`. The four middle ones are the course's four layers, one to one.
+Eleven packages under `src/swingdesk/`. The four middle ones are the course's four layers, one to one, and **three** of the rest are Source Facts.
 
 | Package | Course layer | Owns |
 |---|---|---|
 | `platform` | — | config, clock injection, logging, storage, scheduling, run manifests |
 | `market_data` | Source Facts | vendor adapters, bitemporal bar storage, freshness and conflict checks |
 | `reference_data` | Source Facts | symbology, exchange calendars, corporate actions, sector/industry, event calendars |
+| `broker` | Source Facts | a brokerage account as the VENUE reports it - positions, orders, fills. Reads only; `ADR-0005` |
 | `derived_observations` | **Derived Observations** | indicators, structure, levels, patterns, regime, relative strength — **pure functions** |
 | `decision_logic` | **Decision Logic** | gates, conditions, screeners, strategy evaluation, candidate decisions |
 | `trade_management` | **Trade Management** | sizing, stop, target, partial, trailing, time-exit, portfolio constraints |
@@ -50,10 +51,21 @@ derived_observations
     ↓
 market_data
     ↓
+broker
+    ↓
 reference_data
     ↓
 platform
 ```
+
+**`broker` sits between them, and it is a Source Facts package rather than a service.** A
+brokerage account's answer says what happened at a venue, in the past tense: it originates no
+observation and reaches no decision, which is what the course's Source Facts layer means. It is
+above `reference_data` because it reads the calendar to tell a US instrument from a Canadian one,
+and it is inside the `forbidden` contract that already keeps `market_data` away from strategies -
+the book is the most consequential shared fact this system has, and the one a strategy would be
+most tempted to look up directly. `ADR-0005` records why it is not a service outside the chain
+like `journal_evidence`.
 
 **`reference_data` sits below `market_data`, not above.** Calendars and symbology do not need
 bars; *interpreting* bars needs calendars — the completeness check compares what a vendor returned

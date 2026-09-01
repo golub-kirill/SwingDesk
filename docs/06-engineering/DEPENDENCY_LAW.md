@@ -18,7 +18,7 @@ Production rules §3.8 states five independence rules. Each is transcribed in
 |---|---|---|
 | "indicators do not own strategy decisions" | layered architecture — `derived_observations` sits below `decision_logic` and cannot import it | `layers` |
 | "patterns and classifiers produce observations, not orders" | same layer contract; `trade_management` is above `decision_logic` | `layers` |
-| "strategies do not fetch or normalize their own private version of shared facts" | `derived_observations` and `decision_logic` may not import `market_data` | `forbidden` |
+| "strategies do not fetch or normalize their own private version of shared facts" | `derived_observations` and `decision_logic` may not import `market_data` **or `broker`** | `forbidden` |
 | "management and exit policies may be attached to multiple strategies without duplicating logic" | one implementation per decision — review rule, not yet mechanised (§4) | — |
 | "changing a shared component never silently rewrites historical evidence" | evidence records pin component versions (`EVIDENCE_RECORD_SPEC.md`) | — |
 
@@ -33,7 +33,7 @@ Plus two rules this project adds, both derived from the purity boundary in `ARCH
 
 ```
 presentation → validation → application → trade_management → decision_logic
-    → derived_observations → market_data → reference_data → platform
+    → derived_observations → market_data → broker → reference_data → platform
 ```
 
 A package may import anything **below** it and nothing above. `import-linter`'s `layers` contract
