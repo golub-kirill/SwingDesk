@@ -39,12 +39,15 @@ from enum import StrEnum
 from hashlib import sha256
 from typing import Any, Protocol
 
-from swingdesk.broker.policy import BrokerPolicy, PolicyRefused
+from swingdesk.broker.armed import STOPPED, Arming
+from swingdesk.broker.policy import BrokerPolicy
 from swingdesk.contracts.broker import (
     BrokerAccount,
     BrokerFill,
     BrokerPosition,
+    EntryOrder,
     FillKind,
+    PlacedOrder,
     PositionSide,
     Side,
 )
@@ -73,6 +76,15 @@ class CredentialsMissing(Exception):
     """
 
 
+class SubmissionStopped(Exception):
+    """A guard refused to submit. NOT a venue problem, and never handled with `BrokerUnavailable`.
+
+    `DR-027` 4's four guards all raise this. The distinction matters at the point somebody reads a
+    log at 18:31: `BrokerUnavailable` sends them to the network, and this sends them to the switch
+    file or to the policy, which is where the answer actually is.
+    """
+
+
 class Transport(Protocol):
     """One HTTP round trip. Injected so every test runs against a recorded response.
 
@@ -87,6 +99,7 @@ class Transport(Protocol):
         headers: dict[str, str],
         timeout_seconds: int,
         max_bytes: int,
+        body: bytes | None = None,
     ) -> tuple[int, bytes]:
         ...
 
@@ -138,6 +151,7 @@ def urllib_transport(
     headers: dict[str, str],
     timeout_seconds: int,
     max_bytes: int,
+    body: bytes | None = None,
 ) -> tuple[int, bytes]:
     """The real round trip. The only place in this package that opens a socket.
 
@@ -145,7 +159,7 @@ def urllib_transport(
     that omits or misstates the header cannot bypass it - the same rule `fetch_directory.py`
     follows under `DR-008`.
     """
-    request = urllib.request.Request(url, headers=headers, method=method)
+    request = urllib.request.Request(url, data=body, headers=headers, method=method)
     try:
         with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
             declared = response.headers.get("Content-Length")
@@ -153,20 +167,20 @@ def urllib_transport(
                 raise BrokerUnavailable(
                     f"response declares {declared} bytes, over the policy cap of {max_bytes}"
                 )
-            body = response.read(max_bytes + 1)
-            if len(body) > max_bytes:
+            received = response.read(max_bytes + 1)
+            if len(received) > max_bytes:
                 raise BrokerUnavailable(f"response exceeded the policy cap of {max_bytes} bytes")
             status = int(response.status)
     except urllib.error.HTTPError as error:
         # The body of an error response can carry the venue's own explanation and is worth having;
         # the REQUEST headers carry the secret and are never touched here.
-        body = error.read(max_bytes + 1)[:max_bytes]
+        received = error.read(max_bytes + 1)[:max_bytes]
         status = int(error.code)
     except urllib.error.URLError as error:
         raise BrokerUnavailable(f"{url}: {error.reason}") from error
     except TimeoutError as error:
         raise BrokerUnavailable(f"{url}: timed out after {timeout_seconds}s") from error
-    return status, body
+    return status, received
 
 
 @dataclass(frozen=True, slots=True)
@@ -181,6 +195,14 @@ class AlpacaClient:
     policy: BrokerPolicy
     credentials: Credentials
     transport: Transport = urllib_transport
+
+    arming: Arming = STOPPED
+    """Whether submission is armed. **Defaults to stopped, and that default is the guard.**
+
+    A client constructed without an explicit arming decision cannot write. That makes the safe
+    state the one you get by forgetting, which is the only kind of safe default worth having -
+    `DR-027` 4.2, and `DR-025` 2.1 for what the opposite polarity costs here.
+    """
 
     def _get(self, endpoint: str, query: dict[str, str] | None = None, **path: str) -> Any:
         self.policy.check_method("GET")
@@ -197,21 +219,115 @@ class AlpacaClient:
             limits.max_response_bytes,
         )
 
-        if status == 401 or status == 403:
+        return self._decode(endpoint, status, body)
+
+    def _decode(self, endpoint: str, status: int, body: bytes) -> Any:
+        """One status and decoding rule for reads and writes alike.
+
+        Shared deliberately: a write path with its own idea of what `401` means is a second rule
+        that agrees today, which is how every drift in this repository has looked on the day it was
+        written.
+        """
+        if status in (401, 403):
             raise BrokerUnavailable(
                 f"{self.policy.label} refused the credentials in {self.policy.key_env} / "
                 f"{self.policy.secret_env} (HTTP {status}). Paper keys are distinct from live keys."
             )
-        if status != 200:
+        # 200 for a read, 200 on a submission accepted by Alpaca. A 422 carries the venue's reason
+        # for rejecting an order - a duplicate `client_order_id` among them - and that text is the
+        # most useful thing in the whole exchange, so it travels rather than being flattened.
+        if status not in (200, 201):
             raise BrokerUnavailable(
                 f"{endpoint}: HTTP {status} from {self.policy.label}: "
-                f"{body[:200].decode('utf-8', errors='replace')}"
+                f"{body[:400].decode('utf-8', errors='replace')}"
             )
 
         try:
             return json.loads(body.decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError) as error:
             raise BrokerUnavailable(f"{endpoint}: response was not JSON: {error}") from error
+
+    def guards(self) -> None:
+        """`DR-027` 4's guards, in order, and BEFORE anything an order is built out of.
+
+        Called from `submit` as well as from `_write` so that a refusal happens before a payload
+        exists. A guard that runs after the work is a guard whose failure mode is "we nearly did
+        it", and the ordering is asserted by `test_submit.py` rather than left to reading.
+
+        The arming check is first on purpose. A refusal that reported *the venue is unreachable*
+        when the truth is *the owner never armed it* sends somebody to debug a network at 18:31.
+        """
+        if self.arming.stopped:
+            raise SubmissionStopped(self.arming.reason)
+
+        if not self.policy.write_enabled or self.policy.write is None:
+            raise SubmissionStopped(
+                "the committed policy sets access.write_enabled false, so it carries no write "
+                "section and nothing may be submitted"
+            )
+
+    def _write(self, endpoint: str, payload: dict[str, Any]) -> Any:
+        """The ONLY place in this package that sends anything but a GET.
+
+        `DR-027` 4 lists four guards and three of them are consulted here, in order, before a socket
+        is opened. The fourth is this function's own existence: gate 39 asserts that
+        `self.transport` is called from exactly two places, so a second write path cannot be added
+        without the build noticing.
+
+        **No verb is spelled here.** `policy.write_method` reads it from the committed file, so a
+        policy narrowed back to `GET` leaves this function with nothing to send rather than with a
+        literal it ignores - and gate 39's rule about write verbs stays absolute.
+        """
+        self.guards()
+        method = self.policy.write_method
+        self.policy.check_method(method)
+        url = self.policy.url(endpoint)
+
+        limits = self.policy.limits
+        headers = self.credentials.headers(self.policy.user_agent)
+        headers["Content-Type"] = "application/json"
+        body = json.dumps(payload, sort_keys=True).encode("utf-8")
+
+        status, received = self.transport(
+            method, url, headers, limits.request_timeout_seconds, limits.max_response_bytes, body,
+        )
+        return self._decode(endpoint, status, received)
+
+    def submit(self, order: EntryOrder, observed_at: datetime) -> PlacedOrder:
+        """Send one entry as a bracket, and return what the venue said about it.
+
+        The shape is `DR-027` 3: a limit at the sizing price, a stop-loss leg at the sized stop,
+        `day`, whole shares. Every one of those values comes from the order or from the policy;
+        nothing about the order is decided here.
+        """
+        self.guards()
+        write = self.policy.write
+        assert write is not None  # `guards` refuses when it is, and mypy cannot see that
+
+        payload: dict[str, Any] = {
+            "symbol": order.symbol,
+            "qty": str(order.shares),
+            "side": write.side,
+            "type": write.order_type,
+            "time_in_force": write.time_in_force,
+            "limit_price": str(order.limit_price),
+            "order_class": write.order_class,
+            "stop_loss": {"stop_price": str(order.stop_price)},
+            "client_order_id": order.client_order_id,
+        }
+        answered = self._write("orders", payload)
+        if not isinstance(answered, dict):
+            raise BrokerUnavailable("orders: expected an object")
+
+        return PlacedOrder(
+            order_id=_text(answered, "id", "orders"),
+            client_order_id=_text(answered, "client_order_id", "orders"),
+            symbol=_text(answered, "symbol", "orders"),
+            status=str(answered.get("status", "")),
+            submitted_at=_instant(answered, "submitted_at", "orders"),
+            filled_shares=_optional_decimal(answered, "filled_qty", "orders") or Decimal(0),
+            observed_at=observed_at,
+        )
 
     def account(self, observed_at: datetime) -> BrokerAccount:
         """The account as the venue describes it.
@@ -335,19 +451,24 @@ class AlpacaClient:
 def open_client(
     policy: BrokerPolicy | None = None,
     transport: Transport = urllib_transport,
+    arming: Arming = STOPPED,
 ) -> AlpacaClient:
     """The one construction path: load the committed policy, then read the environment.
 
     In that order deliberately. A malformed policy must refuse before this process reads a secret,
     so a `PolicyRefused` never arrives with credentials already in memory.
+
+    `arming` defaults to STOPPED. A caller that wants to submit has to have gone and read the
+    switch, which is the point: the reading is an act, not an assumption.
     """
     from swingdesk.broker import policy as policy_module
 
     resolved = policy or policy_module.load()
-    if resolved.write_enabled:  # pragma: no cover - `policy.load` refuses this first
-        raise PolicyRefused("write_enabled is true and nothing here can write")
     return AlpacaClient(
-        policy=resolved, credentials=credentials_from_env(resolved), transport=transport
+        policy=resolved,
+        credentials=credentials_from_env(resolved),
+        transport=transport,
+        arming=arming,
     )
 
 

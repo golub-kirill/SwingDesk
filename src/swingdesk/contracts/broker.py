@@ -24,11 +24,11 @@ exactness on the way in, where no later care can restore it.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class Side(StrEnum):
@@ -167,3 +167,81 @@ class BrokerFill(BaseModel):
         if self.shares != self.shares.to_integral_value():
             return None
         return int(self.shares)
+
+
+class EntryOrder(BaseModel):
+    """One entry this system intends to submit. An INTENT, and not yet a fact.
+
+    Separate from `PlacedOrder` for the reason `Position` is separate from `BrokerPosition`: what
+    was asked for and what happened are different claims, and a record that conflates them cannot
+    describe a rejection.
+
+    `DR-027` 3 argues every field. The two that carry the most weight:
+
+      - `limit_price` is the price the SIZING used, not a price chosen for this order. Every R the
+        resulting position reports is denominated in `entry - stop + costs` frozen at entry, so a
+        fill anywhere else makes that R a fiction in the flattering direction. It is also the
+        `CHASE` and `LATE` controls by construction - an order that can only fill at the decision
+        price cannot chase - which is why this introduces no threshold.
+      - `stop_price` is submitted WITH the entry, as a bracket leg. A stop the market cannot see
+        protects nothing between runs.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    client_order_id: str = Field(
+        description="Deterministic from session date and instrument. The venue rejects a "
+                    "duplicate, so a retried pass cannot submit the same entry twice.",
+    )
+    session_date: date = Field(description="The session this decision belongs to.")
+
+    instrument_id: str
+    symbol: str = Field(description="What the venue calls it.")
+
+    shares: int = Field(gt=0, description="Whole shares. The sizing produced this number.")
+    limit_price: Decimal = Field(gt=0)
+    stop_price: Decimal = Field(gt=0)
+
+    @model_validator(mode="after")
+    def _stop_below_entry(self) -> EntryOrder:
+        if self.stop_price >= self.limit_price:
+            raise ValueError(
+                f"stop {self.stop_price} is not below the limit {self.limit_price}. This system "
+                f"describes long positions only, and a bracket whose stop is at or above its entry "
+                f"would be rejected by the venue after being recorded here as sent."
+            )
+        return self
+
+    @property
+    def risk_per_share(self) -> Decimal:
+        """What one share risks at the submitted prices, before costs.
+
+        Not the R denominator - `Position.initial_risk_per_share` adds costs and is frozen at the
+        FILL. This is the quantity a reviewer checks the order against.
+        """
+        return self.limit_price - self.stop_price
+
+
+class PlacedOrder(BaseModel):
+    """What the venue said about an order it was sent. A fact, and not a position.
+
+    An accepted order is not a fill: `leaves_qty` exists because partial fills do, and `DR-027` 6
+    keeps `Position` a thing created from the fill.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    order_id: str = Field(description="The venue's id.")
+    client_order_id: str = Field(description="Ours, echoed back. Proof the id we derived landed.")
+
+    symbol: str
+    status: str = Field(description="The venue's own status string, e.g. `accepted` or `new`.")
+    submitted_at: datetime
+
+    filled_shares: Decimal = Field(
+        default=Decimal(0),
+        description="Almost always zero at submission. Read rather than assumed, because a "
+                    "marketable order can fill inside the response.",
+    )
+
+    observed_at: datetime

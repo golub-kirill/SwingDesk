@@ -4,8 +4,17 @@ Decision-support software for swing trading Canadian and US equities and ETFs. I
 charts, indicators, market structure, setups, risk figures, journal and statistics defined by the
 owner's 116-file swing-trading course, and records every decision with an audit trail.
 
-**It does not place orders.** No broker integration, no automated execution, no advice to third
-parties. The human makes every trading decision; this system prepares and records them.
+**No order that can move the owner's money is ever placed by this system.** The human makes every
+trading decision that involves capital; this system prepares and records them. No advice to third
+parties, no multi-user service.
+
+**It does place orders on a paper venue, and that is a deliberate, recorded exception.** `CHARTER`
+A-002 (owner ruling, 2026-09-01) scopes the human-only rule to real money: on an account with no
+owner capital behind it, the system may submit an order it decided on with no per-order approval,
+because the reason the rule existed — irreversible risk — does not apply there. `DR-026` and
+`DR-027` carry the reasoning and the guards, and the boundary between the two cases is a committed
+host allowlist enforced by a merge gate, because **a brokerage account object carries no field
+saying whether it is paper or live** — which host was called is the only difference there is.
 
 ## Status
 
@@ -14,21 +23,36 @@ different claims and this project keeps them apart deliberately.
 
 *Closed* means a position can be recorded, evaluated before candidates on every scheduled run,
 proposed on, approved by the owner, applied, and settled against what the broker actually did —
-end to end, on real bars, first demonstrated 2026-08-17. *Not known to work* means the base
-strategy is negative at measured costs across the whole admissible universe and **no parameter in
-this system has ever reached `validated`**. See `docs/08-pm/EVIDENCE_SUMMARY.md`, which outlives
-any one session.
+end to end, on real bars, first demonstrated 2026-08-17. Since 2026-09-01 the broker in that
+sentence is a real venue rather than a hand-typed line: `swingdesk broker` reads an Alpaca paper
+account and reconciles it against this system's own book, reporting disagreement in the course's
+own code (`TECH`, *"broker/platform/journal mismatch"*, whose prescribed action is *"pause new
+entries"*).
 
-Everything that keeps those two claims from blurring runs from a single command:
+*Not known to work* means the base strategy is negative at measured costs across the whole
+admissible universe and **no parameter in this system has ever reached `validated`**. See
+`docs/08-pm/EVIDENCE_SUMMARY.md`, which outlives any one session.
+
+**What the evidence actually says about the strategy, as of 2026-08-31.** Two cross-sectional
+momentum studies reported nothing, and a measurement taken afterwards found the likely reason: both
+held for a month or less, which is inside the window where the literature documents the *opposite*
+sign (Jegadeesh 1990; Lehmann 1990), while momentum is documented at three-to-twelve-month holds
+(Jegadeesh & Titman 1993). On this project's own store the decile spread rises monotonically with
+horizon and separates from zero only at about six months. That measurement is **exploratory** — it
+sets no parameter and advances no validation status — and the holding period stays at 20 sessions
+by owner ruling. `TODO.md` carries the bounded study that would test the question properly.
+
+Everything that keeps those claims from blurring runs from a single command:
 
 ```bash
 python tools/check_gates.py
 ```
 
-The current inventory covers provenance, transcription, generated registries, document and study
-consistency, architecture, static analysis, golden vectors, tests, determinism and the parallel
-worktree census. See `docs/06-engineering/CI_POLICY.md` for the derived inventory and a record of
-what each gate has caught.
+The inventory covers provenance, transcription, generated registries, document and study
+consistency, architecture, static analysis, golden vectors, tests, determinism, the parallel
+worktree census, and — since the venue was wired — that the broker adapter can reach exactly one
+allowlisted host and spells no HTTP write verb of its own. See `docs/06-engineering/CI_POLICY.md`
+for the derived inventory and a record of what each gate has caught.
 
 ## Source of truth
 
@@ -54,29 +78,57 @@ specification and an empty *parameter* specification. Every threshold in this sy
 not inherited. Every parameter therefore carries a provenance and a status, and no component is
 ever displayed as more validated than it is.
 
+**And a course rule is not evidence.** `AGENTS.md` §16 (owner instruction) settles what a sentence
+in the course licenses: it names something worth looking at, and it never stands as the reason a
+threshold has its value. Published work supplies method, calibration and known limitations; only a
+pre-registered study against this universe moves a parameter to `validated`.
+
 ## Scope
 
-- Markets: Canada + US equities and ETFs
+- Markets: Canada + US equities and ETFs. **They are never merged** — separate calendars, indexes
+  and currencies, and the paper venue serves only one of them, which the reconciliation reports as
+  *out of scope* rather than as a missing position.
 - Timeframes: context `1Y` / `3M` (windows over daily bars) → decision `1D` → confirmation/trigger
   `1H` → execution `30m`. Lower frames refine a setup; they never invent one. Each resolution is
   fetched and stored independently — deriving `1H` from `30m` would cap hourly history at 60
   trading days when ~725 are available (`ADR-0001`).
-- Storage: local databases for bars, the directory, positions and the journal. Nothing leaves the
-  machine.
+- Storage: local databases for bars, the directory, positions, classifications and the journal.
+  Nothing leaves the machine except the two requests named below.
+- Outbound network: the daily symbol directory (`DR-008`) and the paper broker (`ADR-0005`). Both
+  have their limits — hosts, timeouts, byte caps, retry budgets — in committed, merge-gated policy
+  files rather than in code, so changing one is a commit a reviewer sees.
 - Notification: a **local desktop notice** (`DR-011`, 2026-08-16). Firebase is specified in
   `PRODUCT_SURFACES` §3.4 and **unbuilt**; the record explains why local is stronger on §3.4's own
   terms — "no data leaves the machine" is satisfied by construction rather than by a third party's
   policy.
-- Surfaces: **CLI + reports, built.** The owner's approval of open-position actions runs through
-  `swingdesk pending` / `respond` on the CLI, not Telegram — `DR-011` established the owner is at
-  the machine when the run fires, and a Telegram approval surface would re-open every question that
-  record settled. A web admin panel and Telegram remain specified and unbuilt.
+- Surfaces: **CLI + reports, built.** `swingdesk scan` runs the day; `swingdesk pending` /
+  `respond` carry the owner's approval of open-position actions on the CLI rather than Telegram
+  (`DR-011`); `swingdesk broker` reads the paper account and reconciles it. A web admin panel and
+  Telegram remain specified and unbuilt.
+
+## The paper venue, and the four things that stop it
+
+Submission is **stopped by default** and every guard below is independent — none of them can
+compensate for another, which is `FAIL_CLOSED_POLICY.md` §3 applied to the one surface here that
+acts on the world.
+
+1. **One allowlisted host**, with the live venue named as forbidden and compared as a hostname.
+   This is the whole paper/live boundary, and gate 39 fails the build on a second entry.
+2. **A kill switch that is a file the owner creates**, outside this repository. Absent, unreadable,
+   or missing its marker all mean stopped. A switch that defaults to on is not a switch, and one
+   that fails open is the inversion `DR-025` records this project paying for once already.
+3. **`access.write_enabled` in the committed policy** — one line, one commit, one reviewer.
+4. **A single chokepoint in the code.** Every write goes through one function that consults the
+   other three first, and the gate reads the syntax tree to prove no second path exists.
+
+The keys are the owner's and live only in the environment (`SECURITY.md` §2.1). This repository is
+public and holds none.
 
 ## Layout
 
 ```
 docs/        the document set, by tier (see docs/README.md)
-registry/    generated data: course index, component registry, parameter registry
+registry/    generated data and committed policy: course index, components, parameters, network limits
 golden/      frozen fixtures: component vectors and replay cases
 src/         bounded contexts, one package each
 tools/       generators, verification scripts, and the gate runner

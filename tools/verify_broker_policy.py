@@ -12,7 +12,7 @@ in `registry/broker_policy.yml` is not configuration, it is the entire boundary 
 owner capital in the observable state of the project") rests on, and a URL written as a literal in
 the adapter would route around it silently.
 
-Four checks:
+Five checks:
 
 1. **The policy is complete and well-formed.** Every key the adapter needs, of the right type, with
    the caps positive. A policy missing a limit fails here rather than at the moment that limit
@@ -21,12 +21,18 @@ Four checks:
    reviewer can see which host is reachable; a second is the change this file exists to make
    visible. The live host must also be listed under `forbidden_hosts` - a host protected by an
    omission is protected by nobody noticing.
-3. **`swingdesk/broker/` carries no URL and no HTTP write verb.** `D1`/`BR-1` forbid this system
-   placing, amending or cancelling an order, and `DR-026` records where the owner put that boundary
-   on 2026-08-31 and what stayed closed. Until a write path arrives with its own decision record,
-   *there is no write verb in the package* - which is a fact a gate can check, unlike an intention.
-4. **`access.write_enabled` is false while check 3 holds.** A policy claiming a capability the code
-   does not have is the one-logic-in-two-places failure, pointed the other way.
+3. **`swingdesk/broker/` carries no URL and no HTTP write verb - still absolute, even now that
+   the package CAN write.** `CHARTER` A-002 and `DR-027` authorised submission on 2026-09-01, and
+   the rule did not have to weaken, because the verb is read from the policy
+   (`BrokerPolicy.write_method`) instead of spelled in code. A policy narrowed back to `GET` leaves
+   the adapter with nothing to send rather than with a literal it ignores.
+4. **Exactly two call sites reach the transport**, `_get` and `_write`. `DR-027` 4.4 makes `_write`
+   the single chokepoint where the host, the kill switch and `write_enabled` are all consulted; a
+   second write path that skipped it would consult none of them. This is the check that replaced
+   "there is no write verb at all", and it is the one with teeth now.
+5. **A policy that permits writing carries a kill switch.** `write_enabled: true` with no `write`
+   section is a standing permission with nothing behind it, and `DELETE`/`PATCH`/`PUT` are refused
+   outright - `DR-027` covers submission only.
 
 Read from the syntax tree, so the gate never imports or runs the adapter and stays inside
 `CI_POLICY.md` 4's no-network rule. It is a structural check and not a proof: a verb assembled at
@@ -83,6 +89,27 @@ REQUIRED: dict[str, dict[str, tuple[type, bool]]] = {
     },
 }
 
+#: Required only when `access.write_enabled` is true. A standing permission with no kill switch
+#: behind it is not a permission this project grants (`DR-027` 4.2).
+REQUIRED_WRITE: dict[str, tuple[type, bool]] = {
+    "kill_switch_file": (str, False),
+    "armed_marker": (str, False),
+    "client_order_id_prefix": (str, False),
+    "max_client_order_id_length": (int, True),
+    "order_type": (str, False),
+    "time_in_force": (str, False),
+    "order_class": (str, False),
+    "side": (str, False),
+}
+
+#: The two functions permitted to reach the network. `DR-027` 4.4.
+TRANSPORT_CALLERS = frozenset({"_get", "_write"})
+
+#: The one assignment in the package allowed to spell write verbs, because it is a DENYLIST: these
+#: are the verbs `policy.load` refuses to be given. A denylist is not a capability, and forcing it
+#: to be written obliquely would make the safest line in the package the hardest one to read.
+DENYLIST_TARGET = "REFUSED_METHODS"
+
 #: A URL with a HOST written into the package, however spelled. Gate 22 matches a bare scheme;
 #: this requires a character after the slashes, because `policy.py` legitimately checks that the
 #: allowlisted URL `startswith("https://")` and a scheme-only pattern reports that as a second
@@ -108,6 +135,60 @@ def _docstrings(tree: ast.AST) -> set[int]:
             if isinstance(body[0].value.value, str):
                 lines.add(body[0].value.lineno)
     return lines
+
+
+def _denylist_lines(tree: ast.AST) -> set[int]:
+    """Line numbers inside the one assignment permitted to name write verbs.
+
+    `swingdesk.broker.policy.REFUSED_METHODS` is the set `load` refuses a policy for naming. It is
+    the opposite of a capability, and exempting it by NAME rather than by file keeps the rule exact
+    - any other line in any module still fails.
+    """
+    lines: set[int] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign):
+            continue
+        named = any(
+            isinstance(target, ast.Name) and target.id == DENYLIST_TARGET
+            for target in node.targets
+        )
+        if named:
+            lines.update(range(node.lineno, (node.end_lineno or node.lineno) + 1))
+    return lines
+
+
+def _transport_failures(path: Path, tree: ast.AST) -> list[str]:
+    """Every call to `self.transport` sits inside `_get` or `_write`, and nowhere else.
+
+    `DR-027` 4.4 makes `_write` the single chokepoint that consults the host, the kill switch and
+    `write_enabled`. A second write path that reached the transport directly would consult none of
+    them - and would look, in review, exactly like the first one.
+    """
+    failures: list[str] = []
+    enclosing: dict[int, str] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            for line in range(node.lineno, (node.end_lineno or node.lineno) + 1):
+                # Innermost wins: a nested def inside `_write` is not `_write`.
+                enclosing[line] = node.name
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        reaches_transport = (
+            isinstance(func, ast.Attribute) and func.attr == "transport"
+        ) or (isinstance(func, ast.Name) and func.id == "transport")
+        if not reaches_transport:
+            continue
+        owner = enclosing.get(node.lineno, "<module>")
+        if owner not in TRANSPORT_CALLERS:
+            failures.append(
+                f"{path.name}:{node.lineno}: reaches the transport from {owner!r}. Only "
+                f"{', '.join(sorted(TRANSPORT_CALLERS))} may, because `_write` is where DR-027 4's "
+                f"guards are consulted and a second path would consult none of them."
+            )
+    return failures
 
 
 def _policy_failures() -> tuple[list[str], dict[str, object]]:
@@ -181,18 +262,65 @@ def _policy_failures() -> tuple[list[str], dict[str, object]]:
     if not isinstance(methods, list) or not methods:
         failures.append(f"{POLICY.name}: `access.allowed_methods` is missing or empty")
     else:
-        writes = sorted({str(m).upper() for m in methods} & WRITE_VERBS)
-        if writes and not access_block.get("write_enabled"):
+        named = {str(m).upper() for m in methods}
+        writes = sorted(named & WRITE_VERBS)
+        enabled = bool(access_block.get("write_enabled"))
+        if "GET" not in named:
+            failures.append(f"{POLICY.name}: `access.allowed_methods` must permit GET")
+        if writes and not enabled:
             failures.append(
                 f"{POLICY.name}: `access.allowed_methods` permits {', '.join(writes)} while "
                 f"`write_enabled` is false. A read-only policy that lists a write verb is not one."
             )
-        if writes and access_block.get("write_enabled"):
+        if enabled and not writes:
             failures.append(
-                f"{POLICY.name}: `access.write_enabled` is true. Placing, amending or cancelling "
-                f"an order is D1/BR-1; DR-026 records what a write path needs before one exists, "
-                f"and nothing in swingdesk/broker/ can write today."
+                f"{POLICY.name}: `access.write_enabled` is true but no write verb is permitted, "
+                f"so `BrokerPolicy.write_method` has nothing to return and every submission "
+                f"refuses. A permission that cannot be used is a claim, not a capability."
             )
+        if enabled and len(writes) != 1:
+            failures.append(
+                f"{POLICY.name}: `access.allowed_methods` names {len(writes)} write verbs. "
+                f"Exactly one, so the adapter never chooses between them."
+            )
+        # DR-027 covers submission. Amending or cancelling an order is a different decision record
+        # and every order carries `time_in_force: day`, so nothing outlives its own session.
+        beyond = sorted(named & {"DELETE", "PATCH", "PUT"})
+        if beyond:
+            failures.append(
+                f"{POLICY.name}: `access.allowed_methods` permits {', '.join(beyond)}. DR-027 "
+                f"covers submission only; amending or cancelling needs its own decision record."
+            )
+
+        write_block = loaded.get("write")
+        if enabled and not isinstance(write_block, dict):
+            failures.append(
+                f"{POLICY.name}: `access.write_enabled` is true and there is no `write` section, "
+                f"so there is no kill switch. DR-027 4.2: a switch that defaults to on is not one, "
+                f"and a permission with nothing behind it is not one either."
+            )
+        elif enabled and isinstance(write_block, dict):
+            for key, (kind, positive) in REQUIRED_WRITE.items():
+                value = write_block.get(key)
+                if not isinstance(value, kind) or isinstance(value, bool):
+                    failures.append(
+                        f"{POLICY.name}: `write.{key}` is missing or not {kind.__name__}"
+                    )
+                elif positive and cast(int, value) <= 0:
+                    failures.append(f"{POLICY.name}: `write.{key}` must be positive, is {value!r}")
+            marker = write_block.get("armed_marker")
+            if isinstance(marker, str) and not marker.strip():
+                failures.append(
+                    f"{POLICY.name}: `write.armed_marker` is blank, so any file at all arms "
+                    f"submission - including one made by a stray redirect."
+                )
+            switch = write_block.get("kill_switch_file")
+            if isinstance(switch, str) and ("/" in switch or chr(92) in switch):
+                failures.append(
+                    f"{POLICY.name}: `write.kill_switch_file` must be a bare filename resolved "
+                    f"against the data directory. A path could point inside this repository, and a "
+                    f"switch that ships in a commit is a release rather than a switch."
+                )
 
     return failures, venue_block
 
@@ -212,6 +340,7 @@ def _package_failures() -> list[str]:
             continue
 
         prose = _docstrings(tree)
+        denylist = _denylist_lines(tree)
         for node in ast.walk(tree):
             if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
                 continue
@@ -221,14 +350,16 @@ def _package_failures() -> list[str]:
                     f"The host lives in {POLICY.name} because it is the only thing separating a "
                     f"paper account from the owner's money."
                 )
-            if node.lineno in prose:
+            if node.lineno in prose or node.lineno in denylist:
                 continue
             if node.value.strip().upper() in WRITE_VERBS:
                 failures.append(
-                    f"{path.name}:{node.lineno}: carries the HTTP write verb {node.value!r}. "
-                    f"D1/BR-1: this system prepares and records, it never acts. A write path "
-                    f"arrives with a decision record or it does not arrive."
+                    f"{path.name}:{node.lineno}: spells the HTTP write verb {node.value!r}. "
+                    f"The verb a submission uses comes from the committed policy via "
+                    f"`BrokerPolicy.write_method`, so a policy narrowed back to GET leaves "
+                    f"the adapter with nothing to send rather than a literal it ignores."
                 )
+        failures += _transport_failures(path, tree)
     return failures
 
 

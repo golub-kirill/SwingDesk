@@ -47,13 +47,23 @@ venue:
     - api.alpaca.markets
 
 access:
-  # **Read-only, and the gate makes it structural rather than a promise.** `D1`/`BR-1` forbid this
-  # system placing an order; `DR-026` records the owner's 2026-08-31 ruling on where that boundary
-  # now sits and what is still closed. Until a policy change ships with that decision, the adapter
-  # contains no write verb at all - which is a fact a gate can check, unlike an intention.
-  write_enabled: false
+  # **Writing is permitted, and this line is one of the four independent guards.** `CHARTER` A-002
+  # (owner, 2026-09-01) scopes A-001's human-only rule to real money; `DR-027` says what may be
+  # submitted and what stops it. Turning this back to `false` disarms submission everywhere in one
+  # commit a reviewer sees, which is `DR-008`'s *new human decision* applied to the highest-
+  # consequence surface in this repository.
+  #
+  # **It is not the switch the owner uses day to day** - that is `write.kill_switch_file`, which
+  # defaults to STOPPED and lives outside this repository. This flag is the standing permission;
+  # that file is the arming.
+  write_enabled: true
   allowed_methods:
     - GET
+    # Submitting an order. `DELETE` is deliberately ABSENT: `DR-027` 3.3 gives every order
+    # `time_in_force: day`, so an order this system placed expires with the session that decided
+    # it and there is nothing to cancel. Adding cancellation is a policy change and a decision
+    # record, not an argument to a function.
+    - POST
 
   # NAMES of the environment variables, never values (`SECURITY.md` 2.1: environment variables or
   # an OS keyring, never a file in the repo). This repository is public and `tools/verify_secrets.py`
@@ -96,3 +106,33 @@ endpoints:
   # The one activity type this reads. `FILL` covers both full and partial fills - the `type` field
   # inside the record distinguishes them.
   activity_type: FILL
+
+write:
+  # **The kill switch, and it defaults to STOPPED.** A file the owner creates, resolved against the
+  # data directory the command is given - never inside this repository, because a switch that ships
+  # in a commit is a release rather than a switch. `data/` is gitignored.
+  #
+  # Absent means stopped. Unreadable means stopped. Present but not carrying the marker below means
+  # stopped. Only the marker arms it. **A switch that defaults to ON is not a kill switch**, and one
+  # that fails open is the `unavailable`-admits-unchecked inversion `DR-025` 2.1 records this
+  # project paying for once already.
+  kill_switch_file: .paper-trading-armed
+  armed_marker: ARMED
+
+  # `DR-027` 5. Derived from the SESSION DATE and the instrument, never from a run id and never
+  # from a clock: a retried evening pass carries a new run id and would submit the same entry
+  # twice. The venue rejects a duplicate, so idempotency is enforced by the party that actually
+  # knows what it has accepted.
+  client_order_id_prefix: swingdesk
+  max_client_order_id_length: 128
+
+  # `DR-027` 3. Each of these is argued in that record and none of them is a threshold.
+  #   limit   - at the sizing price itself, which is the CHASE and LATE controls by construction
+  #             and introduces no new number
+  #   day     - an order that outlives the session outlives the analysis that produced it
+  #   bracket - a stop the market cannot see is not a stop, and it is what lets a filled entry
+  #             reconstruct a Position
+  order_type: limit
+  time_in_force: day
+  order_class: bracket
+  side: buy

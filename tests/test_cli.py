@@ -9,6 +9,7 @@ the right arguments into `run()` - the WIRING, not the pipeline it wires to, whi
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -1023,3 +1024,139 @@ def test_broker_exits_2_when_the_venue_cannot_be_read(tmp_path: Path, monkeypatc
     _stub_broker(monkeypatch, [], raises=BrokerUnavailable("the venue is down"))
     assert cli.main(["broker", "--data", str(tmp_path)]) == 2
     assert "UNAVAILABLE" in capsys.readouterr().err
+
+
+# --- `scan --submit`: the machine placing an order, and the switch that stops it ---------------
+#
+# `CHARTER` A-002 authorises submission with no per-order approval. What `cli.py` owns on that path
+# is narrow and worth pinning: it must read the switch, print what it WOULD have submitted whether
+# or not it is armed, and never reach the wire when it is stopped. The order's shape is
+# `test_submit.py`'s subject.
+
+
+def _trade_outcome(instrument_id: str = "TEST.1"):
+    from swingdesk.application.pipeline import InstrumentOutcome
+    from swingdesk.contracts.reference import Exchange, Instrument
+    from swingdesk.journal_evidence.journal import DecisionRecord
+    from swingdesk.trade_management.sizing import RiskSnapshot
+
+    return InstrumentOutcome(
+        instrument=Instrument(
+            id=instrument_id, ticker=instrument_id, exchange=Exchange.NYSE, currency="USD",
+        ),
+        decision=DecisionRecord(instrument_id=instrument_id, decision="Trade"),
+        risk=RiskSnapshot(
+            equity=Decimal(10000), risk_pct=Decimal("1.0"), allowed_risk=Decimal(100),
+            entry=Decimal("50.25"), stop=Decimal("45.00"), costs_per_share=Decimal("0.02"),
+            risk_per_share=Decimal("5.27"), shares=18, position_value=Decimal("904.50"),
+            planned_risk=Decimal("94.86"), parameters=(),
+        ),
+    )
+
+
+def _result_with_one_trade():
+    from swingdesk.application.pipeline import RunResult
+    from swingdesk.contracts.run import RunManifest, RunMode
+
+    return RunResult(
+        manifest=RunManifest(
+            run_id="RUN-TEST", started_at=datetime(2026, 9, 1, 21, 0, tzinfo=UTC),
+            mode=RunMode.LIVE, code_hash="0" * 12, config_hash="1" * 12, snapshot_id="2" * 12,
+            calendar_version="c", platform="p",
+        ),
+        outcomes=[_trade_outcome()],
+    )
+
+
+def _stub_submit_client(monkeypatch, sent: list):
+    from swingdesk import broker as broker_pkg
+
+    class _Client:
+        def __init__(self, arming):
+            self.arming = arming
+
+        def submit(self, order, now):
+            from swingdesk.contracts.broker import PlacedOrder
+
+            if self.arming.stopped:
+                raise broker_pkg.SubmissionStopped(self.arming.reason)
+            sent.append(order)
+            return PlacedOrder(
+                order_id="o-1", client_order_id=order.client_order_id, symbol=order.symbol,
+                status="accepted", submitted_at=now, observed_at=now,
+            )
+
+    monkeypatch.setattr(
+        broker_pkg, "open_client",
+        lambda policy=None, transport=None, arming=broker_pkg.STOPPED: _Client(arming),
+    )
+
+
+def test_submit_is_stopped_by_default_and_says_what_it_would_have_sent(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """The count prints even when stopped.
+
+    A line that appeared only once the switch was armed would hide the difference between a run
+    that had nothing to submit and a run that was stopped from submitting something.
+    """
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent)
+    cli._submit(_result_with_one_trade(), tmp_path, datetime(2026, 9, 1, 21, 0, tzinfo=UTC))
+
+    printed = capsys.readouterr().out
+    assert "1 Trade decision(s) sized and eligible" in printed
+    assert "STOPPED" in printed
+    assert sent == [], "nothing may reach the venue while the switch is stopped"
+
+
+def test_an_armed_switch_submits_the_run_s_trade_decisions(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    from swingdesk.broker import policy as policy_module
+
+    write = policy_module.load().write
+    assert write is not None
+    (tmp_path / write.kill_switch_file).write_text(write.armed_marker, encoding="utf-8")
+
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent)
+    cli._submit(_result_with_one_trade(), tmp_path, datetime(2026, 9, 1, 21, 0, tzinfo=UTC))
+
+    printed = capsys.readouterr().out
+    assert "armed" in printed
+    assert "SENT" in printed
+    assert len(sent) == 1
+    # The limit is the sizing price and the stop is the sized stop - nothing was re-derived here.
+    assert sent[0].limit_price == Decimal("50.25")
+    assert sent[0].stop_price == Decimal("45.00")
+    assert sent[0].shares == 18
+    assert sent[0].client_order_id == "swingdesk-2026-09-01-TEST.1"
+
+
+def test_a_watch_decision_is_never_submitted(tmp_path: Path, monkeypatch, capsys) -> None:
+    from swingdesk.application.pipeline import RunResult
+    from swingdesk.broker import policy as policy_module
+    from swingdesk.contracts.run import RunManifest, RunMode
+    from swingdesk.journal_evidence.journal import DecisionRecord
+
+    write = policy_module.load().write
+    assert write is not None
+    (tmp_path / write.kill_switch_file).write_text(write.armed_marker, encoding="utf-8")
+
+    outcome = _trade_outcome()
+    outcome.decision = DecisionRecord(instrument_id="TEST.1", decision="Watch")
+    result = RunResult(
+        manifest=RunManifest(
+            run_id="RUN-TEST", started_at=datetime(2026, 9, 1, 21, 0, tzinfo=UTC),
+            mode=RunMode.LIVE, code_hash="0" * 12, config_hash="1" * 12, snapshot_id="2" * 12,
+            calendar_version="c", platform="p",
+        ),
+        outcomes=[outcome],
+    )
+
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent)
+    cli._submit(result, tmp_path, datetime(2026, 9, 1, 21, 0, tzinfo=UTC))
+    assert "0 Trade decision(s)" in capsys.readouterr().out
+    assert sent == []

@@ -22,6 +22,16 @@ import yaml
 
 POLICY_PATH = Path(__file__).resolve().parents[3] / "registry" / "broker_policy.yml"
 
+#: Verbs this package refuses to be given, whatever the policy says. **The only place in
+#: `swingdesk/broker/` where an HTTP write verb is spelled at all**, and gate 39 permits it here by
+#: name because a denylist is not a capability: nothing sends these, `load` refuses a policy that
+#: names one, and the verb that IS used comes from `BrokerPolicy.write_method`, read from the file.
+#:
+#: `DR-027` 3.3 is why cancellation is on the list rather than merely unused: every order carries
+#: `time_in_force: day`, so nothing this system placed outlives the session that decided it and
+#: there is nothing to cancel.
+REFUSED_METHODS = frozenset({"DELETE", "PATCH", "PUT"})
+
 
 class PolicyRefused(Exception):
     """The policy is missing, malformed, or permits something it must not.
@@ -43,6 +53,25 @@ class Limits:
 
 
 @dataclass(frozen=True, slots=True)
+class WritePolicy:
+    """What a submission may look like, and the file that has to exist before one happens.
+
+    Every field is a definition argued in `DR-027` rather than a threshold, which is why none of
+    them is in `registry/parameters.yml`. The limit price is the one that looks like a number and
+    is not: it is the sizing price itself, so no value is introduced.
+    """
+
+    kill_switch_file: str
+    armed_marker: str
+    client_order_id_prefix: str
+    max_client_order_id_length: int
+    order_type: str
+    time_in_force: str
+    order_class: str
+    side: str
+
+
+@dataclass(frozen=True, slots=True)
 class BrokerPolicy:
     """Everything the adapter is allowed to do, loaded from the committed file."""
 
@@ -59,6 +88,7 @@ class BrokerPolicy:
     limits: Limits
     endpoints: dict[str, str]
     activity_type: str
+    write: WritePolicy | None
 
     def url(self, endpoint: str, **path: str) -> str:
         """An absolute URL for a named endpoint, and the only way to build one.
@@ -74,6 +104,24 @@ class BrokerPolicy:
                 f"known: {', '.join(sorted(self.endpoints))}"
             ) from None
         return self.base_url + path_template.format(**path)
+
+    @property
+    def write_method(self) -> str:
+        """The one verb this policy permits for a submission, read from the committed file.
+
+        **Nothing in `swingdesk/broker/` spells a write verb, and that is the point.** Gate 39 can
+        therefore keep an ABSOLUTE rule - no `POST`, `PUT`, `PATCH` or `DELETE` literal anywhere in
+        the package - even though the package can now write. The verb exists in exactly one place,
+        `registry/broker_policy.yml`, which is `DR-027` 4.3's guard; a policy narrowed back to
+        `GET` leaves the code with no verb to use rather than with a literal to ignore.
+        """
+        verbs = sorted(self.allowed_methods - {"GET"})
+        if len(verbs) != 1:
+            raise PolicyRefused(
+                f"{POLICY_PATH.name} permits {sorted(self.allowed_methods)}; a submission needs "
+                f"exactly one non-GET verb and this policy names {len(verbs)}."
+            )
+        return verbs[0]
 
     def check_method(self, method: str) -> None:
         """Refuse anything the policy does not list. Today that is everything but `GET`."""
@@ -159,18 +207,64 @@ def load(path: Path | None = None) -> BrokerPolicy:
     if not isinstance(methods, list) or not methods:
         raise PolicyRefused(f"{source.name}: access.allowed_methods is missing or empty")
     allowed = frozenset(str(method).upper() for method in methods)
+    if "GET" not in allowed:
+        raise PolicyRefused(f"{source.name}: access.allowed_methods must permit GET")
     if not write_enabled and allowed != {"GET"}:
         raise PolicyRefused(
             f"{source.name}: access.write_enabled is false but allowed_methods is "
             f"{sorted(allowed)}. A read-only policy that permits a write verb is not read-only."
         )
-    if write_enabled:
-        # There is no supported write path in this package, so a policy asking for one is a policy
-        # that disagrees with the code it governs. `DR-026` records what a write would need first.
+
+    if write_enabled and allowed == {"GET"}:
+        # The mirror of the check above, and it was missing until a test asked for it. A policy
+        # that grants writing while naming no verb to write with loads happily and then refuses
+        # every submission from inside `write_method` - a capability that exists in one half of the
+        # file and not the other, which is the one-logic-in-two-places failure gate 39's own
+        # message names.
         raise PolicyRefused(
-            f"{source.name}: access.write_enabled is true and nothing in swingdesk.broker can "
-            f"write. Placing an order is D1/BR-1 - see DR-026 for what it needs before it exists."
+            f"{source.name}: access.write_enabled is true but allowed_methods names no verb to "
+            f"submit with. A permission that cannot be exercised is a claim, not a capability."
         )
+
+    refused = sorted(allowed & REFUSED_METHODS)
+    if refused:
+        raise PolicyRefused(
+            f"{source.name}: access.allowed_methods permits {', '.join(refused)}. DR-027 covers "
+            f"submission only; amending or cancelling an order is a decision record of its own."
+        )
+
+    write_block = raw.get("write")
+    write: WritePolicy | None = None
+    if write_enabled:
+        if not isinstance(write_block, dict):
+            raise PolicyRefused(
+                f"{source.name}: access.write_enabled is true and there is no `write` section. "
+                f"A permission with no kill switch behind it is not a permission this project "
+                f"grants (DR-027 4.2)."
+            )
+        write = WritePolicy(
+            kill_switch_file=str(_require(write_block, "kill_switch_file", str, "write")),
+            armed_marker=str(_require(write_block, "armed_marker", str, "write")),
+            client_order_id_prefix=str(
+                _require(write_block, "client_order_id_prefix", str, "write")
+            ),
+            max_client_order_id_length=int(
+                _require(write_block, "max_client_order_id_length", int, "write")
+            ),
+            order_type=str(_require(write_block, "order_type", str, "write")),
+            time_in_force=str(_require(write_block, "time_in_force", str, "write")),
+            order_class=str(_require(write_block, "order_class", str, "write")),
+            side=str(_require(write_block, "side", str, "write")),
+        )
+        if not write.armed_marker.strip():
+            # An empty marker arms on any file at all, including one created by a stray redirect.
+            raise PolicyRefused(f"{source.name}: write.armed_marker is blank, so anything arms it")
+        if "/" in write.kill_switch_file or "\\" in write.kill_switch_file:
+            # A name, resolved against the data directory by the caller. A path here could point
+            # inside the repository, and a switch that ships in a commit is a release.
+            raise PolicyRefused(
+                f"{source.name}: write.kill_switch_file must be a bare filename, not a path"
+            )
 
     return BrokerPolicy(
         venue=str(_require(venue, "name", str, "venue")),
@@ -196,6 +290,7 @@ def load(path: Path | None = None) -> BrokerPolicy:
             if key != "activity_type"
         },
         activity_type=str(_require(endpoints, "activity_type", str, "endpoints")),
+        write=write,
     )
 
 
