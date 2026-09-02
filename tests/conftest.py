@@ -88,6 +88,13 @@ def registry() -> ParameterRegistry:
         # and every candidate is admitted UNCHECKED, which is production's own behaviour until
         # `tools/refresh_classifications.py` has run.
         "risk.max_sector_risk": 2,
+        # The order-size cap and the window it reads (`DR-028`, `DR-017`). Real values again, and
+        # the same argument as the three above: a fixture that loosened a cap to keep tests quiet
+        # would be testing a system nobody runs. At the fixture's own volumes - a million shares a
+        # session around 100 - one percent of ADTV is far above anything a $10,000 account sizes,
+        # so the cap binds on nothing here. `test_sizing`'s own tests bind it deliberately.
+        "risk.liquidity_cap_order_to_adtv_pct": "1.0",
+        "universe.adtv_lag_sessions": 3,
     }
     return ParameterRegistry(
         {

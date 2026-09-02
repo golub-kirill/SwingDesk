@@ -102,15 +102,22 @@ retyping it.
       being unevaluable. `risk.risk_off_ladder` stays `unset` and the prescribed ACTION stays the
       owner's; making the kill switch measurable is not the same as making it automatic.
 
-- [ ] **`[v]` `risk.liquidity_cap_order_to_adtv_pct` is owner-set at 1.0 and read by nothing.**
-      **Promoted from `[c]` 2026-08-30 by reading the registry**: `provenance: owner`, `value: 1.0`,
-      `read_by: none`. Gate 1 prints the whole orphan list on every run, so derive it there rather
-      than from this line.
-      The second owner-set orphan. Measured context from `DR-003`'s addendum: at the current account
-      size a position is a median 0.0026% of one session's dollar volume, so the cap is nowhere near
-      binding and would only begin to at roughly a $2.2M account. Unenforced rather than urgent -
-      recorded so it is not rediscovered as a surprise.
-
+- [x] **`[v]` `risk.liquidity_cap_order_to_adtv_pct` IS ENFORCED - DONE 2026-09-01 (`DR-028`).**
+      It carried `provenance: owner`, `value: 1.0` and `read_by: none`, which is `AGENTS.md` §7's
+      own shape: a ratified decision that reaches no code is a decision that did not happen. Two
+      documents and `CARD-001` asserted a control that did not exist.
+      **What was missing was the DEFINITION, not the number.** `DR-028` supplies it: the cap TRIMS
+      the share count and refuses only at zero with the course's `LIQ`, because `M49-T0760` names a
+      liquidity *adjustment* and the position-value cap in the same function already trims. It
+      measures against the universe rule's OWN ADTV window and `DR-017` lag, so an instrument has
+      one liquidity opinion rather than two.
+      **It changes nothing at this account size and that is why it was wired now.** `DR-003`'s
+      addendum measured a position at a median 0.0026% of a session's dollar volume against a 1.0%
+      cap; it begins to bind at roughly a $2.2M account. Wired while getting it wrong is free.
+      **What made it urgent was `CHARTER` A-002**: since 2026-09-01 the machine places the order,
+      so the size that reaches a market stopped being hypothetical.
+      **The Track A streak was 0** when this landed - checked with `tools/track_a_streak.py`, not
+      assumed - so a change that moves decision output cost no counted sessions.
 
 ~~**`master` went RED on its own, 2026-08-22, and it is fixed in this branch.**~~ **CLOSED
 2026-08-22** — merged as `7f3568a` and verified on `master` 2026-08-24. Four tests in `test_cli.py`
@@ -3122,20 +3129,17 @@ is for where no gate can reach.
       another environment can answer, and an import that fails raises instead of exiting 0.
       **Verified by planting the same import again and watching it exit 1.**
 
-- [ ] **`[!]` JOURNAL EVERY SUBMISSION BEFORE THE SWITCH IS ARMED — `DR-027` §6's standing
-      condition, and the one blocker on autonomous paper trading actually running.**
-      `CHARTER` A-002 (owner, 2026-09-01) lets the machine place a paper order nobody approved, and
-      `swingdesk scan --submit` builds and sends it. **Every attempt is currently reported on the
-      run's output and written nowhere.** `journal.duckdb` holds `runs` and `decisions`; a
-      submission is neither, so this is a schema migration — and `AGENTS.md` §12's fourth trap is
-      that a column which never reached disk killed every scheduled evening for four trading days.
-      **Why it gates ARMING rather than merging:** nothing can be submitted while the kill switch
-      file is absent, and absent is its default. So the machinery may land; it may not be switched
-      on. `SECURITY.md` §4's rule for the approval channel is the one being honoured — *an action
-      with no record did not happen* — and the `REVENGE` and `HINDSIGHT` controls both depend on
-      the ATTEMPT being recorded rather than the result.
-      Needs: a `submissions` table reconciled by `platform/schema.py`, the client order id as its
-      key, the four guards' verdict stored with it, and the venue's answer written back.
+- [x] **`[v]` EVERY SUBMISSION IS JOURNALLED - DONE 2026-09-01, and it was `DR-027` §6's standing
+      condition on ARMING.** `journal.duckdb` grew a `submissions` table keyed
+      `(run_id, client_order_id)`; `scan --submit` writes one row per eligible candidate with a
+      coded outcome - `sent`, `stopped`, `refused`, `rejected` - and `Submission` refuses to exist
+      without the venue's order id on a `sent` row or a reason on any other.
+      **The stopped rows are the point.** A session where the machine would have entered three
+      names and was stopped is otherwise indistinguishable from one where it found nothing.
+      **The migration was proven, not assumed:** the live journal was COPIED, the copy opened, and
+      both counts confirmed intact with all twelve columns present. The live store was untouched.
+      `DR-027` §8 is the amendment; §6 stays as written.
+      **Arming is still the owner's act and the switch file is still absent**, which is its default.
 
 - [ ] **`[ ]` WIRE `TECH` INTO THE DAILY RUN, or decide not to.** `swingdesk broker` reports a
       broker/journal mismatch and Appendix N's prescribed action for that code is *"pause new

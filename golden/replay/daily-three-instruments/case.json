@@ -54,16 +54,18 @@
     "risk.correlation_threshold": "0.70",
     "risk.correlation_lookback_sessions": 60,
     "risk.max_sector_risk": 2,
-    "rs.benchmark": "SPY"
+    "rs.benchmark": "SPY",
+    "risk.liquidity_cap_order_to_adtv_pct": "1.0",
+    "universe.adtv_lag_sessions": 3
   },
   "manifest": {
-    "run_id": "run-20260115T210000Z-221f96bf",
+    "run_id": "run-20260115T210000Z-2a093251",
     "started_at": "2026-01-15T21:00:00Z",
     "mode": "replay",
-    "code_hash": "fe997d6",
-    "code_dirty": true,
-    "config_hash": "ac70cbbf0a7a3d17",
-    "snapshot_id": "snap-20260115T210000Z-221f96bf",
+    "code_hash": "2810930",
+    "code_dirty": false,
+    "config_hash": "d4d9f6fcf8ccbdd7",
+    "snapshot_id": "snap-20260115T210000Z-2a093251",
     "component_versions": {
       "M18-T0280-v5.0": 1
     },
@@ -75,5 +77,5 @@
     "output_hash": "a2ba33b949e306b9",
     "completed_at": "2026-01-15T21:00:00Z"
   },
-  "inputs_digest": "3ccd474c37dd145b"
+  "inputs_digest": "4868dcb0836d626b"
 }

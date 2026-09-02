@@ -192,6 +192,8 @@ def size_long(
     stop: Decimal,
     currency: str,
     registry: ParameterRegistry,
+    *,
+    adtv: Decimal | None,
 ) -> RiskSnapshot | Refusal:
     """Size a long, or refuse with a code.
 
@@ -200,6 +202,12 @@ def size_long(
 
     `currency` selects which cost parameters apply (DR-010) - there is deliberately no default
     currency, because guessing one is exactly the silent-oversizing risk the split exists to close.
+
+    `adtv` is the instrument's average daily dollar volume, and it is keyword-only with NO DEFAULT
+    for the reason `LiquidityRule.adtv_lag` has none (`DR-017`): every candidate default is silently
+    wrong in one direction. `None` means it could not be measured and REFUSES (`DR-028` 2.3) - the
+    caller computes it over the universe rule's own window, so there is one liquidity opinion about
+    an instrument rather than two.
     """
     # Step 1-2. Stop first. A stop at or above entry is not an invalidation level for a long.
     if stop >= entry:
@@ -296,6 +304,45 @@ def size_long(
                 f"position-value cap {max_value_local} {currency} buys 0 shares at {entry}",
             )
 
+    # Step 5b. The liquidity cap (`DR-028`, `M49-T0760` - the liquidity ADJUSTMENT). Same shape as
+    # the cap above and deliberately so: the course names an ADJUSTMENT here, its sibling topic is
+    # the correlation adjustment, and a second cap in the same step behaving differently would be
+    # two rules where the course names one family.
+    #
+    # ADTV and the position value are both in the instrument's own currency - `average_dollar_volume`
+    # is close x volume - so no conversion, unlike the base-currency cap above.
+    try:
+        liquidity_pct, liquidity_use = registry.decimal_value(
+            "risk.liquidity_cap_order_to_adtv_pct"
+        )
+    except ParameterUnset as unset:
+        return Refusal(
+            "RISK",
+            "the liquidity cap has no value; sizing an order against a market whose depth nobody "
+            "bounded is not permitted",
+            parameter_id=unset.parameter_id,
+        )
+
+    if adtv is None:
+        return Refusal(
+            "LIQ",
+            "average daily dollar volume could not be measured, so the order-size cap cannot be "
+            "applied; an uncapped order is not sized (DR-028 2.3)",
+            parameter_id="risk.liquidity_cap_order_to_adtv_pct",
+        )
+
+    cap_value = (adtv * liquidity_pct / 100).quantize(Decimal("0.01"))
+    if position_value > cap_value:
+        shares = int((cap_value / entry).to_integral_value(rounding=ROUND_DOWN))
+        position_value = (Decimal(shares) * entry).quantize(Decimal("0.01"))
+        if shares <= 0:
+            return Refusal(
+                "LIQ",
+                f"the liquidity cap {liquidity_pct}% of {adtv} ADTV is {cap_value} {currency}, "
+                f"which buys 0 shares at {entry}",
+                parameter_id="risk.liquidity_cap_order_to_adtv_pct",
+            )
+
     return RiskSnapshot(
         equity=equity,
         risk_pct=risk_pct,
@@ -307,7 +354,7 @@ def size_long(
         shares=shares,
         position_value=position_value,
         planned_risk=(Decimal(shares) * risk_per_share).quantize(Decimal("0.01")),
-        parameters=(equity_use, risk_use, bp_use, floor_use, value_use, *fx_uses),
+        parameters=(equity_use, risk_use, bp_use, floor_use, value_use, liquidity_use, *fx_uses),
     )
 
 

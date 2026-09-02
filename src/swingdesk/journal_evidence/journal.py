@@ -11,7 +11,8 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import date, datetime
+from decimal import Decimal
 from pathlib import Path
 
 import duckdb
@@ -61,11 +62,49 @@ ALTER TABLE runs ADD COLUMN IF NOT EXISTS mode VARCHAR;
 -- means the run had no prior decision for it - a first sighting, or a journal that does not go back
 -- that far - and is not the same as "unchanged".
 ALTER TABLE decisions ADD COLUMN IF NOT EXISTS previous_decision VARCHAR;
+
+-- Every attempt to place an order at the paper venue, INCLUDING the ones a guard stopped
+-- (`DR-027` 6, `CHARTER` A-002). A row here is an ATTEMPT and not a position: the venue accepting
+-- an order is not a fill, and `Position` is still created from the fill.
+--
+-- **The stopped rows are the point, not the overhead.** A run that had nothing to submit and a run
+-- that was stopped from submitting something are different facts, and only this table can tell
+-- them apart afterwards. `SECURITY.md` 4's rule for the approval channel is the one being
+-- honoured - an action with no record did not happen - and the `REVENGE` and `HINDSIGHT` controls
+-- both depend on the ATTEMPT being recorded rather than on the result.
+--
+-- Keyed by `(run_id, client_order_id)` rather than by the client order id alone. The id is derived
+-- from the SESSION and the instrument (`DR-027` 5), so a run stopped by the switch and a later run
+-- that the owner armed share one - and both attempts are facts. Append-only, like everything here.
+CREATE TABLE IF NOT EXISTS submissions (
+    run_id          VARCHAR NOT NULL,
+    client_order_id VARCHAR NOT NULL,
+    attempted_at    TIMESTAMPTZ NOT NULL,
+    session_date    DATE NOT NULL,
+    instrument_id   VARCHAR NOT NULL,
+    shares          INTEGER NOT NULL,
+    limit_price     DECIMAL(18, 6) NOT NULL,
+    stop_price      DECIMAL(18, 6) NOT NULL,
+    outcome         VARCHAR NOT NULL,
+    detail          VARCHAR,
+    venue_order_id  VARCHAR,
+    venue_status    VARCHAR,
+    PRIMARY KEY (run_id, client_order_id)
+);
 """
 
 #: The four states of the candidate-decision enum (DECISION_STATE_MACHINE 1). A decision outside
 #: this set is a defect, not a new state.
 DECISIONS = frozenset({"Trade", "Watch", "Skip", "Pause"})
+
+#: What became of one attempt to place an order. Coded rather than free text, for the reason
+#: `DecisionRecord.reason_code` is: a vocabulary can be counted and a sentence cannot.
+#:
+#:   sent      the venue accepted the order
+#:   stopped   a guard refused before anything reached the wire (`DR-027` 4)
+#:   refused   the order could not be BUILT - wrong market, no shares, an impossible bracket
+#:   rejected  the venue refused it, a duplicate client order id among the reasons
+SUBMISSION_OUTCOMES = frozenset({"sent", "stopped", "refused", "rejected"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -97,6 +136,48 @@ class DecisionRecord:
             raise ValueError(f"{self.decision!r} is not one of {sorted(DECISIONS)}")
         if self.decision == "Skip" and not self.reason_code:
             raise ValueError("a Skip requires a reason code")
+
+
+@dataclass(frozen=True, slots=True)
+class Submission:
+    """One attempt to place an order at the venue, and what became of it.
+
+    **An attempt, not a position, and not a fill.** The venue accepting an order says only that it
+    took it; `leaves_qty` exists because partial fills do. `Position` is still built from the fill
+    (`DR-027` 6).
+
+    A row exists for an attempt a guard STOPPED, with `outcome="stopped"` and the guard's reason in
+    `detail`. That is deliberate and it is most of this record's value: afterwards, a session on
+    which the machine would have entered three names and was stopped is otherwise indistinguishable
+    from a session on which it found nothing.
+    """
+
+    run_id: str
+    client_order_id: str
+    attempted_at: datetime
+    session_date: date
+    instrument_id: str
+    shares: int
+    limit_price: Decimal
+    stop_price: Decimal
+    outcome: str
+    detail: str | None = None
+    venue_order_id: str | None = None
+    venue_status: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.outcome not in SUBMISSION_OUTCOMES:
+            raise ValueError(f"{self.outcome!r} is not one of {sorted(SUBMISSION_OUTCOMES)}")
+        if self.outcome == "sent" and not self.venue_order_id:
+            raise ValueError(
+                "a `sent` submission carries the venue's order id. Without it the row asserts "
+                "something happened at the venue that nothing can be traced back to."
+            )
+        if self.outcome != "sent" and not self.detail:
+            raise ValueError(
+                f"a {self.outcome!r} submission carries the reason. An attempt recorded without "
+                f"why it failed is the sentence `AGENTS.md` 10.4 is about, stored."
+            )
 
 
 class Journal:
@@ -178,6 +259,41 @@ class Journal:
                 for d in decisions
             ],
         )
+
+    def record_submission(self, submission: Submission) -> None:
+        """Write one attempt. Append-only: a second attempt on the same order is a new RUN's row.
+
+        Called for every eligible candidate on a `--submit` run, whether or not anything reached
+        the wire - see `Submission`.
+        """
+        self._connection.execute(
+            """
+            INSERT INTO submissions
+                (run_id, client_order_id, attempted_at, session_date, instrument_id, shares,
+                 limit_price, stop_price, outcome, detail, venue_order_id, venue_status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [
+                submission.run_id, submission.client_order_id, submission.attempted_at,
+                submission.session_date, submission.instrument_id, submission.shares,
+                submission.limit_price, submission.stop_price, submission.outcome,
+                submission.detail, submission.venue_order_id, submission.venue_status,
+            ],
+        )
+
+    def submissions_for(self, run_id: str) -> list[Submission]:
+        """Every attempt one run made, in client-order-id order.
+
+        Sorted here rather than left to the store: `DETERMINISM_SPEC` wants a re-run to match, and
+        an unordered read would compare two orderings of the same set.
+        """
+        rows = self._connection.execute(
+            "SELECT run_id, client_order_id, attempted_at, session_date, instrument_id, shares, "
+            "limit_price, stop_price, outcome, detail, venue_order_id, venue_status "
+            "FROM submissions WHERE run_id = ? ORDER BY client_order_id",
+            [run_id],
+        ).fetchall()
+        return [Submission(*row) for row in rows]
 
     def decisions_for(self, run_id: str) -> list[DecisionRecord]:
         rows = self._connection.execute(

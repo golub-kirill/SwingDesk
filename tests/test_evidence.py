@@ -104,3 +104,47 @@ def test_window_must_not_run_backwards() -> None:
             **{**BASE, "window_start": date(2026, 1, 14), "window_end": date(2016, 1, 4)},
             survivorship=SurvivorshipCoverage.ABSENT,
         )
+
+
+# --- `Submission`: an attempt that cannot say what became of it is not evidence ----------------
+
+
+def _submission(**overrides):
+    from datetime import UTC, date, datetime
+    from decimal import Decimal
+
+    from swingdesk.journal_evidence.journal import Submission
+
+    fields = {
+        "run_id": "RUN-1", "client_order_id": "swingdesk-2026-09-01-TEST.1",
+        "attempted_at": datetime(2026, 9, 1, 21, 0, tzinfo=UTC),
+        "session_date": date(2026, 9, 1), "instrument_id": "TEST.1", "shares": 10,
+        "limit_price": Decimal("50.25"), "stop_price": Decimal("45.00"),
+        "outcome": "sent", "venue_order_id": "o-1",
+    }
+    fields.update(overrides)
+    return Submission(**fields)
+
+
+def test_a_submission_outcome_outside_the_vocabulary_is_a_defect():
+    import pytest
+
+    with pytest.raises(ValueError, match="is not one of"):
+        _submission(outcome="maybe")
+
+
+def test_a_sent_submission_must_name_the_venue_s_order_id():
+    """Otherwise the row asserts something happened at the venue that nothing can trace back."""
+    import pytest
+
+    with pytest.raises(ValueError, match="venue's order id"):
+        _submission(venue_order_id=None)
+
+
+def test_a_failed_submission_must_carry_its_reason():
+    """An attempt recorded without why it failed is `AGENTS.md` 10.4's sentence, stored."""
+    import pytest
+
+    for outcome in ("stopped", "refused", "rejected"):
+        with pytest.raises(ValueError, match="carries the reason"):
+            _submission(outcome=outcome, venue_order_id=None, detail=None)
