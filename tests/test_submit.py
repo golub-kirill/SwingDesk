@@ -322,17 +322,48 @@ def test_a_target_at_or_below_the_entry_is_refused() -> None:
         )
 
 
-def test_the_target_comes_from_a_parameter_and_it_is_unset() -> None:
-    """Production's state today, asserted rather than described.
+def test_the_target_comes_from_the_real_registry_and_is_one_r() -> None:
+    """`DR-029`, ruled by the owner 2026-09-01. The REAL registry, not a fixture.
 
-    `exit.target_r_multiple` has no value, so there is no order at all - the venue requires both
-    legs of a bracket, and inventing a target to satisfy a wire format would be authoring a
-    threshold (`AGENTS.md` 8). The course names three candidates and rules between none of them.
+    Pinned deliberately: a fixture would pass whatever it was shown, and this value is what every
+    order this system places will carry. `test_an_unset_target_refuses` covers the other side.
+    """
+    from swingdesk.platform.parameters import ParameterRegistry
+
+    assert submit.target_price(
+        Decimal("100.00"), Decimal("5.27"), ParameterRegistry.load()
+    ) == Decimal("105.27")
+
+
+def test_an_unset_target_refuses_rather_than_inventing_one() -> None:
+    """The venue requires both legs of a bracket, so an unset target is no order at all.
+
+    Inventing one to satisfy a wire format would be authoring a threshold (`AGENTS.md` 8), and the
+    branch has to keep working for the day somebody clears the value.
     """
     from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
 
+    empty = ParameterRegistry({
+        "exit.target_r_multiple": {
+            "id": "exit.target_r_multiple", "value": None, "provenance": None,
+            "status": "unset", "unit": "R", "named_in": ["M53-T0807"],
+        },
+    })
     with pytest.raises(ParameterUnset, match=re.escape("exit.target_r_multiple")):
-        submit.target_price(Decimal("100"), Decimal("5"), ParameterRegistry.load())
+        submit.target_price(Decimal("100"), Decimal("5"), empty)
+
+
+def test_a_nonpositive_target_multiple_refuses() -> None:
+    from swingdesk.platform.parameters import ParameterRegistry
+
+    zero = ParameterRegistry({
+        "exit.target_r_multiple": {
+            "id": "exit.target_r_multiple", "value": "0", "provenance": "owner",
+            "status": "owner", "unit": "R", "named_in": ["M53-T0807"],
+        },
+    })
+    with pytest.raises(ValueError, match="sell at a loss on the way up"):
+        submit.target_price(Decimal("100"), Decimal("5"), zero)
 
 
 def test_the_target_is_r_above_the_entry_once_a_value_exists() -> None:

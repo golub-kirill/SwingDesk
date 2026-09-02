@@ -717,9 +717,9 @@ parameters:
 
   - id: exit.target_r_multiple
     unit: R
-    value: null
-    status: unset
-    provenance: null
+    value: "1.0"
+    status: owner
+    provenance: owner
     read_by: swingdesk.broker.submit:target_price
     named_in: [M53-T0807, M53-T0808, M53-T0809]
     ui_editable: true
@@ -733,8 +733,13 @@ parameters:
       R HERE IS THE POSITION'S OWN DENOMINATOR - entry - stop + costs, frozen at entry (RISK_SPEC 2)
       - so the target is volatility-normalised by construction and comparable across instruments,
       which a percentage target (exit.percentage_target, M53-T0816) is not.
-      UNSET REFUSES. The venue requires both legs of a bracket, so with no target there is no order
-      at all; inventing one to satisfy a wire format would be authoring a threshold (AGENTS 8).
+      RULED 1R BY THE OWNER 2026-09-01 (DR-029), and it is the only one of the three the ratified
+      20-session hold can deliver: measured over 1,505 instruments and 91,572 non-overlapping
+      windows, 3R resolves in 54% of them and 2R carries a negative expectancy, while the reachable
+      range is structurally about 1.5R because R is two ATR and these names travel about three ATR
+      in twenty sessions. DR-029 5 records that the lever for a wider target is the STOP or the
+      HOLD, never the target - and that every one of those numbers is on UNSELECTED entries, so it
+      says how far instruments travel and nothing about whether an edge exists.
 
   - id: exit.max_holding_period
     unit: trading days
