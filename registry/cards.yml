@@ -131,15 +131,20 @@ cards:
     blocked_by:
       - id: unset-selection
         what: >-
-          rs.lookback, rs.ranking_method, rs.benchmark_form and screen.relative_strength_rule are
-          all unset. PR-012 was the study that would have set them and it REFUSED a verdict on
-          2026-08-24 for want of sample, so they stay unset.
+          CLOSED 2026-09-01 by DR-030. All four now carry provenance `owner`: rs.benchmark_form
+          path, rs.lookback 126, rs.ranking_method descending, screen.relative_strength_rule
+          top_decile. The card SELECTS, and this run produces Trade decisions for the first time.
         why: >-
-          The card refuses rather than defaulting. ALLOCATION_SPEC 3 says an ordering adopted from
-          the course does not inherit its authority and needs a PRE-REGISTRATION before it selects
-          a trade - so these get values from a study, never from a decision record. A refused study
-          sets nothing: it reports the measurement and declines the verdict, which is the design
-          working.
+          ALLOCATION_SPEC 3's pre-registration route was followed to its end and CLOSED rather than
+          waived. PR-012 refused on a structural sample ceiling - four positions for twenty
+          sessions is about fifty entries a year, and 9.5 years did not reach its own floor.
+          PR-013 then ran the per-DATE design and returned six intervals all including zero, gross,
+          in both periods; its report says "comparing two losers on which loses less is not a
+          finding". And b.min_sample is measured_by journal, so NO backtest could ever mark this
+          card Validated whatever it measured. screen.trend_definition's registry note is this
+          project's own precedent for a closed family: a value there is set by owner preference,
+          provenance owner, NEVER validated:. The card therefore ships Untested, paper only, with
+          its expected FAILURE registered in DR-030 3.1 before the journal clock starts.
       - id: the-capacity-cap-caps-the-sample
         what: >-
           CLOSED 2026-08-24: validation/backtest/book.py:run_book exists and PR-012 ran three arms
@@ -155,9 +160,12 @@ cards:
           "Why the sample is structurally short" lists them with what each costs.
       - id: benchmark-form-unset
         what: >-
-          CLOSED in part 2026-08-24 by DR-018. SPY, QQQ, IWM, IVV and VOO are stored, five years
-          each, and rs.benchmark is SPY. What remains unset is rs.benchmark_form - HOW a candidate
-          is compared to it.
+          CLOSED 2026-09-01. DR-018 fixed the benchmark (SPY, with QQQ, IWM, IVV and VOO stored)
+          and deliberately left the FORM for a study; DR-030 ruled it `path` on a structural
+          ground, and the benchmark stopped being decorative the same day - the path form compares
+          session by session, so a run without a benchmark series now leaves every survivor at
+          Watch naming rs.benchmark. DR-018 predicted exactly that: decorative "until the FORM
+          makes it otherwise".
         why: >-
           The form decides whether the benchmark means anything at all. Measured: the usual
           point-to-point ratio is a strictly monotone transform of the name's own return on any one

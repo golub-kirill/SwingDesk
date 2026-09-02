@@ -1907,6 +1907,38 @@ is for where no gate can reach.
 
 ## 5. Studies
 
+- [x] **`[v]` `CARD-001` SELECTS. The system produced its first `Trade` decision on 2026-09-01
+      (`DR-030`).** Four `unset` inputs were the single remaining blocker on the whole project
+      doing anything; all four now carry provenance `owner`.
+      **The pre-registration route was followed to its end and CLOSED, not waived.** `PR-012`
+      refused on a structural ceiling — four positions for twenty sessions is ~50 entries a year,
+      and 9.5 years did not reach its own floor. `PR-013` then ran the **per-DATE** design and
+      returned six intervals all including zero, gross, in both periods. An LLM council on
+      2026-09-01 independently proposed that same design as the fix; a verification pass found it
+      already reported.
+      **And `b.min_sample` is `measured_by: journal`** — 100 CLOSED JOURNALLED TRADES, ratified. No
+      backtest could ever mark this card `Validated`, whatever it measured. That reframed the
+      study's job from a verdict to defensible provenance.
+      **`screen.trend_definition`'s registry note is the precedent**, and it prescribes rather than
+      forbids: a value in a closed family is set by owner preference, provenance `owner`, never
+      `validated:`.
+      **What was BUILT, not just decided.** `decision_logic/ranking.py` moved out of
+      `validation/backtest/` — a ranking is a screener, and its old home sat ABOVE the live run in
+      the layer chain, so the card's selection could not have been wired without copying it.
+      `decision_logic/selection.py` is the cutoff. `pipeline._select` runs after the candidate loop,
+      because a rank is a property of the cross-section and the loop decides one name at a time.
+      **Every loser carries its rank and the cutoff in its `Watch` reason** — a report that showed
+      only the winners could not answer "why not me" for a thousand names.
+      **`output_hash` moved**, `a2ba33b949e306b9` → `39c9d3eda5bf8ac0`, and the golden replay is
+      regenerated. Two tests inverted rather than being patched: the run's `Watch` branch is now a
+      `Trade`, and the benchmark stopped being decorative — `DR-018` predicted that precisely,
+      "until the FORM makes it otherwise".
+      **THE EXPECTATION IS REGISTERED IN ADVANCE (`DR-030` §3.1): this card is expected NOT to
+      clear `b.expectancy`.** Its ordering has no measured separation at the ratified hold. Writing
+      that down before the clock starts is what turns a future null from an embarrassment into a
+      pre-registered result, and `k.card_rejected` already carries the branch.
+
+
 - [x] **`[v]` THE TAKE-PROFIT TARGET IS 1R - ruled by the owner 2026-09-01, `DR-029`.**
       `exit.target_r_multiple` = 1.0, provenance `owner`, read by `broker.submit:target_price`.
       **No pre-registration was needed and that is not a shortcut.** `ALLOCATION_SPEC` §3 requires
@@ -2242,8 +2274,11 @@ is for where no gate can reach.
       reads about **0.6** against raw return — and there the index choice bites: SPY against QQQ at
       **0.616** on 63 sessions, while SPY against IVV (same index, different fund) reads **0.973**.
       **The INDEX is the decision; the PROXY is not.**
-      `rs.benchmark` = `SPY` (`assumed:DR-018`); `rs.benchmark_form` **`unset`**, because the form
-      decides what the card trades and `ALLOCATION_SPEC` §3 sends that to a pre-registration.
+      `rs.benchmark` = `SPY` (`assumed:DR-018`); ~~`rs.benchmark_form` **`unset`**, because the form
+      decides what the card trades and `ALLOCATION_SPEC` §3 sends that to a pre-registration.~~
+      **RULED `path` 2026-09-01 (`DR-030`), provenance `owner`** — §3's route was followed to its
+      end and closed, and the form is chosen structurally: point-to-point ranks at Spearman
+      1.000000 with raw return.
       **The RAW-price dividend bias is measured too**, and it survives every choice above: SPY
       **1.52%** a year against QQQ's **0.68%**, so a benchmark comparison that ignores it compares
       two differently-taxed series. The store holds **no adjusted series at all**.

@@ -17,7 +17,7 @@ import platform as platform_info
 import subprocess
 import sys
 from dataclasses import dataclass, field, replace
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Protocol
@@ -32,6 +32,8 @@ from swingdesk.contracts.observation import ObservationSeries, ParameterUse
 from swingdesk.contracts.position import ActionKind, ManagementAction, Position
 from swingdesk.contracts.reference import Exchange, Instrument
 from swingdesk.contracts.run import RunManifest, RunMode
+from swingdesk.decision_logic import ranking
+from swingdesk.decision_logic import selection as selection_mod
 from swingdesk.derived_observations import atr, correlation, relative_strength
 from swingdesk.journal_evidence.journal import DecisionRecord, Journal
 from swingdesk.journal_evidence.positions import PositionStore
@@ -164,6 +166,14 @@ class RunResult:
 
     sector_limit: Decimal | Refusal | None = None
     """How much of the book may sit in one sector, or why that has no value."""
+
+    selection: selection_mod.Selection | None = None
+    """What the cross-sectional screen chose, or `None` when it did not run (`DR-030`).
+
+    A `decision_logic.selection.Selection` when it ran: the whole ordering, the cutoff and the
+    names inside it. `None` means no candidate reached the screen, or a parameter had no value
+    - and the per-candidate `Watch` reasons say which.
+    """
 
     sector_book: portfolio.SectorBook | Refusal | None = None
     """The open book split by sector - a run-level fact, unlike correlation.
@@ -365,6 +375,57 @@ def _adtv_lag(registry: ParameterRegistry) -> int | Refusal:
             parameter_id=unset.parameter_id,
         )
     return lag
+
+
+@dataclass(frozen=True, slots=True)
+class _Scored:
+    """One candidate the cross-sectional screen may rank. The three fields a ranking may read.
+
+    Built inside the candidate loop and consumed after it, because a rank is a property of the
+    cross-section and the loop decides one instrument at a time.
+    """
+
+    instrument_id: str
+    index: int
+    session_date: date
+
+
+@dataclass(frozen=True, slots=True)
+class SelectionRule:
+    """`CARD-001`'s four selection inputs, resolved once for the whole run (`DR-030`)."""
+
+    form: str
+    lookback: int
+    method: str
+    cutoff_rule: str
+    parameters: tuple[ParameterUse, ...]
+
+
+def _selection_rule(registry: ParameterRegistry) -> SelectionRule | Refusal:
+    """The card's selection inputs, or a refusal naming the first one with no value.
+
+    All four were `unset` from the card's creation until `DR-030` ruled them on 2026-09-01, and the
+    refusal branch stays because that is the state a fresh registry is in - and because
+    `ALLOCATION_SPEC` 6 rule 4 forbids the alternative: falling back to whatever order the system
+    happens to have is an alphabetical bias silently applied.
+    """
+    try:
+        form, form_use = registry.string_value("rs.benchmark_form")
+        lookback, lookback_use = registry.int_value("rs.lookback")
+        method, method_use = registry.string_value("rs.ranking_method")
+        cutoff, cutoff_use = registry.string_value("screen.relative_strength_rule")
+    except ParameterUnset as unset:
+        return Refusal(
+            "DATA",
+            "no selection rule: a cross-sectional card that cannot rank cannot choose, and ranking "
+            "by the order the system happens to have is an alphabetical bias silently applied "
+            "(ALLOCATION_SPEC 6 rule 4)",
+            parameter_id=unset.parameter_id,
+        )
+    return SelectionRule(
+        form=form, lookback=lookback, method=method, cutoff_rule=cutoff,
+        parameters=(form_use, lookback_use, method_use, cutoff_use),
+    )
 
 
 def _freshness_window(registry: ParameterRegistry) -> int | Refusal:
@@ -961,6 +1022,12 @@ def run(
 
     steps.append("candidates")
 
+    # Collected by the loop, consumed by the cross-sectional screen after it. Only candidates
+    # that cleared every per-instrument gate are here - the screen ranks survivors, never the
+    # whole universe, so a name that failed a cap cannot take a slot from one that did not.
+    selection_series: dict[str, BarSeriesLike] = {}
+    selection_scored: dict[str, _Scored] = {}
+
     for instrument in instruments:
         outcome = InstrumentOutcome(instrument=instrument)
         result.outcomes.append(outcome)
@@ -1209,8 +1276,78 @@ def run(
                 )
                 continue
 
+        selection_series[instrument.id] = stored
+        selection_scored[instrument.id] = _Scored(
+            instrument_id=instrument.id, index=len(stored.bars) - 1,
+            session_date=stored.bars[-1].session_date,
+        )
         outcome.decision = DecisionRecord(instrument.id, "Watch", None,
                                           "sized; awaiting a trigger")
+
+    # 7. THE CROSS-SECTIONAL SCREEN - `CARD-001`'s entry trigger, and the step that makes this run
+    # decide anything at all (`DR-030`).
+    #
+    # Everything above judges ONE instrument. A rank is a property of the cross-section, so it can
+    # only be computed once every survivor has been scored - which is why this sits after the loop
+    # rather than inside it, and why every candidate that cleared the caps carried `Watch` until
+    # 2026-09-01. The card's own words: "Membership of the selection set at the close of the
+    # decision session. There is no separate price trigger, and that is a property of the family
+    # rather than an omission."
+    #
+    # A refusal at any point here leaves every survivor at `Watch` naming the cause. That is the
+    # fail-closed design: `ALLOCATION_SPEC` 6 rule 4 forbids ranking by whatever order the system
+    # happens to have, so a screen that cannot run selects NOTHING rather than selecting the first
+    # four alphabetically.
+    survivors = [
+        outcome for outcome in result.outcomes
+        if outcome.decision is not None and outcome.decision.decision == "Watch"
+    ]
+    if survivors:
+        rule = _selection_rule(registry)
+        if isinstance(rule, Refusal):
+            for outcome in survivors:
+                outcome.decision = DecisionRecord(
+                    outcome.instrument.id, "Watch", None, rule.reason, rule.parameter_id
+                )
+        elif benchmark.series is None:
+            # The path form compares each name to the benchmark session by session, so without the
+            # benchmark there is no score. `Watch`, not `Skip`: the candidate did nothing wrong.
+            for outcome in survivors:
+                outcome.decision = DecisionRecord(
+                    outcome.instrument.id, "Watch", None,
+                    f"no cross-sectional rank: {benchmark.unavailable or 'no benchmark series'}",
+                    "rs.benchmark",
+                )
+        else:
+            ordered = ranking.ByMarketPathStrength(
+                series=selection_series, benchmark=benchmark.series, lookback=rule.lookback,
+            )([selection_scored[outcome.instrument.id] for outcome in survivors])
+            chosen = selection_mod.select(list(ordered), rule.method, rule.cutoff_rule)
+            if isinstance(chosen, selection_mod.Refusal):
+                for outcome in survivors:
+                    outcome.decision = DecisionRecord(
+                        outcome.instrument.id, "Watch", None, chosen.reason, chosen.parameter_id
+                    )
+            else:
+                result.selection = chosen
+                steps.append("selection")
+                for outcome in survivors:
+                    rank = chosen.rank_of(outcome.instrument.id)
+                    if outcome.instrument.id in chosen.selected:
+                        outcome.decision = DecisionRecord(
+                            outcome.instrument.id, "Trade", None,
+                            f"ranked {rank} of {len(chosen.ordered)} by relative strength; "
+                            f"inside the {chosen.rule} cutoff of {chosen.cutoff}",
+                        )
+                    else:
+                        # The rank travels on the REJECTED ones too. A report that showed only the
+                        # winners could not answer "why not me" for a thousand names, and a rank is
+                        # the only honest answer to that question.
+                        outcome.decision = DecisionRecord(
+                            outcome.instrument.id, "Watch", None,
+                            f"ranked {rank} of {len(chosen.ordered)} by relative strength; "
+                            f"outside the {chosen.rule} cutoff of {chosen.cutoff}",
+                        )
 
     # from_state (TRANSITION_SPEC 4). Read as of the run's START, so it reports what the journal
     # said before this run touched it. Every other field on the record says what the candidate

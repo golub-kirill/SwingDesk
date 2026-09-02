@@ -179,6 +179,9 @@ def main() -> int:
         "39 broker read-only": _run("the broker adapter reaches one allowlisted host and "
                                     "carries no write verb",
                                     [python, "tools/verify_broker_policy.py"]),
+        "40 registry keys": _run("no registry file names a key twice, because YAML "
+                                 "drops one without a word",
+                                 [python, "tools/verify_registry_keys.py"]),
     }
 
     print("\n" + "=" * 62)

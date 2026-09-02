@@ -267,9 +267,16 @@ were taken, would the book pass 4R or 4 positions?" — and refused with `Skip` 
 `open-position` applies the same test before recording a manual entry, and refuses without
 `--acknowledge-over-cap "<reason>"`, which is itself recorded (`DR-006` §9.2).
 
-**Not built: the ranking.** Candidates do not compete with each other for the remaining capacity, and
-that is rule 4 being obeyed rather than a shortcut: `rs.ranking_method` is `unset`, so there is no
-ordering to apply, and truncating an id-sorted list is §4's alphabetical bias. The consequence has to
+**BUILT 2026-09-01.** Until then this paragraph read *"not built: the ranking"* — candidates did
+not compete for the remaining capacity, because the ranking method had no value and truncating an
+id-sorted list is §4's alphabetical bias. That was rule 4 being obeyed rather than a shortcut, and
+it is history now. `DR-030` ruled the four
+selection inputs by owner preference after the backtest route closed — `PR-012` refused
+structurally and `PR-013` returned six intervals all including zero — so candidates now DO compete:
+`decision_logic.selection` ranks the survivors and takes the top decile, and everything outside it
+carries its rank and the cutoff in its `Watch` reason. Rule 4 is unchanged and still binding: an
+unset or unrecognised rule refuses rather than falling back to the order the system happens to
+have. The consequence has to
 be said out loud wherever the room is displayed, and the run report says it — **the room shown is for
 ONE more position, not for every candidate listed under it.** Two `Watch` names each individually
 inside a book with one slot left are still two names and one slot.

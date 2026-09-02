@@ -86,7 +86,12 @@ def test_case_covers_every_branch(case_dir) -> None:
     case = harness.load_case(case_dir)
     branches = _decisions(case)
 
-    assert branches["TEST.1"] == ("Watch", None), "a candidate that sizes"
+    # `Trade` since `DR-030` (2026-09-01), and the change is the point rather than a regression.
+    # This read `Watch` for the case's whole life because the cross-sectional screen did not exist:
+    # every candidate that cleared the caps ended "sized; awaiting a trigger" for a trigger nothing
+    # computed. `CARD-001`'s trigger IS membership of the selection set, so a case with one
+    # sizeable candidate now ranks it first of one and takes it.
+    assert branches["TEST.1"] == ("Trade", None), "a candidate that sizes AND ranks inside the cutoff"
     # A different exchange AND a different currency. It reaches sizing on the TSX calendar and is
     # then refused for the reason PR #9 introduced: the account is USD and `account.fx_rate_cad` is
     # null in this case, so the R denominator cannot be expressed in the account's own currency.

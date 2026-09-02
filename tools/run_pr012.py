@@ -39,6 +39,13 @@ sys.path.insert(0, str(REPO / "src"))
 from swingdesk.application.universe import ADTV_WINDOW
 from swingdesk.contracts.market import BarSeries, Interval, Series
 from swingdesk.contracts.trade import Trade
+from swingdesk.decision_logic.ranking import (
+    UNSCORED,
+    ByMarketPathStrength,
+    ByRawReturn,
+    BySectorRelativeStrength,
+    daily_returns,
+)
 from swingdesk.derived_observations import atr as atr_component
 from swingdesk.market_data import BarStore
 from swingdesk.platform.parameters import ParameterRegistry
@@ -54,13 +61,6 @@ from swingdesk.validation.backtest import (
     run_book,
 )
 from swingdesk.validation.backtest.book import Candidate
-from swingdesk.validation.backtest.ranking import (
-    UNSCORED,
-    ByMarketPathStrength,
-    ByRawReturn,
-    BySectorRelativeStrength,
-    daily_returns,
-)
 
 RESULT = REPO / "docs" / "prereg" / "results" / "PR-012.json"
 
@@ -526,7 +526,7 @@ def _reference_score(reference: object, candidate: Candidate, clipped: dict[str,
                      benchmark: BarSeries, sector_of: dict[str, str],
                      means: dict[str, Decimal]) -> Decimal | None:
     """The score `ranking.py` would assign, computed through its own helpers."""
-    from swingdesk.validation.backtest.ranking import _beat_share, _window_return
+    from swingdesk.decision_logic.ranking import _beat_share, _window_return
 
     series = clipped[candidate.instrument_id]
     if isinstance(reference, ByRawReturn):

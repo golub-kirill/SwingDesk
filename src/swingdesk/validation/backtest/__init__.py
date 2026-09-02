@@ -13,6 +13,13 @@ Two properties are structural rather than tested-for:
     reason nobody defined, and a run cannot end with positions quietly dropped.
 """
 
+# Re-exported from `decision_logic`, where it moved on 2026-09-01: a ranking is a SCREENER
+# and the live run needs it. Every caller of `validation.backtest` is unchanged.
+from swingdesk.decision_logic.ranking import (
+    ByMarketPathStrength,
+    ByRawReturn,
+    BySectorRelativeStrength,
+)
 from swingdesk.decision_logic.triggers import (
     AlwaysEligible,
     BreakoutHigh,
@@ -34,11 +41,6 @@ from swingdesk.validation.backtest.engine import (
     BacktestConfig,
     Skipped,
     run_arm,
-)
-from swingdesk.validation.backtest.ranking import (
-    ByMarketPathStrength,
-    ByRawReturn,
-    BySectorRelativeStrength,
 )
 
 __all__ = [

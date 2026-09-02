@@ -488,9 +488,12 @@ parameters:
       ever set here it is set by OWNER PREFERENCE with that recorded - provenance 'owner', never
       'validated:' - unless a study with a different trigger or exit model separates them, which
       would be a new question that does not inherit these results.
+      WHAT THE COURSE SUPPLIES, kept here for the same reason: it was a second `note:` key
+      until 2026-09-01 and everything above it was dropped at load. The course requires a
+      quantitative definition of trend and supplies none; a pre-registration is required before
+      activation.
       See docs/prereg/results/PR-001-report.md and PR-005-report.md.
     named_in: [M33-T0485, M71-T1057]
-    note: Requires a quantitative definition of trend. Pre-registration required before activation.
     ui_editable: false
 
   - id: screen.max_distance_from_high_pct
@@ -504,12 +507,16 @@ parameters:
 
   - id: screen.relative_strength_rule
     unit: rule
-    value: null
-    status: unset
-    provenance: null
-    read_by: none
+    value: "top_decile"
+    status: owner
+    provenance: owner
+    read_by: swingdesk.application.pipeline:_selection_rule
     named_in: [M33-T0487, M31-T0464]
-    note: Lookback, ranking method and percentile cutoff all unspecified.
+    note: >-
+      RULED BY THE OWNER 2026-09-01 (DR-030). The cutoff both PR-012 and PR-013 used. At ~1,100
+      admitted names the top decile is ~110 and risk.max_concurrent_positions (4) binds LONG
+      before it does, so this value picks who is eligible and the ratified caps pick who is taken.
+      Lookback, ranking method and percentile cutoff all unspecified.
     ui_editable: false
 
   - id: screen.breakout_definition
@@ -891,31 +898,44 @@ parameters:
       irrelevant. Owner decision D10 (2026-08-02) reaffirmed the free tier knowing this, so the
       direction will not be confirmed.
       A regime is a gauge, not a source of confidence (M30-T0450); ACTING on it is M30-T0451, a
+      WHAT THE COURSE SUPPLIES, kept here because this was a second `note:` key until
+      2026-09-01 and YAML silently dropped everything above it: the course defines 11 regimes
+      and the matrix of what each permits, and names the inputs (direction, ATR, ADX,
+      participation), but no rule produces the label. Fully authored, and load-bearing for the
+      whole strategy-selection matrix.
       separate Untested topic. See docs/prereg/results/PR-002-report.md.
     named_in: [M30-T0450, Appendix L]
-    note: >-
-      The course defines 11 regimes and the matrix of what each permits, and names the inputs
-      (direction, ATR, ADX, participation), but no rule produces the label. Fully authored, and
-      load-bearing for the whole strategy-selection matrix.
     ui_editable: false
 
   - id: rs.lookback
     unit: trading days
-    value: null
-    status: unset
-    provenance: null
-    read_by: none
+    value: 126
+    status: owner
+    provenance: owner
+    read_by: swingdesk.application.pipeline:_selection_rule
     named_in: [M31-T0464, M77-T1138]
     ui_editable: true
+    note: >-
+      RULED BY THE OWNER 2026-09-01 (DR-030). 126 sessions, because changing it changes the
+      UNIVERSE rule: PR-012 section 4 defines the study window as the first session on which 200
+      admitted names have a full 126-session lookback, and PR-013 inherited it. Also inside
+      Jegadeesh & Titman (1993)'s 3-12 month FORMATION band - the half of that literature the
+      20-session hold does not contradict.
 
   - id: rs.ranking_method
     unit: rule
-    value: null
-    status: unset
-    provenance: null
-    read_by: none
+    value: "descending"
+    status: owner
+    provenance: owner
+    read_by: swingdesk.application.pipeline:_selection_rule
     named_in: [M31-T0465]
     ui_editable: false
+    note: >-
+      RULED BY THE OWNER 2026-09-01 (DR-030). Descending rank across the admitted cross-section
+      on the decision date, with ALLOCATION_SPEC section 6's stable tiebreak on instrument_id: a
+      total order is mandatory or a re-run is not a re-run. A name that cannot be scored sorts to
+      the BOTTOM rather than being dropped - it competes and loses, which is a different and
+      honest claim from disappearing.
 
   - id: rs.benchmark
     unit: instrument id
@@ -939,12 +959,15 @@ parameters:
 
   - id: rs.benchmark_form
     unit: rule
-    value: null
-    status: unset
-    provenance: null
-    read_by: none
+    value: "path"
+    status: owner
+    provenance: owner
+    read_by: swingdesk.application.pipeline:_selection_rule
     named_in: [M31-T0464]
     note: >-
+      RULED BY THE OWNER 2026-09-01 (DR-030), provenance owner and never validated:.
+      The path form - share of the lookback's sessions the name beat rs.benchmark - because the
+      alternative is measured to be a lie about the card's own name: see below.
       HOW a candidate is compared to rs.benchmark, and it decides whether the benchmark means
       anything at all. Measured 2026-08-24: the usual point-to-point form (1+own)/(1+benchmark) is a
       strictly monotone transform of the name's own return on any single cross-section, because the

@@ -95,6 +95,16 @@ def registry() -> ParameterRegistry:
         # so the cap binds on nothing here. `test_sizing`'s own tests bind it deliberately.
         "risk.liquidity_cap_order_to_adtv_pct": "1.0",
         "universe.adtv_lag_sessions": 3,
+        # `CARD-001`'s selection rule (`DR-030`, owner 2026-09-01). Real values again, and here the
+        # argument is stronger than for the caps: these four are what turn a `Watch` into a
+        # `Trade`, so a fixture that left them unset would be testing the system as it was before
+        # it could decide anything. `rs.lookback` is the one exception - 126 sessions is longer
+        # than most fixtures are, so the ranking scores those names UNSCORED and sorts them to the
+        # bottom, which is the designed behaviour and is exercised by `test_selection.py`.
+        "rs.benchmark_form": "path",
+        "rs.lookback": 126,
+        "rs.ranking_method": "descending",
+        "screen.relative_strength_rule": "top_decile",
     }
     return ParameterRegistry(
         {
