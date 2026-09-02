@@ -4,17 +4,26 @@ Decision-support software for swing trading Canadian and US equities and ETFs. I
 charts, indicators, market structure, setups, risk figures, journal and statistics defined by the
 owner's 116-file swing-trading course, and records every decision with an audit trail.
 
-**No order that can move the owner's money is ever placed by this system.** The human makes every
-trading decision that involves capital; this system prepares and records them. No advice to third
-parties, no multi-user service.
+**There is no broker integration and no real order is ever placed.** No order that can move the
+owner's money, no live venue, no automated execution of anything with capital behind it. The human
+makes every trading decision that involves money; this system prepares and records them. No advice
+to third parties, no multi-user service.
 
-**It does place orders on a paper venue, and that is a deliberate, recorded exception.** `CHARTER`
-A-002 (owner ruling, 2026-09-01) scopes the human-only rule to real money: on an account with no
-owner capital behind it, the system may submit an order it decided on with no per-order approval,
-because the reason the rule existed — irreversible risk — does not apply there. `DR-026` and
-`DR-027` carry the reasoning and the guards, and the boundary between the two cases is a committed
-host allowlist enforced by a merge gate, because **a brokerage account object carries no field
-saying whether it is paper or live** — which host was called is the only difference there is.
+**What exists is a paper account used as a RESEARCH INSTRUMENT** — owner framing, 2026-09-01, and
+the distinction is the point rather than a softening. The purpose is to put this system's own
+machinery in front of a real venue's fills, partial fills, rejects and halts instead of a fixture,
+so that what it does can be studied. It is a measuring instrument that happens to speak a broker's
+protocol, not a route to market.
+
+`CHARTER` A-002 is the ruling that permits it and it is scoped exactly that narrowly: on an account
+with no owner capital behind it the system may submit without per-order approval, because the
+reason the human-only rule existed — irreversible risk — does not apply there. On anything that can
+move money, A-001 stands unchanged and unweakened.
+
+The boundary between the two is a committed host allowlist enforced by a merge gate, because
+**a brokerage account object carries no field saying whether it is paper or live** — which host was
+called is the only difference there is. `DR-026`, `DR-027` and `DR-028` carry the reasoning and the
+guards.
 
 ## Status
 
@@ -23,11 +32,11 @@ different claims and this project keeps them apart deliberately.
 
 *Closed* means a position can be recorded, evaluated before candidates on every scheduled run,
 proposed on, approved by the owner, applied, and settled against what the broker actually did —
-end to end, on real bars, first demonstrated 2026-08-17. Since 2026-09-01 the broker in that
-sentence is a real venue rather than a hand-typed line: `swingdesk broker` reads an Alpaca paper
-account and reconciles it against this system's own book, reporting disagreement in the course's
-own code (`TECH`, *"broker/platform/journal mismatch"*, whose prescribed action is *"pause new
-entries"*).
+end to end, on real bars, first demonstrated 2026-08-17. Since 2026-09-01 the fills in that
+sentence can come from the paper account rather than from a line the owner typed: `swingdesk
+broker` reads it and reconciles it against this system's own book, reporting disagreement in the
+course's own code (`TECH`, *"broker/platform/journal mismatch"*, whose prescribed action is
+*"pause new entries"*).
 
 *Not known to work* means the base strategy is negative at measured costs across the whole
 admissible universe and **no parameter in this system has ever reached `validated`**. See

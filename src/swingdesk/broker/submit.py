@@ -13,18 +13,37 @@ the wire.
 from __future__ import annotations
 
 import re
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 
 from swingdesk.broker.policy import PolicyRefused, WritePolicy
 from swingdesk.contracts.broker import EntryOrder
 from swingdesk.contracts.reference import Exchange
+from swingdesk.platform.parameters import ParameterRegistry
 from swingdesk.reference_data import calendar as cal
 
 #: What may appear in an instrument id that becomes part of a `client_order_id`. Deliberately does
 #: NOT sanitise: replacing an unexpected character would let two different instruments derive the
 #: same id, and a collision on an idempotency key is the one failure this key exists to prevent.
 SAFE_ID = re.compile(r"^[A-Za-z0-9.\-]+$")
+
+
+def trading_session(market: str, as_of: datetime) -> date:
+    """The exchange session a decision taken at `as_of` belongs to. **Never a clock's date.**
+
+    `DR-027` 5 keys idempotency on the session, so what counts as "the session" is load-bearing:
+    two passes on one evening must derive the same key or the second submits the same entry again.
+
+    **A clock's date does not do that, and a real order proved it.** The first probe ran at about
+    19:57 New York time on 1 September and `datetime.now(UTC).date()` was already the **2nd**. The
+    18:30 pass and the 19:30 retry `DR-015` explicitly provides for therefore straddle midnight UTC
+    on every ordinary evening, and would have carried two different ids for one decision - which is
+    the whole idempotency property, gone, in the one place it was supposed to hold.
+
+    The exchange calendar has no such seam: both passes resolve to the session that closed at 16:00
+    local, whatever the clock says elsewhere.
+    """
+    return cal.last_completed_session(Exchange(market), as_of).session_date
 
 
 def client_order_id(
@@ -54,11 +73,37 @@ def client_order_id(
     return derived
 
 
+def target_price(entry: Decimal, risk_per_share: Decimal, registry: ParameterRegistry) -> Decimal:
+    """The take-profit leg, at `exit.target_r_multiple` R above the entry.
+
+    **In R, not in percent and not in ATR**, because R is what the whole validation programme is
+    denominated in and it is already volatility-normalised: `risk_per_share` is
+    `entry - stop + costs`, frozen at entry (`RISK_SPEC` 2). A target in R is therefore comparable
+    across instruments without a second convention, which `exit.percentage_target` would not be.
+
+    **The form is the course's and the value is the owner's**, exactly as the stop multiple was.
+    `M53-T0807`, `T0808` and `T0809` are "exit at 1R", "exit at 2R" and "exit at 3R" - three
+    Definitions, no ruling between them.
+
+    Raises `ParameterUnset` while the value is unset, which means no order at all: the venue
+    requires both legs of a bracket, and inventing a target to satisfy a wire format would be
+    authoring a threshold (`AGENTS.md` 8).
+    """
+    multiple, _ = registry.decimal_value("exit.target_r_multiple")
+    if multiple <= 0:
+        raise ValueError(
+            f"exit.target_r_multiple is {multiple}; a target at or below the entry is an "
+            f"instruction to sell at a loss on the way up"
+        )
+    return entry + multiple * risk_per_share
+
+
 def entry_order(
     instrument_id: str,
     shares: int,
     limit_price: Decimal,
     stop_price: Decimal,
+    target: Decimal,
     session_date: date,
     write: WritePolicy,
     market: str,
@@ -96,4 +141,5 @@ def entry_order(
         shares=shares,
         limit_price=limit_price,
         stop_price=stop_price,
+        target_price=target,
     )

@@ -190,3 +190,60 @@ survived and all twelve columns appeared. The live store was not touched.
 
 **What this does NOT change.** The switch is still absent, which is still its default, so nothing
 has been submitted. §6's condition was the blocker on *arming*; arming remains the owner's act.
+
+---
+
+## 9. Amendment, 2026-09-01 — two defects a real order found, and a target that is now mandatory
+
+**Appended, not edited.** §3.2 and §5 were written from the API reference and were wrong in ways
+only the venue could say. A probe placed one deliberately unfillable order and both surfaced in the
+first attempt, which is the whole argument for probing before depending on something.
+
+### 9.1 A bracket is a chain of THREE, and the target is now mandatory anyway
+
+§3.2 specified a bracket carrying a stop leg only. The venue refused it:
+
+> `bracket orders require take_profit.limit_price`
+
+`oto` would have taken a single leg — and in the same hour the owner ruled that **a target is
+mandatory, and not only for paper**: a trade is carried from discovery to close and then observed,
+so that the research data comes from a **completed** trade rather than from one that ran out of
+time. So `bracket` is right for a reason better than the wire format, and the take-profit leg is
+`exit.target_r_multiple` R above the entry.
+
+**The form is the course's and the value is the owner's, exactly as the stop multiple was.**
+`M53-T0807`, `T0808` and `T0809` are *"exit at 1R"*, *"exit at 2R"* and *"exit at 3R"* — three
+Definitions, no ruling between them. **The parameter is `unset` and therefore nothing can be
+submitted at all**, which is the fail-closed design rather than a gap: inventing a target to satisfy
+a wire format would be authoring a threshold (`AGENTS.md` §8).
+
+In R rather than percent or ATR, because R is what the validation programme is denominated in and it
+is already volatility-normalised — `entry - stop + costs`, frozen at entry (`RISK_SPEC.md` §2). A
+percentage target would be 0.5R on a volatile name and 3R on a quiet one.
+
+### 9.2 The session is the exchange's, never a clock's date — and this one was nearly invisible
+
+§5 keys idempotency on "the session date" and the code read `now.date()`. The probe ran at about
+**19:57 New York** on 1 September and the derived key said **`2026-09-02`**.
+
+**That breaks the property in exactly the case it exists for.** `DR-015` provides for a retried
+evening pass at 19:30. The 18:30 pass and the retry straddle midnight UTC on **every ordinary
+evening**, so the two would carry different ids for one decision and the venue would accept both —
+the same entry, submitted twice, on the one mechanism that was supposed to make that impossible.
+
+`broker.submit.trading_session` now resolves it through the exchange calendar
+(`last_completed_session`), which has no such seam: both passes land on the session that closed at
+16:00 local. Re-run after the fix, the key read `swingdesk-2026-09-01-SPY`.
+
+**Nothing would have caught this.** Every test passed, both before and after; a fixture clock does
+not straddle midnight unless somebody thought to make it, and nobody had. It took an order.
+
+### 9.3 What the probe established, and what it did not
+
+The venue **accepted** a full bracket through the production path — `entry_order` built it,
+`AlpacaClient.submit` sent it, `guards` let it through, and the journal recorded it under a `probe-`
+run id. Order `1a44d118-59f3-428f-83e7-47cc09bd3e98`, status `accepted`, 0 of 1 filled.
+
+It establishes that the write path works. It establishes **nothing** about the strategy: the limit
+was far below the market on purpose, so the order could not fill, and no position was acquired. The
+switch was disarmed immediately afterwards and is absent again, which is its default.

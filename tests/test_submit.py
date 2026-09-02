@@ -12,6 +12,7 @@ risk is in the other one.
 from __future__ import annotations
 
 import json
+import re
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -44,10 +45,16 @@ def _write_policy():
     return write
 
 
+#: The take-profit leg. `exit.target_r_multiple` is UNSET in the real registry, so these tests pass
+#: a price directly rather than reading it - `test_the_target_comes_from_a_parameter` is what covers
+#: the read, and it asserts the unset case, which is production's today.
+TARGET = Decimal("55.50")
+
+
 def _order(instrument_id: str = "TEST.1", shares: int = 10) -> EntryOrder:
     return submit.entry_order(
         instrument_id=instrument_id, shares=shares,
-        limit_price=Decimal("50.25"), stop_price=Decimal("45.00"),
+        limit_price=Decimal("50.25"), stop_price=Decimal("45.00"), target=TARGET,
         session_date=SESSION, write=_write_policy(), market="NYSE",
     )
 
@@ -179,7 +186,7 @@ def test_a_stop_at_or_above_the_limit_is_refused() -> None:
     with pytest.raises(ValueError, match="not below the limit"):
         EntryOrder(
             client_order_id="x", session_date=SESSION, instrument_id="TEST.1", symbol="TEST.1",
-            shares=1, limit_price=Decimal("50"), stop_price=Decimal("50"),
+            shares=1, limit_price=Decimal("50"), stop_price=Decimal("50"), target_price=TARGET,
         )
 
 
@@ -225,6 +232,9 @@ def test_an_armed_client_sends_the_bracket_dr_027_specifies() -> None:
     # position reports is denominated in it (DR-027 3.1).
     assert body["limit_price"] == "50.25"
     assert body["stop_loss"] == {"stop_price": "45.00"}
+    # A bracket is a chain of THREE and the venue refuses one with a leg missing - measured against
+    # the real endpoint, not read: `bracket orders require take_profit.limit_price` (`DR-027` 9).
+    assert body["take_profit"] == {"limit_price": "55.50"}
     assert body["client_order_id"] == "swingdesk-2026-09-01-TEST.1"
 
     assert placed.client_order_id == "swingdesk-2026-09-01-TEST.1"
@@ -297,3 +307,57 @@ def test_a_policy_permitting_cancellation_will_not_load(tmp_path: Path) -> None:
 def test_the_write_verb_comes_from_the_policy_and_not_from_the_code() -> None:
     """Which is why gate 39 can keep an absolute rule about verb literals in the package."""
     assert policy_module.load().write_method == "POST"
+
+
+# --- the target, which is mandatory and unset -------------------------------------------------
+
+
+def test_a_target_at_or_below_the_entry_is_refused() -> None:
+    """An instruction to sell at a loss on the way up."""
+    with pytest.raises(ValueError, match="not above the limit"):
+        EntryOrder(
+            client_order_id="x", session_date=SESSION, instrument_id="TEST.1", symbol="TEST.1",
+            shares=1, limit_price=Decimal("50"), stop_price=Decimal("45"),
+            target_price=Decimal("50"),
+        )
+
+
+def test_the_target_comes_from_a_parameter_and_it_is_unset() -> None:
+    """Production's state today, asserted rather than described.
+
+    `exit.target_r_multiple` has no value, so there is no order at all - the venue requires both
+    legs of a bracket, and inventing a target to satisfy a wire format would be authoring a
+    threshold (`AGENTS.md` 8). The course names three candidates and rules between none of them.
+    """
+    from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
+
+    with pytest.raises(ParameterUnset, match=re.escape("exit.target_r_multiple")):
+        submit.target_price(Decimal("100"), Decimal("5"), ParameterRegistry.load())
+
+
+def test_the_target_is_r_above_the_entry_once_a_value_exists() -> None:
+    """R is `entry - stop + costs`, so the target is volatility-normalised by construction."""
+    from swingdesk.platform.parameters import ParameterRegistry
+
+    registry = ParameterRegistry({
+        "exit.target_r_multiple": {
+            "id": "exit.target_r_multiple", "value": "2.0", "provenance": "owner",
+            "status": "owner", "unit": "R", "named_in": ["M53-T0808"],
+        },
+    })
+    assert submit.target_price(Decimal("100"), Decimal("5.27"), registry) == Decimal("110.54")
+
+
+def test_the_trading_session_is_the_exchange_s_and_not_the_clock_s() -> None:
+    """`DR-027` 9, and a real order is what found it.
+
+    At 19:57 New York on 1 September the UTC date is already the 2nd, so the 18:30 pass and the
+    19:30 retry `DR-015` provides for would key on different days and resubmit every entry.
+    """
+    from datetime import timedelta
+
+    after_the_close = datetime(2026, 9, 2, 0, 57, tzinfo=UTC)
+    before_midnight = after_the_close - timedelta(hours=2)
+    assert after_the_close.date() != before_midnight.date(), "the fixture must straddle midnight"
+    assert (submit.trading_session("NYSE", after_the_close)
+            == submit.trading_session("NYSE", before_midnight))

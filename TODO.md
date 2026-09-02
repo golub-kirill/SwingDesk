@@ -1907,6 +1907,44 @@ is for where no gate can reach.
 
 ## 5. Studies
 
+- [ ] **`[!]` THE TAKE-PROFIT TARGET NEEDS THE OWNER'S NUMBER, AND IT IS THE ONLY THING BLOCKING A
+      PAPER TRADE.** Owner instruction 2026-09-01: a target is mandatory and not only for paper - a
+      trade is carried from discovery to close and then observed, so the research data comes from a
+      COMPLETED trade. `exit.target_r_multiple` is in the registry, `unset`, read by
+      `broker.submit:target_price`, and every submission refuses until it has a value.
+      **The course names the form and three candidate values and rules between none of them**:
+      `M53-T0807` *exit at 1R*, `M53-T0808` *exit at 2R*, `M53-T0809` *exit at 3R*, all Definitions.
+      **MEASURED 2026-09-01 on the whole admitted universe** - 1,505 instruments, 91,572
+      non-overlapping 20-session windows, entry at the next open, stop 1R below, first touch, a bar
+      containing both counted as a STOP the way `manage.evaluate` resolves it:
+      ```bash
+      PYTHONPATH=$PWD/src python tools/measure_target_reachability.py --data <store>
+      ```
+
+      | target | hit | stopped | timed out | expectancy over resolved |
+      |---|---|---|---|---|
+      | 0.5R | 67.0% | 30.4% | 2.6% | +0.032R |
+      | **1.0R** | **46.8%** | **41.7%** | **11.4%** | **+0.057R** |
+      | 1.5R | 31.3% | 45.6% | 23.1% | +0.017R |
+      | 2.0R | 19.6% | 46.7% | 33.6% | −0.113R |
+      | 3.0R | 7.1% | 47.2% | 45.7% | −0.479R |
+
+      **3R is ruled out by the data rather than by taste:** 45.7% of windows never resolve, so the
+      course's own third candidate and this project's ratified 20-session hold are incompatible.
+      **2R is already negative** and times out a third of the time. The curve peaks at 1R.
+      **WHAT THIS MEASUREMENT IS NOT, and it is the half that matters.** Entries are every 20th
+      session on every admitted name - **no selection at all** - so a near-zero expectancy at every
+      target is exactly what an efficient market should give. It measures how far these instruments
+      TRAVEL, which is the input to choosing a target; it says nothing about whether an edge exists,
+      and choosing the target that maximises expectancy on unselected entries would be optimising
+      for noise. Gross of costs. Expectancy is over RESOLVED windows only, because a time exit is
+      worth whatever the position was on session 20 and this tool does not price it.
+      **A method error, recorded because the first run was wrong by a factor of seven.** It counted
+      a target hit on every bar that cleared the level rather than once per window, so 0.5R
+      "reached" 694% of entries. A share above 100% is the shape that finding takes, which is why
+      the table prints shares rather than counts alone.
+
+
 - [ ] **`[v]` THE HOLDING HORIZON IS WHY BOTH STUDIES FOUND NOTHING — measured 2026-08-31,
       EXPLORATORY, sets nothing.** `python tools/measure_momentum_horizon.py --data <store>`.
       **The literature first** (`AGENTS.md` §10.3 — searched before authoring). Jegadeesh (1990)

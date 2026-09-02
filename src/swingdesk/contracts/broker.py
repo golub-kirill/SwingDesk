@@ -201,14 +201,25 @@ class EntryOrder(BaseModel):
     shares: int = Field(gt=0, description="Whole shares. The sizing produced this number.")
     limit_price: Decimal = Field(gt=0)
     stop_price: Decimal = Field(gt=0)
+    target_price: Decimal = Field(
+        gt=0,
+        description="The take-profit leg. Mandatory by owner ruling 2026-09-01: a trade is carried "
+                    "to CLOSE and then observed, so the research data comes from a completed trade "
+                    "rather than from one that ran out of time.",
+    )
 
     @model_validator(mode="after")
-    def _stop_below_entry(self) -> EntryOrder:
+    def _legs_bracket_the_entry(self) -> EntryOrder:
         if self.stop_price >= self.limit_price:
             raise ValueError(
                 f"stop {self.stop_price} is not below the limit {self.limit_price}. This system "
                 f"describes long positions only, and a bracket whose stop is at or above its entry "
                 f"would be rejected by the venue after being recorded here as sent."
+            )
+        if self.target_price <= self.limit_price:
+            raise ValueError(
+                f"target {self.target_price} is not above the limit {self.limit_price}. A target "
+                f"at or below the entry is an instruction to sell at a loss on the way up."
             )
         return self
 

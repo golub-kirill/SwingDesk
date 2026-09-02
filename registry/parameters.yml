@@ -715,6 +715,27 @@ parameters:
     named_in: [M53-T0816]
     ui_editable: true
 
+  - id: exit.target_r_multiple
+    unit: R
+    value: null
+    status: unset
+    provenance: null
+    read_by: swingdesk.broker.submit:target_price
+    named_in: [M53-T0807, M53-T0808, M53-T0809]
+    ui_editable: true
+    note: >-
+      The take-profit leg, in R. Owner instruction 2026-09-01: a target is mandatory and not only for
+      paper - a trade is carried from discovery to close and then observed, so that the research data
+      comes from a COMPLETED trade rather than from one that timed out.
+      THE COURSE NAMES THE FORM AND THREE CANDIDATE VALUES AND PICKS NONE: M53-T0807, T0808 and
+      T0809 are "exit at 1R", "exit at 2R" and "exit at 3R", all claim_type Definition. So the form
+      is the course's and the value is the owner's, exactly as exit.atr_stop_multiple was.
+      R HERE IS THE POSITION'S OWN DENOMINATOR - entry - stop + costs, frozen at entry (RISK_SPEC 2)
+      - so the target is volatility-normalised by construction and comparable across instruments,
+      which a percentage target (exit.percentage_target, M53-T0816) is not.
+      UNSET REFUSES. The venue requires both legs of a bracket, so with no target there is no order
+      at all; inventing one to satisfy a wire format would be authoring a threshold (AGENTS 8).
+
   - id: exit.max_holding_period
     unit: trading days
     value: 20
