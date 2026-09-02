@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -43,6 +43,11 @@ from swingdesk.trade_management.sizing import (
 )
 
 DEFAULT_DATA = Path("data")
+
+#: What `sync-fills` writes into `Position.strategy`. The card that decided the entry
+#: (`DR-030`), not a literal typed twice - a position whose strategy tag says `unspecified`
+#: cannot be grouped with the trades that validate the card it came from.
+STRATEGY_TAG = "CARD-001"
 
 
 def _instrument(ticker: str) -> Instrument:
@@ -155,6 +160,17 @@ def main(argv: list[str] | None = None) -> int:
     opened.add_argument("--as-of", default=None,
                         help="ISO instant this is being recorded as of; defaults to now")
 
+    sync = sub.add_parser(
+        "sync-fills",
+        help="record positions for entries THIS system placed that have since filled (DR-031). "
+             "Reads the venue, writes the book, places no order",
+    )
+    sync.add_argument("--data", type=Path, default=DEFAULT_DATA)
+    sync.add_argument("--as-of", default=None,
+                      help="ISO instant this is recorded at; defaults to now")
+    sync.add_argument("--dry-run", action="store_true",
+                      help="say what would be recorded and record nothing")
+
     broker_cmd = sub.add_parser(
         "broker",
         help="read the paper account and reconcile it against the book. Reads only - it has no "
@@ -175,6 +191,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "broker":
         return _broker(args)
+    if args.command == "sync-fills":
+        return _sync_fills(args)
 
     if args.command == "pending":
         return _pending(args)
@@ -531,6 +549,147 @@ def _submit(
         print(f"  SENT     {order.instrument_id:<10} {order.shares} sh "
               f"limit {order.limit_price} stop {order.stop_price}  "
               f"{placed.status}  {placed.client_order_id}")
+
+
+def _sync_fills(args: argparse.Namespace) -> int:
+    """Record a `Position` for every entry THIS system placed that has since filled. `DR-031`.
+
+    **This is the step that was a person, and it is the last one in the loop.** `DR-027` §11 stops
+    submission whenever the venue holds something the book does not carry - which, before this
+    command existed, meant every evening after the first, because `positions.duckdb` was written
+    only by hand. The guard was right and the manual step was the cost of it.
+
+    **It writes the book and never the venue.** No order is placed, amended or cancelled here; the
+    only network calls are two GETs. `D1` is untouched - this records a fill that has already
+    happened, which is exactly what `open-position` does, with the typing done from our own record
+    instead of by an operator at 18:35.
+
+    Three exit codes, and the middle one is the point:
+
+        0  the book now describes every holding this system placed
+        2  the venue could not be read, or a cost parameter has no value - nothing was written
+        3  the venue holds something that traces to no order of ours. NOT an error in this
+           command: it is `TECH`, and the action is a person's
+    """
+    from swingdesk import broker as broker_pkg
+    from swingdesk.trade_management import adoption
+
+    clock = (
+        FixedClock(datetime.fromisoformat(args.as_of).replace(tzinfo=UTC))
+        if args.as_of
+        else SystemClock()
+    )
+    now = clock.now()
+    registry = ParameterRegistry.load()
+
+    try:
+        policy = broker_pkg.load_policy()
+        client = broker_pkg.open_client(policy)
+    except broker_pkg.PolicyRefused as refused:
+        print(f"sync REFUSED  {refused}", file=sys.stderr)
+        return 2
+    except broker_pkg.CredentialsMissing as missing:
+        print(f"sync UNAVAILABLE  {missing}", file=sys.stderr)
+        return 2
+
+    try:
+        held = client.positions(now)
+        # The fills feed is read for ONE field the positions endpoint does not carry: the session
+        # the fill happened in. `opened_on` is event time and `knowledge_time` is when we learned
+        # it - the bitemporal split `open-position` keeps by hand, kept here by machine.
+        fills = client.fills(now)
+    except broker_pkg.BrokerUnavailable as unavailable:
+        print(f"sync UNAVAILABLE  {unavailable}", file=sys.stderr)
+        return 2
+
+    opened_on: dict[str, date] = {}
+    for fill in fills:
+        # EARLIEST fill wins. A position built up over several partial fills was opened when the
+        # first one printed, not when the last one completed it.
+        session = fill.transaction_time.date()
+        if fill.symbol not in opened_on or session < opened_on[fill.symbol]:
+            opened_on[fill.symbol] = session
+
+    print(f"{policy.label}  {len(held)} holding(s) at the venue")
+
+    recorded = 0
+    untraceable: list[str] = []
+    refusals: list[str] = []
+
+    with (
+        Journal(args.data / "journal.duckdb") as journal,
+        PositionStore(args.data / "positions.duckdb") as store,
+    ):
+        known = {position.instrument_id for position in store.open_as_of(now)}
+        for holding in held:
+            if holding.symbol in known:
+                continue
+
+            submission = journal.latest_sent_submission(holding.symbol)
+            if submission is None:
+                # NOT adopted, and this is the branch that keeps the system honest. A holding we
+                # cannot trace to an order of ours is somebody trading by hand, and `DR-027` §11's
+                # guard should go on stopping submission until a person deals with it.
+                untraceable.append(holding.symbol)
+                continue
+
+            if holding.symbol not in opened_on:
+                # A holding with no fill in the feed cannot be dated, and `opened_on` is what every
+                # holding-period rule counts from. Refused rather than dated from a clock.
+                refusals.append(
+                    f"{holding.symbol}: held at the venue with no fill in the activities feed, so "
+                    f"the session it opened in is unknown"
+                )
+                continue
+
+            position = adoption.adopt(
+                holding=holding,
+                submitted=adoption.SubmittedEntry(
+                    instrument_id=submission.instrument_id,
+                    stop_price=submission.stop_price,
+                    client_order_id=submission.client_order_id,
+                ),
+                opened_on=opened_on[holding.symbol],
+                knowledge_time=now,
+                registry=registry,
+                strategy=STRATEGY_TAG,
+            )
+            if isinstance(position, Refusal):
+                refusals.append(f"{holding.symbol}: {position}")
+                continue
+
+            if args.dry_run:
+                print(f"  WOULD RECORD  {position.instrument_id:<10} {position.shares} sh "
+                      f"entry {position.entry_price} stop {position.current_stop}")
+                recorded += 1
+                continue
+
+            try:
+                store.record(position)
+            except Exception as unwritable:  # noqa: BLE001 - loud, and the rest still record
+                refusals.append(f"{holding.symbol}: could not be recorded: {unwritable}")
+                continue
+            recorded += 1
+            print(f"  RECORDED  {position.instrument_id:<10} {position.shares} sh "
+                  f"entry {position.entry_price} stop {position.current_stop} "
+                  f"costs {position.initial_costs_per_share}/sh  opened {position.opened_on}")
+
+    if not recorded and not untraceable and not refusals:
+        print("  nothing to record - the book already describes every holding")
+
+    for reason in refusals:
+        print(f"  REFUSED  {reason}", file=sys.stderr)
+
+    if untraceable:
+        print(f"  {broker_pkg.MISMATCH_CODE}  {len(untraceable)} holding(s) trace to no order this "
+              f"system sent: {', '.join(untraceable)}. Not adopted - record them with "
+              f"`open-position` or close them at the venue. New entries stay paused until then.",
+              file=sys.stderr)
+        return 3
+
+    if refusals:
+        return 2
+    return 0
 
 
 def _broker(args: argparse.Namespace) -> int:

@@ -295,6 +295,28 @@ class Journal:
         ).fetchall()
         return [Submission(*row) for row in rows]
 
+    def latest_sent_submission(self, instrument_id: str) -> Submission | None:
+        """The most recent order this system actually PUT ON THE WIRE for one instrument.
+
+        `outcome = 'sent'` and nothing else: a `stopped`, `refused` or `rejected` row is an attempt
+        that never reached the venue, so a holding could not have come from one. Adopting a venue
+        position against a stopped attempt would credit this system with an order it did not place
+        and, worse, write that attempt's stop into the book (`DR-031`).
+
+        `None` when there is none, which is the answer that keeps `DR-027` §11's guard stopping
+        submission: a holding we cannot trace to an order of ours is somebody trading by hand.
+        """
+        row = self._connection.execute(
+            "SELECT run_id, client_order_id, attempted_at, session_date, instrument_id, shares, "
+            "limit_price, stop_price, outcome, detail, venue_order_id, venue_status "
+            "FROM submissions WHERE instrument_id = ? AND outcome = 'sent' "
+            # Ties broken by the id, so two attempts recorded in the same instant resolve the same
+            # way on every read - `DETERMINISM_SPEC` §3.2 applied to a store, not to a report.
+            "ORDER BY attempted_at DESC, client_order_id DESC LIMIT 1",
+            [instrument_id],
+        ).fetchone()
+        return Submission(*row) if row else None
+
     def decisions_for(self, run_id: str) -> list[DecisionRecord]:
         rows = self._connection.execute(
             "SELECT instrument_id, decision, reason_code, reason, parameter_id, previous_decision "

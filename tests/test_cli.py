@@ -1659,3 +1659,188 @@ def test_uncommitted_exposure_ignores_a_book_position_this_venue_cannot_hold() -
     )
     assert uncommitted_exposure([canadian], [], [], "NYSE") == ()
     assert uncommitted_exposure([canadian], [_venue_position("AAPL")], [], "NYSE") == ("AAPL",)
+
+
+# --------------------------------------------------------------------------------------------
+# `sync-fills`: the step that was a person (`DR-031`).
+#
+# DR-027 section 11 stops submission whenever the venue holds something the book does not carry.
+# That was correct and it made the machine one that ran once, because `positions.duckdb` was
+# written only by hand. This closes the loop - and the tests that matter are the ones asserting
+# what it will NOT adopt.
+
+
+def _sync_args(tmp_path: Path, dry_run: bool = False):
+    import argparse
+
+    return argparse.Namespace(
+        data=tmp_path, as_of="2026-09-03T22:30:00", dry_run=dry_run,
+    )
+
+
+def _fill(symbol: str, order_id: str = "o-1", when: str = "2026-09-02T14:31:00+00:00"):
+    from swingdesk.contracts.broker import BrokerFill, FillKind, Side
+
+    return BrokerFill(
+        activity_id=f"a-{symbol}", order_id=order_id, symbol=symbol, side=Side.BUY,
+        kind=FillKind.FILL, transaction_time=datetime.fromisoformat(when),
+        price=Decimal("66.46"), shares=Decimal(17),
+        observed_at=datetime(2026, 9, 3, 22, 30, tzinfo=UTC),
+    )
+
+
+def _stub_read_client(monkeypatch, held=(), fills=()):
+    from swingdesk import broker as broker_pkg
+
+    class _Client:
+        def positions(self, now):
+            return tuple(held)
+
+        def fills(self, now, after=None):
+            return tuple(fills)
+
+    monkeypatch.setattr(
+        broker_pkg, "open_client",
+        lambda policy=None, transport=None, arming=broker_pkg.STOPPED: _Client(),
+    )
+
+
+def _sent_submission(instrument_id: str, stop: str = "45.00"):
+    from swingdesk.journal_evidence.journal import Submission
+
+    return Submission(
+        run_id="RUN-SENT", client_order_id=f"swingdesk-2026-09-02-{instrument_id}",
+        attempted_at=datetime(2026, 9, 2, 22, 31, tzinfo=UTC), session_date=date(2026, 9, 1),
+        instrument_id=instrument_id, shares=17, limit_price=Decimal("50.00"),
+        stop_price=Decimal(stop), outcome="sent", venue_order_id="o-1", venue_status="accepted",
+    )
+
+
+def test_sync_records_a_position_for_an_entry_this_system_placed(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """THE LOOP CLOSING. The stop comes from our journal, the price from the venue."""
+    _stub_read_client(monkeypatch, held=[_venue_position("AIS")], fills=[_fill("AIS")])
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_submission("AIS"))
+
+    assert cli._sync_fills(_sync_args(tmp_path)) == 0
+
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        book = store.open_as_of(datetime(2026, 9, 3, 22, 30, tzinfo=UTC))
+    assert [p.instrument_id for p in book] == ["AIS"]
+    position = book[0]
+    assert position.entry_price == Decimal("50.00"), "the VENUE's average entry price"
+    assert position.initial_stop == Decimal("45.00"), "OUR stop, from the journal"
+    assert position.current_stop == position.initial_stop
+    assert position.opened_on == date(2026, 9, 2), "the session the FILL happened in"
+    assert position.strategy == "CARD-001"
+    assert "RECORDED" in capsys.readouterr().out
+
+
+def test_sync_refuses_a_holding_that_traces_to_no_order_this_system_sent(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """Somebody traded by hand. Adopting it would be this command deciding that anything at the
+    venue must have been ours - the assumption most likely to be wrong on the day it matters.
+
+    Exit 3, and DR-027 section 11's guard goes on pausing new entries.
+    """
+    _stub_read_client(monkeypatch, held=[_venue_position("MYSTERY")], fills=[_fill("MYSTERY")])
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_submission("SOMETHINGELSE"))
+
+    assert cli._sync_fills(_sync_args(tmp_path)) == 3
+
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        assert store.open_as_of(datetime(2026, 9, 3, 22, 30, tzinfo=UTC)) == []
+    printed = capsys.readouterr().err
+    assert "TECH" in printed
+    assert "MYSTERY" in printed
+
+
+def test_sync_will_not_adopt_against_an_attempt_that_never_reached_the_venue(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """A `stopped` row is an attempt a guard refused, so no holding can have come from one.
+
+    Adopting against it would credit this system with an order it did not place and - worse - write
+    that attempt's stop into the book as though it were live at the venue.
+    """
+    from swingdesk.journal_evidence.journal import Submission
+
+    _stub_read_client(monkeypatch, held=[_venue_position("AIS")], fills=[_fill("AIS")])
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(Submission(
+            run_id="RUN-STOPPED", client_order_id="swingdesk-2026-09-02-AIS",
+            attempted_at=datetime(2026, 9, 2, 22, 31, tzinfo=UTC), session_date=date(2026, 9, 1),
+            instrument_id="AIS", shares=17, limit_price=Decimal("50.00"),
+            stop_price=Decimal("45.00"), outcome="stopped", detail="the switch was absent",
+        ))
+
+    assert cli._sync_fills(_sync_args(tmp_path)) == 3
+
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        assert store.open_as_of(datetime(2026, 9, 3, 22, 30, tzinfo=UTC)) == []
+
+
+def test_sync_is_idempotent_and_leaves_a_holding_the_book_already_carries_alone(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """It runs before every evening pass, so running twice must not write twice."""
+    _stub_read_client(monkeypatch, held=[_venue_position("AIS")], fills=[_fill("AIS")])
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_submission("AIS"))
+
+    assert cli._sync_fills(_sync_args(tmp_path)) == 0
+    capsys.readouterr()
+    assert cli._sync_fills(_sync_args(tmp_path)) == 0
+
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        assert len(store.open_as_of(datetime(2026, 9, 3, 22, 30, tzinfo=UTC))) == 1
+    assert "nothing to record" in capsys.readouterr().out
+
+
+def test_sync_dry_run_writes_nothing(tmp_path: Path, monkeypatch, capsys) -> None:
+    _stub_read_client(monkeypatch, held=[_venue_position("AIS")], fills=[_fill("AIS")])
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_submission("AIS"))
+
+    assert cli._sync_fills(_sync_args(tmp_path, dry_run=True)) == 0
+
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        assert store.open_as_of(datetime(2026, 9, 3, 22, 30, tzinfo=UTC)) == []
+    assert "WOULD RECORD" in capsys.readouterr().out
+
+
+def test_sync_refuses_a_holding_it_cannot_date(tmp_path: Path, monkeypatch, capsys) -> None:
+    """`opened_on` is what every holding-period rule counts from, so it is never taken from a clock."""
+    _stub_read_client(monkeypatch, held=[_venue_position("AIS")], fills=[])
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_submission("AIS"))
+
+    assert cli._sync_fills(_sync_args(tmp_path)) == 2
+
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        assert store.open_as_of(datetime(2026, 9, 3, 22, 30, tzinfo=UTC)) == []
+    assert "activities feed" in capsys.readouterr().err
+
+
+def test_the_journal_returns_only_a_sent_submission(tmp_path: Path) -> None:
+    """`latest_sent_submission` is the join `sync-fills` trusts, so its filter is asserted directly."""
+    from swingdesk.journal_evidence.journal import Submission
+
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(Submission(
+            run_id="R1", client_order_id="swingdesk-2026-09-01-AIS",
+            attempted_at=datetime(2026, 9, 1, 22, 31, tzinfo=UTC), session_date=date(2026, 8, 31),
+            instrument_id="AIS", shares=1, limit_price=Decimal(1), stop_price=Decimal("0.5"),
+            outcome="stopped", detail="the switch was absent",
+        ))
+        assert journal.latest_sent_submission("AIS") is None
+
+        journal.record_submission(_sent_submission("AIS", stop="45.00"))
+        found = journal.latest_sent_submission("AIS")
+        assert found is not None
+        assert found.stop_price == Decimal("45.00")
+        assert journal.latest_sent_submission("NOTHING") is None
