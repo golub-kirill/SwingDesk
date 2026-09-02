@@ -488,9 +488,12 @@ parameters:
       ever set here it is set by OWNER PREFERENCE with that recorded - provenance 'owner', never
       'validated:' - unless a study with a different trigger or exit model separates them, which
       would be a new question that does not inherit these results.
+      WHAT THE COURSE SUPPLIES, kept here for the same reason: it was a second `note:` key
+      until 2026-09-01 and everything above it was dropped at load. The course requires a
+      quantitative definition of trend and supplies none; a pre-registration is required before
+      activation.
       See docs/prereg/results/PR-001-report.md and PR-005-report.md.
     named_in: [M33-T0485, M71-T1057]
-    note: Requires a quantitative definition of trend. Pre-registration required before activation.
     ui_editable: false
 
   - id: screen.max_distance_from_high_pct
@@ -891,12 +894,13 @@ parameters:
       irrelevant. Owner decision D10 (2026-08-02) reaffirmed the free tier knowing this, so the
       direction will not be confirmed.
       A regime is a gauge, not a source of confidence (M30-T0450); ACTING on it is M30-T0451, a
+      WHAT THE COURSE SUPPLIES, kept here because this was a second `note:` key until
+      2026-09-01 and YAML silently dropped everything above it: the course defines 11 regimes
+      and the matrix of what each permits, and names the inputs (direction, ATR, ADX,
+      participation), but no rule produces the label. Fully authored, and load-bearing for the
+      whole strategy-selection matrix.
       separate Untested topic. See docs/prereg/results/PR-002-report.md.
     named_in: [M30-T0450, Appendix L]
-    note: >-
-      The course defines 11 regimes and the matrix of what each permits, and names the inputs
-      (direction, ATR, ADX, participation), but no rule produces the label. Fully authored, and
-      load-bearing for the whole strategy-selection matrix.
     ui_editable: false
 
   - id: rs.lookback
