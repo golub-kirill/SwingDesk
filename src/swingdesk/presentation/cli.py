@@ -11,7 +11,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from swingdesk.application import universe as universe_builder
-from swingdesk.application.pipeline import RunResult, run
+from swingdesk.application.pipeline import InstrumentOutcome, RunResult, run
 from swingdesk.contracts.observation import ParameterUse
 from swingdesk.contracts.position import ActionStatus, Fill, ManagementAction, Position
 from swingdesk.contracts.reference import Instrument
@@ -212,6 +212,85 @@ def main(argv: list[str] | None = None) -> int:
     return 1
 
 
+def _allocate(
+    result: RunResult, tradeable: list[InstrumentOutcome],
+) -> tuple[list[InstrumentOutcome], list[tuple[InstrumentOutcome, str]]] | str:
+    """Which of this run's `Trade` decisions fit inside the ratified caps TOGETHER.
+
+    Returns `(submittable, passed_over)` in rank order, or ONE STRING saying why the question could
+    not be answered - in which case nothing may be submitted. `DR-027` §10.
+
+    **Every input is something the run already computed**, and that is deliberate rather than
+    convenient: `result.capacity.book` is the priced book, `result.sector_book` is its sector split
+    and each `outcome.sector` carries the `requested_r` and the exposure the candidate loop judged
+    it on. Recomputing any of them here would put the FX rule or the R conversion in a second place,
+    which is the `DR-010` mistake `to_base_currency` exists to prevent.
+
+    **The order is `CARD-001`'s ranking and nothing else.** `ALLOCATION_SPEC` §6 rule 4 forbids
+    falling back to the order the system happens to hold, so a run whose screen did not produce a
+    `Selection` cannot be allocated at all - it returns the refusal rather than submitting the
+    first four alphabetically.
+
+    **Every branch that cannot measure a cap refuses**, and there is no branch that admits on a gap.
+    A book that was never priced, a sector split that refused, a cap with no value, a candidate the
+    sector check never reached: each of those is `unavailable`, and `unavailable` here means STOPPED.
+    """
+    if result.selection is None:
+        return ("no cross-sectional ranking on this run, so there is no ratified order to take "
+                "names in; ALLOCATION_SPEC 6 rule 4 forbids falling back to the order the system "
+                "happens to hold")
+    if not isinstance(result.capacity, portfolio.Capacity):
+        # `None` is "no position store, so the book was never priced"; a `Refusal` is "priced and it
+        # failed". Both are the same answer here: the caps cannot be applied, so nothing goes.
+        unmeasured = (
+            result.capacity.reason if isinstance(result.capacity, Refusal)
+            else "the book was never priced, so this run cannot say what is already at risk"
+        )
+        return f"the book cap could not be measured: {unmeasured}"
+    if not isinstance(result.sector_book, portfolio.SectorBook):
+        unmeasured = (
+            result.sector_book.reason if isinstance(result.sector_book, Refusal)
+            else "the open book was never split by sector"
+        )
+        return f"the sector cap could not be measured: {unmeasured}"
+    if not isinstance(result.sector_limit, Decimal):
+        unmeasured = (
+            result.sector_limit.reason if isinstance(result.sector_limit, Refusal)
+            else f"{portfolio.MAX_SECTOR_RISK} was never read"
+        )
+        return f"the sector cap has no value: {unmeasured}"
+
+    # Bound to a local before the sort: a lambda closing over `result.selection` re-reads an
+    # optional attribute on every comparison, which mypy is right to refuse.
+    screen = result.selection
+    ranked = sorted(
+        tradeable,
+        # A name the screen did not rank sorts last and is then refused below rather than here, so
+        # the reason it carries names the missing rank instead of a position in a list.
+        key=lambda outcome: (screen.rank_of(outcome.instrument.id) or len(tradeable) + 1,
+                             outcome.instrument.id),
+    )
+    offered: list[portfolio.Allocatable] = []
+    for outcome in ranked:
+        if not isinstance(outcome.sector, portfolio.SectorCapacity):
+            return (f"{outcome.instrument.id} reached a Trade decision without a sector verdict, "
+                    f"so its share of the sector budget is unknown")
+        offered.append(portfolio.Allocatable(
+            instrument_id=outcome.instrument.id,
+            requested_r=outcome.sector.requested_r,
+            exposure=outcome.sector.candidate,
+        ))
+
+    verdicts = portfolio.allocate(
+        offered, result.capacity.book, result.capacity.caps,
+        result.sector_book, result.sector_limit,
+    )
+    by_id = {outcome.instrument.id: outcome for outcome in ranked}
+    submittable = [by_id[v.instrument_id] for v in verdicts if v.taken]
+    passed_over = [(by_id[v.instrument_id], v.reason) for v in verdicts if not v.taken]
+    return submittable, passed_over
+
+
 def _submit(
     result: RunResult, data: Path, now: datetime, journal: Journal,
     registry: ParameterRegistry,
@@ -303,9 +382,40 @@ def _submit(
         except broker_pkg.PolicyRefused:
             return f"unkeyed-{session.isoformat()}-{instrument_id}"
 
+    # THE RATIFIED CAPS, ACROSS THIS RUN'S OWN OUTPUT. `DR-027` §10.
+    #
+    # `pipeline` prices the book ONCE and measures every candidate against it, which is correct for
+    # the question it asks - may this name be held at all - and leaves the question this path asks
+    # unanswered: do 114 of them fit together. On 2026-09-02 they did not, by a factor of 28.
+    # `DR-030` §2.4's *"the ratified caps pick which are taken"* is enforced here or nowhere.
+    allocation = _allocate(result, tradeable)
+    if isinstance(allocation, str):
+        # FAIL CLOSED, and this polarity is the whole point. A cap that could not be measured
+        # admitting everything is the `unavailable`-admits-unchecked inversion `DR-025` §2.1
+        # records this project paying for once already - and here it would pay at a venue.
+        print(f"  STOPPED  {allocation}", file=sys.stderr)
+        for outcome in tradeable:
+            risk = outcome.risk
+            assert isinstance(risk, RiskSnapshot)
+            _record(_key(outcome.instrument.id), outcome.instrument.id, risk.shares,
+                    risk.entry, risk.stop, "stopped", allocation)
+        return
+
+    submittable, passed_over = allocation
+    for outcome, why in passed_over:
+        risk = outcome.risk
+        assert isinstance(risk, RiskSnapshot)
+        _record(_key(outcome.instrument.id), outcome.instrument.id, risk.shares,
+                risk.entry, risk.stop, "stopped", why)
+    if passed_over:
+        # Counted, never listed. A hundred lines naming every name the book had no room for would
+        # bury the four it did, and the journal holds each one with its own reason.
+        print(f"  {len(passed_over)} passed over by the ratified caps; "
+              f"{len(submittable)} within them")
+
     if arming.stopped:
         print(f"  STOPPED  {arming.reason}")
-        for outcome in tradeable:
+        for outcome in submittable:
             risk = outcome.risk
             assert isinstance(risk, RiskSnapshot)
             _record(_key(outcome.instrument.id), outcome.instrument.id, risk.shares,
@@ -315,7 +425,7 @@ def _submit(
     print(f"  armed    {arming.reason}")
 
     halted: str | None = None
-    for outcome in tradeable:
+    for outcome in submittable:
         risk = outcome.risk
         assert isinstance(risk, RiskSnapshot)
         instrument_id = outcome.instrument.id

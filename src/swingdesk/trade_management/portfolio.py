@@ -14,11 +14,28 @@ volatility refuted AND inverted, standing down above the ordinary p75 giving lif
 random (`DR-006` §8.6). A per-trade stop cannot defend against a gap, because the price it names does
 not trade between the close and the open. A bound on simultaneous exposure can.
 
-**What this module does NOT do: it does not allocate between candidates.** A `Watch` is not a
-position and consumes no capacity, so each candidate is measured against the OPEN BOOK alone.
-Choosing which of several admissible candidates gets the last slot is a ranking, `rs.ranking_method`
-is `unset`, and `ALLOCATION_SPEC` §6 rule 4 forbids falling back to id order - which would be an
-alphabetical bias silently applied. Owner ruling, 2026-08-22.
+**`assess`, `assess_correlation` and `assess_sector` do not allocate between candidates, and
+`allocate` does.** Each `assess_*` measures ONE candidate against the OPEN BOOK alone, which was the
+whole story until 2026-09-02 and is still the right shape for the candidate loop: a `Watch` is not a
+position and consumes no capacity.
+
+~~Choosing which of several admissible candidates gets the last slot is a ranking,
+`rs.ranking_method` is `unset`, and `ALLOCATION_SPEC` §6 rule 4 forbids falling back to id order -
+which would be an alphabetical bias silently applied. Owner ruling, 2026-08-22.~~ **That reasoning
+was sound and its premise is gone.** `DR-030` ruled `rs.ranking_method` = `descending` on
+2026-09-01, so a ratified ordering now exists and `ALLOCATION_SPEC` §6 rule 4 is satisfied rather
+than dodged - the sentence is struck rather than deleted because the rule it names still governs
+what `allocate` may be given: an ordering the registry ratified, never the order the system
+happens to hold.
+
+**Why `allocate` had to exist the day after `CARD-001` started emitting `Trade`.** While every
+terminal state was `Watch`, a human read the report and applied the caps by choosing. `DR-030` §2.4
+kept that model - *"this value picks which names are eligible, and the ratified caps pick which are
+taken"* - and `scan --submit` then took the eligible set to a venue with nothing in between. Measured
+on run `run-20260902T143239Z-b908f635`: **114 `Trade` decisions, 103.5R, 114 positions**, against
+ratified caps of 4 and 4R, every one of them admitted because `pipeline` prices the book ONCE and
+every candidate was therefore measured against the same empty book. `allocate` is where "the
+ratified caps pick which are taken" stops being a sentence in a decision record and becomes code.
 
 **Two of `DR-006`'s constraints live here, and they bound different things.** The book cap asks how
 much is at risk at once; the correlation cap (below, built 2026-08-23) asks whether what is at risk
@@ -651,3 +668,130 @@ def assess_sector(
         requested_r=requested_r,
         binding=binding,
     )
+
+
+# ------------------------------------------------------------------ allocation
+
+
+@dataclass(frozen=True, slots=True)
+class Allocatable:
+    """One candidate offered to `allocate`, carrying only what a cap needs to judge it.
+
+    Not an `InstrumentOutcome`: this module sits below `application` and holds no pipeline type, so
+    the caller maps whatever the run produced onto these three fields. `exposure` is the candidate's
+    own judged composition - the same value `assess_sector` was given in the candidate loop.
+    """
+
+    instrument_id: str
+    requested_r: Decimal
+    exposure: classification.Exposure
+
+
+@dataclass(frozen=True, slots=True)
+class Allocated:
+    """One candidate's verdict, and the reason travels whichever way it went.
+
+    Same rule `Arming` follows in the broker package: a line saying only *passed over* is one nobody
+    can act on, and a line saying only *taken* is one nobody can audit. `binding` is the parameter
+    id that stopped it, so a caller can tell a full book from a full sector without parsing prose.
+    """
+
+    instrument_id: str
+    taken: bool
+    reason: str
+    binding: str | None = None
+
+
+def allocate(
+    ordered: Sequence[Allocatable],
+    book: Book,
+    caps: Caps,
+    sectors: SectorBook,
+    sector_cap: Decimal,
+) -> tuple[Allocated, ...]:
+    """Walk a RANKED cross-section and take names until a ratified cap binds.
+
+    **The order is the caller's and this function does not sort.** `ALLOCATION_SPEC` §6 rule 4
+    forbids ranking by whatever order the system happens to have, and a function that re-sorted its
+    input would be authoring the ordering that `rs.ranking_method` exists to rule. Given the wrong
+    order this returns the wrong four names and says so honestly; given no order at all it must not
+    be called.
+
+    **The book ACCUMULATES, and that is the entire difference from `assess`.** Each candidate is
+    judged against the book plus everything already taken in this same walk, so the four ratified
+    numbers bind across one run's own output instead of only across the stored positions. The
+    per-candidate verdicts in `pipeline` stay exactly as they were - they answer *may this name be
+    held at all*, which is a different question from *does it fit alongside the others decided in
+    the same second*.
+
+    **Every rule is `assess` and `assess_sector`, re-entered with a grown book.** Nothing about a
+    cap is re-implemented here: specification §8 forbids one logic in two places, and a second copy
+    of "count + 1 > max_concurrent" is how the report and the decisions drifted apart once already.
+
+    **A candidate the caps pass over does NOT stop the walk.** `requested_r` varies per candidate
+    because the share count rounds down, so a 0.60R name can be refused where the 0.40R name behind
+    it fits - the same reason `pipeline` stopped assigning `result.capacity` unconditionally. Every
+    name is offered, and the ones that fit are taken.
+
+    **An unclassifiable candidate is still admitted by the SECTOR check and still bounded by the
+    other two** (`DR-006` §3). A check the system could not perform must not refuse, but it also
+    buys no exemption: the count and open-risk caps do not care what a name is made of.
+    """
+    running_count = book.count
+    running_risk = book.open_risk_base
+    by_sector = dict(sectors.by_sector)
+    unclassified = sectors.unclassified_r
+    unmeasured = list(sectors.unmeasured)
+    unmeasured_r = sectors.unmeasured_r
+    total_r = sectors.total_r
+
+    verdicts: list[Allocated] = []
+    for candidate in ordered:
+        so_far = Book(
+            count=running_count, open_risk_base=running_risk, r_unit=book.r_unit
+        )
+        capacity = assess(so_far, caps, candidate.requested_r)
+        if not capacity.admitted:
+            verdicts.append(Allocated(
+                candidate.instrument_id, False, capacity.reason, capacity.binding,
+            ))
+            continue
+
+        sector_so_far = SectorBook(
+            by_sector={sector: by_sector[sector] for sector in sorted(by_sector)},
+            unclassified_r=unclassified,
+            unmeasured=tuple(unmeasured),
+            unmeasured_r=unmeasured_r,
+            total_r=total_r,
+        )
+        sector_verdict = assess_sector(
+            sector_so_far, sector_cap, candidate.exposure, candidate.requested_r
+        )
+        if not sector_verdict.admitted:
+            verdicts.append(Allocated(
+                candidate.instrument_id, False, sector_verdict.reason, MAX_SECTOR_RISK,
+            ))
+            continue
+
+        # Taken. The running book grows exactly the way `book` and `sector_book` would have built
+        # it from a stored position, so the next candidate is judged against a book of the shape
+        # this one will actually have.
+        running_count += 1
+        running_risk += candidate.requested_r * book.r_unit
+        total_r += candidate.requested_r
+        if candidate.exposure.is_available:
+            attributed = Decimal(0)
+            for weight in candidate.exposure.weights:
+                share = candidate.requested_r * weight.weight
+                by_sector[weight.sector] = by_sector.get(weight.sector, Decimal(0)) + share
+                attributed += share
+            # A partial look-through spends what it reports and no more, exactly as `sector_book`
+            # carries the remainder rather than normalising it away.
+            unclassified += candidate.requested_r - attributed
+        else:
+            unmeasured.append(candidate.exposure)
+            unmeasured_r += candidate.requested_r
+
+        verdicts.append(Allocated(candidate.instrument_id, True, capacity.reason))
+
+    return tuple(verdicts)
