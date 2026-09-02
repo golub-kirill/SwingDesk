@@ -229,7 +229,7 @@ def test_the_rs_line_is_in_the_output_hash(stores, registry_with_benchmark) -> N
     with_benchmark = run([], FixedClock(AS_OF), registry_with_benchmark, store, journal, mode=MODE,
                          fetcher=_fetch_against(sessions), universe=_universe([TEST_US]))
 
-    # The same run with no benchmark at all: same decision, same trade terms, different RS.
+    # The same run with no benchmark at all.
     entries = dict(registry_with_benchmark._entries)
     entries["rs.benchmark"] = {"id": "rs.benchmark", "value": None}
     without = run([], FixedClock(AS_OF), ParameterRegistry(entries), store, journal, mode=MODE,
@@ -237,8 +237,20 @@ def test_the_rs_line_is_in_the_output_hash(stores, registry_with_benchmark) -> N
 
     assert with_benchmark.outcomes[0].decision is not None
     assert without.outcomes[0].decision is not None
-    assert (with_benchmark.outcomes[0].decision.decision
-            == without.outcomes[0].decision.decision), "the decision is the control"
+
+    # **The decision USED to be the control here, and this line is the inversion.** Until
+    # `DR-030` (2026-09-01) the RS line was computed, printed and read by nothing that decided -
+    # `DR-024` says so in as many words - so removing the benchmark left the decision untouched
+    # and only the hash moved. `DR-018` predicted the end of that state precisely: the benchmark
+    # is "decorative until the FORM makes it otherwise", and the form chosen is the PATH form,
+    # which compares session by session and cannot be computed without a benchmark series.
+    #
+    # So now: with a benchmark the cross-section ranks and the top decile becomes `Trade`; without
+    # one the screen cannot score and every survivor stays `Watch` naming `rs.benchmark`. That is
+    # the parameter becoming load-bearing, asserted rather than described.
+    assert with_benchmark.outcomes[0].decision.decision == "Trade"
+    assert without.outcomes[0].decision.decision == "Watch"
+    assert without.outcomes[0].decision.parameter_id == "rs.benchmark"
     assert with_benchmark.manifest.output_hash != without.manifest.output_hash
 
 

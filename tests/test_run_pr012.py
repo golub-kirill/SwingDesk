@@ -26,8 +26,8 @@ from pathlib import Path
 from tests.conftest import KNOWLEDGE_TIME
 
 from swingdesk.contracts.market import Bar, BarSeries, Interval, Series
+from swingdesk.decision_logic.ranking import _beat_share
 from swingdesk.validation.backtest.book import Candidate
-from swingdesk.validation.backtest.ranking import _beat_share
 
 TOOLS = Path(__file__).resolve().parents[1] / "tools"
 sys.path.insert(0, str(TOOLS))

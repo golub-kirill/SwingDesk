@@ -124,9 +124,9 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 |---|---|
 | Merge gates | **46**, one command: `python tools/check_gates.py` |
 | Tests | **1148**, fully offline |
-| Docs | 132 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
+| Docs | 133 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 459 registered · 4 `specified` · **2 `active`** |
-| Parameters | 108 - 61 `unset`, 34 `assumed`, 13 `owner`, **0 `validated`** |
+| Parameters | 108 - 57 `unset`, 34 `assumed`, 17 `owner`, **0 `validated`** |
 | Golden vectors | 25 vectors across 6 components |
 | Studies | 9 registered · 7 reported |
 | Criteria | `registry/criteria.yml` **v1.1.2** |
@@ -139,12 +139,12 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 
 | | |
 |---|---|
-| Journal | 35 runs, 7 incomplete · **18 run(s) recorded against a dirty tree** and therefore not replayable from their SHA |
-| Decisions | 26109 recorded · 0 uncoded refusals (`a.no_uncoded_failures` requires 0) |
-| Bar store | 3,610,520 rows across 3,743 instruments |
+| Journal | 36 runs, 7 incomplete · **19 run(s) recorded against a dirty tree** and therefore not replayable from their SHA |
+| Decisions | 26121 recorded · 0 uncoded refusals (`a.no_uncoded_failures` requires 0) |
+| Bar store | 3,612,288 rows across 3,750 instruments |
 | PIT integrity | **CLEAN** - bars whose `event_time` postdates their `knowledge_time`: 0 |
 | Directory | **23 pulls** · **13 confirmed** against the response's own `Last-Modified` (`source_session_date`); of the rest, **7** predate the field and stay permanently unattributed (`DR-008` c3); **3** do NOT - they were taken after the field existed and the vendor file had not regenerated, so `DirectoryStore.record`'s monotonicity check dropped the claim. Each of those is a re-pull of an already-recorded session, which `DR-008` says should make **zero requests** |
-| Universe coverage | bars stored for 3,743 of 13,182 listed symbols - **28.4%** |
+| Universe coverage | bars stored for 3,750 of 13,182 listed symbols - **28.4%** |
 | Canada | **1 instrument** with bars, 252 bars over one fetch, last 2026-08-02 · **0** `.TO` symbol(s) listed in `directory.duckdb`. `BR-9`'s per-country requirement is unmet in every reported study. Since `DR-003` gap 1 was refuted (2026-08-25) a FORWARD result is blocked by this row rather than by a missing source; a HISTORICAL one also needs point-in-time membership, which the TMX endpoint cannot supply at any price |
 | Classifications | 1,148 instrument(s) carry a sector · 1,046 (**91.1%**) report at least one non-zero weight. The stricter `look_through` count, which also drops a degenerate ETF look-through (`DR-006` §8.7), is lower - derive it with `python tools/measure_sector_cap.py --wide --classifications data/classifications.duckdb` |
 | Track A clock | **1/20** consecutive clean sessions (2026-09-01 to 2026-09-01) · counting from a **deliberate restart on 2026-08-31**, not an outage - `python tools/track_a_streak.py` prints why · `a.run_completes`, computed by `tools/track_a_streak.py` |

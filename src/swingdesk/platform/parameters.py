@@ -100,6 +100,16 @@ class ParameterRegistry:
         use = self.use(parameter_id)
         return Decimal(use.value), use
 
+    def string_value(self, parameter_id: str) -> tuple[str, ParameterUse]:
+        """A parameter whose value is a RULE NAME rather than a number.
+
+        `ParameterUse.value` is already a string, so this returns it unchanged - the method exists
+        for the same reason the two above do: the caller says which shape it expects, and an unset
+        parameter raises rather than arriving as the string "None".
+        """
+        use = self.use(parameter_id)
+        return use.value, use
+
     def unset_ids(self) -> tuple[str, ...]:
         """Every parameter still awaiting a value. Reported daily (OBSERVABILITY_SPEC 5)."""
         return tuple(

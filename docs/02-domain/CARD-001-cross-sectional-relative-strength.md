@@ -104,8 +104,15 @@ A **path-dependent** form escapes the identity — share of sessions the name be
 against QQQ at **0.616** on 63 sessions, while SPY against IVV (same index, different fund) reads
 **0.973**. **The index is the decision; the proxy is not.**
 
-`rs.benchmark` is therefore `SPY` and `rs.benchmark_form` is **`unset`**, because the form decides
-what this card actually trades and `ALLOCATION_SPEC.md` §3 sends that to a pre-registration.
+`rs.benchmark` is therefore `SPY`. ~~`rs.benchmark_form` is **`unset`**, because the form decides
+what this card actually trades and `ALLOCATION_SPEC.md` §3 sends that to a pre-registration.~~
+**RULED 2026-09-01 (`DR-030`): `path`, provenance `owner`.** §3's pre-registration route was
+followed and closed — `PR-012` refused for a structural sample shortfall, `PR-013` returned six
+intervals all including zero — and `screen.trend_definition`'s registry note supplies this project's
+own precedent for a closed family: a value there is set by owner preference, provenance `owner`,
+**never** `validated:`. The path form is chosen on a structural ground and not an outcome: the
+point-to-point form ranks at Spearman **1.000000** with raw return, so a card named *relative
+strength* using it would be momentum with a decorative denominator.
 
 ### 3c. G6 has a denominator for the first time
 

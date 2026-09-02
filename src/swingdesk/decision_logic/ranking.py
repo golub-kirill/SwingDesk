@@ -1,10 +1,17 @@
-"""Rankings a study can pin: the four forms `DR-018` characterised, plus the control they need.
+"""Rankings: the four forms `DR-018` characterised, plus the control they need.
 
 `book.run_book` takes a `Ranking` and has no default, because falling back to whatever order the
 system happens to have is an alphabetical bias silently applied. These are the implementations a
 study chooses from. **None of them is proposed here** - `AGENTS.md` section 8 governs proposing a
 rule, and `ALLOCATION_SPEC` section 3 sends an ordering adopted from the course to a
-pre-registration. This module is machinery; the pre-registration picks the arm.
+pre-registration. This module is machinery; a study or a decision record picks the arm.
+
+**It lives in `decision_logic` and not in `validation/backtest` since 2026-09-01.** A ranking is a
+SCREENER - `ARCHITECTURE.md` 1 gives this package "gates, conditions, screeners, strategy
+evaluation, candidate decisions" - and it was in the backtest package only because a backtest
+was the first caller. That placement made it unreachable from the live run, which sits BELOW
+`validation` in the layer chain, so `CARD-001`'s selection could not have been wired without
+copying it. `validation.backtest` re-exports it, so every existing caller is unchanged.
 
 **Why `ByRawReturn` exists and must be in every study that uses the others.** `DR-018` section 1
 proved that on a single cross-section a MARKET benchmark cannot change a ranking: its return is one
@@ -30,9 +37,28 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from typing import Protocol
 
 from swingdesk.contracts.market import BarSeries
-from swingdesk.validation.backtest.book import Candidate
+
+
+class Ranked(Protocol):
+    """The two fields a ranking may read: which instrument, and where its decision session sits.
+
+    A Protocol rather than a concrete type, and that is the boundary `book.Candidate`'s docstring
+    describes: a ranking that could reach the bars could look forward. It also lets the live run
+    and the backtest pass their own records without either importing the other's.
+    """
+
+    @property
+    def instrument_id(self) -> str: ...
+
+    @property
+    def index(self) -> int: ...
+
+    @property
+    def session_date(self) -> date: ...
+
 
 #: A score no ranking can produce, used to sort a name that cannot be scored to the BOTTOM rather
 #: than dropping it. A dropped candidate is an unrecorded exclusion; a bottom-ranked one competes
@@ -109,7 +135,7 @@ def _beat_share(series: BarSeries, index: int, lookback: int,
     return Decimal(wins) / Decimal(compared)
 
 
-def _ordered(scored: list[tuple[Decimal, Candidate]]) -> list[Candidate]:
+def _ordered[C: Ranked](scored: list[tuple[Decimal, C]]) -> list[C]:
     """Highest score first, ties broken on instrument_id. A total order, always."""
     return [
         candidate for _, candidate in
@@ -128,8 +154,8 @@ class ByRawReturn:
     series: Mapping[str, BarSeries]
     lookback: int
 
-    def __call__(self, candidates: list[Candidate]) -> list[Candidate]:
-        scored: list[tuple[Decimal, Candidate]] = []
+    def __call__[C: Ranked](self, candidates: list[C]) -> list[C]:
+        scored: list[tuple[Decimal, C]] = []
         for candidate in candidates:
             series = self.series.get(candidate.instrument_id)
             value = None if series is None else _window_return(
@@ -152,11 +178,11 @@ class ByMarketPathStrength:
     benchmark: BarSeries
     lookback: int
 
-    def __call__(self, candidates: list[Candidate]) -> list[Candidate]:
+    def __call__[C: Ranked](self, candidates: list[C]) -> list[C]:
         # Built once per call rather than once per candidate. The benchmark is one series and every
         # candidate compares against the same map.
         benchmark_daily = daily_returns(self.benchmark)
-        scored: list[tuple[Decimal, Candidate]] = []
+        scored: list[tuple[Decimal, C]] = []
         for candidate in candidates:
             series = self.series.get(candidate.instrument_id)
             value = None
@@ -187,8 +213,8 @@ class BySectorRelativeStrength:
     sector_return: Callable[[date], Mapping[str, Decimal]]
     lookback: int
 
-    def __call__(self, candidates: list[Candidate]) -> list[Candidate]:
-        scored: list[tuple[Decimal, Candidate]] = []
+    def __call__[C: Ranked](self, candidates: list[C]) -> list[C]:
+        scored: list[tuple[Decimal, C]] = []
         sessions = {candidate.session_date for candidate in candidates}
         returns = {session: self.sector_return(session) for session in sessions}
         for candidate in candidates:
