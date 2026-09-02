@@ -2421,6 +2421,25 @@ is for where no gate can reach.
 
 ## 6. Code & gates
 
+- [ ] **A FILL IS NEVER RECORDED WITHOUT A PERSON, AND THAT IS NOW WHAT PAUSES THE MACHINE —
+      2026-09-02.** `DR-027` §11.3 names this file, so this is the entry that claim points at.
+      **The state today is correct and manual.** `positions.duckdb` is written only by
+      `open-position` and `respond`. The submission path writes no position deliberately (`DR-027`
+      §6: a `Position` is a thing created from the FILL, and an accepted order is not a fill). So a
+      run submits up to the ratified caps, and the NEXT run stops with `TECH` until somebody
+      records what filled — which is `DR-027` §11's guard doing its job, not a defect.
+      **What it costs:** one manual `open-position` per fill, every evening anything fills, or the
+      machine stands still. That is the right trade while nothing is validated and the caps allow
+      four names; it does not survive contact with a book that turns over.
+      **Why it is not just plumbing.** Constructing a `Position` from the venue's answer is what
+      `DR-026` refused. `DR-027` §3.2 narrows that argument — *this* system placed the bracket, so
+      the venue knows the stop and it is readable from `/v2/orders` — but it does not close it: the
+      fill price is the venue's, and the costs figure and the strategy tag are still ours to state.
+      `BrokerFill` already carries price, shares and time from the activities feed.
+      **Entry criterion, not a date:** the first evening a fill is recorded late enough to stop a
+      run that should have proceeded. Until then the guard is what makes the omission loud instead
+      of expensive, and loud is cheap.
+
 - [x] **`[v]` 6.1 — `HANDOFF.md` §2 is generated, not typed.** Done 2026-08-15.
       `tools/build_state.py` + gate 24 (blocking), built on `verify_counts.measure()` and
       `track_a_streak.measure()` so no fact has two implementations. Two blocks: repo-derived
