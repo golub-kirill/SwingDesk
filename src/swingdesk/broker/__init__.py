@@ -28,7 +28,12 @@ from swingdesk.broker.reconcile import (
     reconcile,
     unrecorded_fills,
 )
-from swingdesk.broker.submit import client_order_id, entry_order
+from swingdesk.broker.submit import (
+    client_order_id,
+    entry_order,
+    target_price,
+    trading_session,
+)
 
 __all__ = [
     "MISMATCH_CODE",
@@ -50,5 +55,7 @@ __all__ = [
     "open_client",
     "read_arming",
     "reconcile",
+    "target_price",
+    "trading_session",
     "unrecorded_fills",
 ]

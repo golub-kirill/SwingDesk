@@ -245,3 +245,86 @@ the event do not count — that is the same rule that governs `criteria.yml`.
 - [ ] The manual position list needs a format and a generation step in the daily run.
 - [ ] Whether entering a degraded state should notify (`PRODUCT_SURFACES.md` §4 sends `Pause`
       everywhere; the other four states are quieter).
+
+---
+
+## 6. The paper account's credentials
+
+**Not a degradation procedure.** It is here because the alternative is rediscovering it under
+pressure, and because the first attempt at it produced a wrong diagnosis that a check disproved.
+
+### 6.1 They persist, they do not expire, and no browser session is involved
+
+**There is no session here at all, and that is the part worth reading.** Alpaca's authentication
+documentation describes two mechanisms:
+
+| | What it is | Lifetime |
+|---|---|---|
+| **API key pair** — what this system uses | `APCA-API-KEY-ID` and `APCA-API-SECRET-KEY` sent as headers on every request | *"These credentials don't expire."* |
+| OAuth client-credentials | a bearer token exchanged for the secret | **15 minutes** — and **not available for the Trading API**, only Broker and Market Data |
+
+So the short-lived thing exists, it is what a browser login feels like, and **this system cannot use
+it even if it wanted to.** Every request carries the static pair. Closing a tab, closing the
+browser, logging out of the dashboard and rebooting are all invisible to it, because none of them
+is where the credential lives.
+
+`setx` writes the user's environment, which survives all four. Verified twice on 2026-09-01, hours
+apart, from a new console with the browser closed — same account fingerprint, `ACTIVE`, same
+balance, and a paper order accepted by the venue.
+
+**Checked rather than assumed** (`AGENTS.md` §15: an impossibility is a claim). Both variables were
+confirmed present at `User` scope and `swingdesk broker` was run against the live endpoint.
+
+```
+setx APCA_API_KEY_ID "<paper key id>"
+setx APCA_API_SECRET_KEY "<paper secret>"
+```
+
+**`setx` does not change the console you type it in.** A variable set this way appears in the NEXT
+process. Running the command and then testing in the same window reports the key as missing, which
+looks exactly like a key that expired.
+
+### 6.2 What actually invalidates a pair, and there are only two things
+
+1. **Regenerating it.** The dashboard shows the secret **once, at creation**. Coming back to read it
+   again is not possible — the only way to see a secret is to generate a new pair, **and that kills
+   the old one**. So "I looked at my key again and now it does not work" is not an expiry; it is the
+   act of looking.
+2. **Resetting or deleting the paper account.** A reset rotates the keys, and Alpaca's own forum
+   answer as of March 2025 is that a paper balance cannot be reset without deleting the account and
+   creating a new one — which issues new keys.
+
+**Neither is a reason to re-enter credentials before a session.** If a key stops working, one of
+those two happened, and the fix is `setx` once with the new pair.
+
+### 6.2a How the system says so, and it says which of the two it is
+
+Both failures are coded refusals naming the variables, never a traceback. Demonstrated 2026-09-01
+by running the command with each fault deliberately present:
+
+```
+broker UNAVAILABLE  Alpaca paper trading refused the credentials in APCA_API_KEY_ID /
+                    APCA_API_SECRET_KEY (HTTP 401). Paper keys are distinct from live keys.
+
+broker UNAVAILABLE  APCA_API_KEY_ID, APCA_API_SECRET_KEY not set. ...
+```
+
+The first means the pair was rejected — regenerated, or the account was reset. The second means the
+variables are absent from this process, which after a `setx` usually means the console predates it.
+`swingdesk broker` exits **2** for both: `UNAVAILABLE` is neither a pass nor a failure of the
+reconciliation, and the exit code keeps those apart (`AGENTS.md` §12).
+
+### 6.3 Never in this repository
+
+`SECURITY.md` §2.1: environment variables or an OS keyring, never a file here, never a command-line
+argument. This repository is public and `tools/verify_secrets.py` is the gate that keeps it so.
+Paper keys are distinct from live keys and that does not soften the rule — a secret in a public
+repository is a secret published, whatever it unlocks.
+
+**What to check, without ever printing a value:**
+
+```
+powershell -Command "'APCA_API_KEY_ID','APCA_API_SECRET_KEY' | ForEach-Object { $v = [Environment]::GetEnvironmentVariable($_,'User'); '{0}: {1}' -f $_, $(if ($v) { 'set, length ' + $v.Length } else { 'absent' }) }"
+```
+
+Presence and length answer every question worth asking here. The value answers none of them.

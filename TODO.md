@@ -1907,6 +1907,58 @@ is for where no gate can reach.
 
 ## 5. Studies
 
+- [x] **`[v]` THE TAKE-PROFIT TARGET IS 1R - ruled by the owner 2026-09-01, `DR-029`.**
+      `exit.target_r_multiple` = 1.0, provenance `owner`, read by `broker.submit:target_price`.
+      **No pre-registration was needed and that is not a shortcut.** `ALLOCATION_SPEC` §3 requires
+      one for an ORDERING adopted from the course; a target is an exit threshold, the same family as
+      `exit.atr_stop_multiple`, which `DR-012` set at 2.0 by owner ruling with no study.
+      **MEASURED over 1,505 instruments and 91,572 non-overlapping 20-session windows**, first
+      touch, a bar containing both levels counted as a STOP:
+      ```bash
+      PYTHONPATH=$PWD/src python tools/measure_target_reachability.py --data <store>
+      ```
+      | target | hit | stopped | timed out | expectancy over resolved |
+      |---|---|---|---|---|
+      | 0.5R | 67.0% | 30.4% | 2.6% | +0.032R |
+      | **1.0R** | **46.8%** | **41.7%** | **11.4%** | **+0.057R** |
+      | 1.5R | 31.3% | 45.6% | 23.1% | +0.017R |
+      | 2.0R | 19.6% | 46.7% | 33.6% | −0.113R |
+      | 3.0R | 7.1% | 47.2% | 45.7% | −0.479R |
+
+      **3R is excluded by the data, not by taste** - 45.7% of its windows never resolve, so the
+      course's own third candidate and the ratified 20-session hold are incompatible.
+      **Every number is on UNSELECTED entries** - every 20th session on every admitted name - so a
+      near-zero expectancy everywhere is what an efficient market should give. It measures how far
+      instruments TRAVEL, never whether an edge exists.
+      **A method error, recorded because the first run was wrong by a factor of seven**: it counted
+      a hit on every bar that cleared the level rather than once per window, so 0.5R "reached" 694%.
+
+- [ ] **`[ ]` THE THREE LEVERS THAT WOULD OPEN A WIDER TARGET, AND NONE OF THEM IS THE TARGET —
+      owner instruction 2026-09-01 ("a good checkup and research in future, to open bigger
+      possibilities and find stoppers and preventers"). `DR-029` §5 names them.**
+      **The stopper is arithmetic and it is worth stating once**: the stop is `2.0 x ATR(14)`, so
+      one R is about two ATR, and these names travel about **three ATR in twenty sessions**. The
+      reachable range is therefore structurally about **1.5R**. A wider target is not available by
+      choosing one.
+      1. **`[ ]` A TIGHTER STOP - the strongest candidate and never measured.** At `1.0 x ATR` one R
+         halves, so 2R becomes as reachable as 1R is now, bought with a higher stop-out rate. Same
+         store, same tool, one more axis: sweep the stop multiple against the target grid and read
+         the expectancy surface. **This is the one to run first** - it is cheap, it is a decision
+         record's subject rather than a study's, and it is the only lever that does not require the
+         owner to reopen something already ratified.
+      2. **`[ ]` A LONGER HOLD.** Already scheduled separately and bounded at ~40 sessions by owner
+         ruling 2026-08-31. **Two independent measurements now say the same thing about 20**: the
+         momentum studies found nothing inside it, and the target grid cannot reach past 1.5R inside
+         it. One constraint, two symptoms.
+      3. **`[ ]` SELECTION.** Every number above is on unselected entries, so the table moves
+         wholesale the moment a card raises the hit rate - and only then does the choice between 1R
+         and 1.5R mean anything. This is `CARD-001`'s four unset inputs and the `PR-012` redesign,
+         and it is the one of the three that needs a PRE-REGISTRATION rather than a decision record
+         (`ALLOCATION_SPEC` §3).
+      **Do not run these as one study.** 1 and 2 are exit-policy thresholds and belong to decision
+      records; 3 is an ordering and belongs to a pre-registration. Merging them would let an
+      ordering inherit an exit threshold's authority, which is the exact confusion §3 exists to stop.
+
 - [ ] **`[v]` THE HOLDING HORIZON IS WHY BOTH STUDIES FOUND NOTHING — measured 2026-08-31,
       EXPLORATORY, sets nothing.** `python tools/measure_momentum_horizon.py --data <store>`.
       **The literature first** (`AGENTS.md` §10.3 — searched before authoring). Jegadeesh (1990)

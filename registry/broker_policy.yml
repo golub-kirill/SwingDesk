@@ -130,8 +130,16 @@ write:
   #   limit   - at the sizing price itself, which is the CHASE and LATE controls by construction
   #             and introduces no new number
   #   day     - an order that outlives the session outlives the analysis that produced it
-  #   bracket - a stop the market cannot see is not a stop, and it is what lets a filled entry
-  #             reconstruct a Position
+  #   bracket - entry, stop and target in one chain. A stop the market cannot see is not a stop,
+  #             and neither is a target: the owner ruled 2026-09-01 that a trade is carried from
+  #             discovery to CLOSE and then observed, so the research data comes from a completed
+  #             trade rather than from one that timed out.
+  #
+  # **The venue settled the class, and it did so by refusing.** The first real order went out as a
+  # bracket with a stop leg only and came back `bracket orders require take_profit.limit_price`.
+  # A bracket is a chain of THREE. `oto` would have taken one leg - and the owner's ruling arrived
+  # in the same hour and made the target mandatory, so `bracket` is right for a reason that is not
+  # the wire format. `DR-027` 9.
   order_type: limit
   time_in_force: day
   order_class: bracket

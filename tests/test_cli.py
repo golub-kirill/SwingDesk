@@ -1055,6 +1055,22 @@ def _trade_outcome(instrument_id: str = "TEST.1"):
     )
 
 
+def _target_registry():
+    """A registry carrying a take-profit multiple, because the real one has none.
+
+    `exit.target_r_multiple` is UNSET in production and these tests are about the WIRING, not about
+    the value. `test_submit.py` asserts the unset case, which is what a run does today.
+    """
+    from swingdesk.platform.parameters import ParameterRegistry
+
+    return ParameterRegistry({
+        "exit.target_r_multiple": {
+            "id": "exit.target_r_multiple", "value": "2.0", "provenance": "assumed:test fixture",
+            "status": "assumed", "unit": "R", "named_in": ["M53-T0808"],
+        },
+    })
+
+
 def _result_with_one_trade():
     from swingdesk.application.pipeline import RunResult
     from swingdesk.contracts.run import RunManifest, RunMode
@@ -1105,7 +1121,7 @@ def test_submit_is_stopped_by_default_and_says_what_it_would_have_sent(
     _stub_submit_client(monkeypatch, sent)
     with Journal(tmp_path / 'journal.duckdb') as journal:
         cli._submit(_result_with_one_trade(), tmp_path,
-                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal)
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry())
 
     printed = capsys.readouterr().out
     assert "1 Trade decision(s) sized and eligible" in printed
@@ -1126,7 +1142,7 @@ def test_an_armed_switch_submits_the_run_s_trade_decisions(
     _stub_submit_client(monkeypatch, sent)
     with Journal(tmp_path / 'journal.duckdb') as journal:
         cli._submit(_result_with_one_trade(), tmp_path,
-                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal)
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry())
 
     printed = capsys.readouterr().out
     assert "armed" in printed
@@ -1163,7 +1179,8 @@ def test_a_watch_decision_is_never_submitted(tmp_path: Path, monkeypatch, capsys
     sent: list = []
     _stub_submit_client(monkeypatch, sent)
     with Journal(tmp_path / 'journal.duckdb') as journal:
-        cli._submit(result, tmp_path, datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal)
+        cli._submit(result, tmp_path, datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal,
+                    _target_registry())
         rows = journal.submissions_for('RUN-TEST')
     assert "0 Trade decision(s)" in capsys.readouterr().out
     assert sent == []
@@ -1185,7 +1202,7 @@ def test_every_stopped_attempt_is_journalled(tmp_path: Path, monkeypatch) -> Non
     _stub_submit_client(monkeypatch, sent)
     with Journal(tmp_path / "journal.duckdb") as journal:
         cli._submit(_result_with_one_trade(), tmp_path,
-                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal)
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry())
         rows = journal.submissions_for("RUN-TEST")
 
     assert len(rows) == 1
@@ -1209,7 +1226,7 @@ def test_a_sent_order_is_journalled_with_the_venue_s_id(tmp_path: Path, monkeypa
     _stub_submit_client(monkeypatch, sent)
     with Journal(tmp_path / "journal.duckdb") as journal:
         cli._submit(_result_with_one_trade(), tmp_path,
-                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal)
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry())
         rows = journal.submissions_for("RUN-TEST")
 
     assert len(rows) == 1
@@ -1237,6 +1254,6 @@ def test_a_journal_that_cannot_be_written_does_not_take_the_run_down(
             lambda submission: (_ for _ in ()).throw(RuntimeError("disk full")),
         )
         cli._submit(_result_with_one_trade(), tmp_path,
-                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal)
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry())
 
     assert "NOT JOURNALLED" in capsys.readouterr().err

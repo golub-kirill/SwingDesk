@@ -313,6 +313,10 @@ class AlpacaClient:
             "limit_price": str(order.limit_price),
             "order_class": write.order_class,
             "stop_loss": {"stop_price": str(order.stop_price)},
+            # A bracket is a chain of THREE and the venue refuses one with a leg missing -
+            # measured, not read: the first real order came back "bracket orders require
+            # take_profit.limit_price". `DR-027` 9.
+            "take_profit": {"limit_price": str(order.target_price)},
             "client_order_id": order.client_order_id,
         }
         answered = self._write("orders", payload)

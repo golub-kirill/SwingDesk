@@ -212,7 +212,10 @@ def main(argv: list[str] | None = None) -> int:
     return 1
 
 
-def _submit(result: RunResult, data: Path, now: datetime, journal: Journal) -> None:
+def _submit(
+    result: RunResult, data: Path, now: datetime, journal: Journal,
+    registry: ParameterRegistry,
+) -> None:
     """Send this run's `Trade` decisions to the paper venue, and journal every attempt.
 
     **Never fatal to the run.** `a.run_completes` measures whether the run produced its decisions
@@ -232,7 +235,6 @@ def _submit(result: RunResult, data: Path, now: datetime, journal: Journal) -> N
     from swingdesk import broker as broker_pkg
 
     run_id = result.manifest.run_id
-    session = now.date()
 
     def _record(
         order_id: str, instrument_id: str, shares: int, limit: Decimal, stop: Decimal,
@@ -256,6 +258,10 @@ def _submit(result: RunResult, data: Path, now: datetime, journal: Journal) -> N
 
     try:
         policy = broker_pkg.load_policy()
+        # The exchange session, not the clock's date (`DR-027` 9). At 19:30 New York the UTC date
+        # has already rolled over, so the retry pass would key on a different day than the 18:30
+        # pass and resubmit every entry.
+        session = broker_pkg.trading_session(policy.market, now)
         arming = broker_pkg.read_arming(data, policy.write)
         client = broker_pkg.open_client(policy, arming=arming)
     except broker_pkg.PolicyRefused as refused:
@@ -263,6 +269,10 @@ def _submit(result: RunResult, data: Path, now: datetime, journal: Journal) -> N
         return
     except broker_pkg.CredentialsMissing as missing:
         print(f"submit UNAVAILABLE  {missing}", file=sys.stderr)
+        return
+    except LookupError as no_session:
+        print(f"submit UNAVAILABLE  no completed session to key an order on: {no_session}",
+              file=sys.stderr)
         return
 
     # Counted first and printed either way. A run that would have submitted nothing and a run that
@@ -318,11 +328,20 @@ def _submit(result: RunResult, data: Path, now: datetime, journal: Journal) -> N
             continue
 
         try:
+            # The target is read here rather than passed down, so an unset one refuses THIS order
+            # and names the parameter, instead of the venue refusing a malformed bracket.
             order = broker_pkg.entry_order(
                 instrument_id=instrument_id, shares=risk.shares,
                 limit_price=risk.entry, stop_price=risk.stop,
+                target=broker_pkg.target_price(risk.entry, risk.risk_per_share, registry),
                 session_date=session, write=write, market=policy.market,
             )
+        except ParameterUnset as unset:
+            print(f"  REFUSED  {instrument_id}  no take-profit target: {unset.parameter_id} is "
+                  f"unset, and a bracket needs both legs", file=sys.stderr)
+            _record(_key(instrument_id), instrument_id, risk.shares, risk.entry, risk.stop,
+                    "refused", f"{unset.parameter_id} is unset")
+            continue
         except (broker_pkg.PolicyRefused, ValueError) as refused:
             print(f"  REFUSED  {instrument_id}  {refused}", file=sys.stderr)
             _record(_key(instrument_id), instrument_id, risk.shares, risk.entry, risk.stop,
@@ -976,7 +995,7 @@ def _scan(args: argparse.Namespace) -> tuple[int, str | None, notify.Outcome]:
             print(f"\nreport written  {written}")
 
         if args.submit:
-            _submit(result, args.data, clock.now(), journal)
+            _submit(result, args.data, clock.now(), journal, registry)
 
     # The outcome distinguishes "go and read it" from "there is nothing to read". Sending
     # COMPLETE unconditionally told the owner "Report on disk." after a failed write - a notice
