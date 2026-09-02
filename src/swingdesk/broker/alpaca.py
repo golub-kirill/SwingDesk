@@ -361,6 +361,44 @@ class AlpacaClient:
             observed_at=observed_at,
         )
 
+    def open_orders(self, observed_at: datetime) -> tuple[PlacedOrder, ...]:
+        """Every order the venue still considers live, in symbol order. A GET, and only a GET.
+
+        **An unfilled order is committed exposure and a position is not the whole story.** A
+        bracket resting overnight will fill or will not, and until the venue says which, the name
+        is spoken for - so a cap that counted only filled positions would let the same name be
+        entered twice on consecutive evenings. `DR-027` §11.
+
+        `status=open` is the venue's own filter, applied at the server rather than here: asking for
+        every order this account ever had and discarding most of them locally would walk the page
+        bound for an answer the endpoint can give directly.
+        """
+        payload = self._get("orders", query={"status": "open", "direction": "asc"})
+        if not isinstance(payload, list):
+            raise BrokerUnavailable("orders: expected an array")
+
+        live = [self._order(row, observed_at) for row in payload]
+        # Sorted here rather than trusted from the wire, exactly as `positions` is: a vendor is
+        # free to change its ordering between calls and `DETERMINISM_SPEC` is not.
+        return tuple(sorted(live, key=lambda order: (order.symbol, order.order_id)))
+
+    def _order(self, row: Any, observed_at: datetime) -> PlacedOrder:
+        if not isinstance(row, dict):
+            raise BrokerUnavailable("orders: expected an array of objects")
+        return PlacedOrder(
+            order_id=_text(row, "id", "orders"),
+            # An order this system did not place carries whatever id the venue assigned, and an
+            # order placed by hand in the dashboard may carry none at all. Both are still exposure,
+            # so this reads rather than requires - unlike `submit`, where a missing echo would mean
+            # our own id did not land.
+            client_order_id=str(row.get("client_order_id") or ""),
+            symbol=_text(row, "symbol", "orders"),
+            status=str(row.get("status", "")),
+            submitted_at=_instant(row, "submitted_at", "orders"),
+            filled_shares=_optional_decimal(row, "filled_qty", "orders") or Decimal(0),
+            observed_at=observed_at,
+        )
+
     def positions(self, observed_at: datetime) -> tuple[BrokerPosition, ...]:
         """Every position the venue says is open, in symbol order.
 
