@@ -300,6 +300,17 @@ and both dropped notes were load-bearing.
 
 - **Arming the switch.** Nothing has been submitted by a run. The probe placed one deliberately
   unfillable order to prove the path; it was disarmed immediately.
+
+  **Read `DR-027` §10 before arming, and do not arm a checkout that does not carry it.** On
+  2026-09-02 an armed `--submit` would have sent **114 bracket orders, 103.5R, $153,040 of
+  notional** against ratified caps of **4 positions and 4R** — and the venue would have accepted
+  every one, because the paper account is ten times the size of the `account.equity` the risk model
+  uses, so nothing bounces. `DR-027` §4's four guards are boundary guards and none of them counts;
+  `pipeline` prices the book once and judges every candidate against that same empty book, so no
+  candidate was ever compared with any other. `portfolio.allocate` now applies the three ratified
+  caps across one run's own output, in `CARD-001`'s ranked order, and the same run submits **4**.
+  **`data/` is shared by the main checkout and every worktree, so the switch is shared too** — an
+  armed switch is only as safe as the code the checkout beside it is running.
 - **`DR-029` §5's three levers**, which is the research the owner asked for: a tighter stop (the
   strongest candidate and never measured — it halves R, so 2R becomes as reachable as 1R is now), a
   longer hold (already scheduled, bounded at ~40 sessions), and selection. **They do not belong together**: the first two are exit thresholds and belong to decision records, the third is an
