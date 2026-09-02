@@ -293,7 +293,7 @@ def _allocate(
 
 def _submit(
     result: RunResult, data: Path, now: datetime, journal: Journal,
-    registry: ParameterRegistry,
+    registry: ParameterRegistry, positions: PositionStore | None = None,
 ) -> None:
     """Send this run's `Trade` decisions to the paper venue, and journal every attempt.
 
@@ -423,6 +423,57 @@ def _submit(
         return
 
     print(f"  armed    {arming.reason}")
+
+    # THE VENUE IS ASKED WHAT IT ALREADY HOLDS, BEFORE ANYTHING IS ADDED. `DR-027` §11.
+    #
+    # §10's caps are measured against `positions.duckdb`, and NOTHING WRITES TO IT automatically -
+    # `open-position` and `respond` are both commands a person runs. So the book reads empty on
+    # every evening nobody recorded a fill, and the caps would take four more names on each of
+    # them: four tonight, four tomorrow, four the night after, against a cap of four in total.
+    # §10 bounded one run against itself and this bounds the run against every run before it.
+    #
+    # AFTER the arming check and not before, which is `AlpacaClient.guards`' own ordering and for
+    # its stated reason: a refusal reporting *the venue is unreachable* when the truth is *the
+    # owner never armed it* sends somebody to debug a network at 18:31. A disarmed run now costs
+    # no request at all.
+    #
+    # `TECH` is the course's own code for the two disagreeing and its prescribed action is *pause
+    # new entries*, which is exactly this - and `DR-027` §7 already ruled that on this path a
+    # divergence stops submission rather than being noted.
+    def _stop_all(reason: str) -> None:
+        print(f"  STOPPED  {reason}", file=sys.stderr)
+        for stopped in submittable:
+            at_risk = stopped.risk
+            assert isinstance(at_risk, RiskSnapshot)
+            _record(_key(stopped.instrument.id), stopped.instrument.id, at_risk.shares,
+                    at_risk.entry, at_risk.stop, "stopped", reason)
+
+    if positions is None:
+        _stop_all("no position store, so what the venue already holds cannot be compared against "
+                  "anything; submission needs a book to add to")
+        return
+
+    try:
+        held = client.positions(now)
+        live_orders = client.open_orders(now)
+    except broker_pkg.BrokerUnavailable as unavailable:
+        # UNAVAILABLE IS STOPPED. A venue that cannot be read is a venue whose holdings are
+        # unknown, and adding to an unknown book is the one thing this guard exists to prevent.
+        _stop_all(f"the venue could not be read before submitting: {unavailable}")
+        return
+
+    unaccounted = broker_pkg.uncommitted_exposure(
+        positions.open_as_of(now), held, live_orders, policy.market,
+    )
+    if unaccounted:
+        _stop_all(
+            f"{broker_pkg.MISMATCH_CODE}: the venue holds {len(unaccounted)} symbol(s) this "
+            f"system's book does not carry ({', '.join(unaccounted[:8])}"
+            f"{', ...' if len(unaccounted) > 8 else ''}). The caps were measured against the book, "
+            f"so they were not measured against these. Pause new entries: record them with "
+            f"`open-position`, or close them at the venue."
+        )
+        return
 
     halted: str | None = None
     for outcome in submittable:
@@ -1105,7 +1156,7 @@ def _scan(args: argparse.Namespace) -> tuple[int, str | None, notify.Outcome]:
             print(f"\nreport written  {written}")
 
         if args.submit:
-            _submit(result, args.data, clock.now(), journal, registry)
+            _submit(result, args.data, clock.now(), journal, registry, positions)
 
     # The outcome distinguishes "go and read it" from "there is nothing to read". Sending
     # COMPLETE unconditionally told the owner "Report on disk." after a failed write - a notice

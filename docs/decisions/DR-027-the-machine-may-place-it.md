@@ -11,6 +11,9 @@ implemented_by:  src/swingdesk/broker/submit.py :: def entry_order
                  the ratified caps bind across one run's own output through
                  src/swingdesk/trade_management/portfolio.py :: def allocate, called by
                  src/swingdesk/presentation/cli.py :: def _allocate (§10)
+                 the venue is asked what it already holds before anything is added by
+                 src/swingdesk/broker/reconcile.py :: def uncommitted_exposure, read through
+                 src/swingdesk/broker/alpaca.py :: def open_orders (§11)
                  the wire call is AlpacaClient.submit, gated by AlpacaClient.guards; the four
                  guards live in registry/broker_policy.yml, src/swingdesk/broker/armed.py and
                  tools/verify_broker_policy.py (gate 39)
@@ -357,3 +360,112 @@ This amendment removes a reason not to arm; it is not an arming.
   enough that sector concentration decides most sessions, the ordering question `DR-030` answered
   for *eligibility* has to be re-asked for *allocation* — they are not the same question, and this
   record borrows the answer to one for the other because at four slots the difference cannot show.
+
+---
+
+## 11. Amendment, 2026-09-02 — §10 bounded a run against itself; nothing bounded it against yesterday
+
+**Appended, not edited.** §10 is correct and unchanged. It makes the three ratified caps bind
+across **one run's own output**, which is the question it was written for. It leaves a second one
+open, and the second one compounds.
+
+### 11.1 The book the caps are measured against is written only by a person
+
+`portfolio.book` is built from `positions.duckdb`. Every writer to that store is a command a human
+runs — `open-position` and `respond`, and those two only; grep is the whole proof. **The submission
+path does not write a position, deliberately**: §6 keeps a `Position` a thing created from the
+*fill*, and an accepted order is not a fill.
+
+So the sequence is:
+
+| evening | book says | venue actually holds | submitted |
+|---|---|---|---|
+| 1 | 0 open | 0 | **4** |
+| 2 | 0 open — nobody recorded the fills | 4 | **4 more** |
+| 3 | 0 open | 8 | **4 more** |
+
+Four a night, for ever, against a cap of four in total. It is §10's defect one level up and slower,
+and slower is worse: §10's would have been obvious on the first evening, and this one looks
+completely normal until the account is twenty names deep.
+
+**The `client_order_id` does not save it.** §5's idempotency is keyed on the *session*, so it stops
+a repeat submission of the same name **within** one session — a retried evening pass, which is what
+it was built for. Consecutive sessions derive different keys by design, because they are different
+decisions. Nothing about it was wrong; it was answering a different question.
+
+### 11.2 What changed
+
+**Before adding, the venue is asked what it already holds.** `uncommitted_exposure` compares the
+venue's positions **and its live orders** against the book, and any symbol the venue is exposed to
+that the book does not carry stops submission entirely.
+
+**`TECH`, and it is not invented here.** Appendix N already carries *"Broker/platform/journal
+mismatch"* with the prescribed action *"Pause new entries"*. `DR-027` §7 already ruled that on this
+path a divergence is a stop-submitting condition rather than a note. This implements a ruling that
+existed and had no code.
+
+**An unfilled order counts, and that is the half that is easy to miss.** A resting bracket is not a
+position and never will be if it does not fill — but until the venue says which, the name is spoken
+for. A guard counting only filled positions would let the same name be entered on two consecutive
+evenings, which is the exact failure it exists to stop.
+
+**Two GETs, and gate 39 stays absolute.** `AlpacaClient.open_orders` reads `/v2/orders?status=open`.
+No write verb is added anywhere; `access.allowed_methods` is untouched.
+
+**After the arming check, never before.** `AlpacaClient.guards` puts arming first on purpose: a
+refusal reporting *the venue is unreachable* when the truth is *the owner never armed it* sends
+somebody to debug a network at 18:31. A disarmed run therefore costs no request at all, and a test
+asserts it by giving the stub a venue that raises on every read.
+
+**Unavailable is stopped**, on all three of its causes — no position store, a venue that could not
+be read, a divergence. A venue whose holdings are unknown is not a venue to add to.
+
+### 11.3 What clears it
+
+Recording the fills. `open-position` for each one puts the book and the venue back in agreement,
+and then §10's caps do the rest — with four recorded positions, the next run's `assess` admits
+nobody and submits nothing, which is the ratified cap working rather than a guard firing.
+
+**This is deliberately not automatic.** Constructing a `Position` from the venue's answer is what
+`DR-026` refused, and §3.2's observation that a bracket makes the stop readable narrows that
+argument without closing it — a fill price, a costs figure and a strategy tag are still ours to
+state. Automating it is a decision record, and `TODO.md` carries it. Until then the guard is what
+makes the omission loud instead of expensive.
+
+### 11.4 It caught something on its first real read, and the something was ours
+
+**Exercised against the live paper venue on 2026-09-02, before this was merged**, in the same
+spirit as §1: two GETs, no write. The venue reported **zero positions and ONE live order** —
+
+```
+order_id       : 1a44d118-59f3-428f-83e7-47cc09bd3e98
+client_order_id: swingdesk-2026-09-01-SPY
+symbol/status  : SPY / new
+```
+
+— which is **§9.3's probe order, still working**. §9.3 says *"The switch was disarmed immediately
+afterwards and is absent again"*, and that sentence is true about the switch and silent about the
+order. It was submitted after the close on 1 September, queued, and released by the venue at the
+next session open; `filled_shares` is 0 because the limit was put far below the market on purpose,
+which is the one thing about it that went to plan.
+
+So the first thing this guard ever did on real data was refuse to add to a book that already had
+something in it that nobody had recorded — which is the whole thesis, demonstrated by the record
+that introduced it.
+
+**And the remedy is the one this system deliberately cannot perform.** §3.3 gives every order
+`time_in_force: day` and `access.allowed_methods` therefore carries no `DELETE`, so SwingDesk cannot
+cancel it: it expires at the close, or a human cancels it in the venue's own dashboard. That is the
+`DELETE`-is-absent decision meeting its first real consequence, and it is being recorded rather than
+quietly reversed — an order the machine cannot recall is exactly why the machine is bounded on how
+many it may place.
+
+### 11.5 What would overturn this
+
+- **Positions recorded from fills automatically.** Then this guard should stop firing in normal
+  operation and becomes a check on the automation rather than on the operator. It should not be
+  deleted at that point — it is the thing that catches the automation failing.
+- **A second account on the same key pair.** `uncommitted_exposure` reads one account's holdings
+  and assumes every symbol at the venue is this system's business. A venue position opened by hand
+  in the dashboard correctly stops submission today, which is the conservative reading and may
+  become an irritation before it becomes wrong.

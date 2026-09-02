@@ -22,7 +22,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 
-from swingdesk.contracts.broker import BrokerFill, BrokerPosition, PositionSide
+from swingdesk.contracts.broker import BrokerFill, BrokerPosition, PlacedOrder, PositionSide
 from swingdesk.contracts.position import Position
 from swingdesk.contracts.reference import Exchange
 from swingdesk.reference_data import calendar as cal
@@ -216,3 +216,40 @@ def unrecorded_fills(
     """
     known = {position.instrument_id for position in book}
     return tuple(fill for fill in fills if fill.symbol not in known)
+
+
+def uncommitted_exposure(
+    book: Sequence[Position],
+    held: Sequence[BrokerPosition],
+    live_orders: Sequence[PlacedOrder],
+    market: str,
+) -> tuple[str, ...]:
+    """Symbols the VENUE is exposed to that this system's book does not carry. `DR-027` §11.
+
+    **This is the question a submission has to ask, and `reconcile` does not ask it.** `reconcile`
+    compares two descriptions of the same position and reports every kind of disagreement, which is
+    what an operator wants at 18:35. A caller about to ADD exposure needs one narrower answer: is
+    there anything out there the caps were not measured against? Everything else - a share count
+    that differs by one, an entry price that drifted - is a reconciliation problem and not a reason
+    the arithmetic on *how many more* is wrong.
+
+    **An unfilled order counts.** A resting bracket will fill or will not, and until the venue says
+    which, that name is spoken for. Counting only filled positions is what would let the same name
+    be entered on two consecutive evenings, which is the whole failure this exists to stop.
+
+    **Out-of-scope book positions are ignored, in scope-symmetry with `reconcile`.** A `.TO` holding
+    is not something this venue failed to report, and a venue symbol that matches no book position
+    is the finding - never the other way round.
+
+    Returns them sorted, empty when the venue holds nothing the book has not accounted for. Empty
+    is the ONLY safe answer, and a caller that treats a non-empty tuple as advisory has reinvented
+    the `unavailable`-admits-unchecked inversion (`DR-025` §2.1).
+    """
+    scope = Exchange(market)
+    known = {
+        position.instrument_id for position in book
+        if cal.exchange_for(position.instrument_id) is scope
+    }
+    at_venue = {holding.symbol for holding in held}
+    at_venue |= {order.symbol for order in live_orders}
+    return tuple(sorted(at_venue - known))

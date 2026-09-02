@@ -26,6 +26,7 @@ from swingdesk.broker.reconcile import (
     Divergence,
     Reconciliation,
     reconcile,
+    uncommitted_exposure,
     unrecorded_fills,
 )
 from swingdesk.broker.submit import (
@@ -57,5 +58,6 @@ __all__ = [
     "reconcile",
     "target_price",
     "trading_session",
+    "uncommitted_exposure",
     "unrecorded_fills",
 ]

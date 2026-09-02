@@ -9,7 +9,7 @@ the right arguments into `run()` - the WIRING, not the pipeline it wires to, whi
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -19,6 +19,7 @@ from swingdesk.application.pipeline import RunResult
 from swingdesk.contracts.position import ActionKind as _ActionKind
 from swingdesk.contracts.run import RunManifest
 from swingdesk.journal_evidence.journal import Journal
+from swingdesk.journal_evidence.positions import PositionStore
 from swingdesk.market_data.retry import RetryingFetcher
 from swingdesk.presentation import cli, notify
 
@@ -1146,12 +1147,28 @@ def _result_with_one_trade():
     return _result_with_trades()
 
 
-def _stub_submit_client(monkeypatch, sent: list):
+def _stub_submit_client(monkeypatch, sent: list, held=(), live_orders=(), unavailable=None):
+    """A venue stub. `held` and `live_orders` are what it already holds - empty by default.
+
+    `DR-027` §11: submission reads the venue before it adds to it, because `positions.duckdb` is
+    only ever written by a human and would otherwise read empty on every evening. A stub that
+    answered nothing here would test a path production does not take.
+    """
     from swingdesk import broker as broker_pkg
 
     class _Client:
         def __init__(self, arming):
             self.arming = arming
+
+        def positions(self, now):
+            if unavailable:
+                raise broker_pkg.BrokerUnavailable(unavailable)
+            return tuple(held)
+
+        def open_orders(self, now):
+            if unavailable:
+                raise broker_pkg.BrokerUnavailable(unavailable)
+            return tuple(live_orders)
 
         def submit(self, order, now):
             from swingdesk.contracts.broker import PlacedOrder
@@ -1180,9 +1197,10 @@ def test_submit_is_stopped_by_default_and_says_what_it_would_have_sent(
     """
     sent: list = []
     _stub_submit_client(monkeypatch, sent)
-    with Journal(tmp_path / 'journal.duckdb') as journal:
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book:
         cli._submit(_result_with_one_trade(), tmp_path,
-                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry())
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry(), book)
 
     printed = capsys.readouterr().out
     assert "1 Trade decision(s) sized and eligible" in printed
@@ -1201,9 +1219,10 @@ def test_an_armed_switch_submits_the_run_s_trade_decisions(
 
     sent: list = []
     _stub_submit_client(monkeypatch, sent)
-    with Journal(tmp_path / 'journal.duckdb') as journal:
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book:
         cli._submit(_result_with_one_trade(), tmp_path,
-                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry())
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry(), book)
 
     printed = capsys.readouterr().out
     assert "armed" in printed
@@ -1239,9 +1258,10 @@ def test_a_watch_decision_is_never_submitted(tmp_path: Path, monkeypatch, capsys
 
     sent: list = []
     _stub_submit_client(monkeypatch, sent)
-    with Journal(tmp_path / 'journal.duckdb') as journal:
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book:
         cli._submit(result, tmp_path, datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal,
-                    _target_registry())
+                    _target_registry(), book)
         rows = journal.submissions_for('RUN-TEST')
     assert "0 Trade decision(s)" in capsys.readouterr().out
     assert sent == []
@@ -1261,9 +1281,10 @@ def test_every_stopped_attempt_is_journalled(tmp_path: Path, monkeypatch) -> Non
 
     sent: list = []
     _stub_submit_client(monkeypatch, sent)
-    with Journal(tmp_path / "journal.duckdb") as journal:
+    with Journal(tmp_path / "journal.duckdb") as journal, \
+            PositionStore(tmp_path / "positions.duckdb") as book:
         cli._submit(_result_with_one_trade(), tmp_path,
-                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry())
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry(), book)
         rows = journal.submissions_for("RUN-TEST")
 
     assert len(rows) == 1
@@ -1285,9 +1306,10 @@ def test_a_sent_order_is_journalled_with_the_venue_s_id(tmp_path: Path, monkeypa
 
     sent: list = []
     _stub_submit_client(monkeypatch, sent)
-    with Journal(tmp_path / "journal.duckdb") as journal:
+    with Journal(tmp_path / "journal.duckdb") as journal, \
+            PositionStore(tmp_path / "positions.duckdb") as book:
         cli._submit(_result_with_one_trade(), tmp_path,
-                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry())
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry(), book)
         rows = journal.submissions_for("RUN-TEST")
 
     assert len(rows) == 1
@@ -1309,13 +1331,14 @@ def test_a_journal_that_cannot_be_written_does_not_take_the_run_down(
 
     sent: list = []
     _stub_submit_client(monkeypatch, sent)
-    with Journal(tmp_path / "journal.duckdb") as journal:
+    with Journal(tmp_path / "journal.duckdb") as journal, \
+            PositionStore(tmp_path / "positions.duckdb") as book:
         monkeypatch.setattr(
             journal, "record_submission",
             lambda submission: (_ for _ in ()).throw(RuntimeError("disk full")),
         )
         cli._submit(_result_with_one_trade(), tmp_path,
-                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry())
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry(), book)
 
     assert "NOT JOURNALLED" in capsys.readouterr().err
 
@@ -1351,9 +1374,10 @@ def test_the_book_cap_binds_across_one_run_s_own_trade_decisions(
     # Six different sectors, so the SECTOR cap cannot be what binds and the count cap is isolated.
     sectors = ["technology", "healthcare", "energy", "industrials", "utilities", "real estate"]
     outcomes = [_trade_outcome(f"NAME{n}", sector) for n, sector in enumerate(sectors)]
-    with Journal(tmp_path / 'journal.duckdb') as journal:
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book:
         cli._submit(_result_with_trades(*outcomes), tmp_path,
-                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry())
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry(), book)
         rows = {row.instrument_id: row for row in journal.submissions_for("RUN-TEST")}
 
     assert len(sent) == 4, "risk.max_concurrent_positions is 4 and six names were eligible"
@@ -1391,9 +1415,10 @@ def test_the_sector_cap_binds_across_one_run_s_own_trade_decisions(
     sent: list = []
     _stub_submit_client(monkeypatch, sent)
     outcomes = [_trade_outcome(f"TECH{n}", "technology") for n in range(4)]
-    with Journal(tmp_path / 'journal.duckdb') as journal:
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book:
         cli._submit(_result_with_trades(*outcomes), tmp_path,
-                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry())
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry(), book)
         rows = {row.instrument_id: row for row in journal.submissions_for("RUN-TEST")}
 
     assert len(sent) == 2, "each name is 1R and risk.max_sector_risk allows 2R in one sector"
@@ -1425,9 +1450,10 @@ def test_a_candidate_the_caps_pass_over_does_not_stop_the_ones_behind_it(
         _trade_outcome("TECH2", "technology"),   # third in technology - passed over at 2R
         _trade_outcome("ENERGY0", "energy"),     # behind it, and its own sector is empty
     ]
-    with Journal(tmp_path / 'journal.duckdb') as journal:
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book:
         cli._submit(_result_with_trades(*outcomes), tmp_path,
-                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry())
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry(), book)
 
     assert [order.symbol for order in sent] == ["TECH0", "TECH1", "ENERGY0"]
 
@@ -1452,12 +1478,184 @@ def test_submission_stops_when_a_cap_could_not_be_measured(
         _stub_submit_client(monkeypatch, sent)
         result = _result_with_trades()
         setattr(result, field, None)
-        with Journal(tmp_path / f'journal-{field}.duckdb') as journal:
+        with Journal(tmp_path / f'journal-{field}.duckdb') as journal, \
+                PositionStore(tmp_path / f'positions-{field}.duckdb') as book:
             cli._submit(result, tmp_path, datetime(2026, 9, 1, 21, 0, tzinfo=UTC),
-                        journal, _target_registry())
+                        journal, _target_registry(), book)
             rows = journal.submissions_for("RUN-TEST")
 
         assert sent == [], f"an armed switch must not submit while {field} is unmeasured"
         assert [row.outcome for row in rows] == ["stopped"], \
             f"the attempt is still recorded when {field} stopped it"
         assert "STOPPED" in capsys.readouterr().err
+
+
+# --------------------------------------------------------------------------------------------
+# The venue is asked what it already holds, before anything is added (`DR-027` §11).
+#
+# §10's caps are measured against `positions.duckdb`, which NOTHING writes automatically -
+# `open-position` and `respond` are both commands a person runs. Four fills tonight that nobody
+# records leave the book reading empty tomorrow, and the caps then take four MORE names. §10
+# bounded a run against itself; these bound it against every run before it.
+
+
+def _venue_position(symbol: str):
+    from swingdesk.contracts.broker import BrokerPosition, PositionSide
+
+    return BrokerPosition(
+        symbol=symbol, asset_class="us_equity", exchange="NYSE", side=PositionSide.LONG,
+        shares=Decimal(10), average_entry_price=Decimal("50.00"),
+        observed_at=datetime(2026, 9, 1, 21, 0, tzinfo=UTC),
+    )
+
+
+def _venue_order(symbol: str):
+    from swingdesk.contracts.broker import PlacedOrder
+
+    return PlacedOrder(
+        order_id=f"o-{symbol}", client_order_id=f"swingdesk-2026-09-01-{symbol}", symbol=symbol,
+        status="new", submitted_at=datetime(2026, 9, 1, 21, 0, tzinfo=UTC),
+        observed_at=datetime(2026, 9, 1, 21, 0, tzinfo=UTC),
+    )
+
+
+def _armed(tmp_path: Path) -> None:
+    from swingdesk.broker import policy as policy_module
+
+    write = policy_module.load().write
+    assert write is not None
+    (tmp_path / write.kill_switch_file).write_text(write.armed_marker, encoding="utf-8")
+
+
+def test_a_position_the_venue_holds_and_the_book_does_not_stops_submission(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """THE REGRESSION. Last night's fill, unrecorded, must stop tonight's entries.
+
+    Without this the book reads empty every evening and the ratified caps take four more names on
+    each of them - four tonight, four tomorrow, against a cap of four in total.
+    """
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent, held=[_venue_position("LEFTOVER")])
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book:
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry(), book)
+        rows = journal.submissions_for("RUN-TEST")
+
+    assert sent == [], "nothing may be added to a book the venue and this system disagree about"
+    printed = capsys.readouterr().err
+    assert "TECH" in printed, "the course's own code for the two disagreeing"
+    assert "LEFTOVER" in printed
+    assert [row.outcome for row in rows] == ["stopped"]
+    assert "TECH" in (rows[0].detail or "")
+
+
+def test_an_unfilled_order_at_the_venue_also_stops_submission(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """A resting bracket is committed exposure even though it is not a position.
+
+    Counting only FILLED positions is what would let the same name be entered on two consecutive
+    evenings: last night's order had not filled yet, so the book had nothing to record.
+    """
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent, live_orders=[_venue_order("RESTING")])
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book:
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry(), book)
+
+    assert sent == []
+    assert "RESTING" in capsys.readouterr().err
+
+
+def test_a_venue_that_cannot_be_read_stops_submission(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """UNAVAILABLE is STOPPED. A venue whose holdings are unknown is not a venue to add to."""
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent, unavailable="connection reset")
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book:
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry(), book)
+        rows = journal.submissions_for("RUN-TEST")
+
+    assert sent == []
+    assert "connection reset" in capsys.readouterr().err
+    assert [row.outcome for row in rows] == ["stopped"]
+
+
+def test_the_venue_is_not_read_at_all_while_the_switch_is_stopped(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Arming is checked FIRST, which is `AlpacaClient.guards`' own ordering and reason.
+
+    A refusal reporting *the venue is unreachable* when the truth is *the owner never armed it*
+    sends somebody to debug a network at 18:31. The switch is absent here, so a venue that raises
+    on every read must never be touched.
+    """
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent, unavailable="this must never be reached")
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book:
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry(), book)
+        rows = journal.submissions_for("RUN-TEST")
+
+    assert sent == []
+    # Stopped by the SWITCH, never by the venue - the reason names the file, not the network.
+    assert [row.outcome for row in rows] == ["stopped"]
+    assert "arms it" in (rows[0].detail or "")
+
+
+def test_a_position_both_sides_carry_does_not_stop_submission(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Recording the fill is what clears the way, and the caps then do the rest.
+
+    The guard must not be a permanent halt once anything is ever held: a book that agrees with the
+    venue is exactly the state submission is designed for.
+    """
+    from swingdesk.contracts.position import Position
+
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent, held=[_venue_position("KNOWN")])
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book:
+        book.record(Position(
+            position_id="POS-KNOWN-2026-09-01", version=1, instrument_id="KNOWN",
+            opened_on=date(2026, 9, 1), entry_price=Decimal(50), shares=10,
+            initial_stop=Decimal(45), current_stop=Decimal(45),
+            initial_costs_per_share=Decimal("0.25"),
+            knowledge_time=datetime(2026, 9, 1, 20, 0, tzinfo=UTC),
+        ))
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry(), book)
+
+    assert len(sent) == 1, "the venue and the book agree, so the caps alone decide"
+
+
+def test_uncommitted_exposure_ignores_a_book_position_this_venue_cannot_hold() -> None:
+    """A `.TO` holding is not something a US venue failed to report (`AGENTS.md` §3).
+
+    Scope-symmetric with `reconcile`: an out-of-scope BOOK position is not a finding, while a venue
+    symbol matching no book position always is.
+    """
+    from swingdesk.broker import uncommitted_exposure
+    from swingdesk.contracts.position import Position
+
+    canadian = Position(
+        position_id="POS-CNQ.TO-2026-09-01", version=1, instrument_id="CNQ.TO",
+        opened_on=date(2026, 9, 1), entry_price=Decimal(50), shares=10,
+        initial_stop=Decimal(45), current_stop=Decimal(45),
+        initial_costs_per_share=Decimal("0.25"),
+        knowledge_time=datetime(2026, 9, 1, 20, 0, tzinfo=UTC),
+    )
+    assert uncommitted_exposure([canadian], [], [], "NYSE") == ()
+    assert uncommitted_exposure([canadian], [_venue_position("AAPL")], [], "NYSE") == ("AAPL",)
