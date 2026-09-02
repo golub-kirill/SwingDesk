@@ -1035,10 +1035,39 @@ def test_broker_exits_2_when_the_venue_cannot_be_read(tmp_path: Path, monkeypatc
 # `test_submit.py`'s subject.
 
 
-def _trade_outcome(instrument_id: str = "TEST.1"):
+#: An empty open book, priced with 1R = $100. Every submit fixture starts from one because that is
+#: the state the live account is in, and because `_submit` now REFUSES a run whose book was never
+#: priced - a cap that cannot be measured stops submission rather than admitting everything.
+def _empty_book():
+    from swingdesk.trade_management import portfolio
+
+    return portfolio.Book(count=0, open_risk_base=Decimal(0), r_unit=Decimal(100))
+
+
+def _empty_sector_book():
+    from swingdesk.trade_management import portfolio
+
+    return portfolio.SectorBook(
+        by_sector={}, unclassified_r=Decimal(0), unmeasured=(), unmeasured_r=Decimal(0),
+        total_r=Decimal(0),
+    )
+
+
+def _exposure(instrument_id: str, sector: str = "technology"):
+    from swingdesk.contracts.reference import SectorWeight
+    from swingdesk.reference_data.classification import Exposure
+
+    return Exposure(
+        instrument_id=instrument_id,
+        weights=(SectorWeight(sector=sector, weight=Decimal(1)),),
+    )
+
+
+def _trade_outcome(instrument_id: str = "TEST.1", sector: str = "technology"):
     from swingdesk.application.pipeline import InstrumentOutcome
     from swingdesk.contracts.reference import Exchange, Instrument
     from swingdesk.journal_evidence.journal import DecisionRecord
+    from swingdesk.trade_management import portfolio
     from swingdesk.trade_management.sizing import RiskSnapshot
 
     return InstrumentOutcome(
@@ -1051,6 +1080,12 @@ def _trade_outcome(instrument_id: str = "TEST.1"):
             entry=Decimal("50.25"), stop=Decimal("45.00"), costs_per_share=Decimal("0.02"),
             risk_per_share=Decimal("5.27"), shares=18, position_value=Decimal("904.50"),
             planned_risk=Decimal("94.86"), parameters=(),
+        ),
+        # The candidate loop's own sector verdict. `_submit` reads `requested_r` and the exposure
+        # off it rather than recomputing either, so a fixture without one is a run that reached a
+        # `Trade` with no sector verdict - which `_submit` refuses, deliberately.
+        sector=portfolio.assess_sector(
+            _empty_sector_book(), Decimal(2), _exposure(instrument_id, sector), Decimal(1),
         ),
     )
 
@@ -1071,18 +1106,44 @@ def _target_registry():
     })
 
 
-def _result_with_one_trade():
+def _result_with_trades(*outcomes, caps=None):
+    """A run carrying `Trade` decisions AND everything the ratified caps are measured against.
+
+    The four extra fields are not fixture ceremony: `_submit` applies `risk.max_concurrent_positions`,
+    `risk.max_open_risk` and `risk.max_sector_risk` across the run's own output (`DR-027` §10), and
+    each of them stops submission when it cannot be measured. A `RunResult` that carries decisions
+    and no book is a run that decided without knowing what was already at risk.
+    """
     from swingdesk.application.pipeline import RunResult
     from swingdesk.contracts.run import RunManifest, RunMode
+    from swingdesk.decision_logic.selection import Selection
+    from swingdesk.trade_management import portfolio
 
+    chosen = outcomes or (_trade_outcome(),)
+    ordered = tuple(outcome.instrument.id for outcome in chosen)
     return RunResult(
         manifest=RunManifest(
             run_id="RUN-TEST", started_at=datetime(2026, 9, 1, 21, 0, tzinfo=UTC),
             mode=RunMode.LIVE, code_hash="0" * 12, config_hash="1" * 12, snapshot_id="2" * 12,
             calendar_version="c", platform="p",
         ),
-        outcomes=[_trade_outcome()],
+        outcomes=list(chosen),
+        capacity=portfolio.assess(
+            _empty_book(),
+            caps or portfolio.Caps(max_open_risk=Decimal(4), max_concurrent=4),
+            Decimal(1),
+        ),
+        sector_book=_empty_sector_book(),
+        sector_limit=Decimal(2),
+        # The order the names are OFFERED in, which is `CARD-001`'s ranking and never id order.
+        selection=Selection(
+            selected=frozenset(ordered), ordered=ordered, cutoff=len(ordered), rule="top_decile",
+        ),
     )
+
+
+def _result_with_one_trade():
+    return _result_with_trades()
 
 
 def _stub_submit_client(monkeypatch, sent: list):
@@ -1257,3 +1318,146 @@ def test_a_journal_that_cannot_be_written_does_not_take_the_run_down(
                     datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry())
 
     assert "NOT JOURNALLED" in capsys.readouterr().err
+
+
+# --------------------------------------------------------------------------------------------
+# The ratified caps, applied across ONE RUN's own output (`DR-027` §10).
+#
+# Nothing in this file caught the defect these pin, and the reason is worth stating: every submit
+# test above carries ONE `Trade`, so the question "do they fit together" could not be asked. On
+# 2026-09-02 a real run produced 114 of them, 103.5R against a ratified 4R, and every one was
+# admitted because `pipeline` prices the book once and measures each candidate against it alone.
+# A fixture with one candidate is not a small version of a fixture with many; it is a different
+# thing - the same lesson `daily_run.cmd`'s log-rotation comment records paying for once already.
+
+
+def test_the_book_cap_binds_across_one_run_s_own_trade_decisions(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """Six eligible names, four slots, and only four may reach the venue.
+
+    THE REGRESSION. Before `_submit` allocated, all six went - the book was priced once from an
+    empty store and each candidate was judged against that same empty book, so no candidate was
+    ever compared with any other.
+    """
+    from swingdesk.broker import policy as policy_module
+
+    write = policy_module.load().write
+    assert write is not None
+    (tmp_path / write.kill_switch_file).write_text(write.armed_marker, encoding="utf-8")
+
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent)
+    # Six different sectors, so the SECTOR cap cannot be what binds and the count cap is isolated.
+    sectors = ["technology", "healthcare", "energy", "industrials", "utilities", "real estate"]
+    outcomes = [_trade_outcome(f"NAME{n}", sector) for n, sector in enumerate(sectors)]
+    with Journal(tmp_path / 'journal.duckdb') as journal:
+        cli._submit(_result_with_trades(*outcomes), tmp_path,
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry())
+        rows = {row.instrument_id: row for row in journal.submissions_for("RUN-TEST")}
+
+    assert len(sent) == 4, "risk.max_concurrent_positions is 4 and six names were eligible"
+    assert [order.symbol for order in sent] == ["NAME0", "NAME1", "NAME2", "NAME3"], \
+        "the four taken are the four the ranking put first, never the first four alphabetically"
+
+    printed = capsys.readouterr().out
+    assert "6 Trade decision(s) sized and eligible" in printed
+    assert "2 passed over by the ratified caps" in printed
+
+    # EVERY eligible candidate gets a row, including the ones no order was built for. A session on
+    # which the machine would have entered six names and took four is otherwise indistinguishable
+    # from one on which it found four.
+    assert len(rows) == 6
+    assert [rows[f"NAME{n}"].outcome for n in range(6)] == \
+        ["sent", "sent", "sent", "sent", "stopped", "stopped"]
+    assert "risk.max_concurrent_positions" in (rows["NAME4"].detail or "")
+
+
+def test_the_sector_cap_binds_across_one_run_s_own_trade_decisions(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """Four slots free, four names, all one sector - and 2R is what stops the third.
+
+    The count cap is deliberately not the binding one here: `risk.max_sector_risk` has to bind on
+    its own, or a run that concentrated its whole book in one theme would clear every check by
+    being small enough.
+    """
+    from swingdesk.broker import policy as policy_module
+
+    write = policy_module.load().write
+    assert write is not None
+    (tmp_path / write.kill_switch_file).write_text(write.armed_marker, encoding="utf-8")
+
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent)
+    outcomes = [_trade_outcome(f"TECH{n}", "technology") for n in range(4)]
+    with Journal(tmp_path / 'journal.duckdb') as journal:
+        cli._submit(_result_with_trades(*outcomes), tmp_path,
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry())
+        rows = {row.instrument_id: row for row in journal.submissions_for("RUN-TEST")}
+
+    assert len(sent) == 2, "each name is 1R and risk.max_sector_risk allows 2R in one sector"
+    assert rows["TECH2"].outcome == "stopped"
+    assert "technology" in (rows["TECH2"].detail or "")
+    assert "risk.max_sector_risk" in (rows["TECH2"].detail or "")
+
+
+def test_a_candidate_the_caps_pass_over_does_not_stop_the_ones_behind_it(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """A full sector passes over one name; a name in a different sector still goes.
+
+    `requested_r` varies per candidate because the share count rounds down, so a walk that halted
+    on the first refusal would leave capacity unused for a reason that is not a cap - the same
+    reasoning `pipeline` applies to `result.capacity` not being overwritten by a later admission.
+    """
+    from swingdesk.broker import policy as policy_module
+
+    write = policy_module.load().write
+    assert write is not None
+    (tmp_path / write.kill_switch_file).write_text(write.armed_marker, encoding="utf-8")
+
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent)
+    outcomes = [
+        _trade_outcome("TECH0", "technology"),
+        _trade_outcome("TECH1", "technology"),
+        _trade_outcome("TECH2", "technology"),   # third in technology - passed over at 2R
+        _trade_outcome("ENERGY0", "energy"),     # behind it, and its own sector is empty
+    ]
+    with Journal(tmp_path / 'journal.duckdb') as journal:
+        cli._submit(_result_with_trades(*outcomes), tmp_path,
+                    datetime(2026, 9, 1, 21, 0, tzinfo=UTC), journal, _target_registry())
+
+    assert [order.symbol for order in sent] == ["TECH0", "TECH1", "ENERGY0"]
+
+
+def test_submission_stops_when_a_cap_could_not_be_measured(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """UNAVAILABLE is STOPPED here, and the polarity is the whole point.
+
+    `DR-025` §2.1 records this project shipping a guard whose refusal ADMITTED the candidate, so
+    "fail closed" read correct and behaved backwards. At a venue that inversion is paid for in
+    orders, so every un-measurable cap is asserted separately rather than trusted to one branch.
+    """
+    from swingdesk.broker import policy as policy_module
+
+    write = policy_module.load().write
+    assert write is not None
+    (tmp_path / write.kill_switch_file).write_text(write.armed_marker, encoding="utf-8")
+
+    for field in ("capacity", "sector_book", "sector_limit", "selection"):
+        sent: list = []
+        _stub_submit_client(monkeypatch, sent)
+        result = _result_with_trades()
+        setattr(result, field, None)
+        with Journal(tmp_path / f'journal-{field}.duckdb') as journal:
+            cli._submit(result, tmp_path, datetime(2026, 9, 1, 21, 0, tzinfo=UTC),
+                        journal, _target_registry())
+            rows = journal.submissions_for("RUN-TEST")
+
+        assert sent == [], f"an armed switch must not submit while {field} is unmeasured"
+        assert [row.outcome for row in rows] == ["stopped"], \
+            f"the attempt is still recorded when {field} stopped it"
+        assert "STOPPED" in capsys.readouterr().err

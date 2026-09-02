@@ -8,6 +8,9 @@ parameters:      none. Every choice below is a definition or a structural guard,
                  sizing price itself and therefore introduces no new number (§3.1)
 components:      none new
 implemented_by:  src/swingdesk/broker/submit.py :: def entry_order
+                 the ratified caps bind across one run's own output through
+                 src/swingdesk/trade_management/portfolio.py :: def allocate, called by
+                 src/swingdesk/presentation/cli.py :: def _allocate (§10)
                  the wire call is AlpacaClient.submit, gated by AlpacaClient.guards; the four
                  guards live in registry/broker_policy.yml, src/swingdesk/broker/armed.py and
                  tools/verify_broker_policy.py (gate 39)
@@ -247,3 +250,110 @@ run id. Order `1a44d118-59f3-428f-83e7-47cc09bd3e98`, status `accepted`, 0 of 1 
 It establishes that the write path works. It establishes **nothing** about the strategy: the limit
 was far below the market on purpose, so the order could not fill, and no position was acquired. The
 switch was disarmed immediately afterwards and is absent again, which is its default.
+
+---
+
+## 10. Amendment, 2026-09-02 — the four guards do not count, and the caps were never applied to a run
+
+**Appended, not edited.** §4's four guards were correct and are unchanged. They answer *may this
+system write to this venue at all*, and they answered it correctly on the first evening somebody
+tried to arm the switch. They do not answer **how many**, and nothing else did either.
+
+### 10.1 What an armed run would have submitted, measured
+
+Run `run-20260902T143239Z-b908f635`, full universe, 2026-09-02:
+
+| | ratified | what `--submit` would have sent |
+|---|---|---|
+| positions | **4** (`risk.max_concurrent_positions`) | **114** |
+| open risk | **4R** (`risk.max_open_risk`) | **103.5R** |
+| sector | **2R** (`risk.max_sector_risk`) | technology **41.0R**; eight of eleven sectors over |
+| notional | — | **$153,040** against an `account.equity` of **$10,000** |
+
+**The venue would have accepted every one of them.** The paper account holds $100,000 of equity and
+$399,899.99 of buying power against a book modelled on $10,000, so nothing bounces — the one place
+this could have failed loudly is ten times too large to notice. And `access.allowed_methods` carries
+no `DELETE` by the deliberate choice §3.3 argues, so 114 accepted brackets could not have been
+recalled through this software at all.
+
+### 10.2 The seam, and every piece of it was correct on its own
+
+Three files, no bug in any of them:
+
+1. **`trade_management/portfolio.py`** measures each candidate against the OPEN BOOK alone, by
+   owner ruling 2026-08-22, because *a `Watch` is not a position and consumes no capacity*.
+2. **`application/pipeline.py`** prices that book **once** before the candidate loop and never
+   grows it, so all 114 were judged against the same empty book and each one honestly reported
+   *"heaviest sector after this candidate is technology at 0.98R of the 2R allowed"*.
+3. **`decision_logic/selection.py`** takes the top decile and says in its own docstring that *"the
+   ratified book cap is what decides how many are actually taken anyway"* — which `DR-030` §2.4
+   states as the model: the cutoff picks **eligibility**, the caps pick **what is taken**.
+
+Every one of those was true while the terminal state was `Watch` and a human applied the caps by
+choosing four names off a report. `CARD-001` emitting `Trade` straight to `--submit` removed the
+human without moving the cap, and the sentence *"the ratified caps pick which are taken"* became a
+claim about a step that did not exist.
+
+### 10.3 Why no gate and no test caught it
+
+Worth stating, because the answer is not "somebody was careless":
+
+- **The four guards are boundary guards.** Gate 39 reads the syntax tree for write verbs and hosts.
+  A cap on quantity is invisible to every one of them, and correctly so.
+- **Every submit test carried exactly ONE `Trade` decision.** The question *do they fit together*
+  could not be asked of a fixture with one candidate. A fixture with one is not a small version of
+  a fixture with many — the same lesson `daily_run.cmd`'s log-rotation comment already records.
+- **The probe (§9) submitted one deliberately unfillable order.** It proved the wire and could not
+  have surfaced this: one order is inside every cap.
+
+### 10.4 What changed
+
+**`portfolio.allocate` walks a RANKED cross-section and grows the book as it takes names**, so the
+three ratified caps bind across one run's own output. Nothing about a cap is re-implemented: it
+re-enters `assess` and `assess_sector` with a grown book, because specification §8 forbids one logic
+in two places and a second copy of *"count + 1 > max_concurrent"* is how the report and the
+decisions drifted apart once already.
+
+**The order is `CARD-001`'s ranking and nothing else.** `ALLOCATION_SPEC` §6 rule 4 forbids falling
+back to the order the system happens to hold, so a run whose screen produced no `Selection` is
+**not allocated at all** — it submits nothing rather than the first four alphabetically. This is
+also why the module docstring's *"it does not allocate between candidates"* is struck rather than
+deleted: that ruling's stated premise was `rs.ranking_method` being `unset`, and `DR-030` ruled it
+`descending` on 2026-09-01. The premise is gone; the rule it cites still governs.
+
+**Every branch that cannot measure a cap STOPS.** A book that was never priced, a sector split that
+refused, a cap with no value, a `Trade` that reached the wire with no sector verdict: each is
+`unavailable`, and `unavailable` here means stopped. `DR-025` §2.1 records this project shipping a
+guard whose refusal ADMITTED the candidate — *fail closed* read correct and behaved backwards. At a
+venue that inversion is paid for in orders, so each of the four is asserted separately by
+`test_submission_stops_when_a_cap_could_not_be_measured` rather than trusted to one branch.
+
+**A candidate the caps pass over is journalled `stopped`, with the cap's own reason and the
+parameter that bound.** §8.1's argument applied one level down: a session on which the machine would
+have entered 114 names and took 4 is otherwise indistinguishable from one on which it found 4.
+
+### 10.5 What this does NOT change
+
+**No decision moves.** `Trade` still means *eligible*, exactly as `DR-030` §2.4 defines it; the
+funnel still reports 114; `output_hash` is untouched and the per-candidate verdicts in `pipeline`
+are byte-identical. The cap is applied in the submission path, which is where `DR-030` already said
+it was applied. Nothing here re-opens what the screen selects.
+
+**This authors no threshold.** All three numbers are ratified `owner` parameters that already had
+consumers (`DR-006` §8.3, 2026-08-22), and the ordering is `DR-030`'s. `AGENTS.md` §8 is satisfied
+because nothing new was chosen — three existing numbers were connected to a path that was ignoring
+them.
+
+**The switch is still absent, which is still its default.** Nothing has been submitted by a run.
+This amendment removes a reason not to arm; it is not an arming.
+
+### 10.6 What would overturn this
+
+- **A run whose selection is not a ranking.** `allocate` must be given a ratified order or nothing;
+  a future screen that returns an unordered set makes this refuse, which is correct and will look
+  like a regression to whoever writes it.
+- **The book cap ceasing to be the binding constraint.** At 4 slots against a ~114-name eligible
+  set, which of the two caps binds is never in doubt. If `risk.max_concurrent_positions` rises far
+  enough that sector concentration decides most sessions, the ordering question `DR-030` answered
+  for *eligibility* has to be re-asked for *allocation* — they are not the same question, and this
+  record borrows the answer to one for the other because at four slots the difference cannot show.
