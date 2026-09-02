@@ -115,7 +115,7 @@ pre-registered study against this universe moves a parameter to `validated`.
   (`DR-011`); `swingdesk broker` reads the paper account and reconciles it. A web admin panel and
   Telegram remain specified and unbuilt.
 
-## The paper venue, and the four things that stop it
+## The paper venue, and the six things that stop it
 
 Submission is **stopped by default** and every guard below is independent — none of them can
 compensate for another, which is `FAIL_CLOSED_POLICY.md` §3 applied to the one surface here that
@@ -129,9 +129,25 @@ acts on the world.
 3. **`access.write_enabled` in the committed policy** — one line, one commit, one reviewer.
 4. **A single chokepoint in the code.** Every write goes through one function that consults the
    other three first, and the gate reads the syntax tree to prove no second path exists.
+5. **The ratified caps, applied across one run's own output** (`DR-027` §10). The screen's cutoff
+   picks who is *eligible* — normally about a hundred names; `risk.max_concurrent_positions` (4),
+   `risk.max_open_risk` (4R) and `risk.max_sector_risk` (2R) pick who is *taken*, in the card's own
+   ranked order. Without it a single evening would have sent **114 orders and 103.5R**, measured.
+6. **The venue is asked what it already holds, before anything is added** (`DR-027` §11). Any
+   symbol the account is exposed to — a position *or* a resting order — that this system's book
+   does not carry stops submission with the course's `TECH`, whose action is *"pause new entries"*.
+   The caps are measured against the book, so a book that does not describe reality bounds nothing.
+
+Guards 5 and 6 are not boundary guards; the first four answer *may this system write here at all*
+and cannot answer *how many*. `DR-031` is what keeps 6 from being a permanent halt: an entry this
+system placed records itself from the fill, taking the price from the venue and the stop from our
+own journal.
 
 The keys are the owner's and live only in the environment (`SECURITY.md` §2.1). This repository is
 public and holds none.
+
+**Operating it day to day** — arming, disarming, reading the evening's log, and the one message
+that needs a person — is `docs/runbooks/README.md` §7.
 
 ## Layout
 

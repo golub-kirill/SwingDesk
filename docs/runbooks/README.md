@@ -328,3 +328,130 @@ powershell -Command "'APCA_API_KEY_ID','APCA_API_SECRET_KEY' | ForEach-Object { 
 ```
 
 Presence and length answer every question worth asking here. The value answers none of them.
+
+---
+
+## 7. Running the paper venue, day to day
+
+**Who this section is for.** Everything above is written for whoever is repairing the system. This
+one is for whoever is *operating* it, and it assumes nothing about the code. If you read one
+section before letting the scheduler place an order, read this one.
+
+### 7.1 What the system does on its own, once a day
+
+On weekday evenings the scheduled task (`SwingDesk daily run`, 18:30 local) runs three things in
+this order, and the order matters:
+
+| step | what it does | writes |
+|---|---|---|
+| `fetch-directory` | pulls the symbol directory | `directory.duckdb` |
+| `sync-fills` | records a position for every entry **we** placed that has since filled | `positions.duckdb` |
+| `scan --universe` | decides, reports, and — if armed — submits | `journal.duckdb`, the report |
+
+`sync-fills` runs **before** the scan because the ratified caps are measured against the book: the
+book has to describe what is actually held before the run reads it.
+
+**Everything lands in one log**, `data/daily_run.log`, and the report for the evening is written to
+`data/reports/`.
+
+### 7.2 The switch — the only control you need day to day
+
+```
+data/.paper-trading-armed
+```
+
+**Contains the word `ARMED` → the evening pass may submit. Absent → it may not.** Absent is the
+default and it is also what unreadable, empty, and anything-else mean. To stop the machine placing
+another order, for any reason, at any time:
+
+```
+del C:\PycharmProjects\SwingDesk\data\.paper-trading-armed
+```
+
+That is the whole procedure. It needs no release, no commit and no restart, which is exactly why
+the switch is a file. Re-arm by writing `ARMED` back into it.
+
+**The switch is shared by every checkout on the machine**, because `data/` is. An armed switch is
+only ever as safe as the code sitting next to it.
+
+### 7.3 Reading the evening's result
+
+Three lines in the log tell you what happened, and you want all three:
+
+```
+submission  114 Trade decision(s) sized and eligible
+  110 passed over by the ratified caps; 4 within them
+  SENT     AIS        17 sh limit 66.459999 stop 60.96...  accepted  swingdesk-2026-09-02-AIS
+```
+
+- **eligible** is how many names the screen picked. It is normally around a hundred and that is
+  not alarming — the cutoff picks who is *eligible*, the caps pick who is *taken*.
+- **passed over** is the caps working. 4 positions and 4R is the whole book (`DR-006` §8.3).
+- **SENT** lines are the orders that actually went. Anything else — `STOPPED`, `REFUSED`,
+  `NOT SENT` — names its own reason and is recorded in `journal.duckdb`, including the attempts
+  nothing was sent for.
+
+### 7.4 The one message that needs you
+
+```
+TECH: the venue holds N symbol(s) this system's book does not carry
+```
+
+**New entries are paused until you deal with it.** It means the account holds something we cannot
+trace to an order this system sent — bought by hand in the dashboard, or a fill that
+`sync-fills` refused for a reason it printed just above.
+
+Two ways to clear it, and both are yours:
+
+1. **Record it**, if it is a real position you want the system to manage:
+   ```
+   python -m swingdesk.presentation.cli open-position AAPL --entry 191.20 --shares 12 --stop 180.00 --data data
+   ```
+2. **Close it at the venue**, in Alpaca's own dashboard, if it should not be there.
+
+The pause is not a fault. The caps are measured against the book, so a book that does not describe
+reality cannot bound anything — and adding to it would be the failure the guard exists to prevent.
+
+### 7.5 Checking the account by hand, any time
+
+```
+python -m swingdesk.presentation.cli broker --data data
+```
+
+Prints the account, its positions, and whether they agree with the book. **Exit codes are three
+different answers and none of them is "fine":** `0` they agree · `2` the venue could not be read ·
+`3` they disagree. It writes nothing, ever.
+
+```
+python -m swingdesk.presentation.cli sync-fills --data data --dry-run
+```
+
+Says what `sync-fills` would record, and records nothing.
+
+### 7.6 What the system will never do
+
+Worth knowing before you watch it run, because each is a deliberate absence rather than a gap:
+
+- **It cannot cancel an order.** Every order is `time_in_force: day`, so it expires at the close;
+  `DELETE` is absent from the committed policy on purpose. To pull a resting order early, use the
+  venue's dashboard.
+- **It cannot reach the live venue.** One host is allowlisted and the live one is named as
+  forbidden. A merge gate fails the build on a second entry.
+- **It cannot short, and it cannot trade fractions.** Both are refused with a reason.
+- **It cannot exit a position.** There is no exit card yet. A position that leaves the venue is a
+  divergence you resolve, not something it handles.
+- **It never claims a probability.** There is no legal source of one in this system, and a number
+  displayed would be manufactured.
+
+### 7.7 The thing to say out loud when showing this to anyone
+
+**The machinery is real; the strategy is not known to work.** They are separate claims and this
+project keeps them apart on purpose. `docs/08-pm/EVIDENCE_SUMMARY.md` is the standing account, and
+it currently reports the base strategy as **negative at measured costs** across the admissible
+universe. `CARD-001` ships `Untested`, and `DR-030` §3.1 registers **in advance** that it is
+expected to fail its expectancy criterion.
+
+What the paper account is for is putting this system's own machinery in front of a real venue's
+fills, rejects and halts instead of a fixture — a measuring instrument that happens to speak a
+broker's protocol. Every report this system prints says so, and nothing shown to anybody should
+say more than the reports do.
