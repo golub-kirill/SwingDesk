@@ -630,6 +630,38 @@ def _submit(
     #
     # Identified by an id in our own record, never by the shape of the id. A prefix test would
     # adopt anything typed into the dashboard with the right first word.
+    # AN EXIT THAT HAPPENED AT THE VENUE IS NOT INVISIBLE. `DR-035`.
+    #
+    # `uncommitted_exposure` looks one way - venue to book - and answers *is there exposure the caps
+    # were not measured against*. It cannot see the opposite: a position the BOOK still carries and
+    # the venue no longer holds, which is what a bracket's stop leg firing overnight looks like.
+    #
+    # Nothing closes a position automatically. `closed_on` is written only by `respond` and
+    # `record-fill`, both commands a person runs, and the scheduled wrapper never runs `broker` -
+    # so a stopped-out position stays open in the book for ever, holds its slot in
+    # `risk.max_concurrent_positions`, and after four stop-outs the machine submits nothing again,
+    # silently, with no line anywhere saying why.
+    #
+    # `reconcile` already asks BOTH directions and already words this one: *"An exit that happened
+    # at the venue and was never recorded looks exactly like this."* And `DR-027` §7 already ruled
+    # that on this path a divergence is a stop-submitting condition rather than a note. This is
+    # that ruling reaching the only command that ever runs unattended.
+    agreement = broker_pkg.reconcile(
+        positions.open_as_of(now), held, venue=policy.label, market=policy.market,
+    )
+    if not agreement.agrees:
+        named = "; ".join(
+            f"{d.instrument_id} ({d.reason})" for d in agreement.divergences[:6]
+        )
+        _stop_all(
+            f"{agreement.code}: the book and {policy.label} disagree about "
+            f"{len(agreement.divergences)} position(s) - {named}"
+            f"{'; ...' if len(agreement.divergences) > 6 else ''}. Pause new entries: run "
+            f"`swingdesk broker` for the full comparison, then `record-fill` or `open-position` "
+            f"until the two describe the same book."
+        )
+        return
+
     sent_ids = journal.sent_client_order_ids()
     unaccounted = broker_pkg.uncommitted_exposure(
         positions.open_as_of(now), held, live_orders, policy.market, sent_order_ids=sent_ids,
