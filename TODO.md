@@ -31,7 +31,7 @@ retyping it.
 
 ### THE ONLY RATIFIED LIVE CRITERION CANNOT FIRE — found 2026-08-24
 
-- [ ] **`[v]` `k.drawdown_pause` is ratified, scope `live`, and nothing enforces it.**
+- [x] **`[v]` `k.drawdown_pause` is ratified, scope `live`, and nothing enforces it. WIRED 2026-09-03 (`DR-034`).**
       `registry/criteria.yml` ratifies it: trigger *"Realised drawdown exceeds
       `validation.max_allowable_drawdown`"*, action *"Pause - not kill. Reduce size per the risk-off
       ladder and review."* The threshold is **owner-set at 20** percent of equity.
@@ -101,6 +101,21 @@ retyping it.
       journal - and reports 0.00% against zero positions, which is the point: the criterion stops
       being unevaluable. `risk.risk_off_ladder` stays `unset` and the prescribed ACTION stays the
       owner's; making the kill switch measurable is not the same as making it automatic.
+
+      **CLOSED 2026-09-03 by `DR-034`, and the deadline this entry set is what closed it.** The
+      entry said it was harmless *"today and only today. The moment a position is opened, the
+      project's own kill switch is decorative."* Today ended on 2026-09-02, when
+      `run-20260903T044052Z-84cbe591` had four bracket orders accepted at the paper venue.
+      `_submit` now evaluates the criterion on every armed submission and prints the percentage
+      either way. A breach **pauses new entries** - the only outward action this system has, and the
+      mapping `TECH` already carries. A drawdown that cannot be MEASURED also stops: the first
+      implementation collected sessions from the bars each position had, so a position with none
+      dropped silently out and the curve reported a tidy 0.00% for an account holding something
+      nobody could value. That is this file's own admit-on-unavailable inversion, and the test
+      written for it failed on the first run and named it.
+      **`risk.risk_off_ladder` is still `unset` and still the owner's**, and the refusal text says
+      so where an operator reads it. Nothing here sets a number: both values it reads were already
+      owner-set, and what was missing was a caller.
 
 - [x] **`[v]` `risk.liquidity_cap_order_to_adtv_pct` IS ENFORCED - DONE 2026-09-01 (`DR-028`).**
       It carried `provenance: owner`, `value: 1.0` and `read_by: none`, which is `AGENTS.md` §7's

@@ -383,6 +383,22 @@ class PositionStore:
             [position_id, sequence, at, choice.value, reason],
         )
 
+    def action_kinds_for(self, position_id: str) -> dict[int, str]:
+        """Every proposal's `sequence` mapped to its kind. `DR-034`.
+
+        **`actions_for` cannot serve this and says so**: it returns actions in sequence order but
+        not the sequences themselves, so a caller pairing them with `enumerate` would be assuming
+        they run 1..n contiguously. They are monotonic, not contiguous. `drawdown._exit_fills`
+        joins a `Fill.sequence` to the kind that settles it, and an off-by-one there books a
+        realised gain or loss against an action that never transacted - which lands in the equity
+        curve `k.drawdown_pause` is measured on.
+        """
+        rows = self._connection.execute(
+            "SELECT sequence, kind FROM management WHERE position_id = ? ORDER BY sequence",
+            [position_id],
+        ).fetchall()
+        return {int(sequence): str(kind) for sequence, kind in rows}
+
     def proposal_at(self, position_id: str, sequence: int) -> ManagementAction | None:
         """One proposal by its sequence, answered or not.
 

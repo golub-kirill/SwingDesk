@@ -13,6 +13,7 @@ from pydantic import ValidationError
 
 from swingdesk.application import universe as universe_builder
 from swingdesk.application.pipeline import InstrumentOutcome, RunResult, run
+from swingdesk.contracts.market import Interval, Series
 from swingdesk.contracts.observation import ParameterUse
 from swingdesk.contracts.position import ActionStatus, Fill, ManagementAction, Position
 from swingdesk.contracts.reference import Instrument
@@ -35,7 +36,7 @@ from swingdesk.reference_data.directory import DirectoryStore
 # private import is gone rather than being explained again. Same reasoning promoted
 # `to_base_currency`, which the portfolio cap needs for exactly the DR-010 reason this note gives:
 # reuse the one implementation, never copy the formula.
-from swingdesk.trade_management import manage, portfolio
+from swingdesk.trade_management import drawdown, manage, portfolio
 from swingdesk.trade_management.sizing import (
     Refusal,
     RiskSnapshot,
@@ -232,6 +233,63 @@ def main(argv: list[str] | None = None) -> int:
     return 1
 
 
+def _drawdown_now(
+    positions: PositionStore, store: BarStore, registry: ParameterRegistry, now: datetime,
+) -> drawdown.Drawdown | drawdown.Unavailable:
+    """Peak-to-trough drawdown of account equity, including open positions marked to market.
+
+    **This is `k.drawdown_pause` finally being able to fire.** The criterion is ratified with scope
+    `live`, its threshold is owner-set at 20 percent, `criteria.yml` v1.1.2 fixed what its one
+    load-bearing word means - and until this call existed **nothing in `src/` invoked the
+    measurement**, so the only live criterion this project has could not evaluate. `TODO.md` §1
+    carries the whole finding; it was harmless exactly as long as the book was empty.
+
+    Everything here is assembly. `trade_management.drawdown` is pure by construction - no store, no
+    clock, no registry - so the shape of a run's stores is mapped onto its arguments here and the
+    arithmetic stays somewhere it can be tested without one.
+    """
+    open_positions = positions.open_as_of(now)
+    baseline, _use = registry.decimal_value("account.equity")
+
+    fills_by_position = {p.position_id: positions.fills_for(p.position_id) for p in open_positions}
+    actions_by_position = {
+        p.position_id: positions.action_kinds_for(p.position_id) for p in open_positions
+    }
+
+    # Sessions come from the BARS the positions actually have, not from a calendar range: a session
+    # nothing can be priced on is a session the curve must not claim a value for.
+    marks: dict[tuple[str, date], Decimal] = {}
+    sessions: set[date] = set()
+    for position in open_positions:
+        stored = store.as_of(position.instrument_id, Interval.DAY, Series.RAW, now)
+        priced = [bar for bar in stored.bars if bar.session_date >= position.opened_on]
+        if not priced:
+            # NAMED, NEVER SKIPPED. A position contributing no sessions would drop out of the union
+            # below and the curve would be built from the ones that CAN be priced - reporting a
+            # tidy 0.00% for an account holding something nobody can value. That is
+            # `DR-006` §3's admit-on-unavailable inversion, and a test caught it here rather than
+            # on the evening it would have mattered.
+            return drawdown.Unavailable(
+                reason=(
+                    f"{position.instrument_id} has been held since {position.opened_on} and the "
+                    f"bar store carries no session for it, so account equity cannot be valued"
+                ),
+                unpriced=((position.instrument_id, position.opened_on),),
+            )
+        for bar in priced:
+            marks[(position.instrument_id, bar.session_date)] = bar.close
+            sessions.add(bar.session_date)
+
+    return drawdown.measure(
+        positions=open_positions,
+        fills_by_position=fills_by_position,
+        actions_by_position=actions_by_position,
+        baseline=baseline,
+        sessions=sorted(sessions),
+        mark_for=lambda instrument_id, session: marks.get((instrument_id, session)),
+    )
+
+
 def _committed_by_live_orders(
     live: Sequence[object], journal: Journal, registry: ParameterRegistry,
     result: RunResult, r_unit: Decimal | None,
@@ -405,6 +463,7 @@ def _allocate(
 def _submit(
     result: RunResult, data: Path, now: datetime, journal: Journal,
     registry: ParameterRegistry, positions: PositionStore | None = None,
+    store: BarStore | None = None,
 ) -> None:
     """Send this run's `Trade` decisions to the paper venue, and journal every attempt.
 
@@ -548,9 +607,9 @@ def _submit(
         print(f"  STOPPED  {reason}", file=sys.stderr)
         _journal_all(reason)
 
-    if positions is None:
-        _stop_all("no position store, so what the venue already holds cannot be compared against "
-                  "anything; submission needs a book to add to")
+    if positions is None or store is None:
+        _stop_all("no position store or bar store, so neither what the venue already holds nor the "
+                  "drawdown k.drawdown_pause is measured against can be read")
         return
 
     try:
@@ -582,6 +641,38 @@ def _submit(
             f"{', ...' if len(unaccounted) > 8 else ''}). The caps were measured against the book, "
             f"so they were not measured against these. Pause new entries: record them with "
             f"`open-position`, or close them at the venue."
+        )
+        return
+
+    # THE ONLY RATIFIED `live` CRITERION, AND UNTIL NOW IT COULD NOT FIRE. `DR-034`.
+    #
+    # `k.drawdown_pause` is ratified, scope `live`, threshold owner-set at 20 percent, and nothing
+    # in `src/` ever called the measurement - so the project's own kill switch was decorative.
+    # `TODO.md` §1 says it was harmless "today and only today", and today ended when four orders
+    # went to a venue.
+    #
+    # PAUSE, NOT KILL, and this stops the one outward action this system has. The criterion also
+    # says *reduce size per the risk-off ladder*; `risk.risk_off_ladder` is `unset` and stays the
+    # owner's, so that half is NOT automated and NOT approximated. Refusing to add while a book is
+    # this far down is the smallest honest reading of "pause" - and it is the same mapping `TECH`
+    # already has, whose prescribed action is *pause new entries*.
+    fall = _drawdown_now(positions, store, registry, now)
+    if isinstance(fall, drawdown.Unavailable):
+        # UNMEASURABLE IS STOPPED. A cap that fails open is not a cap - the whole reason `DR-006`
+        # §3's admit-on-unavailable is this project's deepest open item - and a kill switch that
+        # admits when it cannot read the book is that inversion on the highest-consequence surface.
+        _stop_all(f"the drawdown could not be measured, so k.drawdown_pause cannot be evaluated "
+                  f"and nothing may be added: {fall.reason}")
+        return
+    limit, _use = registry.decimal_value("validation.max_allowable_drawdown")
+    print(f"  drawdown {fall.percent}% of a {limit}% limit "
+          f"(peak {fall.peak}, trough {fall.trough})")
+    if fall.breaches(limit):
+        _stop_all(
+            f"k.drawdown_pause: account equity is {fall.percent}% below its peak and "
+            f"validation.max_allowable_drawdown allows {limit}%. PAUSE - not kill. New entries "
+            f"stop here; reducing size per the risk-off ladder is the owner's and "
+            f"risk.risk_off_ladder is unset."
         )
         return
 
@@ -1443,7 +1534,7 @@ def _scan(args: argparse.Namespace) -> tuple[int, str | None, notify.Outcome]:
             print(f"\nreport written  {written}")
 
         if args.submit:
-            _submit(result, args.data, clock.now(), journal, registry, positions)
+            _submit(result, args.data, clock.now(), journal, registry, positions, store)
 
     # The outcome distinguishes "go and read it" from "there is nothing to read". Sending
     # COMPLETE unconditionally told the owner "Report on disk." after a failed write - a notice
