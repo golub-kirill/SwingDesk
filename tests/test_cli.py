@@ -989,6 +989,13 @@ def _stub_broker(monkeypatch, held, *, raises=None):
         def positions(self, at):
             return tuple(held)
 
+        def open_orders(self, at):
+            # `DR-036`: the `broker` command now reports whether each held position's stop is
+            # standing, and asks the venue for its resting orders to find out. Empty here, so the
+            # protection section reports every held position unprotected - which is what a venue
+            # holding no stops means.
+            return ()
+
         def fills(self, at, after=None):
             return ()
 
@@ -1666,7 +1673,9 @@ def test_a_position_both_sides_carry_does_not_stop_submission(
 
     _armed(tmp_path)
     sent: list = []
-    _stub_submit_client(monkeypatch, sent, held=[_venue_position("KNOWN")])
+    _stub_submit_client(monkeypatch, sent,
+                        held=[_venue_position("KNOWN", shares="10", entry="50")],
+                        live_orders=[_venue_stop("KNOWN", "45.00")])
     with Journal(tmp_path / 'journal.duckdb') as journal, \
             PositionStore(tmp_path / 'positions.duckdb') as book, \
             BarStore(tmp_path / 'bars.duckdb') as bars:
@@ -1902,6 +1911,23 @@ def test_the_journal_returns_only_a_sent_submission(tmp_path: Path) -> None:
 #
 # The fix has two halves and only both together are safe. Excluding them from the halt without
 # counting them in the caps would let the retry add four more names on top of four already resting.
+
+
+def _venue_stop(symbol: str, stop: str = "45.00"):
+    """A protective stop resting at the venue, which every held position must have (`DR-036`).
+
+    A bracket's legs inherit the entry's `time_in_force`, so in production they expire at the close
+    and this is exactly what stops being true. A fixture that holds a position without one is a
+    book whose caps are denominated in a stop that is not there.
+    """
+    from swingdesk.contracts.broker import PlacedOrder
+
+    return PlacedOrder(
+        order_id=f"leg-{symbol}", client_order_id="", symbol=symbol, status="new",
+        submitted_at=datetime(2026, 9, 1, 21, 0, tzinfo=UTC),
+        order_type="stop", stop_price=Decimal(stop),
+        observed_at=datetime(2026, 9, 1, 21, 0, tzinfo=UTC),
+    )
 
 
 def _our_order(symbol: str, order_id: str | None = None):
@@ -2197,7 +2223,8 @@ def test_a_book_past_the_drawdown_limit_pauses_new_entries(
     _armed(tmp_path)
     sent: list = []
     _stub_submit_client(monkeypatch, sent,
-                        held=[_venue_position("FALLEN", shares="100", entry="50.00")])
+                        held=[_venue_position("FALLEN", shares="100", entry="50.00")],
+                        live_orders=[_venue_stop("FALLEN", "1.00")])
     with Journal(tmp_path / 'journal.duckdb') as journal, \
             PositionStore(tmp_path / 'positions.duckdb') as book, \
             BarStore(tmp_path / 'bars.duckdb') as bars:
@@ -2230,7 +2257,8 @@ def test_a_book_inside_the_limit_still_submits(tmp_path: Path, monkeypatch, caps
     _armed(tmp_path)
     sent: list = []
     _stub_submit_client(monkeypatch, sent,
-                        held=[_venue_position("FALLEN", shares="100", entry="50.00")])
+                        held=[_venue_position("FALLEN", shares="100", entry="50.00")],
+                        live_orders=[_venue_stop("FALLEN", "1.00")])
     with Journal(tmp_path / 'journal.duckdb') as journal, \
             PositionStore(tmp_path / 'positions.duckdb') as book, \
             BarStore(tmp_path / 'bars.duckdb') as bars:
@@ -2276,7 +2304,8 @@ def test_a_drawdown_that_cannot_be_measured_stops_submission(
     _armed(tmp_path)
     sent: list = []
     _stub_submit_client(monkeypatch, sent,
-                        held=[_venue_position("UNPRICED", shares="100", entry="50")])
+                        held=[_venue_position("UNPRICED", shares="100", entry="50")],
+                        live_orders=[_venue_stop("UNPRICED", "45.00")])
     with Journal(tmp_path / 'journal.duckdb') as journal, \
             PositionStore(tmp_path / 'positions.duckdb') as book, \
             BarStore(tmp_path / 'bars.duckdb') as bars:
@@ -2431,7 +2460,8 @@ def test_a_book_the_venue_agrees_with_still_submits(
     _armed(tmp_path)
     sent: list = []
     _stub_submit_client(monkeypatch, sent,
-                        held=[_venue_position("HELD", shares="100", entry="50")])
+                        held=[_venue_position("HELD", shares="100", entry="50")],
+                        live_orders=[_venue_stop("HELD", "45.00")])
     with Journal(tmp_path / 'journal.duckdb') as journal, \
             PositionStore(tmp_path / 'positions.duckdb') as book, \
             BarStore(tmp_path / 'bars.duckdb') as bars:
@@ -2462,7 +2492,8 @@ def test_a_position_opened_in_the_session_still_running_is_not_unpriced(
     _armed(tmp_path)
     sent: list = []
     _stub_submit_client(monkeypatch, sent,
-                        held=[_venue_position("TODAY", shares="100", entry="50")])
+                        held=[_venue_position("TODAY", shares="100", entry="50")],
+                        live_orders=[_venue_stop("TODAY", "45.00")])
     with Journal(tmp_path / 'journal.duckdb') as journal, \
             PositionStore(tmp_path / 'positions.duckdb') as book, \
             BarStore(tmp_path / 'bars.duckdb') as bars:
@@ -2499,7 +2530,8 @@ def test_a_position_held_through_a_closed_session_with_no_bar_still_refuses(
     _armed(tmp_path)
     sent: list = []
     _stub_submit_client(monkeypatch, sent,
-                        held=[_venue_position("STALE", shares="100", entry="50")])
+                        held=[_venue_position("STALE", shares="100", entry="50")],
+                        live_orders=[_venue_stop("STALE", "45.00")])
     with Journal(tmp_path / 'journal.duckdb') as journal, \
             PositionStore(tmp_path / 'positions.duckdb') as book, \
             BarStore(tmp_path / 'bars.duckdb') as bars:
@@ -2516,3 +2548,154 @@ def test_a_position_held_through_a_closed_session_with_no_bar_still_refuses(
 
     assert sent == []
     assert "cannot be evaluated" in capsys.readouterr().err
+
+
+# --------------------------------------------------------------------------------------------
+# `DR-036`: a stop the market cannot see is not a stop, and nobody was checking.
+#
+# `reconcile` compares side, asset class, share count and entry price - and never the stop. The one
+# number that bounds the loss was the one number nothing verified. Measured on 2026-09-03, the first
+# day this system held anything: all three stop legs read `canceled` and all three targets `expired`
+# at the first close, because a bracket's legs inherit `time_in_force: day` from the entry while the
+# POSITION lives up to `exit.max_holding_period` sessions.
+
+
+def _protected_book(book: PositionStore, bars: BarStore, symbol: str = "GUARDED") -> None:
+    from swingdesk.contracts.position import Position
+
+    book.record(Position(
+        position_id=f"POS-{symbol}-2026-09-01", version=1, instrument_id=symbol,
+        opened_on=date(2026, 9, 1), entry_price=Decimal(50), shares=100,
+        initial_stop=Decimal(45), current_stop=Decimal(45),
+        initial_costs_per_share=Decimal("0.25"),
+        knowledge_time=datetime(2026, 9, 1, 20, 0, tzinfo=UTC),
+    ))
+    _bars_for(bars, symbol, ((date(2026, 9, 1), "50.00"), (date(2026, 9, 2), "50.00")))
+
+
+def test_a_position_with_no_stop_at_the_venue_pauses_new_entries(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """THE REGRESSION, and it was live on 2026-09-03 rather than hypothetical.
+
+    The bracket's legs expired at the first close and the position went on. Nothing anywhere said
+    so: the report never mentioned protection, `reconcile` never compared a stop, and the caps went
+    on being denominated in a number that was no longer at the venue.
+    """
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent,
+                        held=[_venue_position("GUARDED", shares="100", entry="50")],
+                        live_orders=[])          # the legs expired at the close
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book, \
+            BarStore(tmp_path / 'bars.duckdb') as bars:
+        _protected_book(book, bars)
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 2, 23, 0, tzinfo=UTC), journal, _target_registry(),
+                    book, bars)
+        rows = journal.submissions_for("RUN-TEST")
+
+    assert sent == [], "the caps are denominated in a stop that is not there"
+    printed = capsys.readouterr().err
+    assert "TECH" in printed and "GUARDED" in printed
+    assert "no stop standing" in printed
+    assert [r.outcome for r in rows] == ["stopped"]
+
+
+def test_a_stop_at_the_wrong_price_is_reported_separately(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """`manage.apply_approved` writes a new Position version and sends nothing anywhere.
+
+    So an approved stop move leaves the book and the venue holding different triggers while both
+    hold one. That is a different fact from having none, and a person acts on it differently.
+    """
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent,
+                        held=[_venue_position("GUARDED", shares="100", entry="50")],
+                        live_orders=[_venue_stop("GUARDED", "41.00")])   # the book says 45
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book, \
+            BarStore(tmp_path / 'bars.duckdb') as bars:
+        _protected_book(book, bars)
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 2, 23, 0, tzinfo=UTC), journal, _target_registry(),
+                    book, bars)
+
+    assert sent == []
+    printed = capsys.readouterr().err
+    assert "41.00" in printed and "45" in printed
+
+
+def test_a_position_whose_stop_is_standing_still_submits(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """The guard must not be a permanent halt on any book that holds something."""
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent,
+                        held=[_venue_position("GUARDED", shares="100", entry="50")],
+                        live_orders=[_venue_stop("GUARDED", "45.00")])
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book, \
+            BarStore(tmp_path / 'bars.duckdb') as bars:
+        _protected_book(book, bars)
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 2, 23, 0, tzinfo=UTC), journal, _target_registry(),
+                    book, bars)
+
+    assert len(sent) == 1
+    assert "TECH" not in capsys.readouterr().err
+
+
+def test_a_resting_target_is_not_mistaken_for_protection() -> None:
+    """A `limit` above the entry is the take-profit, not the stop. Only a `stop` protects.
+
+    Asserted directly because the two legs arrive in the same list from the same endpoint, and a
+    check that counted either would report a naked position as guarded by its own target.
+    """
+    from swingdesk.broker import unprotected
+    from swingdesk.contracts.broker import PlacedOrder
+    from swingdesk.contracts.position import Position
+
+    position = Position(
+        position_id="POS-T-2026-09-01", version=1, instrument_id="T",
+        opened_on=date(2026, 9, 1), entry_price=Decimal(50), shares=100,
+        initial_stop=Decimal(45), current_stop=Decimal(45),
+        initial_costs_per_share=Decimal("0.25"),
+        knowledge_time=datetime(2026, 9, 1, 20, 0, tzinfo=UTC),
+    )
+    target = PlacedOrder(
+        order_id="leg-target", client_order_id="", symbol="T", status="new",
+        submitted_at=datetime(2026, 9, 1, 21, 0, tzinfo=UTC),
+        order_type="limit", stop_price=None,
+        observed_at=datetime(2026, 9, 1, 21, 0, tzinfo=UTC),
+    )
+    findings = unprotected([position], [target], "NYSE")
+    assert len(findings) == 1
+    assert findings[0].venue_stop is None, "a target guards nothing"
+
+    guarded = unprotected([position], [target, _venue_stop("T", "45.00")], "NYSE")
+    assert guarded == ()
+
+
+def test_the_highest_resting_stop_is_the_one_in_force() -> None:
+    """Two stops on one name: the higher trigger fires first and is the protection actually held.
+
+    A lower one behind it changes nothing about the loss, so comparing against the lower would
+    report a book that IS protected as diverging.
+    """
+    from swingdesk.broker import unprotected
+    from swingdesk.contracts.position import Position
+
+    position = Position(
+        position_id="POS-T-2026-09-01", version=1, instrument_id="T",
+        opened_on=date(2026, 9, 1), entry_price=Decimal(50), shares=100,
+        initial_stop=Decimal(45), current_stop=Decimal(45),
+        initial_costs_per_share=Decimal("0.25"),
+        knowledge_time=datetime(2026, 9, 1, 20, 0, tzinfo=UTC),
+    )
+    stops = [_venue_stop("T", "40.00"), _venue_stop("T", "45.00")]
+    assert unprotected([position], stops, "NYSE") == ()

@@ -255,4 +255,19 @@ class PlacedOrder(BaseModel):
                     "marketable order can fill inside the response.",
     )
 
+    order_type: str = Field(
+        default="",
+        description="The venue's own type string - `limit`, `stop`, `stop_limit`. Read because a "
+                    "resting order's TYPE is what says whether it protects anything: a `stop` "
+                    "standing below a long position is the protection, and a `limit` above it is "
+                    "the target (`DR-036`).",
+    )
+
+    stop_price: Decimal | None = Field(
+        default=None,
+        description="The trigger of a `stop` order, and `None` for every other type. This is the "
+                    "number `Position.current_stop` has to be checked against - a stop the book "
+                    "records and the venue does not hold protects nothing.",
+    )
+
     observed_at: datetime

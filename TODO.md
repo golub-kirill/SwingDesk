@@ -1510,6 +1510,29 @@ is for where no gate can reach.
 
 ## 4. Pending decisions
 
+- [ ] **`[v]` HOW A POSITION'S STOP STAYS AT THE VENUE — `DR-036`, and the machine stops trading
+      until it is answered.** Measured 2026-09-03, the first day this system held anything: all
+      three stop legs read `canceled` and all three targets `expired` at the first close, because a
+      bracket's legs inherit `time_in_force: day` from the entry while the position lives up to
+      `exit.max_holding_period` sessions. `DR-027` §3.2 and §3.3 contradict each other for every
+      position held overnight.
+      **`DR-036` makes it visible and pauses new entries. It does not fix it**, because re-placing a
+      stop is a management action on an open position, which `DR-027` §2 leaves to `D6` and
+      `CHARTER` A-002 §4 leaves standing — and this system has no verb that could amend an order
+      anyway (`access.allowed_methods` is `GET` and `POST`).
+      **Three options, and each has a real cost:**
+      1. **`gtc` on the bracket.** Simplest. Makes the ENTRY rest overnight too, which is exactly
+         what §3.3 refused — an order that outlives the session outlives the analysis that produced
+         it, and `DR-015` fixed two sessions as too stale to decide on.
+      2. **A separate `gtc` protective stop after the fill**, placed by `sync-fills` once a position
+         is recorded. Keeps §3.3 intact for the entry; needs a new order shape under `DR-027` §2 and
+         therefore a decision record.
+      3. **Leave it manual.** Correct, and it means the system stops trading after its first fill
+         until a person restores the protection by hand each time.
+      **Until it is ruled, the guard is the behaviour**: `broker` exits 3 and no submission happens
+      while any held position has no stop standing.
+
+
 - [ ] **`[v]` `DR-006` §3 ADMITS AN UNAVAILABLE CANDIDATE UNCHECKED, AND A CAP THAT FAILS OPEN IS
       NOT A CAP — five of five council advisors, 2026-08-31, unanimous and the only thing they all
       volunteered.** 145 admitted universe members have no sector served or nothing stored, and
