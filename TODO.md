@@ -1322,8 +1322,9 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ### THE DEGENERACY GUARD REFUSES THE INSTRUMENTS ITS OWN RECORD SAYS IT PROTECTS — measured 2026-08-30
 
-- [ ] **`[v]` `DR-006` §12.1 argues the guard is EXACT so a genuine sector ETF clears it. Five of
-      the eleven do not.**
+- [x] **`[v]` ~~`DR-006` §12.1 argues the guard is EXACT so a genuine sector ETF clears it. Five of
+      the eleven do not.~~ FIXED BY `DR-025` ON 2026-08-31 — the day after this was written, and it
+      sat here stale for four days.**
       ```bash
       PYTHONPATH=$PWD/src python tools/probe_sector_benchmarks.py --data data
       ```
@@ -1353,6 +1354,26 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       amendment to a ratified record and belongs to the owner (§8, §14). What is done is the
       measurement, the command that reproduces it, and the note that the cost is bounded today:
       **none of the five is in the admitted universe**, because none of the eleven has bars stored.
+
+      **RE-MEASURED 2026-09-03: ALL ELEVEN CLEAR. The owner ruled it the next day and this entry
+      never learned.** `DR-025` deleted the shape inference outright — not because a tolerance was
+      wanted, but because the premise was measured false: the vendor's sector weights sum to 1.0000
+      for **every** fund regardless of what it holds, including funds reporting 0% equity, so the
+      shape carried no information about holdings and never had. A **declared** zero is the only
+      refusal left, which is the direct discriminator this entry proposed.
+      Re-run of this entry's own command, unchanged:
+      ```
+      XLB clears · XLC clears · XLY clears · XLP clears · XLE clears · XLF clears
+      XLV clears · XLI clears · XLRE clears · XLK clears · XLU clears
+      confirmed by the vendor: 11, contradicted: 0, unavailable: 0
+      ```
+      The five it named — `XLC`, `XLE`, `XLV`, `XLRE`, `XLU` — each still report exactly one sector
+      at exactly 100%, and each now clears at 99.7–100% stock. **The false refusal text this entry
+      was really about is gone too**: `"which is how this vendor describes a fund holding no equity
+      at all"` appears nowhere in `src/`.
+      **What it cost: nothing operationally, and four days of a wrong map.** This sits in §3, whose
+      own header says each item is *"a silent wrong-answer generator: a session reads one, acts, and
+      is wrong."* An item that describes a fixed defect is that generator pointed at the reader.
       **What it also settles, and this is `E05`'s first half.** The blocker recorded in
       `application/checklist.py` is *"no sector-to-index mapping exists"* — true of this repository.
       A mapping now exists as a measurement rather than an assertion: **all eleven pairings are
@@ -1508,6 +1529,23 @@ is for where no gate can reach.
       will the moment one is opened. If this is to be flipped, the cheap window is while the book is
       empty.
       Ruling this is the owner's. It changes a ratified rule and it costs a Track A restart.
+
+      **THE WINDOW CLOSED ON 2026-09-03, and the entry named its own closing condition.** *"That
+      cost does not exist today and will the moment one is opened."* Three positions opened that
+      morning — `AIS`, `BTSG`, `DINO`, the first this project has ever held — filled from the
+      brackets `run-20260903T044052Z-84cbe591` placed and recorded by `sync-fills`.
+      **What it actually costs, measured rather than feared: still zero, and by luck.** All three
+      are classified, so a fail-closed rule would refuse **none** of them:
+      ```
+      AIS   coverage 0.9999   technology 0.8943, industrials 0.1027, consumer defensive 0.0029
+      BTSG  coverage 1.0000   healthcare 1.0000
+      DINO  coverage 1.0000   energy 1.0000
+      ```
+      So the migration is still free, and it is free because of what happened to fill rather than
+      because of anything the design does. **145 admitted universe members have no sector**, and the
+      next fill has no reason to avoid them. The entry's own arithmetic still holds; what changed is
+      that it is now one unclassified fill away from costing something, where before it was zero by
+      construction.
 
 - [ ] **`[c]` Is a SECTOR cap the right unit for a single-name leveraged ETF?** Raised in council
       review 2026-08-31 and not settled anywhere. `AAPU` is 2x one company; charging it to
