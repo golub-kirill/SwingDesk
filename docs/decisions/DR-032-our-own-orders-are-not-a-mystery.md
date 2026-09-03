@@ -69,6 +69,21 @@ slot*, and the two would agree until the day they did not (specification §8).
 authority applied to a leg that has not filled — the venue knows an order is resting, and only we
 know what it was sized against.
 
+### 3.1 Only the part that has not filled
+
+**A partial fill is otherwise charged twice against one name.** `sync-fills` records a `Position`
+for the shares that filled and the book prices those; pricing the whole order again on top reads
+**1.29R against a real 1R** on a 17-share order with 5 filled.
+
+Over-counting is the safe direction — it refuses a legitimate candidate rather than admitting an
+illegitimate one — and it is still the wrong number, so the resting quantity is
+`ordered − filled`. `filled_shares` is the venue's and the ordered quantity is ours, which is §2's
+split of authority applied one level down: **the venue knows what filled, we know what was asked.**
+
+A fully filled entry that is still listed open is a bracket **leg**, not an entry with something
+left to fill. It holds nothing here; the position it produced is in the book and is already
+consuming the slot.
+
 **A resting order we cannot price stops the run.** An unset cost parameter, a stop at or above the
 limit, a submission that cannot be read: each means a slot is held whose size is unknown, and the
 alternative — treating it as zero — is the `unavailable`-admits-unchecked inversion (`DR-025` §2.1)

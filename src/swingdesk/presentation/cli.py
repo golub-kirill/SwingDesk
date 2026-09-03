@@ -282,9 +282,25 @@ def _committed_by_live_orders(
             return (f"{submission.instrument_id} has a resting order whose stop is at or above its "
                     f"limit, so it has no R denominator and what it holds cannot be measured")
 
+        # ONLY THE PART THAT HAS NOT FILLED. `DR-032` §3.1.
+        #
+        # A partial fill is counted TWICE otherwise: `sync-fills` records a position for the shares
+        # that filled and the book prices those, while this would price the whole order again. On
+        # 17 shares with 5 filled that reads 1.29R against a real 1R - over-counting, so it refuses
+        # a legitimate candidate rather than admitting an illegitimate one, which is the safe
+        # direction and still the wrong number.
+        #
+        # `filled_shares` is the venue's and the ordered quantity is ours, which is the same split
+        # of authority `DR-031` §2 sets out: the venue knows what filled, we know what was asked.
+        resting = submission.shares - int(getattr(order, "filled_shares", 0) or 0)
+        if resting <= 0:
+            # Fully filled and still listed as open - a leg of the bracket, not the entry. The
+            # position it produced is in the book and is already consuming the slot.
+            continue
+
         committed.append(portfolio.Allocatable(
             instrument_id=submission.instrument_id,
-            requested_r=submission.shares * risk_per_share / r_unit,
+            requested_r=resting * risk_per_share / r_unit,
             # A name outside today's universe cannot be attributed, and `assess_sector` admits an
             # unclassifiable candidate unchecked (`DR-006` §3) while the count cap still bounds it.
             exposure=exposures.get(

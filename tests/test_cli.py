@@ -2029,3 +2029,63 @@ def test_ours_reads_the_journal_and_never_the_shape_of_an_id() -> None:
 
     assert [o.symbol for o in ours([mine, theirs], known)] == ["MINE"]
     assert ours([mine, theirs], frozenset()) == ()
+
+
+def test_a_partly_filled_order_holds_only_the_part_that_has_not_filled(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """`DR-032` §3.1. A partial fill is otherwise counted twice, against one name.
+
+    `sync-fills` records a position for the shares that filled and the book prices those; counting
+    the whole order again on top reads 1.29R against a real 1R on a 17-share order with 5 filled.
+    Over-counting refuses a legitimate candidate rather than admitting an illegitimate one - the
+    safe direction, and still the wrong number.
+    """
+    from swingdesk.contracts.broker import PlacedOrder
+
+    _armed(tmp_path)
+    sent: list = []
+    partly = PlacedOrder(
+        order_id="venue-PART", client_order_id="swingdesk-2026-09-02-PART", symbol="PART",
+        status="partially_filled", submitted_at=datetime(2026, 9, 2, 22, 31, tzinfo=UTC),
+        filled_shares=Decimal(5), observed_at=datetime(2026, 9, 2, 23, 31, tzinfo=UTC),
+    )
+    _stub_submit_client(monkeypatch, sent, live_orders=[partly])
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book:
+        journal.record_submission(_sent_for("PART", shares=17))
+        cli._submit(_result_with_trades(_trade_outcome("FRESH", "energy")), tmp_path,
+                    datetime(2026, 9, 2, 23, 31, tzinfo=UTC), journal, _target_registry(), book)
+
+    printed = capsys.readouterr().out
+    # 12 of 17 shares still resting at (50.00 - 45.00 + 0.25) = 5.25/share against a 100 r_unit.
+    assert "1 live order(s) of ours already hold 0.63R" in printed, printed
+    assert [order.symbol for order in sent] == ["FRESH"]
+
+
+def test_a_fully_filled_order_still_listed_open_holds_nothing(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """A filled entry stays visible as a bracket LEG. The position it produced holds the slot.
+
+    Counting the leg as well would charge one name twice over - once as a position the book prices
+    and once as an order that no longer has anything left to fill.
+    """
+    from swingdesk.contracts.broker import PlacedOrder
+
+    _armed(tmp_path)
+    sent: list = []
+    leg = PlacedOrder(
+        order_id="venue-DONE", client_order_id="swingdesk-2026-09-02-DONE", symbol="DONE",
+        status="new", submitted_at=datetime(2026, 9, 2, 22, 31, tzinfo=UTC),
+        filled_shares=Decimal(17), observed_at=datetime(2026, 9, 2, 23, 31, tzinfo=UTC),
+    )
+    _stub_submit_client(monkeypatch, sent, live_orders=[leg])
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book:
+        journal.record_submission(_sent_for("DONE", shares=17))
+        cli._submit(_result_with_trades(_trade_outcome("FRESH", "energy")), tmp_path,
+                    datetime(2026, 9, 2, 23, 31, tzinfo=UTC), journal, _target_registry(), book)
+
+    assert "already hold" not in capsys.readouterr().out
+    assert [order.symbol for order in sent] == ["FRESH"]
