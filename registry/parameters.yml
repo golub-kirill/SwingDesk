@@ -1213,7 +1213,9 @@ parameters:
     value: 20
     status: owner
     provenance: owner
-    read_by: swingdesk.trade_management.drawdown:measure
+    # The measurement is pure - no registry - so it is COMPARED against there and READ here.
+    # `DR-034` gave it a caller; until 2026-09-03 this pointed at a function nothing invoked.
+    read_by: swingdesk.presentation.cli:_drawdown_now
     named_in: [M75-T1122]
     note: >-
       Owner decision, 2026-08-05. M75-T1122 names "Максимальная допустимая просадка" and gives no
