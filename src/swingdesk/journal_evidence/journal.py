@@ -295,6 +295,40 @@ class Journal:
         ).fetchall()
         return [Submission(*row) for row in rows]
 
+    def sent_client_order_ids(self) -> frozenset[str]:
+        """Every order id this system has actually PUT ON THE WIRE. `DR-032`.
+
+        The set answers one question and it is narrow: *did we send this?* A live order at the
+        venue whose id is in here is exposure this system created an hour ago and journalled - not
+        something it cannot account for. `outcome = 'sent'` only, for the reason
+        `latest_sent_submission` gives: a stopped or refused attempt never reached the venue, so
+        no order there can carry its id.
+
+        Whole table rather than a session filter, deliberately. The id already encodes the session
+        (`DR-027` §5), so filtering by it here would be the same predicate written twice - and an
+        order that outlived its session is still one we sent, which is the fact being asked about.
+        """
+        rows = self._connection.execute(
+            "SELECT DISTINCT client_order_id FROM submissions WHERE outcome = 'sent'"
+        ).fetchall()
+        return frozenset(row[0] for row in rows)
+
+    def submission_by_order_id(self, client_order_id: str) -> Submission | None:
+        """The `sent` attempt carrying this id, or `None`.
+
+        Keyed by the venue-visible id rather than the instrument, because the caller already has
+        the id from the venue and wants the shares and the stop we sent with it - the numbers that
+        say how much capacity that live order is consuming.
+        """
+        row = self._connection.execute(
+            "SELECT run_id, client_order_id, attempted_at, session_date, instrument_id, shares, "
+            "limit_price, stop_price, outcome, detail, venue_order_id, venue_status "
+            "FROM submissions WHERE client_order_id = ? AND outcome = 'sent' "
+            "ORDER BY attempted_at DESC LIMIT 1",
+            [client_order_id],
+        ).fetchone()
+        return Submission(*row) if row else None
+
     def latest_sent_submission(self, instrument_id: str) -> Submission | None:
         """The most recent order this system actually PUT ON THE WIRE for one instrument.
 

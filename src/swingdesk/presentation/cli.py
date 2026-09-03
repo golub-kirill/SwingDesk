@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -24,6 +25,7 @@ from swingdesk.platform.clock import FixedClock, SystemClock
 from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
 from swingdesk.presentation import notify, report
 from swingdesk.reference_data import calendar as cal
+from swingdesk.reference_data import classification
 from swingdesk.reference_data.classification import ClassificationStore
 from swingdesk.reference_data.directory import DirectoryStore
 
@@ -230,8 +232,91 @@ def main(argv: list[str] | None = None) -> int:
     return 1
 
 
+def _committed_by_live_orders(
+    live: Sequence[object], journal: Journal, registry: ParameterRegistry,
+    result: RunResult, r_unit: Decimal | None,
+) -> list[portfolio.Allocatable] | str:
+    """How much of the ratified caps this system's own resting orders are already holding.
+
+    Returns them shaped as `Allocatable` so `allocate` consumes them through the SAME walk it uses
+    for candidates, or one string saying why the question could not be answered - in which case
+    nothing may be submitted. `DR-032` §3.
+
+    **Every number comes from the submission we journalled before sending**, never from the venue's
+    echo of it: `shares`, `limit_price` and `stop_price` are ours, and the cost model is `DR-010`'s.
+    That is `DR-031`'s split of authority applied to a leg that has not filled - the venue knows an
+    order is resting, and only we know what it was sized against.
+
+    **A resting order we cannot price STOPS the run.** It is holding a slot whose size is unknown,
+    and the alternative - treating it as zero - is the `unavailable`-admits-unchecked inversion in
+    the one place it would be paid for in orders.
+    """
+    if not live:
+        return []
+    if r_unit is None or r_unit <= 0:
+        return ("this system has live orders at the venue and 1R could not be priced, so what "
+                "they are holding of the cap is unknown")
+
+    committed: list[portfolio.Allocatable] = []
+    # The candidate loop already judged the sector composition of everything in today's universe,
+    # so a name we have an order out for is looked up rather than re-judged.
+    exposures = {
+        outcome.instrument.id: outcome.sector.candidate
+        for outcome in result.outcomes
+        if isinstance(outcome.sector, portfolio.SectorCapacity)
+    }
+    for order in live:
+        client_order_id = getattr(order, "client_order_id", "")
+        submission = journal.submission_by_order_id(client_order_id)
+        if submission is None:  # pragma: no cover - `ours` selected these from the same table
+            return (f"{client_order_id} is resting at the venue and its journalled submission "
+                    f"could not be read, so what it holds of the cap is unknown")
+
+        costs = costs_per_share(submission.limit_price, "USD", registry)
+        if isinstance(costs, Refusal):
+            return (f"{submission.instrument_id} has a resting order and its cost per share has "
+                    f"no value, so its R cannot be computed: {costs}")
+        costs_value, _bp, _floor = costs
+        risk_per_share = submission.limit_price - submission.stop_price + costs_value
+        if risk_per_share <= 0:
+            return (f"{submission.instrument_id} has a resting order whose stop is at or above its "
+                    f"limit, so it has no R denominator and what it holds cannot be measured")
+
+        # ONLY THE PART THAT HAS NOT FILLED. `DR-032` §3.1.
+        #
+        # A partial fill is counted TWICE otherwise: `sync-fills` records a position for the shares
+        # that filled and the book prices those, while this would price the whole order again. On
+        # 17 shares with 5 filled that reads 1.29R against a real 1R - over-counting, so it refuses
+        # a legitimate candidate rather than admitting an illegitimate one, which is the safe
+        # direction and still the wrong number.
+        #
+        # `filled_shares` is the venue's and the ordered quantity is ours, which is the same split
+        # of authority `DR-031` §2 sets out: the venue knows what filled, we know what was asked.
+        resting = submission.shares - int(getattr(order, "filled_shares", 0) or 0)
+        if resting <= 0:
+            # Fully filled and still listed as open - a leg of the bracket, not the entry. The
+            # position it produced is in the book and is already consuming the slot.
+            continue
+
+        committed.append(portfolio.Allocatable(
+            instrument_id=submission.instrument_id,
+            requested_r=resting * risk_per_share / r_unit,
+            # A name outside today's universe cannot be attributed, and `assess_sector` admits an
+            # unclassifiable candidate unchecked (`DR-006` §3) while the count cap still bounds it.
+            exposure=exposures.get(
+                submission.instrument_id,
+                classification.Exposure(
+                    instrument_id=submission.instrument_id, weights=(),
+                    unavailable="a resting order for a name outside this run's universe",
+                ),
+            ),
+        ))
+    return committed
+
+
 def _allocate(
     result: RunResult, tradeable: list[InstrumentOutcome],
+    committed: Sequence[portfolio.Allocatable] = (),
 ) -> tuple[list[InstrumentOutcome], list[tuple[InstrumentOutcome, str]]] | str:
     """Which of this run's `Trade` decisions fit inside the ratified caps TOGETHER.
 
@@ -299,11 +384,19 @@ def _allocate(
             exposure=outcome.sector.candidate,
         ))
 
+    # ALREADY COMMITTED FIRST, and taking them through the same walk is the point (`DR-032` §3).
+    # A live order of ours is not a candidate to weigh - it is capacity already spent - so it is
+    # offered ahead of everything and `allocate` grows the book with it exactly as it would with a
+    # name it took. Seeding a Book by hand instead would be a second implementation of "how does an
+    # order consume a slot", and the two would agree until the day they did not.
     verdicts = portfolio.allocate(
-        offered, result.capacity.book, result.capacity.caps,
+        [*committed, *offered], result.capacity.book, result.capacity.caps,
         result.sector_book, result.sector_limit,
     )
     by_id = {outcome.instrument.id: outcome for outcome in ranked}
+    # The committed entries carry no outcome and are dropped from both lists: they were not decided
+    # by this run and reporting them as passed over would invent a candidate.
+    verdicts = tuple(v for v in verdicts if v.instrument_id in by_id)
     submittable = [by_id[v.instrument_id] for v in verdicts if v.taken]
     passed_over = [(by_id[v.instrument_id], v.reason) for v in verdicts if not v.taken]
     return submittable, passed_over
@@ -400,40 +493,40 @@ def _submit(
         except broker_pkg.PolicyRefused:
             return f"unkeyed-{session.isoformat()}-{instrument_id}"
 
-    # THE RATIFIED CAPS, ACROSS THIS RUN'S OWN OUTPUT. `DR-027` §10.
-    #
-    # `pipeline` prices the book ONCE and measures every candidate against it, which is correct for
-    # the question it asks - may this name be held at all - and leaves the question this path asks
-    # unanswered: do 114 of them fit together. On 2026-09-02 they did not, by a factor of 28.
-    # `DR-030` §2.4's *"the ratified caps pick which are taken"* is enforced here or nowhere.
-    allocation = _allocate(result, tradeable)
-    if isinstance(allocation, str):
-        # FAIL CLOSED, and this polarity is the whole point. A cap that could not be measured
-        # admitting everything is the `unavailable`-admits-unchecked inversion `DR-025` §2.1
-        # records this project paying for once already - and here it would pay at a venue.
-        print(f"  STOPPED  {allocation}", file=sys.stderr)
+    def _journal_passed_over(passed: list[tuple[InstrumentOutcome, str]]) -> None:
+        for outcome, why in passed:
+            risk = outcome.risk
+            assert isinstance(risk, RiskSnapshot)
+            _record(_key(outcome.instrument.id), outcome.instrument.id, risk.shares,
+                    risk.entry, risk.stop, "stopped", why)
+
+    def _journal_all(reason: str) -> None:
         for outcome in tradeable:
             risk = outcome.risk
             assert isinstance(risk, RiskSnapshot)
             _record(_key(outcome.instrument.id), outcome.instrument.id, risk.shares,
-                    risk.entry, risk.stop, "stopped", allocation)
-        return
+                    risk.entry, risk.stop, "stopped", reason)
 
-    submittable, passed_over = allocation
-    for outcome, why in passed_over:
-        risk = outcome.risk
-        assert isinstance(risk, RiskSnapshot)
-        _record(_key(outcome.instrument.id), outcome.instrument.id, risk.shares,
-                risk.entry, risk.stop, "stopped", why)
-    if passed_over:
-        # Counted, never listed. A hundred lines naming every name the book had no room for would
-        # bury the four it did, and the journal holds each one with its own reason.
-        print(f"  {len(passed_over)} passed over by the ratified caps; "
-              f"{len(submittable)} within them")
-
+    # A DISARMED RUN STOPS HERE, and still says which names the caps would have taken.
+    #
+    # It allocates against the BOOK ALONE. The resting-order half of the cap (`DR-032` §3) needs
+    # the venue, and the venue is read only after this check - `AlpacaClient.guards`' own ordering,
+    # so that a refusal saying *the venue is unreachable* never stands in for *nobody armed it*.
+    # Nothing can be submitted on this path anyway, so the record is the whole purpose and a
+    # book-only reading of it is the honest one.
     if arming.stopped:
+        book_only = _allocate(result, tradeable)
+        if isinstance(book_only, str):
+            print(f"  STOPPED  {book_only}", file=sys.stderr)
+            _journal_all(book_only)
+            return
+        would_take, would_pass = book_only
+        _journal_passed_over(would_pass)
         print(f"  STOPPED  {arming.reason}")
-        for outcome in submittable:
+        if would_pass:
+            print(f"  {len(would_pass)} passed over by the ratified caps; "
+                  f"{len(would_take)} within them")
+        for outcome in would_take:
             risk = outcome.risk
             assert isinstance(risk, RiskSnapshot)
             _record(_key(outcome.instrument.id), outcome.instrument.id, risk.shares,
@@ -444,27 +537,16 @@ def _submit(
 
     # THE VENUE IS ASKED WHAT IT ALREADY HOLDS, BEFORE ANYTHING IS ADDED. `DR-027` §11.
     #
-    # §10's caps are measured against `positions.duckdb`, and NOTHING WRITES TO IT automatically -
-    # `open-position` and `respond` are both commands a person runs. So the book reads empty on
-    # every evening nobody recorded a fill, and the caps would take four more names on each of
-    # them: four tonight, four tomorrow, four the night after, against a cap of four in total.
-    # §10 bounded one run against itself and this bounds the run against every run before it.
-    #
-    # AFTER the arming check and not before, which is `AlpacaClient.guards`' own ordering and for
-    # its stated reason: a refusal reporting *the venue is unreachable* when the truth is *the
-    # owner never armed it* sends somebody to debug a network at 18:31. A disarmed run now costs
-    # no request at all.
+    # §10's caps are measured against `positions.duckdb`, and NOTHING WRITES TO IT automatically
+    # except `sync-fills` (`DR-031`), which a person can forget to schedule. So the book can read
+    # empty on an evening something filled, and the caps would take four more names on top.
     #
     # `TECH` is the course's own code for the two disagreeing and its prescribed action is *pause
-    # new entries*, which is exactly this - and `DR-027` §7 already ruled that on this path a
-    # divergence stops submission rather than being noted.
+    # new entries* - and `DR-027` §7 already ruled that on this path a divergence stops submission
+    # rather than being noted.
     def _stop_all(reason: str) -> None:
         print(f"  STOPPED  {reason}", file=sys.stderr)
-        for stopped in submittable:
-            at_risk = stopped.risk
-            assert isinstance(at_risk, RiskSnapshot)
-            _record(_key(stopped.instrument.id), stopped.instrument.id, at_risk.shares,
-                    at_risk.entry, at_risk.stop, "stopped", reason)
+        _journal_all(reason)
 
     if positions is None:
         _stop_all("no position store, so what the venue already holds cannot be compared against "
@@ -480,8 +562,18 @@ def _submit(
         _stop_all(f"the venue could not be read before submitting: {unavailable}")
         return
 
+    # OUR OWN LIVE ORDERS ARE NOT A MYSTERY. `DR-032`.
+    #
+    # An order this system sent an hour ago and journalled BEFORE sending is the exposure it can
+    # account for best, not least. Halting on it is what killed `DR-015`'s 19:30 retry: the first
+    # pass submitted, the second found its own orders resting at the venue, called them a mismatch
+    # and stopped - so a candidate that failed on the first pass was never retried.
+    #
+    # Identified by an id in our own record, never by the shape of the id. A prefix test would
+    # adopt anything typed into the dashboard with the right first word.
+    sent_ids = journal.sent_client_order_ids()
     unaccounted = broker_pkg.uncommitted_exposure(
-        positions.open_as_of(now), held, live_orders, policy.market,
+        positions.open_as_of(now), held, live_orders, policy.market, sent_order_ids=sent_ids,
     )
     if unaccounted:
         _stop_all(
@@ -492,6 +584,42 @@ def _submit(
             f"`open-position`, or close them at the venue."
         )
         return
+
+    # Excluding our resting orders above obliges this to count them here (`DR-032` §3). They hold a
+    # slot and their R until they fill or expire; leaving them out of both would let the retry pass
+    # add four more names on top of four already resting.
+    committed = _committed_by_live_orders(
+        broker_pkg.ours(live_orders, sent_ids), journal, registry, result,
+        r_unit=result.capacity.book.r_unit if isinstance(result.capacity, portfolio.Capacity)
+        else None,
+    )
+    if isinstance(committed, str):
+        _stop_all(committed)
+        return
+    if committed:
+        held_r = sum((entry.requested_r for entry in committed), Decimal(0))
+        print(f"  {len(committed)} live order(s) of ours already hold {held_r:.2f}R of the cap")
+
+    # THE RATIFIED CAPS, ACROSS THIS RUN'S OWN OUTPUT AND WHAT IS ALREADY RESTING. `DR-027` §10.
+    #
+    # `pipeline` prices the book ONCE and measures every candidate against it, which is correct for
+    # the question it asks - may this name be held at all - and leaves the question this path asks
+    # unanswered: do 114 of them fit together. On 2026-09-02 they did not, by a factor of 28.
+    allocation = _allocate(result, tradeable, committed)
+    if isinstance(allocation, str):
+        # FAIL CLOSED, and this polarity is the whole point. A cap that could not be measured
+        # admitting everything is the `unavailable`-admits-unchecked inversion `DR-025` §2.1
+        # records this project paying for once already - and here it would pay at a venue.
+        _stop_all(allocation)
+        return
+
+    submittable, passed_over = allocation
+    _journal_passed_over(passed_over)
+    if passed_over:
+        # Counted, never listed. A hundred lines naming every name the book had no room for would
+        # bury the four it did, and the journal holds each one with its own reason.
+        print(f"  {len(passed_over)} passed over by the ratified caps; "
+              f"{len(submittable)} within them")
 
     halted: str | None = None
     for outcome in submittable:
