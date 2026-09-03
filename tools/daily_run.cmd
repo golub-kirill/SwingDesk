@@ -151,7 +151,46 @@ if errorlevel 1 echo ===== [%DATE% %TIME%] directory pull failed; the pass conti
 ver > nul
 
 pushd "%REPO%"
-"%PY%" -X utf8 -m swingdesk.presentation.cli scan --universe --data "%REPO%\data" >> "%LOG%" 2>&1
+
+REM ---------------------------------------------------------------------------
+REM SYNC FIRST, THEN DECIDE (DR-031). The order is load-bearing, not tidy.
+REM ---------------------------------------------------------------------------
+REM `positions.duckdb` is what the ratified caps are measured against, and until
+REM `sync-fills` existed it was written only by a person. So an evening whose fills
+REM nobody recorded left the book reading EMPTY and DR-027 section 11 stopped every
+REM entry after the first night - correctly, and it made the machine one that ran once.
+REM
+REM This records what filled BEFORE the scan reads the book, so the caps are measured
+REM against what is actually held. Running it after the scan would measure them
+REM against yesterday, which is the DR-023 mistake in a more expensive place.
+REM
+REM IT MUST NOT FAIL THE RUN, and exit 3 in particular is not a failure: it means the
+REM venue holds something that traces to no order this system sent, which is TECH and
+REM belongs to a person. The scan still runs, still decides, still reports - and
+REM DR-027 section 11 stops the submission by itself, which is the guard doing its job
+REM rather than this wrapper second-guessing it. `ver > nul` clears the errorlevel so
+REM nothing between here and `set RC` reads this one's.
+"%PY%" -X utf8 -m swingdesk.presentation.cli sync-fills --data "%REPO%\data" >> "%LOG%" 2>&1
+if errorlevel 3 echo ===== [%DATE% %TIME%] sync-fills: venue holds something untraceable; new entries stay paused until a person records or closes it >> "%LOG%"
+ver > nul
+
+REM ---------------------------------------------------------------------------
+REM --submit: the evening pass places this run's Trade decisions (CHARTER A-002).
+REM ---------------------------------------------------------------------------
+REM Owner instruction, 2026-09-02. A-002 authorises submission with no per-order
+REM approval on a venue holding no owner capital, and DR-027 says what may be sent.
+REM
+REM THIS FLAG IS NOT THE ARMING. `--submit` only asks; the kill switch
+REM (data\.paper-trading-armed, DR-027 section 4.2) decides, and it defaults to STOPPED.
+REM Deleting that file disarms every pass without touching this wrapper, which is why
+REM the switch is a file and not a flag: a flag is only ever as available as the next
+REM release.
+REM
+REM SECOND PASS TOO. DR-015 section 3 provides for the 19:30 retry, and DR-027 section 5
+REM keys idempotency on the SESSION rather than the run - so the retry derives the same
+REM client_order_id and the VENUE refuses the duplicate. Submitting on one pass and not
+REM the other would make the retry a different decision from the run it retries.
+"%PY%" -X utf8 -m swingdesk.presentation.cli scan --universe --submit --data "%REPO%\data" >> "%LOG%" 2>&1
 set RC=%ERRORLEVEL%
 popd
 
