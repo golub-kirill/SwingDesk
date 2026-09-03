@@ -49,6 +49,7 @@ from swingdesk.contracts.broker import (
     FillKind,
     PlacedOrder,
     PositionSide,
+    ProtectiveOrder,
     Side,
 )
 
@@ -330,6 +331,54 @@ class AlpacaClient:
             status=str(answered.get("status", "")),
             submitted_at=_instant(answered, "submitted_at", "orders"),
             filled_shares=_optional_decimal(answered, "filled_qty", "orders") or Decimal(0),
+            observed_at=observed_at,
+        )
+
+    def protect(self, order: ProtectiveOrder, observed_at: datetime) -> PlacedOrder:
+        """Place one `oco` against a position already held, and return what the venue said.
+
+        **The same chokepoint, deliberately.** This goes through `_write` like every other write in
+        this package, so `DR-027` §4's three guards are consulted before a socket opens and gate 39
+        still sees exactly two call sites reaching the transport. A second write METHOD is not a
+        second write PATH.
+
+        **It is an order shape `DR-027` §2 did not permit**, and `DR-037` is the record that adds
+        it. The distinction that made it addable: §2 excludes *management actions on open
+        positions* because `D6` governs stop MOVES and partial exits. This moves nothing. It
+        restores the protection this system already decided on and already sent, which the venue
+        retired for a mechanical reason - `DR-036` measured all three of them gone at the first
+        close.
+        """
+        self.guards()
+        write = self.policy.write
+        assert write is not None  # `guards` refuses when it is, and mypy cannot see that
+
+        payload: dict[str, Any] = {
+            "symbol": order.symbol,
+            "qty": str(order.shares),
+            "side": write.protect_side,
+            # `oco` takes its two legs and no top-level price: the whole order IS the pair, and
+            # whichever fills cancels the other. That is what "stop or target, never both" is on
+            # this venue's wire, and it is why a protective order needs no `type` of its own.
+            "order_class": write.protect_order_class,
+            "time_in_force": write.protect_time_in_force,
+            "stop_loss": {"stop_price": str(order.stop_price)},
+            "take_profit": {"limit_price": str(order.target_price)},
+            "client_order_id": order.client_order_id,
+        }
+        answered = self._write("orders", payload)
+        if not isinstance(answered, dict):
+            raise BrokerUnavailable("orders: expected an object")
+
+        return PlacedOrder(
+            order_id=_text(answered, "id", "orders"),
+            client_order_id=_text(answered, "client_order_id", "orders"),
+            symbol=_text(answered, "symbol", "orders"),
+            status=str(answered.get("status", "")),
+            submitted_at=_instant(answered, "submitted_at", "orders"),
+            filled_shares=_optional_decimal(answered, "filled_qty", "orders") or Decimal(0),
+            order_type=str(answered.get("order_type") or answered.get("type") or ""),
+            stop_price=_optional_decimal(answered, "stop_price", "orders"),
             observed_at=observed_at,
         )
 

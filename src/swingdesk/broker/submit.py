@@ -17,7 +17,7 @@ from datetime import date, datetime
 from decimal import ROUND_DOWN, ROUND_UP, Decimal
 
 from swingdesk.broker.policy import PolicyRefused, WritePolicy
-from swingdesk.contracts.broker import EntryOrder
+from swingdesk.contracts.broker import EntryOrder, ProtectiveOrder
 from swingdesk.contracts.reference import Exchange
 from swingdesk.platform.parameters import ParameterRegistry
 from swingdesk.reference_data import calendar as cal
@@ -192,3 +192,73 @@ def entry_order(
         stop_price=stop_price,
         target_price=target,
     )
+
+
+def protective_order(
+    instrument_id: str,
+    shares: int,
+    stop_price: Decimal,
+    target: Decimal,
+    session_date: date,
+    write: WritePolicy,
+    market: str,
+) -> ProtectiveOrder:
+    """One `oco` for a position already held, or a refusal naming what stopped it. `DR-037`.
+
+    **The same refusals `entry_order` makes, for the same reasons**, because a protective order that
+    could not be built is a position that stays naked and the caller has to be told which. What it
+    does NOT repeat is the entry's price: there is no limit to chase here, the position is already
+    open, and the two legs are the book's own stop and the target that stop implies.
+
+    **Snapped by `DR-033`'s rule and in its directions.** The stop rounds UP - nearer the entry,
+    risking less per share than the book planned - and the target rounds DOWN, asking less of the
+    trade. Both are the conservative side, which is the only side rounding may take on a price this
+    system will be measured by.
+    """
+    exchange = cal.exchange_for(instrument_id)
+    if exchange is not Exchange(market):
+        raise PolicyRefused(
+            f"{instrument_id} is {exchange.value} and this venue serves {market}. A position this "
+            f"venue cannot hold is one it cannot be asked to protect either."
+        )
+    if shares <= 0:
+        raise PolicyRefused(
+            f"{instrument_id}: {shares} shares to protect, so there is nothing to place an order "
+            f"against."
+        )
+
+    stop_price = to_tick(stop_price, write, favouring="safer")
+    target = to_tick(target, write, favouring="cheaper")
+
+    return ProtectiveOrder(
+        client_order_id=protective_order_id(session_date, instrument_id, write),
+        session_date=session_date,
+        instrument_id=instrument_id,
+        symbol=instrument_id,
+        shares=shares,
+        stop_price=stop_price,
+        target_price=target,
+    )
+
+
+def protective_order_id(
+    session_date: date, instrument_id: str, write: WritePolicy
+) -> str:
+    """`<protect prefix>-<session>-<instrument>`, and never the entry's id.
+
+    The entry for this instrument on this session already carries
+    `<prefix>-<session>-<instrument>`, and the venue rejects a duplicate - which is `DR-027` §5
+    working, not an obstacle. A distinct prefix keeps that property for the protective order too:
+    one per instrument per session, and a second attempt refused by the party that knows.
+    """
+    if not SAFE_ID.match(instrument_id):
+        raise PolicyRefused(
+            f"{instrument_id!r} carries characters that cannot go in a client order id."
+        )
+    derived = f"{write.protect_client_order_id_prefix}-{session_date.isoformat()}-{instrument_id}"
+    if len(derived) > write.max_client_order_id_length:
+        raise PolicyRefused(
+            f"the derived protective order id is {len(derived)} characters, over the venue's "
+            f"{write.max_client_order_id_length}."
+        )
+    return derived

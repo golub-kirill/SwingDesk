@@ -78,6 +78,14 @@ class WritePolicy:
     sub_dollar_tick: Decimal
     sub_dollar_threshold: Decimal
 
+    protect_time_in_force: str
+    """`gtc` (`DR-037`). The entry keeps `day` because an order outliving its session outlives the
+    analysis that produced it; a PROTECTION has to outlive the session because the position does."""
+
+    protect_order_class: str
+    protect_side: str
+    protect_client_order_id_prefix: str
+
     def tick_for(self, price: Decimal) -> Decimal:
         """The increment this price must be a multiple of."""
         return self.tick_size if price >= self.sub_dollar_threshold else self.sub_dollar_tick
@@ -290,6 +298,14 @@ def load(path: Path | None = None) -> BrokerPolicy:
             tick_size=_decimal(write_block, "tick_size", "write"),
             sub_dollar_tick=_decimal(write_block, "sub_dollar_tick", "write"),
             sub_dollar_threshold=_decimal(write_block, "sub_dollar_threshold", "write"),
+            protect_time_in_force=str(
+                _require(write_block, "protect_time_in_force", str, "write")
+            ),
+            protect_order_class=str(_require(write_block, "protect_order_class", str, "write")),
+            protect_side=str(_require(write_block, "protect_side", str, "write")),
+            protect_client_order_id_prefix=str(
+                _require(write_block, "protect_client_order_id_prefix", str, "write")
+            ),
         )
         if not write.armed_marker.strip():
             # An empty marker arms on any file at all, including one created by a stray redirect.

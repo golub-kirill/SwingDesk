@@ -271,3 +271,51 @@ class PlacedOrder(BaseModel):
     )
 
     observed_at: datetime
+
+
+class ProtectiveOrder(BaseModel):
+    """One `oco` this system intends to place against a position it already holds. `DR-037`.
+
+    **Separate from `EntryOrder` because it is a different claim.** An entry says *open this*; this
+    says *the thing already open must not lose more than the book already decided it could*. They
+    carry different sides, different lifetimes and different idempotency keys, and a record that
+    conflated them could not describe an account that holds one and not the other - which is
+    exactly the state `DR-036` found on 2026-09-03.
+
+    **Nothing here is chosen.** `stop_price` is the position's own `current_stop`; `target_price` is
+    `exit.target_r_multiple` R above its recorded entry, the same rule an entry's target follows;
+    `shares` is what the venue says is held. The builder snaps both prices to the venue's tick
+    (`DR-033`) and refuses rather than sending legs that collapsed onto one another.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    client_order_id: str = Field(
+        description="Derived from the session and the instrument under its OWN prefix. The entry "
+                    "for this instrument on this session already used the other one, and the "
+                    "venue rejects a duplicate (`DR-027` §5).",
+    )
+    session_date: date
+    instrument_id: str
+    symbol: str
+
+    shares: int = Field(gt=0, description="What is held, as a whole number.")
+
+    stop_price: Decimal = Field(gt=0, description="The book's `current_stop`, never a new number.")
+    target_price: Decimal = Field(gt=0)
+
+    @model_validator(mode="after")
+    def _legs_bracket_nothing_if_they_cross(self) -> ProtectiveOrder:
+        """The stop must sit below the target, or the pair describes no position at all.
+
+        Not a price check against the market - the position is already open and its entry may sit
+        anywhere between them. What cannot happen is a stop at or above the target, which would
+        make the two legs of one `oco` contradict each other on the wire.
+        """
+        if self.stop_price >= self.target_price:
+            raise ValueError(
+                f"{self.instrument_id}: the stop is {self.stop_price} and the target is "
+                f"{self.target_price}. An OCO whose stop is at or above its target is two "
+                f"instructions that cannot both be waiting."
+            )
+        return self
