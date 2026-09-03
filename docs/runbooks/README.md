@@ -418,9 +418,24 @@ reality cannot bound anything — and adding to it would be the failure the guar
 python -m swingdesk.presentation.cli broker --data data
 ```
 
-Prints the account, its positions, and whether they agree with the book. **Exit codes are three
-different answers and none of them is "fine":** `0` they agree · `2` the venue could not be read ·
-`3` they disagree. It writes nothing, ever.
+Prints the account, its positions, whether they agree with the book, **and whether each open
+position's stop is still standing at the venue**. **Exit codes are three different answers and none
+of them is "fine":** `0` they agree · `2` the venue could not be read · `3` they disagree — which
+now includes a position holding no stop. It writes nothing, ever.
+
+**The protection section is the one to read** (`DR-036`). A bracket's stop leg expires with the
+session that placed it, while the position can live twenty sessions, so a holding can end up with
+no protective order at all:
+
+```
+protection at the venue (3 open)
+  TECH  unprotected  AIS
+             the book records a stop at 61.700000 and nothing is resting at the venue for 17 shares.
+```
+
+That is the book saying one thing and the market able to see nothing. **The system cannot restore
+it** — it has no verb that amends or cancels an order — so a stop that has to go back on has to be
+placed in the venue's own dashboard, and new entries stay paused until it is.
 
 ```
 python -m swingdesk.presentation.cli sync-fills --data data --dry-run

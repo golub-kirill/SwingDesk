@@ -115,7 +115,7 @@ pre-registered study against this universe moves a parameter to `validated`.
   (`DR-011`); `swingdesk broker` reads the paper account and reconciles it. A web admin panel and
   Telegram remain specified and unbuilt.
 
-## The paper venue, and the eight things that stop it
+## The paper venue, and the nine things that stop it
 
 Submission is **stopped by default** and every guard below is independent — none of them can
 compensate for another, which is `FAIL_CLOSED_POLICY.md` §3 applied to the one surface here that
@@ -149,9 +149,14 @@ acts on the world.
    account equity including open positions marked to market, against an owner-set 20 percent. A
    breach pauses new entries; a drawdown that cannot be *measured* pauses them too. Reducing size
    per the risk-off ladder stays the owner's — `risk.risk_off_ladder` is `unset`.
+9. **Every open position's stop is standing at the venue** (`DR-036`). A bracket's legs expire with
+   the entry's session while the position lives twenty of them, so the protection this system
+   argues for can quietly stop existing. The caps are denominated in `entry − stop`; a book whose
+   stops are not at the venue bounds nothing, and adding to it is the same failure reached from
+   underneath.
 
-Guards 5 to 8 are not boundary guards; the first four answer *may this system write here at all*
-and cannot answer *how many*, *against what book*, or *how far down*. `DR-031` is what keeps 6 from being a permanent halt: an entry this
+Guards 5 to 9 are not boundary guards; the first four answer *may this system write here at all*
+and cannot answer *how many*, *against what book*, *how far down*, or *is the loss still bounded*. `DR-031` is what keeps 6 from being a permanent halt: an entry this
 system placed records itself from the fill, taking the price from the venue and the stop from our
 own journal.
 

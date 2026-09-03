@@ -396,6 +396,11 @@ class AlpacaClient:
             status=str(row.get("status", "")),
             submitted_at=_instant(row, "submitted_at", "orders"),
             filled_shares=_optional_decimal(row, "filled_qty", "orders") or Decimal(0),
+            # `DR-036`. A resting order's TYPE and trigger are what say whether it protects
+            # anything, and until this was read nothing in this system could tell a live stop from
+            # a live target - or from no protection at all.
+            order_type=str(row.get("order_type") or row.get("type") or ""),
+            stop_price=_optional_decimal(row, "stop_price", "orders"),
             observed_at=observed_at,
         )
 

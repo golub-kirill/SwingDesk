@@ -677,6 +677,40 @@ def _submit(
         )
         return
 
+    # A STOP THE MARKET CANNOT SEE IS NOT A STOP, AND NOBODY WAS CHECKING. `DR-036`.
+    #
+    # `reconcile` compares side, asset class, share count and entry price and never the stop - the
+    # one number that bounds the loss was the one number nothing verified. A bracket's legs inherit
+    # the entry's `time_in_force`, and `DR-027` §3.3 makes that `day` for a reason true of an entry
+    # and false of a protection: the POSITION outlives the session, by up to
+    # `exit.max_holding_period` of them.
+    #
+    # Measured on 2026-09-03, the first day this system held anything: all three stop legs read
+    # `canceled` and all three targets `expired` at the first close. Three holdings, no protection
+    # at the venue, and a book still recording one.
+    #
+    # PAUSING IS THE POINT, not tidiness. `risk.max_open_risk` is denominated in `entry - stop`, so
+    # a book whose stops are not standing is a book whose caps are measured against a number that
+    # does not exist. Adding a fifth position to that is the failure every guard here exists to
+    # prevent, arrived at from underneath.
+    #
+    # RE-PLACING the stop is deliberately NOT done here: `DR-027` §2 lists management actions on
+    # open positions as not submittable and leaves them to `D6`, and this system has no verb that
+    # could amend one anyway. Saying so loudly is what a guard may do.
+    naked = broker_pkg.unprotected(positions.open_as_of(now), live_orders, policy.market)
+    if naked:
+        # NOT split on a full stop, which was the first draft: every price in the reason carries
+        # one, so `41.00` became `41` and the number an operator needs vanished from the message.
+        named = "; ".join(f"{n.instrument_id}: {n.reason}" for n in naked[:4])
+        _stop_all(
+            f"{broker_pkg.MISMATCH_CODE}: {len(naked)} open position(s) have no stop standing at "
+            f"{policy.label} - {named}"
+            f"{'; ...' if len(naked) > 4 else ''}. The caps are denominated in a stop, so a book "
+            f"whose stops are not at the venue bounds nothing. Restore the protection at the venue "
+            f"before adding to it."
+        )
+        return
+
     sent_ids = journal.sent_client_order_ids()
     unaccounted = broker_pkg.uncommitted_exposure(
         positions.open_as_of(now), held, live_orders, policy.market, sent_order_ids=sent_ids,
@@ -1041,6 +1075,28 @@ def _broker(args: argparse.Namespace) -> int:
     if report_.agrees and not report_.out_of_scope:
         print("  the venue and the book describe the same positions")
 
+    # THE PROTECTION, ASKED SEPARATELY because `reconcile` never asked it. `DR-036`.
+    #
+    # Two sides agreeing about a position says nothing about whether the loss is bounded, and
+    # `DR-027` §3.2's whole argument for a bracket is that a stop the market cannot see is not a
+    # stop. This command is where an operator looks for the answer, so it is printed here whether
+    # or not the reconciliation agreed.
+    try:
+        live_orders = client.open_orders(now)
+    except broker_pkg.BrokerUnavailable as unavailable:
+        print(f"\nprotection  UNAVAILABLE  the venue's resting orders could not be read: "
+              f"{unavailable}", file=sys.stderr)
+        return 2
+    naked = broker_pkg.unprotected(book, live_orders, policy.market)
+    print(f"\nprotection at the venue ({len(book)} open)")
+    if not book:
+        print("  nothing held")
+    elif not naked:
+        print("  every open position has its stop standing at the venue")
+    for finding in naked:
+        print(f"  {broker_pkg.MISMATCH_CODE}  unprotected  {finding.instrument_id}")
+        print(f"             {finding.reason}")
+
     if args.fills:
         print(f"\nvenue executions ({len(fills)})")
         for fill in fills:
@@ -1055,6 +1111,15 @@ def _broker(args: argparse.Namespace) -> int:
     if not report_.agrees:
         print(f"\n{report_.code}: broker/journal mismatch. Appendix N's action for this code is "
               f"'pause new entries' until it is resolved.", file=sys.stderr)
+        return 3
+    if naked:
+        # THE SAME EXIT CODE, because it is the same condition. An unprotected position is a
+        # broker/journal mismatch about the one number that bounds the loss, and Appendix N's
+        # action for `TECH` does not soften because the share counts happened to agree. Returning
+        # 0 here would tell a script that a book with no stops at the venue is a book in order.
+        print(f"\n{broker_pkg.MISMATCH_CODE}: {len(naked)} open position(s) have no stop standing "
+              f"at {policy.label}. Appendix N's action for this code is 'pause new entries'; a "
+              f"stop the market cannot see is not a stop (DR-027 3.2, DR-036).", file=sys.stderr)
         return 3
     return 0
 

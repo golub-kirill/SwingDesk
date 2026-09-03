@@ -25,9 +25,11 @@ from swingdesk.broker.reconcile import (
     Agreement,
     Divergence,
     Reconciliation,
+    Unprotected,
     ours,
     reconcile,
     uncommitted_exposure,
+    unprotected,
     unrecorded_fills,
 )
 from swingdesk.broker.submit import (
@@ -50,6 +52,7 @@ __all__ = [
     "PolicyRefused",
     "Reconciliation",
     "SubmissionStopped",
+    "Unprotected",
     "WritePolicy",
     "client_order_id",
     "entry_order",
@@ -61,5 +64,6 @@ __all__ = [
     "target_price",
     "trading_session",
     "uncommitted_exposure",
+    "unprotected",
     "unrecorded_fills",
 ]
