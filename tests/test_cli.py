@@ -1104,6 +1104,16 @@ def _target_registry():
             "id": "exit.target_r_multiple", "value": "2.0", "provenance": "assumed:test fixture",
             "status": "assumed", "unit": "R", "named_in": ["M53-T0808"],
         },
+        # `DR-032` §3 prices what a resting order of ours is holding, and `DR-010`'s cost model is
+        # inside that R. Carried at the committed values, so a fixture cannot flatter the cap.
+        "risk.costs_bp_usd": {
+            "id": "risk.costs_bp_usd", "value": "50", "provenance": "assumed:DR-010",
+            "status": "assumed", "unit": "basis points", "named_in": [],
+        },
+        "risk.costs_floor_usd": {
+            "id": "risk.costs_floor_usd", "value": "0.25", "provenance": "assumed:DR-010",
+            "status": "assumed", "unit": "currency per share", "named_in": [],
+        },
     })
 
 
@@ -1844,3 +1854,178 @@ def test_the_journal_returns_only_a_sent_submission(tmp_path: Path) -> None:
         assert found is not None
         assert found.stop_price == Decimal("45.00")
         assert journal.latest_sent_submission("NOTHING") is None
+
+
+# --------------------------------------------------------------------------------------------
+# `DR-032`: our own resting orders stop halting the run, and start consuming capacity.
+#
+# DR-027 section 11 halted on anything at the venue the book did not carry - INCLUDING the orders
+# this system had just sent. That killed DR-015's 19:30 retry: the first pass submitted, the second
+# found its own orders resting, called them a mismatch and stopped.
+#
+# The fix has two halves and only both together are safe. Excluding them from the halt without
+# counting them in the caps would let the retry add four more names on top of four already resting.
+
+
+def _our_order(symbol: str, order_id: str | None = None):
+    """A live order carrying an id this system journalled before sending."""
+    from swingdesk.contracts.broker import PlacedOrder
+
+    return PlacedOrder(
+        order_id=f"venue-{symbol}",
+        client_order_id=order_id or f"swingdesk-2026-09-02-{symbol}",
+        symbol=symbol, status="new",
+        submitted_at=datetime(2026, 9, 2, 22, 31, tzinfo=UTC),
+        observed_at=datetime(2026, 9, 2, 23, 31, tzinfo=UTC),
+    )
+
+
+def _sent_for(instrument_id: str, shares: int = 17, limit: str = "50.00", stop: str = "45.00"):
+    from swingdesk.journal_evidence.journal import Submission
+
+    return Submission(
+        run_id="RUN-FIRST-PASS", client_order_id=f"swingdesk-2026-09-02-{instrument_id}",
+        attempted_at=datetime(2026, 9, 2, 22, 31, tzinfo=UTC), session_date=date(2026, 9, 2),
+        instrument_id=instrument_id, shares=shares, limit_price=Decimal(limit),
+        stop_price=Decimal(stop), outcome="sent", venue_order_id=f"venue-{instrument_id}",
+        venue_status="accepted",
+    )
+
+
+def test_our_own_resting_order_no_longer_halts_the_retry_pass(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """THE REGRESSION. The 18:30 pass sent it; the 19:30 pass must not call it a mismatch.
+
+    Before this, the second pass found its own orders at the venue, reported TECH and stopped - so
+    a candidate that failed on the first pass was never retried at all.
+    """
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent, live_orders=[_our_order("OURS")])
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book:
+        journal.record_submission(_sent_for("OURS"))
+        cli._submit(_result_with_trades(_trade_outcome("LATER", "energy")), tmp_path,
+                    datetime(2026, 9, 2, 23, 31, tzinfo=UTC), journal, _target_registry(), book)
+
+    printed = capsys.readouterr()
+    assert "TECH" not in printed.err, "an order we sent and journalled is not a mismatch"
+    assert [order.symbol for order in sent] == ["LATER"], \
+        "the retry may still submit a name the first pass did not"
+
+
+def test_a_resting_order_of_ours_still_consumes_a_slot_in_the_caps(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """THE OTHER HALF, and without it the fix is the accumulation bug wearing a disguise.
+
+    Four slots, three already resting from the first pass, four fresh candidates: exactly ONE may go.
+    """
+    _armed(tmp_path)
+    sent: list = []
+    resting = ["R1", "R2", "R3"]
+    _stub_submit_client(monkeypatch, sent, live_orders=[_our_order(s) for s in resting])
+    fresh = [_trade_outcome(f"NEW{n}", s) for n, s in
+             enumerate(["energy", "utilities", "industrials", "real estate"])]
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book:
+        for symbol in resting:
+            journal.record_submission(_sent_for(symbol))
+        cli._submit(_result_with_trades(*fresh), tmp_path,
+                    datetime(2026, 9, 2, 23, 31, tzinfo=UTC), journal, _target_registry(), book)
+        rows = {row.instrument_id: row for row in journal.submissions_for("RUN-TEST")}
+
+    assert len(sent) == 1, \
+        "three slots are held by resting orders and risk.max_concurrent_positions is 4"
+    assert sent[0].symbol == "NEW0", "the one taken is the one the ranking put first"
+    assert "3 live order(s) of ours already hold" in capsys.readouterr().out
+    assert [rows[f"NEW{n}"].outcome for n in range(4)] == ["sent", "stopped", "stopped", "stopped"]
+
+
+def test_an_order_we_did_not_send_still_halts_everything(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """The exemption is narrow on purpose: it is our JOURNAL that makes an order ours.
+
+    An id shaped like ours but never journalled is somebody typing into the dashboard, and it must
+    still stop the run. A prefix test would have adopted it.
+    """
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(
+        monkeypatch, sent,
+        live_orders=[_our_order("IMPOSTER", order_id="swingdesk-2026-09-02-IMPOSTER")],
+    )
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book:
+        # Nothing recorded: the id was never put on the wire by this system.
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 2, 23, 31, tzinfo=UTC), journal, _target_registry(), book)
+
+    assert sent == []
+    printed = capsys.readouterr().err
+    assert "TECH" in printed
+    assert "IMPOSTER" in printed
+
+
+def test_a_stopped_attempt_does_not_make_an_order_ours(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """`sent` only. An attempt a guard stopped never reached the venue, so no order carries its id."""
+    from swingdesk.journal_evidence.journal import Submission
+
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent, live_orders=[_our_order("GHOST")])
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book:
+        journal.record_submission(Submission(
+            run_id="RUN-STOPPED", client_order_id="swingdesk-2026-09-02-GHOST",
+            attempted_at=datetime(2026, 9, 2, 22, 31, tzinfo=UTC), session_date=date(2026, 9, 2),
+            instrument_id="GHOST", shares=17, limit_price=Decimal("50.00"),
+            stop_price=Decimal("45.00"), outcome="stopped", detail="the switch was absent",
+        ))
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 2, 23, 31, tzinfo=UTC), journal, _target_registry(), book)
+
+    assert sent == []
+    assert "TECH" in capsys.readouterr().err
+
+
+def test_a_disarmed_run_still_reports_which_names_the_caps_would_have_taken(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """The venue is read only after the arming check, so this path allocates against the book alone.
+
+    It must still say four-of-six rather than collapsing to "stopped", which is DR-027 section 6's
+    whole argument: a run that would have entered six names and was stopped has to be
+    distinguishable from one that found nothing.
+    """
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent, unavailable="the venue must not be reached here")
+    sectors = ["technology", "healthcare", "energy", "industrials", "utilities", "real estate"]
+    outcomes = [_trade_outcome(f"N{n}", s) for n, s in enumerate(sectors)]
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book:
+        cli._submit(_result_with_trades(*outcomes), tmp_path,
+                    datetime(2026, 9, 2, 23, 31, tzinfo=UTC), journal, _target_registry(), book)
+        rows = {row.instrument_id: row for row in journal.submissions_for("RUN-TEST")}
+
+    assert sent == []
+    printed = capsys.readouterr().out
+    assert "2 passed over by the ratified caps; 4 within them" in printed
+    assert "arms it" in (rows["N0"].detail or ""), "the four say the SWITCH stopped them"
+    assert "max_concurrent" in (rows["N4"].detail or ""), "the two say the CAP passed them over"
+
+
+def test_ours_reads_the_journal_and_never_the_shape_of_an_id() -> None:
+    """`ours` is asserted directly, because the whole exemption rests on how narrow it is."""
+    from swingdesk.broker import ours
+
+    mine = _our_order("MINE")
+    theirs = _our_order("THEIRS", order_id="swingdesk-2026-09-02-THEIRS")
+    known = frozenset({"swingdesk-2026-09-02-MINE"})
+
+    assert [o.symbol for o in ours([mine, theirs], known)] == ["MINE"]
+    assert ours([mine, theirs], frozenset()) == ()

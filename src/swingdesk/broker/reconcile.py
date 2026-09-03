@@ -218,11 +218,25 @@ def unrecorded_fills(
     return tuple(fill for fill in fills if fill.symbol not in known)
 
 
+def ours(
+    live_orders: Sequence[PlacedOrder], sent_order_ids: frozenset[str]
+) -> tuple[PlacedOrder, ...]:
+    """The live orders THIS system sent, identified by an id it journalled before sending. `DR-032`.
+
+    **Not a shape test and not a prefix match.** An id is ours because it appears in our own record
+    of what we put on the wire, never because it looks like something we would have written. A
+    prefix test would adopt anything a person typed into the dashboard with the right first word,
+    which is precisely the holding `uncommitted_exposure` exists to catch.
+    """
+    return tuple(order for order in live_orders if order.client_order_id in sent_order_ids)
+
+
 def uncommitted_exposure(
     book: Sequence[Position],
     held: Sequence[BrokerPosition],
     live_orders: Sequence[PlacedOrder],
     market: str,
+    sent_order_ids: frozenset[str] = frozenset(),
 ) -> tuple[str, ...]:
     """Symbols the VENUE is exposed to that this system's book does not carry. `DR-027` §11.
 
@@ -233,9 +247,16 @@ def uncommitted_exposure(
     that differs by one, an entry price that drifted - is a reconciliation problem and not a reason
     the arithmetic on *how many more* is wrong.
 
-    **An unfilled order counts.** A resting bracket will fill or will not, and until the venue says
-    which, that name is spoken for. Counting only filled positions is what would let the same name
-    be entered on two consecutive evenings, which is the whole failure this exists to stop.
+    **An unfilled order counts** - unless it is one of OURS, named in `sent_order_ids`. A resting
+    bracket will fill or will not, and until the venue says which, that name is spoken for. But an
+    order this system sent an hour ago and journalled before sending is the exposure it can account
+    for BEST, not least, and halting on it is what killed `DR-015`'s 19:30 retry: the first pass
+    submitted, the second found its own orders at the venue, called them a mismatch and stopped.
+
+    **Excluding them here obliges the caller to count them elsewhere**, and `DR-032` §3 is that
+    obligation: a live order of ours consumes a slot and its R in the ratified caps. Exclude it
+    from both and the retry pass adds four more names on top of the four already resting, which is
+    the accumulation failure this whole family of guards exists to prevent, one step subtler.
 
     **Out-of-scope book positions are ignored, in scope-symmetry with `reconcile`.** A `.TO` holding
     is not something this venue failed to report, and a venue symbol that matches no book position
@@ -251,5 +272,8 @@ def uncommitted_exposure(
         if cal.exchange_for(position.instrument_id) is scope
     }
     at_venue = {holding.symbol for holding in held}
-    at_venue |= {order.symbol for order in live_orders}
+    at_venue |= {
+        order.symbol for order in live_orders
+        if order.client_order_id not in sent_order_ids
+    }
     return tuple(sorted(at_venue - known))

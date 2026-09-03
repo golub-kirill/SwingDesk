@@ -137,6 +137,10 @@ acts on the world.
    symbol the account is exposed to — a position *or* a resting order — that this system's book
    does not carry stops submission with the course's `TECH`, whose action is *"pause new entries"*.
    The caps are measured against the book, so a book that does not describe reality bounds nothing.
+   **An order this system itself sent is the exception** (`DR-032`): identified by an id in our own
+   journal, never by the shape of one, it does not halt the run — and is counted against the caps
+   instead, because exempting it from both would let the evening's retry pass add four more names
+   on top of four already resting.
 
 Guards 5 and 6 are not boundary guards; the first four answer *may this system write here at all*
 and cannot answer *how many*. `DR-031` is what keeps 6 from being a permanent halt: an entry this
