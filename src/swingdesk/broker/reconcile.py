@@ -277,3 +277,86 @@ def uncommitted_exposure(
         if order.client_order_id not in sent_order_ids
     }
     return tuple(sorted(at_venue - known))
+
+
+#: The venue's own word for an order that triggers at a price. `stop_limit` is included because it
+#: still protects - it becomes a limit at the trigger rather than a market order, and a protection
+#: that might not fill is a different problem from no protection at all.
+PROTECTIVE_TYPES = frozenset({"stop", "stop_limit"})
+
+
+@dataclass(frozen=True, slots=True)
+class Unprotected:
+    """One open position whose stop is not standing at the venue. `DR-036`."""
+
+    instrument_id: str
+    book_stop: Decimal
+    shares: int
+    #: What IS resting for this symbol, so the reason can say *nothing at all* apart from *a stop
+    #: at the wrong price*. Those need different actions from a person.
+    venue_stop: Decimal | None
+    reason: str
+
+
+def unprotected(
+    book: Sequence[Position],
+    live_orders: Sequence[PlacedOrder],
+    market: str,
+) -> tuple[Unprotected, ...]:
+    """Open positions the venue is not holding a stop for. `DR-036`.
+
+    **`reconcile` compares side, asset class, share count and entry price - and never the stop.**
+    The one number that bounds the loss is the one number the reconciliation did not check, and
+    `DR-027` §3.2's whole argument for submitting a bracket is that *a stop the market cannot see is
+    not a stop*. This asks whether it can still see it.
+
+    **It has to be asked every session, not once.** A bracket's legs inherit the entry's
+    `time_in_force`, and `DR-027` §3.3 makes that `day` for a reason that is true of an entry and
+    false of a protection: an order that outlives the session outlives the analysis - but the
+    POSITION outlives the session too, by up to `exit.max_holding_period` sessions. Measured on
+    2026-09-03, the first day this system held anything: all three positions' stop legs read
+    `canceled` and their targets `expired` at the first close, leaving three holdings with no
+    protection at the venue and a book that still recorded one.
+
+    **A stop at the WRONG price is reported too**, and separately. `manage.apply_approved` writes a
+    new `Position` version when the owner approves a stop move and sends nothing anywhere - this
+    system has no verb that could - so the book and the venue can disagree about the trigger while
+    both hold one. That is a different fact from having none, and a person acts on it differently.
+
+    Pure, and out-of-scope book positions are ignored for the reason `reconcile` gives.
+    """
+    scope = Exchange(market)
+    resting: dict[str, list[PlacedOrder]] = {}
+    for order in live_orders:
+        if order.order_type in PROTECTIVE_TYPES and order.stop_price is not None:
+            resting.setdefault(order.symbol, []).append(order)
+
+    findings: list[Unprotected] = []
+    for position in sorted(book, key=lambda p: p.instrument_id):
+        if cal.exchange_for(position.instrument_id) is not scope:
+            continue
+        stops = resting.get(position.instrument_id, [])
+        if not stops:
+            findings.append(Unprotected(
+                position.instrument_id, position.current_stop, position.shares, None,
+                f"the book records a stop at {position.current_stop} and {venue_word(stops)} is "
+                f"resting at the venue for {position.shares} shares. A stop the market cannot see "
+                f"is not a stop (DR-027 3.2).",
+            ))
+            continue
+        # The HIGHEST resting trigger, because that is the one that fires first and is therefore
+        # the protection actually in force. A lower one behind it changes nothing about the loss.
+        highest = max(stop.stop_price for stop in stops if stop.stop_price is not None)
+        if highest != position.current_stop:
+            findings.append(Unprotected(
+                position.instrument_id, position.current_stop, position.shares, highest,
+                f"the book records a stop at {position.current_stop} and the venue is holding one "
+                f"at {highest}. Every R this position reports is denominated in the book's number "
+                f"(RISK_SPEC 2), and the loss would be taken at the venue's.",
+            ))
+    return tuple(findings)
+
+
+def venue_word(stops: list[PlacedOrder]) -> str:
+    """`nothing` or `no stop`, so the sentence reads as English in both branches."""
+    return "nothing" if not stops else "no matching stop"
