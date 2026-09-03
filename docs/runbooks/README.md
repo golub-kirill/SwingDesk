@@ -428,6 +428,22 @@ python -m swingdesk.presentation.cli sync-fills --data data --dry-run
 
 Says what `sync-fills` would record, and records nothing.
 
+```
+PYTHONPATH=$PWD/src python tools/verify_submission_guards.py --data data
+```
+
+**Runs every guard tonight's pass will run, in its order, and sends nothing.** This is the one to
+reach for before arming, or after any change to the risk rules. It prints PASS or STOP for each of
+the reconciliation, the venue check, the drawdown criterion and the caps, then builds the actual
+order payloads and checks every price against the venue's own increment — so a rejection like the
+sub-penny one that stopped the first four real orders is found here rather than at the wire.
+
+Three exit codes: `0` every guard passes and it names what would be sent · `2` a guard would stop
+tonight's pass, which is a real answer and often the correct one · `3` the venue or a store could
+not be read.
+
+It takes about six minutes, because it runs the real pipeline rather than a fixture.
+
 ### 7.6 What the system will never do
 
 Worth knowing before you watch it run, because each is a deliberate absence rather than a gap:
