@@ -59,6 +59,25 @@ for an account holding something nobody could value. The test written for this s
 first run and named it. A position with no session in the store is now `Unavailable`, carrying the
 instrument and the date it has been held since.
 
+### 3.1 A position opened in the session still running is not an unpriced one
+
+**Amendment, 2026-09-03, and it was found on the first evening a real position existed.** The store
+refuses an unclosed bar (`CALENDAR_SPEC` §5), so a position opened in the session currently running
+has no bar and never should have one yet. §3's first implementation read that as *unpriced* and
+halted every submission — on the evening of the first fill, which is the evening this guard was
+built for.
+
+**The calendar is the only thing that can tell the two apart**, and it already answers exactly this:
+`last_completed_session`. A position opened after the last close has lived through no completed
+session, contributes no curve point, and is not a gap. One held THROUGH a closed session with no bar
+stored still refuses — that is a book which genuinely cannot be valued, and both halves are asserted
+separately because an exemption that swallowed the second would undo §3 entirely.
+
+Measured on the real book the same evening: at 13:00 New York with 2026-09-03 still open, the three
+positions opened that morning report **0.00%** instead of halting. After the close, with the day's
+bars not yet fetched, the same call correctly reports UNAVAILABLE — the scheduled pass fetches held
+instruments before it submits, so the run that matters sees the bar.
+
 ## 4. `actions_for` could not serve this, and says so itself
 
 `drawdown._exit_fills` joins a `Fill.sequence` to the kind of action that settles it. `actions_for`

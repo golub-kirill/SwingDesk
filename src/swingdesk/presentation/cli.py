@@ -16,7 +16,7 @@ from swingdesk.application.pipeline import InstrumentOutcome, RunResult, run
 from swingdesk.contracts.market import Interval, Series
 from swingdesk.contracts.observation import ParameterUse
 from swingdesk.contracts.position import ActionStatus, Fill, ManagementAction, Position
-from swingdesk.contracts.reference import Instrument
+from swingdesk.contracts.reference import Exchange, Instrument
 from swingdesk.contracts.run import RunMode
 from swingdesk.journal_evidence.journal import Journal, Submission
 from swingdesk.journal_evidence.positions import CapOverride, PositionStore
@@ -235,6 +235,7 @@ def main(argv: list[str] | None = None) -> int:
 
 def _drawdown_now(
     positions: PositionStore, store: BarStore, registry: ParameterRegistry, now: datetime,
+    policy_market: str = "NYSE",
 ) -> drawdown.Drawdown | drawdown.Unavailable:
     """Peak-to-trough drawdown of account equity, including open positions marked to market.
 
@@ -258,9 +259,23 @@ def _drawdown_now(
 
     # Sessions come from the BARS the positions actually have, not from a calendar range: a session
     # nothing can be priced on is a session the curve must not claim a value for.
+    # A POSITION OPENED TODAY IS NOT AN UNPRICED POSITION. `DR-034` §3.1.
+    #
+    # The store refuses an unclosed bar (`CALENDAR_SPEC` §5), so a position opened in the session
+    # currently running has no bar and never should have one yet. Treating that as *unpriced* halts
+    # every submission on the evening of the first fill - which is exactly the evening this guard
+    # was built for, and it is the guard being wrong rather than strict.
+    #
+    # The calendar answers *has this session closed* and is the only thing that can. A position that
+    # has not lived through a completed session contributes no curve point, which is not the same
+    # as a session the curve could not price.
+    latest_closed = cal.last_completed_session(Exchange(policy_market), now).session_date
+
     marks: dict[tuple[str, date], Decimal] = {}
     sessions: set[date] = set()
     for position in open_positions:
+        if position.opened_on > latest_closed:
+            continue
         stored = store.as_of(position.instrument_id, Interval.DAY, Series.RAW, now)
         priced = [bar for bar in stored.bars if bar.session_date >= position.opened_on]
         if not priced:
@@ -688,7 +703,7 @@ def _submit(
     # owner's, so that half is NOT automated and NOT approximated. Refusing to add while a book is
     # this far down is the smallest honest reading of "pause" - and it is the same mapping `TECH`
     # already has, whose prescribed action is *pause new entries*.
-    fall = _drawdown_now(positions, store, registry, now)
+    fall = _drawdown_now(positions, store, registry, now, policy.market)
     if isinstance(fall, drawdown.Unavailable):
         # UNMEASURABLE IS STOPPED. A cap that fails open is not a cap - the whole reason `DR-006`
         # §3's admit-on-unavailable is this project's deepest open item - and a kill switch that
