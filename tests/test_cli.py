@@ -1530,12 +1530,18 @@ def test_submission_stops_when_a_cap_could_not_be_measured(
 # bounded a run against itself; these bound it against every run before it.
 
 
-def _venue_position(symbol: str):
+def _venue_position(symbol: str, shares: str = "10", entry: str = "50.00"):
+    """A holding at the venue. `shares` and `entry` are arguments because `reconcile` compares both.
+
+    `DR-035` runs the full reconciliation before anything is added, so a fixture whose book and
+    venue disagree about a share count stops the run - correctly, and it would otherwise look like
+    the test's own subject failing.
+    """
     from swingdesk.contracts.broker import BrokerPosition, PositionSide
 
     return BrokerPosition(
         symbol=symbol, asset_class="us_equity", exchange="NYSE", side=PositionSide.LONG,
-        shares=Decimal(10), average_entry_price=Decimal("50.00"),
+        shares=Decimal(shares), average_entry_price=Decimal(entry),
         observed_at=datetime(2026, 9, 1, 21, 0, tzinfo=UTC),
     )
 
@@ -2190,7 +2196,8 @@ def test_a_book_past_the_drawdown_limit_pauses_new_entries(
     """
     _armed(tmp_path)
     sent: list = []
-    _stub_submit_client(monkeypatch, sent)
+    _stub_submit_client(monkeypatch, sent,
+                        held=[_venue_position("FALLEN", shares="100", entry="50.00")])
     with Journal(tmp_path / 'journal.duckdb') as journal, \
             PositionStore(tmp_path / 'positions.duckdb') as book, \
             BarStore(tmp_path / 'bars.duckdb') as bars:
@@ -2222,7 +2229,8 @@ def test_a_book_inside_the_limit_still_submits(tmp_path: Path, monkeypatch, caps
     """
     _armed(tmp_path)
     sent: list = []
-    _stub_submit_client(monkeypatch, sent)
+    _stub_submit_client(monkeypatch, sent,
+                        held=[_venue_position("FALLEN", shares="100", entry="50.00")])
     with Journal(tmp_path / 'journal.duckdb') as journal, \
             PositionStore(tmp_path / 'positions.duckdb') as book, \
             BarStore(tmp_path / 'bars.duckdb') as bars:
@@ -2267,7 +2275,8 @@ def test_a_drawdown_that_cannot_be_measured_stops_submission(
 
     _armed(tmp_path)
     sent: list = []
-    _stub_submit_client(monkeypatch, sent)
+    _stub_submit_client(monkeypatch, sent,
+                        held=[_venue_position("UNPRICED", shares="100", entry="50")])
     with Journal(tmp_path / 'journal.duckdb') as journal, \
             PositionStore(tmp_path / 'positions.duckdb') as book, \
             BarStore(tmp_path / 'bars.duckdb') as bars:
@@ -2315,3 +2324,121 @@ def test_action_kinds_carry_their_real_sequence(tmp_path: Path) -> None:
 
     assert set(kinds.values()) == {"move_stop", "exit_now"}
     assert all(isinstance(sequence, int) for sequence in kinds)
+
+
+# --------------------------------------------------------------------------------------------
+# `DR-035`: an exit that happened at the venue is not invisible.
+#
+# `uncommitted_exposure` looks one way - venue to book. It cannot see a position the BOOK still
+# carries and the venue no longer holds, which is what a bracket's stop leg firing overnight looks
+# like. Nothing closes a position automatically: `closed_on` is written only by `respond` and
+# `record-fill`, and the scheduled wrapper never runs `broker`. So a stopped-out position held its
+# slot for ever, and after four stop-outs the machine submitted nothing again, silently.
+
+
+def _booked_and_priced(book: PositionStore, bars: BarStore, symbol: str = "HELD") -> None:
+    from swingdesk.contracts.position import Position
+
+    book.record(Position(
+        position_id=f"POS-{symbol}-2026-09-01", version=1, instrument_id=symbol,
+        opened_on=date(2026, 9, 1), entry_price=Decimal(50), shares=100,
+        initial_stop=Decimal(45), current_stop=Decimal(45),
+        initial_costs_per_share=Decimal("0.25"),
+        knowledge_time=datetime(2026, 9, 1, 20, 0, tzinfo=UTC),
+    ))
+    _bars_for(bars, symbol, ((date(2026, 9, 1), "50.00"), (date(2026, 9, 2), "50.00")))
+
+
+def test_a_position_the_book_carries_and_the_venue_has_closed_pauses_new_entries(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """THE REGRESSION. A bracket's stop fired overnight and nothing recorded it.
+
+    Before this the run saw an empty venue, `uncommitted_exposure` found nothing to complain about,
+    and the caps counted a position that no longer existed - for ever.
+    """
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent)          # the venue holds NOTHING
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book, \
+            BarStore(tmp_path / 'bars.duckdb') as bars:
+        _booked_and_priced(book, bars)
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 2, 23, 0, tzinfo=UTC), journal, _target_registry(),
+                    book, bars)
+        rows = journal.submissions_for("RUN-TEST")
+
+    assert sent == [], "a book that describes a position the venue closed bounds nothing"
+    printed = capsys.readouterr().err
+    assert "TECH" in printed
+    assert "HELD" in printed and "book_only" in printed
+    assert [r.outcome for r in rows] == ["stopped"]
+
+
+def test_a_share_count_the_two_sides_disagree_about_pauses_new_entries(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """A partial exit nobody recorded looks exactly like this, and the caps would price the wrong R."""
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent,
+                        held=[_venue_position("HELD", shares="60", entry="50")])
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book, \
+            BarStore(tmp_path / 'bars.duckdb') as bars:
+        _booked_and_priced(book, bars)
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 2, 23, 0, tzinfo=UTC), journal, _target_registry(),
+                    book, bars)
+
+    assert sent == []
+    assert "shares" in capsys.readouterr().err
+
+
+def test_an_entry_price_the_two_sides_disagree_about_pauses_new_entries(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """`DR-027` §7 already ruled this a stop-submitting condition rather than a note.
+
+    Every R the position reports is denominated in the book's number, so two sides describing
+    different trades is not cosmetic.
+    """
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent,
+                        held=[_venue_position("HELD", shares="100", entry="51.25")])
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book, \
+            BarStore(tmp_path / 'bars.duckdb') as bars:
+        _booked_and_priced(book, bars)
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 2, 23, 0, tzinfo=UTC), journal, _target_registry(),
+                    book, bars)
+
+    assert sent == []
+    assert "entry_price" in capsys.readouterr().err
+
+
+def test_a_book_the_venue_agrees_with_still_submits(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """The guard must not be a permanent halt the moment anything is ever held.
+
+    Two sides describing the same position is the state submission is designed for, and the caps
+    then decide - here the one slot taken leaves three, so the candidate goes.
+    """
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent,
+                        held=[_venue_position("HELD", shares="100", entry="50")])
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book, \
+            BarStore(tmp_path / 'bars.duckdb') as bars:
+        _booked_and_priced(book, bars)
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 2, 23, 0, tzinfo=UTC), journal, _target_registry(),
+                    book, bars)
+
+    assert len(sent) == 1
+    assert "TECH" not in capsys.readouterr().err

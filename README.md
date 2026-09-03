@@ -115,7 +115,7 @@ pre-registered study against this universe moves a parameter to `validated`.
   (`DR-011`); `swingdesk broker` reads the paper account and reconciles it. A web admin panel and
   Telegram remain specified and unbuilt.
 
-## The paper venue, and the six things that stop it
+## The paper venue, and the eight things that stop it
 
 Submission is **stopped by default** and every guard below is independent — none of them can
 compensate for another, which is `FAIL_CLOSED_POLICY.md` §3 applied to the one surface here that
@@ -141,9 +141,17 @@ acts on the world.
    journal, never by the shape of one, it does not halt the run — and is counted against the caps
    instead, because exempting it from both would let the evening's retry pass add four more names
    on top of four already resting.
+7. **The book and the venue must describe the same positions** (`DR-035`), which is the same
+   question asked the other way round. A stop leg firing overnight closes a position at the venue
+   and nothing records it, so the caps would count it for ever and the machine would stop trading
+   after four stop-outs without a word.
+8. **`k.drawdown_pause`, the only ratified `live` criterion** (`DR-034`). Peak-to-trough drawdown of
+   account equity including open positions marked to market, against an owner-set 20 percent. A
+   breach pauses new entries; a drawdown that cannot be *measured* pauses them too. Reducing size
+   per the risk-off ladder stays the owner's — `risk.risk_off_ladder` is `unset`.
 
-Guards 5 and 6 are not boundary guards; the first four answer *may this system write here at all*
-and cannot answer *how many*. `DR-031` is what keeps 6 from being a permanent halt: an entry this
+Guards 5 to 8 are not boundary guards; the first four answer *may this system write here at all*
+and cannot answer *how many*, *against what book*, or *how far down*. `DR-031` is what keeps 6 from being a permanent halt: an entry this
 system placed records itself from the fill, taking the price from the venue and the stop from our
 own journal.
 
