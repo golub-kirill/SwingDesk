@@ -2442,3 +2442,77 @@ def test_a_book_the_venue_agrees_with_still_submits(
 
     assert len(sent) == 1
     assert "TECH" not in capsys.readouterr().err
+
+
+def test_a_position_opened_in_the_session_still_running_is_not_unpriced(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """`DR-034` §3.1, and it was found on the first evening a real position existed.
+
+    The store refuses an unclosed bar (`CALENDAR_SPEC` §5), so a position opened in the session
+    currently running has no bar and never should have one yet. Reading that as *unpriced* halts
+    every submission on the evening of the first fill - the evening this guard was built for.
+
+    Opened 2026-09-03, judged at 13:00 New York with 2026-09-03 still open, so the last completed
+    session is the 2nd: the position has lived through no closed session and contributes no curve
+    point. That is not the same as a session the curve could not price.
+    """
+    from swingdesk.contracts.position import Position
+
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent,
+                        held=[_venue_position("TODAY", shares="100", entry="50")])
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book, \
+            BarStore(tmp_path / 'bars.duckdb') as bars:
+        book.record(Position(
+            position_id="POS-TODAY-2026-09-03", version=1, instrument_id="TODAY",
+            opened_on=date(2026, 9, 3), entry_price=Decimal(50), shares=100,
+            initial_stop=Decimal(45), current_stop=Decimal(45),
+            initial_costs_per_share=Decimal("0.25"),
+            knowledge_time=datetime(2026, 9, 3, 14, 0, tzinfo=UTC),
+        ))
+        # No bar for the 3rd, deliberately: the session has not closed, so there cannot be one.
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 3, 17, 0, tzinfo=UTC), journal, _target_registry(),
+                    book, bars)
+
+    printed = capsys.readouterr()
+    assert "cannot be evaluated" not in printed.err, \
+        "a position that has lived through no closed session is not an unpriced one"
+    assert "drawdown 0.00%" in printed.out
+    assert len(sent) == 1
+
+
+def test_a_position_held_through_a_closed_session_with_no_bar_still_refuses(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """The other half, and the exemption must not swallow it.
+
+    Opened on the 1st and judged after the 2nd has closed: this position HAS lived through a
+    completed session, so a store carrying no bar for it is a book that cannot be valued - and a
+    kill switch that admitted there is `DR-006` §3's inversion.
+    """
+    from swingdesk.contracts.position import Position
+
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent,
+                        held=[_venue_position("STALE", shares="100", entry="50")])
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book, \
+            BarStore(tmp_path / 'bars.duckdb') as bars:
+        book.record(Position(
+            position_id="POS-STALE-2026-09-01", version=1, instrument_id="STALE",
+            opened_on=date(2026, 9, 1), entry_price=Decimal(50), shares=100,
+            initial_stop=Decimal(45), current_stop=Decimal(45),
+            initial_costs_per_share=Decimal("0.25"),
+            knowledge_time=datetime(2026, 9, 1, 20, 0, tzinfo=UTC),
+        ))
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 3, 17, 0, tzinfo=UTC), journal, _target_registry(),
+                    book, bars)
+
+    assert sent == []
+    assert "cannot be evaluated" in capsys.readouterr().err
