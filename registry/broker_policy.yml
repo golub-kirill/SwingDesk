@@ -140,6 +140,20 @@ write:
   # A bracket is a chain of THREE. `oto` would have taken one leg - and the owner's ruling arrived
   # in the same hour and made the target mandatory, so `bracket` is right for a reason that is not
   # the wire format. `DR-027` 9.
+  # THE VENUE'S TICK, AND IT IS A FACT ABOUT THE VENUE RATHER THAN A CHOICE OF OURS - which is why
+  # it lives here beside the host and not in `registry/parameters.yml`. SEC Rule 612, the sub-penny
+  # rule: a US equity quoted at or above $1.00 may only be priced in whole cents, and below $1.00 in
+  # $0.0001. Alpaca enforces it and says so - `invalid limit_price 66.949997. sub-penny increment
+  # does not fulfill minimum pricing criteria`, which is how this was found: the first four real
+  # orders this system ever sent were ALL rejected for it (`DR-033`).
+  #
+  # `universe.min_price` admits nothing under $5, so the sub-dollar tick is unreachable today. It is
+  # declared anyway, because a rounding rule that silently did the wrong thing below a dollar would
+  # be waiting for the day that floor moves.
+  tick_size: "0.01"
+  sub_dollar_tick: "0.0001"
+  sub_dollar_threshold: "1.00"
+
   order_type: limit
   time_in_force: day
   order_class: bracket

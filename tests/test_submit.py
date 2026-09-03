@@ -392,3 +392,124 @@ def test_the_trading_session_is_the_exchange_s_and_not_the_clock_s() -> None:
     assert after_the_close.date() != before_midnight.date(), "the fixture must straddle midnight"
     assert (submit.trading_session("NYSE", after_the_close)
             == submit.trading_session("NYSE", before_midnight))
+
+
+# --------------------------------------------------------------------------------------------
+# `DR-033`: the venue prices in pennies, and rounding is never allowed to flatter.
+#
+# THE REGRESSION. The first four real orders this system ever sent were ALL rejected:
+#   invalid limit_price 66.949997. sub-penny increment does not fulfill minimum pricing criteria
+# The whole pipeline was right - caps, guards, allocation - and the wire format was wrong. Only a
+# real order could find it, which is the third time that has been true (`DR-027` §9).
+
+
+def _write_policy():
+    from swingdesk.broker import policy as policy_module
+
+    write = policy_module.load().write
+    assert write is not None
+    return write
+
+
+def test_the_four_prices_the_venue_actually_rejected_are_now_valid() -> None:
+    """Named literally, because a regression test whose inputs are invented is testing a guess."""
+    from swingdesk.broker.submit import to_tick
+
+    write = _write_policy()
+    rejected = {
+        Decimal("66.949997"): Decimal("66.94"),
+        Decimal("106.059998"): Decimal("106.05"),
+        Decimal("106.480003"): Decimal("106.48"),
+        Decimal("65.72569193187650639356166246"): Decimal("65.72"),
+    }
+    for raw, expected in rejected.items():
+        assert to_tick(raw, write, favouring="cheaper") == expected
+        assert to_tick(raw, write, favouring="cheaper") % write.tick_size == 0
+
+
+def test_every_leg_rounds_the_way_that_cannot_hurt() -> None:
+    """The tick is the venue's rule; the DIRECTION is ours, and it is the half that matters.
+
+    An entry rounded UP could fill above the price its R was computed against - permanently, on the
+    one statistic the validation programme is measured in. A stop rounded DOWN would risk more per
+    share than the sizing planned.
+    """
+    from swingdesk.broker.submit import to_tick
+
+    write = _write_policy()
+    price = Decimal("50.005")
+
+    assert to_tick(price, write, favouring="cheaper") == Decimal("50.00"), "entry never rounds up"
+    assert to_tick(price, write, favouring="safer") == Decimal("50.01"), "stop never rounds down"
+
+
+def test_a_price_already_on_the_tick_is_untouched() -> None:
+    from swingdesk.broker.submit import to_tick
+
+    write = _write_policy()
+    for direction in ("cheaper", "safer"):
+        assert to_tick(Decimal("50.00"), write, favouring=direction) == Decimal("50.00")
+
+
+def test_below_a_dollar_the_venue_allows_four_decimals() -> None:
+    """`universe.min_price` admits nothing under $5, so this is unreachable today.
+
+    Asserted anyway: a rounding rule that silently did the wrong thing below a dollar would be
+    waiting for the day that floor moves, and the policy declares the increment for exactly that.
+    """
+    from swingdesk.broker.submit import to_tick
+
+    write = _write_policy()
+    assert to_tick(Decimal("0.123456"), write, favouring="cheaper") == Decimal("0.1234")
+    assert to_tick(Decimal("0.123456"), write, favouring="safer") == Decimal("0.1235")
+
+
+def test_an_order_whose_legs_collapse_once_rounded_is_refused() -> None:
+    """Rounding must not be allowed to produce an order with no R denominator.
+
+    A stop a fraction below the entry rounds UP onto it; sending that would put a position in the
+    book whose reported R is zero, and finding out from a 422 is the expensive place to find out.
+    """
+    from swingdesk.broker.policy import PolicyRefused
+    from swingdesk.broker.submit import entry_order
+
+    write = _write_policy()
+    with pytest.raises(PolicyRefused, match="no longer below the entry"):
+        entry_order(
+            instrument_id="AAPL", shares=10,
+            limit_price=Decimal("50.004"), stop_price=Decimal("49.999"),
+            target=Decimal("60.00"), session_date=date(2026, 9, 2), write=write, market="NYSE",
+        )
+
+
+def test_a_target_that_rounds_onto_the_entry_is_refused() -> None:
+    from swingdesk.broker.policy import PolicyRefused
+    from swingdesk.broker.submit import entry_order
+
+    write = _write_policy()
+    with pytest.raises(PolicyRefused, match="sell at a loss on the way up"):
+        entry_order(
+            instrument_id="AAPL", shares=10,
+            limit_price=Decimal("50.00"), stop_price=Decimal("45.00"),
+            target=Decimal("50.009"), session_date=date(2026, 9, 2), write=write, market="NYSE",
+        )
+
+
+def test_a_built_order_carries_only_tick_aligned_prices() -> None:
+    """End to end: the three legs the venue sees are all multiples of its increment."""
+    from swingdesk.broker.submit import entry_order
+
+    write = _write_policy()
+    order = entry_order(
+        instrument_id="AIS", shares=17,
+        limit_price=Decimal("66.949997"),
+        stop_price=Decimal("61.69966995546901155580079372"),
+        target=Decimal("72.20033004453098844419920628"),
+        session_date=date(2026, 9, 2), write=write, market="NYSE",
+    )
+    assert order.limit_price == Decimal("66.94")
+    assert order.stop_price == Decimal("61.70"), "the stop rounds UP, nearer the entry"
+    assert order.target_price == Decimal("72.20")
+    for price in (order.limit_price, order.stop_price, order.target_price):
+        assert price % write.tick_size == 0
+    assert order.stop_price < order.limit_price < order.target_price

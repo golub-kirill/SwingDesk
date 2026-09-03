@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import re
 from datetime import date, datetime
-from decimal import Decimal
+from decimal import ROUND_DOWN, ROUND_UP, Decimal
 
 from swingdesk.broker.policy import PolicyRefused, WritePolicy
 from swingdesk.contracts.broker import EntryOrder
@@ -98,6 +98,34 @@ def target_price(entry: Decimal, risk_per_share: Decimal, registry: ParameterReg
     return entry + multiple * risk_per_share
 
 
+def to_tick(price: Decimal, write: WritePolicy, *, favouring: str) -> Decimal:
+    """Snap a price to the venue's increment, always in the direction that cannot hurt. `DR-033`.
+
+    **The tick is the venue's rule and the DIRECTION is ours**, and they are separate decisions.
+    SEC Rule 612 forbids sub-penny pricing at or above a dollar; the venue enforces it and rejected
+    the first four orders this system ever sent for `66.949997`, `106.059998`, `106.480003` and a
+    take-profit carrying twenty-six decimal places. Nothing here chooses the increment - it is read
+    from the committed policy beside the host.
+
+    **`favouring` is `"cheaper"` or `"safer"`, and every leg gets the one that makes the trade no
+    worse than the one the sizing computed:**
+
+    - **the entry limit rounds DOWN**, so it can only ever fill at or BELOW the decision price.
+      That is `DR-027` §3.1's argument made stronger rather than weakened.
+    - **the stop rounds UP.** A stop nearer the entry risks LESS per share than planned, so the
+      realised R can never exceed the one frozen at entry.
+    - **the take-profit rounds DOWN**, asking less of the trade than planned.
+
+    **Rounding is never allowed to move a price the flattering way**, which is the whole reason
+    this takes a direction rather than calling `quantize` with a default. `ROUND_HALF_EVEN` on the
+    limit would let an order fill a fraction above the price its `R` was computed against -
+    permanently, on the one statistic the validation programme is measured in.
+    """
+    tick = write.tick_for(price)
+    rounding = ROUND_DOWN if favouring == "cheaper" else ROUND_UP
+    return (price / tick).quantize(Decimal(1), rounding=rounding) * tick
+
+
 def entry_order(
     instrument_id: str,
     shares: int,
@@ -128,6 +156,27 @@ def entry_order(
         raise PolicyRefused(
             f"{instrument_id}: the sizing produced {shares} shares, so there is nothing to submit. "
             f"A zero-share order is a refusal that reached the wire."
+        )
+
+    # Snapped to the venue's increment, each leg toward the side that cannot hurt (`DR-033`). Done
+    # HERE rather than at the wire so the refusals below judge the prices that will actually be
+    # sent: an order whose legs collapse into one another once rounded is not submittable, and
+    # finding that out from a 422 is finding it out in the most expensive place.
+    limit_price = to_tick(limit_price, write, favouring="cheaper")
+    stop_price = to_tick(stop_price, write, favouring="safer")
+    target = to_tick(target, write, favouring="cheaper")
+
+    if stop_price >= limit_price:
+        raise PolicyRefused(
+            f"{instrument_id}: rounded to the venue's tick the stop is {stop_price} and the limit "
+            f"is {limit_price}, so the stop is no longer below the entry. The R denominator this "
+            f"trade would report does not exist."
+        )
+    if target <= limit_price:
+        raise PolicyRefused(
+            f"{instrument_id}: rounded to the venue's tick the take-profit is {target}, at or "
+            f"below the {limit_price} entry. That is an instruction to sell at a loss on the way "
+            f"up, and one tick of rounding is not a reason to send it."
         )
 
     return EntryOrder(
