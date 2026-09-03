@@ -14,6 +14,7 @@ URL that is not on the allowlist is refused here, before a socket is opened.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -69,6 +70,17 @@ class WritePolicy:
     time_in_force: str
     order_class: str
     side: str
+
+    tick_size: Decimal
+    """The price increment the venue accepts at or above `sub_dollar_threshold`. Its own rule, not
+    ours - SEC Rule 612, enforced by the venue and discovered by it rejecting four orders."""
+
+    sub_dollar_tick: Decimal
+    sub_dollar_threshold: Decimal
+
+    def tick_for(self, price: Decimal) -> Decimal:
+        """The increment this price must be a multiple of."""
+        return self.tick_size if price >= self.sub_dollar_threshold else self.sub_dollar_tick
 
 
 @dataclass(frozen=True, slots=True)
@@ -132,6 +144,26 @@ class BrokerPolicy:
                 f"Placing, amending or cancelling an order is D1/BR-1 and needs a decision record, "
                 f"not an argument."
             )
+
+
+def _decimal(section: dict[str, Any], key: str, where: str) -> Decimal:
+    """A price increment, parsed exactly. Quoted in the YAML so no float ever touches it.
+
+    A tick read through a float is a tick that is almost right, and `0.01` is famously not
+    representable - the one place in this file where the parsing rule is load-bearing.
+    """
+    raw = section.get(key)
+    if raw is None:
+        raise PolicyRefused(f"{POLICY_PATH.name}: {where}.{key} is missing")
+    try:
+        value = Decimal(str(raw))
+    except InvalidOperation:
+        raise PolicyRefused(
+            f"{POLICY_PATH.name}: {where}.{key} is {raw!r}, which is not a number"
+        ) from None
+    if value <= 0:
+        raise PolicyRefused(f"{POLICY_PATH.name}: {where}.{key} is {value}; a tick is positive")
+    return value
 
 
 def _require(section: dict[str, Any], key: str, kind: type, where: str) -> Any:
@@ -255,6 +287,9 @@ def load(path: Path | None = None) -> BrokerPolicy:
             time_in_force=str(_require(write_block, "time_in_force", str, "write")),
             order_class=str(_require(write_block, "order_class", str, "write")),
             side=str(_require(write_block, "side", str, "write")),
+            tick_size=_decimal(write_block, "tick_size", "write"),
+            sub_dollar_tick=_decimal(write_block, "sub_dollar_tick", "write"),
+            sub_dollar_threshold=_decimal(write_block, "sub_dollar_threshold", "write"),
         )
         if not write.armed_marker.strip():
             # An empty marker arms on any file at all, including one created by a stray redirect.
