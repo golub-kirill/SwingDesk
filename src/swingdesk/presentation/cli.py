@@ -4,12 +4,19 @@ from __future__ import annotations
 
 import argparse
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
+
+if TYPE_CHECKING:  # the broker package is imported lazily inside the functions that need it
+    from swingdesk.broker.alpaca import AlpacaClient
+    from swingdesk.broker.policy import BrokerPolicy
+    from swingdesk.broker.reconcile import Unprotected
+    from swingdesk.contracts.broker import PlacedOrder
 
 from swingdesk.application import universe as universe_builder
 from swingdesk.application.pipeline import InstrumentOutcome, RunResult, run
@@ -303,6 +310,81 @@ def _drawdown_now(
         sessions=sorted(sessions),
         mark_for=lambda instrument_id, session: marks.get((instrument_id, session)),
     )
+
+
+def _restore_protection(
+    naked: Sequence[Unprotected], positions: PositionStore, client: AlpacaClient,
+    registry: ParameterRegistry, policy: BrokerPolicy, now: datetime,
+    record: Callable[..., None],
+) -> list[PlacedOrder]:
+    """Place a `gtc` OCO for every held position the venue is holding no stop for. `DR-037`.
+
+    Returns the orders the venue accepted, so the caller can re-ask `unprotected` against a picture
+    that includes them rather than trusting this to have worked.
+
+    **Every number comes from the book or from a rule that already exists.** The stop is the
+    position's own `current_stop`; the target is `exit.target_r_multiple` R above its recorded
+    entry, which is `broker.submit.target_price` applied to a position instead of to a candidate.
+    Nothing is chosen here, and `DR-033`'s tick rounding takes the conservative direction on both.
+
+    **Each attempt is journalled whatever happens**, under the same `Submission` contract an entry
+    uses. A protective order that the venue refused is the fact an operator most needs and the one
+    a console buffer loses; `DR-027` §8 is the rule and this is the same rule one order shape over.
+    """
+    from swingdesk import broker as broker_pkg
+
+    by_id = {position.instrument_id: position for position in positions.open_as_of(now)}
+    write = policy.write
+    if write is None:  # pragma: no cover - the caller's own guard refuses before this is reached
+        return []
+    session = broker_pkg.trading_session(policy.market, now)
+    placed: list[PlacedOrder] = []
+
+    for finding in naked:
+        position = by_id.get(finding.instrument_id)
+        if position is None:  # pragma: no cover - `naked` was derived from this same book
+            continue
+        risk_per_share = position.entry_price - position.current_stop
+        if risk_per_share <= 0:  # pragma: no cover - refused by `Position` at construction
+            continue
+        try:
+            multiple, _use = registry.decimal_value("exit.target_r_multiple")
+            order = broker_pkg.protective_order(
+                instrument_id=position.instrument_id, shares=position.shares,
+                stop_price=position.current_stop,
+                target=position.entry_price + multiple * (
+                    risk_per_share + position.initial_costs_per_share
+                ),
+                session_date=session, write=write, market=policy.market,
+            )
+        except (ParameterUnset, broker_pkg.PolicyRefused, ValueError) as refused:
+            print(f"  NOT PROTECTED {position.instrument_id}  {refused}", file=sys.stderr)
+            record(f"unprotectable-{session.isoformat()}-{position.instrument_id}",
+                   position.instrument_id, position.shares, position.entry_price,
+                   position.current_stop, "refused", str(refused))
+            continue
+
+        try:
+            answered = client.protect(order, now)
+        except broker_pkg.SubmissionStopped as stopped:
+            print(f"  NOT PROTECTED {order.symbol}  {stopped}", file=sys.stderr)
+            record(order.client_order_id, order.instrument_id, order.shares, order.target_price,
+                   order.stop_price, "stopped", str(stopped))
+            continue
+        except broker_pkg.BrokerUnavailable as unavailable:
+            print(f"  NOT PROTECTED {order.symbol}  {unavailable}", file=sys.stderr)
+            record(order.client_order_id, order.instrument_id, order.shares, order.target_price,
+                   order.stop_price, "rejected", str(unavailable))
+            continue
+
+        record(order.client_order_id, order.instrument_id, order.shares, order.target_price,
+               order.stop_price, "sent", venue_order_id=answered.order_id,
+               venue_status=answered.status)
+        print(f"  PROTECTED {order.symbol:<10} {order.shares} sh  stop {order.stop_price}  "
+              f"target {order.target_price}  {answered.status}")
+        placed.append(answered)
+
+    return placed
 
 
 def _committed_by_live_orders(
@@ -698,6 +780,25 @@ def _submit(
     # open positions as not submittable and leaves them to `D6`, and this system has no verb that
     # could amend one anyway. Saying so loudly is what a guard may do.
     naked = broker_pkg.unprotected(positions.open_as_of(now), live_orders, policy.market)
+    if naked:
+        # RESTORE IT, then re-ask. `DR-037`.
+        #
+        # `DR-036` reported this and stopped, which was the most a guard could do while `DR-027` §2
+        # left every order on an open position to `D6`. The owner ruled on 2026-09-03: the entry
+        # keeps `day` and the protection gets its own `gtc` `oco`, so it lives as long as the
+        # position rather than as long as the session that opened it.
+        #
+        # A stop at the WRONG price is NOT restored here - that is a stop somebody moved, `D6`
+        # governs the move, and this system has no verb that could replace the standing one anyway.
+        # Only the position holding nothing is placed for.
+        restored = _restore_protection(
+            [finding for finding in naked if finding.venue_stop is None],
+            positions, client, registry, policy, now, _record,
+        )
+        naked = broker_pkg.unprotected(
+            positions.open_as_of(now), [*live_orders, *restored], policy.market,
+        )
+
     if naked:
         # NOT split on a full stop, which was the first draft: every price in the reason carries
         # one, so `41.00` became `41` and the number an operator needs vanished from the message.

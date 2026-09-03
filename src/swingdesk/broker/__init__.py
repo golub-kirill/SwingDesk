@@ -35,6 +35,8 @@ from swingdesk.broker.reconcile import (
 from swingdesk.broker.submit import (
     client_order_id,
     entry_order,
+    protective_order,
+    protective_order_id,
     target_price,
     trading_session,
 )
@@ -59,6 +61,8 @@ __all__ = [
     "load_policy",
     "open_client",
     "ours",
+    "protective_order",
+    "protective_order_id",
     "read_arming",
     "reconcile",
     "target_price",

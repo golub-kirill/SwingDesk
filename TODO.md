@@ -1510,8 +1510,8 @@ is for where no gate can reach.
 
 ## 4. Pending decisions
 
-- [ ] **`[v]` HOW A POSITION'S STOP STAYS AT THE VENUE — `DR-036`, and the machine stops trading
-      until it is answered.** Measured 2026-09-03, the first day this system held anything: all
+- [x] **`[v]` HOW A POSITION'S STOP STAYS AT THE VENUE — ~~`DR-036`, and the machine stops trading
+      until it is answered.~~ RULED AND BUILT 2026-09-03 (`DR-037`), option 2.** Measured 2026-09-03, the first day this system held anything: all
       three stop legs read `canceled` and all three targets `expired` at the first close, because a
       bracket's legs inherit `time_in_force: day` from the entry while the position lives up to
       `exit.max_holding_period` sessions. `DR-027` §3.2 and §3.3 contradict each other for every
@@ -1531,6 +1531,22 @@ is for where no gate can reach.
          until a person restores the protection by hand each time.
       **Until it is ruled, the guard is the behaviour**: `broker` exits 3 and no submission happens
       while any held position has no stop standing.
+
+      **RULED 2026-09-03: option 2, and option 1 was excluded by evidence rather than taste.** A
+      bracket's legs cannot carry their own `time_in_force` — Alpaca accepts it only on the parent —
+      so `gtc` on the bracket would reach the ENTRY, which is exactly what `DR-027` §3.3 refused,
+      and `BFH` is the live example of an entry that rested unfilled and expired on schedule.
+      Option 3 was excluded by arithmetic: `b.min_sample` needs a hundred closed trades and a
+      machine that halts after its first fill accumulates none.
+      **What `DR-037` builds**: the bracket keeps `day` and a separate `gtc` OCO goes on once the
+      position is recorded — as well as, not instead of, so the fill session is covered by the legs
+      and every session after it by the OCO. A stop at the WRONG price is still only reported: that
+      is a move, `D6` governs moves, and placing a second trigger would silently apply one nobody
+      approved.
+      **What is still open and is smaller than this was:** the OCO's wire format is read from
+      Alpaca's reference and not measured. Three of this project's defects were documentation facts
+      the venue corrected by refusing; the first armed evening settles this one the same way, with
+      the `422` journalled under `rejected` if it comes.
 
 
 - [ ] **`[v]` `DR-006` §3 ADMITS AN UNAVAILABLE CANDIDATE UNCHECKED, AND A CAP THAT FAILS OPEN IS

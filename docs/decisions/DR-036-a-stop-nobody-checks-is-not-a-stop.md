@@ -94,6 +94,16 @@ positions were unprotected for a day and a night and no line anywhere said so.
 3. **Leave it manual** and let this guard pause the machine until a person restores the protection.
    Correct, and it makes the system stop trading after its first fill.
 
+## 4.1 Amendment, 2026-09-03 — §4's "it does not re-place the stop" is now history
+
+**Appended rather than edited**, per `AGENTS.md` §11 rule 2. §4 was accurate when written: the
+options were laid out for the owner and the guard was the whole behaviour.
+
+**The owner ruled the same day.** `DR-037` keeps the bracket `day` and adds a separate `gtc` OCO
+once a position is recorded, so a missing protection is now *restored* before the run continues,
+and this guard is what it falls back to when the restoration fails — plus what still reports a stop
+standing at the wrong price, which `DR-037` deliberately does not touch.
+
 ## 5. What would overturn this
 
 - **A venue that reports a position's protective orders on the position itself.** The join here is

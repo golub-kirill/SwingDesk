@@ -1175,7 +1175,8 @@ def _result_with_one_trade():
     return _result_with_trades()
 
 
-def _stub_submit_client(monkeypatch, sent: list, held=(), live_orders=(), unavailable=None):
+def _stub_submit_client(monkeypatch, sent: list, held=(), live_orders=(), unavailable=None,
+                        protected: list | None = None, protect_raises=None):
     """A venue stub. `held` and `live_orders` are what it already holds - empty by default.
 
     `DR-027` §11: submission reads the venue before it adds to it, because `positions.duckdb` is
@@ -1197,6 +1198,22 @@ def _stub_submit_client(monkeypatch, sent: list, held=(), live_orders=(), unavai
             if unavailable:
                 raise broker_pkg.BrokerUnavailable(unavailable)
             return tuple(live_orders)
+
+        def protect(self, order, now):
+            """`DR-037`: the OCO that keeps a held position protected past the entry's session."""
+            from swingdesk.contracts.broker import PlacedOrder
+
+            if self.arming.stopped:
+                raise broker_pkg.SubmissionStopped(self.arming.reason)
+            if protect_raises is not None:
+                raise protect_raises
+            if protected is not None:
+                protected.append(order)
+            return PlacedOrder(
+                order_id=f"oco-{order.symbol}", client_order_id=order.client_order_id,
+                symbol=order.symbol, status="accepted", submitted_at=now,
+                order_type="stop", stop_price=order.stop_price, observed_at=now,
+            )
 
         def submit(self, order, now):
             from swingdesk.contracts.broker import PlacedOrder
@@ -2573,20 +2590,22 @@ def _protected_book(book: PositionStore, bars: BarStore, symbol: str = "GUARDED"
     _bars_for(bars, symbol, ((date(2026, 9, 1), "50.00"), (date(2026, 9, 2), "50.00")))
 
 
-def test_a_position_with_no_stop_at_the_venue_pauses_new_entries(
+def test_a_position_with_no_stop_at_the_venue_is_protected_before_anything_is_added(
     tmp_path: Path, monkeypatch, capsys
 ) -> None:
     """THE REGRESSION, and it was live on 2026-09-03 rather than hypothetical.
 
-    The bracket's legs expired at the first close and the position went on. Nothing anywhere said
-    so: the report never mentioned protection, `reconcile` never compared a stop, and the caps went
-    on being denominated in a number that was no longer at the venue.
+    The bracket's legs expired at the first close and the position went on. `DR-036` made that
+    visible and stopped; `DR-037` restores it — a `gtc` OCO carrying the book's own stop and the
+    target that stop implies — and only then lets the run continue.
     """
     _armed(tmp_path)
     sent: list = []
+    protected: list = []
     _stub_submit_client(monkeypatch, sent,
                         held=[_venue_position("GUARDED", shares="100", entry="50")],
-                        live_orders=[])          # the legs expired at the close
+                        live_orders=[],          # the legs expired at the close
+                        protected=protected)
     with Journal(tmp_path / 'journal.duckdb') as journal, \
             PositionStore(tmp_path / 'positions.duckdb') as book, \
             BarStore(tmp_path / 'bars.duckdb') as bars:
@@ -2594,13 +2613,79 @@ def test_a_position_with_no_stop_at_the_venue_pauses_new_entries(
         cli._submit(_result_with_one_trade(), tmp_path,
                     datetime(2026, 9, 2, 23, 0, tzinfo=UTC), journal, _target_registry(),
                     book, bars)
-        rows = journal.submissions_for("RUN-TEST")
+        rows = {row.instrument_id: row for row in journal.submissions_for("RUN-TEST")}
 
-    assert sent == [], "the caps are denominated in a stop that is not there"
+    assert [o.symbol for o in protected] == ["GUARDED"], "the naked position is protected first"
+    assert protected[0].stop_price == Decimal("45.00"), "the book's own stop, never a new number"
+    assert protected[0].shares == 100
+    assert "PROTECTED GUARDED" in capsys.readouterr().out
+
+    assert len(sent) == 1, "and the run then continues, because the book can be bounded again"
+    assert rows["GUARDED"].outcome == "sent", "the protective order is journalled like any other"
+
+
+def test_a_position_that_could_not_be_protected_still_pauses_new_entries(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """`DR-036`'s guard is what `DR-037` falls back to, and it has to still be there.
+
+    The venue refusing the OCO leaves the position exactly as naked as before. The caps are
+    denominated in `entry - stop`, so adding a fifth name to a book whose stops are not standing is
+    the failure both records exist to prevent.
+    """
+    from swingdesk import broker as broker_pkg
+
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(
+        monkeypatch, sent,
+        held=[_venue_position("GUARDED", shares="100", entry="50")], live_orders=[],
+        protect_raises=broker_pkg.BrokerUnavailable("orders: HTTP 422 from the venue"),
+    )
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book, \
+            BarStore(tmp_path / 'bars.duckdb') as bars:
+        _protected_book(book, bars)
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 2, 23, 0, tzinfo=UTC), journal, _target_registry(),
+                    book, bars)
+        rows = {row.instrument_id: row for row in journal.submissions_for("RUN-TEST")}
+
+    assert sent == [], "a position that could not be protected still bounds nothing"
     printed = capsys.readouterr().err
-    assert "TECH" in printed and "GUARDED" in printed
-    assert "no stop standing" in printed
-    assert [r.outcome for r in rows] == ["stopped"]
+    assert "NOT PROTECTED GUARDED" in printed
+    assert "TECH" in printed and "no stop standing" in printed
+    assert rows["GUARDED"].outcome == "rejected", "the refusal is journalled, not only printed"
+
+
+def test_a_stop_at_the_wrong_price_is_reported_and_never_replaced(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """`DR-037` restores a MISSING stop and never a moved one.
+
+    A stop standing at a different price is one somebody moved, `D6` governs the move, and this
+    system has no verb that could replace the order already resting. Placing a second would leave
+    two triggers on one position and `unprotected` reads the highest as the one in force — which
+    would silently apply a move nobody approved.
+    """
+    _armed(tmp_path)
+    sent: list = []
+    protected: list = []
+    _stub_submit_client(monkeypatch, sent,
+                        held=[_venue_position("GUARDED", shares="100", entry="50")],
+                        live_orders=[_venue_stop("GUARDED", "41.00")],   # the book says 45
+                        protected=protected)
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book, \
+            BarStore(tmp_path / 'bars.duckdb') as bars:
+        _protected_book(book, bars)
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 2, 23, 0, tzinfo=UTC), journal, _target_registry(),
+                    book, bars)
+
+    assert protected == [], "a moved stop is D6's, and no second trigger is placed"
+    assert sent == []
+    assert "41.00" in capsys.readouterr().err
 
 
 def test_a_stop_at_the_wrong_price_is_reported_separately(

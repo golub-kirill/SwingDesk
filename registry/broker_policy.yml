@@ -158,3 +158,33 @@ write:
   time_in_force: day
   order_class: bracket
   side: buy
+
+  # ---------------------------------------------------------------------------
+  # THE PROTECTIVE ORDER, and why it is a SECOND shape rather than a longer entry
+  # ---------------------------------------------------------------------------
+  # `DR-037`, owner ruling 2026-09-03. A bracket's legs inherit the entry's `time_in_force`, and
+  # `DR-027` 3.3 makes that `day` for an argument that is exact about an ENTRY - an order outliving
+  # its session outlives the analysis that produced it - and false about a PROTECTION, because the
+  # position outlives the session too, by up to `exit.max_holding_period` of them.
+  #
+  # Measured 2026-09-03, the first day this system held anything: all three stop legs read
+  # `canceled` and all three targets `expired` at the first close. Three holdings, no protection at
+  # the venue, and a book still recording one.
+  #
+  # So the entry keeps `day` above and the protection gets its own shape here: `gtc`, so it lives
+  # as long as the position does. `oco` because the two legs are alternatives - whichever fills
+  # cancels the other, which is what "stop or target, never both" means on this venue's wire.
+  # `sell` because it closes a long, and this system cannot describe any other kind.
+  #
+  # NO THRESHOLD IS SET HERE. The stop is the one already in the book and the target is
+  # `exit.target_r_multiple` R above the recorded entry - the same rule `broker.submit.target_price`
+  # already applies to an entry. Both are snapped by `DR-033`'s tick rule, stop UP and target DOWN.
+  protect_time_in_force: gtc
+  protect_order_class: oco
+  protect_side: sell
+
+  # Distinct from `client_order_id_prefix` because the venue rejects a duplicate id, and the entry
+  # for this instrument on this session already used that one (`DR-027` 5). The idempotency
+  # property is unchanged: one protective order per instrument per session, refused by the venue if
+  # a second is attempted.
+  protect_client_order_id_prefix: swingdesk-protect
