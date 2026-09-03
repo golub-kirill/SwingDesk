@@ -59,6 +59,7 @@ because a rule sits in a 650-line file and a working session acts from memory.
 | 15 | An impossibility is a claim. Test it before recording it | honour |
 | 16 | The course is a requirements source, not an evidence source | honour |
 | 17 | Verify at the right granularity — run the check whose subject you touched | honour |
+| **18** | **Plan, validate the plan against the tree, build, SCRUTINISE, review, commit, gates, merge — in that order, on every change that earns a branch** | **honour** · 21, 33 catch instances of the last step |
 
 **Gate 37 keeps this table honest**: every numbered section appears here exactly once, every row
 points at a section that exists, and every gate number cited resolves to a registered gate. A rule
@@ -721,3 +722,50 @@ regenerate by itself. The check was correct every time. The granularity was not.
 **Where this does NOT apply.** Anything touching `src/`, `tools/` or a frozen file gets the full
 suite before it is committed — those are the changes a targeted check cannot bound, and §12's first
 trap is a suite that went green while testing the wrong tree.
+
+## 18. The eight steps, on every change that earns a branch — owner instruction, 2026-09-03
+
+> *"plan first. 2 step - plan validation. 3 - code building. 4 - critical, scrutiny code check.
+> 5 - review. 6 - commit. 7 - gates. 8 - merge. Its must be applicated on every major step."*
+
+**§2 and §17 already own the last third of this.** §2 says run the gates before you commit; §17 says
+which check to run and to stop paying for CI you are not using. Neither says anything about what
+happens *before* the first line is written, and the steps before it are where this session's defects
+were actually found.
+
+**The steps:**
+
+1. **Plan before touching a file.** Say what will change and why. Name the decision record it needs,
+   or say out loud that it needs none — an unnamed record is one nobody notices is missing.
+2. **Validate the plan against the tree, never against memory.** Does the function exist, is the
+   parameter set, has the ruling already been made, is the number still what the entry says? A plan
+   is a set of claims about the repository, and §1 applies to it before it applies to anything.
+3. **Build the code and its tests together.** A test written afterwards is written by somebody who
+   already believes the code.
+4. **Scrutinise, and this is the step that earns the other seven.** Read your own diff as an
+   adversary. **Run it against live state, not only fixtures** — a fixture with one item is not a
+   small version of one with many. **Mutate the fix and prove the tests die**; a test that passes
+   with the fix removed is decoration.
+5. **Review the claims you just wrote.** A commit message is a claim, a decision record is a claim,
+   a `read_by` is a claim, and every one of them can be checked against the tree in seconds.
+6. **Commit** one coherent change whose message says what was wrong and what it cost.
+7. **Gates** — §2, at §17's granularity.
+8. **Merge** — pull *every* checkout afterwards, then re-run the gates from the main one. A merge
+   nobody pulled is a merge that changed one worktree.
+
+**The order is the rule, not the list.** Gates before merge, review before commit, validation before
+build. A step taken out of order is a step not taken, and step 4 is the one most easily skipped
+because by then the work already looks finished.
+
+**"Every major step" means every change that earns a branch** — not every session and not every
+edit. §17.2 still governs how many branches an evening should have.
+
+**What paid for it, 2026-09-03.** Four defects in three days, and the shape of each is the argument
+for step 4 rather than for more tests. A bracket needed three legs, the session had to come from the
+exchange rather than a clock, every price had to sit on the venue's own increment, and a position's
+stop leg expired at the first close while the position lived on — every one found by a real order or
+by running a guard against a real book, none by the suite, which was green before and after each.
+The same day, a guard written to respect `DR-006` §3 reproduced that record's own
+`unavailable`-admits-unchecked inversion, and its own test caught it on the first run; and a claim
+in this repository's contradictions section described a defect the owner had ruled on three days
+earlier, found only by re-running the command the entry itself carried.
