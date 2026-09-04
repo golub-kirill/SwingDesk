@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -643,3 +644,97 @@ def test_cap_overrides_are_ordered_oldest_first(store) -> None:
         position_id="POS-2", recorded_at=datetime(2026, 8, 23, 18, 0, tzinfo=UTC)))
     store.record_cap_override(_override())
     assert [o.position_id for o in store.cap_overrides()] == ["POS-1", "POS-2"]
+
+
+# --------------------------------------------------- one decision is one proposal, not eleven
+#
+# Measured 2026-09-04 on the live book: three open positions carried 33 proposals between them,
+# eleven each, every one a `move_stop` to the same price. Each run recomputed the same exit policy
+# and appended it again. `respond` answers ONE sequence number, so answering the newest would have
+# left the other ten pending for ever - and a queue of 33 identical items is one nobody works
+# through, which is `CHARTER` A-001's human-in-the-loop defeated by volume.
+
+PROPOSED_AT = datetime(2026, 9, 3, 22, 30, tzinfo=UTC)
+
+
+def _held(store: PositionStore) -> Position:
+    """One open position for a proposal to hang off."""
+    held = Position(
+        position_id="POS-TEST.1-2026-09-01", version=1, instrument_id="TEST.1",
+        opened_on=date(2026, 9, 1), entry_price=Decimal("50.00"), shares=100,
+        initial_stop=Decimal("45.00"), current_stop=Decimal("45.00"),
+        initial_costs_per_share=Decimal("0.02"), knowledge_time=PROPOSED_AT,
+    )
+    store.record(held)
+    return held
+
+
+def _move_stop(new_stop: str = "45.50", kind: ActionKind = ActionKind.MOVE_STOP
+               ) -> ManagementAction:
+    return ManagementAction(
+        position_id="POS-TEST.1-2026-09-01", proposed_at=PROPOSED_AT, kind=kind,
+        status=ActionStatus.PROPOSED, reason_code="D6",
+        reason="2.0xATR below the close sits above the current stop",
+        old_stop=Decimal("45.00"), new_stop=Decimal(new_stop),
+    )
+
+
+def test_the_same_proposal_twice_is_recorded_once(tmp_path: Path) -> None:
+    """THE REGRESSION. Eleven runs, one decision, eleven rows - until this."""
+    with PositionStore(tmp_path / "p.duckdb") as store:
+        _held(store)
+        for _ in range(11):
+            store.propose(_move_stop())
+        waiting = store.pending()
+
+    assert len(waiting) == 1, f"eleven identical proposals became {len(waiting)} rows"
+    assert waiting[0].sequence == 1, "and it is the FIRST, whose proposed_at is the honest one"
+
+
+def test_a_proposal_at_a_DIFFERENT_stop_is_a_different_decision(tmp_path: Path) -> None:
+    """The control that stops this becoming silence.
+
+    The ATR moves daily, so an evening pass legitimately proposes a new level each day. Collapsing
+    those would hide a decision the owner has never seen - the opposite failure, and the worse one.
+    """
+    with PositionStore(tmp_path / "p.duckdb") as store:
+        _held(store)
+        store.propose(_move_stop("45.50"))
+        store.propose(_move_stop("45.75"))
+        waiting = store.pending()
+
+    # Compared as values, not as text: the store returns six decimal places and the point
+    # of this test is that the two decisions are DIFFERENT, not how they are rendered.
+    assert [p.action.new_stop for p in waiting] == [Decimal("45.50"), Decimal("45.75")]
+
+
+def test_a_different_KIND_at_the_same_numbers_is_a_different_decision(tmp_path: Path) -> None:
+    """`exit_now` and `move_stop` are not interchangeable because their prices happen to match."""
+    with PositionStore(tmp_path / "p.duckdb") as store:
+        _held(store)
+        store.propose(_move_stop())
+        store.propose(_move_stop(kind=ActionKind.EXIT_NOW))
+        kinds = sorted(p.action.kind.value for p in store.pending())
+
+    assert kinds == ["exit_now", "move_stop"]
+
+
+def test_an_ANSWERED_proposal_does_not_suppress_a_later_identical_one(tmp_path: Path) -> None:
+    """The one that matters for correctness rather than for noise, and it caught a real bug.
+
+    "Waiting" is the ABSENCE OF A RESPONSE ROW, never `status = 'proposed'` - the status column
+    records what the run proposed and never changes. The first draft of the dedupe filtered on it,
+    which would have swallowed the same recommendation arising again after the owner had already
+    answered: the system deciding by omission. This test is what said so.
+    """
+    with PositionStore(tmp_path / "p.duckdb") as store:
+        _held(store)
+        store.propose(_move_stop())
+        first = store.pending()[0]
+        store.respond(first.action.position_id, first.sequence,
+                      choice=ActionStatus.REJECTED, reason="not yet", at=PROPOSED_AT)
+        store.propose(_move_stop())
+        waiting = store.pending()
+
+    assert len(waiting) == 1, "the question may be asked again once it has been answered"
+    assert waiting[0].sequence == 2, "and it is a NEW proposal, not the answered one resurfacing"

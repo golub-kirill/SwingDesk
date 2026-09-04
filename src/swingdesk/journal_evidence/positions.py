@@ -236,7 +236,56 @@ class PositionStore:
         )
 
     def propose(self, action: ManagementAction, run_id: str | None = None) -> None:
-        """Append a proposal. Sequence is monotonic per position, so order survives equal clocks."""
+        """Append a proposal, unless the identical one is already waiting for an answer.
+
+        Sequence is monotonic per position, so order survives equal clocks.
+
+        **ONE DECISION IS ONE PROPOSAL, and eleven of them is not eleven decisions.** Measured
+        2026-09-04: three open positions carried **33** proposals between them, eleven each, every
+        one a `move_stop` to the same price. Each run recomputed the same exit policy and appended
+        it again, because this method appended unconditionally.
+
+        That is not a tidiness problem. `CHARTER` A-001 puts a person in the loop and `respond`
+        answers **one sequence number**, so answering the newest leaves the other ten pending for
+        ever - and a queue of 33 identical items is one nobody works through, which is the
+        cries-wolf failure `AGENTS.md` §12 names, arrived at from underneath.
+
+        **Skipped, never superseded.** Marking an older row answered would mutate a record, and
+        `AGENTS.md` §3 keeps them immutable - corrections create versions. Not writing a duplicate
+        changes nothing that exists, and the surviving row is the same decision with an earlier and
+        therefore more honest `proposed_at`.
+
+        **Identical means the same kind AND the same numbers.** A stop level that moved, however
+        slightly, is a different decision and is recorded: the ATR shifts daily, so an evening pass
+        still proposes once a day per position. What this removes is the same decision restated
+        because a run happened twice in an hour - which is what a probe, a retry pass and an
+        operator's own check all do.
+        """
+        # **Waiting means NO RESPONSE ROW, never `status = 'proposed'`.** The status column records
+        # what the run proposed and never changes - `pending` above says so and joins the same way.
+        # Filtering on it here would have matched proposals the owner had already ANSWERED and
+        # silently swallowed the same recommendation arising a second time, which is the system
+        # deciding by omission: the opposite failure to the one this fixes, and the worse one.
+        # The first draft did exactly that, and the test written for it is what said so.
+        already = self._connection.execute(
+            """
+            SELECT 1
+            FROM management m
+            LEFT JOIN management_responses r
+                   ON r.position_id = m.position_id AND r.sequence = m.sequence
+            WHERE r.sequence IS NULL
+              AND m.position_id = ? AND m.kind = ?
+              AND m.old_stop IS NOT DISTINCT FROM ?
+              AND m.new_stop IS NOT DISTINCT FROM ?
+              AND m.shares_affected IS NOT DISTINCT FROM ?
+            LIMIT 1
+            """,
+            [action.position_id, action.kind.value,
+             action.old_stop, action.new_stop, action.shares_affected],
+        ).fetchone()
+        if already is not None:
+            return
+
         row = self._connection.execute(
             "SELECT COALESCE(MAX(sequence), 0) + 1 FROM management WHERE position_id = ?",
             [action.position_id],
