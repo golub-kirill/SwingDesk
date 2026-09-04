@@ -2857,3 +2857,76 @@ def test_the_highest_resting_stop_is_the_one_in_force() -> None:
     )
     stops = [_venue_stop("T", "40.00"), _venue_stop("T", "45.00")]
     assert unprotected([position], stops, "NYSE") == ()
+
+
+def _protective_order_at_venue(symbol: str = "GUARDED"):
+    """The `oco` PARENT as the venue describes it: a sell, a `limit`, no `stop_price` of its own."""
+    from swingdesk.contracts.broker import PlacedOrder
+
+    return PlacedOrder(
+        order_id=f"oco-{symbol}", client_order_id=f"swingdesk-protect-2026-09-01-{symbol}",
+        symbol=symbol, status="accepted", order_type="limit", side="sell",
+        submitted_at=datetime(2026, 9, 1, 21, 0, tzinfo=UTC),
+        observed_at=datetime(2026, 9, 1, 21, 0, tzinfo=UTC),
+    )
+
+
+def _protective_submission(symbol: str = "GUARDED"):
+    """What the journal holds for it: the TARGET as `limit_price`, the stop as `stop_price`."""
+    from swingdesk.journal_evidence.journal import Submission
+
+    return Submission(
+        run_id="RUN-SENT", client_order_id=f"swingdesk-protect-2026-09-01-{symbol}",
+        attempted_at=datetime(2026, 9, 1, 22, 31, tzinfo=UTC), session_date=date(2026, 9, 1),
+        instrument_id=symbol, shares=100, limit_price=Decimal("60.50"),
+        stop_price=Decimal("45.00"), outcome="sent", venue_order_id=f"oco-{symbol}",
+        venue_status="accepted",
+    )
+
+
+def test_a_protective_sell_holds_none_of_the_cap(tmp_path: Path) -> None:
+    """THE REGRESSION, measured 2026-09-04 on the live book, and it refused a real candidate.
+
+    `DR-037`'s protective `oco` is a SELL against a position already held and already counted in
+    the book. Pricing it as committed exposure counts that position twice - and with a number that
+    is not risk at all: the journalled protective submission carries the TARGET as its `limit_price`
+    and the stop as its `stop_price`, so `limit - stop + costs` reads the whole span between them.
+
+    Three of them held **5.22R of a 4R cap** on top of the 2.43R the positions themselves held, and
+    the pass reported `0 within the caps, 101 passed over`.
+
+    **The direction matters more than the arithmetic.** Over-counting refuses a legitimate
+    candidate, which is the safe way to be wrong and still wrong - and it would refuse every
+    candidate for as long as the protection stood, which is the life of the position. A machine
+    that stops trading the moment it protects itself has not been made safe.
+    """
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_protective_submission())
+        committed = cli._committed_by_live_orders(
+            [_protective_order_at_venue()], journal, _target_registry(),
+            _result_with_one_trade(), r_unit=Decimal(100),
+        )
+
+    assert committed == [], (
+        f"a protective sell was priced as {committed} of the cap. It closes a position the book "
+        f"already carries; the exposure is counted there and counting it again is double-counting "
+        f"a number that is not even risk"
+    )
+
+
+def test_the_same_order_as_a_BUY_does_hold_the_cap(tmp_path: Path) -> None:
+    """The positive control, and `AGENTS.md` §9 is why it is here.
+
+    Without it the test above passes for any reason at all - a journal lookup that missed, a
+    registry with no cost model, a walk that returns empty always. This is the same order with one
+    field changed, and it must be counted.
+    """
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_protective_submission())
+        entry = _protective_order_at_venue().model_copy(update={"side": "buy"})
+        committed = cli._committed_by_live_orders(
+            [entry], journal, _target_registry(), _result_with_one_trade(), r_unit=Decimal(100),
+        )
+
+    assert len(committed) == 1, "a resting BUY is exposure the caps have to see (`DR-032` §3)"
+    assert committed[0].requested_r > 0

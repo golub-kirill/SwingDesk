@@ -430,12 +430,32 @@ class AlpacaClient:
         `status=open` is the venue's own filter, applied at the server rather than here: asking for
         every order this account ever had and discarding most of them locally would walk the page
         bound for an answer the endpoint can give directly.
+
+        **`nested=true`, and the legs are flattened back out. Measured 2026-09-04.** An `oco`'s
+        stop rests with status `held`, which `status=open` does NOT return - so with the default the
+        endpoint answered three `limit` parents and the three stops that were actually standing were
+        invisible. `unprotected` then called three protected positions naked and the pass stopped
+        with 101 candidates behind protection the venue was holding:
+
+            status=open                 -> 3 rows, all `limit`, 0 legs
+            status=open&nested=false    -> 3 rows, all `limit`, 0 legs
+            status=open&nested=true     -> 3 rows, all `limit`, 3 legs
+
+        `nested=true` is the only shape that returns them at all. They are flattened here rather
+        than handed on nested because a leg IS a resting order - `DR-036` asks what is standing at
+        the venue, and a stop that protects a position is not less standing for having a parent.
         """
-        payload = self._get("orders", query={"status": "open", "direction": "asc"})
+        payload = self._get(
+            "orders", query={"status": "open", "direction": "asc", "nested": "true"})
         if not isinstance(payload, list):
             raise BrokerUnavailable("orders: expected an array")
 
-        live = [self._order(row, observed_at) for row in payload]
+        live: list[PlacedOrder] = []
+        for row in payload:
+            live.append(self._order(row, observed_at))
+            if isinstance(row, dict):
+                for leg in row.get("legs") or []:
+                    live.append(self._order(leg, observed_at))
         # Sorted here rather than trusted from the wire, exactly as `positions` is: a vendor is
         # free to change its ordering between calls and `DETERMINISM_SPEC` is not.
         return tuple(sorted(live, key=lambda order: (order.symbol, order.order_id)))
@@ -459,6 +479,7 @@ class AlpacaClient:
             # a live target - or from no protection at all.
             order_type=str(row.get("order_type") or row.get("type") or ""),
             stop_price=_optional_decimal(row, "stop_price", "orders"),
+            side=str(row.get("side") or ""),
             observed_at=observed_at,
         )
 

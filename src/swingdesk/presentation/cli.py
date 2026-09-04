@@ -421,6 +421,21 @@ def _committed_by_live_orders(
         if isinstance(outcome.sector, portfolio.SectorCapacity)
     }
     for order in live:
+        # A SELL COMMITS NOTHING. Measured 2026-09-04, and it cost a legitimate candidate.
+        #
+        # Exposure is created by an order that OPENS. `DR-037`'s protective `oco` is a sell against
+        # a position already held and already counted in the book - so pricing it here counts the
+        # same position twice, and with a number that is not risk at all: the journalled protective
+        # submission carries the TARGET as its `limit_price` and the stop as its `stop_price`, so
+        # `limit - stop + costs` reads the whole span between them. Three of them held **5.22R of a
+        # 4R cap**, and the run refused the one candidate that fit.
+        #
+        # Read from the venue's own `side` rather than from our id scheme. A prefix test would be
+        # the shortcut `DR-032` names - it would also miss a protective order placed by hand, which
+        # commits nothing either, for the same reason.
+        if getattr(order, "side", "") == "sell":
+            continue
+
         client_order_id = getattr(order, "client_order_id", "")
         submission = journal.submission_by_order_id(client_order_id)
         if submission is None:  # pragma: no cover - `ours` selected these from the same table

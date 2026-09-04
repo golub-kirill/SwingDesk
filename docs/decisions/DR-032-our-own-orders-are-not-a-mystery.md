@@ -89,6 +89,37 @@ limit, a submission that cannot be read: each means a slot is held whose size is
 alternative — treating it as zero — is the `unavailable`-admits-unchecked inversion (`DR-025` §2.1)
 in the one place it is paid for in orders.
 
+## 3.1 Amendment, 2026-09-04 - a SELL commits nothing, and this counted it
+
+**Appended, per `AGENTS.md` §11 rule 2.** §3 was right that a resting order of ours consumes a slot
+and its R. It did not say *which* resting orders, because when it was written every order this
+system could place was an entry. `DR-037` added one that is not.
+
+**The measurement.** With three protective `oco`s standing, the pass reported:
+
+```
+book holds 3 position(s) at 2.43R; resting orders hold 5.22R more
+PASS  0 within the caps, 101 passed over
+```
+
+The cap is 4R. The three protections alone held more than the whole of it, and the one candidate
+that fit was refused.
+
+**The arithmetic is not merely double-counting, it is a number that is not risk.** A protective
+submission is journalled with the TARGET as its `limit_price` and the stop as its `stop_price`, so
+`limit - stop + costs` reads the entire span between them - `70.03 - 61.70` for `AIS`, about 8.33 a
+share against a real 1R of roughly 4.16. The position it protects is *already* counted, in the book,
+at the right number.
+
+**Read from the venue's own `side`.** Not from our id prefix: that is the shortcut §1 names, and it
+would also miss a protective order placed by hand, which commits nothing either and for the same
+reason. Exposure is created by an order that OPENS.
+
+**Why the direction still matters.** Over-counting refuses a legitimate candidate rather than
+admitting an illegitimate one, which is the safe way to be wrong. It is still wrong, and this
+particular wrongness lasts as long as the protection does - which is the life of the position. **A
+machine that stops trading the moment it protects itself has not been made safe.**
+
 ## 4. What moved in `_submit`, and why the order had to change
 
 The allocation now depends on the venue, and the venue is read only after the arming check —
