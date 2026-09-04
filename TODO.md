@@ -2433,7 +2433,10 @@ is for where no gate can reach.
       the threshold restated — the title, §1, §3 and §6 all name −15R. That is a registration change.
       **Task 8's blocker is discharged and a different one replaced it**: the trade log exists
       (`docs/prereg/results/PR-005-trades.csv`) and no longer reproduces (§5 above, owner's call).
-      New research is also suspended, overridden for `PR-013` only.
+      ~~New research is also suspended, overridden for `PR-013` only.~~ **Stale — the suspension was
+      LIFTED ENTIRELY by the owner on 2026-08-30** (§2 of this file carries the ruling). Re-read
+      that entry rather than this line; it is the blocker-expires shape §6 records, three entries
+      later.
       Corrected forward in `PR-009` §10, `prereg/README.md`, `DR-006` §18, `ALLOCATION_SPEC.md`,
       `GO_LIVE_GATES.md` and `CI_POLICY.md`.
 - [ ] **`[v]` Reserved prereg ids with nothing written yet:** PR-001b (unblocked, writable now) ·
@@ -2441,8 +2444,28 @@ is for where no gate can reach.
       forward test). **Checked 2026-08-30 against `docs/prereg/README.md`**, which is the index gate
       3f keeps honest and the only place this belongs; `PR-011` is also unwritten and is tracked in
       its own item two rows down, which is why it is absent here rather than missing.
-- [ ] **`[v]` `PR-011` — screening out the instrument classes that cannot hold a stop — IS NOT
-      WRITTEN.** Migrated here 2026-08-22 from `SESSION-HANDOFF-2026-08-22.md` §3 before that file
+- [x] **`[v]` ~~`PR-011` — screening out the instrument classes that cannot hold a stop — IS NOT
+      WRITTEN.~~ WRITTEN 2026-09-04, and writing it SPLIT the question in two.**
+      `docs/prereg/PR-011-stop-integrity-by-volatility-band.md` registers the half with no prior
+      fitted on it — *does a 2 × ATR stop overshoot more on names whose ATR is a large fraction of
+      their price* — and it is **confirmatory**. The CLASS half is `PR-011b`, reserved in the index,
+      **exploratory in advance** for whoever writes it: the sign flip recorded below was seen on the
+      fitted data, and `PREREG_TEMPLATE.md` rule 3 does not care who saw it.
+      **Three things the writing established that reading would not have.**
+      • **The gap rates below are a prior this repository cannot currently reproduce.** They were
+      migrated from a deleted session handoff and no tool re-derives them. `PR-011b` measures them;
+      it may not cite them.
+      • **`DR-010` records that the broker charges NO commission** — `PR-013` §4 cites *"commission
+      0.005 per share (assumed:DR-010)"*, which that record does not say, and `PR-013`'s own
+      amendment A-1 then dropped commission for a different reason. `PR-011` names the model rather
+      than copying the line.
+      • **The primary statistic is deliberately NOT expectancy**, and Kaminski & Lo (*JFM* 18, 2014)
+      is why: under a random walk a stop-loss always reduces expected return, so judging a stop on
+      what it earns measures the return process. Ang, Hodrick, Xing & Zhang (*JF* 61:1, 2006) is the
+      confound in the other direction — a high-ATR%-of-price screen is a crude idiosyncratic-
+      volatility screen, and that literature predicts the excluded names underperform for reasons
+      that have nothing to do with stops. Measuring stop OVERSHOOT keeps the two apart.
+      Migrated here 2026-08-22 from `SESSION-HANDOFF-2026-08-22.md` §3 before that file
       was deleted; it lived nowhere else, which is why it is now in the one open-work list
       (`AGENTS.md` §10.7).
       **The finding it rests on:** the gap rate is not a general property of holding overnight. It

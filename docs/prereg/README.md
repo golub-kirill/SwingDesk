@@ -21,9 +21,18 @@ has to happen first, not the thing that has to happen last.
 | `PR-008` | Is the assumed 5bp slippage an understatement of the spread this universe pays? | **reported — INCONCLUSIVE**, then corrected | — |
 | `PR-009` | Is a −15R drawdown limit distinguishable from ordinary sequence luck? | **registered**, and its subject moved — see its §10 first amendment, 2026-08-25: the live threshold is 20 percent of equity and has never been −15R | ~~a trade log — none exists~~ **it exists** (`results/PR-005-trades.csv`, 2026-08-16). Blocked instead on that log no longer reproducing (`TODO.md` §5) and on the research suspension |
 | `PR-010` | Does EDGE resolve the spread level Corwin-Schultz and Abdi-Ranaldo could not? | **reported — REJECT** | — |
-| `PR-011` | Should instrument classes that cannot hold a stop be screened out? | not written | — id reserved 2026-08-22, see `TODO.md` §5 |
+| `PR-011` | Does a 2 × ATR stop behave as the risk model assumes, on names whose ATR is a large fraction of their price? | **registered** 2026-09-04 | — the runner is not built; §8's expected count is step 1 of it |
+| `PR-011b` | Should whole instrument CLASSES whose stops are unenforceable — bond and foreign-market ETFs — be screened out? | not written | — **exploratory in advance** when written: the class evidence in `TODO.md` §5 includes a sign flip seen on the fitted data, so no class study judged on expectancy can be confirmatory. `PR-011`'s appendix carries the constraint |
 | `PR-012` | Does a cross-sectional ranking beat plain momentum on a capacity-constrained book? | **reported — REFUSED** 2026-08-24, the minimum sample is not met on two of three arms | `CARD-001`; the capacity cap caps the sample, and both caps are ratified |
 | `PR-013` | Does relative strength separate forward returns **at all**, measured on names rather than on a four-position book? | **reported — `inconclusive`** 2026-08-24, and the verdict understates it: **all six GROSS intervals include zero**, so the ordering does not separate forward returns before costs are considered at all. **Exploratory by declaration** (§0b) | The sample rule was MET — 142 holdout dates against a minimum of 100 — which is what `PR-012` could not reach. `CARD-001`'s inputs stay `unset` |
+
+**`PR-011`'s question narrowed when it was written, 2026-09-04, and the half that was cut is
+`PR-011b`.** The id was reserved on 2026-08-22 for *"should instrument classes that cannot hold a
+stop be screened out"*. Writing it exposed that the two halves are not the same study: the ATR-vs-price
+half has no prior fitted on it and is confirmatory, while the CLASS half is contaminated — `TODO.md`
+§5 records a sign flip in mean net R observed on the fitted data, which `PREREG_TEMPLATE.md` rule 3
+makes exploratory for whoever writes it. Splitting them is what keeps the clean half clean; a
+citation of `PR-011` written before this date means the wider question.
 
 **Three ids collided on 2026-08-09 and several studies moved.** Three efforts registered studies without
 seeing each other. `RECONCILIATION_PLAN.md` D-R4 awards a contested id to the earliest commit
