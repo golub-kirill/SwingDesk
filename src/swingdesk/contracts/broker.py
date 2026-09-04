@@ -270,6 +270,14 @@ class PlacedOrder(BaseModel):
                     "records and the venue does not hold protects nothing.",
     )
 
+    side: str = Field(
+        default="",
+        description="`buy` or `sell`, as the venue names it. Read because an order's SIDE is what "
+                    "says whether it can commit exposure at all: a buy opens and a sell on a held "
+                    "position closes. Counting a protective sell as new exposure held 5.22R of a "
+                    "4R cap on 2026-09-04 and refused a legitimate candidate (`DR-032`).",
+    )
+
     observed_at: datetime
 
 

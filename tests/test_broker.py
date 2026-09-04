@@ -34,6 +34,7 @@ from swingdesk.broker.reconcile import (
     Unprotected,
     reconcile,
     restorable,
+    unprotected,
     unrecorded_fills,
 )
 from swingdesk.contracts.broker import BrokerPosition, FillKind, PositionSide, Side
@@ -435,3 +436,77 @@ def test_the_two_kinds_are_split_and_nothing_is_dropped() -> None:
 
 def test_no_findings_is_not_an_error() -> None:
     assert restorable([]) == ((), ())
+
+
+# ------------------------------------------------------------------ an OCO's stop rests as a LEG
+#
+# Measured 2026-09-04 against the live venue. `status=open` returns the `oco` PARENT and not its
+# stop, because the stop's status is `held` and `held` is not `open`. `nested=true` is the only
+# shape of this request that returns it at all:
+#
+#     status=open                 -> 3 rows, all `limit`, 0 legs
+#     status=open&nested=false    -> 3 rows, all `limit`, 0 legs
+#     status=open&nested=true     -> 3 rows, all `limit`, 3 legs
+#
+# Three positions were protected, `unprotected` could not see any of it, and the pass stopped with
+# 101 candidates behind protection the venue was holding.
+
+OCO_WITH_LEG = [{
+    "id": "1e5b565a-0000-0000-0000-000000000001",
+    "client_order_id": "swingdesk-protect-2026-09-03-TEST.1",
+    "symbol": "TEST.1", "status": "accepted", "side": "sell", "type": "limit",
+    "order_class": "oco", "limit_price": "70.03", "stop_price": None, "filled_qty": "0",
+    "submitted_at": "2026-09-03T21:49:08.975524Z",
+    "legs": [{
+        "id": "1e5b565a-0000-0000-0000-000000000002",
+        "client_order_id": "venue-generated-leg-id",
+        "symbol": "TEST.1", "status": "held", "side": "sell", "type": "stop",
+        "limit_price": None, "stop_price": "61.70", "filled_qty": "0",
+        "submitted_at": "2026-09-03T21:49:08.975524Z",
+    }],
+}]
+
+
+def test_open_orders_asks_for_the_legs(tmp_path: Path) -> None:
+    """THE REGRESSION. Without `nested=true` the venue never mentions the stop that is standing."""
+    client = _client(tmp_path, {"/orders": OCO_WITH_LEG})
+    client.open_orders(OBSERVED_AT)
+    urls = [url for _method, url in client.transport.calls]
+    assert any("nested=true" in url for url in urls), (
+        f"open_orders asked {urls}; an OCO's stop leg rests as `held`, which `status=open` "
+        f"excludes, so without `nested=true` a protected position reads as naked"
+    )
+
+
+def test_open_orders_returns_the_stop_leg_as_a_resting_order(tmp_path: Path) -> None:
+    """A leg IS a resting order. `DR-036` asks what is standing, not what has a parent."""
+    live = _client(tmp_path, {"/orders": OCO_WITH_LEG}).open_orders(OBSERVED_AT)
+
+    assert len(live) == 2, f"parent and leg, got {[(o.order_type, o.status) for o in live]}"
+    stops = [o for o in live if o.order_type == "stop"]
+    assert len(stops) == 1
+    assert stops[0].stop_price == Decimal("61.70")
+    assert stops[0].side == "sell"
+
+
+def test_the_flattened_leg_protects_the_position_it_belongs_to(tmp_path: Path) -> None:
+    """The whole point, end to end: with the leg visible, the position is no longer unprotected."""
+    live = _client(tmp_path, {"/orders": OCO_WITH_LEG}).open_orders(OBSERVED_AT)
+    held = _position("TEST.1", shares=100, entry="65.70")
+    held = held.model_copy(update={
+        "initial_stop": Decimal("61.70"), "current_stop": Decimal("61.70")})
+
+    assert unprotected([held], live, "NYSE") == (), (
+        "the venue is holding a stop at exactly the book's price and the position still read as "
+        "naked - which is the 2026-09-04 defect"
+    )
+    assert unprotected([held], [o for o in live if o.order_type != "stop"], "NYSE"), (
+        "the positive control: drop the leg and it must go back to reading naked, or this test "
+        "would pass for a reason that has nothing to do with the leg"
+    )
+
+
+def test_a_placed_order_carries_its_side(tmp_path: Path) -> None:
+    """`side` is what says an order can commit exposure at all. A buy opens; a sell closes."""
+    live = _client(tmp_path, {"/orders": OCO_WITH_LEG}).open_orders(OBSERVED_AT)
+    assert {o.side for o in live} == {"sell"}

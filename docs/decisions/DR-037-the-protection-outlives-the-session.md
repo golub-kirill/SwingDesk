@@ -172,6 +172,33 @@ project has paid for at the boundary between what a document says and what the v
 **The count is five**: three legs to a bracket, a session from the exchange, prices on the tick, an
 order class that does not replace an order type, and an `oco` whose confirmation is not its echo.
 
+## 5.3 Amendment, 2026-09-04 - a `held` leg is not an `open` order
+
+**The re-read from §5.2 was necessary and not sufficient**, and only the live venue could say so.
+With the protection standing, the pass still called all three positions naked.
+
+**The measurement**, three requests against the same account:
+
+```
+status=open                 -> 3 rows, all `limit` parents, 0 legs
+status=open&nested=false    -> 3 rows, all `limit` parents, 0 legs
+status=open&nested=true     -> 3 rows, all `limit` parents, 3 legs
+```
+
+An `oco`'s stop rests with status **`held`**, and `held` is not `open`. The server-side filter this
+project chose deliberately - *"the venue's own filter, applied at the server rather than here"* -
+excludes the very orders `DR-036` exists to find. `nested=true` is the only shape of the request
+that returns them at all.
+
+`open_orders` now asks for them and **flattens the legs back out**, because a leg IS a resting
+order: `DR-036` asks what is standing at the venue, and a stop is not less standing for having a
+parent.
+
+**This is the fourth wire-format fact this project has been wrong about and the venue has settled**,
+and the third in two days. The pattern is stable enough to state as a rule: *when the question is
+what the venue is holding, the answer comes from the venue, in the shape the venue actually sends -
+not from its documentation, and not from our own record of what we asked for.*
+
 ## 6. What this does NOT do
 
 - **It does not move a stop, close a position, or cancel anything.** `access.allowed_methods` is
