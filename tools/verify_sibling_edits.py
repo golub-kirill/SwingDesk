@@ -19,6 +19,11 @@ overlapping line ranges **expressed in merge-base coordinates** - so an overlap 
 changed the same original text, not merely the same file. Two sessions appending to different parts
 of `TODO.md` do not collide and are not reported; two sessions rewriting one table row are.
 
+**A DELETION counts as a change to every line the file had**, so one branch removing what another
+is rewriting is reported - the collision a textual merge settles silently, in whichever direction
+the merge strategy prefers. A file both branches removed is not reported: there is nothing to
+choose between.
+
 **ADVISORY BY DESIGN: it prints and returns 0.** Parallel work is this repository's normal mode
 (`HANDOFF.md` §2) and an overlap is often legitimate - the same shared log, the same registry.
 Vetoing it would block ordinary work, and a gate that blocks ordinary work gets bypassed
@@ -94,20 +99,54 @@ def _touched(base: str, ref: str) -> dict[str, list[tuple[int, int]]]:
     A pure insertion has a zero-length base range; it is widened to a single line so that two
     branches appending at the same anchor - the end of one file, the same table - are seen to
     collide. Without that, the commonest real overlap is invisible.
+
+    **A DELETION covers the file's whole base-side extent**, so a branch that removes a file
+    collides with a branch editing any line of it. That is arguably the overlap that most needs a
+    person: a textual merge settles delete-against-edit silently, in whichever direction the merge
+    strategy prefers, and nobody is asked which was meant. Until 2026-09-04 it was invisible here -
+    a deleted file's header reads `+++ /dev/null`, the path was dropped on that line, and the file
+    never entered the map at all. The base-side path comes from `--- a/` instead, which is the one
+    place the diff still names it.
     """
     diff = _git("diff", "--unified=0", "--no-color", f"{base}..{ref}")
     ranges: dict[str, list[tuple[int, int]]] = {}
     path = ""
+    removed = ""
+    # `---` and `+++` are read only in a file's HEADER, between `diff --git` and the first hunk.
+    # Inside a hunk they are content: a removed line reading `-- a/x` is printed as `--- a/x`, and
+    # this repository's documents quote diffs. The old code had the same ambiguity on `+++ b/`;
+    # bounding it costs one flag and the first `@@` is an exact end marker, since a body line can
+    # never begin with one.
+    in_header = False
     for line in (diff or "").splitlines():
-        if line.startswith("+++ b/"):
+        if line.startswith("diff --git "):
+            path, removed, in_header = "", "", True
+        elif in_header and line.startswith("--- a/"):
+            removed = line.removeprefix("--- a/").strip()
+        elif in_header and line.startswith("+++ b/"):
             path = line.removeprefix("+++ b/").strip()
-        elif line.startswith("+++ /dev/null"):
-            path = ""
-        elif path and (match := HUNK.match(line)):
-            start = int(match.group("start"))
-            count = int(match.group("count") or 1)
-            ranges.setdefault(path, []).append((start, start + max(count, 1) - 1))
+        elif in_header and line.startswith("+++ /dev/null"):
+            path = removed
+        elif (match := HUNK.match(line)) is not None:
+            in_header = False
+            if path:
+                start = int(match.group("start"))
+                count = int(match.group("count") or 1)
+                ranges.setdefault(path, []).append((start, start + max(count, 1) - 1))
     return ranges
+
+
+def _deleted(base: str, ref: str) -> set[str]:
+    """Paths that existed at `base` and are gone at `ref`.
+
+    Asked separately from `_touched` because it answers a different question: that one says which
+    original lines a branch changed, this one says which files it removed outright. A path BOTH
+    sides removed is not a collision - there is nothing for a merge to choose between, and nothing
+    for a person to decide - and it is the one exclusion this gate can make with no judgement at
+    all, in the same spirit as `_same_as_trunk` below.
+    """
+    listing = _git("diff", "--name-only", "--diff-filter=D", f"{base}..{ref}")
+    return {line.strip() for line in (listing or "").splitlines() if line.strip()}
 
 
 def _same_as_trunk(branch: str, path: str) -> bool:
@@ -117,16 +156,12 @@ def _same_as_trunk(branch: str, path: str) -> bool:
     two files and hashing them here - the same object id is the strongest possible statement that
     there is nothing to choose between.
 
-    **A path missing from one side is not a match, and that guard is DEFENSIVE rather than
-    exercised.** `rev-parse` fails for a file absent at that ref and `_git` returns `None`; two
-    `None`s compared equal would read as *identical, nothing to decide*. The obvious way to reach
-    it - one branch deletes what the other rewrites - cannot happen today, because `_touched` above
-    sets `path = ""` on `+++ /dev/null` and so never records a deletion at all. **That is a gap in
-    this gate rather than a property of it**, measured 2026-09-04 and written up in `TODO.md` §6;
-    the guard is here so that closing the gap does not silently open a hole in this function.
-
-    It is stated instead of tested for exactly that reason. A test would have to reach a branch the
-    caller cannot produce, and `AGENTS.md` §10.8 says the honest move is to say which it is.
+    **A path missing from one side is not a match, and that guard is now REACHED rather than
+    merely defensive.** `rev-parse` fails for a file absent at that ref and `_git` returns `None`;
+    two `None`s compared equal would read as *identical, nothing to decide*. The way to reach it is
+    one branch deleting what the other rewrites, which `_touched` above could not record until
+    2026-09-04 - the guard was written on the same day against the gap being closed, and closing it
+    is what turned the sentence from a prediction into a covered case.
     """
     mine = _git("rev-parse", f"{TRUNK}:{path}")
     theirs = _git("rev-parse", f"{branch}:{path}")
@@ -165,7 +200,12 @@ def main() -> int:
         if not mine:
             continue
         compared += 1
+        gone_mine, gone_theirs = _deleted(base, "HEAD"), _deleted(base, branch)
         for path in sorted(set(mine) & set(theirs)):
+            if path in gone_mine and path in gone_theirs:
+                # Both sides removed it. Nothing to choose between and nothing to merge - the one
+                # deletion case that is not a collision.
+                continue
             if _same_as_trunk(branch, path):
                 # NOTHING TO DECIDE BETWEEN, so nothing to report. Measured 2026-09-04: this gate
                 # named eight overlaps against `claude/a-research-instrument-not-a-broker`, a branch
@@ -191,9 +231,23 @@ def main() -> int:
                 f"{low}" if low == high else f"{low}-{high}" for low, high in hits[:6]
             )
             more = f" (+{len(hits) - 6} more)" if len(hits) > 6 else ""
-            reports.append(
-                f"{path}: both this branch and `{branch}` changed base line(s) {where}{more}"
-            )
+            # The stated subject has to match what happened, or the reader acts on the wrong thing
+            # (`AGENTS.md` §12: a defensible verdict under a wrong description). A deletion is not
+            # "both changed these lines", and it is the case a merge settles without asking.
+            if path in gone_theirs:
+                reports.append(
+                    f"{path}: `{branch}` DELETES this file; this branch changed base line(s) "
+                    f"{where}{more}"
+                )
+            elif path in gone_mine:
+                reports.append(
+                    f"{path}: this branch DELETES this file; `{branch}` changed base line(s) "
+                    f"{where}{more}"
+                )
+            else:
+                reports.append(
+                    f"{path}: both this branch and `{branch}` changed base line(s) {where}{more}"
+                )
 
     for report in sorted(set(reports)):
         print(f"  {report}")
