@@ -30,7 +30,12 @@ from swingdesk.broker.policy import PolicyRefused
 
 # Imported from the MODULE and not from the package: `swingdesk.broker` re-exports a FUNCTION
 # called `reconcile`, which shadows the module of the same name on an `import ... as`.
-from swingdesk.broker.reconcile import reconcile, unrecorded_fills
+from swingdesk.broker.reconcile import (
+    Unprotected,
+    reconcile,
+    restorable,
+    unrecorded_fills,
+)
 from swingdesk.contracts.broker import BrokerPosition, FillKind, PositionSide, Side
 from swingdesk.contracts.position import Position
 
@@ -380,3 +385,53 @@ def test_unrecorded_fills_names_executions_with_no_position(tmp_path: Path) -> N
     fills = _client(tmp_path, {"/activities/": FILLS}).fills(OBSERVED_AT)
     assert unrecorded_fills(fills, []) == fills
     assert unrecorded_fills(fills, [_position("TEST.1")]) == ()
+
+
+# ------------------------------------------------------------ which unprotected positions get one
+#
+# `DR-037` §3's line, and it has to stay narrow. The predicate was written twice - inline in
+# `cli._submit` and again in `tools/verify_submission_guards.py` - which is the drift
+# `tests/test_guard_parity.py` exists to catch. It is one function now, and these are its tests.
+
+
+def _finding(instrument_id: str, venue_stop: Decimal | None) -> Unprotected:
+    return Unprotected(
+        instrument_id=instrument_id, book_stop=Decimal("45.00"), shares=100,
+        venue_stop=venue_stop, reason="fixture",
+    )
+
+
+def test_a_position_with_nothing_resting_is_restored() -> None:
+    """The case `DR-037` was ruled for: the protection was decided, sent, and expired with the
+    session. Placing it again restores; it moves nothing."""
+    keep, leave = restorable([_finding("AIS", None)])
+    assert [f.instrument_id for f in keep] == ["AIS"]
+    assert leave == ()
+
+
+def test_a_stop_resting_at_the_wrong_price_is_left_alone() -> None:
+    """THE ONE THAT MATTERS, because getting it wrong applies a move nobody approved.
+
+    A stop standing at a price the book does not record is a stop somebody MOVED. `D6` governs a
+    move. Placing a second one would leave two triggers on one position, and `unprotected` reads
+    the HIGHEST as the one in force - so restoring here would silently enact the move.
+    """
+    keep, leave = restorable([_finding("BTSG", Decimal("52.00"))])
+    assert keep == ()
+    assert [f.instrument_id for f in leave] == ["BTSG"]
+
+
+def test_the_two_kinds_are_split_and_nothing_is_dropped() -> None:
+    """Every finding lands in exactly one side. A position quietly in neither is one nobody acts on."""
+    findings = [
+        _finding("AIS", None), _finding("BTSG", Decimal("52.00")),
+        _finding("DINO", None), _finding("CM", Decimal("110.00")),
+    ]
+    keep, leave = restorable(findings)
+    assert [f.instrument_id for f in keep] == ["AIS", "DINO"]
+    assert [f.instrument_id for f in leave] == ["BTSG", "CM"]
+    assert len(keep) + len(leave) == len(findings)
+
+
+def test_no_findings_is_not_an_error() -> None:
+    assert restorable([]) == ((), ())

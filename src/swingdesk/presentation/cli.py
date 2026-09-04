@@ -792,7 +792,7 @@ def _submit(
         # governs the move, and this system has no verb that could replace the standing one anyway.
         # Only the position holding nothing is placed for.
         restored = _restore_protection(
-            [finding for finding in naked if finding.venue_stop is None],
+            broker_pkg.restorable(naked)[0],
             positions, client, registry, policy, now, _record,
         )
         naked = broker_pkg.unprotected(
