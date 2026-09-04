@@ -457,3 +457,29 @@ def test_the_two_families_disagree_rather_than_sharing_an_answer() -> None:
     assert up_signals, "the breakout family took something"
     assert down_signals, "so did the reversion family"
     assert not (up_signals & down_signals), "and they are not the same trades"
+
+
+def test_an_atr_larger_than_half_the_price_is_counted_rather_than_crashing_the_run() -> None:
+    """`stop >= entry_price` admits a NEGATIVE stop: it is below entry and the arithmetic is finite.
+
+    `trade_management/sizing.py` added this second check on the live path after a candidate came
+    back with a risk per share larger than its own entry price. The engines were one guard behind,
+    and `Trade.stop_price` is `gt=0` - so the run did not mis-measure the trade, it DIED on a
+    pydantic error part-way through and lost everything walked so far. This enum's own docstring
+    promises the opposite: counted, never discarded.
+
+    Reachable rather than hypothetical - the live path has refused exactly this shape on a real
+    instrument whose price round-tripped while ATR still carried the spike.
+    """
+    rows = _flat(3, "10") + [("10", "12", "10", "12")] + _flat(5, "10")
+    series = _series(rows)
+    gate = [True] * len(rows)
+
+    result = run_arm(series, gate, _atr(series, "9"), _config())
+
+    assert result.signals == 1, "the trigger fired; this is not a test about the trigger"
+    assert result.trades == []
+    assert result.skipped[Skipped.STOP_NOT_POSITIVE] == 1
+    assert result.skipped[Skipped.STOP_NOT_BELOW_ENTRY] == 0, (
+        "the first guard does not catch it, which is the whole reason for the second"
+    )
