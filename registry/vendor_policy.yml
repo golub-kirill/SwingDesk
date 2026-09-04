@@ -1,0 +1,79 @@
+# The price vendor's network policy, in one committed machine-readable file.
+#
+# Same instrument and the same argument as `directory_pull_policy.yml`, which `DR-008` required and
+# gate 22 enforces — applied at last to the dependency this project asks the most of.
+#
+# **The asymmetry that paid for this, measured 2026-09-04.** The broker has `broker_policy.yml`.
+# The symbol directory has `directory_pull_policy.yml`. The price vendor had nothing: no timeout, no
+# byte cap, no retry budget, no pause between requests. Every one of those lived as a default inside
+# `yfinance`, where nobody in this repository could see it or change it deliberately.
+#
+# And it is not the small dependency. Counted from the run log: the 18:30 pass fetches every member
+# of the admitted universe — 1,142 on the day this was written — and the 19:30 pass fetches them
+# again, so about **2,300 requests a day**, against the directory's two files and the broker's
+# handful of GETs. **The limits were absent from exactly the place they matter most.**
+#
+# **What this file does NOT do, stated so nobody looks for it: it authors no number.** Every value
+# below is the one already in force, moved from a Python literal or from a vendor default into a
+# place a reviewer sees. `AGENTS.md` §8 governs a threshold this project INVENTS; recording one that
+# is already operating is not that, and the day any of these changes it will be a commit with a
+# reason rather than an edited line.
+#
+# **The rate-limit question, answered with this project's own evidence rather than with folklore.**
+# The commonly-quoted figure for this vendor is 360 requests an hour, and it comes from a report of
+# 1-minute bars over a 7-day window — a far heavier endpoint than the daily bars fetched here.
+# Measured across 48,988 journalled decisions and every line of `data/daily_run.log`: **zero HTTP
+# 429s and zero `VendorUnavailable`**. So `pause_seconds` is 0.0 because that is what has been
+# running, not because nobody thought about it — and it is here, named, so the day a `429` appears
+# the fix is one committed value rather than an argument about where the constant should live.
+#
+# Gate 41 (`tools/verify_vendor_policy.py`) checks this file against `swingdesk/market_data/`: every
+# key present and well-formed, and the adapter READING them rather than carrying a second copy.
+
+version: 1
+
+source:
+  # Yahoo Finance, reached through `yfinance` (`ADR-0001`). Not an official API — an unofficial
+  # client over a consumer site's endpoints, which is why its output is validated at the boundary
+  # as untrusted input (`SECURITY.md` §6) and why its limits are worth writing down at all.
+  vendor: yahoo
+  label: Yahoo Finance via yfinance
+  client: yfinance
+
+limits:
+  # Seconds. `yfinance` takes no timeout argument on `Ticker.history`, so today this records the
+  # value the underlying HTTP client uses rather than one this project sets. Named here because a
+  # limit nobody can see is a limit nobody can change: gate 41 requires the key, and the day the
+  # client exposes a timeout the adapter reads THIS rather than a new literal.
+  request_timeout_seconds: 30
+
+  # Seconds between consecutive fetches in a bulk pass. **0.0 is the value in force**, and the
+  # header above says why it is defensible rather than accidental. `tools/refresh_universe.py`
+  # already accepts `--pause`; it now defaults to this instead of to a hard-coded zero.
+  pause_seconds: 0.0
+
+  # `DR-015` §3, ratified: three attempts, thirty seconds apart, and a ninety-second ceiling on the
+  # sleeping so a vendor outage costs the run a fixed amount rather than an unbounded one. These
+  # were `ATTEMPTS`, `DELAY_SECONDS` and `BUDGET_SECONDS` in `market_data/retry.py`; the record is
+  # unchanged and this is where the numbers now live.
+  max_attempts: 3
+  retry_delay_seconds: 30.0
+  retry_budget_seconds: 90.0
+
+windows:
+  # What the vendor will actually serve per interval, measured 2026-08-01 (`ADR-0001`). Requesting
+  # more silently returns less, which is why the ceiling is stated rather than discovered — a
+  # request for five years of half-hourly bars comes back as sixty days and looks like a short
+  # history rather than like a refusal.
+  #
+  # `null` means no ceiling: daily bars go back as far as the vendor holds them — AAPL to
+  # 1980-12-12, CNQ.TO to 1995-01-12, both verified.
+  day_max_lookback_days: null
+  hour_max_lookback_days: 730      # about 725 trading days
+  half_hour_max_lookback_days: 60  # the vendor's own error message states this limit
+
+fetch:
+  # `auto_adjust=False`, deliberately and not by omission: this system stores RAW bars and applies
+  # its own corporate-action handling (`DR-016`). An adjusted series would silently rewrite history
+  # under a bitemporal store, which is the one thing it cannot recover from.
+  auto_adjust: false

@@ -15,6 +15,7 @@ import re
 import sys
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
+from functools import cache
 from typing import SupportsFloat
 
 from swingdesk.contracts.market import (
@@ -26,15 +27,37 @@ from swingdesk.contracts.market import (
     Series,
 )
 from swingdesk.contracts.reference import Classification, Instrument, SectorWeight
+from swingdesk.market_data import policy as vendor_policy
+from swingdesk.market_data.policy import VendorPolicy
 from swingdesk.reference_data.classification import FUND_KINDS
 
-#: What Yahoo will serve, measured 2026-08-01 (ADR-0001). Requesting more silently returns less,
-#: so the ceiling is stated here rather than discovered.
-MAX_LOOKBACK_DAYS: dict[Interval, int | None] = {
-    Interval.DAY: None,      # full history: AAPL to 1980-12-12, CNQ.TO to 1995-01-12
-    Interval.HOUR: 730,      # ~725 trading days
-    Interval.HALF_HOUR: 60,  # 60 trading days; Yahoo's own error states the limit
-}
+
+@cache
+def policy() -> VendorPolicy:
+    """The committed vendor policy, read once per process.
+
+    **Cached because `fetch` is called once per universe member** - 1,142 times in an evening pass,
+    and re-parsing the same YAML that often is work nobody asked for. `cache_clear()` is the seam a
+    test uses to point this at a different file; nothing in `src/` calls it.
+    """
+    return vendor_policy.load()
+
+
+def max_lookback_days(interval: Interval) -> int | None:
+    """What the vendor will serve for this interval, or `None` for as far back as it holds.
+
+    **Read from `registry/vendor_policy.yml`, not from a literal here** - `DR-008`'s argument
+    applied to the dependency this project asks the most of. Requesting more than the ceiling
+    silently returns less, which is why it is stated rather than discovered: a request for five
+    years of half-hourly bars comes back as sixty days and looks like a short history rather than
+    like a refusal.
+    """
+    current = policy()
+    return {
+        Interval.DAY: current.day_max_lookback_days,
+        Interval.HOUR: current.hour_max_lookback_days,
+        Interval.HALF_HOUR: current.half_hour_max_lookback_days,
+    }[interval]
 
 _INTERVAL_ARG = {Interval.DAY: "1d", Interval.HOUR: "1h", Interval.HALF_HOUR: "30m"}
 
@@ -73,12 +96,17 @@ def fetch(
     import yfinance as yf
 
     if period is None:
-        ceiling = MAX_LOOKBACK_DAYS[interval]
+        ceiling = max_lookback_days(interval)
         period = "max" if ceiling is None else f"{ceiling}d"
 
     try:
         frame = yf.Ticker(instrument.vendor_symbol).history(
-            period=period, interval=_INTERVAL_ARG[interval], auto_adjust=False
+            period=period, interval=_INTERVAL_ARG[interval],
+            # From the committed policy, never a literal: this system stores RAW bars and
+            # applies its own corporate-action handling (`DR-016`). An adjusted series would
+            # rewrite history under a bitemporal store, which it cannot recover from - so the
+            # value sits where a change to it is a commit a reviewer sees.
+            auto_adjust=policy().auto_adjust,
         )
     except Exception as error:
         raise VendorUnavailable(f"{instrument.vendor_symbol} {interval.value}: {error}") from error
