@@ -1176,7 +1176,8 @@ def _result_with_one_trade():
 
 
 def _stub_submit_client(monkeypatch, sent: list, held=(), live_orders=(), unavailable=None,
-                        protected: list | None = None, protect_raises=None):
+                        protected: list | None = None, protect_raises=None,
+                        unavailable_on_reread=None):
     """A venue stub. `held` and `live_orders` are what it already holds - empty by default.
 
     `DR-027` §11: submission reads the venue before it adds to it, because `positions.duckdb` is
@@ -1184,6 +1185,16 @@ def _stub_submit_client(monkeypatch, sent: list, held=(), live_orders=(), unavai
     answered nothing here would test a path production does not take.
     """
     from swingdesk import broker as broker_pkg
+
+    #: What is standing at the venue right now, which a protective order ADDS to. `live_orders` is
+    #: the opening state; anything `protect` places joins it, so a re-read sees it the way the real
+    #: venue's `GET /v2/orders` does.
+    resting = list(live_orders)
+
+    #: How many times the venue's order book has been asked for. The run reads it once before the
+    #: guards and again after restoring protection, and `unavailable_on_reread` fails only the
+    #: second - the case where the write landed and the confirmation did not.
+    reads = []
 
     class _Client:
         def __init__(self, arming):
@@ -1197,10 +1208,27 @@ def _stub_submit_client(monkeypatch, sent: list, held=(), live_orders=(), unavai
         def open_orders(self, now):
             if unavailable:
                 raise broker_pkg.BrokerUnavailable(unavailable)
-            return tuple(live_orders)
+            reads.append(now)
+            if unavailable_on_reread is not None and len(reads) > 1:
+                raise broker_pkg.BrokerUnavailable(unavailable_on_reread)
+            # **Resting, not static.** A venue that forgets the order you just placed is not a
+            # venue, and the run re-reads this after restoring. The previous fixture returned the
+            # same tuple every time, which is why it could not have caught what follows.
+            return tuple(resting)
 
         def protect(self, order, now):
-            """`DR-037`: the OCO that keeps a held position protected past the entry's session."""
+            """`DR-037`: the OCO that keeps a held position protected past the entry's session.
+
+            **This returns what Alpaca returns, which is not what a helpful fake would.** Measured
+            2026-09-03 against the live venue: an `oco` answers with its PARENT - `type: limit`,
+            `order_class: oco`, `stop_price: null` - and the stop is a nested LEG that rests
+            separately. The earlier fixture returned `order_type="stop"` with a `stop_price`,
+            an object the venue never sends, so `unprotected` recognised it here and did not in
+            production: three OCOs were accepted, the re-check called all three positions naked,
+            and the pass stopped with 101 candidates behind protection that was standing.
+
+            A fake more cooperative than the system it stands for tests the fake.
+            """
             from swingdesk.contracts.broker import PlacedOrder
 
             if self.arming.stopped:
@@ -1209,11 +1237,18 @@ def _stub_submit_client(monkeypatch, sent: list, held=(), live_orders=(), unavai
                 raise protect_raises
             if protected is not None:
                 protected.append(order)
-            return PlacedOrder(
+            parent = PlacedOrder(
                 order_id=f"oco-{order.symbol}", client_order_id=order.client_order_id,
                 symbol=order.symbol, status="accepted", submitted_at=now,
+                order_type="limit", stop_price=None, observed_at=now,
+            )
+            leg = PlacedOrder(
+                order_id=f"oco-{order.symbol}-stop", client_order_id=f"{order.client_order_id}-l",
+                symbol=order.symbol, status="held", submitted_at=now,
                 order_type="stop", stop_price=order.stop_price, observed_at=now,
             )
+            resting.extend((parent, leg))
+            return parent
 
         def submit(self, order, now):
             from swingdesk.contracts.broker import PlacedOrder
@@ -2622,6 +2657,44 @@ def test_a_position_with_no_stop_at_the_venue_is_protected_before_anything_is_ad
 
     assert len(sent) == 1, "and the run then continues, because the book can be bounded again"
     assert rows["GUARDED"].outcome == "sent", "the protective order is journalled like any other"
+
+
+def test_protection_placed_but_unconfirmable_still_pauses_new_entries(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """The write landed and the confirmation did not, which is not the same as protected.
+
+    `DR-037` places the OCO and then re-reads the venue, because `DR-036`'s argument is that a stop
+    the market cannot see is not a stop - and a stop only OUR OWN write's echo can see is the same
+    claim wearing a receipt. This is the branch where the echo is all there is.
+
+    **Unavailable is not confirmation.** The caps are denominated in `entry - stop`, so a book whose
+    stops cannot be verified bounds nothing, and adding a position to it is the failure every guard
+    on this path exists to prevent. The venue may well be holding the protection; that is exactly
+    the guess this refuses to make.
+    """
+    _armed(tmp_path)
+    sent: list = []
+    protected: list = []
+    _stub_submit_client(monkeypatch, sent,
+                        held=[_venue_position("GUARDED", shares="100", entry="50")],
+                        live_orders=[],
+                        protected=protected,
+                        unavailable_on_reread="504 from the venue on the confirming read")
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book, \
+            BarStore(tmp_path / 'bars.duckdb') as bars:
+        _protected_book(book, bars)
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 2, 23, 0, tzinfo=UTC), journal, _target_registry(),
+                    book, bars)
+
+    assert [o.symbol for o in protected] == ["GUARDED"], "the protection was still attempted"
+    assert sent == [], "but nothing new is added behind a protection nobody could confirm"
+    # The refusal goes to stderr like every other `_stop_all`, and is journalled beside it.
+    printed = capsys.readouterr().err
+    assert "could not be re-read" in printed
+    assert "Unavailable is not confirmation" in printed
 
 
 def test_a_position_that_could_not_be_protected_still_pauses_new_entries(
