@@ -3215,7 +3215,8 @@ is for where no gate can reach.
       missed (b) entirely. `reference_data/universe.py:159` `to_instrument()` is the *correct*
       construction — `id` from the `DirectoryStore` symbol, `ticker` from `vendor_symbol()` — and
       both sites below bypass it.
-      - **(a) `cli.py`:29 really does derive `id` from what the user typed**, which the contract
+      - **(a) — FIXED 2026-09-04.** ~~`cli.py`:29 really does derive `id` from what the user
+        typed~~, which the contract
         forbids ("Never derived from the ticker alone"). Typing `BRK-B` mints id `BRK-B`; the
         universe path calls the same instrument `BRK.B`. That is two identities for one instrument
         in a bitemporal store, which cannot be un-split after the fact. Not yet triggered —
@@ -3267,13 +3268,25 @@ is for where no gate can reach.
         symbol a typed ticker means. Resolve when it is unambiguous, refuse when it is not
         (`AGENTS.md` §3, fail closed), and leave today's behaviour where the directory has no row —
         which keeps `.TO` and unknown symbols exactly as they are.
-      **Not built in the same pass that measured it, deliberately.** `_instrument` is called by
-      `_open_position`, which writes the bitemporal store, and by `_scan`; this entry's own last
-      line puts it behind the freeze, and §17's rule is that a change to the daily-run path gets its
-      own deliberate pass rather than riding along with a measurement. What is gone is the *reason
-      to wait* — the blocker this entry recorded was a missing directory, and there is one.
-      Blocks any historical edge claim; does not block Track-A-only PAPER. **Changes the daily-run
-      path — behind the freeze.**
+      ~~**Not built in the same pass that measured it, deliberately.**~~ **BUILT 2026-09-04, in
+      its own pass, which is what §17 asks for rather than that it never happen.** `_instrument`
+      resolves against the directory and returns one of three answers:
+      - the directory knows the symbol — by its own name, or as the vendor's form of **exactly
+        one** symbol — so typing `BRK-B` now yields `id=BRK.B` with `ticker=BRK-B`, the
+        directory's name for it and the vendor's form of it, each in its own field;
+      - the vendor's form is **ambiguous** → a refusal naming the candidates. `vendor_symbol` does
+        not invert: `AMH$G` and `AMH.PG` both map to `AMH-PG` and neither is spelled that way, so
+        choosing would put an invented identity into an append-only store (`AGENTS.md` §3);
+      - **no directory row → the old behaviour, minted, and said out loud on stderr.** Refusing
+        here would refuse every Canadian instrument over `DR-003` gap 1, which is somebody else's
+        open item. The note is what stops that being silent, and it names which of the two reasons
+        applies — the first draft blamed Canada for a US ticker's absence.
+      **No decision record**, and that is stated rather than omitted: this applies
+      `universe.to_instrument`'s existing construction to a second site and defines nothing.
+      **What is still open in this entry is only (b)'s neighbourhood** — the identity work the
+      universe path already does correctly, and the Canadian half that waits on `DR-003` gap 1's
+      wiring. The split this entry was written about can no longer be minted from the CLI.
+      Blocks any historical edge claim; does not block Track-A-only PAPER.
 - [ ] **Half the journalled runs carry `code_dirty = true`.** `a.reproducible` requires a
       byte-identical re-run from a stored manifest; a manifest pointing at a dirty tree cannot be
       replayed from its SHA. **`HANDOFF.md` §2 owns the count** — this line read ~~11 of 13~~ until

@@ -2930,3 +2930,134 @@ def test_the_same_order_as_a_BUY_does_hold_the_cap(tmp_path: Path) -> None:
 
     assert len(committed) == 1, "a resting BUY is exposure the caps have to see (`DR-032` §3)"
     assert committed[0].requested_r > 0
+
+
+# ---------------------------------------------------------------- an id is RESOLVED, not typed
+#
+# `contracts.reference` forbids deriving an id from a ticker alone; `universe.to_instrument` is the
+# construction that obeys it. This site minted `id=<what was typed>`, so `open-position BRK-B`
+# would have recorded a position under `BRK-B` while every bar the universe path stored for it is
+# under `BRK.B` - two identities for one instrument in a bitemporal store, which cannot be
+# un-split afterwards.
+#
+# Measured 2026-09-04: `bars.duckdb` holds 13 dotted ids and zero dashed, so it had not fired; and
+# `directory.duckdb` holds 13,339 symbols including `BRK.A` and NOT `BRK-B`, so the lookup that was
+# impossible in August answers now.
+
+IDENTITY_AT = datetime(2026, 9, 4, 12, 0, tzinfo=UTC)
+
+
+def _directory(tmp_path: Path, *symbols: str) -> Path:
+    """A data directory whose `directory.duckdb` carries `symbols` as of `IDENTITY_AT`."""
+    from swingdesk.reference_data.directory import DirectoryEntry, DirectoryStore
+
+    with DirectoryStore(tmp_path / "directory.duckdb") as store:
+        store.record(
+            [DirectoryEntry(symbol=s, name=f"{s} Inc", venue="N", is_etf=False,
+                            is_test_issue=False) for s in symbols],
+            IDENTITY_AT, "fixture",
+        )
+    return tmp_path
+
+
+def test_the_vendors_form_of_a_symbol_resolves_to_the_canonical_id(tmp_path: Path) -> None:
+    """THE REGRESSION, and the one that cannot be undone once it happens.
+
+    `BRK-B` is what a person types and what the price vendor uses. `BRK.B` is what the directory
+    calls it and what every stored bar is keyed by. Minting the typed form splits the instrument.
+    """
+    data = _directory(tmp_path, "BRK.B", "AIS")
+    resolved = cli._instrument("BRK-B", data, IDENTITY_AT)
+
+    assert not isinstance(resolved, str), resolved
+    assert resolved.id == "BRK.B", "the DIRECTORY's name for it, never the typed one"
+    assert resolved.ticker == "BRK-B", "and the vendor's form travels in `ticker`, where it belongs"
+
+
+def test_a_symbol_typed_by_its_own_name_resolves_to_itself(tmp_path: Path) -> None:
+    """The ordinary case, and the control: resolution must not perturb a ticker that was right."""
+    data = _directory(tmp_path, "BRK.B", "AIS")
+    resolved = cli._instrument("AIS", data, IDENTITY_AT)
+
+    assert not isinstance(resolved, str), resolved
+    assert (resolved.id, resolved.ticker) == ("AIS", "AIS")
+
+
+def test_an_ambiguous_vendor_form_REFUSES_rather_than_picking(tmp_path: Path) -> None:
+    """`AGENTS.md` §3: fail closed. Two symbols mapping to one vendor form is not a coin toss.
+
+    **A REAL collision, and the first draft of this test did not have one.** It seeded `BRK.B` and
+    `BRK-B` and expected a refusal for `BRK-B` - but a directory that literally carries `BRK-B`
+    makes that typing unambiguous, and the exact-match branch answered it correctly. The test was
+    wrong and the code was right.
+
+    `vendor_symbol` genuinely does not invert: `AMH$G` (a preferred series) and `AMH.PG` (a class
+    share) BOTH map to `AMH-PG`, and neither is spelled that way. Choosing between them would put
+    an invented identity into an append-only store.
+    """
+    data = _directory(tmp_path, "AMH$G", "AMH.PG")
+    refusal = cli._instrument("AMH-PG", data, IDENTITY_AT)
+
+    assert isinstance(refusal, str), refusal
+    assert "AMH$G" in refusal and "AMH.PG" in refusal
+    assert "name the one you mean" in refusal
+
+
+def test_a_ticker_with_no_directory_row_is_minted_and_SAID_OUT_LOUD(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Refusing here would refuse every Canadian instrument over somebody else's open item.
+
+    `DR-003` gap 1 records that the directory holds no `.TO` symbols. So the unresolvable case
+    keeps the old behaviour - and says so, which is the whole difference between a fallback and a
+    silent one.
+    """
+    data = _directory(tmp_path, "AIS")
+    resolved = cli._instrument("CNQ.TO", data, IDENTITY_AT)
+
+    assert not isinstance(resolved, str), resolved
+    assert resolved.id == "CNQ.TO"
+    err = capsys.readouterr().err
+    assert "id NOT RESOLVED" in err
+    assert "DR-003" in err, "and it names whose open item this is"
+
+
+def test_the_unresolvable_note_does_not_blame_canada_for_a_US_ticker(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Two different facts need two messages, or one of them is false.
+
+    The first draft printed *the directory holds no `.TO` symbols* for every unresolvable ticker,
+    including US ones, where it is simply untrue.
+    """
+    data = _directory(tmp_path, "AIS")
+    cli._instrument("NOSUCHTICKER", data, IDENTITY_AT)
+
+    err = capsys.readouterr().err
+    assert "NOSUCHTICKER" in err
+    assert ".TO" not in err, "a US ticker's absence is a fact about that ticker"
+
+
+def test_without_a_data_directory_the_construction_is_exactly_what_it_was(tmp_path: Path) -> None:
+    """The compatibility control. `data=None` must not consult anything or change any answer."""
+    assert cli._instrument("AIS").id == "AIS"
+    assert cli._instrument("CNQ.TO").id == "CNQ.TO"
+    assert cli._instrument("BRK-B").id == "BRK-B", (
+        "unchanged WITHOUT a directory - which is exactly why passing one is the fix"
+    )
+
+
+def test_a_class_share_typed_in_its_CANONICAL_form_resolves(tmp_path: Path) -> None:
+    """The exact-match branch, and a mutation is why this test exists.
+
+    Deleting `if typed in by_symbol` left every other test green, because a plain ticker is its own
+    vendor form and the reverse lookup finds it anyway. It is load-bearing for exactly one shape:
+    a DOTTED symbol typed the way the directory spells it. `vendor_symbol("BRK.A")` is `BRK-A`, so
+    without the exact branch, typing the canonical name falls through to the minted path and prints
+    *not resolved* about a symbol sitting in the directory under that very name.
+    """
+    data = _directory(tmp_path, "BRK.A", "AIS")
+    resolved = cli._instrument("BRK.A", data, IDENTITY_AT)
+
+    assert not isinstance(resolved, str), resolved
+    assert (resolved.id, resolved.ticker) == ("BRK.A", "BRK-A")
