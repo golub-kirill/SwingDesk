@@ -179,8 +179,20 @@ write:
   # NO THRESHOLD IS SET HERE. The stop is the one already in the book and the target is
   # `exit.target_r_multiple` R above the recorded entry - the same rule `broker.submit.target_price`
   # already applies to an entry. Both are snapped by `DR-033`'s tick rule, stop UP and target DOWN.
+  #
+  # **`protect_order_type` was added 2026-09-03 because the venue refused the order without it.**
+  # The first three protective orders carried no `type` at all, on the reasoning that an `oco` IS
+  # its two legs and needs no shape of its own. All three came back
+  # `422 {"code":40010001,"message":"invalid order type"}`, and AIS, BTSG and DINO spent that night
+  # unprotected. The evidence that settles it is this system's own ACCEPTED entry rather than a
+  # document: that order sends `type` alongside `order_class: bracket` and the same nested legs.
+  # `order_class` says how the legs relate; `type` is still the parent order's own shape. `limit`,
+  # because an `oco`'s take-profit leg is a limit order. **It is not a threshold** - the two prices
+  # are the book's own stop and the target `exit.target_r_multiple` implies, and both travel in the
+  # legs, not here.
   protect_time_in_force: gtc
   protect_order_class: oco
+  protect_order_type: limit
   protect_side: sell
 
   # Distinct from `client_order_id_prefix` because the venue rejects a duplicate id, and the entry

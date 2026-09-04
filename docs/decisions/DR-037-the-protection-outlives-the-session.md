@@ -92,6 +92,45 @@ the journal records it under `rejected`, `DR-036`'s guard stops the submission, 
 evening's operator reads exactly which field was wrong — which is `DR-027` §9's pattern working
 rather than a gap. **The first armed evening settles it.**
 
+## 5.1 Amendment, 2026-09-03 — it settled it, and the format was wrong
+
+**Appended rather than edited**, per `AGENTS.md` §11 rule 2. §5 was a prediction with a stated
+mechanism; this is what the mechanism returned, four hours later.
+
+**The measurement.** The evening pass ran armed at 19:30 CDT and sent three protective orders. All
+three came back:
+
+```
+422  {"code":40010001,"message":"invalid order type"}
+```
+
+`AIS`, `BTSG` and `DINO` stayed unprotected, and the journal holds three `submissions` rows with
+`outcome = rejected` carrying that exact message. **Everything §5 promised happened**: the venue
+answered, the journal recorded it, `DR-036`'s guard stopped the run — 96 sized and eligible Trade
+decisions were *not* submitted behind an unprotected book — and the field was named. The prediction
+was right about the process and wrong about the payload, which is the outcome that costs least.
+
+**What was wrong.** The payload carried no `type` at all. The reasoning, written into the code, was
+that an `oco` *is* its two legs and therefore needs no shape of its own. It reads well and it was
+false.
+
+**What settles it, and it is not a document.** This system's own accepted entry sends `type`
+alongside `order_class: bracket` and the same nested `stop_loss`/`take_profit` legs, and the venue
+takes it. So `order_class` says how the legs relate and `type` is still the parent order's own
+shape. `protect_order_type: limit` is now in the committed policy, because an `oco`'s take-profit
+leg is a limit order. **It sets no threshold** — the two prices are still the book's own stop and
+the target `exit.target_r_multiple` implies, and both travel in the legs.
+
+**Why no test caught it.** Nothing in the suite looked inside the protective payload; the builder
+was covered and the wire shape was not. `tests/test_submit.py` now compares the protective
+payload's top-level fields against the entry payload the venue has **accepted**, with each
+difference named and its reason written down. Removing `type` again fails two tests. That check is
+the general form of this defect rather than a patch for this instance: the four wire-format facts
+this project has got wrong were all discoverable by asking what the venue had already taken.
+
+**The count is now four**, not three: a bracket needs three legs, a session comes from the exchange,
+prices sit on the tick, and an order class does not replace an order type.
+
 ## 6. What this does NOT do
 
 - **It does not move a stop, close a position, or cancel anything.** `access.allowed_methods` is

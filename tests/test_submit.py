@@ -513,3 +513,106 @@ def test_a_built_order_carries_only_tick_aligned_prices() -> None:
     for price in (order.limit_price, order.stop_price, order.target_price):
         assert price % write.tick_size == 0
     assert order.stop_price < order.limit_price < order.target_price
+
+
+# --------------------------------------------------------------- the protective order's wire shape
+#
+# `DR-037` amended 2026-09-03. The first three protective orders were refused - `422
+# {"code":40010001,"message":"invalid order type"}` - because the payload carried no `type` at all.
+# Nothing in this suite looked inside that payload, which is why it shipped and why AIS, BTSG and
+# DINO spent a night unprotected.
+
+ARMED = Arming(True, "armed for this test")
+
+PROTECTED = {
+    "id": "6f0b0000-0000-0000-0000-00000000000b",
+    "client_order_id": "swingdesk-protect-2026-09-01-TEST.1",
+    "symbol": "TEST.1",
+    "status": "accepted",
+    "submitted_at": "2026-09-01T13:31:00.123456Z",
+    "filled_qty": "0",
+}
+
+
+def _protective(instrument_id: str = "TEST.1", shares: int = 10):
+    return submit.protective_order(
+        instrument_id=instrument_id, shares=shares,
+        stop_price=Decimal("45.00"), target=TARGET,
+        session_date=SESSION, write=_write_policy(), market="NYSE",
+    )
+
+
+def _body_of(client) -> dict[str, object]:
+    """The single JSON body the transport was handed."""
+    sent = [call for call in client.transport.sent if call["body"] is not None]
+    assert len(sent) == 1, f"expected exactly one write, got {len(sent)}"
+    return json.loads(sent[0]["body"])
+
+
+def test_the_protective_order_carries_an_order_type(tmp_path: Path) -> None:
+    """THE REGRESSION, and the venue is the one that reported it.
+
+    The payload was built without a `type` on the reasoning that an `oco` IS its two legs and
+    therefore needs no shape of its own. That reasoning is readable, was written down, and was
+    wrong: Alpaca answered `422 invalid order type` three times on 2026-09-03.
+    """
+    client = _client(arming=ARMED, payload=PROTECTED)
+    client.protect(_protective(), OBSERVED_AT)
+
+    body = _body_of(client)
+    assert body["type"] == _write_policy().protect_order_type
+    assert body["order_class"] == "oco"
+    assert body["time_in_force"] == "gtc", "a protection outlives the session the position does"
+
+
+def test_the_protective_payload_carries_every_field_the_accepted_entry_carries(
+        tmp_path: Path) -> None:
+    """The evidence is this system's OWN accepted order, not a vendor document.
+
+    Three of this project's defects were wire-format facts the documentation had wrong and the
+    venue corrected by refusing. So the standard here is not "what the reference says a protective
+    order needs" - it is **what this venue has already accepted from us**. `submit` sends `type`
+    alongside `order_class: bracket` and the same nested legs, and the venue takes it; the
+    protective order omitted `type` and was refused.
+
+    Every difference below is named with its reason. A field that appears in one and not the other
+    for a reason nobody wrote down is the defect this test exists to catch, and the failure - not a
+    guess about which side is right - is the point.
+    """
+    entry_client = _client(arming=ARMED, payload=ACCEPTED)
+    entry_client.submit(_order(), OBSERVED_AT)
+    entry = set(_body_of(entry_client))
+
+    protect_client = _client(arming=ARMED, payload=PROTECTED)
+    protect_client.protect(_protective(), OBSERVED_AT)
+    protection = set(_body_of(protect_client))
+
+    #: In the ENTRY and deliberately not in the protection. The position is already open: there is
+    #: no price to chase and no side to choose, because closing a long is a sell by construction.
+    entry_only = {"limit_price"}
+
+    missing = entry - entry_only - protection
+    assert not missing, (
+        f"the protective order omits {sorted(missing)}, which the venue has ACCEPTED on an entry "
+        f"carrying the same nested legs. `type` was omitted exactly this way and three positions "
+        f"went unprotected overnight. Add the field, or name it above with the reason it differs."
+    )
+
+
+def test_the_protective_order_is_refused_when_the_switch_is_stopped() -> None:
+    """The same guard as the entry's, on the write path `DR-037` added.
+
+    A protection is risk-reducing, which is the argument someone will one day make for exempting
+    it. It is still an order this machine sends without a human, and `DR-027` 4's guards are not
+    graded by intent.
+    """
+    with pytest.raises(SubmissionStopped):
+        _client(arming=STOPPED, payload=PROTECTED).protect(_protective(), OBSERVED_AT)
+
+
+def test_the_protective_order_id_is_never_the_entrys() -> None:
+    """`DR-027` 5: the venue rejects a duplicate id, and that rejection IS the idempotency."""
+    assert _protective().client_order_id != _order().client_order_id
+    assert _protective().client_order_id.startswith(
+        _write_policy().protect_client_order_id_prefix
+    )
