@@ -18,8 +18,9 @@ must keep apart, and both are tested from both sides:
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 from tests.conftest import TEST_US
@@ -204,3 +205,106 @@ def test_a_first_insert_is_never_a_revision(store) -> None:
     assert result.inserted == 1
     assert result.revised == 0
     assert result.close_revisions == ()
+
+
+# ------------------------------------------------- one statement per chunk, not one per row
+#
+# `executemany` was 97% of a write, measured 2026-09-04 by profiling one pass: DuckDB runs the
+# statement once per parameter set instead of vectorising it. 2.739 ms/row became 0.087, and the
+# coverage backfill went from four hours - in a run whose NETWORK was 0.27 seconds a symbol - to
+# something bounded by the fetching.
+#
+# Asserted as a PROPERTY rather than as a duration. A timing test on a shared machine is a test
+# that fails on a busy afternoon and gets deleted, and the thing that actually regressed here is
+# the number of statements.
+
+
+class _Counting:
+    """Wraps a duckdb connection and records every INSERT statement it executes."""
+
+    def __init__(self, inner) -> None:
+        self._inner = inner
+        self.inserts = 0
+
+    def execute(self, sql, *args, **kwargs):
+        if "INSERT OR REPLACE INTO bars" in sql:
+            self.inserts += 1
+        return self._inner.execute(sql, *args, **kwargs)
+
+    def executemany(self, sql, *args, **kwargs):  # pragma: no cover - the defect this test forbids
+        if "INSERT OR REPLACE INTO bars" in sql:
+            self.inserts += 1000  # loud: an executemany is what this change removed
+        return self._inner.executemany(sql, *args, **kwargs)
+
+    def __getattr__(self, name):
+        return getattr(self._inner, name)
+
+
+def _daily(symbol: str, count: int, known: datetime,
+           base: datetime = datetime(2024, 1, 1, tzinfo=UTC)) -> list[Bar]:
+    """`count` consecutive daily bars from `base`.
+
+    **The window must end before `known`.** A bar whose session has not closed at the knowledge time
+    is refused before it reaches the insert - correctly - so a fixture that runs off the end of the
+    calendar silently tests fewer rows than it names. The 2,500-row case below starts in 2019 for
+    exactly that reason; the first draft started in 2024, ran to 2030, and asserted three statements
+    over rows that had been dropped.
+    """
+    return [
+        Bar(instrument_id=symbol, interval=Interval.DAY, series=Series.RAW,
+            event_time=base + timedelta(days=n), session_date=(base + timedelta(days=n)).date(),
+            open=Decimal("10.0"), high=Decimal("11.0"), low=Decimal("9.0"),
+            close=Decimal("10.5"), volume=1000, knowledge_time=known)
+        for n in range(count)
+    ]
+
+
+def test_a_symbols_whole_history_is_ONE_insert_statement(tmp_path: Path) -> None:
+    """THE REGRESSION. 503 bars used to be 503 statements."""
+    known = datetime(2026, 9, 4, 12, 0, tzinfo=UTC)
+    with BarStore(tmp_path / "b.duckdb") as store:
+        counting = _Counting(store._connection)
+        store._connection = counting
+        store.write(_daily("TEST.1", 503, known), known, None)
+
+    assert counting.inserts == 1, (
+        f"503 bars took {counting.inserts} INSERT statements. One per row is what made the "
+        f"coverage backfill four hours long while the network was 0.27 seconds a symbol"
+    )
+
+
+def test_a_batch_larger_than_the_chunk_is_split_and_all_of_it_lands(tmp_path: Path) -> None:
+    """The chunk bound exists so a caller cannot build a statement with 100,000 placeholders.
+
+    Both halves matter: the split happens, AND nothing is lost in it. A chunking bug that dropped
+    the tail would still make this test's first assertion pass.
+    """
+    known = datetime(2026, 9, 4, 12, 0, tzinfo=UTC)
+    count = 2_500
+    with BarStore(tmp_path / "b.duckdb") as store:
+        counting = _Counting(store._connection)
+        store._connection = counting
+        store.write(_daily("TEST.2", count, known, datetime(2019, 1, 1, tzinfo=UTC)),
+                    known, None)
+
+    assert counting.inserts == 3, "2,500 rows at 1,000 a chunk is three statements"
+
+    with BarStore(tmp_path / "b.duckdb") as store:
+        stored = store.as_of("TEST.2", Interval.DAY, Series.RAW, known)
+    assert len(stored.bars) == count, "and every row survived the split"
+
+
+def test_an_empty_batch_runs_no_statement_at_all(tmp_path: Path) -> None:
+    """A write with nothing new must not send an INSERT with an empty VALUES list, which is a
+    syntax error rather than a no-op. The old `executemany` tolerated an empty sequence; a built
+    statement does not, so this is the edge the rewrite introduced and has to cover."""
+    known = datetime(2026, 9, 4, 12, 0, tzinfo=UTC)
+    bars = _daily("TEST.3", 10, known)
+    with BarStore(tmp_path / "b.duckdb") as store:
+        store.write(bars, known, None)
+        counting = _Counting(store._connection)
+        store._connection = counting
+        result = store.write(bars, known, None)  # every bar already stored and unchanged
+
+    assert counting.inserts == 0
+    assert result.unchanged == 10
