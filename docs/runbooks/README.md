@@ -555,3 +555,149 @@ saying `PARTIAL UNIVERSE` is the day the rule's answer and the stored answer are
 
 A held store is not a failure here: an overlapping pass costs a log line rather than a traceback,
 which is `AGENTS.md` §12's rule about `ADR-0004`'s single writer.
+
+
+## 9. Standing it up from nothing — the clean-install sequence
+
+**Written 2026-09-04 because the answer was scattered across five sections and nowhere in order.**
+The owner asked whether the scheduled-task command would survive a clean install. It would not:
+the three `schtasks` lines live in §1, §1a and §8, the credentials in §6, the local config is
+mentioned only in `DR-008`, and nothing said which order any of it goes in. **A clone of this
+repository is not a working installation, and this is the list of what the clone does not carry.**
+
+### What the repository does NOT carry
+
+Everything below is gitignored or lives outside the tree. Nothing here is a secret this project
+stores — `tools/verify_secrets.py` is gate 19 and it fails on a tracked one.
+
+| | what it is | rebuilt by |
+|---|---|---|
+| `.venv/` | the interpreter and dependencies | `pyproject.toml` |
+| `data/*.duckdb` | bars, directory, classifications, journal, positions | the passes below |
+| `data/.paper-trading-armed` | the kill switch. **Absent means STOPPED**, which is its value | the owner, deliberately |
+| `.swingdesk-local.json` | the directory pull's enable flag | step 4 |
+| `APCA_API_KEY_ID` / `APCA_API_SECRET_KEY` | paper credentials, environment only | Alpaca's dashboard, §6 |
+| three scheduled tasks | the daily pass, the second pass, the coverage pass | step 7 |
+| the course PDFs + `pdftotext` | gate 2 re-extracts and diffs them | outside the repo entirely |
+
+### The sequence
+
+**1. The environment.**
+
+```bash
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -e .
+.venv\Scripts\python.exe -X utf8 tools/preflight.py
+```
+
+`preflight.py` is what the scheduled wrapper runs before every pass, and an interpreter that exists
+is not an environment that works — `yfinance` was importable and undeclared for a day in August, and
+this is the check that ends.
+
+**2. The credentials.** Two environment variables, named by `registry/broker_policy.yml` and never
+by the code:
+
+```bash
+setx APCA_API_KEY_ID "<paper key>"
+setx APCA_API_SECRET_KEY "<paper secret>"
+```
+
+§6 covers what invalidates a pair and how the system says which of the two it is. **Paper keys are
+distinct from live keys and are still secrets**: the allowlist in `broker_policy.yml` is the only
+thing separating the two accounts, because a brokerage account object carries no field that says
+which it is.
+
+**3. The symbol directory**, which everything else is selected from:
+
+```bash
+PYTHONPATH=$PWD/src python tools/fetch_directory.py --data data
+```
+
+**4. The local config**, or step 3's scheduled mode refuses — by design, so an unattended pass
+cannot start pulling on a machine nobody meant it to:
+
+```json
+{"directory_pull_enabled": true}
+```
+
+at the repository root, as `.swingdesk-local.json`. Gitignored, and `DR-008` explains why it is not
+in the committed policy: the policy says what this project may ask of a server, and this says
+whether *this machine* is the one that asks.
+
+**5. The bars.** This is the long step and the only one that is:
+
+```bash
+tools\widen_universe.cmd 13500
+```
+
+**About an hour**, measured after the batched-insert fix of 2026-09-04 — the network is roughly a
+quarter-second a symbol and the writing is no longer the cost. Before that fix the same work took
+five. About 45 in every 1,000 fail and that is expected: warrants, units and rights map to no vendor
+symbol.
+
+**6. The classifications**, which the sector cap is measured through:
+
+```bash
+PYTHONPATH=$PWD/src python tools/refresh_classifications.py --data data --universe --budget 2000
+```
+
+**The budget is not optional here.** It defaults to 100 instruments a pass, which is right for a
+top-up and wrong for an empty store. `--universe` queues only the names the liquidity rule can
+actually nominate rather than every symbol with bars.
+
+**7. The three scheduled tasks.** Check before creating — `schtasks /Create` on an existing name
+offers to REPLACE it, and a wrong keystroke discards a working registration:
+
+```bash
+PYTHONPATH=$PWD/src python tools/verify_schedule.py
+```
+
+```bash
+schtasks /Create /TN "SwingDesk daily run" /TR "C:\PycharmProjects\SwingDesk\tools\daily_run.cmd" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 18:30
+schtasks /Create /TN "SwingDesk second pass" /TR "\"C:\PycharmProjects\SwingDesk\tools\daily_run.cmd\" second-pass" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 19:30
+schtasks /Create /TN "SwingDesk coverage pass" /TR "C:\PycharmProjects\SwingDesk\tools\widen_universe.cmd" /SC WEEKLY /D SUN /ST 09:00
+```
+
+**The first of those three lines was recorded NOWHERE until 2026-09-04.** The runbook carried the
+second pass's command and, after that date, the coverage pass's — and nothing at all for the daily
+run, which is the one that actually places orders. It is reconstructed above by reading the live
+task off the machine (`Get-ScheduledTask`), whose action is that path and whose trigger is 18:30 on
+a `DaysOfWeek` mask of 62 — Monday through Friday. **That is exactly the gap this section exists
+for**: the installation worked, so nobody noticed that it could not be rebuilt.
+
+Gate 26 names all three and reports two hazards it cannot fix: both run only while the user is
+logged on, and the second does not start on battery. Those are settings on the task, not on this
+repository.
+
+**8. Arming, and it is deliberately last.** Submission is stopped until a file exists carrying one
+word. Absent means stopped, unreadable means stopped, present-but-unmarked means stopped — only the
+marker arms it, and the remedy for a machine submitting something it should not is deleting one
+file:
+
+```bash
+echo ARMED > data\.paper-trading-armed
+```
+
+**Do not do this until step 9 passes.**
+
+**9. Proving the installation, before it is armed.**
+
+```bash
+PYTHONPATH=$PWD/src SWINGDESK_DATA=$PWD/data python tools/check_gates.py
+PYTHONPATH=$PWD/src SWINGDESK_DATA=$PWD/data python tools/verify_submission_guards.py --data data
+```
+
+The first runs every gate. **Gate 2 will report `UNAVAILABLE` without the course PDFs and
+`pdftotext` on PATH** — that is honest rather than passing, and it is the one gate a clean install
+cannot satisfy from the repository alone.
+
+The second runs every guard the evening pass runs, against the live account, **and sends nothing**.
+It is the last thing to read before arming: it names what would be submitted and which guard would
+stop it.
+
+### What is deliberately NOT scripted
+
+There is no `setup.cmd` and no `bootstrap.py`, and that is a choice rather than an omission. Two of
+these steps are irreversible in the direction that matters — arming the switch, and registering a
+task that will place orders on a schedule — and a script that does both is a script somebody runs
+by accident. The sequence above is short enough to read.
