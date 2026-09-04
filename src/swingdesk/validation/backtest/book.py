@@ -233,6 +233,13 @@ def run_book(
                 result.skipped[Skipped.STOP_NOT_BELOW_ENTRY] += 1
                 continue
 
+            # A negative stop is below entry, so the check above admits it. See `run_arm` in
+            # `engine.py` for the whole argument - this is the same guard at the second site, and
+            # having it at only one was the shape `AGENTS.md` §12 keeps recording.
+            if stop <= 0:
+                result.skipped[Skipped.STOP_NOT_POSITIVE] += 1
+                continue
+
             risk_per_share = entry_price - stop
             shares = int(config.risk_per_trade / risk_per_share)
             if shares < 1:

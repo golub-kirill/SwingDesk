@@ -57,6 +57,7 @@ class Skipped(StrEnum):
     NO_NEXT_BAR = "no_next_bar"          # signal on the last bar; nothing to enter on
     POSITION_OPEN = "position_open"      # already in a trade on this instrument
     STOP_NOT_BELOW_ENTRY = "stop_ge_entry"  # a gap up put the fill at or below the stop
+    STOP_NOT_POSITIVE = "stop_not_positive"  # 2 x ATR exceeded the entry price; see `run_arm`
     ZERO_SHARES = "zero_shares"          # risk budget bought nothing
 
 
@@ -180,6 +181,26 @@ def run_arm(
         stop = config.exits.stop_for(entry_price, atr_value)
         if stop >= entry_price:
             result.skipped[Skipped.STOP_NOT_BELOW_ENTRY] += 1
+            continue
+
+        # And a stop must be a PRICE. `stop >= entry_price` alone lets a NEGATIVE stop through - it
+        # is below entry, and the arithmetic that follows is finite. `trade_management/sizing.py`
+        # added this same second check on the live path after a candidate came back with a risk per
+        # share larger than its own entry price; the engines were one guard behind, in the code that
+        # produces this project's evidence.
+        #
+        # Reachable rather than hypothetical: `stop_for` is `entry - multiple * atr`, so any
+        # instrument whose ATR exceeds half its price at a 2.0 multiple produces one. Measured
+        # 2026-09-04 - the live path has refused exactly this on a real instrument that went from
+        # about $4 to $91 and back to $10 in four weeks, with ATR(14) still carrying the spike.
+        #
+        # What it changes is a CRASH into a count. `Trade.stop_price` is `gt=0`, so the trade was
+        # never silently mis-measured - the run died on a pydantic error part-way through, losing
+        # everything walked so far, which is the traceback-instead-of-a-coded-refusal that
+        # `AGENTS.md` §3 forbids and that this enum's own docstring promises against: counted,
+        # never discarded.
+        if stop <= 0:
+            result.skipped[Skipped.STOP_NOT_POSITIVE] += 1
             continue
 
         risk_per_share = entry_price - stop

@@ -2533,6 +2533,37 @@ is for where no gate can reach.
 
 ## 6. Code & gates
 
+- [x] **`[v]` BOTH BACKTEST ENGINES WERE ONE GUARD BEHIND THE LIVE PATH, AND THE COST WAS A CRASH
+      RATHER THAN A WRONG NUMBER — found and fixed 2026-09-04.** `trade_management/sizing.py`
+      checks two things about a stop: that it is below entry, and that it is a positive PRICE. The
+      second was added after a live candidate came back with a risk per share larger than its own
+      entry price. **`validation/backtest/engine.py` and `book.py` carry only the first**, copied
+      into both, in the code that produces this project's evidence.
+      **Reachable, not hypothetical.** `stop_for` is `entry − multiple × atr`, so any instrument
+      whose ATR exceeds half its price at a 2.0 multiple produces a negative stop, and
+      `stop >= entry_price` admits it — a negative number is below entry and the arithmetic that
+      follows is finite. The live path has been refusing exactly this shape on a real instrument
+      that went from about $4 to $91 and back to $10 in four weeks while ATR(14) still carried the
+      spike (see `PR-011` in §5).
+      **What it did, measured rather than reasoned.** `Trade.stop_price` is `gt=0`, so nothing was
+      ever silently mis-measured — instead `run_arm` **raised a pydantic `ValidationError`** and the
+      study run died part-way through, losing every instrument walked so far. Proven twice: once by
+      driving the engine over the live store's bars for that instrument with an ATR that reproduces
+      the shape, and once by removing the shipped guard and watching both new tests die on
+      `stop_price Input should be greater than 0`. That is the traceback-instead-of-a-coded-refusal
+      `AGENTS.md` §3 forbids, in the one enum whose docstring promises *counted, never discarded*.
+      **No published result moves, and that is checked rather than asserted.** `PR-005`'s trade log
+      holds no trade with a non-positive stop and none whose risk per share reaches its entry price
+      — a crash is the only outcome the contract allowed, so a reported study could not contain one.
+      Re-derive:
+      ```bash
+      python -c "import csv;from decimal import Decimal as D;print(sum(1 for r in csv.DictReader(open('docs/prereg/results/PR-005-trades.csv')) if D(r['stop_price'])<=0))"
+      ```
+      **What is NOT decided here.** Whether `2 × ATR ≥ price` should be an eligibility SCREEN — so
+      the name never reaches sizing at all — is a threshold the course does not supply, which
+      `AGENTS.md` §8 makes a ruling or a pre-registration and never a guess. `PR-011` is where it
+      belongs and it is still unwritten.
+
 - [x] **`[v]` THREE UNIT TESTS WROTE INTO THE OPERATOR'S LIVE DIRECTORY STORE — found 2026-09-04
       because the store was busy, FIXED the same day.** `tests/test_directory.py`'s three
       `scheduled_mode_*` tests

@@ -104,10 +104,11 @@ def _config(trigger, **kwargs) -> BacktestConfig:
     return BacktestConfig(**defaults)
 
 
-def _book(names: list[str], rows, trigger, capacity=ROOMY, ranking=by_instrument_id, **kwargs):
+def _book(names: list[str], rows, trigger, capacity=ROOMY, ranking=by_instrument_id,
+          atr_value: str = "2", **kwargs):
     series = {name: _series(name, rows) for name in names}
     gates = {name: [True] * len(rows) for name in names}
-    atr = {name: _atr(s, "2") for name, s in series.items()}
+    atr = {name: _atr(s, atr_value) for name, s in series.items()}
     return run_book(series, gates, atr, _config(trigger, **kwargs), capacity, ranking)
 
 
@@ -280,3 +281,19 @@ def test_a_missing_gate_or_atr_raises_rather_than_skipping_the_instrument() -> N
     series = {"AAA": _series("AAA", _flat(5))}
     with pytest.raises(ValueError, match="needs both a gate and an ATR"):
         run_book(series, {}, {}, _config(_fires_on(3)), ROOMY, by_instrument_id)
+
+
+def test_the_book_counts_a_non_positive_stop_the_same_way_the_engine_does() -> None:
+    """The second site of the same guard, and having it at only one was the whole defect.
+
+    `run_book` and `run_arm` carry the same admission block, copied. The live path's second check -
+    a stop must be a positive PRICE, not merely below entry - reached `sizing.py` and neither of
+    these, in the code that produces this project's evidence.
+    """
+    from swingdesk.validation.backtest.engine import Skipped
+
+    result = _book(["AAA"], _flat(6, "10"), _fires_on(3), atr_value="9")
+
+    assert result.signals == 1
+    assert result.trades == []
+    assert result.skipped[Skipped.STOP_NOT_POSITIVE] == 1
