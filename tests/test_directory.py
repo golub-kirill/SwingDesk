@@ -17,6 +17,12 @@ import pytest
 from swingdesk.reference_data.directory import DirectoryStore
 from swingdesk.reference_data.universe import DirectoryEntry
 
+# The cases below import `fetch_directory`, which lives in `tools/`. This module used to rely on
+# another test module having put that directory on the path first, so the file passed in a full
+# alphabetical run and failed half its cases when run alone - the shape `test_gates.py` and
+# `test_vendor_yahoo.py` already avoid by inserting their own path.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+
 
 def test_collection_is_disabled_without_the_local_file(tmp_path: Path) -> None:
     from fetch_directory import collection_enabled
@@ -121,6 +127,35 @@ def test_scheduled_mode_refuses_an_unreadable_config(
     assert capsys.readouterr().out == (
         "directory pull disabled - no .swingdesk-local.json with directory_pull_enabled: true\n"
     )
+
+
+def test_a_refusal_writes_its_audit_row_under_the_repo_and_nowhere_else(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The store the collector opens is a property of `REPO`, never of the working directory.
+
+    Every policy refusal leaves through `_finish`, which writes an audit row - so a store resolved
+    against the process's working directory is a store the three cases above wrote into. They patch
+    `REPO`, pass no `--data`, and the default was `Path("data")`: run from the repository root, that
+    is the operator's own append-only audit table, and it holds their rows.
+    """
+    import fetch_directory
+
+    repo = tmp_path / "repo"
+    elsewhere = tmp_path / "elsewhere"
+    repo.mkdir()
+    elsewhere.mkdir()
+    monkeypatch.chdir(elsewhere)
+    monkeypatch.setattr(fetch_directory, "REPO", repo)
+    monkeypatch.setattr(sys, "argv", ["fetch_directory", "--scheduled"])
+    monkeypatch.setattr(fetch_directory, "_download", lambda _url: pytest.fail("downloaded"))
+
+    assert fetch_directory.main() == 0
+
+    assert not (elsewhere / "data").exists()
+    with DirectoryStore(repo / "data" / "directory.duckdb") as store:
+        rows = store.audit()
+    assert [(row[2], row[8]) for row in rows] == [("SCHEDULED", "DISABLED")]
 
 
 class _DownloadResponse:
