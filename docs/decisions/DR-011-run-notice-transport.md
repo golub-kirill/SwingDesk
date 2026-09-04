@@ -7,7 +7,7 @@ status:          accepted — ratified by the owner 2026-08-30. The MECHANISM wa
 parameters:      none
 components:      none - swingdesk.presentation.notify is a surface, not a measured component
 supersedes:      nothing. PRODUCT_SURFACES 3.4's Firebase remains specified and unbuilt
-implemented_by:  src/swingdesk/presentation/notify.py :: DR-011
+implemented_by:  src/swingdesk/presentation/notify.py :: SWINGDESK_NOTIFY_BODY
 ```
 
 ## 1. What was asked, and what the ask ran into
@@ -100,6 +100,33 @@ is raised inside `scan`, and its outcome lands in the log the wrapper already ca
 - **No approval channel.** `PRODUCT_SURFACES` §3.3 and `US-010` are untouched. This is send-only:
   the module contains no `getUpdates`, no polling and no inbound path of any kind.
 - **No amendment to §4's Telegram column.** Telegram remains "—" for this event, correctly.
+
+## 6.1 Amendment, 2026-09-03 - the marker now points at code
+
+**The field was edited, and only the field**, because `implemented_by` is a live pointer the build
+follows rather than a statement about what was true in August. Everything else here stands as
+written, per `AGENTS.md` §11 rule 2.
+
+**What was wrong.** The marker was `notify.py :: DR-011`: the record cited *itself*. That string
+appears in `notify.py` exactly twice, both times in prose - the module docstring and §5's
+explanation of why a failure returns instead of raising. Gate 20 tested for a substring anywhere in
+the file, so a record could be satisfied by a file that merely *mentions* it, and this one was.
+**For four days, not for the eighteen since this was written**: gate 20 reads only `accepted`
+records, and this record's own `status:` line dates ratification to 2026-08-30. A proposal promises nothing, so
+the exemption is correct and the exposure is the shorter number.
+
+**What it points at now.** `SWINGDESK_NOTIFY_BODY` - the environment key in `notify()` and in
+`_SCRIPT`. That is not a cosmetic upgrade to a nicer name: §2's substantive claim is that *"the run
+id and status reach it through the environment, never interpolated into the script"*, and that key
+is where the claim lives. Delete the environment channel and the gate goes red; rename the module's
+docstring and it does not. `def notify` was the easier choice and was rejected for saying only that
+a function exists.
+
+**Found by**, and this is the honest provenance: a test written the day before had the same defect -
+it asked whether a guard's NAME appeared in a file, and a mutation that removed the guard left the
+name in a section heading, so the test passed with the fix deleted. Auditing for that shape
+elsewhere is what turned this up. Gate 20 was strengthened the same day to redact comments and
+docstrings before looking.
 
 ## 7. A defect found in §3.4 while writing this
 

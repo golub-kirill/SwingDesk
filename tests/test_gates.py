@@ -149,6 +149,114 @@ def test_decision_gate_ignores_a_proposal(tmp_path: Path) -> None:
     assert code == 0, out
 
 
+# The token must be CODE, not prose - gate 20's rule from 2026-09-03. Every fixture below names a
+# `.py` target, because that is the only suffix the redaction applies to.
+
+
+def test_decision_gate_refuses_a_token_that_appears_only_in_a_comment(tmp_path: Path) -> None:
+    """THE REGRESSION, and it was live. `DR-011` cited its own id, which `notify.py` carried twice
+    in prose and nowhere in code, and the substring test this replaced passed it for the four days
+    between its ratification and this fix.
+    """
+    root = _decisions_tree(
+        tmp_path,
+        "date: 2026-08-01\nstatus: accepted\n"
+        "implemented_by: src/thing.py :: def collect",
+        marker_file="src/thing.py",
+        marker_body="# def collect is planned for next week\nvalue = 1\n",
+    )
+    code, out = run_gate("verify_decisions.py", root)
+    assert code == 1, out
+    assert "COMMENT" in out and "def collect" in out
+
+
+def test_decision_gate_refuses_a_token_that_appears_only_in_a_docstring(tmp_path: Path) -> None:
+    """A docstring is the comment's respectable cousin, and it reads even more like evidence."""
+    root = _decisions_tree(
+        tmp_path,
+        "date: 2026-08-01\nstatus: accepted\n"
+        "implemented_by: src/thing.py :: DR-001",
+        marker_file="src/thing.py",
+        marker_body='"""This module implements DR-001."""\nvalue = 1\n',
+    )
+    code, out = run_gate("verify_decisions.py", root)
+    assert code == 1, out
+    assert "DOCSTRING" in out
+
+
+def test_decision_gate_accepts_a_token_inside_an_ordinary_string_literal(tmp_path: Path) -> None:
+    """`DR-006`'s marker is `MAX_OPEN_RISK = "risk.max_open_risk"`, and a parameter key is code.
+
+    This is the test that stops the fix overshooting. A rule that stripped every string literal
+    would call the most precisely-cited record in the store unimplemented - so the rule is comments
+    and BARE STRING STATEMENTS, and this proves that distinction is load-bearing rather than
+    merely intended.
+    """
+    root = _decisions_tree(
+        tmp_path,
+        "date: 2026-08-01\nstatus: accepted\n"
+        "implemented_by: src/thing.py :: risk.max_open_risk",
+        marker_file="src/thing.py",
+        marker_body='MAX_OPEN_RISK = "risk.max_open_risk"\n',
+    )
+    code, out = run_gate("verify_decisions.py", root)
+    assert code == 0, out
+
+
+def test_decision_gate_still_matches_a_token_of_several_words(tmp_path: Path) -> None:
+    """THE SECOND REGRESSION, and it was mine, caught before it shipped.
+
+    The redaction's first draft rebuilt the source by joining the surviving tokens, which put a
+    newline between `def` and `assess` and reported NINETEEN records unimplemented - `DR-015`,
+    `DR-027`, `DR-033` and sixteen others, every one of them real code. Blanking the prose in place
+    preserves every offset. This fails the day somebody rewrites it as a rebuild.
+    """
+    root = _decisions_tree(
+        tmp_path,
+        "date: 2026-08-01\nstatus: accepted\n"
+        "implemented_by: src/thing.py :: def assess",
+        marker_file="src/thing.py",
+        marker_body='"""Prose above the code."""\ndef assess(bar):\n    return bar\n',
+    )
+    code, out = run_gate("verify_decisions.py", root)
+    assert code == 0, out
+
+
+def test_decision_gate_does_not_redact_a_file_it_cannot_parse(tmp_path: Path) -> None:
+    """A syntax error in a target is another gate's failure. This one must not become a second.
+
+    Without the fallback, a target that will not tokenize would redact to nothing and every record
+    naming it would read as unimplemented - a wrong diagnosis pointing at an innocent file.
+
+    An unclosed bracket, which the lexer reports as `TokenError`. Its sibling below covers the
+    other exception `tokenize` actually raises: the first draft of this pair tested only this
+    shape, and a mutation that dropped `IndentationError` from the clause SURVIVED it. The sibling
+    exists because the mutation said it had to, not for symmetry.
+    """
+    root = _decisions_tree(
+        tmp_path,
+        "date: 2026-08-01\nstatus: accepted\n"
+        "implemented_by: src/thing.py :: def assess",
+        marker_file="src/thing.py",
+        marker_body="def assess(bar:\n  this is not python\n",
+    )
+    code, out = run_gate("verify_decisions.py", root)
+    assert code == 0, out
+
+
+def test_decision_gate_survives_a_target_whose_indentation_is_broken(tmp_path: Path) -> None:
+    """A dedent matching no outer level - an `IndentationError`, which is not a `TokenError`."""
+    root = _decisions_tree(
+        tmp_path,
+        "date: 2026-08-01\nstatus: accepted\n"
+        "implemented_by: src/thing.py :: def assess",
+        marker_file="src/thing.py",
+        marker_body="def assess(bar):\n    x = 1\n  y = 2\n",
+    )
+    code, out = run_gate("verify_decisions.py", root)
+    assert code == 0, out
+
+
 # --------------------------------------------------------------------------- fixtures
 
 

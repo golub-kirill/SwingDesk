@@ -134,6 +134,13 @@ def main(argv: list[str] | None = None) -> int:
 
         stopped: list[str] = []
 
+        # THE SWITCH IS REPORTED AND NEVER TREATED AS A GUARD THAT PASSED. This tool submits
+        # nothing, so a stopped switch does not change what it can check - but printing
+        # "WOULD SUBMIT" beside a disarmed venue would answer a question nobody asked. The line
+        # says which it is and the verdict at the end says so too.
+        arming = broker_pkg.read_arming(args.data, write)
+        print(f"kill switch - {'ARMED' if arming.armed else 'STOPPED'} ({arming.reason})\n")
+
         print("reconcile - the book and the venue describe the same positions (DR-035)")
         agreement = broker_pkg.reconcile(book, held, venue=policy.label, market=policy.market)
         if agreement.agrees:
@@ -143,6 +150,17 @@ def main(argv: list[str] | None = None) -> int:
             for divergence in agreement.divergences:
                 print(f"   STOP  {divergence.instrument_id} ({divergence.reason}) "
                       f"{divergence.detail[:100]}")
+
+        print("\nprotection - every open position's stop is standing at the venue (DR-036)")
+        naked = broker_pkg.unprotected(book, live, policy.market)
+        if naked:
+            stopped.append(f"{broker_pkg.MISMATCH_CODE} - {len(naked)} position(s) unprotected")
+            for finding in naked:
+                print(f"   STOP  {finding.instrument_id}  {finding.reason[:110]}")
+        elif book:
+            print(f"   PASS  {len(book)} position(s), each with its stop standing")
+        else:
+            print("   PASS  nothing held")
 
         print("\nuncommitted exposure - nothing at the venue the caps have not seen (DR-027 §11)")
         sent_ids = journal.sent_client_order_ids()
@@ -231,7 +249,11 @@ def main(argv: list[str] | None = None) -> int:
         print("\nNothing was sent. No write verb was used.")
         return WOULD_STOP
 
-    print(f"WOULD SUBMIT {len(submittable)} order(s), and every guard passes.")
+    if not arming.armed:
+        print(f"Every guard passes and {len(submittable)} order(s) fit the caps, but the switch is "
+              f"STOPPED, so a real pass would send nothing.")
+    else:
+        print(f"WOULD SUBMIT {len(submittable)} order(s), and every guard passes.")
     print("Nothing was sent. No write verb was used.")
     return OK
 
