@@ -2712,21 +2712,47 @@ is for where no gate can reach.
       *ahead* are the same shape to a diff. Deleting the stale local ref is still the fix, and it is
       still the owner's to run.
 
-- [ ] **GATE 33 CANNOT SEE A DELETION AT ALL — found 2026-09-04, and it is older than the entry
-      above.** `_touched` sets `path = ""` when a diff hunk header reads `+++ /dev/null`, so a file
-      one branch DELETED never enters the map and can never be reported as overlapping anything.
+- [x] **GATE 33 CANNOT SEE A DELETION AT ALL — found 2026-09-04, FIXED the same day.** `_touched`
+      set `path = ""` when a diff hunk header read `+++ /dev/null`, so a file one branch DELETED
+      never entered the map and could never be reported as overlapping anything.
       **One branch deleting what another is rewriting is a real collision** — arguably the one that
       most needs a person, because a textual merge resolves it silently in whichever direction the
       merge strategy prefers. §10.1's whole subject is two efforts editing one thing.
       **Measured rather than reasoned:** a fixture repo where `sibling` removes `contested.txt` and
-      `master` rewrites every line of it reports `0 overlap(s)`.
-      **Not fixed here, and the reason is a cost nobody has measured.** Counting deletions would
+      `master` rewrites every line of it reported `0 overlap(s)`. That fixture is now a test.
+      ~~**Not fixed here, and the reason is a cost nobody has measured.** Counting deletions would
       make every branch that removes a file it no longer needs collide with every branch that
-      touched it — which may be exactly right, or may be the noise `CI_POLICY.md` §3 describes.
-      `AGENTS.md` §12's habit applies: *measure the mechanism before shipping it, and be willing to
-      throw it away*. The measurement is one run of a widened `_touched` against the live branches.
-      `_same_as_trunk` already refuses to treat a missing path as a match, so closing this gap will
-      not silently open a hole there.
+      touched it — which may be exactly right, or may be the noise `CI_POLICY.md` §3 describes.~~
+      **The cost was measured before shipping, as `AGENTS.md` §12's habit asks, and it is zero.**
+      Two measurements rather than one, because a single live run is a population of two branches:
+      a widened `_touched` against today's siblings reports the same overlaps as the current one,
+      and across every local branch there is not one deletion relative to its merge-base. Both
+      re-derive:
+      ```bash
+      python tools/verify_sibling_edits.py
+      for b in $(git branch --format='%(refname:short)'); do
+        git diff --name-only --diff-filter=D "$(git merge-base master "$b")..$b"; done | wc -l
+      ```
+      **A null needs a positive control** (§9), and this one has one: `_touched` was run over
+      `283e71c~1..283e71c`, a real commit on `master` that removes a dated handoff file. The
+      shipped version records the whole base-side extent of that file; the old one records nothing.
+      **Two exclusions keep it exact.** A file BOTH branches removed is not reported — there is
+      nothing to choose between — and `_same_as_trunk` still refuses to treat a missing path as a
+      match, so the widening did not open a hole there. That guard was written on 2026-09-04
+      against this gap being closed, and closing it turned the sentence from a prediction into a
+      covered case.
+      **The report says which happened.** A deletion reads *"`branch` DELETES this file"* rather
+      than *"both changed base line(s)"* — the same discipline as the three 2026-08-30 findings
+      where the verdict was defensible and the stated subject was wrong.
+      **And scrutinising the parser found a SILENT FALSE NEGATIVE that predates all of this.**
+      `--unified=0` prints a removed line as `-` plus its text, so a file containing the line
+      `-- a/ghost.txt` emits `--- a/ghost.txt`, and one gaining `++ /dev/null` emits
+      `+++ /dev/null`. This repository's documents quote diffs, so the shape is not hypothetical.
+      Measured on a fixture where both branches change base lines 2, 5 and 8 of one file:
+      `master`'s gate reports **2, 5** and loses 8 — the quoted line reset the path and every hunk
+      after it was dropped. **A guard whose subject is "do not miss a collision" was missing them,
+      and no test could see it.** Headers are now read only between `diff --git` and the first
+      `@@`, which is exact: a hunk body line can never start with `@@`.
 
 - [ ] **`[v]` A FILL IS NEVER RECORDED WITHOUT A PERSON — ~~AND THAT IS NOW WHAT PAUSES THE
       MACHINE~~ CLOSED FOR OUR OWN ORDERS 2026-09-03 (`DR-031`), still true and still correct for
