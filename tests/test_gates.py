@@ -3835,3 +3835,133 @@ def test_sibling_gate_stays_quiet_about_a_file_identical_to_trunk(tmp_path: Path
         "decide and nothing to report"
     )
     assert "shared.txt" in out, "and the file that genuinely diverges is still named"
+
+
+def _deletion_repo(tmp_path: Path, *, trunk_deletes: bool) -> Path:
+    """A repo where the sibling DELETES `contested.txt` and trunk rewrites every line of it.
+
+    `shared.txt` diverges on both sides throughout, so a quiet result about `contested.txt` can be
+    told apart from a gate that reported nothing at all - `AGENTS.md` §9's positive control.
+
+    `trunk_deletes` makes both sides remove the file, which is the one deletion shape that is not a
+    collision.
+    """
+    root = tmp_path / "repo"
+    root.mkdir()
+
+    def git(*args: str) -> None:
+        subprocess.run(
+            ["git", "-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t", *args],
+            capture_output=True, check=True,
+        )
+
+    (root / "shared.txt").write_text("base line\n", encoding="utf-8")
+    (root / "contested.txt").write_text(
+        "\n".join(f"line {n}" for n in range(1, 9)) + "\n", encoding="utf-8"
+    )
+    git("init", "-b", "master")
+    git("add", "-A")
+    git("commit", "-m", "the shared merge-base")
+
+    git("checkout", "-b", "sibling")
+    (root / "shared.txt").write_text("the sibling's answer\n", encoding="utf-8")
+    (root / "contested.txt").unlink()
+    git("add", "-A")
+    git("commit", "-m", "sibling removes the file")
+
+    git("checkout", "master")
+    (root / "shared.txt").write_text("trunk's answer\n", encoding="utf-8")
+    if trunk_deletes:
+        (root / "contested.txt").unlink()
+    else:
+        (root / "contested.txt").write_text(
+            "\n".join(f"rewritten {n}" for n in range(1, 9)) + "\n", encoding="utf-8"
+        )
+    git("add", "-A")
+    git("commit", "-m", "trunk")
+    return root
+
+
+def test_sibling_gate_reports_a_file_one_branch_deleted_and_the_other_rewrote(
+    tmp_path: Path,
+) -> None:
+    """Delete-against-edit is the collision a textual merge settles without asking anybody.
+
+    It was invisible until 2026-09-04: a deleted file's diff header reads `+++ /dev/null`, the path
+    was dropped there, and the file never entered the map. Measured on the fixture below before the
+    fix - `0 overlap(s)` - which is what a gate saying nothing about a real collision looks like.
+    """
+    root = _deletion_repo(tmp_path, trunk_deletes=False)
+    code, out = run_gate("verify_sibling_edits.py", root)
+
+    assert code == 0, out          # advisory: it reports and never vetoes
+    assert "contested.txt" in out, out
+    assert "DELETES" in out, "the report names what happened, not 'both changed these lines'"
+
+
+def test_sibling_gate_is_not_fooled_by_a_diff_quoted_inside_a_file(tmp_path: Path) -> None:
+    """A file whose CONTENT looks like a diff header must not steal the hunks after it.
+
+    `--unified=0` prints a removed line as `-` plus its text, so a line reading `-- a/ghost.txt`
+    arrives as `--- a/ghost.txt`, and an added `++ /dev/null` arrives as `+++ /dev/null`. This
+    repository's documents quote diffs, so the shape is not hypothetical. Both the reader that
+    reads `+++` anywhere and the one that reads `---` anywhere get this wrong, and the failure is
+    the dangerous direction: the later hunks are attributed to a file nobody touched, so a REAL
+    overlap goes unreported. Headers are read only between `diff --git` and the first `@@`.
+    """
+    root = tmp_path / "repo"
+    root.mkdir()
+
+    def git(*args: str) -> None:
+        subprocess.run(
+            ["git", "-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t", *args],
+            capture_output=True, check=True,
+        )
+
+    notes = root / "notes.md"
+    base = ["line 1", "-- a/ghost.txt", "line 3", "line 4",
+            "line 5", "line 6", "line 7", "line 8"]
+    notes.write_text("\n".join(base) + "\n", encoding="utf-8")
+    git("init", "-b", "master")
+    git("add", "-A")
+    git("commit", "-m", "the shared merge-base")
+
+    def rewrite(quote: str, last: str) -> None:
+        lines = list(base)
+        lines[1] = quote
+        lines[4] = "++ /dev/null"
+        lines[7] = last
+        notes.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    git("checkout", "-b", "sibling")
+    rewrite("the sibling rewrote the quote", "the sibling's last line")
+    git("add", "-A")
+    git("commit", "-m", "sibling")
+
+    git("checkout", "master")
+    rewrite("trunk rewrote the quote", "trunk's last line")
+    git("add", "-A")
+    git("commit", "-m", "trunk")
+
+    code, out = run_gate("verify_sibling_edits.py", root)
+
+    assert code == 0, out
+    assert "ghost.txt" not in out, "no such file was ever touched - that text is content"
+    assert "notes.md" in out, out
+    assert "8" in out, "the hunk after the fake header is still attributed to the real file"
+
+
+def test_sibling_gate_stays_quiet_when_both_branches_deleted_the_same_file(
+    tmp_path: Path,
+) -> None:
+    """Both removed it: nothing for a merge to choose and nothing for a person to decide.
+
+    The exclusion is exact and needs no judgement, which is the standard `_same_as_trunk` set - a
+    gate that manufactures alarm costs what one that manufactures confidence costs.
+    """
+    root = _deletion_repo(tmp_path, trunk_deletes=True)
+    code, out = run_gate("verify_sibling_edits.py", root)
+
+    assert code == 0, out
+    assert "contested.txt" not in out, out
+    assert "shared.txt" in out, "and the file that genuinely diverges is still named"
