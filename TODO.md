@@ -2513,6 +2513,33 @@ is for where no gate can reach.
 
 ## 6. Code & gates
 
+- [ ] **`[v]` A BLOCKER EXPIRES AND THE ENTRY THAT NAMED IT DOES NOT — three found in one evening,
+      2026-09-04.** Not a hypothesis: three open entries were opened for unrelated reasons and all
+      three described a world that had stopped being true.
+      | entry | what it claimed | when it stopped being true |
+      |---|---|---|
+      | §6b `WIRE TECH INTO THE DAILY RUN` | *"the scheduled pass never calls it"*, blocked until the adapter ran for real | `DR-035`, 2026-09-03 — and the pass stopped on `TECH` that evening |
+      | §6 `A FILL IS NEVER RECORDED WITHOUT A PERSON` | *"`positions.duckdb` is written only by `open-position` and `respond`"* | `DR-031`, 2026-09-03 — `sync-fills` writes it, before the scan |
+      | §6 instrument identity (a) | blocked on a missing symbol directory | the directory holds 13,339 symbols; measured 2026-09-04, fixed the same day |
+
+      **The sample is what it is and is not extrapolated.** 66 items are open and 48 carry `[v]`;
+      roughly eight were opened last night and three of those were stale. That is a rate worth
+      acting on and not a census — the other forty have not been re-read.
+      **Why the `[v]` mark does not catch it.** It records that an item was verified *when written*,
+      which is exactly the shape `AGENTS.md` §12 names as this repository's most persistent failure:
+      *"a citation that was CORRECT when written, still standing after the fact it cites moved."*
+      Every one of the three was correct on its own date.
+      **The fix has a precedent in this file.** §10.5 stopped counts rotting by giving each one an
+      owner and making every other mention name the command instead. The same move works on a
+      blocker: **a sentence saying something is blocked, missing or unwired names the command that
+      would show it had changed.** `read_by: none` and `verify_parameters.py` are the working
+      example — a parameter's unwired-ness is re-derived on every gate run rather than asserted in
+      prose.
+      Not built here: whether it can be a gate depends on whether such sentences can be recognised
+      exactly, and `AGENTS.md` §12's habit is that a gate over prose needs an exact token or it
+      becomes noise. **The cheap version needs no gate at all** — the convention, applied when an
+      entry is written.
+
 - [ ] **GATE 33 REPORTS EIGHT OVERLAPS THAT CANNOT EXIST, AND IT WILL DO SO FOREVER — found
       2026-09-04.** `tools/verify_sibling_edits.py` names `claude/a-research-instrument-not-a-broker`
       as a live sibling overlapping on `registry/parameters.yml`, `tools/check_gates.py`,
@@ -2565,13 +2592,33 @@ is for where no gate can reach.
       `_same_as_trunk` already refuses to treat a missing path as a match, so closing this gap will
       not silently open a hole there.
 
-- [ ] **A FILL IS NEVER RECORDED WITHOUT A PERSON, AND THAT IS NOW WHAT PAUSES THE MACHINE —
-      2026-09-02.** `DR-027` §11.3 names this file, so this is the entry that claim points at.
-      **The state today is correct and manual.** `positions.duckdb` is written only by
-      `open-position` and `respond`. The submission path writes no position deliberately (`DR-027`
+- [ ] **`[v]` A FILL IS NEVER RECORDED WITHOUT A PERSON — ~~AND THAT IS NOW WHAT PAUSES THE
+      MACHINE~~ CLOSED FOR OUR OWN ORDERS 2026-09-03 (`DR-031`), still true and still correct for
+      everything else.** `DR-027` §11.3 names this file, so this is the entry that claim points at.
+      ~~**The state today is correct and manual.** `positions.duckdb` is written only by
+      `open-position` and `respond`.~~ The submission path writes no position deliberately (`DR-027`
       §6: a `Position` is a thing created from the FILL, and an accepted order is not a fill). So a
       run submits up to the ratified caps, and the NEXT run stops with `TECH` until somebody
       records what filled — which is `DR-027` §11's guard doing its job, not a defect.
+
+      **RE-CHECKED AGAINST THE TREE 2026-09-04, and the struck-through half is a month out of
+      date.** `sync-fills` writes `positions.duckdb` — `cli._sync_fills` calls `adoption.adopt` and
+      `store.record` — and `tools/daily_run.cmd` runs it **before** the scan, which is `DR-031`'s
+      ordering argument: the caps must be measured against what is actually held, not against
+      yesterday.
+      Evidence rather than a docstring. The three positions this project holds were written in a
+      single instant, `2026-09-03 12:45:38.955385-05:00`, which is one programmatic call and not
+      three typed commands; and the scheduled log carries the pass doing its job on both runs since:
+      ```
+      Alpaca paper trading  3 holding(s) at the venue
+        nothing to record - the book already describes every holding
+      ```
+      **What is still open is the part that SHOULD be**, and it is worth keeping the entry for:
+      a holding that traces to **no order this system placed** is still `TECH`, still pauses new
+      entries, and still needs a person. That is the untraceable case — a hand-placed order, or a
+      fill against something this book has no record of asking for — and adopting one automatically
+      would be `DR-026`'s refusal reversed by the back door. **The entry's cost sentence is what
+      expired, not its argument.**
       **What it costs:** one manual `open-position` per fill, every evening anything fills, or the
       machine stands still. That is the right trade while nothing is validated and the caps allow
       four names; it does not survive contact with a book that turns over.
