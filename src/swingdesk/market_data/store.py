@@ -31,6 +31,7 @@ from swingdesk.contracts.market import (
     Series,
 )
 from swingdesk.platform import schema
+from swingdesk.platform.bulk import insert_many
 from swingdesk.reference_data import calendar as cal
 
 _SCHEMA = """
@@ -372,7 +373,16 @@ class BarStore:
                 )
             )
 
-        _insert_bars(self._connection, new_rows)
+        insert_many(
+            self._connection,
+            """
+            INSERT OR REPLACE INTO bars
+                (instrument_id, interval, series, event_time, session_date, knowledge_time,
+                 open, high, low, close, volume)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            new_rows,
+        )
         return WriteResult(inserted=len(new_rows) - revised, revised=revised,
                            unchanged=unchanged, unclosed=unclosed,
                            close_revisions=tuple(revisions))
@@ -413,12 +423,16 @@ class BarStore:
             rows.append((action.instrument_id, action.kind.value, action.effective_date,
                          knowledge_time, action.value))
 
-        if rows:
-            self._connection.executemany(
-                "INSERT OR REPLACE INTO corporate_actions "
-                "(instrument_id, kind, effective_date, knowledge_time, value) VALUES (?,?,?,?,?)",
-                rows,
-            )
+        # A handful of rows per instrument rather than five hundred, so the saving here is
+        # small - it is written this way because one mechanism in one place is worth more
+        # than a saving, and the next reader should not have to work out why two batch
+        # writes in one file take different routes.
+        insert_many(
+            self._connection,
+            "INSERT OR REPLACE INTO corporate_actions "
+            "(instrument_id, kind, effective_date, knowledge_time, value) VALUES (?,?,?,?,?)",
+            rows,
+        )
         return WriteResult(inserted=len(rows) - revised, revised=revised, unchanged=unchanged)
 
     def actions_as_of(
@@ -514,51 +528,6 @@ class WriteResult:
         return (f"WriteResult(inserted={self.inserted}, revised={self.revised}, "
                 f"unchanged={self.unchanged}, unclosed={self.unclosed}, "
                 f"close_revisions={len(self.close_revisions)})")
-
-
-#: How many bars go into one `INSERT` statement. Bounded so a caller handing over ten years of
-#: half-hourly bars cannot build a statement with a hundred thousand placeholders in it; 1,000 rows
-#: is 11,000 parameters, which is comfortable, and it is far above the 503 a two-year daily fetch
-#: produces so the ordinary case is still a single statement.
-_INSERT_CHUNK = 1_000
-
-
-def _insert_bars(connection: Any, rows: list[tuple[Any, ...]]) -> None:
-    """Write the batch with one statement per chunk instead of one per ROW.
-
-    **`executemany` was 97% of the write, measured 2026-09-04 by profiling one pass.** DuckDB
-    executes the statement once per parameter set rather than vectorising it, and the difference is
-    not marginal:
-
-        executemany                    2.739 ms/row
-        one VALUES statement per chunk 0.087 ms/row     31x
-
-    Same table, same five-column primary key, same rows. What it costs in practice: the coverage
-    pass fetches symbols this store has never seen, so every one of a symbol's ~503 bars is new and
-    every one was a separate statement — 4 hours of a run in which the network was 0.27 seconds a
-    symbol and the writing was seven.
-
-    **The daily pass barely notices, and saying so is the honest half.** `write` skips a bar that is
-    already stored and unchanged, so an evening inserts about one row per instrument. This is a fix
-    for the BACKFILL, which is `NFR.md` §3's *full historical refresh* and the budget it was pressing
-    against.
-
-    A registered `pandas` relation is faster still — 0.022 ms/row — and is deliberately not used:
-    it would put a DataFrame in the storage layer for a saving of five minutes on a pass whose
-    network time is forty, and this module's dependency surface is one `import duckdb`.
-    """
-    for start in range(0, len(rows), _INSERT_CHUNK):
-        chunk = rows[start:start + _INSERT_CHUNK]
-        placeholders = ", ".join(["(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"] * len(chunk))
-        connection.execute(
-            f"""
-            INSERT OR REPLACE INTO bars
-                (instrument_id, interval, series, event_time, session_date, knowledge_time,
-                 open, high, low, close, volume)
-            VALUES {placeholders}
-            """,
-            [value for row in chunk for value in row],
-        )
 
 
 def _unclosed_sessions(

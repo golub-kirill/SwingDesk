@@ -19,6 +19,7 @@ import duckdb
 
 from swingdesk.contracts.run import RunManifest
 from swingdesk.platform import schema
+from swingdesk.platform.bulk import insert_many
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS runs (
@@ -246,7 +247,8 @@ class Journal:
         """
         if not decisions:
             return
-        self._connection.executemany(
+        insert_many(
+            self._connection,
             """
             INSERT INTO decisions
                 (run_id, recorded_at, instrument_id, decision, reason_code, reason, parameter_id,
