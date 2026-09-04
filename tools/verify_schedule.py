@@ -28,9 +28,24 @@ import csv
 import subprocess
 import sys
 
-#: The two tasks `docs/runbooks/README.md` §1 and §1a describe. Named here rather than discovered,
+#: The tasks `docs/runbooks/README.md` §1, §1a and §8 describe. Named here rather than discovered,
 #: so a task RENAMED out from under the runbook reads as missing instead of silently passing.
-TASKS = ("SwingDesk daily run", "SwingDesk second pass")
+#:
+#: **The third one was added 2026-09-04 and is expected to be RED until somebody registers it**,
+#: which is the whole point of adding it. `refresh_universe.py` describes tiered work - a periodic
+#: pass widens coverage, a daily pass reads what is stored - and the periodic tier was specified on
+#: 2026-08-12 and never scheduled at all. Nothing noticed for three weeks, while every evening's
+#: report printed `PARTIAL UNIVERSE` over a universe that was 28% of what the rule admits, and
+#: `CARD-001` ranked relative strength across that 28% as though it were the market.
+#:
+#: A task this file does not name is a task that can stop running and be missed, which is the
+#: failure this gate exists for aimed at the schedule instead of at one run. The message names the
+#: runbook section that carries the one command; it stops being red the moment it is registered.
+TASKS = (
+    "SwingDesk daily run",
+    "SwingDesk second pass",
+    "SwingDesk coverage pass",
+)
 
 UNAVAILABLE_EXIT = 4
 

@@ -486,3 +486,72 @@ What the paper account is for is putting this system's own machinery in front of
 fills, rejects and halts instead of a fixture — a measuring instrument that happens to speak a
 broker's protocol. Every report this system prints says so, and nothing shown to anybody should
 say more than the reports do.
+
+
+## 8. The coverage pass — the tier that was specified and never scheduled
+
+**Found 2026-09-04.** `tools/refresh_universe.py` opens by describing tiered work: a periodic pass
+widens coverage, and the daily `scan --universe` reads whatever is already stored. The daily tier
+was registered on 2026-08-12 and has run every evening since. **The periodic tier was never
+registered at all** — `schtasks` listed exactly two SwingDesk tasks, the 18:30 run and the 19:30
+second pass, and `tools/daily_run.cmd` mentions `refresh_universe` nowhere.
+
+**What it cost, and the report has been printing it every evening.** Every run carries the line:
+
+```
+PARTIAL UNIVERSE. This is a subset of what the rule admits, not the rule's answer:
+a symbol with no stored bars cannot be measured, so it cannot be admitted.
+```
+
+Measured that morning: **3,694 of 13,154 eligible symbols had stored bars — 28.1%**, and **9,460
+had never been fetched once**. `CARD-001` ranks the admitted universe by relative strength and
+holds the strongest few, so *strongest* meant strongest of a 28% sample. **That is a property of
+the schedule rather than of the rule**, and nothing acted on the label for three weeks.
+
+### What it costs to close, measured rather than estimated
+
+45 seconds per 100 symbols, so the ~9,400 never fetched are about **seventy minutes, once**. After
+that the queue is oldest-first drift, not a backlog.
+
+Roughly **45 of every 100 fail, and that is expected, not a fault**: warrants, units and rights
+(`AAC.U`, `ACHR.W`, `AESPW`) map to no vendor symbol — `universe.UNMAPPABLE_SUFFIXES` names them.
+The tool reports both counts so the two are never confused.
+
+### Registering it — the owner's step
+
+`tools/widen_universe.cmd` is the wrapper, built to the same discipline as `daily_run.cmd`: a
+preflight, a rotated log at `data/widen_universe.log`, a preserved exit code, and a `build_state`
+rebuild afterwards because `HANDOFF.md` §2 owns the coverage figure and is generated.
+
+**Check first.** `schtasks /Create` on an existing name offers to REPLACE it, and a wrong keystroke
+there discards a working registration:
+
+```bash
+python tools/verify_schedule.py
+```
+
+Then, once:
+
+```bash
+schtasks /Create /TN "SwingDesk coverage pass" /TR "C:\PycharmProjects\SwingDesk\tools\widen_universe.cmd" /SC WEEKLY /D SUN /ST 09:00
+```
+
+**Sunday morning, and the reason is a constraint rather than a preference.** The stores are
+single-writer (`ADR-0004`), so this must not overlap the evening passes — a weekend morning is the
+widest gap in the week. It is also the cadence Appendix T uses: a weekly pass sets up the week and
+the pre-session pass runs it.
+
+**A bigger catch-up by hand takes a budget:**
+
+```bash
+tools\widen_universe.cmd 9400
+```
+
+### How you know it is working
+
+`HANDOFF.md` §2's universe-coverage row is generated from the store, and every run's report prints
+the same figure in its `UNIVERSE` block. **The number to watch is `coverage`, and the day it stops
+saying `PARTIAL UNIVERSE` is the day the rule's answer and the stored answer are the same set.**
+
+A held store is not a failure here: an overlapping pass costs a log line rather than a traceback,
+which is `AGENTS.md` §12's rule about `ADR-0004`'s single writer.
