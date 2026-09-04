@@ -357,9 +357,18 @@ class AlpacaClient:
             "symbol": order.symbol,
             "qty": str(order.shares),
             "side": write.protect_side,
-            # `oco` takes its two legs and no top-level price: the whole order IS the pair, and
-            # whichever fills cancels the other. That is what "stop or target, never both" is on
-            # this venue's wire, and it is why a protective order needs no `type` of its own.
+            # **The venue settled this by refusing, on 2026-09-03.** The first three protective
+            # orders went out without a `type` at all - the comment here reasoned that an `oco` IS
+            # its two legs and therefore needs no type of its own - and all three came back
+            # `422 {"code":40010001,"message":"invalid order type"}`. AIS, BTSG and DINO spent that
+            # night unprotected because of it.
+            #
+            # The evidence that settles it is this system's own accepted order, not a document:
+            # `submit` above sends `type` ALONGSIDE `order_class: bracket` and the same nested
+            # `stop_loss`/`take_profit` legs, and the venue takes it. `order_class` says how the
+            # legs relate; `type` is still the parent order's own shape. `DR-027` 9 records the
+            # entry's class being settled the same way, by a refusal.
+            "type": write.protect_order_type,
             "order_class": write.protect_order_class,
             "time_in_force": write.protect_time_in_force,
             "stop_loss": {"stop_price": str(order.stop_price)},

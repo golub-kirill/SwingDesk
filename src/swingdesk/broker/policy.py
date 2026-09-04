@@ -83,6 +83,14 @@ class WritePolicy:
     analysis that produced it; a PROTECTION has to outlive the session because the position does."""
 
     protect_order_class: str
+
+    protect_order_type: str
+    """`limit` (`DR-037`, amended 2026-09-03 after the venue refused the order without it).
+
+    Not a threshold and not a price: `oco`'s take-profit leg IS a limit order, and this names the
+    parent's shape. The prices are the book's own stop and the target `exit.target_r_multiple`
+    implies, both carried in the legs below."""
+
     protect_side: str
     protect_client_order_id_prefix: str
 
@@ -302,6 +310,7 @@ def load(path: Path | None = None) -> BrokerPolicy:
                 _require(write_block, "protect_time_in_force", str, "write")
             ),
             protect_order_class=str(_require(write_block, "protect_order_class", str, "write")),
+            protect_order_type=str(_require(write_block, "protect_order_type", str, "write")),
             protect_side=str(_require(write_block, "protect_side", str, "write")),
             protect_client_order_id_prefix=str(
                 _require(write_block, "protect_client_order_id_prefix", str, "write")
