@@ -182,6 +182,9 @@ def main() -> int:
         "40 registry keys": _run("no registry file names a key twice, because YAML "
                                  "drops one without a word",
                                  [python, "tools/verify_registry_keys.py"]),
+        "41 vendor policy": _run("the price vendor's limits live in the committed policy "
+                                 "and the adapter reads them from there",
+                                 [python, "tools/verify_vendor_policy.py"]),
     }
 
     print("\n" + "=" * 62)

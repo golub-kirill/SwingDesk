@@ -79,12 +79,22 @@ def main() -> int:
                         help="how many symbols to fetch this pass (ignored with --symbols-from)")
     parser.add_argument("--period", default="2y",
                         help="fetch window; must exceed universe.min_bar_history (250 bars)")
-    parser.add_argument("--pause", type=float, default=0.0,
-                        help="seconds between fetches, if the vendor starts throttling")
+    # DEFAULTS FROM THE COMMITTED POLICY, not from a literal here. This is the bulk pass - the one
+    # that would notice a throttle first and the one whose politeness is a decision about somebody
+    # else's free server, which is `DR-008`'s argument and gate 41's subject. `None` as the argparse
+    # default so an explicit `--pause 0` on the command line is still distinguishable from silence.
+    parser.add_argument("--pause", type=float, default=None,
+                        help="seconds between fetches; defaults to limits.pause_seconds in "
+                             "registry/vendor_policy.yml, which is where the value lives")
     parser.add_argument("--symbols-from", type=Path, default=None,
                          help="JSON file with an 'instruments' list; fetch exactly these symbols "
                               "instead of budget-queuing eligible ones (PR-007 reproduction)")
     args = parser.parse_args()
+
+    # The policy is the owner of this number and the flag is an override, not the other way
+    # round. Read once per pass rather than per symbol: `vendor_yahoo.policy` is cached, but
+    # resolving it here makes the precedence visible at the point it is decided.
+    pause = args.pause if args.pause is not None else vendor_yahoo.policy().pause_seconds
 
     as_of = datetime.now(UTC)
 
@@ -139,8 +149,8 @@ def main() -> int:
             else:
                 faults.extend(store.write(series.bars, as_of, epsilon).close_revisions)
                 fetched += 1
-            if args.pause:
-                time.sleep(args.pause)
+            if pause:
+                time.sleep(pause)
             if index % 100 == 0:
                 print(f"  [{index}/{len(queue)}] fetched={fetched} failed={failed}")
 
