@@ -228,11 +228,20 @@ def size_long(
     # run would size and propose a trade the store could never record. Found by
     # `test_sizing_and_position_agree_on_the_denominator` on its first run, which is what a
     # cross-module property test is for.
+    # The reason NAMES THE MECHANISM. It read "an instrument cannot be stopped out at or below
+    # zero", which is true and reads as a data fault - an operator meeting it goes looking for a
+    # corrupt bar. The cause is arithmetic and ordinary: a volatility-scaled stop crosses zero when
+    # the volatility outgrows the price, and the live instance was a name that round-tripped from
+    # about $4 to $91 to $10 in four weeks with ATR(14) still carrying the spike.
+    # `AGENTS.md` §12: a defensible verdict under a wrong stated subject costs what a wrong verdict
+    # costs. The text is stated in what this function is GIVEN - it never sees the ATR or the
+    # multiple, so it does not name them.
     if stop <= 0:
         return Refusal(
             "STOP",
-            f"stop {stop} is not a positive price; an instrument cannot be stopped out at or "
-            f"below zero",
+            f"stop {stop} is not a positive price: an intended risk per share of {entry - stop} "
+            f"exceeds the entry price {entry} itself, which is what a volatility-scaled stop "
+            f"produces when volatility outgrows price",
         )
 
     budget = allowed_risk(registry)

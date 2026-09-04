@@ -2479,12 +2479,16 @@ is for where no gate can reach.
       registerable; a screen justified by the sign it produces on the sample that suggested it is
       the thing pre-registration exists to stop.
       **It has live evidence now, and it arrived from the other direction — 2026-09-04.** The
-      journal carries `Skip / STOP` decisions whose reason is *"stop … is not a positive price; an
-      instrument cannot be stopped out at or below zero"*. **They are all one instrument**, and the
+      journal carries `Skip / STOP` decisions whose reason names a stop that is not a positive
+      price. **They are all one instrument**, and the
       cause is mechanical rather than a data fault: the name round-tripped from about $4 to $91 and
       back to $10 inside four weeks, so ATR(14) still carries the spike while the price does not,
-      and `close − 2 × ATR` lands below zero. The refusal is the guard working. Derive the rows and
-      their span, never from this line:
+      and `close − 2 × ATR` lands below zero. The refusal is the guard working.
+      **The stored rows say something different from the ones written after 2026-09-04**, and the
+      difference is the point rather than an inconsistency: the reason read *"an instrument cannot
+      be stopped out at or below zero"* — true, and it reads as a data fault — and now names the
+      mechanism instead. Journal rows are immutable, so the old wording stands in every row already
+      written. Derive the rows and their span, never from this line:
       ```sql
       SELECT instrument_id, COUNT(*), MIN(recorded_at), MAX(recorded_at)
       FROM decisions WHERE reason_code = 'STOP' GROUP BY 1;

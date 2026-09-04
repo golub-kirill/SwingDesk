@@ -155,10 +155,17 @@ def test_a_nonpositive_stop_always_refuses(entry: Decimal, stop: Decimal) -> Non
     price, and sized against it. It is reachable: the stop is `entry - multiple * atr`, so any
     instrument whose ATR exceeds half its price at a 2.0 multiple crosses zero, and
     `universe.min_price` of 5.00 does not exclude those.
+
+    **The reason is asserted as well as the code, and that is deliberate.** It used to say only that
+    a stop cannot sit at or below zero - true, and it reads as a data fault, so an operator meeting
+    it goes looking for a corrupt bar. Nothing pinned the text, so nothing would have noticed it
+    saying the wrong thing about its own cause (`AGENTS.md` §10.8).
     """
     result = size_long(entry, stop, "USD", _registry(), adtv=ADTV_ABUNDANT)
     assert isinstance(result, Refusal)
     assert result.code == "STOP"
+    assert "volatility outgrows price" in result.reason
+    assert "exceeds the entry price" in result.reason
 
 
 #: The fixture's own arithmetic, worked by hand so this test constrains the code instead of
