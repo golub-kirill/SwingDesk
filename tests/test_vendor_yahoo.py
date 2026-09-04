@@ -20,6 +20,7 @@ from __future__ import annotations
 import sys
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 from types import ModuleType, SimpleNamespace
 
 import pandas as pd
@@ -27,6 +28,10 @@ import pytest
 
 from swingdesk.contracts.market import Interval
 from swingdesk.contracts.reference import Exchange, Instrument
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+
+import vendor_integrity
 from swingdesk.market_data import vendor_yahoo
 
 KNOWN_AT = datetime(2026, 8, 24, 23, 31, tzinfo=UTC)
@@ -121,10 +126,121 @@ def test_a_row_the_CONTRACT_refuses_is_reported_on_one_line(
 
     Found by a fixture that made exactly that mistake. A log spending six lines per refused row per
     instrument is one nobody reads, so the reason is collapsed and bounded.
+
+    **Amended 2026-09-04.** This asserted the whole of stderr was ONE line, and that was always a
+    stronger claim than the docstring made: the subject is the collapsing of a multi-line pydantic
+    render, not the total. A close outside `[low, high]` is *also* arithmetically impossible, so it
+    now carries a `VENDOR INTEGRITY` line beside its refusal - deliberately, and covered below.
+    The assertion is narrowed to what this test is actually about.
     """
     _install(monkeypatch, _frame([_row("2026-08-21"), _row("2026-08-24", close=99.0)]))
     vendor_yahoo.fetch(_instrument(), Interval.DAY, KNOWN_AT)
 
     err = capsys.readouterr().err.strip()
-    assert len(err.splitlines()) == 1, err
-    assert "2026-08-24" in err and "ValidationError" in err
+    refusals = [line for line in err.splitlines() if line.startswith("vendor row(s) refused")]
+    assert len(refusals) == 1, err
+    assert "2026-08-24" in refusals[0] and "ValidationError" in refusals[0]
+
+
+# ------------------------------------------------------- an impossible bar is not a late one
+#
+# Measured 2026-09-04 across the whole run log: 1,120 refusals in one evening, 1,113 of them the
+# same routine condition, and `DFNM`'s arithmetically impossible bar invisible among them. The
+# first run of `tools/vendor_integrity.py` then found **770** such bars across 311 instruments and
+# 52 runs - not one. Every one had been buried since the log began.
+
+
+def _impossible_row(when: str) -> dict:
+    """Yahoo's own numbers for `DFNM` on 2026-09-03, scaled to a `TEST.n` instrument.
+
+    The open sits above the high. A session's high IS the highest price of that session and the
+    open is a trade inside it, so no publication delay produces this - which is precisely what
+    separates it from a `close` the vendor has not computed yet.
+    """
+    return {"when": when, "Open": 47.37, "High": 47.355, "Low": 47.27,
+            "Close": 47.30, "Volume": 1_000}
+
+
+def test_an_impossible_bar_gets_its_own_line(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """THE REGRESSION. Without a prefix of its own it is one of a thousand identical lines."""
+    _install(monkeypatch, _frame([_row("2026-08-21"), _impossible_row("2026-08-24")]))
+    vendor_yahoo.fetch(_instrument(), Interval.DAY, KNOWN_AT)
+
+    err = capsys.readouterr().err
+    assert "VENDOR INTEGRITY" in err, (
+        "an open outside its own session range is arithmetically impossible and must be findable "
+        "without grouping a thousand lines by hand"
+    )
+    assert "TEST.1" in err and "2026-08-24" in err
+    assert "outside [" in err, "the numbers themselves, so the reader can check the claim"
+
+
+def test_a_late_close_does_NOT_get_that_line(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """The control that stops the prefix meaning nothing.
+
+    This is the 1,113-a-day case - the vendor's end-of-day process has not run. It is still
+    refused and still counted, and it is NOT an integrity finding. A prefix that appears on every
+    refusal is the noise it was added to cut.
+    """
+    _install(monkeypatch, _frame([_row("2026-08-21"), _row("2026-08-24", close=float("nan"))]))
+    vendor_yahoo.fetch(_instrument(), Interval.DAY, KNOWN_AT)
+
+    err = capsys.readouterr().err
+    assert "VENDOR INTEGRITY" not in err
+    assert "1 of 2 rows failed validation" in err, "still refused, still counted, still visible"
+
+
+def test_the_impossible_bar_is_also_still_counted_as_a_refusal(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """It gets an EXTRA line, never a different one. Losing it from the count would trade one
+    kind of silence for another."""
+    _install(monkeypatch, _frame([_row("2026-08-21"), _impossible_row("2026-08-24")]))
+    vendor_yahoo.fetch(_instrument(), Interval.DAY, KNOWN_AT)
+    printed = capsys.readouterr().err
+
+    assert "1 of 2 rows failed validation" in printed
+    assert printed.count("VENDOR INTEGRITY") == 1
+
+
+# ------------------------------------------------------------------ the history tool reads BOTH
+
+
+def test_the_integrity_tool_reads_the_legacy_line_shape() -> None:
+    """A history tool that cannot read history is decoration.
+
+    The `VENDOR INTEGRITY` prefix landed 2026-09-04. Every one of the 770 violations already in
+    the log was written before it, inside a `vendor row(s) refused` line - so a parser that only
+    understood the new shape would answer *"has this happened before?"* with *no*, for all 770.
+    """
+    legacy = ("vendor row(s) refused  DFNM 1d: 1 of 252 rows failed validation - 2026-09-03 "
+              "(ValidationError: 1 validation error for Bar Value error, open 47.369999 outside "
+              "[47.270000, 47.355000] [type=value_error])")
+    found = vendor_integrity.violations(legacy)
+
+    assert len(found) == 1
+    symbol, field, distance = found[0]
+    assert symbol == "DFNM"
+    assert field == "open"
+    # 47.369999 is 0.014999 above a high of 47.355, against a midpoint of 47.3125.
+    assert Decimal("0.031") < distance < Decimal("0.032"), distance
+
+
+def test_the_integrity_tool_reads_the_new_line_shape() -> None:
+    current = ("VENDOR INTEGRITY  DFNM 1d 2026-09-03  1 validation error for Bar Value error, "
+               "open 47.369999 outside [47.270000, 47.355000]")
+    found = vendor_integrity.violations(current)
+
+    assert [(s, f) for s, f, _d in found] == [("DFNM", "open")]
+
+
+def test_the_integrity_tool_ignores_a_refusal_that_is_merely_late() -> None:
+    """The positive control for the parser: it must not count the routine case as a violation."""
+    routine = ("vendor row(s) refused  AIS 1d: 1 of 252 rows failed validation - 2026-09-03 "
+               "(ValidationError: 1 validation error for Bar close Input should be a finite "
+               "number [type=finite_number, input_value=Decimal('NaN')])")
+    assert vendor_integrity.violations(routine) == []
