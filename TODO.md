@@ -2513,6 +2513,40 @@ is for where no gate can reach.
 
 ## 6. Code & gates
 
+- [ ] **`[v]` THE COVERAGE TIER WAS SPECIFIED AND NEVER SCHEDULED, AND THE UNIVERSE IS 28% BECAUSE
+      OF IT — found 2026-09-04.** `tools/refresh_universe.py` opens by describing tiered work: a
+      periodic pass widens coverage, and the daily `scan --universe` reads what is already stored.
+      The daily tier was registered 2026-08-12 and has run every evening. **The periodic tier was
+      never registered at all** — `schtasks` lists exactly two SwingDesk tasks, and
+      `tools/daily_run.cmd` mentions `refresh_universe` nowhere.
+      **Every report has been saying so and nothing acted on it.** The `UNIVERSE` block prints
+      *"PARTIAL UNIVERSE. This is a subset of what the rule admits, not the rule's answer"* on every
+      run. Measured that morning: **3,694 of 13,154 eligible symbols had stored bars, and 9,460 had
+      never been fetched once.**
+      **Why it is a correctness problem and not a coverage statistic.** `CARD-001` ranks the
+      admitted universe by relative strength and holds the strongest few, so *strongest* meant
+      strongest of a 28% sample. That is a property of the SCHEDULE, not of the rule, and a
+      cross-sectional statistic computed over a biased sample is the one thing this card cannot
+      survive. The queue is oldest-first precisely so the subset is not also arbitrary.
+      **The cost is measured, not estimated:** 45 seconds per 100 symbols, so the never-fetched set
+      is about **seventy minutes, once**. Roughly 45 of every 100 fail and that is expected —
+      warrants, units and rights map to no vendor symbol (`universe.UNMAPPABLE_SUFFIXES`), and the
+      tool reports both counts so the two are never confused.
+      **Built here:** `tools/widen_universe.cmd`, to the same discipline as `daily_run.cmd` — a
+      preflight, a rotated log, a preserved exit code, and a `build_state` rebuild afterwards
+      because `HANDOFF.md` §2 owns the coverage figure and is generated. `docs/runbooks/README.md`
+      §8 carries the registration.
+      **Left to the owner, and the runbook already says why:** *"Registering it is the owner's step
+      — the repository cannot create a scheduled task."* One `schtasks /Create`, Sunday morning,
+      chosen because the stores are single-writer (`ADR-0004`) and a weekend morning is the widest
+      gap from the evening passes.
+      **A catch-up pass was run by hand on 2026-09-04** to stop the subset being 28% while the
+      registration waits. Derive the current figure rather than quoting one:
+      ```bash
+      PYTHONPATH=$PWD/src python tools/verify_counts.py
+      ```
+
+
 - [ ] **`[v]` A BLOCKER EXPIRES AND THE ENTRY THAT NAMED IT DOES NOT — three found in one evening,
       2026-09-04.** Not a hypothesis: three open entries were opened for unrelated reasons and all
       three described a world that had stopped being true.
