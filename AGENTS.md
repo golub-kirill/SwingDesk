@@ -749,9 +749,26 @@ were actually found.
 5. **Review the claims you just wrote.** A commit message is a claim, a decision record is a claim,
    a `read_by` is a claim, and every one of them can be checked against the tree in seconds.
 6. **Commit** one coherent change whose message says what was wrong and what it cost.
-7. **Gates** — §2, at §17's granularity.
+7. **Gates** — §2, at §17's granularity. **Once, here, and not while you iterate.**
 8. **Merge** — pull *every* checkout afterwards, then re-run the gates from the main one. A merge
    nobody pulled is a merge that changed one worktree.
+
+**Step 7 is a step, not a habit.** Measured on 2026-09-04, the owner having noticed it first: one
+session ran `check_gates.py` about ten times and the full suite five, roughly **twenty-five minutes**
+of waiting, for six commits. Most of those runs answered a question nobody had asked — after a pull,
+after a branch switch, after regenerating a file the gate itself generates.
+
+While you are building, run **the one test file you are changing**: it answers in seconds and it is
+the only thing that can be red for a reason you caused. The full suite and the gates go **once**,
+at step 7, on the tree you are about to commit. A second identical run is not more evidence; it is
+the same evidence, later.
+
+The two exceptions, both real: after a **merge** (step 8, from the main checkout — a different tree),
+and when a gate has actually failed and you are checking a fix.
+
+The costs, so nobody has to guess at them: the whole gate set is about **50 seconds**, of which gate
+34 (mutation) is half; the suite is about **3½ minutes** single-process. (The gate *count* is in
+`HANDOFF.md` §2, generated — §10.5, and gate 14 caught this paragraph naming it.)
 
 **The order is the rule, not the list.** Gates before merge, review before commit, validation before
 build. A step taken out of order is a step not taken, and step 4 is the one most easily skipped
