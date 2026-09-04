@@ -2284,9 +2284,13 @@ is for where no gate can reach.
       **Open:** pooling the primary window is the honest route to a sample, and §5 fixed the split
       before the run, so it needs a NEW pre-registration rather than an amendment.
 
-- [ ] **`[v]` `a.reproducible` HAS NEVER BEEN MEASURED ON THE REAL UNIVERSE, and the reason is
-      not the one `HANDOFF.md` gives.** Found 2026-08-24 by reading `journal.duckdb` rather than the
-      documents.
+- [ ] **`[v]` `a.reproducible` IS MEASURED ON THE REAL UNIVERSE AND NO STORED MANIFEST CAN
+      DEMONSTRATE IT — two different claims, and the second is what stays open.**
+      ~~`a.reproducible` HAS NEVER BEEN MEASURED ON THE REAL UNIVERSE.~~ **That was the title until
+      2026-09-04, and this entry's own body had refuted it since 2026-08-24** — see *RUN 2026-08-24,
+      AND IT PASSES* below. A reader who takes a heading as the finding got the opposite of what the
+      paragraph says. Originally found 2026-08-24 by reading `journal.duckdb` rather than the
+      documents; the reason is still not the one `HANDOFF.md` gives.
       Gate 9 checks it on `golden/replay/daily-three-instruments` — real, and **three instruments**.
       Determinism defects live where iteration order, set membership and dictionary insertion have
       room to differ, and three names give them almost none.
@@ -2451,6 +2455,22 @@ is for where no gate can reach.
       post-hoc and **must not be adopted as a finding**. A screen justified by a mechanism is
       registerable; a screen justified by the sign it produces on the sample that suggested it is
       the thing pre-registration exists to stop.
+      **It has live evidence now, and it arrived from the other direction — 2026-09-04.** The
+      journal carries `Skip / STOP` decisions whose reason is *"stop … is not a positive price; an
+      instrument cannot be stopped out at or below zero"*. **They are all one instrument**, and the
+      cause is mechanical rather than a data fault: the name round-tripped from about $4 to $91 and
+      back to $10 inside four weeks, so ATR(14) still carries the spike while the price does not,
+      and `close − 2 × ATR` lands below zero. The refusal is the guard working. Derive the rows and
+      their span, never from this line:
+      ```sql
+      SELECT instrument_id, COUNT(*), MIN(recorded_at), MAX(recorded_at)
+      FROM decisions WHERE reason_code = 'STOP' GROUP BY 1;
+      ```
+      **What it changes for the study, and what it does not.** It is a second mechanism in the same
+      family — an instrument whose recent volatility exceeds its own price cannot hold a 2 × ATR
+      stop — and it is observable in the LIVE path rather than only in a backtest, which none of the
+      three classes above are. It authors no threshold and does not narrow the study's scope; the
+      decision *"is `2 × ATR ≥ price` a screen"* is the owner's and nobody has been asked it.
 - [x] **`[v]` Prereg id-reservation has a gate — 29, built 2026-08-24.** The index said *"worth
       fixing if a third one appears"* and a third had. `tools/verify_prereg_ids.py` catches all
       three shapes: a study document missing from its own index, an id reserved **by reference
@@ -2604,6 +2624,28 @@ is for where no gate can reach.
       exactly, and `AGENTS.md` §12's habit is that a gate over prose needs an exact token or it
       becomes noise. **The cheap version needs no gate at all** — the convention, applied when an
       entry is written.
+
+      **SECOND PASS, 2026-09-04, and it found a sharper shape than the first one.** Five open items
+      carrying a blocking claim were re-tested against the tree and the stores rather than re-read.
+      Two are still exactly true — `data.staleness_action_threshold` is `unset` with `read_by: none`
+      in the registry, and `PR-011` is still unwritten. **Three were wrong, and all three in the
+      same way: the TITLE asserted a state the entry's OWN BODY had already struck through.**
+      | entry | its title said | its own body already said |
+      |---|---|---|
+      | `a.reproducible` has never been measured on the real universe | never measured | *"RUN 2026-08-24, AND IT PASSES"*, with the hash |
+      | Almost every recorded `Skip` is `RISK / risk.per_trade_pct` | almost every one | *"No such skip has been recorded since the parameter was set"* |
+      | Half the journalled runs carry `code_dirty` | half | `HANDOFF.md` §2 owns the count, and the line said so |
+      **That is a different failure from an expired blocker and it is cheaper to fix.** No
+      measurement is needed to catch it: the contradiction is inside the entry. A reader who takes
+      the heading as the finding — which is what a heading is for — carries away the opposite of
+      what the paragraph establishes, and every one of these three headings had stood for at least
+      ten days over a body that refuted it.
+      **One body was wrong too, which is the part that did need a measurement.** *"The dirty era
+      ended on 2026-08-17"* — the journal has every scheduled pass from 2026-08-25 19:30 through
+      08-27 19:30 dirty.
+      **Rule, applied here and cheap enough to keep:** when an entry is corrected, the TITLE is
+      corrected with it, and a title carries no numeral. Not proposed as a gate — `AGENTS.md` §12's
+      standard is an exact token, and *"a heading contradicted by its own paragraph"* is not one.
 
 - [ ] **GATE 33 REPORTS EIGHT OVERLAPS THAT CANNOT EXIST, AND IT WILL DO SO FOREVER — found
       2026-09-04.** `tools/verify_sibling_edits.py` names `claude/a-research-instrument-not-a-broker`
@@ -3399,15 +3441,32 @@ is for where no gate can reach.
       universe path already does correctly, and the Canadian half that waits on `DR-003` gap 1's
       wiring. The split this entry was written about can no longer be minted from the CLI.
       Blocks any historical edge claim; does not block Track-A-only PAPER.
-- [ ] **Half the journalled runs carry `code_dirty = true`.** `a.reproducible` requires a
-      byte-identical re-run from a stored manifest; a manifest pointing at a dirty tree cannot be
-      replayed from its SHA. **`HANDOFF.md` §2 owns the count** — this line read ~~11 of 13~~ until
-      2026-08-25, which was true when written and is a second copy of a figure §2 generates
-      (`AGENTS.md` §10.5). The dirty era ended on 2026-08-17 and its records are immutable, so the
-      share falls only by adding clean runs.
-- [ ] **Almost every recorded `Skip` is `RISK / risk.per_trade_pct`** — unset-parameter refusals,
-      i.e. a system fault rather than market judgment. That parameter was set 2026-08-11. Any
-      statistic over the decision history must segment these out first.
+- [ ] **Some journalled runs carry `code_dirty = true`, and a manifest pointing at a dirty tree
+      cannot be replayed from its SHA.** `a.reproducible` requires a byte-identical re-run from a
+      stored manifest. **`HANDOFF.md` §2 owns the count** — this line read ~~11 of 13~~ until
+      2026-08-25 and ~~half~~ until 2026-09-04, both true when written and both a second copy of a
+      figure §2 generates (`AGENTS.md` §10.5). The title carries no numeral now, which is the only
+      version of this line that cannot rot.
+      ~~The dirty era ended on 2026-08-17 and its records are immutable, so the share falls only by
+      adding clean runs.~~ **That sentence was wrong, measured against the journal 2026-09-04.** A
+      SECOND dirty era ran afterwards — every scheduled pass from 2026-08-25 19:30 through
+      2026-08-27 19:30 is dirty, which is the `daily_run.cmd` leftover chain `HANDOFF.md` §8
+      describes. **It has stopped:** every scheduled pass since 2026-08-31 is clean. Why it stopped
+      is not established here and is marked conjecture (`AGENTS.md` §10.4) — the leftover is a
+      property of what the main checkout is carrying at 18:30, not of the code. Re-derive rather
+      than reading either sentence:
+      ```sql
+      SELECT started_at, code_dirty FROM runs ORDER BY started_at;
+      ```
+- [ ] **A large block of the recorded `Skip`s is `RISK / risk.per_trade_pct`, and every one of them
+      predates 2026-08-11** — unset-parameter refusals, i.e. a system fault rather than market
+      judgment. Any statistic over the decision history must segment them out first.
+      ~~Almost every recorded `Skip` is `RISK / risk.per_trade_pct`.~~ **The title said that until
+      2026-09-04, and the body below had already refuted it** — which is the shape this file keeps
+      producing: a heading asserting a state its own paragraph has struck. Checked against the last
+      three runs on 2026-09-04: their `RISK` skips carry NO `parameter_id`, they are the `DR-006`
+      book cap, and the same runs record `Trade` decisions. The parameter is `owner`, valued, and
+      its `read_by` resolves.
       ~~4,486 of 4,510~~ **— corrected 2026-08-25, and the numerator is the half that cannot move.**
       No such skip has been recorded since the parameter was set, so the count of them is frozen
       while the denominator grows with every evening; quoting the pair makes the ratio look worse
