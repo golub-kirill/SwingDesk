@@ -49,6 +49,7 @@ from pathlib import Path
 
 import duckdb
 
+from swingdesk.platform.bulk import insert_many
 from swingdesk.reference_data.universe import DirectoryEntry
 
 #: One `directory_audit` row, in column order: started, finished, mode, reason, enabled, attempts,
@@ -204,8 +205,12 @@ class DirectoryStore:
                 source_session_date = None
 
         self._connection.execute("DELETE FROM directory WHERE knowledge_time = ?", [knowledge_time])
-        self._connection.executemany(
-            "INSERT OR REPLACE INTO directory VALUES (?, ?, ?, ?, ?, ?)", rows
+        # 13,339 rows on every pull. `executemany` runs the statement once per row, which on
+        # this table's composite primary key measured 2.739 ms each - about half a minute of
+        # a daily pull spent inserting a directory that fits in memory twice over.
+        insert_many(
+            self._connection, "INSERT OR REPLACE INTO directory VALUES (?, ?, ?, ?, ?, ?)",
+            list(rows),
         )
         self._connection.execute(
             "INSERT OR REPLACE INTO directory_pulls VALUES (?, ?, ?, ?, ?)",
