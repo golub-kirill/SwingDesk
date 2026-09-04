@@ -11,6 +11,7 @@ becomes "traded on stale data".
 
 from __future__ import annotations
 
+import re
 import sys
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
@@ -36,6 +37,18 @@ MAX_LOOKBACK_DAYS: dict[Interval, int | None] = {
 }
 
 _INTERVAL_ARG = {Interval.DAY: "1d", Interval.HOUR: "1h", Interval.HALF_HOUR: "30m"}
+
+#: A refusal that ARITHMETIC forbids, as opposed to one the vendor will fix by tomorrow.
+#:
+#: `contracts.market.Bar` raises `open <price> outside [<low>, <high>]` when a session's opening
+#: trade sits beyond the range of the session that contains it. That cannot happen in real market
+#: data at any publication time, which is exactly what separates it from a `close` that is still
+#: `NaN` because the vendor's end-of-day process has not run.
+#:
+#: Matched on the message rather than on an exception type because the two arrive as the SAME type
+#: - pydantic raises `ValidationError` for both - and a check on the type would put every refusal
+#: in one bucket, which is the defect this exists to end.
+_IMPOSSIBLE = re.compile(r"outside \[")
 
 
 class VendorUnavailable(Exception):
@@ -114,6 +127,33 @@ def fetch(
             # that spends six lines per refused row per instrument is one nobody reads.
             reason = " ".join(str(invalid).split())
             dropped.append(f"{session_date} ({type(invalid).__name__}: {reason[:120]})")
+
+            # AN IMPOSSIBLE BAR IS NOT A LATE ONE, AND ONE LINE PER REFUSAL HID THAT FOR 52 RUNS.
+            #
+            # Measured 2026-09-04 over the whole of `data/daily_run.log`: 1,120 refusals in one
+            # evening, of which 1,113 were the same routine condition - the vendor's own close for
+            # the current session, not yet published, arriving as `NaN`. Buried among them was
+            # `DFNM`, whose OPEN sat outside its own `[low, high]`. It was found by grouping the
+            # lines with an ad-hoc script, which is not a mechanism anybody can rely on running.
+            #
+            # The two are different problems with different fixes, and the difference is not a
+            # severity I invented - it is the shape of the failure. *Not yet published* is a
+            # TIMING fact that resolves itself by tomorrow. *Open outside `[low, high]`* is an
+            # ARITHMETIC impossibility: the high is the highest price of the session and the open
+            # happened inside it, so no vendor timing can produce this and no later fetch repairs
+            # it. Verified against the raw feed - `auto_adjust=False`, `back_adjust=False`,
+            # `repair=False` - so it is the vendor's own number and not our adjustment rounding.
+            #
+            # Given its own prefix rather than its own severity, because a prefix is greppable and
+            # a severity is a number somebody has to agree on. `tools/vendor_integrity.py` reads
+            # these lines and answers "has this happened before" as a tool call rather than a
+            # memory - `AGENTS.md` §10.6.
+            if _IMPOSSIBLE.search(reason):
+                print(
+                    f"VENDOR INTEGRITY  {instrument.vendor_symbol} {interval.value} "
+                    f"{session_date}  {reason[:120]}",
+                    file=sys.stderr,
+                )
             continue
         bars.append(bar)
 
