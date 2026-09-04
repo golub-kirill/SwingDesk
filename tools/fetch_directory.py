@@ -289,7 +289,14 @@ def _adjacent_sessions(earlier: date, later: date) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser(prog="fetch_directory")
-    parser.add_argument("--data", type=Path, default=Path("data"))
+    # Anchored on `REPO`, never on the working directory. A relative default made the store the tool
+    # opened a property of where it was invoked from, and every refusal writes an audit row before it
+    # returns - so `tests/test_directory.py`'s scheduled-mode cases, which patch `REPO` and pass no
+    # `--data`, wrote DISABLED and NOT_A_SESSION rows into the operator's own append-only audit table
+    # on every full-suite run made from the repository root. Derive what is there:
+    #   SELECT mode, result, count(*) FROM directory_audit GROUP BY 1, 2
+    # `tools/daily_run.cmd` already passes an absolute `--data`, so the scheduled path is unmoved.
+    parser.add_argument("--data", type=Path, default=REPO / "data")
     parser.add_argument(
         "--scheduled",
         action="store_true",
