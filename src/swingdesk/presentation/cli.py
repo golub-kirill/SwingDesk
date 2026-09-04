@@ -34,6 +34,7 @@ from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
 from swingdesk.presentation import notify, report
 from swingdesk.reference_data import calendar as cal
 from swingdesk.reference_data import classification
+from swingdesk.reference_data import universe as reference_universe
 from swingdesk.reference_data.classification import ClassificationStore
 from swingdesk.reference_data.directory import DirectoryStore
 
@@ -60,15 +61,87 @@ DEFAULT_DATA = Path("data")
 STRATEGY_TAG = "CARD-001"
 
 
-def _instrument(ticker: str) -> Instrument:
+def _instrument(
+    ticker: str, data: Path | None = None, now: datetime | None = None
+) -> Instrument | str:
+    """The instrument a typed ticker means, or one string saying why it cannot be decided.
+
+    **An id is RESOLVED, not typed.** `contracts.reference` forbids deriving an id from a ticker
+    alone, and `universe.to_instrument` is the construction that obeys it - the id is the directory
+    symbol and the ticker is the vendor's form of it. This site minted `id=<what was typed>`
+    instead, so `open-position BRK-B` would record a position under id `BRK-B` while every bar the
+    universe path ever stored for it is under `BRK.B`. **Two identities for one instrument in a
+    bitemporal store cannot be un-split afterwards**, which is why it is worth a lookup.
+
+    Measured 2026-09-04, both halves: `bars.duckdb` holds 13 dotted ids and zero dashed, so it has
+    not happened yet - and `directory.duckdb` holds 13,339 symbols, including `BRK.A` in its dotted
+    form and **not** `BRK-B`, so a lookup now answers where in August it could not.
+
+    Three outcomes, and the third is the one that keeps this from breaking a workflow:
+
+      - the directory knows the symbol, by its own name or as the vendor's form of exactly one
+        symbol -> the canonical instrument, whatever was typed;
+      - the vendor's form is ambiguous across two symbols -> a REFUSAL naming both, because
+        picking one would be the guess `AGENTS.md` §3 forbids;
+      - **the directory has no row at all -> today's behaviour, minted, and said out loud.**
+        Canada is the live case: `DR-003` gap 1 records that the directory holds zero `.TO`
+        symbols, so refusing here would refuse every Canadian instrument on the strength of a
+        source gap somebody else is tracking. The note on stderr is what stops that being silent.
+
+    `data` is optional so the pure construction stays testable and so a caller with no store to
+    open behaves exactly as before.
+    """
     exchange = cal.exchange_for(ticker)
     base = ticker.upper().removesuffix(".TO")
-    return Instrument(
+    minted = Instrument(
         id=base if exchange.value == "NYSE" else f"{base}.TO",
         ticker=base,
         exchange=exchange,
         currency="USD" if exchange.value == "NYSE" else "CAD",
     )
+    if data is None:
+        return minted
+
+    typed = ticker.upper()
+    try:
+        with DirectoryStore(data / "directory.duckdb") as directory:
+            entries = directory.as_of(now or datetime.now(UTC))
+    except Exception as unreadable:  # noqa: BLE001 - a store this cannot open is not a refusal
+        # `ADR-0004` makes the stores single-writer, so a refresh pass holding this one is the
+        # design working. Minting is what this command did before the lookup existed; saying so is
+        # the difference between a fallback and a silent one.
+        print(f"  id NOT RESOLVED  {typed}: the directory could not be read ({unreadable}); "
+              f"the id was derived from what you typed", file=sys.stderr)
+        return minted
+
+    by_symbol = {entry.symbol: entry for entry in entries}
+    if typed in by_symbol:
+        return reference_universe.to_instrument(by_symbol[typed])
+
+    # The reverse of `universe.vendor_symbol`, computed forward rather than inverted: `BRK.B` and
+    # `AMH$G` both map into the vendor's namespace by rules that do not invert uniquely, so the
+    # honest lookup is to map every symbol and see which ones land on what was typed.
+    candidates = sorted(
+        symbol for symbol in by_symbol if reference_universe.vendor_symbol(symbol) == typed
+    )
+    if len(candidates) == 1:
+        return reference_universe.to_instrument(by_symbol[candidates[0]])
+    if candidates:
+        return (f"{typed} is the vendor's form of {len(candidates)} directory symbols "
+                f"({', '.join(candidates)}); name the one you mean")
+
+    # Two different facts, and one message for both would be false about one of them: a `.TO`
+    # symbol is unresolvable because the directory has no Canadian rows at all (`DR-003` gap 1,
+    # somebody else's open item), while a US ticker with no row is either a typo or a name the
+    # directory does not carry - which is a fact about THIS ticker.
+    why = (
+        "`DR-003` gap 1 - the directory holds no `.TO` symbols at all"
+        if exchange is Exchange.TSX
+        else f"no directory row for {typed}, by its own name or as any symbol's vendor form"
+    )
+    print(f"  id NOT RESOLVED  {typed}: the id was derived from what you typed. {why}",
+          file=sys.stderr)
+    return minted
 
 
 def _force_utf8_output() -> None:
@@ -1593,7 +1666,13 @@ def _open_position(args: argparse.Namespace) -> int:
     )
     now = clock.now()
     opened_on = date_cls.fromisoformat(args.opened_on) if args.opened_on else now.date()
-    instrument = _instrument(args.ticker)
+    resolved = _instrument(args.ticker, args.data, now)
+    if isinstance(resolved, str):
+        # Ambiguity refuses rather than picks. This writes the bitemporal position store,
+        # and a wrong id there is the one mistake no later correction can undo.
+        print(f"REFUSED  {resolved}", file=sys.stderr)
+        return 2
+    instrument = resolved
     registry = ParameterRegistry.load()
 
     if args.costs_per_share is not None:
@@ -1710,7 +1789,13 @@ def _scan(args: argparse.Namespace) -> tuple[int, str | None, notify.Outcome]:
     )
     mode = RunMode.LIVE_AS_OF if args.as_of else RunMode.LIVE
     registry = ParameterRegistry.load()
-    instruments = [_instrument(t) for t in args.tickers]
+    resolutions = [_instrument(t, args.data, clock.now()) for t in args.tickers]
+    refusals = [r for r in resolutions if isinstance(r, str)]
+    if refusals:
+        for refusal in refusals:
+            print(f"REFUSED  {refusal}", file=sys.stderr)
+        return 2, None, notify.Outcome.REFUSED
+    instruments = [r for r in resolutions if not isinstance(r, str)]
     selection = None
 
     with (
