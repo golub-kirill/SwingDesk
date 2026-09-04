@@ -298,6 +298,33 @@ class Unprotected:
     reason: str
 
 
+def restorable(
+    findings: Sequence[Unprotected],
+) -> tuple[tuple[Unprotected, ...], tuple[Unprotected, ...]]:
+    """Split unprotected positions into the ones `DR-037` places for, and the ones it must not.
+
+    Returns `(restorable, immovable)`.
+
+    **The line is `DR-037` §3 and it has to stay narrow.** A position holding NOTHING gets the
+    protection this system already decided on and already sent, which the venue retired for a
+    mechanical reason - that restores, it does not move. A stop resting at the WRONG price is a
+    stop somebody moved: `D6` governs a move, and placing a second trigger would leave two on one
+    position, which `unprotected` reads as *the highest wins* - silently applying a move nobody
+    approved.
+
+    **It lives here because it was written twice.** `cli._submit` had it inline and
+    `tools/verify_submission_guards.py` grew its own copy the day the tool learned to report the
+    two cases apart. Two spellings of one rule is the drift `tests/test_guard_parity.py` exists to
+    catch, found once already this week; one predicate with one test is the fix rather than a
+    third test asserting the two copies agree.
+    """
+    keep: list[Unprotected] = []
+    leave: list[Unprotected] = []
+    for finding in findings:
+        (keep if finding.venue_stop is None else leave).append(finding)
+    return tuple(keep), tuple(leave)
+
+
 def unprotected(
     book: Sequence[Position],
     live_orders: Sequence[PlacedOrder],

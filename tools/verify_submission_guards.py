@@ -151,12 +151,39 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"   STOP  {divergence.instrument_id} ({divergence.reason}) "
                       f"{divergence.detail[:100]}")
 
-        print("\nprotection - every open position's stop is standing at the venue (DR-036)")
+        print("\nprotection - every open position's stop is standing at the venue (DR-036/DR-037)")
         naked = broker_pkg.unprotected(book, live, policy.market)
         if naked:
-            stopped.append(f"{broker_pkg.MISMATCH_CODE} - {len(naked)} position(s) unprotected")
-            for finding in naked:
-                print(f"   STOP  {finding.instrument_id}  {finding.reason[:110]}")
+            # **The same split `_submit` makes**, and reporting it as one thing was wrong the day
+            # `DR-037` landed: a position holding NOTHING gets its protection placed and the run
+            # continues, while a stop at the WRONG price is a move, `D6` governs moves, and this
+            # system has no verb that could replace the standing one. Printing `STOP` for both
+            # described the world before `DR-037` and would have told tomorrow's operator that a
+            # pass which is about to work would not run.
+            restorable, immovable = broker_pkg.restorable(naked)
+
+            for finding in restorable:
+                print(f"   RESTORE  {finding.instrument_id}  nothing resting; the pass will place "
+                      f"a gtc oco at {finding.book_stop} for {finding.shares} sh (DR-037)")
+            for finding in immovable:
+                print(f"   STOP     {finding.instrument_id}  {finding.reason[:110]}")
+
+            # **Both still stop THIS tool**, and the asymmetry is deliberate. A restoration is an
+            # attempt, not an outcome - the first three went out on 2026-09-03 and came back
+            # `422 invalid order type`, after which `DR-036`'s guard stopped the pass exactly as it
+            # should have. A tool that reported "would submit" on the strength of a write it has
+            # not made would be claiming to know what the venue will say.
+            if immovable:
+                stopped.append(
+                    f"{broker_pkg.MISMATCH_CODE} - {len(immovable)} position(s) with a stop at the "
+                    f"wrong price, which `DR-037` does not restore"
+                )
+            if restorable:
+                stopped.append(
+                    f"{broker_pkg.MISMATCH_CODE} - {len(restorable)} position(s) unprotected. The "
+                    f"pass ATTEMPTS to restore these first and continues if the venue accepts; it "
+                    f"stops on whatever is still naked afterwards"
+                )
         elif book:
             print(f"   PASS  {len(book)} position(s), each with its stop standing")
         else:
@@ -243,7 +270,8 @@ def main(argv: list[str] | None = None) -> int:
 
     print()
     if stopped:
-        print(f"WOULD NOT SUBMIT - {len(stopped)} guard(s) would stop tonight's pass:")
+        print(f"WOULD NOT SUBMIT AS THINGS STAND - {len(stopped)} guard(s) would stop tonight's "
+              f"pass. A line saying the pass RESTORES first is one it may clear by itself:")
         for reason in stopped:
             print(f"   {reason[:150]}")
         print("\nNothing was sent. No write verb was used.")
