@@ -2513,6 +2513,58 @@ is for where no gate can reach.
 
 ## 6. Code & gates
 
+- [ ] **GATE 33 REPORTS EIGHT OVERLAPS THAT CANNOT EXIST, AND IT WILL DO SO FOREVER — found
+      2026-09-04.** `tools/verify_sibling_edits.py` names `claude/a-research-instrument-not-a-broker`
+      as a live sibling overlapping on `registry/parameters.yml`, `tools/check_gates.py`,
+      `tools/verify_registry_keys.py` and `HANDOFF.md`. **That branch is not ahead of `master`, it
+      is behind it.** Measured:
+      - `tools/verify_registry_keys.py` and `tools/check_gates.py` are **byte-identical** to
+        `master`'s;
+      - its `docs/06-engineering/CI_POLICY.md` still carries the pre-2026-09-04 gate 20 row, so
+        `master` has content it lacks;
+      - its one unmerged commit, `d406a39`, has the same subject, date and content as `master`'s
+        `78f5ca0` — the work reached trunk by another route and left this copy orphaned.
+
+      **Why it matters more than the tidiness.** §10.1's whole argument is that gate 33 is the thing
+      that stops two efforts rewriting one paragraph. A guard that reports the same eight phantom
+      overlaps on every run is one an operator learns to skim, and then it is not there on the
+      evening two efforts really do collide. That is `AGENTS.md` §12's *"a gate that manufactures
+      alarm costs what one that manufactures confidence costs"*, arrived at by neglect rather than
+      by design.
+
+      **Not deleted here, deliberately.** The branch belongs to another effort, and `master` is the
+      only place its content is proven to live; that proof is above rather than asserted. The remote
+      ref survives either way, so the local one is recreatable:
+      ```bash
+      git branch -D claude/a-research-instrument-not-a-broker
+      git checkout -b claude/a-research-instrument-not-a-broker origin/claude/a-research-instrument-not-a-broker   # to undo
+      ```
+      **PARTLY CLOSED THE SAME DAY.** Gate 33 now drops a path whose blob on the sibling is the
+      **same git object** as trunk's — there is no version to choose between, so there is nothing to
+      report. That is exact and needs no judgement, and it took the census from eight overlaps to
+      five. It deliberately does **not** try to work out which side is newer: that is the fuzzy
+      question, and answering it wrongly would hide a real collision rather than a phantom one.
+      **What is left open is the branch, not the gate.** The five that remain are files where the
+      sibling's copy genuinely differs from trunk's — it is behind on all of them, but *behind* and
+      *ahead* are the same shape to a diff. Deleting the stale local ref is still the fix, and it is
+      still the owner's to run.
+
+- [ ] **GATE 33 CANNOT SEE A DELETION AT ALL — found 2026-09-04, and it is older than the entry
+      above.** `_touched` sets `path = ""` when a diff hunk header reads `+++ /dev/null`, so a file
+      one branch DELETED never enters the map and can never be reported as overlapping anything.
+      **One branch deleting what another is rewriting is a real collision** — arguably the one that
+      most needs a person, because a textual merge resolves it silently in whichever direction the
+      merge strategy prefers. §10.1's whole subject is two efforts editing one thing.
+      **Measured rather than reasoned:** a fixture repo where `sibling` removes `contested.txt` and
+      `master` rewrites every line of it reports `0 overlap(s)`.
+      **Not fixed here, and the reason is a cost nobody has measured.** Counting deletions would
+      make every branch that removes a file it no longer needs collide with every branch that
+      touched it — which may be exactly right, or may be the noise `CI_POLICY.md` §3 describes.
+      `AGENTS.md` §12's habit applies: *measure the mechanism before shipping it, and be willing to
+      throw it away*. The measurement is one run of a widened `_touched` against the live branches.
+      `_same_as_trunk` already refuses to treat a missing path as a match, so closing this gap will
+      not silently open a hole there.
+
 - [ ] **A FILL IS NEVER RECORDED WITHOUT A PERSON, AND THAT IS NOW WHAT PAUSES THE MACHINE —
       2026-09-02.** `DR-027` §11.3 names this file, so this is the entry that claim points at.
       **The state today is correct and manual.** `positions.duckdb` is written only by
@@ -3195,6 +3247,31 @@ is for where no gate can reach.
       refuses an empty set drawn from the directory. **The one instrument is itself an instance of
       this defect** rather than a counterexample: it holds bars while absent from the directory, so
       nothing could resolve it either way.
+      **RE-MEASURED 2026-09-04, and two of this entry's four claims have moved.** The entry is from
+      2026-08-16 and the world under it changed twice since.
+      - **Still not triggered, and that is measured rather than assumed.** `bars.duckdb` holds
+        **13 dotted ids and zero dashed** — `BRK.A`, `BF.A`, `AGM.A`, `CRD.A`, `CIG.C`, `BIO.B`,
+        `BH.A`, `CNQ.TO` among them — and `positions.duckdb` holds neither form. Nineteen days of
+        real trading, and the split has not happened.
+      - **The cost of it happening went up.** In August the book was empty; there are open
+        positions now, so a second identity would split a book that is being managed rather than
+        one that is not there yet.
+      - **The directory can now resolve, which is the load-bearing change.** It held zero usable
+        rows for this purpose in August; it holds **13,339** symbols today, and every ticker in
+        actual use resolves — `AIS`, `BTSG`, `DINO`, `CM`, and `BRK.A` in its dotted, canonical
+        form. **`BRK-B` is ABSENT precisely because the canonical form is dotted**, which is the
+        defect stated as a lookup: what the user would type is not what the store calls it.
+      - **So a fix exists that needs no new source and no ruling.** `_instrument` mints
+        `id=base` from what was typed; `universe.vendor_symbol` already maps canonical → vendor
+        (`BRK.B` → `BRK-B`), so the reverse lookup over the directory identifies the one canonical
+        symbol a typed ticker means. Resolve when it is unambiguous, refuse when it is not
+        (`AGENTS.md` §3, fail closed), and leave today's behaviour where the directory has no row —
+        which keeps `.TO` and unknown symbols exactly as they are.
+      **Not built in the same pass that measured it, deliberately.** `_instrument` is called by
+      `_open_position`, which writes the bitemporal store, and by `_scan`; this entry's own last
+      line puts it behind the freeze, and §17's rule is that a change to the daily-run path gets its
+      own deliberate pass rather than riding along with a measurement. What is gone is the *reason
+      to wait* — the blocker this entry recorded was a missing directory, and there is one.
       Blocks any historical edge claim; does not block Track-A-only PAPER. **Changes the daily-run
       path — behind the freeze.**
 - [ ] **Half the journalled runs carry `code_dirty = true`.** `a.reproducible` requires a
@@ -3339,17 +3416,46 @@ is for where no gate can reach.
       `DR-027` §8 is the amendment; §6 stays as written.
       **Arming is still the owner's act and the switch file is still absent**, which is its default.
 
-- [ ] **`[ ]` WIRE `TECH` INTO THE DAILY RUN, or decide not to.** `swingdesk broker` reports a
+- [ ] **`[v]` WIRE `TECH` INTO THE DAILY RUN — ~~or decide not to~~ HALF BUILT 2026-09-03
+      (`DR-035`), and what is left is one narrow case.** `swingdesk broker` reports a
       broker/journal mismatch and Appendix N's prescribed action for that code is *"pause new
-      entries"* — but nothing pauses anything today, because the reconciliation is a command the
-      owner types and the scheduled pass never calls it.
+      entries"* — ~~but nothing pauses anything today, because the reconciliation is a command the
+      owner types and the scheduled pass never calls it.~~
       **The obstacle is real and is a decision, not a wiring task:** making the 18:30 pass reconcile
       means putting the broker network call inside the run that `a.run_completes` counts, so a venue
       outage becomes a failed run. `DR-015`'s staleness machinery is the precedent for how to answer
       that (refuse to DECIDE, do not fail the RUN), and `DR-019` is the precedent for asking whether
       a pass should do a thing at all before teaching it to.
-      Blocked behind the owner setting the keys — there is nothing to reconcile against until the
-      adapter has been run once for real.
+      ~~Blocked behind the owner setting the keys — there is nothing to reconcile against until the
+      adapter has been run once for real.~~
+
+      **CORRECTED AGAINST THE TREE, 2026-09-04.** The blocker above expired without anybody
+      revisiting the entry: the keys are set, the adapter has run for real many times, and the
+      struck-through sentence became false on 2026-09-03. **The scheduled pass DOES reconcile and
+      DOES pause**, and the decision the entry frames was answered by `DR-035` in exactly the shape
+      it predicted — the venue is read inside the run, an unreadable venue stops the SUBMISSION and
+      not the RUN, and the report is still written.
+      Not a claim from a docstring — from the evening of 2026-09-04, in `data/daily_run.log`:
+      ```
+      STOPPED  TECH: 3 open position(s) have no stop standing at Alpaca paper trading ...
+               The caps are denominated in a stop, so a book whose stops are not at the
+               venue bounds nothing. Restore the protection at the venue before adding to it.
+      ```
+      That pass had 101 sized and eligible Trade decisions and submitted none of them.
+
+      **WHAT IS ACTUALLY LEFT, and it is one case rather than the whole item.** `cli._submit`
+      returns at `if arming.stopped:` **before** it reads the venue, so a **disarmed** evening
+      reconciles nothing and would not notice a mismatch at all. Disarmed is the default state
+      (`broker/armed.py`: absent, unreadable or unmarked all mean stopped), so this is the ordinary
+      evening rather than an edge case.
+      **It is harmless in the direction that matters and not in the other.** A disarmed pass submits
+      nothing, so a mismatch causes no bad order — but a mismatch is precisely what the owner needs
+      to know about *before* arming, and today they learn it only by typing `swingdesk broker`.
+      **Still a decision, and a narrower one than the entry originally posed:** should a pass that
+      will not submit anything spend a venue call to tell the owner what it would have found? The
+      cost is one `GET` on an evening that otherwise makes none; the gain is that `TECH` surfaces on
+      the schedule rather than on demand. `DR-019`'s question — should a pass do this at all —
+      applies to that call and to nothing else now.
 
 **COMPLETE as of 2026-08-18.** Every buildable item below is done, and the one remaining open entry
 (3c, off-desk reach) is a deliberate non-goal rather than a gap — `DR-011` decided it and preserves

@@ -3760,3 +3760,78 @@ def test_conformance_gate_is_not_satisfied_by_the_split_dates_alone(tmp_path: Pa
     code, out = run_gate("verify_prereg_conformance.py", root)
     assert code == 1
     assert "split.buys" in out
+
+
+# ------------------------------------------------ gate 33: a file identical to trunk is no overlap
+#
+# Measured 2026-09-04. The gate named eight overlaps against a branch whose work had already reached
+# `master` under a different SHA - two of the files were BYTE-IDENTICAL to trunk's. `git branch
+# --merged` cannot see that, so the branch and its phantom overlaps would have been listed for ever,
+# and §10.1's argument for this gate is that an operator READS it.
+
+
+def _sibling_repo(tmp_path: Path, sibling_content: str) -> Path:
+    """A repo where `master` and `sibling` both changed the same two files since their merge-base.
+
+    `shared.txt` diverges. `duplicated.txt` is rewritten to the SAME text on both sides, which is
+    what duplicated work looks like once it has landed on trunk by another route.
+    """
+    root = tmp_path / "repo"
+    root.mkdir()
+
+    def git(*args: str) -> None:
+        subprocess.run(
+            ["git", "-C", str(root), "-c", "user.email=t@t", "-c", "user.name=t", *args],
+            capture_output=True, check=True,
+        )
+
+    (root / "shared.txt").write_text("base line\n", encoding="utf-8")
+    (root / "duplicated.txt").write_text("base line\n", encoding="utf-8")
+    git("init", "-b", "master")
+    git("add", "-A")
+    git("commit", "-m", "the shared merge-base")
+
+    git("checkout", "-b", "sibling")
+    (root / "shared.txt").write_text("the sibling's answer\n", encoding="utf-8")
+    (root / "duplicated.txt").write_text(sibling_content, encoding="utf-8")
+    git("add", "-A")
+    git("commit", "-m", "sibling")
+
+    git("checkout", "master")
+    (root / "shared.txt").write_text("trunk's answer\n", encoding="utf-8")
+    (root / "duplicated.txt").write_text("the settled text\n", encoding="utf-8")
+    git("add", "-A")
+    git("commit", "-m", "trunk")
+    return root
+
+
+def test_sibling_gate_reports_a_file_the_two_branches_answered_differently(tmp_path: Path) -> None:
+    """The positive control, and it is what the gate is FOR.
+
+    Without it the test below passes for a gate that reports nothing at all, which is the failure
+    `AGENTS.md` §9 names: a null is evidence only once a positive control shows the query works.
+    """
+    root = _sibling_repo(tmp_path, sibling_content="the sibling's other answer\n")
+    code, out = run_gate("verify_sibling_edits.py", root)
+
+    assert code == 0, out
+    assert "shared.txt" in out, out
+    assert "duplicated.txt" in out, "both differ from trunk here, so both are real overlaps"
+
+
+def test_sibling_gate_stays_quiet_about_a_file_identical_to_trunk(tmp_path: Path) -> None:
+    """THE REGRESSION. Same blob on both sides: there is no version to choose between.
+
+    The rule is exact and deliberately narrow - it does not try to work out which side is NEWER.
+    That is the fuzzy question, and answering it wrongly would hide a real collision instead of a
+    phantom one.
+    """
+    root = _sibling_repo(tmp_path, sibling_content="the settled text\n")
+    code, out = run_gate("verify_sibling_edits.py", root)
+
+    assert code == 0, out
+    assert "duplicated.txt" not in out, (
+        "the sibling's copy of this file is the same git object as trunk's, so there is nothing to "
+        "decide and nothing to report"
+    )
+    assert "shared.txt" in out, "and the file that genuinely diverges is still named"

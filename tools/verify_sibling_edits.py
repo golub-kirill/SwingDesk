@@ -110,6 +110,31 @@ def _touched(base: str, ref: str) -> dict[str, list[tuple[int, int]]]:
     return ranges
 
 
+def _same_as_trunk(branch: str, path: str) -> bool:
+    """Is the sibling's version of this file the same object as trunk's?
+
+    Compared by blob id via `rev-parse`, which asks git what it already knows rather than reading
+    two files and hashing them here - the same object id is the strongest possible statement that
+    there is nothing to choose between.
+
+    **A path missing from one side is not a match, and that guard is DEFENSIVE rather than
+    exercised.** `rev-parse` fails for a file absent at that ref and `_git` returns `None`; two
+    `None`s compared equal would read as *identical, nothing to decide*. The obvious way to reach
+    it - one branch deletes what the other rewrites - cannot happen today, because `_touched` above
+    sets `path = ""` on `+++ /dev/null` and so never records a deletion at all. **That is a gap in
+    this gate rather than a property of it**, measured 2026-09-04 and written up in `TODO.md` §6;
+    the guard is here so that closing the gap does not silently open a hole in this function.
+
+    It is stated instead of tested for exactly that reason. A test would have to reach a branch the
+    caller cannot produce, and `AGENTS.md` §10.8 says the honest move is to say which it is.
+    """
+    mine = _git("rev-parse", f"{TRUNK}:{path}")
+    theirs = _git("rev-parse", f"{branch}:{path}")
+    if mine is None or theirs is None:
+        return False
+    return mine.strip() == theirs.strip()
+
+
 def _overlaps(
     mine: list[tuple[int, int]], theirs: list[tuple[int, int]]
 ) -> list[tuple[int, int]]:
@@ -141,6 +166,24 @@ def main() -> int:
             continue
         compared += 1
         for path in sorted(set(mine) & set(theirs)):
+            if _same_as_trunk(branch, path):
+                # NOTHING TO DECIDE BETWEEN, so nothing to report. Measured 2026-09-04: this gate
+                # named eight overlaps against `claude/a-research-instrument-not-a-broker`, a branch
+                # whose `tools/check_gates.py` and `tools/verify_registry_keys.py` are BYTE-IDENTICAL
+                # to trunk's - its work reached `master` under a different SHA and left the copy
+                # orphaned, so `git branch --merged` cannot see it and it will be listed for ever.
+                #
+                # §10.1's whole argument is that this gate stops two efforts rewriting one
+                # paragraph. A gate reporting the same phantom overlaps every run is one an operator
+                # learns to skim, and then it is not there on the evening two efforts really do
+                # collide - `AGENTS.md` §12's *a gate that manufactures alarm costs what one that
+                # manufactures confidence costs*, arrived at by neglect.
+                #
+                # The test is EXACT and needs no judgement: if the sibling's blob for this path is
+                # the same object as trunk's, there is no version to choose. It deliberately does
+                # NOT try to decide which side is newer - that is the fuzzy question, and answering
+                # it wrongly would hide a real collision.
+                continue
             hits = _overlaps(mine[path], theirs[path])
             if not hits:
                 continue
