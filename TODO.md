@@ -2513,6 +2513,37 @@ is for where no gate can reach.
 
 ## 6. Code & gates
 
+- [ ] **`[v]` THREE UNIT TESTS OPEN THE OPERATOR'S LIVE DIRECTORY STORE — found 2026-09-04, and only
+      because the store was busy.** `tests/test_directory.py`'s three `scheduled_mode_*` tests
+      monkeypatch `fetch_directory.REPO` to `tmp_path` and set `sys.argv` to
+      `["fetch_directory", "--scheduled"]` — no `--data`. So argparse falls back to its default:
+      ```python
+      parser.add_argument("--data", type=Path, default=Path("data"))
+      ```
+      which is **relative**, resolves against the working directory, and from the repository root is
+      `C:/PycharmProjects/SwingDesk/data/directory.duckdb`. The `REPO` monkeypatch does not reach it.
+      **The evidence is a failure nobody would otherwise have seen.** With a coverage pass holding
+      the store, all three failed:
+      ```
+      IOException: Cannot open "data\directory.duckdb": used by another process (PID 3472)
+      ```
+      They pass on any ordinary day, which is the whole problem: a test that opens the live store
+      and succeeds is indistinguishable from one that is sandboxed.
+      **Harmless today, and the reason is luck rather than design.** The scheduled path exits early
+      when the local config disables the pull, so the connection is opened and nothing is written.
+      Nothing in the test enforces that; a future edit that reaches a write would reach the
+      operator's own directory, which is bitemporal and append-only.
+      **The fix is one line and it is not obviously free.** `default=REPO / "data"` makes the
+      monkeypatch reach it and makes the tool behave the same from any working directory — which
+      `daily_run.cmd` already relies on by passing an absolute path. It changes what a bare
+      `python tools/fetch_directory.py` means from another directory, so it belongs in a pass that
+      runs the full suite (`AGENTS.md` §17's *"anything touching `tools/`"*), not in a wrap-up.
+      **A second, separable finding in the same file:** run alone, `tests/test_directory.py` fails
+      28 of 56 — it depends on another test module having inserted `tools/` into `sys.path` at
+      import time. Alphabetical collection makes that true in a full run and false in isolation.
+      A module should insert its own path, as `test_gates.py` and `test_vendor_yahoo.py` do.
+
+
 - [ ] **`[v]` THE COVERAGE TIER WAS SPECIFIED AND NEVER SCHEDULED, AND THE UNIVERSE IS 28% BECAUSE
       OF IT — found 2026-09-04.** `tools/refresh_universe.py` opens by describing tiered work: a
       periodic pass widens coverage, and the daily `scan --universe` reads what is already stored.
