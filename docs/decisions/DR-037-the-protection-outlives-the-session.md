@@ -131,6 +131,47 @@ this project has got wrong were all discoverable by asking what the venue had al
 **The count is now four**, not three: a bracket needs three legs, a session comes from the exchange,
 prices sit on the tick, and an order class does not replace an order type.
 
+## 5.2 Amendment, 2026-09-04 — the protection landed and the run stopped anyway
+
+**Appended, per `AGENTS.md` §11 rule 2.** §5.1 fixed the payload; this is what the first *accepted*
+restoration then found.
+
+**The measurement.** The pass placed all three OCOs and the venue accepted all three — `AIS` 61.70,
+`BTSG` 55.08, `DINO` 98.59, `gtc`, stop legs `held`. The journal holds three `sent` rows. Then the
+re-check called all three positions unprotected and the run stopped, sending `101` candidates to
+`stopped` behind protection that was standing.
+
+**The cause is the response shape, again.** An `oco` answers with its **parent**, and the stop is a
+nested leg:
+
+```
+parent   type=limit  order_class=oco  stop_price=None  status=accepted
+  leg    sell stop   stop=61.7                         status=held
+```
+
+`unprotected` requires `order_type in PROTECTIVE_TYPES` and a `stop_price`. The parent is neither,
+so splicing it into the live-orders view proved nothing about a stop.
+
+**The fix is not to read the legs out of the echo.** That would work and it would be the wrong
+shape of answer. `DR-036`'s whole argument is that a stop the market cannot see is not a stop; a
+re-check assembled from our own write's receipt is the same claim wearing better clothes. The run
+now spends **one `GET`** and asks the party that will be holding the order when the gap comes. It
+also covers what an echo cannot — a leg accepted and then rejected, or a partial acceptance.
+
+**Unavailable is not confirmation.** If that read fails, the run stops and says the protection was
+placed but could not be confirmed. The venue may well be holding it; that is precisely the guess
+this refuses to make, and it is the same polarity `DR-025` §2.1 records this project getting
+backwards once already.
+
+**Why the suite did not catch it.** The fixture was more cooperative than the venue: it returned
+`order_type="stop"` with a `stop_price` — an object Alpaca never sends — and its `open_orders`
+returned the same static tuple however many times it was asked. Both are fixed. **A fake more
+helpful than the system it stands for tests the fake**, and that is now the third defect this
+project has paid for at the boundary between what a document says and what the venue does.
+
+**The count is five**: three legs to a bracket, a session from the exchange, prices on the tick, an
+order class that does not replace an order type, and an `oco` whose confirmation is not its echo.
+
 ## 6. What this does NOT do
 
 - **It does not move a stop, close a position, or cancel anything.** `access.allowed_methods` is

@@ -791,13 +791,42 @@ def _submit(
         # A stop at the WRONG price is NOT restored here - that is a stop somebody moved, `D6`
         # governs the move, and this system has no verb that could replace the standing one anyway.
         # Only the position holding nothing is placed for.
-        restored = _restore_protection(
+        _restore_protection(
             broker_pkg.restorable(naked)[0],
             positions, client, registry, policy, now, _record,
         )
-        naked = broker_pkg.unprotected(
-            positions.open_as_of(now), [*live_orders, *restored], policy.market,
-        )
+
+        # RE-READ THE VENUE. Do not re-ask against what we BELIEVE we placed.
+        #
+        # Measured 2026-09-03, on the first pass that restored anything: all three OCOs were
+        # accepted and the re-check still called all three positions unprotected, so the run
+        # stopped and 101 candidates went to `stopped` behind protection that was standing.
+        #
+        # The cause is the response shape. An `oco` answers with its PARENT - `type: limit`,
+        # `order_class: oco`, `stop_price: null` - and the stop lives in a nested leg:
+        #
+        #     parent   type=limit  order_class=oco  stop_price=None  status=accepted
+        #       leg    sell stop   stop=61.7                         status=held
+        #
+        # `unprotected` wants `order_type in PROTECTIVE_TYPES` and a `stop_price`, and the parent
+        # is neither. Splicing it in therefore proved nothing about a stop.
+        #
+        # **Reading the legs out of the response would also work and is the wrong fix.** `DR-036`'s
+        # whole argument is that a stop the market cannot see is not a stop; a re-check built from
+        # our own write's echo is the same species of claim as a book that records a stop nobody
+        # verified. One GET asks the party that knows, and it is the party that will be holding the
+        # order when the gap comes. It also covers what an echo cannot: a leg the venue accepted
+        # and then rejected, or a partial acceptance.
+        try:
+            live_orders = client.open_orders(now)
+        except broker_pkg.BrokerUnavailable as unavailable:
+            _stop_all(
+                f"the protection was placed but the venue could not be re-read to confirm it is "
+                f"standing: {unavailable}. Unavailable is not confirmation, and the caps are "
+                f"denominated in a stop"
+            )
+            return
+        naked = broker_pkg.unprotected(positions.open_as_of(now), live_orders, policy.market)
 
     if naked:
         # NOT split on a full stop, which was the first draft: every price in the reason carries
