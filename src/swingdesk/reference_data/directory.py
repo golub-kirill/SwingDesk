@@ -246,7 +246,17 @@ class DirectoryStore:
         )
 
     def audit(self) -> tuple[AuditRow, ...]:
-        """Every audit row, oldest first."""
+        """Every audit row, oldest first.
+
+        **Rows written up to and including 2026-09-04 whose result is DISABLED or NOT_A_SESSION are
+        not attributable.** Until then `tools/fetch_directory.py` resolved `--data` against the working
+        directory, so `tests/test_directory.py`'s scheduled-mode cases wrote their refusals into
+        whatever store sat under the directory the suite was started from - the operator's own,
+        when that was the repository root. They are not deleted: this table is append-only and a
+        record that can be tidied is not one (`AGENTS.md` §11 rule 2). A scheduled run leaves one
+        row on its own evening; a suite run leaves a triple about 30 ms apart, which is how the two
+        are told apart by eye.
+        """
         return tuple(
             self._connection.execute(
                 "SELECT started_at, finished_at, mode, reason, enabled, attempts, requests, "

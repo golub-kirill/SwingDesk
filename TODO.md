@@ -2533,8 +2533,9 @@ is for where no gate can reach.
 
 ## 6. Code & gates
 
-- [ ] **`[v]` THREE UNIT TESTS OPEN THE OPERATOR'S LIVE DIRECTORY STORE — found 2026-09-04, and only
-      because the store was busy.** `tests/test_directory.py`'s three `scheduled_mode_*` tests
+- [x] **`[v]` THREE UNIT TESTS WROTE INTO THE OPERATOR'S LIVE DIRECTORY STORE — found 2026-09-04
+      because the store was busy, FIXED the same day.** `tests/test_directory.py`'s three
+      `scheduled_mode_*` tests
       monkeypatch `fetch_directory.REPO` to `tmp_path` and set `sys.argv` to
       `["fetch_directory", "--scheduled"]` — no `--data`. So argparse falls back to its default:
       ```python
@@ -2549,19 +2550,47 @@ is for where no gate can reach.
       ```
       They pass on any ordinary day, which is the whole problem: a test that opens the live store
       and succeeds is indistinguishable from one that is sandboxed.
-      **Harmless today, and the reason is luck rather than design.** The scheduled path exits early
-      when the local config disables the pull, so the connection is opened and nothing is written.
-      Nothing in the test enforces that; a future edit that reaches a write would reach the
-      operator's own directory, which is bitemporal and append-only.
-      **The fix is one line and it is not obviously free.** `default=REPO / "data"` makes the
-      monkeypatch reach it and makes the tool behave the same from any working directory — which
-      `daily_run.cmd` already relies on by passing an absolute path. It changes what a bare
-      `python tools/fetch_directory.py` means from another directory, so it belongs in a pass that
-      runs the full suite (`AGENTS.md` §17's *"anything touching `tools/`"*), not in a wrap-up.
-      **A second, separable finding in the same file:** run alone, `tests/test_directory.py` fails
-      28 of 56 — it depends on another test module having inserted `tools/` into `sys.path` at
-      import time. Alphabetical collection makes that true in a full run and false in isolation.
-      A module should insert its own path, as `test_gates.py` and `test_vendor_yahoo.py` do.
+      ~~**Harmless today, and the reason is luck rather than design.** The scheduled path exits early
+      when the local config disables the pull, so the connection is opened and nothing is written.~~
+      **FIXED 2026-09-04, and that struck sentence was false the day it was written — the tests had
+      already written into the operator's audit table.** Every POLICY refusal exits through
+      `_finish`, which opens the store and appends a `directory_audit` row — that is the case the
+      table exists for, so DISABLED and NOT_A_SESSION are exactly what it records. (The two usage
+      errors above it return without a row, deliberately, and say so in a comment.) Measured, not
+      reasoned — the live store's audit rows split three ways, and the two refusal results outnumber
+      the genuine SCHEDULED/RECORDED ones by an order of magnitude:
+      ```bash
+      python -c "import duckdb;print(duckdb.connect('data/directory.duckdb',read_only=True).execute('select mode, result, count(*), min(started_at), max(started_at) from directory_audit group by 1,2').fetchall())"
+      ```
+      The shape makes the attribution readable without guessing: the refusal rows arrive in triples
+      about 30 ms apart — DISABLED, NOT_A_SESSION, DISABLED, the three cases in file order — while
+      every genuine row stands alone at 18:30 on its own evening.
+      **The rows are NOT deleted** (`AGENTS.md` §11 rule 2, and §3's *records are immutable*).
+      `DirectoryStore.audit`'s docstring now carries the caveat, because that is where anyone
+      reading the table will be. No production reader is affected: `audit()` has no caller in `src/`
+      or `tools/` at all, only in `tests/`, so no gate, report or count was ever wrong.
+      **The fix, and what it does not move.** `default=REPO / "data"` in `tools/fetch_directory.py`.
+      `tools/daily_run.cmd` passes `--data "%REPO%\data"` on every store-touching line, so the
+      scheduled path is unmoved — checked against the file rather than assumed.
+      **The blast radius was measured rather than bounded by argument.** 19 tools in `tools/` carry
+      the same relative `--data` default; `tests/` drives a tool's `main()` through `sys.argv` in
+      exactly one file, this one. Derive both:
+      ```bash
+      grep -rn 'default=Path("data")' tools/*.py
+      grep -rn 'setattr(sys, "argv"' tests/*.py
+      ```
+      The other 18 are left alone: no test reaches them, and for a human a wrong `--data` is a store
+      that is visibly empty rather than a silent write into a live one.
+      **A second, separable finding in the same file — also fixed.** ~~run alone,
+      `tests/test_directory.py` fails 28 of 56~~ — it depended on another test module having
+      inserted `tools/` into `sys.path` at import time, so alphabetical collection made it true in a
+      full run and false in isolation. The module inserts its own path now, as `test_gates.py` and
+      `test_vendor_yahoo.py` do, and the file passes standalone.
+      **The regression test is the transferable part.**
+      `test_a_refusal_writes_its_audit_row_under_the_repo_and_nowhere_else` runs the scheduled
+      refusal from a working directory that is not the repo and asserts both halves: the audit row
+      is under the patched `REPO`, and no `data/` appears beside the process. Reverting the one-line
+      fix kills that test and only that test.
 
 
 - [ ] **`[v]` THE COVERAGE TIER WAS SPECIFIED AND NEVER SCHEDULED, AND THE UNIVERSE IS 28% BECAUSE
