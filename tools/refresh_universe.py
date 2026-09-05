@@ -117,16 +117,31 @@ def main() -> int:
             stored = set(store.instrument_ids(as_of))
             instruments = [universe.to_instrument(e) for e in entries]
 
+            # **Owner instruction 2026-09-05: skip what we cannot fetch at all.** These have no
+            # vendor symbol to ask for, `universe.UNMAPPABLE_SUFFIXES` has said so since it was
+            # written, and the loop asked anyway - spending budget to be told "possibly delisted"
+            # every pass, and leaving a remainder that made the closing line promise a convergence
+            # that could never happen. Zero of them has ever had a bar stored.
+            #
+            # It is a SUFFIX test and nothing wider, and that is measured rather than cautious:
+            # excluding warrants, units and rights by the vendor's Security Name would have dropped
+            # 738 names that are already fetched, `AB` among them. See `universe.is_mappable`.
+            unmappable = [i for i in instruments if not universe.is_mappable(i.id)]
+            reachable = [i for i in instruments if universe.is_mappable(i.id)]
+
             # Never-fetched first, then the stalest. A symbol with no bars can never enter the
             # universe, so widening coverage buys more than re-reading what is already there.
             last_seen = store.last_sessions(as_of)
-            never = [i for i in instruments if i.id not in stored]
-            known = [i for i in instruments if i.id in stored]
+            never = [i for i in reachable if i.id not in stored]
+            known = [i for i in reachable if i.id in stored]
             known.sort(key=lambda i: last_seen.get(i.id, date(1970, 1, 1)))
             queue = (never + known)[: args.budget]
 
             print(f"eligible {len(entries)} · stored {len(stored)} · "
                   f"never fetched {len(never)} · this pass {len(queue)}")
+            if unmappable:
+                print(f"excluded {len(unmappable)} symbol(s) the vendor has no form for "
+                      f"({', '.join(universe.UNMAPPABLE_SUFFIXES)}) - never attempted, not failures")
 
         # `data.revision_epsilon`, scoped to `close` by the owner ruling of 2026-08-23 (DR-016
         # section 8.4). Unset means the store reports no faults rather than assuming a tolerance -
@@ -170,11 +185,28 @@ def main() -> int:
             covered = len(set(store.instrument_ids(as_of)) & {i.id for i in queue})
             print(f"coverage of the resolved sample: {covered}/{len(queue)}")
         else:
-            covered = len(set(store.instrument_ids(as_of)) & {i.id for i in instruments})
+            now_stored = set(store.instrument_ids(as_of))
+            covered = len(now_stored & {i.id for i in instruments})
             print(f"coverage now {covered}/{len(entries)} eligible ({covered / len(entries):.1%})")
-            if covered < len(entries):
-                remaining = -(-(len(entries) - covered) // max(args.budget, 1))
-                print(f"{remaining} more pass(es) at this budget to cover the directory")
+
+            # **The old line counted passes over the whole shortfall and promised a convergence
+            # that could not happen.** Measured across two passes on 2026-09-04/05: the second
+            # spent its entire budget and moved coverage by ZERO, while printing "1 more pass at
+            # this budget to cover the directory" both times. Most of the shortfall has no vendor
+            # symbol to ask for, so no number of passes reaches it - a report that manufactures an
+            # expectation, which is `AGENTS.md` section 12's manufactured-alarm shape inverted.
+            outstanding = len(reachable) - len(now_stored & {i.id for i in reachable})
+            if unmappable:
+                print(f"  {len(unmappable)} of the shortfall is EXCLUDED, not pending - no vendor "
+                      f"symbol exists to ask for, and none has ever had a bar stored")
+            if outstanding:
+                remaining = -(-outstanding // max(args.budget, 1))
+                print(f"  {outstanding} fetchable symbol(s) still have no bars - {remaining} more "
+                      f"pass(es) at this budget. A symbol the vendor refuses stays here: this pass "
+                      f"records no attempt history, so it cannot tell 'not yet reached' from "
+                      f"'asked and refused'")
+            else:
+                print("  every fetchable eligible symbol has bars")
     return 0
 
 
