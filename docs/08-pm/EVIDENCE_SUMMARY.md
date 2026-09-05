@@ -178,6 +178,37 @@ sat wholly below zero was not rejected by it. The numbers are what to read; the 
 understates them. The gap is recorded in that study's report for whoever writes the next
 pre-registration.
 
+## 9. The risk model is MORE valid on volatile names, not less, and that reverses an intuition
+
+Added 2026-09-04. **`PR-011` REJECTED its own hypothesis, in the opposite direction to the one it
+predicted**, and the reversal is the finding rather than the rejection.
+
+The study asked whether a 2 × ATR stop still costs about 1R on names whose ATR is a large share of
+their price — a question about whether `entry − stop` is a risk measure there at all, not about
+whether such names are worth trading. Over 126,564 census entries across 10,377 names, **mean
+overshoot falls monotonically as volatility rises**: the quietest band overshoots its stop by about
+0.095R and the most volatile measured band by about 0.026R, with non-overlapping intervals. The
+gap-through rate moves the same way — about 21% against about 14% — which is a second measurement
+rather than a restatement of the first.
+
+**Why the sign matters more than the verdict.** 1R *is* 2 × ATR, so the stop distance already scales
+with the name's own volatility. The sizing arithmetic's self-correction does not merely survive into
+the top band; it over-corrects. *(The mechanism sentence is CONJECTURE — `AGENTS.md` §10.4. Nothing
+here measures gap size against ATR directly, and that statistic was not registered.)*
+
+**Two boundaries this does not move.** The live refusal of a non-positive stop is arithmetic rather
+than a hypothesis and stands untouched — the study said so in advance. And `screen.atr_pct_band`
+stays `unset` with `read_by: none`: the study supplies no argument for a value.
+
+**The caveat that cuts against it, stated in the report rather than buried.** Survivorship removes
+exactly the names the top band is made of, so part of the reversal could be the missing data rather
+than the mechanism. The study was registered as *biased toward finding nothing*; it found less than
+nothing, and no figure here corrects for that.
+
+**The net-R column in that result is NOT interpretable** and the report says so at length: a census
+is not a set of trades, survivorship is absent, and `HANDOFF.md` §7 closes the new-entry-filter
+family by evidence anyway.
+
 ---
 
 **Do not write anything implying more confidence than the above.** `UX_COPY.md` §3 carries the

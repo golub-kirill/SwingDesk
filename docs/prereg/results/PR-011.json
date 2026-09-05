@@ -1,0 +1,150 @@
+{
+  "bands": {
+    "B1": {
+      "ci_high": 0.10026708301946977,
+      "ci_low": 0.0906853721495605,
+      "entries": 72041,
+      "events": 39742,
+      "gap_through_rate": 0.20907352423129183,
+      "mean_net_r": -0.23752870880634547,
+      "mean_overshoot": 0.09528211043220634,
+      "meets_minimum": true
+    },
+    "B2": {
+      "ci_high": 0.04997402778919492,
+      "ci_low": 0.04282054940351904,
+      "entries": 42414,
+      "events": 19537,
+      "gap_through_rate": 0.1443926907918309,
+      "mean_net_r": 0.037456634316397765,
+      "mean_overshoot": 0.04628171162309289,
+      "meets_minimum": true
+    },
+    "B3": {
+      "ci_high": 0.049908526901932856,
+      "ci_low": 0.03470875861267513,
+      "entries": 9408,
+      "events": 3741,
+      "gap_through_rate": 0.14461373964180702,
+      "mean_net_r": 0.10963084255132054,
+      "mean_overshoot": 0.04191103838114673,
+      "meets_minimum": true
+    },
+    "B4": {
+      "ci_high": 0.034949443990099575,
+      "ci_low": 0.018581191539082578,
+      "entries": 2701,
+      "events": 820,
+      "gap_through_rate": 0.1378048780487805,
+      "mean_net_r": 0.11237789723395056,
+      "mean_overshoot": 0.026408140032676358,
+      "meets_minimum": true
+    },
+    "B5": {
+      "ci_high": null,
+      "ci_low": null,
+      "entries": 0,
+      "events": 0,
+      "gap_through_rate": null,
+      "mean_net_r": null,
+      "mean_overshoot": null,
+      "meets_minimum": false
+    }
+  },
+  "country": "US",
+  "difference": {
+    "ci_high": -0.05886952708062575,
+    "ci_low": -0.09001634224313229,
+    "dates": 264,
+    "point": -0.07474478338904769
+  },
+  "entries": 126564,
+  "exploratory": false,
+  "measurement_bound": "overshoot is non-zero only when a session GAPPED through the stop - a touched stop fills at the stop by construction - so intraday slippage is invisible and every band's figure is biased downward (amendment A-2)",
+  "names_walked": 10377,
+  "parameters": {
+    "arm_band": "B4",
+    "atr_period": 14,
+    "atr_stop_multiple": "2.0",
+    "bands": {
+      "B1": [
+        "0",
+        "0.03"
+      ],
+      "B2": [
+        "0.03",
+        "0.06"
+      ],
+      "B3": [
+        "0.06",
+        "0.10"
+      ],
+      "B4": [
+        "0.10",
+        "0.50"
+      ],
+      "B5": [
+        "0.50",
+        "10000"
+      ]
+    },
+    "bootstrap_resamples": 10000,
+    "bootstrap_seed": 20260904,
+    "commission_per_share": "0",
+    "control_band": "B1",
+    "formation_every": 20,
+    "liquidity_rule": {
+      "adtv_lag": 0,
+      "min_adtv": "5000000",
+      "min_history": 250,
+      "min_price": "5.00"
+    },
+    "materiality_fraction": "0.25",
+    "max_concurrent_positions_pinned": 4,
+    "max_holding_bars": 20,
+    "max_open_risk_r_pinned": "4",
+    "min_events_per_band": 200,
+    "slippage_bps": "25",
+    "threshold_formula": "materiality_fraction x max_open_risk / max_concurrent_positions, evaluated once at registration (amendment A-1)",
+    "threshold_r": "0.25"
+  },
+  "perturbations": {
+    "considered_not_registered": [
+      "stop-multiple sweep",
+      "band-edge sweep",
+      "holding-period sweep"
+    ],
+    "note": "the cost stress moves the net figure only. The primary statistic is measured in R against the placed stop and is pre-cost by construction, so no stress can move it",
+    "registered": [
+      "cost stress 3x"
+    ],
+    "run": [
+      "cost stress 3x"
+    ]
+  },
+  "prereg": "PR-011",
+  "refused": {
+    "no_atr": 10388,
+    "not_admitted": 223822,
+    "short_history": 2500,
+    "stop_not_positive": 71,
+    "stop_not_positive_B4": 5,
+    "stop_not_positive_B5": 66
+  },
+  "run_at": "2026-09-05T00:52:03.723585+00:00",
+  "scope_unmet": [],
+  "single_market": true,
+  "snapshot": "2026-09-04T18:30:15.159102-05:00",
+  "split": {
+    "buys": "NOTHING, and section 5 says so. Every band edge, the multiple, the period and the horizon are fixed before the run, so a holdout would cost sample and protect against a selection risk this study does not carry (PREREG_TEMPLATE 7)",
+    "registered": "none - nothing is fitted and nothing is selected from any window"
+  },
+  "survivorship": "absent - today's directory. Here the bias runs TOWARD finding nothing: a delisted name is disproportionately one whose volatility exploded, which is this study's top band",
+  "trials": 1,
+  "verdict": "reject",
+  "verdict_reason": "the difference is -0.0747R, below the registered threshold of 0.25R",
+  "window": [
+    "1982-11-16",
+    "2026-09-03"
+  ]
+}
