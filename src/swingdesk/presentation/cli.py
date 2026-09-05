@@ -243,6 +243,32 @@ def main(argv: list[str] | None = None) -> int:
     opened.add_argument("--as-of", default=None,
                         help="ISO instant this is being recorded as of; defaults to now")
 
+    closed = sub.add_parser(
+        "close-position",
+        help="record an exit that already happened at the broker (D1: this never places the "
+             "order). The mirror of open-position",
+    )
+    closed.add_argument("position_id", help="e.g. POS-AIS-2026-09-03; `swingdesk broker` names it")
+    closed.add_argument("--exit", type=Decimal, required=True, dest="exit_price",
+                        help="fill price, per share, as the venue reports it")
+    closed.add_argument("--reason", required=True,
+                        help="why this position is closed in the book. Required, and recorded: a "
+                             "close with no stated reason is the unlogged judgment Production "
+                             "Rules 3.8 exists to prevent")
+    closed.add_argument("--commission", type=Decimal, default=Decimal(0),
+                        help="as charged. Defaults to 0, which is DR-009's measured structure")
+    closed.add_argument("--shares", type=int, default=None,
+                        help="defaults to the whole position. A smaller number is a PARTIAL_EXIT "
+                             "and is refused here rather than silently recorded as a close")
+    closed.add_argument("--closed-on", default=None,
+                        help="ISO date the exit happened; defaults to today. Kept apart from "
+                             "--as-of on purpose: one is the event, the other is when we learned")
+    closed.add_argument("--reason-code", default=None,
+                        help="the course's code for why, when one applies")
+    closed.add_argument("--data", type=Path, default=DEFAULT_DATA)
+    closed.add_argument("--as-of", default=None,
+                        help="ISO instant this is being recorded as of; defaults to now")
+
     sync = sub.add_parser(
         "sync-fills",
         help="record positions for entries THIS system placed that have since filled (DR-031). "
@@ -285,6 +311,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "open-position":
         return _open_position(args)
+
+    if args.command == "close-position":
+        return _close_position(args)
 
     if args.command == "scan":
         if bool(args.tickers) == bool(args.universe):
@@ -1768,6 +1797,117 @@ def _open_position(args: argparse.Namespace) -> int:
         f"({position.initial_risk} total) - this is what every R on this position is "
         f"measured against, and it never changes (RISK_SPEC 2)"
     )
+    return 0
+
+
+def _close_position(args: argparse.Namespace) -> int:
+    """Record an exit that ALREADY HAPPENED at the venue. The mirror of `open-position`.
+
+    **Why this had to exist, measured 2026-09-04.** `closed_on` is written in exactly one place -
+    `manage.apply_approved` for an approved `EXIT_NOW` - and `EXIT_NOW` is proposed in exactly one
+    place, `manage.manage_one`, from BARS. The venue's view never reaches that decision. So a
+    position that exited at the venue could not be closed in the book by any shipped command: the
+    book kept it open, it held its slot in `risk.max_concurrent_positions`, `DR-027` §11's
+    reconciliation stopped every submission with `TECH`, and the pipeline went on proposing
+    `MOVE_STOP` on a holding that was not there. Three positions, 320 sized `Trade` decisions and an
+    armed switch, blocked by one row nothing could write.
+
+    **It grants the machine NOTHING.** `open-position` records an entry that already happened;
+    this records an exit that already happened, and the same `D1` sentence covers both - it never
+    places, amends or cancels anything. What the machine may do on its own about a venue divergence
+    is a separate question and is the owner's; this is the command that lets a person answer it.
+
+    **It reuses the chain rather than writing `closed_on` itself**, because there must be one
+    definition of what closing means: propose the `EXIT_NOW`, record the owner's approval with
+    their reason, apply it through `manage.apply_approved`, and settle it with a `Fill` carrying
+    the venue's price. Every row is append-only and every one names who said so and why.
+    """
+    from datetime import date as date_cls
+
+    from swingdesk.contracts.position import ActionKind, ActionStatus, Fill, ManagementAction
+    from swingdesk.trade_management import manage
+
+    clock = (
+        FixedClock(datetime.fromisoformat(args.as_of).replace(tzinfo=UTC))
+        if args.as_of
+        else SystemClock()
+    )
+    now = clock.now()
+    closed_on = date_cls.fromisoformat(args.closed_on) if args.closed_on else now.date()
+    if not args.reason.strip():
+        print("REFUSED  --reason must not be blank (Production Rules 3.8)", file=sys.stderr)
+        return 2
+
+    with PositionStore(args.data / "positions.duckdb") as positions:
+        history = positions.history(args.position_id)
+        if not history:
+            print(f"REFUSED  no position {args.position_id} in the book", file=sys.stderr)
+            return 2
+        current = history[-1]
+        if current.closed_on is not None:
+            print(
+                f"REFUSED  {args.position_id} is already closed on {current.closed_on}. Records "
+                f"are immutable; a correction is a new record, never an edited one.",
+                file=sys.stderr,
+            )
+            return 2
+
+        shares = current.shares if args.shares is None else args.shares
+        if shares != current.shares:
+            # A close and a partial are different actions with different vocabulary, and recording
+            # one as the other would put a position size in the book that never existed.
+            print(
+                f"REFUSED  {args.position_id} holds {current.shares} shares and this names "
+                f"{shares}. A smaller number is a PARTIAL_EXIT, which this command does not "
+                f"record.",
+                file=sys.stderr,
+            )
+            return 2
+
+        before = set(positions.action_kinds_for(args.position_id))
+        positions.propose(ManagementAction(
+            position_id=args.position_id, proposed_at=now, kind=ActionKind.EXIT_NOW,
+            reason_code=args.reason_code, reason=args.reason, old_stop=current.current_stop,
+        ))
+        # The sequence `propose` assigned, read back rather than assumed. `propose` declines to
+        # append a duplicate of a proposal already waiting, so an EXIT_NOW that is somehow already
+        # pending leaves nothing new here - and settling the wrong sequence would apply this
+        # approval to a different proposal, which is the off-by-one `proposal_at` exists to stop.
+        appeared = set(positions.action_kinds_for(args.position_id)) - before
+        if len(appeared) != 1:
+            print(
+                f"REFUSED  {args.position_id} already carries an unanswered EXIT_NOW. Answer it "
+                f"with `swingdesk respond` rather than proposing a second.",
+                file=sys.stderr,
+            )
+            return 2
+        sequence = appeared.pop()
+
+        positions.respond(
+            args.position_id, sequence,
+            choice=ActionStatus.APPROVED, reason=args.reason, at=now,
+        )
+        applied = manage.apply_approved(
+            current,
+            positions.proposal_at(args.position_id, sequence).model_copy(  # type: ignore[union-attr]
+                update={"status": ActionStatus.APPROVED}
+            ),
+            now,
+        )
+        # `apply_approved` dates the close from the clock, which is right for an exit the system
+        # proposes and wrong for one it is being TOLD about: the store is bitemporal, so the event
+        # is `closed_on` and the knowledge is `knowledge_time`, and collapsing them would record
+        # that we knew yesterday's exit yesterday.
+        positions.record(applied.model_copy(update={"closed_on": closed_on}))
+        positions.record_fill(Fill(
+            position_id=args.position_id, sequence=sequence, filled_on=closed_on,
+            shares=shares, price=args.exit_price, commission=args.commission,
+            planned_price=current.current_stop, recorded_at=now,
+        ))
+
+    print(f"recorded: {args.position_id} closed {closed_on} at {args.exit_price} x {shares}")
+    print(f"          EXIT_NOW #{sequence}, approved - {args.reason}")
+    print("          nothing was placed, amended or cancelled at any venue (D1)")
     return 0
 
 

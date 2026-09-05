@@ -3061,3 +3061,110 @@ def test_a_class_share_typed_in_its_CANONICAL_form_resolves(tmp_path: Path) -> N
 
     assert not isinstance(resolved, str), resolved
     assert (resolved.id, resolved.ticker) == ("BRK.A", "BRK-A")
+
+
+# ------------------------------------------- close-position: the exit the venue took (TODO.md 6b)
+
+
+def _open_positions(tmp_path, at="2026-09-05T22:00:00"):
+    from datetime import UTC, datetime
+
+    from swingdesk.journal_evidence.positions import PositionStore
+
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        return store.open_as_of(datetime.fromisoformat(at).replace(tzinfo=UTC))
+
+
+def test_close_position_records_the_exit_and_frees_the_slot(tmp_path, capsys) -> None:
+    """The gap this command was built for, end to end.
+
+    `closed_on` is written in one place - `manage.apply_approved` for an approved `EXIT_NOW` - and
+    `EXIT_NOW` is proposed in one place, from BARS. A position that exited at the VENUE could
+    therefore not be closed by any shipped command: it held its slot for ever and stopped every
+    submission with `TECH`.
+    """
+    root = _seeded(tmp_path)
+    capsys.readouterr()
+
+    code = cli.main(["close-position", "POS-1", "--exit", "289.40", "--reason",
+                     "stopped out at the venue; the book never learned",
+                     "--closed-on", "2026-09-04", "--data", str(root), "--as-of", LIVE])
+
+    assert code == 0
+    assert _open_positions(root) == [], "the slot is free, which is what unblocks the caps"
+    latest = _history(root)[-1]
+    assert latest.closed_on == date(2026, 9, 4)
+    assert latest.shares == 8, "a close does not change the size that was held"
+    out = capsys.readouterr().out
+    assert "nothing was placed, amended or cancelled" in out
+
+
+def test_close_position_dates_the_EVENT_and_not_the_clock(tmp_path) -> None:
+    """The store is bitemporal and `apply_approved` dates a close from the clock, which is right
+    for an exit the system proposes and wrong for one it is being TOLD about. Collapsing the two
+    would record that we knew yesterday's exit yesterday."""
+    root = _seeded(tmp_path)
+
+    cli.main(["close-position", "POS-1", "--exit", "289.40", "--reason", "venue exit",
+              "--closed-on", "2026-08-14", "--data", str(root), "--as-of", LIVE])
+
+    latest = _history(root)[-1]
+    assert latest.closed_on == date(2026, 8, 14), "the event date, from the venue"
+    assert latest.knowledge_time.date() == date(2026, 8, 18), "and --as-of is when we learned"
+
+
+def test_close_position_records_a_fill_that_settles_its_own_approval(tmp_path) -> None:
+    """`record_fill` refuses a fill settling anything unapproved, so a fill existing at all is the
+    proof that the approval was recorded rather than assumed."""
+    root = _seeded(tmp_path)
+
+    cli.main(["close-position", "POS-1", "--exit", "289.40", "--commission", "1.25",
+              "--reason", "venue exit", "--data", str(root), "--as-of", LIVE])
+
+    recorded = _fills(root)
+    assert len(recorded) == 1
+    assert recorded[0].price == Decimal("289.40")
+    assert recorded[0].shares == 8
+    assert recorded[0].commission == Decimal("1.25")
+
+
+def test_close_position_refuses_a_position_that_is_not_there(tmp_path, capsys) -> None:
+    root = _seeded(tmp_path)
+    capsys.readouterr()
+
+    code = cli.main(["close-position", "POS-NOPE", "--exit", "1", "--reason", "x",
+                     "--data", str(root), "--as-of", LIVE])
+
+    assert code == 2
+    assert "no position POS-NOPE" in capsys.readouterr().err
+
+
+def test_close_position_refuses_to_close_a_closed_position(tmp_path, capsys) -> None:
+    """Records are immutable. A correction is a new record, never an edited one."""
+    root = _seeded(tmp_path)
+    cli.main(["close-position", "POS-1", "--exit", "289.40", "--reason", "venue exit",
+              "--data", str(root), "--as-of", LIVE])
+    capsys.readouterr()
+
+    code = cli.main(["close-position", "POS-1", "--exit", "280", "--reason", "again",
+                     "--data", str(root), "--as-of", LIVE])
+
+    assert code == 2
+    assert "already closed" in capsys.readouterr().err
+
+
+def test_close_position_refuses_a_partial_rather_than_recording_it_as_a_close(
+    tmp_path, capsys
+) -> None:
+    """A close and a partial are different actions with different vocabulary. Recording one as the
+    other would put a position size in the book that never existed."""
+    root = _seeded(tmp_path)
+    capsys.readouterr()
+
+    code = cli.main(["close-position", "POS-1", "--exit", "289.40", "--shares", "3",
+                     "--reason", "part", "--data", str(root), "--as-of", LIVE])
+
+    assert code == 2
+    err = capsys.readouterr().err
+    assert "PARTIAL_EXIT" in err
+    assert _open_positions(root), "and nothing was closed"
