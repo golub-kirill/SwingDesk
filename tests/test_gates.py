@@ -4060,3 +4060,66 @@ def test_the_gate_says_it_DID_NOT_RUN_rather_than_passing_without_git(tmp_path) 
     assert code == 0
     assert "DID NOT RUN" in out
     assert "not a clean result" in out
+
+
+# ------------- gate 43: TODO.md holds open items, and ONLY open items, added 2026-09-05
+#
+# `AGENTS.md` section 10.7 had said so since it was written, and on 2026-09-05 the file held 105
+# closed items across 2,557 lines - 57% of an open-work list that was not open work, growing about
+# 330 lines a day. The rule was honour and the file is prose, so nothing could see it.
+
+
+def _todo(root: Path, body: str) -> Path:
+    (root / "TODO.md").write_text(body, encoding="utf-8")
+    return root
+
+
+def test_a_todo_of_only_open_items_passes(tmp_path) -> None:
+    """Positive control. Without it every assertion below passes for an empty file."""
+    root = _todo(tmp_path, "- [ ] one thing\n- [ ] another\n")
+
+    code, out = run_gate("verify_open_work.py", root)
+
+    assert code == 0, out
+    assert "2 open item(s)" in out
+
+
+def test_a_closed_item_is_a_failure(tmp_path) -> None:
+    root = _todo(tmp_path, "- [ ] still open\n- [x] **finished** and still here\n")
+
+    code, out = run_gate("verify_open_work.py", root)
+
+    assert code == 1
+    assert "1 closed item(s)" in out
+    assert "finished and still here" in out
+
+
+def test_the_failure_names_where_a_closed_item_goes(tmp_path) -> None:
+    """A gate that refuses without naming the remedy trains the operator to skip it."""
+    root = _todo(tmp_path, "- [x] done\n")
+
+    _code, out = run_gate("verify_open_work.py", root)
+
+    assert "TODO_CLOSED.md" in out
+    assert "Promote the lesson first" in out
+
+
+def test_the_token_is_EXACT_and_prose_about_closed_work_is_not_a_hit(tmp_path) -> None:
+    """`CI_POLICY.md` section 3: a check over text needs an exact token or it becomes noise.
+
+    An entry may say the word "closed" in any voice it likes - what the gate reads is the five
+    characters that make a checklist line ticked, at the start of the line.
+    """
+    root = _todo(tmp_path, "- [ ] this one is CLOSED in spirit, - [x] appears mid-line here\n")
+
+    code, out = run_gate("verify_open_work.py", root)
+
+    assert code == 0, out
+
+
+def test_a_checkout_without_a_todo_says_UNAVAILABLE_rather_than_passing(tmp_path) -> None:
+    """`AGENTS.md` section 10.6 rule 2: a gate that cannot see its subject says so."""
+    code, out = run_gate("verify_open_work.py", tmp_path)
+
+    assert code == 0
+    assert "UNAVAILABLE" in out

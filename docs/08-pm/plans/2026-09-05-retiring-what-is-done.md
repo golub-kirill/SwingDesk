@@ -1,6 +1,9 @@
 # Retiring what is done, and re-verifying what is not
 
-**Status:** owner-pending · **Tier:** 8 (PM) · **Written:** 2026-09-05
+**Status:** owner-pending · **Tier:** 8 (PM) · **Written:** 2026-09-05 ·
+**§3 EXECUTED 2026-09-05** on the owner's ruling: destination named, each of the 105 triaged
+individually, four lessons promoted to §12, gate 43 built. §4's argument about the audit
+cadence is unchanged and still the owner's.
 
 **The question this answers, from the owner:** *"Looks like we need a gate or better ruling in
 `AGENTS.md`. Let's research, plan well and decide how to fix this behaviour and prevent future

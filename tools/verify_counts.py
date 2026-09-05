@@ -184,7 +184,30 @@ OWNER_SECTION = "## 2."
 
 #: Generated documents. Their numbers are recomputed from the registries on every build and cannot
 #: drift, so the ownership rule does not apply - `--check-only` is already their gate.
+#:
 GENERATED = frozenset({"docs/08-pm/COVERAGE_MATRIX.md", "docs/01-requirements/FRD.md"})
+
+#: History. Not the same exemption as GENERATED and the difference is the whole point: a
+#: generated document's numbers are recomputed and therefore CURRENT, so it skips the ownership
+#: rule and still has its values checked. A history document's numbers are deliberately OLD, so
+#: checking them against today turns "4 tests, both mutants killed" from 2026-08-18 into
+#: "but tests is 1333". Putting it in GENERATED was the first attempt and it failed exactly there.
+#:
+#: **`TODO_CLOSED.md` is history BY CONSTRUCTION, and gate 43 is what makes that exact rather
+#: than a claim** - it refuses a closed item in `TODO.md`, so the two files partition the work
+#: list between them and neither can quietly become the other.
+#:
+#: **What decided it was reading the twelve hits rather than counting them, 2026-09-05.** Three
+#: were the document QUOTING this gate's own known false positives - `"8 tests"` is
+#: `check_gates.py`'s gate NAME, `'465 registered'` is a component count - inside the very entry
+#: that catalogued them. Two more were "gates" as a VERB: *"condition 4 gates rather than
+#: reports"*. **Editing a record so a matcher stops misreading it is corrupting the record to
+#: please the check**, which is `AGENTS.md` section 12's inversion pointed the other way.
+#:
+#: **The cost, stated rather than discovered:** a live claim written into that file goes
+#: unchecked. Its header says it is not a work list and nothing cites an individual entry, so the
+#: exposure is a reader treating history as current - which the file opens by telling them not to.
+HISTORY = frozenset({"docs/08-pm/TODO_CLOSED.md"})
 
 OWNERSHIP_HINT = (
     "measured counts live in HANDOFF.md section 2. Name the source instead of the number, or mark "
@@ -201,6 +224,8 @@ def main() -> int:
     failures: list[str] = []
     for path in markdown:
         rel = path.relative_to(REPO).as_posix()
+        if rel in HISTORY:
+            continue
         section = ""
         for line in path.read_text(encoding="utf-8").splitlines():
             if line.startswith("## "):

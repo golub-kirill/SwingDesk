@@ -188,6 +188,9 @@ def main() -> int:
         "42 control characters": _run("a control byte in a tracked text file, which is what a "
                                       "heredoc-mangled edit leaves behind",
                                       [python, "tools/verify_control_characters.py"]),
+        "43 open work only": _run("a CLOSED item in TODO.md, which AGENTS.md 10.7 gives one job - "
+                                  "every open item, and only open items",
+                                  [python, "tools/verify_open_work.py"]),
     }
 
     print("\n" + "=" * 62)

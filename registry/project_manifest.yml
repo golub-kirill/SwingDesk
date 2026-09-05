@@ -876,6 +876,16 @@ documents:
   readme_status_text: owner-pending
   generated: false
   file_expected: true
+- id: DOC-67c
+  display_number: '67c'
+  tier_ref: TIER-8
+  artifact_class: SUPPLEMENTAL_DELIVERABLE
+  path: docs/08-pm/TODO_CLOSED.md
+  document_status: drafting
+  status_source: document
+  readme_status_text: drafting
+  generated: false
+  file_expected: true
 - id: DOC-67a
   display_number: '67a'
   tier_ref: TIER-8
