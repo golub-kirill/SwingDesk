@@ -1836,6 +1836,32 @@ def test_a_missing_read_by_is_a_failure() -> None:
     assert "no `read_by`" in (_reader_failure() or "")
 
 
+def test_none_is_a_FAILURE_when_the_code_asks_for_the_parameter_by_name() -> None:
+    """The inverse of the direction this gate was built for, added 2026-09-05.
+
+    Gate 1 exists because parameters carried values no line of code read, and `read_by: none` is
+    the honest answer for those. **The opposite went unchecked**: `rs.benchmark` said `none` while
+    `pipeline._benchmark` had been reading it through the registry since `DR-018` was ratified.
+    That understates the system in the dangerous direction - `read_by: none` is what a reader
+    consults before retiring something, and `CHANGE_MANAGEMENT.md` section 5 makes `unused` a
+    deletion candidate.
+
+    Measured before shipping: 75 parameters declare `none`, 8 have their id appear anywhere in
+    `src/` as a string, and exactly **one** reaches a registry call. Matching the CALL rather than
+    the literal is what keeps that 1-in-8 from being noise.
+    """
+    failure = _reader_failure(id="rs.benchmark", read_by="none")
+
+    assert failure is not None
+    assert "asks the registry for it by name" in failure
+
+
+def test_none_still_passes_for_a_parameter_nothing_reads() -> None:
+    """The seven that only APPEAR in `src/` - named in refusal text, or listed as an id - are not
+    reads, and a check that flagged them would be the noise `CI_POLICY.md` section 3 describes."""
+    assert _reader_failure(id="costs.slippage_model", read_by="none") is None
+
+
 def test_a_reader_naming_a_module_that_does_not_exist_is_a_failure() -> None:
     failure = _reader_failure(read_by="swingdesk.nowhere:whatever")
     assert failure is not None

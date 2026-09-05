@@ -1166,8 +1166,65 @@ evening returned every one of those sessions, clean. The owner asked; nobody had
       which vintage it used and where that came from.
       8 tests in `tests/test_study_vintage.py`; mutating `--reproduce` to ignore the record it
       had just read killed exactly the two that assert it, and nothing else.
-      **Nothing was re-run and no published result was touched.** `PR-012` costs 13m37s and a
-      re-run is the owner's to ask for; what changed is that one is now possible.
+      ~~**Nothing was re-run and no published result was touched.**~~ **RUN 2026-09-05, and it
+      reproduced two arms of three.** No published result was touched — `--reproduce` refuses
+      `--write`. The command, and it is the whole evidence:
+      ```bash
+      PYTHONPATH=$PWD/src python tools/run_pr012.py --data <store> --reproduce --verify-sample 0
+      ```
+      ```
+      vintage: bars at 2026-08-24T07:15:39, classifications at 2026-08-24T15:52:36
+               (reproducing PR-012.json)
+      snapshot 2026-08-24T07:15:39  ·  admitted 1140
+      ```
+      **The bar half works exactly.** The admitted universe is 1,140 both times, and all eight
+      `MOMENTUM` and `MARKET` cells reproduce — trade counts identical, mean net R identical to
+      the printed six decimals. That is the ruling doing its job: before this, a re-run read
+      whatever the store held today, `APH` at half the study's price included.
+      **The SECTOR arm does not reproduce, and the run names its own cause.** All four sector
+      cells differ; two differ on trade COUNT, which no rounding explains:
+
+      | cell | trades | mean net R |
+      |---|---|---|
+      | `1x/SECTOR` primary | 409 → **408** | 0.344545 → 0.342022 |
+      | `1x/SECTOR` holdout | 181 → 181 | 0.160587 → **0.159103** |
+      | `3x/SECTOR` primary | 415 → **417** | 0.427230 → 0.405489 |
+      | `3x/SECTOR` holdout | 189 → 189 | 0.065513 → **0.061604** |
+
+      `PR-012.json` records `classified: 1013`; the pinned re-run prints **1036**. Same admitted
+      universe, same pinned clock, **23 more names carrying a sector**.
+      **So pinning both clocks is NOT sufficient, and the residue is the classification store.**
+      Measured directly, and it is not what it looks like — nothing was backdated by mistake:
+      ```sql
+      SELECT knowledge_time, count(DISTINCT instrument_id) FROM classifications GROUP BY 1;
+      -- 2026-08-23 15:42:18 -> 1148     2026-08-31 16:59:40 -> 23
+      ```
+      The store holds exactly **two** `knowledge_time` values. Only the 08-23 one is at or
+      before the pinned clock, and at that clock the store answers for **1,148** instruments
+      and **1,050** with weights **today** — while the study, reading the same clock, found
+      1,013. **A `knowledge_time <= ?` query whose answer grows is a batch LABEL, not a record
+      of when a fact became known to us.**
+      **What that means, stated as narrowly as the evidence allows.** The bar store is
+      point-in-time and the classification store is not: rows reached it under a timestamp at
+      or before the study's clock, after the study had read it. `AGENTS.md` §12's *"two stores,
+      two clocks"* is about reading one at the other's `knowledge_time`; **this is narrower and
+      worse — one store's own clock does not bound its own answer.** Which of the two shapes it
+      is — rows appended under an existing label, or a batch written with an earlier stamp —
+      cannot be told from the schema, which records no insertion time. That is marked
+      conjecture (`AGENTS.md` §10.4); the ANSWER changing is measured.
+      **Consequence, and it is the reason this is written here rather than filed as a curio:**
+      **no study reading classifications can be reproduced**, `--reproduce` or not. `PR-012`
+      and `PR-013` both do. The momentum and market arms are safe because they read bars only.
+      **Not fixed here, and the fix is a decision.** Giving the classification store a true
+      insertion time is a schema change, and `AGENTS.md` §12 is explicit that adding a column
+      is a migration. Whether the existing rows can be attributed at all is a separate
+      question, and probably answered *no* — the same shape as `DR-008` c3's permanently
+      unattributable directory pulls.
+      **And one measured aside, because it will surprise the next person who runs it:** the
+      pinned run took **about 25 minutes** against the ~13m37s `HANDOFF.md` records for a fresh
+      one. Reading `as_of` an older `knowledge_time` over a store that has since grown means
+      more versions to filter per query. Same tool, different population — the shape
+      `widen_universe.cmd`'s 45-seconds-per-100 comment already demonstrated.
 
       **THE ORIGINAL QUESTION, and it is the owner's, because it changes what a guard is FOR.**
       `DR-016` §8.4 scoped the revision guard to the DECISION PATH, where the close is what is
@@ -2537,8 +2594,36 @@ is for where no gate can reach.
       and both need `PR-012`'s values.
 
 - [ ] **`[v]` THE BENCHMARK EXISTS NOW, AND POINT-TO-POINT RELATIVE STRENGTH IS DECORATIVE** —
-      `DR-018`, written 2026-08-24, `proposed`. Derive every figure with
+      `DR-018`, written 2026-08-24, ~~`proposed`~~ **`accepted` — ratified by the owner
+      2026-08-30, corrected here 2026-09-05**. The record's own header says so; this line had
+      said `proposed` for six days. Derive every figure with
       `python tools/measure_benchmark.py`, never from this line.
+
+      **AND CHECKING THAT TURNED UP THE THING WORTH KEEPING — 2026-09-05.** `rs.benchmark`
+      declared **`read_by: none`** while `pipeline.py:299` reads it:
+      `benchmark_id = str(registry.use("rs.benchmark").value)`, inside `_benchmark`. Corrected
+      to `swingdesk.application.pipeline:_benchmark`.
+      **This is §7's direction REVERSED, and nothing was watching it.** §7 exists because
+      parameters carried values no line of code read, so `read_by: none` is the honest answer
+      for those and gate 1 accepted it unconditionally. **A parameter that IS read and says
+      nobody reads it understates the system**, and it is the more dangerous half: `none` is
+      what a reader consults before retiring something, and `CHANGE_MANAGEMENT.md` §5 makes
+      `unused` a deletion candidate. A ratified benchmark was one review away from looking
+      like dead weight.
+      **GATE 1 NOW CHECKS IT, and it was measured before shipping** (`AGENTS.md` §12's habit,
+      which rejected three of four mechanisms on 2026-08-25 on their own numbers):
+      | | |
+      |---|---|
+      | parameters declaring `read_by: none` | 75 |
+      | whose id appears anywhere in `src/` as a string | 8 |
+      | **whose id reaches an actual registry call** | **1** |
+      The eight-to-one gap is the whole design: the check matches the CALL
+      (`.use` / `.decimal_value` / `.int_value` / `.string_value` / `.bool_value` with a
+      literal id), not the literal. The seven near-misses are ids named in refusal text or in
+      lists, and a check firing on those would be the noise `CI_POLICY.md` §3 describes.
+      **Extended gate 1 rather than adding a gate**, because `read_by` is already gate 1's
+      subject and §10.5's argument applies to checks as much as to counts. Two tests; removing
+      the branch kills the one that asserts it and nothing else.
       **The blocker was cheap and the fix found something expensive.** No index series was stored
       only because coverage is an ALPHABETICAL PREFIX that had not reached the letter S; `SPY`,
       `QQQ`, `IWM`, `IVV` and `VOO` were already eligible ETF rows. Fetched, five years each.
@@ -2748,6 +2833,32 @@ is for where no gate can reach.
       `PR-002` unrun `thresholds_pm20pct`, `execution_delay_1bar`.
       Both need new runs, which means new pre-registrations: neither runner can reproduce its
       original sample (both fetch the current directory and current Yahoo history).
+
+      **TESTED 2026-09-05, and the parenthesis is TRUE — checked at the source rather than
+      taken on trust** (`AGENTS.md` §15 rule 1: an impossibility names the test that
+      established it):
+      ```bash
+      grep -n 'urlopen\|vendor_yahoo.fetch\|BarStore' tools/run_pr001.py tools/run_pr002.py
+      ```
+      Both `urlopen` the two directory files and call `vendor_yahoo.fetch` per name. **Neither
+      opens the bar store at all**, so neither has a vintage to pin — the `--reproduce` flag
+      that `run_pr012` and `run_pr013` gained on 2026-09-05 has nothing to attach to here.
+      **But *the runner* cannot is not *nothing* can, and the counter-example is in the same
+      directory.** `PR-005` was in this exact position and got `tools/run_pr005_replay.py` — a
+      store-backed replay that re-derives the cells and compares them to the published result.
+      It is a guard rail rather than a study: it re-derives the SAME statistic, so it spends no
+      trial, and it caught a real drift on 2026-09-05.
+      **What such a replay could and could not settle here, stated so nobody expects the wrong
+      thing.** It could not reproduce the ORIGINAL sample: `PR-002` ran 2026-08-03T02:24 and
+      the store held nothing for those names until later that day — `tools/measure_study_drift.py`
+      prints `UNAVAILABLE` for exactly this reason, and `PR-002.json` cannot even be asked
+      because it records `instruments` as a COUNT rather than a list. It could establish
+      whether the headline result survives on today's data, which is what `PR-005`'s replay is
+      for and what nothing currently does for `PR-002`.
+      **The unrun perturbations still need a new pre-registration and that is unchanged.**
+      Running `thresholds_pm20pct` or `execution_delay_1bar` on a different sample is a new
+      study whatever the mechanism, so this correction narrows the claim rather than
+      overturning the conclusion: what was foreclosed is the cheap check, not the study.
 
 ## 6. Code & gates
 

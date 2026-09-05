@@ -123,7 +123,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | | |
 |---|---|
 | Merge gates | **48**, one command: `python tools/check_gates.py` |
-| Tests | **1331**, fully offline |
+| Tests | **1333**, fully offline |
 | Docs | 143 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 459 registered · 4 `specified` · **2 `active`** |
 | Parameters | 108 - 57 `unset`, 34 `assumed`, 17 `owner`, **0 `validated`** |
@@ -188,7 +188,7 @@ once did).
 
 - `claude/a-test-that-opens-the-live-store`
 - `claude/a-handoff-for-the-blocked-claims`
-- `claude/skip-what-the-vendor-never-serves`
+- `claude/blocked-claims-third-sweep`
 
 *Tip and merge state deliberately absent - both move under this document's own feet. `python tools/verify_branches.py` prints them.*
 
