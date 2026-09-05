@@ -64,6 +64,95 @@ from swingdesk.validation.backtest.book import Candidate
 
 RESULT = REPO / "docs" / "prereg" / "results" / "PR-012.json"
 
+
+@dataclass(frozen=True)
+class Vintage:
+    """Which moment each store is read at, and where that moment came from.
+
+    Two stores, two clocks (`AGENTS.md` section 12). The BAR and DIRECTORY stores are read at
+    `as_of`; the CLASSIFICATION store is read at `clock`, and they are genuinely different moments -
+    a study's bar snapshot is the store's latest at the time, while its classifications were read
+    when the run reached them. Reproducing one and not the other is not a reproduction.
+    """
+
+    #: Bar and directory stores. `None` means "whatever the store's latest is", the fresh-run default.
+    as_of: datetime | None
+    #: Classification store.
+    clock: datetime
+    #: Printed on every run, so nobody has to infer which sample they are looking at.
+    source: str
+
+
+def resolve_vintage(
+    *,
+    as_of_arg: str | None,
+    reproduce: bool,
+    result_path: Path,
+    now: datetime,
+) -> Vintage:
+    """Decide which vintage to read at, from the arguments and the study's own record.
+
+    **Owner ruling 2026-09-05, option (a): read the recorded snapshot back.** These runners took
+    `store.latest_knowledge_time()` and then WROTE the value they used into the result as
+    `snapshot` - a number that would make the study reproducible, recorded and never read again. A
+    re-run therefore read whatever the store held that day.
+
+    **What paid for it, measured 2026-09-05 by `tools/measure_study_drift.py`:** since PR-013's
+    recorded snapshot, 1,220 rows inside its own window were revised - `APH` at close x0.5 from a
+    2:1 split re-adjusted through history and `DFNS` at x125 from a reverse split. A re-run read
+    those names at a fraction and a multiple of what the study read, and said nothing. That matters
+    because a re-run is used as EVIDENCE that a code change moved nothing.
+
+    The default is unchanged: a fresh run still reads the store's latest, because pinning a new
+    study to an old vintage would be the opposite mistake.
+    """
+    if reproduce and as_of_arg:
+        raise SystemExit("--reproduce and --as-of both name a vintage; pass one")
+
+    if reproduce:
+        if not result_path.exists():
+            raise SystemExit(
+                f"--reproduce reads the vintage from {result_path.name}, which does not exist. "
+                "There is nothing to reproduce yet."
+            )
+        record = json.loads(result_path.read_text(encoding="utf-8"))
+        missing = [key for key in ("snapshot", "run_at") if key not in record]
+        if missing:
+            raise SystemExit(
+                f"{result_path.name} records no {' and no '.join(missing)}, so this study cannot "
+                "be reproduced from it. Studies published before those fields existed are in that "
+                "position permanently - say so rather than reading today's store and calling it a "
+                "reproduction."
+            )
+        return Vintage(
+            as_of=datetime.fromisoformat(record["snapshot"]),
+            clock=datetime.fromisoformat(record["run_at"]),
+            source=f"reproducing {result_path.name}",
+        )
+
+    if as_of_arg:
+        # The classification store is deliberately NOT pinned here. `--as-of` names one moment and
+        # this study reads two stores, so claiming both were pinned would be the overstatement
+        # `AGENTS.md` section 10.8 is about. `--reproduce` is the flag that pins both.
+        return Vintage(
+            as_of=datetime.fromisoformat(as_of_arg),
+            clock=now,
+            source="--as-of pins the bars; classifications still read at now",
+        )
+
+    return Vintage(as_of=None, clock=now, source="fresh run - the store's latest")
+
+
+def add_vintage_arguments(parser: argparse.ArgumentParser) -> None:
+    """The two flags, identical on both runners because the argument is identical."""
+    parser.add_argument("--as-of", dest="as_of", default=None,
+                        help="ISO-8601 knowledge_time to read the bar and directory stores at. "
+                             "Default: the store's latest, which is what a fresh run wants")
+    parser.add_argument("--reproduce", action="store_true",
+                        help="read the vintage back out of this study's own published result - "
+                             "its `snapshot` for the bars and its `run_at` for the classifications "
+                             "- so the run sees the sample the study saw")
+
 # ---- pinned by the pre-registration. A change here is a DIFFERENT study. -------------------------
 LOOKBACK = 126
 BENCHMARK = "SPY"
@@ -243,17 +332,27 @@ def main() -> int:
     parser.add_argument("--verify-sample", type=int, default=300,
                         help="how many (name, session) scores to check against the reference "
                              "implementations. 0 disables the check, which is not recommended")
+    add_vintage_arguments(parser)
     args = parser.parse_args()
 
-    clock = datetime.now(UTC)
+    vintage = resolve_vintage(as_of_arg=args.as_of, reproduce=args.reproduce,
+                              result_path=RESULT, now=datetime.now(UTC))
+    if args.reproduce and args.write:
+        # A reproduction that publishes is not a reproduction, it is a republication under an old
+        # vintage. `run_pr005_replay.py` makes the same refusal for the same reason.
+        raise SystemExit("--reproduce does not publish. Drop --write, or run without --reproduce.")
+
+    clock = vintage.clock
     with (
         BarStore(args.data / "bars.duckdb") as store,
         DirectoryStore(args.data / "directory.duckdb") as directory,
         ClassificationStore(args.data / "classifications.duckdb") as classifications,
     ):
-        as_of = store.latest_knowledge_time()
+        as_of = vintage.as_of or store.latest_knowledge_time()
         if as_of is None:
             raise SystemExit("bar store is empty")
+        print(f"vintage: bars at {as_of.isoformat()}, classifications at {clock.isoformat()} "
+              f"({vintage.source})")
 
         benchmark = store.as_of(BENCHMARK, Interval.DAY, Series.RAW, as_of)
         if not benchmark.bars:

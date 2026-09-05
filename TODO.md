@@ -1146,9 +1146,28 @@ evening returned every one of those sessions, clean. The owner asked; nobody had
       - **(b) leave it and date every re-run**, which is the 2026-08-30 ruling generalised.
         Cheaper today, and it means no reproduction claim can ever be more than *at that
         vintage*.
-      **This entry recommends (a) and does not take it.** A re-run is evidence, and changing
-      what a reproduction MEANS is a decision about the research record rather than a wiring
-      job.
+      ~~**This entry recommends (a) and does not take it.**~~ **RULED (a) AND BUILT 2026-09-05,
+      owner instruction.** `run_pr012.py` and `run_pr013.py` take `--as-of` and `--reproduce`;
+      the shared resolver is `run_pr012.resolve_vintage`, which `run_pr013` already imports
+      from. Four things it does, and the last two are what make it honest:
+      - **`--reproduce` reads the study's own record back** — its `snapshot` for the bars and
+        the directory, its `run_at` for the classifications. **Two stores, two clocks**
+        (`AGENTS.md` §12): pinning the bars and reading classifications at `now` would not be
+        a reproduction, and the first draft of this did exactly that.
+      - **the default is unchanged.** A fresh run still reads `latest_knowledge_time()`;
+        pinning a NEW study to an old vintage is the opposite mistake.
+      - **`--reproduce --write` is REFUSED.** A reproduction that publishes is a republication
+        under an old vintage; `run_pr005_replay.py` refuses the same thing for the same reason.
+      - **a record missing either field refuses rather than falling back.** A study published
+        before those fields existed cannot be reproduced, permanently — reading today's store
+        and printing cells would be the `unavailable`-as-`pass` inversion this file collects.
+      `--as-of` alone says in its own printed line that it pins the bars and **not** the
+      classifications, because claiming both would be the §10.8 overstatement. Every run prints
+      which vintage it used and where that came from.
+      8 tests in `tests/test_study_vintage.py`; mutating `--reproduce` to ignore the record it
+      had just read killed exactly the two that assert it, and nothing else.
+      **Nothing was re-run and no published result was touched.** `PR-012` costs 13m37s and a
+      re-run is the owner's to ask for; what changed is that one is now possible.
 
       **THE ORIGINAL QUESTION, and it is the owner's, because it changes what a guard is FOR.**
       `DR-016` §8.4 scoped the revision guard to the DECISION PATH, where the close is what is
@@ -2932,6 +2951,30 @@ is for where no gate can reach.
       landed on 2026-09-04 and `HANDOFF.md` §2 owns what the number is today
       (`AGENTS.md` §10.5). The command above the fence is the answer, and the wrapper
       rebuilds that block itself for exactly this reason (`AGENTS.md` §10.6).
+      **RAN AGAIN 2026-09-05 ON OWNER INSTRUCTION, AND THE SECOND PASS ADDED NOTHING — which
+      is a finding about the REPORT, not about the pass.** `exit 0`, `fetched 3783, failed
+      217`, and the eligible names covered went **12,948 → 12,948**. The first pass added 71;
+      this one added zero, and it was not idle — it spent its whole budget.
+      **The remainder cannot be covered by any number of passes.** 207 eligible symbols have
+      never been fetched and the vendor serves none of them:
+      - **133** carry `.U`, `.W` or `.R` — units, warrants and rights, which is exactly what
+        `universe.UNMAPPABLE_SUFFIXES` names;
+      - **the other 74 are the same classes spelled without the dot** — `ACAAW`, `APACR`,
+        `FBYDP`, `BCTXL` — so the constant does not catch them.
+      Every one answers *"possibly delisted; no price data found"*.
+      **So `"1 more pass(es) at this budget to cover the directory"` prints forever**, and each
+      pass spends part of its budget re-attempting names the vendor has never served. A line
+      promising convergence over a set that cannot converge is `AGENTS.md` §12's
+      manufactured-alarm shape pointed the other way: it manufactures an expectation.
+      **Two things follow, both the owner's because both change what a scheduled pass does** —
+      nothing is built here:
+      - should the queue skip classes the vendor has never served? It would return budget to
+        names that can use it. Against: a suffix rule is a guess about instrument class, and
+        `UNMAPPABLE_SUFFIXES` as written would catch only 133 of the 207;
+      - should the closing line say **unreachable** instead of counting passes? Nearly free,
+        and it changes no fetch behaviour at all.
+      **The mechanism itself is sound and is not what is in question:** the queue is
+      never-fetched first and then the stalest, and it did add 71 names on its first run.
       **So this entry is closed on both halves**: the tier is registered, and the thing it
       registers has been shown to run.
 
