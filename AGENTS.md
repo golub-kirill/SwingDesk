@@ -388,6 +388,26 @@ because an unverified item that reads as verified is how a fixed problem gets wo
 **`TODO.md` holds work items and never measured counts** — where an item needs a number it names the
 command. §10.5 and §10.6 apply to it as to everything else.
 
+**A CLOSED ITEM DOES NOT STAY — added 2026-09-05, owner instruction.** When an item closes, its
+lesson is promoted — to §12's traps, to a decision record, or to a gate — and **the entry
+moves to `docs/08-pm/TODO_CLOSED.md`**. A lesson that is only *"this specific thing was
+fixed"* is not promoted, because git holds it.
+
+**What paid for it:** on 2026-09-05 this file was **4,653 lines, of which 105 closed items
+occupied 2,557** — 57% of the open-work list was not open work, and it was growing about 330
+lines a day. The rule above had said *only open items* since it was written; nothing could see
+the breach because the rule was honour and the file is prose. **Gate 43 is that rule with an
+exact token behind it** — `- [x] ` at the start of a line — which is the one shape §12's habit
+allows a check over text to have.
+
+**The migration was not a deletion and the difference is the whole discipline.** All 105 were
+triaged first: 75 named a decision record or a gate that already held the lesson, 18 were
+small *"this was fixed"* entries, and of the 12 read one at a time, **four carried a lesson
+nothing held** — they are traps 28 to 31 in §12 now. `AGENTS.md` §11 rule 2 protects decisions,
+ADRs, ratified criteria, pre-registrations, reports, journal entries and evidence; **a finished
+work item is none of those**, and the correct-forward-never-delete habit had been applied to it
+by inertia rather than by rule.
+
 **`HANDOFF.md` is session-to-session memory and nothing else**: what changed, what is in flight,
 what is frozen, where to look. Not the plan (`docs/08-pm/plans/`), not the analysis, not the task
 list, not this file, not the project history.
@@ -543,6 +563,37 @@ open question that follows: §10.5 gives every COUNT an owner and nothing does t
   return. And an ambiguous bare name is attributed to one owner: `freshness.assess` reports zero
   callers while `pipeline.py` calls it twice as `fresh.assess`, because `portfolio.assess` has the
   same short name. Read the file before reporting a null.
+
+- **A budget stated PER STAGE and measured only END TO END is not measured at all.** `NFR.md`
+  §3 budgets the decision path at ≤ 5 minutes; it was running at **20.2 minutes, four times
+  over**, while the end-to-end row it shares a table with sat comfortably inside its own 45.
+  Nobody saw it because `data/daily_run.log` records a total and **the requirement lives in
+  the split**. `tools/measure_latency.py` now times the stages separately and reads the
+  threshold out of `NFR.md` rather than carrying a copy. **Two of §3's budgets are still
+  unmeasured and are named as such** — a ratified number with no instrument behind it is a
+  number nobody is accountable to.
+- **A test that opens the LIVE store and passes is indistinguishable from a sandboxed one.**
+  Three tests monkeypatched the module's `REPO` and set `sys.argv` without `--data`, so
+  argparse fell through to `default=Path("data")` — **relative**, resolved against the working
+  directory, and from the repository root that is the operator's real store. The monkeypatch
+  never reached the default. They were caught only because a coverage pass happened to be
+  holding the file and all three failed at once; on any ordinary day they pass. **A default
+  argparse never sees is a path no fixture controls.**
+- **A comparison that changes two things attributes the difference to the wrong one.**
+  `www.sec.gov` returned 403 and `data.sec.gov` returned 200, so the HOST was recorded as the
+  blocker and a real measurement waited **fifteen days on an owner action nobody needed**. The
+  probes had been sent with different headers: one carried `Accept`, the other did not. Re-run
+  with the header held constant, the host was never the variable. **Change one thing, or you
+  have measured nothing** — and §15's asymmetry means this shape buys a wrong impossibility,
+  which costs everything downstream of it, silently.
+- **A guard added to the live path is not added to the engines that REPLAY it.**
+  `trade_management/sizing.py` gained a second check on a stop — that it is a positive price —
+  after a live candidate produced a risk per share larger than its own entry. Both backtest
+  engines kept only the first check, in the code that produces this project's EVIDENCE. **The
+  cost was a traceback rather than a wrong number** — `Trade.stop_price` is `gt=0`, so the run
+  died part-way and lost every instrument walked so far, which is the coded-refusal rule §3
+  states, broken in the one path whose docstring promises *counted, never discarded*. **When a
+  guard is added, ask what else walks the same data.**
 
 **The habits:**
 

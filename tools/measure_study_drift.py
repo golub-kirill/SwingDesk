@@ -42,6 +42,7 @@ RESULTS = REPO / "docs" / "prereg" / "results"
 #: A study is listed only if its record carries all three; the rest report why they cannot be read.
 STUDIES: list[tuple[str, str, str]] = [
     ("PR-001.json", "admitted", "run_at"),
+    ("PR-002.json", "instruments", "run_at"),
     ("PR-005.json", "instruments", "run_at"),
     ("PR-013.json", "instruments", "snapshot"),
 ]

@@ -138,7 +138,11 @@ def _load_yaml(path: Path) -> Any:
 #: The numbered specification-track files at root are deliberately NOT here: 31 of their 32
 #: references are forward entries in `46_Build_Plan`'s own plan table, and all of them disappear
 #: when that material is folded into docs/. Allowlisting them would be 32 throwaway entries.
-ROOT_DOCS = ("README.md", "AGENTS.md", "HANDOFF.md")
+#: `TODO.md` joined on 2026-09-05. It had been outside this gate since the gate was written, so
+#: the open-work list - the file a fresh session reads first - was never checked. The first run
+#: found two dead citations and two sentences claiming a number of reported studies the record
+#: contradicted.
+ROOT_DOCS = ("README.md", "AGENTS.md", "HANDOFF.md", "TODO.md")
 
 
 def _unindexed_decisions() -> list[str]:
@@ -166,6 +170,11 @@ def _unindexed_decisions() -> list[str]:
 
 def main() -> int:
     markdown = sorted(DOCS.rglob("*.md")) + [REPO / name for name in ROOT_DOCS]
+    # A ROOT_DOCS entry that is absent is skipped rather than raising. Every one of them is
+    # present in a real checkout; a FIXTURE builds only what its case needs, and a gate that
+    # dies on a missing root file reports a traceback instead of a verdict - which is what
+    # adding TODO.md to the tuple did to ten existing tests on 2026-09-05.
+    markdown = [path for path in markdown if path.is_file()]
     # Documents that exist anywhere in the tree, plus the repo-root ones docs legitimately cite.
     known_docs = (
         {p.name for p in markdown}
@@ -197,7 +206,15 @@ def main() -> int:
             if name not in topics:
                 failures.append(f"{rel}: cites component {name}, absent from the course index")
 
-        status = STATUS_LINE.search(body)
+        # The ladder is a property of a TIER document - where a deliverable sits in its lifecycle.
+        # A root file has no tier: the readme, the rulebook, the handoff and the work list are not
+        # deliverables on a ladder. The other three have been in ROOT_DOCS since this gate was
+        # written and never met this check, because none of them carries a `**Status:**` line;
+        # `TODO.md` does, which is how the question surfaced when it joined on 2026-09-05.
+        # `rel` is a Path, so compare the NAME - `rel in ROOT_DOCS` is a Path against a tuple of
+        # strings and is silently always False, which is how the first version of this guard did
+        # nothing at all.
+        status = None if path.name in ROOT_DOCS else STATUS_LINE.search(body)
         if status and status.group(1) not in STATUSES:
             failures.append(
                 f"{rel}: status {status.group(1)!r} is outside the ladder {sorted(STATUSES)}"

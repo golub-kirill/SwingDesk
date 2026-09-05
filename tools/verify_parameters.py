@@ -66,6 +66,35 @@ SRC = REPO / "src"
 #: listed here - a hand-kept list would drift the first time a call site moved.
 NUMERIC_CALL = re.compile(r'decimal_value\(\s*"([a-z][a-z0-9_.]*)"')
 
+#: Every way this codebase asks the registry for a value, with the id as a literal. An id reaching
+#: one of these IS read, whatever the registry says about it.
+#:
+#: **This is the inverse of the direction section 7 was built for, and nothing was watching it.**
+#: Section 7 exists because parameters carried values no line of code read; `read_by: none` is the
+#: honest answer for those and is accepted unconditionally. **The opposite - a parameter that IS
+#: read and declares that nobody reads it - understates the system**, and it is the more dangerous
+#: half: `read_by: none` is what a reader consults before retiring something, and
+#: `CHANGE_MANAGEMENT.md` section 5 makes `unused` a deletion candidate.
+#:
+#: **Measured before shipping, as `AGENTS.md` section 12's habit asks.** 75 parameters declare
+#: `read_by: none`; 8 have their id appear somewhere in `src/` as a bare string; exactly **1**
+#: reaches a call below - `rs.benchmark`, read by `pipeline._benchmark` since `DR-018` was
+#: ratified. The other 7 are ids named in refusal text or in lists, which is why this matches the
+#: CALL and not the literal: the loose form would have carried a 7-in-8 false-positive rate and
+#: become the noise `CI_POLICY.md` section 3 describes.
+REGISTRY_READ = re.compile(
+    r"\.(?:use|decimal_value|int_value|string_value|bool_value)\(\s*[\"']([a-z][a-z0-9_.]*)[\"']"
+)
+
+
+def registry_read_ids() -> set[str]:
+    """Every parameter id the code actually asks the registry for, by any accessor."""
+    return {
+        match
+        for path in SRC.rglob("*.py")
+        for match in REGISTRY_READ.findall(path.read_text(encoding="utf-8"))
+    }
+
 
 def decision_record_exists(reference: str) -> bool:
     return any(DECISIONS_DIR.glob(f"{reference}-*.md"))
@@ -130,6 +159,16 @@ def reader_failure(entry: dict[str, Any]) -> str | None:
     if reader is None:
         return f"{label}: no `read_by`. Name the code that consumes it, or write `none`"
     if reader == "none":
+        # `none` is honest for a parameter nothing consumes, and most of them are. It is a LIE for
+        # one the code asks the registry for by name, and that lie runs the wrong way from the one
+        # section 7 was built to catch: `read_by: none` is what a reader consults before retiring
+        # something, and `CHANGE_MANAGEMENT.md` section 5 makes `unused` a deletion candidate.
+        # Found on 2026-09-05: `rs.benchmark` was read by `pipeline._benchmark` and said `none`.
+        if label in registry_read_ids():
+            return (
+                f"{label}: `read_by` is 'none' but the code asks the registry for it by name. "
+                f"Name the module:symbol that consumes it"
+            )
         return None
     if not isinstance(reader, str) or ":" not in reader:
         return f"{label}: `read_by` must be 'module:symbol' or 'none', got {reader!r}"

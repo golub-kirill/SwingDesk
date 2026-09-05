@@ -942,7 +942,7 @@ parameters:
     value: SPY
     status: assumed
     provenance: "assumed:DR-018"
-    read_by: none
+    read_by: swingdesk.application.pipeline:_benchmark
     named_in: [M31-T0454, M31-T0464]
     note: >-
       What relative strength is measured AGAINST. The course names three indexes as Definitions -

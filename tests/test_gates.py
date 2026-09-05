@@ -1836,6 +1836,32 @@ def test_a_missing_read_by_is_a_failure() -> None:
     assert "no `read_by`" in (_reader_failure() or "")
 
 
+def test_none_is_a_FAILURE_when_the_code_asks_for_the_parameter_by_name() -> None:
+    """The inverse of the direction this gate was built for, added 2026-09-05.
+
+    Gate 1 exists because parameters carried values no line of code read, and `read_by: none` is
+    the honest answer for those. **The opposite went unchecked**: `rs.benchmark` said `none` while
+    `pipeline._benchmark` had been reading it through the registry since `DR-018` was ratified.
+    That understates the system in the dangerous direction - `read_by: none` is what a reader
+    consults before retiring something, and `CHANGE_MANAGEMENT.md` section 5 makes `unused` a
+    deletion candidate.
+
+    Measured before shipping: 75 parameters declare `none`, 8 have their id appear anywhere in
+    `src/` as a string, and exactly **one** reaches a registry call. Matching the CALL rather than
+    the literal is what keeps that 1-in-8 from being noise.
+    """
+    failure = _reader_failure(id="rs.benchmark", read_by="none")
+
+    assert failure is not None
+    assert "asks the registry for it by name" in failure
+
+
+def test_none_still_passes_for_a_parameter_nothing_reads() -> None:
+    """The seven that only APPEAR in `src/` - named in refusal text, or listed as an id - are not
+    reads, and a check that flagged them would be the noise `CI_POLICY.md` section 3 describes."""
+    assert _reader_failure(id="costs.slippage_model", read_by="none") is None
+
+
 def test_a_reader_naming_a_module_that_does_not_exist_is_a_failure() -> None:
     failure = _reader_failure(read_by="swingdesk.nowhere:whatever")
     assert failure is not None
@@ -4034,3 +4060,118 @@ def test_the_gate_says_it_DID_NOT_RUN_rather_than_passing_without_git(tmp_path) 
     assert code == 0
     assert "DID NOT RUN" in out
     assert "not a clean result" in out
+
+
+# ------------- gate 43: TODO.md holds open items, and ONLY open items, added 2026-09-05
+#
+# `AGENTS.md` section 10.7 had said so since it was written, and on 2026-09-05 the file held 105
+# closed items across 2,557 lines - 57% of an open-work list that was not open work, growing about
+# 330 lines a day. The rule was honour and the file is prose, so nothing could see it.
+
+
+def _todo(root: Path, body: str) -> Path:
+    (root / "TODO.md").write_text(body, encoding="utf-8")
+    return root
+
+
+def test_a_todo_of_only_open_items_passes(tmp_path) -> None:
+    """Positive control. Without it every assertion below passes for an empty file."""
+    root = _todo(tmp_path, "- [ ] one thing\n- [ ] another\n")
+
+    code, out = run_gate("verify_open_work.py", root)
+
+    assert code == 0, out
+    assert "2 open item(s)" in out
+
+
+def test_a_closed_item_is_a_failure(tmp_path) -> None:
+    root = _todo(tmp_path, "- [ ] still open\n- [x] **finished** and still here\n")
+
+    code, out = run_gate("verify_open_work.py", root)
+
+    assert code == 1
+    assert "1 closed item(s)" in out
+    assert "finished and still here" in out
+
+
+def test_the_failure_names_where_a_closed_item_goes(tmp_path) -> None:
+    """A gate that refuses without naming the remedy trains the operator to skip it."""
+    root = _todo(tmp_path, "- [x] done\n")
+
+    _code, out = run_gate("verify_open_work.py", root)
+
+    assert "TODO_CLOSED.md" in out
+    assert "Promote the lesson first" in out
+
+
+def test_the_token_is_EXACT_and_prose_about_closed_work_is_not_a_hit(tmp_path) -> None:
+    """`CI_POLICY.md` section 3: a check over text needs an exact token or it becomes noise.
+
+    An entry may say the word "closed" in any voice it likes - what the gate reads is the five
+    characters that make a checklist line ticked, at the start of the line.
+    """
+    root = _todo(tmp_path, "- [ ] this one is CLOSED in spirit, - [x] appears mid-line here\n")
+
+    code, out = run_gate("verify_open_work.py", root)
+
+    assert code == 0, out
+
+
+def test_a_checkout_without_a_todo_says_UNAVAILABLE_rather_than_passing(tmp_path) -> None:
+    """`AGENTS.md` section 10.6 rule 2: a gate that cannot see its subject says so."""
+    code, out = run_gate("verify_open_work.py", tmp_path)
+
+    assert code == 0
+    assert "UNAVAILABLE" in out
+
+
+# ------------- gates 3e and 13 read the open-work list, added 2026-09-05
+#
+# `verify_docs.py` and `verify_study_summary.py` scan `docs/**` plus a three-entry ROOT_DOCS, and
+# `TODO.md` was not in it - so 2,146 lines of the open-work list had never been read by either.
+# The first run found two dead citations and two sentences claiming a number of reported studies
+# the record contradicted.
+
+
+def test_gate_3e_reads_the_open_work_list(tmp_path: Path) -> None:
+    """A dead citation in the work list is the same defect as one in a spec.
+
+    `TODO.md` was outside this gate until 2026-09-05 - 2,146 lines, the file a fresh session reads
+    first, and the first run over it found two dead citations.
+    """
+    _docs_tree(tmp_path)
+    absent = "MISSING_SPEC.md"          # built, not written literally: a test that spells out a
+    tick = chr(96)                      # dead citation puts one into this file
+    (tmp_path / "TODO.md").write_text(f"See {tick}{absent}{tick}.\n", encoding="utf-8")
+
+    code, out = run_gate("verify_docs.py", tmp_path)
+
+    assert absent in out
+    assert code == 1
+
+
+def test_a_root_file_has_no_rung_on_the_status_ladder(tmp_path: Path) -> None:
+    """The ladder is a property of a TIER document. `TODO.md` is the first root file to carry a
+    `**Status:**` line at all, and its value is not on the ladder because it is not on one."""
+    _docs_tree(tmp_path)
+    (tmp_path / "TODO.md").write_text("**Status:** working document\n", encoding="utf-8")
+
+    code, out = run_gate("verify_docs.py", tmp_path)
+
+    assert code == 0, out
+    assert "outside the ladder" not in out
+
+
+def test_gate_13_reads_the_open_work_list(tmp_path: Path) -> None:
+    """A wrong count of the research record is worse in the work list than in a spec: it is the
+    file a session reads first, and it carried one until 2026-09-05 - three sentences claiming a
+    number of reported studies the record contradicted.
+    """
+    root = _study_tree(tmp_path, "Nothing to see here.")
+    (root / "TODO.md").write_text("All seven reported studies carry it.\n", encoding="utf-8")
+
+    code, out = run_gate("verify_study_summary.py", root)
+
+    assert code == 1
+    assert "TODO.md" in out
+    assert "seven reported" in out.lower()
