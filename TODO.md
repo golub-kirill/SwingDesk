@@ -2966,13 +2966,37 @@ is for where no gate can reach.
       pass spends part of its budget re-attempting names the vendor has never served. A line
       promising convergence over a set that cannot converge is `AGENTS.md` §12's
       manufactured-alarm shape pointed the other way: it manufactures an expectation.
-      **Two things follow, both the owner's because both change what a scheduled pass does** —
-      nothing is built here:
-      - should the queue skip classes the vendor has never served? It would return budget to
-        names that can use it. Against: a suffix rule is a guess about instrument class, and
-        `UNMAPPABLE_SUFFIXES` as written would catch only 133 of the 207;
-      - should the closing line say **unreachable** instead of counting passes? Nearly free,
-        and it changes no fetch behaviour at all.
+      ~~**Two things follow, both the owner's because both change what a scheduled pass
+      does**~~ — **RULED AND BUILT 2026-09-05**: *"те которые мы не можем никак зафетчить —
+      конечно их стоит пропустить"*. Both are done, and the interesting part is how much
+      SMALLER the rule got when it was measured.
+      **`universe.is_mappable` is the predicate, and it exists because the TRANSLATION could
+      not answer the question.** `vendor_symbol` returns an unmappable symbol **unchanged**, so
+      `ACHR.W` in and `ACHR.W` out looks exactly like a symbol that needed no translation —
+      which is how a loop came to ask the vendor for a form the vendor does not use, every
+      pass, for weeks. `refresh_universe` now keeps them out of the queue and names them:
+      ```
+      eligible 13155 · stored 13008 · never fetched 74 · this pass 0
+      excluded 133 symbol(s) the vendor has no form for (.W, .U, .R) - never attempted, not failures
+      ```
+      **THE WIDER RULE WAS TRIED AND REFUSED BY MEASUREMENT, and this is the part worth
+      keeping.** Excluding warrants, units and rights by the vendor's own Security Name reads
+      as obviously right — the charter scopes *equities and ETFs* and `UNMAPPABLE_SUFFIXES`
+      says as much in its own comment. Measured against the eligible directory: **938 names
+      say warrant/unit/right and 738 of them ALREADY HAVE BARS.** `AB` is *"AllianceBernstein
+      Holding L.P. Units"* and is an ordinary NYSE listing. **The class is served; one
+      spelling of it is not**, and a rule reading the last letter alone drops `LOW`.
+      So the rule is the 133 with a dotted suffix, of which **zero have ever had a bar** —
+      and the other 74 stay in the queue, because nothing establishes they are unfetchable.
+      13 tests; mutating the predicate to the bare-trailing-letter form killed exactly the five
+      that guard against it, `LOW` among them.
+      **The closing line no longer promises a convergence it cannot deliver.** It separates
+      *excluded, not pending* from *still fetchable*, and says plainly that the pass records no
+      attempt history, so it cannot tell *not yet reached* from *asked and refused*.
+      **WHAT IS STILL OPEN, and it is the 74.** They are not a class — their shape-twins are
+      served — so distinguishing *refused* from *not yet reached* needs ATTEMPT HISTORY, which
+      nothing records today. That is storage and therefore a decision (`AGENTS.md` §12: adding
+      a column is a migration). Not built, and not guessed at.
       **The mechanism itself is sound and is not what is in question:** the queue is
       never-fetched first and then the stalest, and it did add 71 names on its first run.
       **So this entry is closed on both halves**: the tier is registered, and the thing it

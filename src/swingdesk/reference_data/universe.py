@@ -180,6 +180,24 @@ def parse_other_listed(text: str) -> tuple[DirectoryEntry, ...]:
 UNMAPPABLE_SUFFIXES = (".W", ".U", ".R")
 
 
+def is_mappable(symbol: str) -> bool:
+    """Is there a vendor symbol we could even ask for?
+
+    `vendor_symbol` returns an unmappable symbol UNCHANGED, so its RESULT cannot tell a caller
+    whether a mapping happened - `ACHR.W` in and `ACHR.W` out looks exactly like a symbol that
+    needed no translation. A fetch loop therefore asks the vendor for a form it already knows the
+    vendor does not use, and reads back "possibly delisted".
+
+    **Measured 2026-09-05, and the measurement is why this is a suffix test and nothing wider.**
+    Of the eligible directory, 133 symbols carry these suffixes and **not one has ever had a bar
+    stored**. The obvious generalisation - exclude warrants, units and rights by the vendor's own
+    Security Name - was tried against the same data and REFUSED: 938 eligible names say
+    warrant/unit/right and **738 of them are already fetched**, including `AB`
+    ("AllianceBernstein Holding L.P. Units"). The class is served; this spelling of it is not.
+    """
+    return not symbol.endswith(UNMAPPABLE_SUFFIXES)
+
+
 def vendor_symbol(symbol: str) -> str:
     """A NASDAQ Trader symbol in the form the price vendor expects.
 
