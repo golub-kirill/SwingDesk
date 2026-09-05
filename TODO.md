@@ -1101,7 +1101,56 @@ evening returned every one of those sessions, clean. The owner asked; nobody had
       keyed on the close and the pivots produced **identical trades**, while the denominator
       moved in the sixth decimal. That is exactly the observed shape — 0 cells differ on count,
       10 on mean R, and the 10 are the period the revised bars occupy.
-      **THE OPEN QUESTION, and it is the owner's, because it changes what a guard is FOR.**
+      **MEASURED ACROSS THE WHOLE RESEARCH RECORD, 2026-09-05, because the question below was
+      put abstractly and got the honest answer *"I have no answer"*.** A principle is hard to
+      rule on; a frequency is not. `tools/measure_study_drift.py` asks, per reported study,
+      what the store did to its sample after it ran:
+      ```bash
+      PYTHONPATH=$PWD/src python tools/measure_study_drift.py --data C:/PycharmProjects/SwingDesk/data
+      ```
+      **Two of the three measurable studies cannot be asked at all, and saying so is the
+      result rather than a gap.** `PR-001` and `PR-005` read at 2026-08-03, before ANY of
+      their 68 names had a bar in this store — which is what `PR-005-trades-provenance.json`'s
+      `why_not` already recorded and what `run_pr005_replay.py` reads `now` for. Their drift is
+      unmeasurable by construction, so the tool prints `UNAVAILABLE` instead of a number.
+      **`PR-013` can be asked, and the answer is not the half-cent story above.** Since its
+      recorded snapshot: **1,220 revised rows inside its own window, and zero new sessions** —
+      so every one of them is a rewrite of a session the study had read. Three names carry it:
+
+      | name | revised sessions | what happened to the close |
+      |---|---|---|
+      | `APH` | 727 | **×0.5** — a 2:1 split re-adjusted through history |
+      | `DFNS` | 220 | **×125** — a reverse split, same thing at the other end |
+      | `LEG` | 220 | unchanged — the tick corrections that moved `PR-005` |
+
+      **So there are two populations and only one of them is subtle.** A corporate-action
+      re-adjustment moves prices by a FACTOR and is the vendor being correct; a tick correction
+      moves them by half a cent and is invisible to a close-scoped guard. Both land inside a
+      closed study window, and neither is a fault in the store — it keeps every version.
+      **AND THE RUNNERS DO NOT READ THE SNAPSHOT THEY RECORD.** `run_pr012.py:254` and
+      `run_pr013.py:151` both take `as_of = store.latest_knowledge_time()`, then write
+      `"snapshot": as_of` into the result. The value that would make the study reproducible is
+      recorded and never read back. A re-run today reads `APH` at half the price the study saw
+      and `DFNS` at a hundred and twenty-five times it.
+      **That matters beyond tidiness because a re-run is used as EVIDENCE.** `HANDOFF.md` and
+      §5 of this file both cite `run_pr012.py` reproducing all 12 of `PR-012`'s cells as proof
+      that a code change moved nothing. That argument reads the store at `now`, so a split
+      landing in the window breaks it for a reason that has nothing to do with the code.
+      **The decision is now a small one, and it is still the owner's** (`AGENTS.md` §14 —
+      nothing is built here):
+      - **(a) read the recorded snapshot back.** `store.as_of` already takes a knowledge_time;
+        the runners pass `latest` where they could pass `record["snapshot"]`. Studies whose
+        vintage is IN the store become exactly reproducible, forever, and the byte-identity
+        argument above becomes sound. It does nothing for `PR-001` and `PR-005`, whose bytes
+        were never here.
+      - **(b) leave it and date every re-run**, which is the 2026-08-30 ruling generalised.
+        Cheaper today, and it means no reproduction claim can ever be more than *at that
+        vintage*.
+      **This entry recommends (a) and does not take it.** A re-run is evidence, and changing
+      what a reproduction MEANS is a decision about the research record rather than a wiring
+      job.
+
+      **THE ORIGINAL QUESTION, and it is the owner's, because it changes what a guard is FOR.**
       `DR-016` §8.4 scoped the revision guard to the DECISION PATH, where the close is what is
       read and a wider rule cries wolf. **A published study is a different subject with a
       different sensitivity** — it reaches `high` and `low` through ATR — and nothing watches
