@@ -789,7 +789,8 @@ replacing themselves.
 
 **Three costs, all measured:**
 
-1. **Things die in it.** Four traps lived only in `SESSION-HANDOFF-2026-08-24.md` §3 and were
+1. **Things die in it.** Four traps lived only in the dated session handoff of 2026-08-24, §3,
+   and were
    migrated to `AGENTS.md` §12 on 2026-08-24, hours before that file was deleted by its own
    instruction. Nothing would have noticed their loss.
 2. **An append-only record cites one.** `DR-016` line 441 cites `SESSION-HANDOFF` §1. `DR-016` is
@@ -1220,7 +1221,7 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
          and 1.5R mean anything. This is `CARD-001`'s four unset inputs and the `PR-012` redesign,
          and it is the one of the three that needs a PRE-REGISTRATION rather than a decision record
          (`ALLOCATION_SPEC` §3).
-      **Do not run these as one study.** 1 and 2 are exit-policy thresholds and belong to decision
+      **Do not run these as a single study.** 1 and 2 are exit-policy thresholds and belong to decision
       records; 3 is an ordering and belongs to a pre-registration. Merging them would let an
       ordering inherit an exit threshold's authority, which is the exact confusion §3 exists to stop.
 
@@ -1305,8 +1306,10 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       a `split buys` field with `none` as an explicitly legitimate answer, §7 carries the accounting,
       and rule 7 states it. Gate 25 gained condition 6: a reported study must DECLARE `split.buys`,
       the same shape as the `perturbations` condition and for the same reason - `none` is a
-      declaration, silence is not. All seven reported studies now carry it, read from each
-      pre-registration's own §5 and marked `recorded`; no measurement changed.
+      declaration, silence is not. Every reported study now carries it, read from each
+      pre-registration's own §5 and marked `recorded`; no measurement changed. The census is
+      `python tools/verify_study_summary.py`, never this line — it read *seven* until
+      2026-09-05 and the record had moved past it.
       **The DATES were never the declaration**, and that is what the gate had to be written around:
       `PR-002` carried a full three-way train/validation/test block from the day it ran while the
       question of what it bought went unasked for the study's whole life. A condition satisfied by
@@ -1328,7 +1331,8 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       rule 8 states why. Comparing two losers on which loses less is not a finding.
       **NOT closed at a gate, and the reason is stated rather than left as an omission.** Gate 25
       checks declarations against a verdict; this one needs the arm's and the control's point
-      estimates declared in a comparable shape, and the seven reported studies do not share one.
+      estimates declared in a comparable shape, and the reported studies do not share one
+      (`python tools/verify_study_summary.py` for how many there are).
       Requiring it retrospectively would mean inventing a schema for results already published. The
       next study to register a comparison should declare both, and the gate can bite from there.
 
@@ -1555,8 +1559,8 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 - [ ] **`[v]` PR-007** registered, unreported — **checked 2026-08-30 against the files rather than
       the mark**: `docs/prereg/PR-007-base-strategy-measured-costs.md` exists and
-      `docs/prereg/results/` holds no `PR-007-report.md`. It and `PR-009` are the two registered
-      studies with no report, which is what `HANDOFF.md` §2's studies row counts.
+      `docs/prereg/results/` holds no report for `PR-007`. It and `PR-009` are the registered
+      studies with no report, which is the gap `HANDOFF.md` §2's studies row counts.
 - [ ] **`[v]` PR-009 — ~~blocked on Task 8~~. TASK 8 IS DONE, AND THE STUDY IS NAMED AFTER A
       SUPERSEDED THRESHOLD.** Re-checked 2026-08-25.
       **Its title and §1 say −15R.** The registry holds `validation.max_allowable_drawdown` = **20,
@@ -1594,7 +1598,7 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **So the original `ACCEPT` rested on one of three registered robustness checks** — a defect
       independent of the country condition, and not fixed by the 2026-08-16 correction. Needs a new
       run, which means a new pre-registration: the runner cannot reproduce the 2026-08-02 sample.
-- [ ] **`[v]` Two studies rest on fewer checks than they registered.** Gate 25 prints this on every
+- [ ] **`[v]` Some studies rest on fewer checks than they registered.** Gate 25 names which, on every
       run (permitted — concluding less than you registered is always allowed — but the verdict is
       weaker than its report implies):
       `PR-001` unrun `sma_periods_pm20pct` (`overlap_per_regime` was conditional on a classifier
@@ -1908,7 +1912,7 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
         form. **`BRK-B` is ABSENT precisely because the canonical form is dotted**, which is the
         defect stated as a lookup: what the user would type is not what the store calls it.
       - **So a fix exists that needs no new source and no ruling.** `_instrument` mints
-        `id=base` from what was typed; `universe.vendor_symbol` already maps canonical → vendor
+        `id=base` from what was typed; `universe.vendor_symbol()` already maps canonical → vendor
         (`BRK.B` → `BRK-B`), so the reverse lookup over the directory identifies the one canonical
         symbol a typed ticker means. Resolve when it is unambiguous, refuse when it is not
         (`AGENTS.md` §3, fail closed), and leave today's behaviour where the directory has no row —
@@ -1927,7 +1931,7 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
         open item. The note is what stops that being silent, and it names which of the two reasons
         applies — the first draft blamed Canada for a US ticker's absence.
       **No decision record**, and that is stated rather than omitted: this applies
-      `universe.to_instrument`'s existing construction to a second site and defines nothing.
+      `universe.to_instrument()`'s existing construction to a second site and defines nothing.
       **What is still open in this entry is only (b)'s neighbourhood** — the identity work the
       universe path already does correctly, and the Canadian half that waits on `DR-003` gap 1's
       wiring. The split this entry was written about can no longer be minted from the CLI.

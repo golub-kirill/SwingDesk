@@ -35,7 +35,11 @@ PREREG = DOCS / "prereg"
 RESULTS = PREREG / "results"
 
 #: Root-level documents that state project-wide summaries and must be checked like any other.
-ROOT_DOCS = ("README.md", "AGENTS.md", "HANDOFF.md")
+#: `TODO.md` joined on 2026-09-05. It had been outside this gate since the gate was written, so
+#: the open-work list - the file a fresh session reads first - was never checked. The first run
+#: found two dead citations and two sentences claiming a number of reported studies the record
+#: contradicted.
+ROOT_DOCS = ("README.md", "AGENTS.md", "HANDOFF.md", "TODO.md")
 
 NUMBER_WORDS = {
     "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
@@ -134,6 +138,11 @@ def _value(token: str) -> int:
 def main() -> int:
     census = measure()
     markdown = sorted(DOCS.rglob("*.md")) + [REPO / name for name in ROOT_DOCS]
+    # A ROOT_DOCS entry that is absent is skipped rather than raising. Every one of them is
+    # present in a real checkout; a FIXTURE builds only what its case needs, and a gate that
+    # dies on a missing root file reports a traceback instead of a verdict - which is what
+    # adding TODO.md to the tuple did to ten existing tests on 2026-09-05.
+    markdown = [path for path in markdown if path.is_file()]
 
     failures: list[str] = []
     for path in markdown:

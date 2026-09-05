@@ -4123,3 +4123,55 @@ def test_a_checkout_without_a_todo_says_UNAVAILABLE_rather_than_passing(tmp_path
 
     assert code == 0
     assert "UNAVAILABLE" in out
+
+
+# ------------- gates 3e and 13 read the open-work list, added 2026-09-05
+#
+# `verify_docs.py` and `verify_study_summary.py` scan `docs/**` plus a three-entry ROOT_DOCS, and
+# `TODO.md` was not in it - so 2,146 lines of the open-work list had never been read by either.
+# The first run found two dead citations and two sentences claiming a number of reported studies
+# the record contradicted.
+
+
+def test_gate_3e_reads_the_open_work_list(tmp_path: Path) -> None:
+    """A dead citation in the work list is the same defect as one in a spec.
+
+    `TODO.md` was outside this gate until 2026-09-05 - 2,146 lines, the file a fresh session reads
+    first, and the first run over it found two dead citations.
+    """
+    _docs_tree(tmp_path)
+    absent = "MISSING_SPEC.md"          # built, not written literally: a test that spells out a
+    tick = chr(96)                      # dead citation puts one into this file
+    (tmp_path / "TODO.md").write_text(f"See {tick}{absent}{tick}.\n", encoding="utf-8")
+
+    code, out = run_gate("verify_docs.py", tmp_path)
+
+    assert absent in out
+    assert code == 1
+
+
+def test_a_root_file_has_no_rung_on_the_status_ladder(tmp_path: Path) -> None:
+    """The ladder is a property of a TIER document. `TODO.md` is the first root file to carry a
+    `**Status:**` line at all, and its value is not on the ladder because it is not on one."""
+    _docs_tree(tmp_path)
+    (tmp_path / "TODO.md").write_text("**Status:** working document\n", encoding="utf-8")
+
+    code, out = run_gate("verify_docs.py", tmp_path)
+
+    assert code == 0, out
+    assert "outside the ladder" not in out
+
+
+def test_gate_13_reads_the_open_work_list(tmp_path: Path) -> None:
+    """A wrong count of the research record is worse in the work list than in a spec: it is the
+    file a session reads first, and it carried one until 2026-09-05 - three sentences claiming a
+    number of reported studies the record contradicted.
+    """
+    root = _study_tree(tmp_path, "Nothing to see here.")
+    (root / "TODO.md").write_text("All seven reported studies carry it.\n", encoding="utf-8")
+
+    code, out = run_gate("verify_study_summary.py", root)
+
+    assert code == 1
+    assert "TODO.md" in out
+    assert "seven reported" in out.lower()

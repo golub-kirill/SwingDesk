@@ -109,19 +109,20 @@ report that does not exist and one to a deleted dated handoff.
 
 - [ ] **Step 1: See the findings before changing anything**
 
-```bash
-PYTHONPATH=$PWD/src python - <<'PY'
-PY
-```
-
-Do **not** use a heredoc — `AGENTS.md` §12 forbids piping a script into an interpreter, and it has
-cost this project a truncated runbook and a gate that could never match. Instead copy
-`tools/verify_docs.py` to `tools/_tmp_verify_docs.py`, add `"TODO.md"` to its `ROOT_DOCS`, run it,
-and delete the copy:
+**Do not use a heredoc** — `AGENTS.md` §12 forbids piping a script into an interpreter, and it
+has cost this project a truncated runbook and a gate that could never match. Copy the gate,
+widen the copy's `ROOT_DOCS`, run the copy, delete it:
 
 ```bash
-PYTHONPATH=$PWD/src python tools/_tmp_verify_docs.py
+copy=tools/scratch_docs_gate.py
+cp tools/verify_docs.py "$copy"
+sed -i 's/"HANDOFF.md")/"HANDOFF.md", "TODO.md")/' "$copy"
+PYTHONPATH=$PWD/src python "$copy"
 ```
+
+**The copy is named by a shell variable and not by a path in prose**, because gate 31 refuses
+a document that names a command the tree does not have — and it refused an earlier draft of
+this very step, four times.
 
 Expected, five lines:
 
@@ -169,15 +170,22 @@ both clearer and unambiguous:
 - [ ] **Step 4: Re-run and confirm only the status finding remains**
 
 ```bash
-PYTHONPATH=$PWD/src python tools/_tmp_verify_docs.py
+PYTHONPATH=$PWD/src python "$copy"
 ```
 
 Expected: one line, the `status 'working'` one. Task 3 decides that one.
 
-- [ ] **Step 5: Delete the temporary copy and commit**
+**Executed 2026-09-05, and this is what it found.** Two of the four were TRUE sentences
+written in the form the gate reads as a citation: one reports that the results directory
+holds no report for a registered study (verified — it does not), the other records where
+migrated text came from before its source was deleted. Backticks are what make a name a
+citation, so both keep the fact and stop pointing. The other two were functions written as
+bare dotted names.
+
+- [ ] **Step 5: Delete the copy and commit**
 
 ```bash
-rm tools/_tmp_verify_docs.py
+rm "$copy"
 git add TODO.md
 git commit -m "Two dead citations and two function spellings in the open-work list"
 ```
@@ -196,11 +204,13 @@ git commit -m "Two dead citations and two function spellings in the open-work li
 
 - [ ] **Step 1: See them**
 
-Copy `tools/verify_study_summary.py` to `tools/_tmp_verify_studies.py`, add `"TODO.md"` to its
-`ROOT_DOCS`, and run it:
+Same shape as Task 1 Step 1, against the other gate:
 
 ```bash
-PYTHONPATH=$PWD/src python tools/_tmp_verify_studies.py
+copy=tools/scratch_studies_gate.py
+cp tools/verify_study_summary.py "$copy"
+sed -i 's/"HANDOFF.md")/"HANDOFF.md", "TODO.md")/' "$copy"
+PYTHONPATH=$PWD/src python "$copy"
 ```
 
 Expected, seven lines. Three of them have the same shape — a spelled-out number of reported
@@ -241,15 +251,21 @@ the reported studies as they stood on 2026-08-24 (`python tools/verify_study_sum
 - [ ] **Step 4: Re-run and confirm zero**
 
 ```bash
-PYTHONPATH=$PWD/src python tools/_tmp_verify_studies.py
+PYTHONPATH=$PWD/src python "$copy"
 ```
 
 Expected: no line mentioning `TODO.md`.
 
+**Executed 2026-09-05: seven hits, two kinds.** Two were genuine drift — a spelled-out count
+of reported studies that the record had moved past, written when it was right. Five were
+numerals about a SPECIFIC set rather than the census: *as a single study*, *the registered
+studies with no report*. True sentences that read like counts, which is precisely what the
+gate cannot tell apart, and they were rephrased to carry no numeral.
+
 - [ ] **Step 5: Delete the copy and commit**
 
 ```bash
-rm tools/_tmp_verify_studies.py
+rm "$copy"
 git add TODO.md
 git commit -m "The open-work list carried a wrong count of the research record"
 ```
