@@ -391,26 +391,62 @@ submission  114 Trade decision(s) sized and eligible
   `NOT SENT` — names its own reason and is recorded in `journal.duckdb`, including the attempts
   nothing was sent for.
 
-### 7.4 The one message that needs you
+### 7.4 The messages that need you, and there are two of them
+
+**New entries are paused until you deal with either.** The pause is not a fault: the caps are
+measured against the book, so a book that does not describe reality cannot bound anything, and
+adding to it would be the failure the guard exists to prevent.
+
+**Start by looking**, always. One read-only command shows both directions at once and places
+nothing:
+
+```bash
+PYTHONPATH=$PWD/src python -m swingdesk.presentation.cli broker --data data
+```
+
+#### The venue holds something the book does not
 
 ```
 TECH: the venue holds N symbol(s) this system's book does not carry
 ```
 
-**New entries are paused until you deal with it.** It means the account holds something we cannot
-trace to an order this system sent — bought by hand in the dashboard, or a fill that
-`sync-fills` refused for a reason it printed just above.
-
-Two ways to clear it, and both are yours:
+The account holds something we cannot trace to an order this system sent — bought by hand in the
+dashboard, or a fill that `sync-fills` refused for a reason it printed just above. Two ways to
+clear it, and both are yours:
 
 1. **Record it**, if it is a real position you want the system to manage:
-   ```
+   ```bash
    python -m swingdesk.presentation.cli open-position AAPL --entry 191.20 --shares 12 --stop 180.00 --data data
    ```
 2. **Close it at the venue**, in Alpaca's own dashboard, if it should not be there.
 
-The pause is not a fault. The caps are measured against the book, so a book that does not describe
-reality cannot bound anything — and adding to it would be the failure the guard exists to prevent.
+#### The book holds something the venue does not — `book_only`
+
+```
+TECH: the book and Alpaca paper trading disagree about 1 position(s) - AIS (book_only)
+```
+
+**This is a position that EXITED at the venue and was never recorded here.** Its stop fired
+overnight, or it was sold in the dashboard. The book still carries it, so it still holds a slot in
+`risk.max_concurrent_positions`, and every pass will keep stopping until the two agree.
+
+Take the exit price from the venue — Alpaca's dashboard, or the account's activities — and record
+it. **The date the exit happened and the moment you record it are kept apart on purpose**, so a
+close reported the next morning is still dated to the day it occurred:
+
+```bash
+python -m swingdesk.presentation.cli close-position POS-AIS-2026-09-03 --exit 66.42 --closed-on 2026-09-04 --reason "stop fired at the venue; the book never learned" --data data
+```
+
+`--reason` is required and is written to the store rather than printed: a close nobody can audit is
+not a close. The command **places, amends and cancels nothing** — like `open-position`, it records
+a fact the venue already made. Then re-run `broker`; when it reports no mismatch, the next pass
+submits again.
+
+**Until 2026-09-04 there was no way to do this at all**, and that is worth knowing rather than
+hiding: `closed_on` was written only for an `EXIT_NOW` the system had proposed from BARS, and the
+venue's view never reached that decision. A stopped-out position stayed open in the book for ever.
+If you meet a book-only divergence in an older checkout, `close-position` is what is missing.
 
 ### 7.5 Checking the account by hand, any time
 

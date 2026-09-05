@@ -3633,6 +3633,46 @@ is for where no gate can reach.
 
 ## 6b. The operational chain — what a full cycle needs
 
+- [x] **`[v]` THE BOOK COULD NOT CLOSE WHAT THE VENUE NO LONGER HELD, AND IT STOPPED THE MACHINE
+      DEAD — found and fixed 2026-09-04.** Traced from a live symptom rather than a review: the
+      18:30 pass produced **320 `Trade` decisions, sized and eligible**, with the switch armed, and
+      submitted nothing.
+      ```
+      STOPPED  TECH: the book and Alpaca paper trading disagree about 1 position(s) - AIS (book_only)
+      ```
+      **The chain, established in the code and not inferred.** `closed_on` is written in exactly one
+      place — `manage.apply_approved` for an approved `EXIT_NOW` — and `EXIT_NOW` is proposed in
+      exactly one place, `manage.manage_one`, **from BARS**. The venue's view never reaches that
+      decision. `record-fill` settles an approved action and there was none to settle. So a position
+      that exited at the venue **could not be closed by any shipped command**: it held its slot in
+      `risk.max_concurrent_positions`, the reconciliation guard stopped every submission, and the
+      pipeline went on proposing `MOVE_STOP` on a holding that was not there — twice that evening,
+      18:30 and 19:30, on `POS-AIS-2026-09-03`.
+      **`cli.py:824` already knew.** *"a stopped-out position stays open in the book for ever,
+      holds its slot … and after four stop-outs the machine submits nothing again, silently."* The
+      guard made it loud; nothing made it fixable.
+      **The fix is `close-position`, the mirror of `open-position`**, and it grants the machine
+      nothing: `open-position` records an entry that already happened, this records an exit that
+      already happened, and the same `D1` sentence covers both. It reuses the existing chain rather
+      than writing `closed_on` itself — propose the `EXIT_NOW`, record the owner's approval and
+      reason, apply it through `manage.apply_approved`, settle it with a `Fill` carrying the venue's
+      price — so there stays **one** definition of what closing means.
+      **The event date and the knowledge date are kept apart**, which `apply_approved` alone does
+      not do: it dates a close from the clock, right for an exit the system proposes and wrong for
+      one it is being told about. Pinned by a test.
+      Six tests, and each of the three guards was mutated and kills its own test: the bitemporal
+      date, the already-closed refusal, and the partial-versus-close refusal.
+      **`docs/runbooks/README.md` §7.4 covered only the venue-only direction** and now covers both,
+      with the command an operator types. Re-derive the state, never from this entry:
+      ```bash
+      PYTHONPATH=$PWD/src python -m swingdesk.presentation.cli broker --data data
+      ```
+      **What is NOT decided here and is the owner's:** whether the machine may propose an
+      `EXIT_NOW` on a `book_only` divergence by itself, or close on the venue's silence the way
+      `sync-fills` opens on its word. `DR-026` refused to construct a `Position` from the venue's
+      answer and `DR-027` §3.2 narrowed that refusal for our own orders; closing from ABSENCE is a
+      step past both.
+
 - [ ] **`[v]` ALPACA PAPER TRADING — owner instruction 2026-08-31. Wire it as the broker so
       strategies, guesses and the whole chain can be tested against a real venue.**
       <https://docs.alpaca.markets/us/docs/paper-trading>. Researched 2026-08-31:
