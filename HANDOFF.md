@@ -207,7 +207,12 @@ Four things a fresh session must not get wrong, each argued there:
 - the spread **level is not obtainable from daily OHLC** — treat 25bp as "materially more than 5",
   never as a measurement of 25;
 - the one positive finding (`PR-002`) is **erased by 1.6–2.3% of trades missing at −2R**, which the
-  free tier can never rule out;
+  free tier ~~can never rule out~~ **could not rule out until 2026-09-05**, when Alpaca was
+  asked for the first time and served complete daily paths for delisted names — 19,188 inactive
+  US equities enumerated, `EIO` 767 bars to its delisting, `BHBK` 815. `feed=sip` only; the free
+  IEX feed serves none of it, coverage starts 2016-01-04, and whether SIP historical is
+  free-tier or this account's is unestablished. `python tools/probe_alpaca_delisted.py`, and
+  `EVIDENCE_SUMMARY.md` §3 carries what it does and does not license;
 - **there is no legal source of probability in this system today.** Any probability displayed would
   be manufactured.
 

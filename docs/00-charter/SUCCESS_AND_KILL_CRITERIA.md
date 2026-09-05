@@ -62,7 +62,10 @@ Six criteria. The load-bearing choices:
 - **Benchmark-relative, not absolute.** Beating cash is not the bar.
 - **Era stability.** An effect carried by one stretch of history is not an effect.
 - **The survivorship marker is mandatory** on every Track B result. Not a threshold — a reporting
-  obligation, because no free source serves delisted instruments and every historical number is
+  obligation, because ~~no free source serves delisted instruments~~ **— refuted 2026-09-05,
+  `python tools/probe_alpaca_delisted.py` serves complete daily paths for delisted names from
+  2016; the free IEX feed serves none of it and the entitlement question is open —** every
+  historical number is
   therefore optimistic by an unknown amount.
 
 ## 4. Kill criteria

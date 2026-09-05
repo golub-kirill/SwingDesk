@@ -72,7 +72,7 @@ Beyond the course's list, three fields are mandatory here because of what was me
 
 | Field | Why |
 |---|---|
-| **survivorship marker** | no free source serves delisted instruments (`ADR-0001` §6), so every historical result is optimistic by an unknown amount. `criteria.yml` `b.survivorship_caveat` makes this a ratified obligation. |
+| **survivorship marker** | ~~no free source serves delisted instruments~~ (`ADR-0001` §6) — **refuted 2026-09-05 by `tools/probe_alpaca_delisted.py`, which enumerates the inactive universe and returns daily paths from 2016 on `feed=sip`; the marker stays because the correction is not yet a measurement** — so every historical result is optimistic by an unknown amount. `criteria.yml` `b.survivorship_caveat` makes this a ratified obligation. |
 | **evidence-window ceiling** | any result touching `30m` is bounded by ~60 trading days of history. A claim cannot be stronger than its window. |
 | **point-in-time coverage** | results computed from data predating this system's first fetch cannot claim point-in-time correctness — our revision record starts when we start (`POINT_IN_TIME_SPEC.md` §7). |
 
