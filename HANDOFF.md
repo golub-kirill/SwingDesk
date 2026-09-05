@@ -188,7 +188,7 @@ once did).
 
 - `claude/a-test-that-opens-the-live-store`
 - `claude/a-handoff-for-the-blocked-claims`
-- `claude/refresh-todo-validate-tasks-bb8735`
+- `claude/the-channel-is-on-but-empty`
 
 *Tip and merge state deliberately absent - both move under this document's own feet. `python tools/verify_branches.py` prints them.*
 
