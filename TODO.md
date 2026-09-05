@@ -2618,6 +2618,35 @@ is for where no gate can reach.
       before any of the changes. Same decision output over the full production universe, from
       different code.
 
+      **RE-RUN 2026-09-05: THE CRITERION STILL HOLDS AND THE HASH ABOVE IS UNREACHABLE.** Both
+      figures moved and only one of them is a claim about the system:
+
+      | | 2026-08-24 | 2026-09-05 |
+      |---|---|---|
+      | universe | 1,141 | **3,959** |
+      | `output_hash`, both passes | `50e1646b933a4a9d` | **`d0e2601777138443`** |
+      | wall time, both passes | 11m40s | **~61 min** |
+
+      **`--- reproducible: PASS (full universe, 3959 instruments)`.** Determinism is intact,
+      and it is a stronger result than the first one: iteration order, set membership and
+      dictionary insertion get three and a half times as many chances to bite.
+      **The hash is not comparable and that is not a defect** — the coverage catch-up took the
+      admitted universe from 1,141 to 3,959, so the two runs decided over different
+      populations. **A different hash here means the UNIVERSE moved, not that determinism
+      broke**, and anyone re-running this to check the criterion would meet that first. The
+      2026-08-24 figure is kept above because it was the byte-identity evidence for a code
+      change, and it is true of its own date and population.
+      *(This is the trap `AGENTS.md` §12 names about answering from a proxy, in its numeric
+      form: a recorded hash reads as a fingerprint of the CODE and is a fingerprint of the code
+      **and** the universe **and** the parameters. Only one of the three was stable.)*
+      **The cost row is the one to plan against.** ~61 minutes for both passes against the
+      recorded 11m40s — 3.5x the instruments for about 5x the wall clock, because the run also
+      makes one live vendor fetch per member. It was already too slow for a merge gate and the
+      reason is unchanged (`CI_POLICY` §4 forbids a gate to touch the network); what changed is
+      that it is now an hour of somebody's afternoon rather than ten minutes.
+      Derive all three with `python tools/verify_reproducible.py --data …`, never from this
+      table.
+
 - [ ] **`[v]` `M31-T0464` IS `specified` — 2026-08-24, and the gate caught the shortcut.**
       `derived_observations/relative_strength.py` computes the RS line: the ratio of an
       instrument's close to `rs.benchmark`'s, rebased to 1.0 at their first SHARED session. An
