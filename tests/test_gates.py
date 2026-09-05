@@ -3965,3 +3965,72 @@ def test_sibling_gate_stays_quiet_when_both_branches_deleted_the_same_file(
     assert code == 0, out
     assert "contested.txt" not in out, out
     assert "shared.txt" in out, "and the file that genuinely diverges is still named"
+
+
+# ------------------------------------------- gate 42: a control byte is a mangled edit's residue
+
+
+def _tracked(tmp_path, name: str, body: bytes):
+    """A one-file git repository, because the gate reads `git ls-files` rather than walking."""
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / name).write_bytes(body)
+    for args in (["init", "-b", "master"], ["add", "-A"],
+                 ["-c", "user.email=t@t", "-c", "user.name=t", "commit", "-m", "in"]):
+        subprocess.run(["git", "-C", str(root), *args], capture_output=True, check=True)
+    return root
+
+
+def test_a_backspace_from_a_mangled_regex_is_CAUGHT() -> None:
+    """The historical instance, reproduced. `AGENTS.md` §12: gate 14's widened pattern was written
+    as a word boundary and stored as a BACKSPACE, so the gate ran, printed "0 failures", and could
+    never have matched anything. Nothing in this repository could see that byte until now."""
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as scratch:
+        body = ("PATTERN = r\"(NUM)" + chr(8) + "\"\n").encode("utf-8")
+        root = _tracked(Path(scratch), "gate.py", body)
+        code, out = run_gate("verify_control_characters.py", root)
+
+    assert code == 1
+    assert "gate.py:1" in out
+    assert "BS" in out, "and it names the byte, because 0x08 alone tells a reader nothing"
+
+
+def test_a_vertical_tab_from_a_heredoc_is_CAUGHT() -> None:
+    """The instance of 2026-09-04: a patch script through a heredoc turned `tools\\verify_...`
+    into a vertical tab and truncated five commands in the operator runbook."""
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as scratch:
+        body = ("run tools" + chr(11) + "erify_x.py\n").encode("utf-8")
+        root = _tracked(Path(scratch), "runbook.md", body)
+        code, out = run_gate("verify_control_characters.py", root)
+
+    assert code == 1
+    assert "VT" in out
+
+
+def test_ordinary_text_with_tabs_and_CRLF_passes() -> None:
+    """TAB, LF and CR are absent from the forbidden set deliberately: they are ordinary text here,
+    and CRLF is this repository's line ending. A gate that failed on them would be bypassed."""
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as scratch:
+        body = b"first\r\n\tindented\r\nlast\n"
+        root = _tracked(Path(scratch), "notes.md", body)
+        code, out = run_gate("verify_control_characters.py", root)
+
+    assert code == 0, out
+    assert "0 failure(s)" in out
+
+
+def test_the_gate_says_it_DID_NOT_RUN_rather_than_passing_without_git(tmp_path) -> None:
+    """`AGENTS.md` §10.6 rule 2: a gate that cannot see its subject says so. A directory that is
+    not a repository yields no file list, and reporting clean over that would be the manufactured
+    confidence this project keeps paying for."""
+    code, out = run_gate("verify_control_characters.py", tmp_path)
+
+    assert code == 0
+    assert "DID NOT RUN" in out
+    assert "not a clean result" in out
