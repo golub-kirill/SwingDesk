@@ -111,12 +111,28 @@ and asserts the replay reports which version it used.
 
 ## 5. What was not run, and what it would cost
 
-| task | status | why |
-|---|---|---|
-| 9 — persistence and recoverability drills | UNAVAILABLE | needs disposable copies of ~1 GB of stores and a restore rehearsal |
-| 10 — fault injection against adapters | not run | needs recorded fixtures per adapter |
-| 11 — mutation testing beyond gate 34 | not run | gate 34 already mutates the invariant tests; a wider sweep is hours |
-| 12 — secret-scan under `sensitive/` | not run | gate 19 covers the committed tree; an HMAC vault was not set up |
+| task | status | why | what already covers part of it |
+|---|---|---|---|
+| 9 — persistence and recoverability drills | **OUT OF SCOPE** | owner ruling 2026-09-05 | **nothing** |
+| 10 — fault injection against adapters | **OUT OF SCOPE** | owner ruling 2026-09-05 | `tests/test_broker.py` runs the adapter against recorded responses |
+| 11 — mutation testing beyond gate 34 | **OUT OF SCOPE** | owner ruling 2026-09-05 | gate 34 mutates the tests `INVARIANTS.md` names |
+| 12 — secret-scan under `sensitive/` | **OUT OF SCOPE** | owner ruling 2026-09-05 | gate 19 checks the committed tree and the ignore rules |
+
+**The owner ruled these four out of scope on 2026-09-05**, and the ruling is recorded here rather
+than left as an omission — an audit whose gaps are undocumented reads as complete, which is the
+failure this whole report is about.
+
+**Three of the four have a partial substitute already under a gate**, which is why the ruling is
+reasonable rather than a hole: the adapter is exercised against recorded responses, the invariant
+tests are mutated on every run, and the committed tree is scanned.
+
+**Task 9 has none, and that is the one to know about.** Measured while recording this ruling: there
+is no backup tool, no restore tool and no recoverability tool in `tools/`, and no restore rehearsal
+on record anywhere. Backups have been taken by hand — the 2026-08-18 unclosed-bar deletion kept one
+beside the store — but **nobody has ever demonstrated that this project's stores can be restored
+from one.** That is not a finding of this audit, because the audit did not test it; it is the
+standing exposure the ruling leaves in place, stated so the next reader does not have to rediscover
+it.
 
 ## 6. The cost, which is why this ran
 
