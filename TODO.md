@@ -1222,9 +1222,36 @@ evening returned every one of those sessions, clean. The owner asked; nobody had
       unattributable directory pulls.
       **And one measured aside, because it will surprise the next person who runs it:** the
       pinned run took **about 25 minutes** against the ~13m37s `HANDOFF.md` records for a fresh
-      one. Reading `as_of` an older `knowledge_time` over a store that has since grown means
-      more versions to filter per query. Same tool, different population — the shape
-      `widen_universe.cmd`'s 45-seconds-per-100 comment already demonstrated.
+      one. ~~Reading `as_of` an older `knowledge_time` over a store that has since grown means
+      more versions to filter per query.~~
+      **THAT EXPLANATION IS WRONG AND THE MEASUREMENT REFUTES IT — 2026-09-05.** The owner
+      asked the question that found it: *how come taking from our own db is slower than
+      fetching from the internet?* Timed over 60 random instruments on a copy of the store,
+      shuffled between rounds so a warm cache cannot flatter either:
+
+      | read | median | mean | bars returned |
+      |---|---|---|---|
+      | `as_of` at the store's latest | 24.3 ms | 37.2 ms | 85,335 |
+      | `as_of` at the pinned 2026-08-24 vintage | **9.5 ms** | 20.9 ms | 72,384 |
+      | at the latest again, as a control | 23.8 ms | 38.6 ms | 85,335 |
+
+      **The old vintage is about two and a half times FASTER, not slower** — it returns fewer
+      bars, and that is the whole of it. The control repeats the first row, so this is not a
+      cache artefact.
+      **And the store is not slower than the network — it is roughly twenty times faster.**
+      About **24 ms** to read one instrument locally against about **460 ms** to fetch one over
+      HTTP, derived from 7,918 fetches in ~61 minutes. Nothing is inverted.
+      **There is no missing index either**, which was the other candidate worth ruling out:
+      `bars` carries `PRIMARY KEY(instrument_id, interval, series, event_time, knowledge_time)`,
+      so the `WHERE instrument_id = ? AND knowledge_time <= ?` lookup is covered.
+      **So what made the pinned run slow is UNEXPLAINED, and this line says so rather than
+      guessing twice.** The store went from ~1.9M rows to 7.5M between the two measurements,
+      which is the obvious candidate and is **conjecture** (`AGENTS.md` §10.4) until somebody
+      isolates it. What is established is only that per-instrument store reads are not the
+      cause.
+      *(The first version of this paragraph named a mechanism it had not measured, in an entry
+      whose subject is claims nobody re-tested. §10.4 asks for the check or the word
+      **conjecture**, and it got neither.)*
 
       **THE ORIGINAL QUESTION, and it is the owner's, because it changes what a guard is FOR.**
       `DR-016` §8.4 scoped the revision guard to the DECISION PATH, where the close is what is
@@ -1872,6 +1899,32 @@ is for where no gate can reach.
       coverage pass would shrink the unclassified set before anyone has to choose, and it is
       one `schtasks /Create` of the same shape the coverage tier needed — the owner's step,
       because the repository cannot create a scheduled task.
+
+      **RUN BY HAND 2026-09-05 ON OWNER INSTRUCTION, AND IT CLOSED MOST OF THE GAP.**
+      `refresh_classifications.py --universe --budget 3000`: **3,000 of 3,000 attempted, zero
+      vendor failures**, 361 unusable — no sector served, or a degenerate look-through, which
+      is `DR-006` §8.7's bond-fund guard doing its job rather than a fetch failing. The store
+      went from about 1,171 instruments carrying a sector to **3,984**.
+      **Measured against the admitted universe afterwards, which is the number that matters:**
+
+      | | before | after |
+      |---|---|---|
+      | admitted universe | 3,877 | 3,958 |
+      | with a usable sector | ~1,481 | **3,499** |
+      | **admitted UNCHECKED** | **2,396** | **459** |
+
+      From nearly two in three back to about one in eight — roughly where the council was
+      looking when it called a fail-open cap *"not a cap"*. **The ruling is unchanged and still
+      the owner's**; what changed is that it is no longer being made against a universe where
+      the cap sees a minority of its subject.
+      **459 is not zero and will not become zero**, and the reason is the same class the
+      coverage tier hit: some admitted names have no sector the vendor will serve. That is a
+      floor to measure, not a backlog to close.
+      **And a wrapper that is not on `master` yet cannot be run by a scheduler.** The first
+      attempt invoked `tools\widen_classifications.cmd` in the main checkout, where the file
+      does not exist because its branch is unmerged — **`cmd /c` returned 0 and did nothing**,
+      no log, no error. The tool was run directly instead. One more shape of silent success,
+      and worth knowing before the task is registered against a path.
 
 - [ ] **`[c]` Is a SECTOR cap the right unit for a single-name leveraged ETF?** Raised in council
       review 2026-08-31 and not settled anywhere. `AAPU` is 2x one company; charging it to
