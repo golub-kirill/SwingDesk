@@ -614,6 +614,55 @@ the pre-session pass runs it.
 tools\widen_universe.cmd 9400
 ```
 
+### The classification pass — the second tier, and the coverage pass made it urgent
+
+`tools/refresh_classifications.py` is tiered the same way and says so in its own docstring:
+*"this tool, run occasionally, widens sector coverage"*, and then **"Until it has run, every
+candidate is admitted UNCHECKED and the report says so."**
+
+**What made it urgent, measured 2026-09-05 from the run's own funnel.** Widening coverage tripled
+the admitted universe and the classification store did not move with it, because nothing schedules
+it:
+
+| evening | admitted | admitted **UNCHECKED** |
+|---|---|---|
+| 2026-09-03 | 1,142 | 110 |
+| 2026-09-04 | 3,877 | 2,396 |
+
+From roughly one in ten to nearly two in three, in one evening. `DR-006` §3's fail-open is correct
+behaviour — a cap that refused every unclassified name would refuse the whole universe — but the
+SIZE of the unclassified set is what decides whether the cap is worth anything, and nothing was
+watching it.
+
+`tools/widen_classifications.cmd` is the wrapper, built to the same discipline as the other two: a
+preflight, a rotated log at `data/widen_classifications.log`, a preserved exit code, and a
+`build_state` rebuild afterwards.
+
+**Check first**, for the same reason as above:
+
+```bash
+.\.venv\Scripts\python.exe -X utf8 tools\verify_schedule.py
+```
+
+Then, once:
+
+```bash
+schtasks /Create /TN "SwingDesk classification pass" /TR "C:\PycharmProjects\SwingDesk\tools\widen_classifications.cmd" /SC WEEKLY /D SUN /ST 13:00
+```
+
+**Sunday, and AFTER the coverage pass, and that order is a constraint rather than a preference.**
+The stores are single-writer (`ADR-0004`), so the two must not overlap each other any more than
+they may overlap the evening passes. The coverage pass decides *which* instruments exist to be
+classified, so classifying first would leave every newly covered name unclassified for another
+week. 13:00 leaves the 11:00 coverage pass room to finish.
+
+**Gate 26 names this task and is therefore RED until the command above is run** — deliberately, on
+the coverage pass's own precedent. A catch-up by hand takes a budget:
+
+```bash
+tools\widen_classifications.cmd 4000
+```
+
 ### How you know it is working
 
 `HANDOFF.md` §2's universe-coverage row is generated from the store, and every run's report prints
@@ -712,7 +761,7 @@ symbol.
 top-up and wrong for an empty store. `--universe` queues only the names the liquidity rule can
 actually nominate rather than every symbol with bars.
 
-**7. The three scheduled tasks.** Check before creating — `schtasks /Create` on an existing name
+**7. The four scheduled tasks.** Check before creating — `schtasks /Create` on an existing name
 offers to REPLACE it, and a wrong keystroke discards a working registration:
 
 ```bash
@@ -723,6 +772,7 @@ offers to REPLACE it, and a wrong keystroke discards a working registration:
 schtasks /Create /TN "SwingDesk daily run" /TR "C:\PycharmProjects\SwingDesk\tools\daily_run.cmd" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 18:30
 schtasks /Create /TN "SwingDesk second pass" /TR "\"C:\PycharmProjects\SwingDesk\tools\daily_run.cmd\" second-pass" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 19:30
 schtasks /Create /TN "SwingDesk coverage pass" /TR "C:\PycharmProjects\SwingDesk\tools\widen_universe.cmd" /SC WEEKLY /D SUN /ST 09:00
+schtasks /Create /TN "SwingDesk classification pass" /TR "C:\PycharmProjects\SwingDesk\tools\widen_classifications.cmd" /SC WEEKLY /D SUN /ST 13:00
 ```
 
 **The first of those three lines was recorded NOWHERE until 2026-09-04.** The runbook carried the
@@ -732,9 +782,14 @@ task off the machine (`Get-ScheduledTask`), whose action is that path and whose 
 a `DaysOfWeek` mask of 62 — Monday through Friday. **That is exactly the gap this section exists
 for**: the installation worked, so nobody noticed that it could not be rebuilt.
 
-Gate 26 names all three and reports two hazards it cannot fix: both run only while the user is
-logged on, and the second does not start on battery. Those are settings on the task, not on this
+Gate 26 names all four and reports two hazards it cannot fix: they run only while the user is
+logged on, and some do not start on battery. Those are settings on the task, not on this
 repository.
+
+**The fourth was added 2026-09-05 and the gate is RED until it is registered**, deliberately
+and on the coverage pass's own precedent. The two widening passes are a PAIR: coverage decides
+which instruments exist, classification decides which of them the sector cap can see. Running
+only the first is what took candidates admitted UNCHECKED from 110 to 2,396 in one evening.
 
 **8. Arming, and it is deliberately last.** Submission is stopped until a file exists carrying one
 word. Absent means stopped, unreadable means stopped, present-but-unmarked means stopped — only the

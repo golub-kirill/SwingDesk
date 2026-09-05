@@ -45,6 +45,13 @@ TASKS = (
     "SwingDesk daily run",
     "SwingDesk second pass",
     "SwingDesk coverage pass",
+    # Added 2026-09-05, and RED until the owner registers it - deliberately, on the coverage pass's
+    # own precedent. A tier nothing watches is how `refresh_universe.py` went unscheduled for three
+    # weeks; `refresh_classifications.py` is the second of that pair and went unscheduled longer.
+    # What it cost: the coverage catch-up tripled the admitted universe on 2026-09-04 and the
+    # classification store did not move with it, so candidates admitted UNCHECKED by the sector cap
+    # went from 110 to 2,396 in one evening. `docs/runbooks/README.md` carries the one command.
+    "SwingDesk classification pass",
 )
 
 UNAVAILABLE_EXIT = 4

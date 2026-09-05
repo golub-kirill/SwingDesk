@@ -433,6 +433,15 @@ The first runs every guard the evening pass runs, against the live account, and 
 third answers *has the vendor served an impossible bar before* as a tool call rather than as a
 memory — it found hundreds on its first run, every one of them buried in a line nobody could see.
 
+**AND WIDENING THE UNIVERSE MOVED SOMETHING ELSE, measured 2026-09-05 — read this before reasoning
+about the sector cap.** The coverage catch-up tripled the admitted universe on 2026-09-04, and
+`tools/refresh_classifications.py` is scheduled **nowhere**, so the classification store did not
+widen with it. The share of candidates the sector cap admits **unchecked** went from about a tenth
+to nearly two thirds in one evening — `DR-006` §3's fail-open now applies to the majority rather
+than the margin, which inverts the cost side of a ruling the owner has not yet made. `TODO.md` §2
+carries the funnel figures and the command that re-derives them; the report has been printing the
+`UNAVAILABLE` line in the funnel every evening since.
+
 **Standing, and not defects:** ~~gate 26 is red until the coverage task is registered (above)~~
 — registered 2026-09-04 and the gate is green, see above — and gate 24 is red on any morning the
 evening pass has moved `data/`, regenerate rather than investigate, which §8 of this file already

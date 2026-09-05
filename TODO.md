@@ -1820,11 +1820,58 @@ is for where no gate can reach.
       BTSG  coverage 1.0000   healthcare 1.0000
       DINO  coverage 1.0000   energy 1.0000
       ```
-      So the migration is still free, and it is free because of what happened to fill rather than
-      because of anything the design does. **145 admitted universe members have no sector**, and the
-      next fill has no reason to avoid them. The entry's own arithmetic still holds; what changed is
-      that it is now one unclassified fill away from costing something, where before it was zero by
-      construction.
+      So the migration is still free, and it is free because of what happened to fill rather
+      than because of anything the design does. ~~**145 admitted universe members have no
+      sector**~~, and the
+      next fill has no reason to avoid them. The entry's own arithmetic still holds; what changed
+      is that it is now one unclassified fill away from costing something, where before it was
+      zero by construction.
+
+      **THE ARITHMETIC STOPPED HOLDING ON 2026-09-04, AND THE PROPORTION INVERTED — measured
+      2026-09-05 from the run's own funnel.** This entry is built on 145 unclassified members
+      out of a ~1,150 universe. Both halves of that moved in one evening:
+
+      | evening | admitted | admitted **UNCHECKED** (no sector) |
+      |---|---|---|
+      | 2026-09-01 | 1,148 | 119 |
+      | 2026-09-02 | 1,148 | 123 |
+      | 2026-09-03 | 1,142 | 110 |
+      | **2026-09-04** | **3,877** | **2,396** |
+
+      ```powershell
+      Select-String -Path data\daily_run.log -Pattern 'admitted UNCHECKED|^\s+admitted\s+\d+'
+      ```
+      **From roughly one in ten to nearly two in three.** *"A cap that fails open is not a cap"*
+      now fails open on the MAJORITY of what it is asked about, and the council's unanimous
+      objection was raised when it was a tenth.
+      **The cause is a tier that widened without its partner, and it is not the vendor's
+      fault.** The coverage catch-up took the admitted universe from ~1,150 to 3,877.
+      **`tools/refresh_classifications.py` exists and is scheduled NOWHERE** — neither
+      `daily_run.cmd` nor `widen_universe.cmd` mentions it, which is why the classification
+      store carries exactly two `knowledge_time` batches, 2026-08-23 and 2026-08-31, for about
+      1,171 instruments in total. Against 3,877 admitted names, most of the universe has no
+      classification to read and cannot acquire one.
+      **This is the same shape as the coverage tier itself, and the tool says so in its own
+      words** — so this is a tier that was designed and never scheduled, not an oversight invented
+      here. `refresh_classifications.py`'s docstring: *"the cadence is tiered the same way: this
+      tool, run occasionally, widens sector coverage"*, and then, exactly: **"Until it has run,
+      every candidate is admitted UNCHECKED and the report says so."** `refresh_universe.py` was
+      specified as periodic work and registered nowhere for three weeks; this is the second of the
+      pair, and it is still nowhere. The report has been printing the `UNAVAILABLE` line in the
+      funnel every evening.
+      *(The same docstring says "the universe was 1152 members on 2026-08-17" — a population figure
+      that has since tripled, sitting in the comment that argues the cadence. It is not wrong about
+      its own date; it is the reason this entry re-measured rather than quoting it.)*
+      **What it changes for this entry, stated narrowly.** The *decision* — fail open or fail
+      closed on an unclassified candidate — is unchanged and still the owner's. What is no
+      longer true is the COST side of it: flipping to fail-closed would now refuse 2,396 of
+      3,521 candidates rather than a tenth, and leaving it open now admits that many unchecked.
+      **Neither reading is cheap any more**, which is the opposite of what this entry
+      concluded when the window was measured as free.
+      **The cheapest move is not the ruling.** Scheduling the classification refresh beside the
+      coverage pass would shrink the unclassified set before anyone has to choose, and it is
+      one `schtasks /Create` of the same shape the coverage tier needed — the owner's step,
+      because the repository cannot create a scheduled task.
 
 - [ ] **`[c]` Is a SECTOR cap the right unit for a single-name leveraged ETF?** Raised in council
       review 2026-08-31 and not settled anywhere. `AAPU` is 2x one company; charging it to
