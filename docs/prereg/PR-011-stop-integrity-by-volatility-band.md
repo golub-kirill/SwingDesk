@@ -114,11 +114,18 @@ Stated numerically before the run. The statistic is defined in §5.
 | Mean overshoot, top band vs bottom band | difference **≥ 0.25R**, 95% CI excluding zero | difference below 0.25R, or its CI includes zero |
 | Overshoot in the bottom band | small — the risk model holds where it is supposed to | as large as the top band's, in which case the screen discriminates nothing |
 
-**Why 0.25R, derived rather than picked.** `risk.max_concurrent_positions` is **4** and
+~~**Why 0.25R, derived rather than picked.** `risk.max_concurrent_positions` is **4** and
 `risk.max_open_risk` is **4R**, both ratified (`DR-006` §8.3, owner 2026-08-22). An extra 0.25R on
 each of four positions is one full R — a quarter of the book's entire ratified risk budget, lost
 outside the model that is supposed to bound it. Below that, an overshoot is real and is absorbed by
-the cap's own margin; at or above it, the cap is not the cap.
+the cap's own margin; at or above it, the cap is not the cap.~~
+
+**Struck the day it was written, and the VALUE IS UNCHANGED — see §10 A-1.** *"Derived rather than
+picked"* overstated it: the derivation reduces one chosen number to another, because *"a quarter of
+the budget is material"* is a judgement and not arithmetic. A-1 carries the owner's ruling on the
+fraction, the formula, and the caps pinned rather than read. **The threshold is still 0.25R**; what
+changed is that this document no longer claims nobody chose it. Struck rather than rewritten,
+because a pre-registration is not edited in place (`PREREG_TEMPLATE.md` rule 2).
 
 **If both look the same the study cannot inform.** They do not: the FALSE column is a live
 possibility, because a stop is placed at a distance already scaled by that name's own ATR. The
@@ -280,7 +287,86 @@ the point where the arithmetic breaks.
 Appended, dated, never edited in place. An amendment after data is seen is recorded as such and
 downgrades this study to exploratory (rule 3).
 
-*(none)*
+### A-1 · 2026-09-04 · BEFORE THE RUN — the threshold is a formula with a chosen fraction in it, and the fraction is the owner's
+
+**§3 called 0.25R *derived rather than picked*, and that overstated it.** The derivation reduces one
+chosen number to another: 4 positions × 0.25R = 1R = **a quarter** of the ratified 4R book cap, and
+*"a quarter of the budget is material"* is a judgement nobody had made. The caps are ratified; the
+fraction was mine. `AGENTS.md` §12 — a number you worked out in your head is still a number.
+
+**Put to the owner and ruled on 2026-09-04.** The registered rule is a formula, evaluated once, here:
+
+```
+threshold = f x risk.max_open_risk / risk.max_concurrent_positions
+f         = 0.25          owner ruling 2026-09-04. A JUDGEMENT, not arithmetic
+caps      = 4R and 4      PINNED at registration, not read at run time
+threshold = 0.25R         the value that governs this study
+```
+
+**The caps are pinned, not read.** A threshold that reads the registry when the runner runs is not
+fixed in advance: a cap ratified mid-study would silently rewrite the decision rule, which
+`PREREG_TEMPLATE.md` §6 forbids and rule 3 would then treat as a redesign. **This study is judged at
+0.25R whatever the caps become.** A later study re-derives from the formula under the caps standing
+then; that is what recording the formula buys, and it is the whole of what it buys.
+
+**No second copy of the caps is created**, on the same ruling. Each study records the cap VALUES it
+assumed in its own result JSON, and no `research.*` parameter is added: a ratified value copied into
+a registry key of its own is `AGENTS.md` §10.5's drift with an extra step.
+
+### A-2 · 2026-09-04 · BEFORE THE RUN — three things validation found in the design
+
+No data had been seen when this was written; the runner did not exist.
+
+**1. Overshoot can only be non-zero on a GAP, and the measure is therefore a LOWER BOUND.**
+`ExitPolicy.evaluate` fills at `bar.open` when the session opens through the stop (`STOP_GAP`) and at
+**the stop itself** when the low merely touches it (`STOP`). So on daily bars a stop-out costs
+exactly 1R unless the market gapped, and the primary statistic measures the **gap-through cost**.
+Intraday slippage past a touched stop is invisible to this data and is not measured, which biases
+every band's overshoot **downward**. Stated here rather than discovered in the report: it is the
+second reason (with §4's survivorship) that a null result from this study is weaker evidence than it
+looks.
+
+**2. §1 promises two things and §5 measured one.** The question says *more often, and by more*. The
+decisive statistic is the **mean overshoot over ALL stop-outs in the band**, which already combines
+frequency and severity — a stop-out that did not gap enters as a zero. The **gap-through rate** is
+reported beside it, per band, and **decides nothing**. Splitting the decision across two statistics
+would need two thresholds and a rule for disagreement, and neither was registered.
+
+**3. A band is assigned from the SIGNAL bar and the stop is placed against the ENTRY.** ATR% is
+`ATR(14) / close` at the signal bar; the stop is `entry − 2 × ATR` where `entry` is the next
+session's open. The two differ by one session's move, so **B5 membership and the actual arithmetic
+break can disagree at the boundary** — a name can land in B4 and still produce a non-positive stop,
+or sit in B5 and produce a positive one. The runner records **both**: the band from the signal bar,
+and whether the stop it actually computed was positive. Neither is inferred from the other.
+
+### A-3 · 2026-09-04 · BEFORE THE RUN — a smoke run showed the drafter a direction, and it is disclosed here
+
+**What happened.** `tools/run_pr011.py` was built and smoke-tested against a copy of the live bar
+store with `--limit 60` — an alphabetical prefix, taken to prove the runner walks real data rather
+than only fixtures (`AGENTS.md` §18 step 4). Its first version printed the **band statistics**, so
+the drafter saw a direction on a subset of this study's own data: on that prefix the CONTROL band's
+mean overshoot was the larger one, which is the opposite of §3's TRUE column.
+
+**What it is worth, which is nothing.** `AGENTS.md` §12: *coverage is an ALPHABETICAL PREFIX, not a
+sample.* Thirty-eight names walked, and the arm band held eleven stop-outs against a floor of two
+hundred — the runner refused a verdict, correctly, which is the sample rule in §8 doing its job on
+its first live contact.
+
+**What changed in the design: nothing.** No band edge, no threshold, no statistic, no window and no
+decision rule was touched after that run. This amendment records the exposure rather than acting on
+it, and it is written so that a reader can weigh it instead of discovering it. **Any design change
+that follows makes this study exploratory** under rule 3 — that is the standing consequence and it
+is stated here, not left to be argued later.
+
+**What changed in the TOOL, so this cannot recur.** `--limit` now prints counts and **withholds the
+band statistics**, saying so on the line where they would have been. Counts stay: §8 makes deriving
+them step 1 of the runner, and a count is not a result. `--write` was already refused with
+`--limit`, so no prefix could ever have been published; what was missing was the smaller guard, on
+what a debugging run shows the person running it.
+
+**One count from that run, and it is a count rather than a result.** The arm band is thin: eleven
+stop-outs from thirty-eight names. Whether the full universe clears §8's floor of two hundred is
+therefore a real question and not a formality, and `refused` remains a live outcome for this study.
 
 ---
 
