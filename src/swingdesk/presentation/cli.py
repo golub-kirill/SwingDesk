@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import sys
 from collections.abc import Callable, Sequence
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -1098,6 +1098,12 @@ def _submit(
               f"{placed.status}  {placed.client_order_id}")
 
 
+#: Days of slack on the fills window `sync-fills` asks for, beyond the oldest open position. A
+#: position opened on session S can only have filled on S or just before it, and the margin covers
+#: the timezone difference between a session date and the venue's UTC timestamps.
+FILL_WINDOW_MARGIN = 3
+
+
 def _sync_fills(args: argparse.Namespace) -> int:
     """Record a `Position` for every entry THIS system placed that has since filled. `DR-031`.
 
@@ -1139,12 +1145,27 @@ def _sync_fills(args: argparse.Namespace) -> int:
         print(f"sync UNAVAILABLE  {missing}", file=sys.stderr)
         return 2
 
+    # THE WINDOW IS ASKED FOR, because the venue's default is TODAY and that is the wrong span for
+    # every question this command has. Measured 2026-09-04: `AIS` was sold at 19:46 UTC and the
+    # close was invisible an hour later, because by then "today" in UTC had rolled over. The same
+    # default sits under the opening half - `opened_on` comes from this feed, and a holding whose
+    # fill has aged out is REFUSED as undatable rather than adopted.
+    #
+    # The span is the book's own: far enough back to cover the oldest position still open, because
+    # anything that could have opened or closed one happened inside it. `max_pages` still bounds the
+    # walk and raises rather than returning a partial answer that looks complete.
+    with PositionStore(args.data / "positions.duckdb") as book:
+        open_now = book.open_as_of(now)
+    earliest = min((p.opened_on for p in open_now), default=now.date())
+    since = datetime.combine(earliest, time.min, tzinfo=UTC) - timedelta(days=FILL_WINDOW_MARGIN)
+
     try:
         held = client.positions(now)
-        # The fills feed is read for ONE field the positions endpoint does not carry: the session
-        # the fill happened in. `opened_on` is event time and `knowledge_time` is when we learned
-        # it - the bitemporal split `open-position` keeps by hand, kept here by machine.
-        fills = client.fills(now)
+        # The fills feed is read for the session a fill happened in, which the positions endpoint
+        # does not carry - `opened_on` is event time and `knowledge_time` is when we learned it,
+        # the bitemporal split `open-position` keeps by hand and this keeps by machine - and, since
+        # `DR-038`, for the sells that ended a position.
+        fills = client.fills(now, after=since)
     except broker_pkg.BrokerUnavailable as unavailable:
         print(f"sync UNAVAILABLE  {unavailable}", file=sys.stderr)
         return 2
