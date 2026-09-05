@@ -2560,6 +2560,42 @@ is for where no gate can reach.
 
 ## 6. Code & gates
 
+- [x] **`[v]` THE OPERATOR RUNBOOK'S COMMANDS COULD NOT BE RUN BY THE OPERATOR, AND THE EDIT THAT
+      FIXED THEM DAMAGED THE FILE — both found and fixed 2026-09-04.**
+      **The first half, measured on the owner's own shell rather than reasoned:** every command in
+      `docs/runbooks/README.md` began `PYTHONPATH=$PWD/src python …` or `python …`. The first is
+      bash syntax that `cmd` and PowerShell both reject outright. The second resolves to the Windows
+      Store alias, which sits EARLIER on `PATH` than the real Python 3.14 install and exits without
+      running anything — and once that alias is turned off, the system interpreter answers
+      `ModuleNotFoundError: No module named 'swingdesk'`, because the package is installed in the
+      venv and nowhere else. `tools/daily_run.cmd` had named `%REPO%\.venv\Scripts\python.exe` all
+      along; the prose contradicted the wrapper. **This is the document read under pressure by one
+      person on one machine**, and none of it would run there.
+      **Gate 31 passed all of it**, because it checks that argparse accepts the ARGUMENTS and never
+      asks whether the invocation can run. Its matcher is widened to the venv form and the Windows
+      separator, and the widening is itself the second finding: normalising the runbook first took
+      the gate from 145 invocations to 134 **while it still reported zero failures** — a check that
+      quietly stopped seeing eleven of its subjects, which is §10.6 rule 2 exactly. Derive it:
+      ```bash
+      python tools/verify_commands.py
+      ```
+      **The second half is worse and it is mine.** The patch script that normalised those lines was
+      piped through a heredoc, so `tools\verify_…` reached the file as a **vertical tab** and five
+      commands were truncated mid-word. `AGENTS.md` §12 already forbade exactly this, the session
+      had read it that morning, and the count from gate 31 is what exposed it.
+      **So the rule is widened and given a gate.** §12 now says: never pipe a patch script into an
+      interpreter at all — write it to a file and run the file. The old rule asked an agent to
+      remember a quoting subtlety at the moment it was concentrating on something else.
+      **Gate 42 (`verify_control_characters.py`) catches the residue**, which is what takes this
+      trap off the honour list: every accident of this class leaves a C0 control byte in a text
+      file, and that is an exact token rather than prose. Measured before shipping — 438 tracked
+      text files, zero control bytes — so it ships with no exemption list. It would have caught the
+      2026-08-30 instance too, where gate 14's widened pattern was stored as `specified` plus a
+      BACKSPACE and the gate printed *"0 failures"* over a pattern that could not match anything.
+      **Its blind spot is declared:** a mangle that produced legal characters is invisible to it.
+      Four failure tests, including the two historical bytes and a `DID NOT RUN` case for a
+      directory git cannot list.
+
 - [x] **`[v]` BOTH BACKTEST ENGINES WERE ONE GUARD BEHIND THE LIVE PATH, AND THE COST WAS A CRASH
       RATHER THAN A WRONG NUMBER — found and fixed 2026-09-04.** `trade_management/sizing.py`
       checks two things about a stop: that it is below entry, and that it is a positive PRICE. The

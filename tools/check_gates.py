@@ -185,6 +185,9 @@ def main() -> int:
         "41 vendor policy": _run("the price vendor's limits live in the committed policy "
                                  "and the adapter reads them from there",
                                  [python, "tools/verify_vendor_policy.py"]),
+        "42 control characters": _run("a control byte in a tracked text file, which is what a "
+                                      "heredoc-mangled edit leaves behind",
+                                      [python, "tools/verify_control_characters.py"]),
     }
 
     print("\n" + "=" * 62)
