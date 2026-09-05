@@ -516,9 +516,18 @@ open question that follows: §10.5 gives every COUNT an owner and nothing does t
   `(\d+)\s+specified\b` and stored as `specified\x08`, so the gate ran, printed **"0 failures"**,
   and could never have matched anything. **That is §10.6 rule 2's manufactured confidence produced
   by a shell quoting rule**, and it is the same shape as the cp1252 trap above: a clean result over
-  bytes that were never what you wrote. **Never write a backslash escape inside a heredoc.** Build
-  it — `chr(92) + "b"` — or write the file with an editor tool and run it. And after any patch that
-  contains a regex, print the pattern back with `repr()` before believing a green result.
+  bytes that were never what you wrote. ~~**Never write a backslash escape inside a heredoc.**~~
+  **THE RULE IS WIDER NOW, because the narrow one was read and broken on 2026-09-04 by a session
+  that had read it that morning: NEVER PIPE A PATCH SCRIPT INTO AN INTERPRETER AT ALL.** Write it to
+  a file and run the file. The old rule asked you to remember a quoting subtlety at the moment you
+  were concentrating on something else; this one removes the shell from the path. What it cost the
+  second time: `tools\verify_…` reached the file as a **vertical tab** and truncated five commands
+  in `docs/runbooks/README.md` — in the same edit that was fixing commands nobody could run.
+  **Gate 42 catches the residue**, which is why this trap is no longer honour-only: every one of
+  these accidents leaves a C0 control byte in a text file, and that is an exact token. It does not
+  catch a mangle that produced legal characters — a `\n` that became a real newline is still yours
+  to notice — so after any patch containing a regex, print the pattern back with `repr()` before
+  believing a green result.
 - **A number you worked out in your head is still a number.** Two reached prose on 2026-08-25: an
   interval written as sixteen days that was one day, and a tally of the studies that had narrowed
   their scope on the same refuted citation, written as one more than the list holds. Neither came

@@ -59,8 +59,16 @@ REPO = Path(os.environ.get("SWINGDESK_ROOT") or Path(__file__).resolve().parents
 #: produces two false positives teaches a reader to skim its output, which is how a real finding
 #: gets skipped; `CI_POLICY.md` §3 records that cost. A trailing backslash still continues onto the
 #: next line, because a wrapped command is one command.
+#: **The interpreter is matched, not assumed to be the word `python`.** `docs/runbooks/README.md` is
+#: read by an operator on this machine, where a bare `python` resolves to the Windows Store stub and
+#: exits without running anything - so its commands name `.\.venv\Scripts\python.exe`, the same
+#: interpreter `tools/daily_run.cmd` uses. Measured 2026-09-04: normalising the runbook onto that
+#: form took this gate from 145 invocations to 134 **while it still reported zero failures**, which
+#: is `AGENTS.md` §10.6 rule 2 exactly - a check that stopped seeing eleven of its subjects and said
+#: nothing. Path separator too: a Windows line writes `tools\x.py`.
+PYTHON = r"(?:python|[.\w\\/:-]*python(?:\.exe)?)(?:\s+-X\s+\w+)?"
 INVOCATION = re.compile(
-    r"python\s+(tools/[A-Za-z0-9_]+\.py)((?:\\\n|[^\n`&|;>])*)"
+    PYTHON + r"\s+(tools[/\\][A-Za-z0-9_]+\.py)((?:\\\n|[^\n`&|;>])*)"
 )
 
 #: Flags a document may pass to any tool without the tool declaring them. `--help` is argparse's,

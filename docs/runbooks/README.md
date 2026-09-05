@@ -14,6 +14,30 @@ finding the right section in one document beats finding the right file among fiv
 quoted verbatim in each section, and the system stays in its degraded state until the condition is
 demonstrably met.
 
+### The interpreter, once, because every command below names it
+
+Every command here is written for **PowerShell, from `C:\PycharmProjects\SwingDesk`**, and names the
+interpreter explicitly:
+
+```
+.\.venv\Scripts\python.exe -X utf8 …
+```
+
+**That is not ceremony, and both halves were measured on this machine on 2026-09-04.** A bare
+`python` resolves to the Windows Store alias — which sits *earlier* on `PATH` than the real
+Python 3.14 install and exits without running anything — and even once that alias is turned off, the
+system interpreter answers `ModuleNotFoundError: No module named 'swingdesk'`. **The package is
+installed in the venv and nowhere else.** `tools/daily_run.cmd` has always named the same
+interpreter, as `%REPO%\.venv\Scripts\python.exe`; this document now agrees with the wrapper instead
+of contradicting it.
+
+**No `PYTHONPATH=` prefix appears here, for two reasons.** It is bash syntax that neither `cmd` nor
+PowerShell accepts — the form this file carried until 2026-09-04, in a document read by an operator
+on Windows — and it is unnecessary from this checkout, because the venv has the package installed.
+`AGENTS.md` §12's `PYTHONPATH` rule is about **worktrees**, where the installed package resolves to
+the main checkout and a suite can go green against the wrong tree. Different audience, different
+command.
+
 ---
 
 ## 1. No data, or data in doubt
@@ -45,11 +69,11 @@ stored bars; a symbol never fetched cannot be measured and so cannot be admitted
 count drops or reaches zero, check coverage before concluding anything about liquidity:
 
 ```bash
-python tools/fetch_directory.py
+.\.venv\Scripts\python.exe -X utf8 tools\fetch_directory.py
 ```
 
 ```bash
-python tools/refresh_universe.py --budget 500
+.\.venv\Scripts\python.exe -X utf8 tools\refresh_universe.py --budget 500
 ```
 
 The report prints the coverage fraction on every run precisely so this is visible before it is
@@ -62,7 +86,7 @@ Classification is a separate pass for the reason bar coverage is — it is one m
 per instrument, on a fact that changes a few times a year:
 
 ```bash
-python tools/refresh_classifications.py --budget 200
+.\.venv\Scripts\python.exe -X utf8 tools\refresh_classifications.py --budget 200
 ```
 
 Until it has run, every candidate is admitted **unchecked** and the report says so on every run.
@@ -121,7 +145,7 @@ does not rescue a broken evening, and it is not supposed to.
 existing name offers to REPLACE it and a wrong keystroke there discards a working registration:
 
 ```bash
-python tools/verify_schedule.py
+.\.venv\Scripts\python.exe -X utf8 tools\verify_schedule.py
 ```
 
 That is gate 26, and it reports both tasks, their last exit code and the two settings that make a
@@ -401,7 +425,7 @@ adding to it would be the failure the guard exists to prevent.
 nothing:
 
 ```bash
-PYTHONPATH=$PWD/src python -m swingdesk.presentation.cli broker --data data
+.\.venv\Scripts\python.exe -X utf8 -m swingdesk.presentation.cli broker --data data
 ```
 
 #### The venue holds something the book does not
@@ -435,7 +459,7 @@ it. **The date the exit happened and the moment you record it are kept apart on 
 close reported the next morning is still dated to the day it occurred:
 
 ```bash
-python -m swingdesk.presentation.cli close-position POS-AIS-2026-09-03 --exit 66.42 --closed-on 2026-09-04 --reason "stop fired at the venue; the book never learned" --data data
+.\.venv\Scripts\python.exe -X utf8 -m swingdesk.presentation.cli close-position POS-AIS-2026-09-03 --exit 66.42 --closed-on 2026-09-04 --reason "stop fired at the venue; the book never learned" --data data
 ```
 
 `--reason` is required and is written to the store rather than printed: a close nobody can audit is
@@ -451,7 +475,7 @@ If you meet a book-only divergence in an older checkout, `close-position` is wha
 ### 7.5 Checking the account by hand, any time
 
 ```
-python -m swingdesk.presentation.cli broker --data data
+.\.venv\Scripts\python.exe -X utf8 -m swingdesk.presentation.cli broker --data data
 ```
 
 Prints the account, its positions, whether they agree with the book, **and whether each open
@@ -474,13 +498,13 @@ it** — it has no verb that amends or cancels an order — so a stop that has t
 placed in the venue's own dashboard, and new entries stay paused until it is.
 
 ```
-python -m swingdesk.presentation.cli sync-fills --data data --dry-run
+.\.venv\Scripts\python.exe -X utf8 -m swingdesk.presentation.cli sync-fills --data data --dry-run
 ```
 
 Says what `sync-fills` would record, and records nothing.
 
 ```
-PYTHONPATH=$PWD/src python tools/verify_submission_guards.py --data data
+.\.venv\Scripts\python.exe -X utf8 tools\verify_submission_guards.py --data data
 ```
 
 **Runs every guard tonight's pass will run, in its order, and sends nothing.** This is the one to
@@ -563,7 +587,7 @@ rebuild afterwards because `HANDOFF.md` §2 owns the coverage figure and is gene
 there discards a working registration:
 
 ```bash
-python tools/verify_schedule.py
+.\.venv\Scripts\python.exe -X utf8 tools\verify_schedule.py
 ```
 
 Then, once:
@@ -646,7 +670,7 @@ which it is.
 **3. The symbol directory**, which everything else is selected from:
 
 ```bash
-PYTHONPATH=$PWD/src python tools/fetch_directory.py --data data
+.\.venv\Scripts\python.exe -X utf8 tools\fetch_directory.py --data data
 ```
 
 **4. The local config**, or step 3's scheduled mode refuses — by design, so an unattended pass
@@ -674,7 +698,7 @@ symbol.
 **6. The classifications**, which the sector cap is measured through:
 
 ```bash
-PYTHONPATH=$PWD/src python tools/refresh_classifications.py --data data --universe --budget 2000
+.\.venv\Scripts\python.exe -X utf8 tools\refresh_classifications.py --data data --universe --budget 2000
 ```
 
 **The budget is not optional here.** It defaults to 100 instruments a pass, which is right for a
@@ -685,7 +709,7 @@ actually nominate rather than every symbol with bars.
 offers to REPLACE it, and a wrong keystroke discards a working registration:
 
 ```bash
-PYTHONPATH=$PWD/src python tools/verify_schedule.py
+.\.venv\Scripts\python.exe -X utf8 tools\verify_schedule.py
 ```
 
 ```bash
@@ -719,8 +743,8 @@ echo ARMED > data\.paper-trading-armed
 **9. Proving the installation, before it is armed.**
 
 ```bash
-PYTHONPATH=$PWD/src SWINGDESK_DATA=$PWD/data python tools/check_gates.py
-PYTHONPATH=$PWD/src SWINGDESK_DATA=$PWD/data python tools/verify_submission_guards.py --data data
+.\.venv\Scripts\python.exe -X utf8 tools\check_gates.py
+.\.venv\Scripts\python.exe -X utf8 tools\verify_submission_guards.py --data data
 ```
 
 The first runs every gate. **Gate 2 will report `UNAVAILABLE` without the course PDFs and
