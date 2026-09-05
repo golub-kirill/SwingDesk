@@ -1,6 +1,6 @@
 # TODO — the single open-work list
 
-**Status:** working document · **Owner:** shared · **Last reconciled:** 2026-08-25
+**Status:** working document · **Owner:** shared · **Last reconciled:** 2026-09-04
 
 **Provenance marks are a claim about THIS file, so the reconciliation date is too.** Items touched on 2026-08-24/25 carry `[v]` on the strength of a check made then; everything older kept the mark it had. A `[c]` is an *unverified* item, not a smaller one, and promoting it means checking it rather than retyping it.
 
@@ -235,6 +235,15 @@ and `data.revision_epsilon` is ruled; what is left is the item directly below.*
       entries. Today a run where every candidate is stale refuses each one individually and says
       nothing about the run as a whole. Needs a ruling, or an explicit decision that the
       per-instrument gate discharges it and the parameter should be retired (`AGENTS.md` §11).
+      **RE-TESTED 2026-09-04 AND STILL EXACTLY TRUE**, and the test is written down here rather
+      than the verdict, which is what §6's blocker convention asks of a sentence like this one:
+      ```bash
+      grep -A6 'id: data.staleness_action_threshold' registry/parameters.yml
+      grep -rn staleness_action_threshold src/ tools/
+      ```
+      The registry entry reads `value: null`, `status: unset`, `read_by: none`; the identifier
+      appears **nowhere** in `src/` or `tools/`, only in `DATA_QUALITY_SPEC.md`'s parameter list.
+      So the ruling this item asks for is still the one thing that would move it.
 
 - [x] **`[v]` Unclosed bars — GUARD BUILT 2026-08-18, deletion ruled by the owner and pending one
       command.** Found while measuring for `DR-016`, by accident.
@@ -2444,6 +2453,14 @@ is for where no gate can reach.
       forward test). **Checked 2026-08-30 against `docs/prereg/README.md`**, which is the index gate
       3f keeps honest and the only place this belongs; `PR-011` is also unwritten and is tracked in
       its own item two rows down, which is why it is absent here rather than missing.
+      **`PR-011b` joined the reserved set on 2026-09-04** — the CLASS half `PR-011` split off,
+      exploratory in advance, and the item below records why. Re-derive rather than trusting
+      this list, which is a copy of an index and rots the way copies do:
+      ```bash
+      ls docs/prereg/ && grep -n 'PR-0' docs/prereg/README.md
+      ```
+      Checked that way 2026-09-04: `PR-011` is now WRITTEN and on disk, so this line's own
+      pointer to it is what stayed accurate while the set around it moved.
 - [x] **`[v]` ~~`PR-011` — screening out the instrument classes that cannot hold a stop — IS NOT
       WRITTEN.~~ WRITTEN 2026-09-04, and writing it SPLIT the question in two.**
       `docs/prereg/PR-011-stop-integrity-by-volatility-band.md` registers the half with no prior
@@ -2687,8 +2704,9 @@ is for where no gate can reach.
       fix kills that test and only that test.
 
 
-- [ ] **`[v]` THE COVERAGE TIER WAS SPECIFIED AND NEVER SCHEDULED, AND THE UNIVERSE IS 28% BECAUSE
-      OF IT — found 2026-09-04.** `tools/refresh_universe.py` opens by describing tiered work: a
+- [x] **`[v]` ~~THE COVERAGE TIER WAS SPECIFIED AND NEVER SCHEDULED, AND THE UNIVERSE IS 28%
+      BECAUSE OF IT~~ — found 2026-09-04, REGISTERED AND CONFIRMED THE SAME DAY.**
+      `tools/refresh_universe.py` opens by describing tiered work: a
       periodic pass widens coverage, and the daily `scan --universe` reads what is already stored.
       The daily tier was registered 2026-08-12 and has run every evening. **The periodic tier was
       never registered at all** — `schtasks` lists exactly two SwingDesk tasks, and
@@ -2719,6 +2737,32 @@ is for where no gate can reach.
       ```bash
       PYTHONPATH=$PWD/src python tools/verify_counts.py
       ```
+
+      **IT IS REGISTERED — CONFIRMED AGAINST THE SCHEDULER 2026-09-04, so this entry's blocker
+      is discharged rather than argued.** `schtasks` lists **three** SwingDesk tasks now, where
+      the finding above rests on there being two:
+      ```
+      SwingDesk coverage pass   Weekly, SUN 11:00   next 2026-09-06 11:00 AM   Ready
+      ```
+      That is `docs/runbooks/README.md` §8's registration at the day and hour it prescribes, for
+      the reason it gives — the stores are single-writer (`ADR-0004`) and a weekend morning is
+      the widest gap from the evening passes. **Who ran it is not established here and is not
+      asserted** (`AGENTS.md` §10.4): the task exists and matches the runbook, which is what the
+      scheduler can be asked; the rest would be conjecture.
+      **Gate 26 passes on it, and for the right reason rather than by accident.** It reports the
+      task as named and adds *"has not run yet - this check says nothing about that run"*
+      instead of judging an exit code it does not have. `unavailable` is not `pass`, applied to
+      a task in its first week:
+      ```bash
+      SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data PYTHONPATH=$PWD/src python tools/verify_schedule.py
+      ```
+      **What is left is an observation, not an action.** The pass has never run, so its last
+      result is `267011` = `0x00041303` = `SCHED_S_TASK_HAS_NOT_RUN`, and nothing yet shows
+      `widen_universe.cmd` survives a real Sunday. The first run is 2026-09-06; gate 26 judges
+      it from then on, which is the whole reason the task is named in the gate.
+      **Neither coverage figure in this entry is quotable any more** — the hand-run catch-up
+      landed before the registration and `HANDOFF.md` §2 owns what the number is today
+      (`AGENTS.md` §10.5). The command above the fence is the answer.
 
 
 - [ ] **`[v]` A BLOCKER EXPIRES AND THE ENTRY THAT NAMED IT DOES NOT — three found in one evening,
@@ -2805,6 +2849,29 @@ is for where no gate can reach.
       sibling's copy genuinely differs from trunk's — it is behind on all of them, but *behind* and
       *ahead* are the same shape to a diff. Deleting the stale local ref is still the fix, and it is
       still the owner's to run.
+
+      **RE-MEASURED 2026-09-04, and it is TWO stale refs rather than one — so every overlap the
+      gate reports today is phantom.** The entry named `claude/a-research-instrument-not-a-broker`
+      alone. `claude/the-tool-missed-a-guard` is the second, and it is the same shape: one
+      unmerged commit, `aa3c0ce`, whose subject, date and content reached trunk as `9bd52c6`.
+      ```bash
+      git branch --no-merged master                      # exactly these two, out of 124 local refs
+      git diff claude/the-tool-missed-a-guard:tools/verify_submission_guards.py master:tools/verify_submission_guards.py
+      ```
+      **`master` is AHEAD of it, and the diff says so in the direction that settles the
+      question**: trunk's copy carries the sibling's guard *plus* `DR-037`'s restorable/immovable
+      split, which landed after that commit. So the sibling holds no line trunk lacks, and the
+      overlap is a version to discard rather than one to choose.
+      **The patch-ids differ and that is not a counter-argument** — `git patch-id` compares the
+      whole diff, and trunk's version of the same work was written against a moved base. Blob
+      identity is what gate 33's exclusion tests, and these blobs are genuinely different; the
+      gate is behaving exactly as designed and reporting a real textual divergence that no
+      person will ever have to resolve.
+      **So the alarm is now 100% false, which is worse than it was when this entry was
+      written.** `AGENTS.md` §12: a gate that manufactures alarm costs what one that manufactures
+      confidence costs, and §10.1's whole argument is that gate 33 is the thing that stops two
+      efforts rewriting one paragraph. Deleting both refs clears it completely, and both are
+      recreatable from `origin/`; it is still the owner's command to run, for the reason above.
 
 - [x] **GATE 33 CANNOT SEE A DELETION AT ALL — found 2026-09-04, FIXED the same day.** `_touched`
       set `path = ""` when a diff hunk header read `+++ /dev/null`, so a file one branch DELETED
@@ -3154,8 +3221,21 @@ is for where no gate can reach.
       **A scheduling decision, not a code one**, and it belongs with `DR-019` (the conditional second
       pass), which is still `proposed`: a delay or start-boundary on the second task, or making it
       conditional on the first having finished.
-- [ ] **`[v]` THE DAILY RUN MAKES THE NEXT DAILY RUN `code_dirty`, AND NOBODY PRICED THAT — found
-      2026-08-29.** ~~My own uncommitted work marked three evenings of scheduled runs dirty.~~
+      **RE-MEASURED 2026-09-04 AND STILL OPEN, but narrower than the title reads.** On an
+      ordinary day the two passes are fine: `schtasks` reports the daily run at 18:30 and the
+      second pass at 19:30 on 2026-09-04, **each with exit 0**, an hour apart as designed.
+      ```bash
+      SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data PYTHONPATH=$PWD/src python tools/verify_schedule.py
+      ```
+      **The collision is a property of the CATCH-UP, not of the schedule**, so a clean day is
+      not evidence against it and is not offered as any — it says only that nothing has regressed
+      and that the last measured collision is still 2026-08-29's. The decision `DR-019` frames
+      is unchanged, and the thing that would settle this item is a day the machine misses its
+      trigger, not another clean evening.
+- [x] **`[v]` ~~THE DAILY RUN MAKES THE NEXT DAILY RUN `code_dirty`, AND NOBODY PRICED THAT~~ —
+      found 2026-08-29, CLOSED 2026-08-30 by `DR-022`. The title asserted an open question over
+      a body recording its answer until 2026-09-04, which is §6's second shape exactly.**
+      ~~My own uncommitted work marked three evenings of scheduled runs dirty.~~
       **That attribution was wrong and is corrected here**; the worktree was clean from the evening
       of 08-25 onward, and the runs went on being dirty anyway.
       **The real cause is in `daily_run.cmd`'s own comment.** Its last step regenerates
@@ -3195,6 +3275,13 @@ is for where no gate can reach.
       than by argument — `code_dirty` is not in `output_hash`, so narrowing it moves no decision and
       resets no counter. The 18 already-flagged runs keep their flags; `DR-022` §4 records the
       discontinuity that leaves and why re-deriving them is not on offer.
+      **Checked against the tree before closing 2026-09-04**, because a record saying a thing
+      was built is a claim like any other (`AGENTS.md` §10.8):
+      ```bash
+      grep -n DECIDING_PATHS src/swingdesk/application/pipeline.py
+      ```
+      prints the tuple at its definition and again at the `code_dirty=` call that passes it to
+      `git status`, so the narrowing is wired and not merely ratified.
 - [ ] **`[v]` GATE 10 IS NOW TWO CHECKS, NOT THREE, AND THE THIRD WAS BUILT UNDER ANOTHER NUMBER —
       re-derived 2026-08-30.** `REQUIREMENTS.md` §7 exists (the linkage the entry below says gate 10
       needs first) and it names what gate 10 should check: *"a row here naming a test or a gate that
@@ -3753,11 +3840,24 @@ is for where no gate can reach.
       *"Broker/platform/journal mismatch"*, action *"pause new entries"*). `ADR-0005` places the
       package; `registry/broker_policy.yml` + **gate 39** hold the limits and the one allowed host;
       `tests/test_broker.py` runs it all against recorded fixtures.
-      **`APCA_API_KEY_ID` and `APCA_API_SECRET_KEY` are not set, so it has NEVER been run against
-      the live endpoint** — the field names come from Alpaca's published reference, not from an
-      observed response. That is the next thing to do and it is the owner's: set the two variables
-      in the environment (never in a file here — this repository is public) and run
-      `swingdesk broker`.
+      ~~**`APCA_API_KEY_ID` and `APCA_API_SECRET_KEY` are not set, so it has NEVER been run
+      against the live endpoint** — the field names come from Alpaca's published reference, not
+      from an observed response.~~
+      **EXPIRED, AND MEASURED RATHER THAN READ — 2026-09-04.** The adapter has been run against
+      the live paper endpoint on three separate evenings, and the evidence is the venue's own
+      answers in `journal.duckdb`'s `submissions` table rather than a docstring:
+      ```sql
+      SELECT outcome, min(attempted_at), max(attempted_at), count(*) FROM submissions GROUP BY 1;
+      ```
+      **eight `sent` rows carry `venue_status = accepted`** — `SPY` on 2026-09-01, then `AIS`,
+      `DINO`, `BFH`, `BTSG` on 09-02 and three re-armed on 09-03 — beside eleven `rejected` and
+      the stopped majority. A `rejected` row is the strongest evidence of all that the field
+      names are right, and the rows carry the venue's OWN error bodies rather than ours —
+      *"bracket orders require take_profit.limit_price"*, *"invalid limit_price 66.949997.
+      sub-penny increment does not fulfill minimum pricing criteria"* — which is a request
+      Alpaca parsed and authenticated. `positions.duckdb` holds the three names that filled.
+      The keys stay in the environment and never in a file here — this repository is public
+      (`SECURITY.md` §2.1, `tools/verify_secrets.py`).
       **What (a) deliberately does NOT do, and it is not a gap that more code closes.** A broker's
       answer cannot construct a `Position`: the venue knows symbol, quantity and average entry and
       does **not** know the STOP, which is what `RISK_SPEC.md` §2 denominates every R in. Nor can a
@@ -3765,11 +3865,23 @@ is for where no gate can reach.
       `position_id` and a `sequence`. So it reconciles and reports; `open-position` and
       `record-fill` still take the owner's judgment. Both close only with a `client_order_id` this
       system sets and a bracket order carrying the stop — which is to say, only with (b).
-      **(b) ORDER PLACEMENT — open, and `DR-026` §4 lists the six things it must carry.** The
-      unresolved question is §5 and it is the owner's: **may the system submit a paper order that no
-      human approved order-by-order?** An owner-approved one is already permitted by every
-      constraint; an unapproved one needs A-001 amended, which its own text says admits no
-      configuration.
+      ~~**(b) ORDER PLACEMENT — open, and `DR-026` §4 lists the six things it must carry.**~~
+      **BUILT AND RUN — 2026-09-01 onward, and this line was the last part of the entry still
+      describing August.** `scan --submit` places bracket orders (`DR-027`), journals every
+      attempt with a coded outcome, and `DR-037` puts a separate `gtc` OCO on once a position is
+      recorded, because `DR-036` measured every bracket leg dead at the first close. The caps,
+      the drawdown criterion (`DR-034`) and the venue reconciliation (`DR-035`) all sit in front
+      of it.
+      **§5's question was PUT AND ANSWERED — yes, on 2026-09-01 — and it took a charter
+      amendment rather than an argument.** `DR-027` §1 records the question in this entry's
+      own words and **`CHARTER` A-002 is the amendment**, so the line above was right that an
+      unapproved order needed one and out of date about whether it had been made. *(Written
+      here first as "no amendment was needed", which is exactly the §1 failure — a claim about
+      a record I had not opened. `DR-027` §1 says otherwise in one line.)*
+      **Arming is still the owner's act** (`DR-027` §8): absent, unreadable or unmarked all
+      mean stopped (`broker/armed.py`), so a pass nobody armed submits nothing.
+      **What is genuinely still open here is narrower and lives in §6b**: a *disarmed* evening
+      returns before it reads the venue, so it reconciles nothing and surfaces no `TECH`.
       **Constraints already binding on this work:** `SECURITY.md` §2.1 — no secret in the repo, env
       vars or an OS keyring only, and this repository is public (`tools/verify_secrets.py` says so).
       `CI_POLICY` §4 — CI must never touch the network, so every Alpaca test runs against a recorded

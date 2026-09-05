@@ -188,6 +188,7 @@ once did).
 
 - `claude/a-test-that-opens-the-live-store`
 - `claude/a-handoff-for-the-blocked-claims`
+- `claude/refresh-todo-validate-tasks-bb8735`
 
 *Tip and merge state deliberately absent - both move under this document's own feet. `python tools/verify_branches.py` prints them.*
 
@@ -370,7 +371,8 @@ general entry and the proposed convention: **a sentence saying something is bloc
 command that would show it had changed**, which is §10.5's move aimed at a blocker instead of a
 count.
 
-**4. The coverage tier was specified and never scheduled — and this is the one still open.**
+**4. The coverage tier was specified and never scheduled — ~~and this is the one still open~~,
+and it was REGISTERED on 2026-09-04.**
 `refresh_universe.py` describes tiered work: a periodic pass widens coverage, the daily pass reads
 what is stored. The daily tier was registered on 2026-08-12; **the periodic tier was never
 registered at all**, and every evening's report has printed `PARTIAL UNIVERSE` over it. `CARD-001`
@@ -382,10 +384,26 @@ PYTHONPATH=$PWD/src python tools/verify_counts.py
 ```
 
 `tools/widen_universe.cmd` is built and `docs/runbooks/README.md` §8 carries the one command that
-registers it. **Gate 26 names the task and is therefore RED until somebody runs that command** —
-deliberately, because a tier nothing watches is how this went unnoticed for three weeks. A catch-up
-pass was run by hand on 2026-09-04 so the subset is not left where it was while the registration
-waits.
+registers it. ~~**Gate 26 names the task and is therefore RED until somebody runs that command**~~
+— deliberately, because a tier nothing watches is how this went unnoticed for three weeks. A
+catch-up pass was run by hand on 2026-09-04 so the subset is not left where it was while the
+registration waits.
+
+**IT IS REGISTERED, and gate 26 is GREEN — confirmed against the scheduler 2026-09-04.**
+`SwingDesk coverage pass` is registered weekly, Sunday 11:00, `Ready`, next run 2026-09-06 — the
+day and hour the runbook prescribes. Who ran the command is not established here and is not
+asserted; the task exists and matches the runbook, and that is what a scheduler can be asked.
+
+The gate reports it as named and adds *"has not run yet - this check says nothing about that
+run"* rather than judging an exit code it does not have, which is `unavailable` ≠ `pass`
+behaving correctly in a task's first week. Ask the machine rather than reading either sentence:
+
+```bash
+SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data PYTHONPATH=$PWD/src python tools/verify_schedule.py
+```
+
+What is left is an observation and not an action: nothing yet shows `widen_universe.cmd` survives
+a real Sunday, and 2026-09-06 is the first one.
 
 **5. Four gates and one policy were added or hardened.** Gate 20 refused a decision record whose
 token appeared only in a comment or a docstring — one record was living on that. Gate 33 stopped
@@ -411,9 +429,10 @@ The first runs every guard the evening pass runs, against the live account, and 
 third answers *has the vendor served an impossible bar before* as a tool call rather than as a
 memory — it found hundreds on its first run, every one of them buried in a line nobody could see.
 
-**Standing, and not defects:** gate 26 is red until the coverage task is registered (above), and
-gate 24 is red on any morning the evening pass has moved `data/` — regenerate rather than
-investigate, which §8 of this file already says.
+**Standing, and not defects:** ~~gate 26 is red until the coverage task is registered (above)~~
+— registered 2026-09-04 and the gate is green, see above — and gate 24 is red on any morning the
+evening pass has moved `data/`, regenerate rather than investigate, which §8 of this file already
+says.
 
 ### 5.0 What changed on 2026-09-01 and 2026-09-02, and what it left open
 
@@ -965,13 +984,20 @@ used a copy, which is why the 18:30 pass was never at risk from them.
 **The catch-up fires BOTH tasks at once, and the second pass dies — measured 2026-08-29.** Both
 scheduled tasks report the same `last run 8/29/2026 6:50:57 PM`: `StartWhenAvailable` caught up the
 missed triggers together, the 18:30 pass started, and the 19:30 pass exited **`-2147020576`** —
-`0x80070420`, `ERROR_SERVICE_ALREADY_RUNNING`. Gate 26 reports it and is red on this machine for
-that reason; CI reports the gate `UNAVAILABLE` and cannot see it.
+`0x80070420`, `ERROR_SERVICE_ALREADY_RUNNING`. ~~Gate 26 reports it and is red on this machine for
+that reason~~; CI reports the gate `UNAVAILABLE` and cannot see it.
+
+**Gate 26 is GREEN today, and that is not the risk going away — it is the gate reading a
+different day.** Measured 2026-09-04: the 18:30 pass and the 19:30 pass each report their own
+trigger and `exit 0`, an hour apart. The gate judges the LAST run, so it is red on a catch-up
+morning and green on every ordinary one, which is why a green here is not evidence about the
+risk. **The last measured collision is still 2026-08-29's** and what would settle this is a day
+the machine misses its trigger, not another clean evening.
 
 **If you are a fresh session and gate 26 is your first red, it now says this itself** — since
 2026-08-30 the gate names `0x80070420` rather than printing the bare negative number, so the
-failure explains itself at the point you meet it. The verdict is unchanged and still red: naming a
-cause is not fixing one, and the fix below is a scheduling decision.
+failure explains itself at the point you meet it. Naming a cause is not fixing one, and the fix
+below is a scheduling decision.
 
 **Why it matters more than it looks.** The second pass exists to retry the instruments a data
 failure dropped. A catch-up happens exactly on the days the machine was asleep or logged out — the
