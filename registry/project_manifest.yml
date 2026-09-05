@@ -876,6 +876,16 @@ documents:
   readme_status_text: owner-pending
   generated: false
   file_expected: true
+- id: DOC-67d
+  display_number: '67d'
+  tier_ref: TIER-8
+  artifact_class: SUPPLEMENTAL_DELIVERABLE
+  path: docs/08-pm/plans/2026-09-05-what-watches-the-root-documents.md
+  document_status: owner-pending
+  status_source: document
+  readme_status_text: owner-pending
+  generated: false
+  file_expected: true
 - id: DOC-67c
   display_number: '67c'
   tier_ref: TIER-8
