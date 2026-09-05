@@ -555,22 +555,46 @@ evening returned every one of those sessions, clean. The owner asked; nobody had
       and **1,050** with weights **today** — while the study, reading the same clock, found
       1,013. **A `knowledge_time <= ?` query whose answer grows is a batch LABEL, not a record
       of when a fact became known to us.**
-      **What that means, stated as narrowly as the evidence allows.** The bar store is
+      ~~**What that means, stated as narrowly as the evidence allows.** The bar store is
       point-in-time and the classification store is not: rows reached it under a timestamp at
       or before the study's clock, after the study had read it. `AGENTS.md` §12's *"two stores,
       two clocks"* is about reading one at the other's `knowledge_time`; **this is narrower and
-      worse — one store's own clock does not bound its own answer.** Which of the two shapes it
-      is — rows appended under an existing label, or a batch written with an earlier stamp —
-      cannot be told from the schema, which records no insertion time. That is marked
-      conjecture (`AGENTS.md` §10.4); the ANSWER changing is measured.
-      **Consequence, and it is the reason this is written here rather than filed as a curio:**
-      **no study reading classifications can be reproduced**, `--reproduce` or not. `PR-012`
-      and `PR-013` both do. The momentum and market arms are safe because they read bars only.
-      **Not fixed here, and the fix is a decision.** Giving the classification store a true
-      insertion time is a schema change, and `AGENTS.md` §12 is explicit that adding a column
-      is a migration. Whether the existing rows can be attributed at all is a separate
-      question, and probably answered *no* — the same shape as `DR-008` c3's permanently
-      unattributable directory pulls.
+      worse — one store's own clock does not bound its own answer.**~~
+      ~~**Consequence:** **no study reading classifications can be reproduced**, `--reproduce`
+      or not.~~
+      ~~**Not fixed here, and the fix is a decision.** Giving the classification store a true
+      insertion time is a schema change.~~
+
+      **WRONG, AND THE AUDIT OVERTURNED IT THE SAME DAY — 2026-09-05.** The store was never the
+      cause. `ClassificationStore.record` is `INSERT OR REPLACE` on `(knowledge_time,
+      instrument_id)`, so a later pull APPENDS a version and its docstring says exactly that; the
+      paragraph above accused it without reading it.
+      **What actually moved is the CODE THAT READS THE ROWS.** Two commits touched
+      `classification.py` after `PR-012` ran — `61f6d6e` on how the sector guard decides a fund
+      holds equity, and `d67b931` on the look-through's shape. Both change the verdict on a stored
+      row without touching the row.
+      **Reproduced by loading BOTH versions over the same store at the same pinned clock:**
+      ```
+      instruments classified at the pinned clock        1148
+      usable under the code as it was when PR-012 ran   1023
+      usable under today's code, SAME rows, SAME clock  1046
+      verdicts FLIPPED                                    23
+      ```
+      **Twenty-three is the whole discrepancy** — the study recorded 1,013 classified and the
+      pinned re-run printed 1,036. `AAPU`, `ANGL`, `BNDX`, `BIZD` and nineteen others.
+      **So the corrected finding is more general and more useful than the wrong one:**
+      **`--reproduce` pins the DATA and not the CODE.** A replay runs today's interpretation over
+      the study's sample, and where that interpretation has changed the result moves — and it
+      moves in a way that looks exactly like the data moving. `MOMENTUM` and `MARKET` reproduced
+      because nothing they read had been reinterpreted; `SECTOR` did not because it had.
+      **This is `AGENTS.md` §12's proxy trap once more, and I walked into it while writing about
+      it.** The store's answer changing was measured; *the store changed it* was inferred, and the
+      inference was the part that mattered. §10.4 asks for the check or the word conjecture — the
+      shape of the write was marked conjecture, the CAUSE was not, and the cause is what was wrong.
+      **What is genuinely open**, and it is small: nothing records which code version a replay ran
+      under, so a reader meeting a moved cell cannot tell a data change from a reinterpretation
+      without doing what this audit did. `RunManifest` already carries `code_hash`; a study result
+      does not.
       **And one measured aside, because it will surprise the next person who runs it:** the
       pinned run took **about 25 minutes** against the ~13m37s `HANDOFF.md` records for a fresh
       one. ~~Reading `as_of` an older `knowledge_time` over a store that has since grown means

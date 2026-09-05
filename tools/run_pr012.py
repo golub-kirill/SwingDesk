@@ -36,6 +36,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
 
+from swingdesk.application.pipeline import DECIDING_PATHS, _git
 from swingdesk.application.universe import ADTV_WINDOW
 from swingdesk.contracts.market import BarSeries, Interval, Series
 from swingdesk.contracts.trade import Trade
@@ -65,6 +66,27 @@ from swingdesk.validation.backtest.book import Candidate
 RESULT = REPO / "docs" / "prereg" / "results" / "PR-012.json"
 
 
+def code_version() -> dict[str, object]:
+    """What code this study is being interpreted by.
+
+    **AUD-001, 2026-09-05.** `PR-012` pinned to its own snapshot did not reproduce its SECTOR arm,
+    and the published explanation blamed the classification store. It was wrong: two commits had
+    changed how a stored row is JUDGED - the sector guard's equity test and the look-through's
+    shape - and 23 instruments flipped their usability verdict on the same rows at the same clock.
+    23 was the entire discrepancy.
+
+    **A replay pins the data and not the code**, and nothing recorded which code a result was
+    computed by, so a moved cell reads as moved data. `RunManifest` has carried `code_hash` and
+    `code_dirty` for every daily run since the journal existed; a study result carried neither.
+
+    Derived by the same two calls the pipeline uses, imported rather than copied.
+    """
+    return {
+        "code_hash": _git("rev-parse", "--short", "HEAD"),
+        "code_dirty": bool(_git("status", "--porcelain", "--", *DECIDING_PATHS)),
+    }
+
+
 @dataclass(frozen=True)
 class Vintage:
     """Which moment each store is read at, and where that moment came from.
@@ -81,6 +103,10 @@ class Vintage:
     clock: datetime
     #: Printed on every run, so nobody has to infer which sample they are looking at.
     source: str
+    #: The code the study being reproduced was interpreted by, or None when it recorded none.
+    #: `None` is not a pass: it means this replay CANNOT tell a data change from a
+    #: reinterpretation, and `main` says so rather than staying quiet (AUD-001).
+    recorded_code: str | None = None
 
 
 def resolve_vintage(
@@ -128,6 +154,7 @@ def resolve_vintage(
             as_of=datetime.fromisoformat(record["snapshot"]),
             clock=datetime.fromisoformat(record["run_at"]),
             source=f"reproducing {result_path.name}",
+            recorded_code=record.get("code_hash"),
         )
 
     if as_of_arg:
@@ -141,6 +168,23 @@ def resolve_vintage(
         )
 
     return Vintage(as_of=None, clock=now, source="fresh run - the store's latest")
+
+
+def report_code_drift(recorded: str | None, current: str) -> str:
+    """One line saying whether a moved cell can be attributed at all.
+
+    AUD-001: a replay that pins the data and prints its numbers invites the reader to attribute a
+    difference to the sample. Where the code has moved, that reading is wrong and the reader has no
+    way to know. Where the study recorded no code at all, NOBODY can know, and saying so is the
+    only honest output - `unavailable` is not `pass`.
+    """
+    if recorded is None:
+        return ("  code:    UNAVAILABLE - this study recorded no code version, so a moved cell "
+                "cannot be told from a reinterpretation (AUD-001)")
+    if recorded == current:
+        return f"  code:    {recorded}, unchanged since the study ran"
+    return (f"  code:    MOVED - the study ran at {recorded}, this replay runs at {current}. "
+            f"A cell that differs may be a REINTERPRETATION and not a data change (AUD-001)")
 
 
 def add_vintage_arguments(parser: argparse.ArgumentParser) -> None:
@@ -353,6 +397,8 @@ def main() -> int:
             raise SystemExit("bar store is empty")
         print(f"vintage: bars at {as_of.isoformat()}, classifications at {clock.isoformat()} "
               f"({vintage.source})")
+        if args.reproduce:
+            print(report_code_drift(vintage.recorded_code, code_version()["code_hash"]))
 
         benchmark = store.as_of(BENCHMARK, Interval.DAY, Series.RAW, as_of)
         if not benchmark.bars:
@@ -521,6 +567,7 @@ def main() -> int:
 
     payload = {
         "prereg": "PR-012",
+        **code_version(),
         "run_at": clock.isoformat(),
         "snapshot": as_of.isoformat(),
         "window": [str(window[0]), str(window[1])],
