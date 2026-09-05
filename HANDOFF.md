@@ -188,7 +188,7 @@ once did).
 
 - `claude/a-test-that-opens-the-live-store`
 - `claude/a-handoff-for-the-blocked-claims`
-- `claude/the-channel-is-on-but-empty`
+- `claude/blocked-claims-second-sweep`
 
 *Tip and merge state deliberately absent - both move under this document's own feet. `python tools/verify_branches.py` prints them.*
 
@@ -537,6 +537,12 @@ universe — the hash recorded on `master` before the change — and by `tools/r
 reproducing all 20 of PR-005's cells through the backtest engine instead of the pipeline. So it
 moves no decision output and spends no `a.run_completes` counter, and none of it touches a frozen
 file.
+
+*(The 20-cell reproduction is true of the store as it stood. Run the same command today and it
+reports a mean-R drift in the ten holdout cells, caused by a vendor revision to one instrument
+on 2026-08-27 that moved `high` and `low` and never touched `close`; `TODO.md` §6 carries the
+measurement. It says nothing about the change this paragraph is about, which is why the sentence
+stands and this note sits beside it.)*
 
 **Two gates came with it**, 28 (a document may not state a parameter status the registry
 contradicts) and 29 (a pre-registration id is reserved once, including across unmerged branches).
