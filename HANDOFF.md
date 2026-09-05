@@ -141,10 +141,10 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 |---|---|
 | Journal | 59 runs, 8 incomplete · **22 run(s) recorded against a dirty tree** and therefore not replayable from their SHA |
 | Decisions | 56753 recorded · 0 uncoded refusals (`a.no_uncoded_failures` requires 0) |
-| Bar store | 7,386,122 rows across 12,937 instruments |
+| Bar store | 7,460,562 rows across 13,008 instruments |
 | PIT integrity | **CLEAN** - bars whose `event_time` postdates their `knowledge_time`: 0 |
 | Directory | **26 pulls** · **16 confirmed** against the response's own `Last-Modified` (`source_session_date`); of the rest, **7** predate the field and stay permanently unattributed (`DR-008` c3); **3** do NOT - they were taken after the field existed and the vendor file had not regenerated, so `DirectoryStore.record`'s monotonicity check dropped the claim. Each of those is a re-pull of an already-recorded session, which `DR-008` says should make **zero requests** |
-| Universe coverage | bars stored for 12,937 of 13,188 listed symbols - **98.1%** |
+| Universe coverage | bars stored for 13,008 of 13,188 listed symbols - **98.6%** |
 | Canada | **1 instrument** with bars, 252 bars over one fetch, last 2026-08-02 · **0** `.TO` symbol(s) listed in `directory.duckdb`. `BR-9`'s per-country requirement is unmet in every reported study. Since `DR-003` gap 1 was refuted (2026-08-25) a FORWARD result is blocked by this row rather than by a missing source; a HISTORICAL one also needs point-in-time membership, which the TMX endpoint cannot supply at any price |
 | Classifications | 1,148 instrument(s) carry a sector · 1,046 (**91.1%**) report at least one non-zero weight. The stricter `look_through` count, which also drops a degenerate ETF look-through (`DR-006` §8.7), is lower - derive it with `python tools/measure_sector_cap.py --wide --classifications data/classifications.duckdb` |
 | Track A clock | **4/20** consecutive clean sessions (2026-09-01 to 2026-09-04) · counting from a **deliberate restart on 2026-08-31**, not an outage - `python tools/track_a_streak.py` prints why · `a.run_completes`, computed by `tools/track_a_streak.py` |
@@ -402,8 +402,12 @@ behaving correctly in a task's first week. Ask the machine rather than reading e
 SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data PYTHONPATH=$PWD/src python tools/verify_schedule.py
 ```
 
-What is left is an observation and not an action: nothing yet shows `widen_universe.cmd` survives
-a real Sunday, and 2026-09-06 is the first one.
+~~What is left is an observation and not an action: nothing yet shows `widen_universe.cmd`
+survives a real Sunday~~ — **it was run by hand on 2026-09-04 on the owner's instruction,
+through the registered task rather than the wrapper, and returned `exit 0`** in ten minutes:
+`fetched 3784, failed 216` of a 4,000 budget, the failures being the warrants, units and
+rights that map to no vendor symbol. Gate 26 now judges a real exit code. §2's coverage row
+is regenerated and owns the figure.
 
 **5. Four gates and one policy were added or hardened.** Gate 20 refused a decision record whose
 token appeared only in a comment or a docstring — one record was living on that. Gate 33 stopped
