@@ -54,6 +54,8 @@ from run_pr012 import (
     _window_returns,
     add_vintage_arguments,
     bootstrap_interval,
+    code_version,
+    report_code_drift,
     resolve_vintage,
 )
 from swingdesk.application.universe import ADTV_WINDOW
@@ -161,6 +163,8 @@ def main() -> int:
             raise SystemExit("bar store is empty")
         print(f"vintage: bars at {as_of.isoformat()}, classifications at {clock.isoformat()} "
               f"({vintage.source})")
+        if args.reproduce:
+            print(report_code_drift(vintage.recorded_code, code_version()["code_hash"]))
 
         benchmark = store.as_of(BENCHMARK, Interval.DAY, Series.RAW, as_of)
         if not benchmark.bars:
@@ -336,6 +340,7 @@ def main() -> int:
         "prereg": "PR-013",
         "exploratory": True,
         "exploratory_reason": "section 0b - the drafter had seen PR-012's results before designing",
+        **code_version(),
         "run_at": clock.isoformat(),
         "snapshot": as_of.isoformat(),
         "window": [window[0].isoformat(), window[1].isoformat()],

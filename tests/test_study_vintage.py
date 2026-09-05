@@ -109,3 +109,74 @@ def test_a_record_missing_either_vintage_REFUSES_rather_than_falling_back(tmp_pa
 
     assert missing in str(refusal.value)
     assert "cannot be reproduced" in str(refusal.value)
+
+
+# ------------- AUD-001: a replay pins the DATA and not the CODE, added 2026-09-05
+#
+# `PR-012` pinned to its own snapshot did not reproduce its SECTOR arm, and the published
+# explanation blamed the classification store. It was wrong. Two commits had changed how a stored
+# row is JUDGED, and 23 instruments flipped their usability verdict on the SAME rows at the SAME
+# clock - 23 being the entire discrepancy. A replay that prints its numbers without saying the code
+# moved invites exactly that misattribution.
+
+
+def test_a_study_records_the_code_it_was_interpreted_by() -> None:
+    """The asymmetry this closes: `RunManifest` has carried `code_hash` since the journal existed
+    and a study result carried neither it nor `code_dirty`."""
+    version = runner.code_version()
+
+    assert set(version) == {"code_hash", "code_dirty"}
+    assert isinstance(version["code_dirty"], bool)
+    assert version["code_hash"]
+
+
+def test_a_replay_says_UNAVAILABLE_when_the_study_recorded_no_code() -> None:
+    """Every study published before 2026-09-05 is in this position permanently. Saying so is the
+    only honest output - `unavailable` is not `pass`."""
+    line = runner.report_code_drift(None, "abc1234")
+
+    assert "UNAVAILABLE" in line
+    assert "AUD-001" in line
+
+
+def test_a_replay_says_MOVED_when_the_code_has_changed() -> None:
+    """The line that would have prevented the wrong finding."""
+    line = runner.report_code_drift("61f6d6e", "abc1234")
+
+    assert "MOVED" in line
+    assert "61f6d6e" in line and "abc1234" in line
+    assert "REINTERPRETATION" in line
+
+
+def test_a_replay_says_nothing_alarming_when_the_code_is_unchanged() -> None:
+    """Positive control. Without it the two assertions above pass for a function that always
+    shouts, which would be the manufactured alarm `AGENTS.md` section 12 warns about."""
+    line = runner.report_code_drift("abc1234", "abc1234")
+
+    assert "unchanged" in line
+    assert "MOVED" not in line and "UNAVAILABLE" not in line
+
+
+def test_reproduce_carries_the_recorded_code_into_the_vintage(tmp_path: Path) -> None:
+    """End to end: the field reaches the resolver, not just the payload."""
+    path = tmp_path / "PR-012.json"
+    path.write_text(
+        json.dumps({"snapshot": SNAPSHOT, "run_at": RUN_AT, "code_hash": "61f6d6e"}),
+        encoding="utf-8",
+    )
+
+    vintage = runner.resolve_vintage(as_of_arg=None, reproduce=True, result_path=path, now=NOW)
+
+    assert vintage.recorded_code == "61f6d6e"
+
+
+def test_a_result_without_a_code_hash_still_reproduces(tmp_path: Path) -> None:
+    """A missing code version must NOT refuse the replay - every published study lacks one, and
+    refusing would make them all unreproducible over a field invented after they ran."""
+    path = tmp_path / "PR-012.json"
+    path.write_text(json.dumps({"snapshot": SNAPSHOT, "run_at": RUN_AT}), encoding="utf-8")
+
+    vintage = runner.resolve_vintage(as_of_arg=None, reproduce=True, result_path=path, now=NOW)
+
+    assert vintage.recorded_code is None
+    assert vintage.as_of is not None
