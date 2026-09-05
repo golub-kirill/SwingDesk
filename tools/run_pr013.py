@@ -52,7 +52,9 @@ from run_pr012 import (
     _beat_prefix,
     _daily_returns_by_session,
     _window_returns,
+    add_vintage_arguments,
     bootstrap_interval,
+    resolve_vintage,
 )
 from swingdesk.application.universe import ADTV_WINDOW
 from swingdesk.contracts.market import BarSeries, Interval, Series
@@ -140,17 +142,25 @@ def main() -> int:
     parser.add_argument("--write", action="store_true",
                         help="publish docs/prereg/results/PR-013.json. Without it, nothing is "
                              "written and the run is a measurement only")
+    add_vintage_arguments(parser)
     args = parser.parse_args()
 
-    clock = datetime.now(UTC)
+    vintage = resolve_vintage(as_of_arg=args.as_of, reproduce=args.reproduce,
+                              result_path=RESULT, now=datetime.now(UTC))
+    if args.reproduce and args.write:
+        raise SystemExit("--reproduce does not publish. Drop --write, or run without --reproduce.")
+
+    clock = vintage.clock
     with (
         BarStore(args.data / "bars.duckdb") as store,
         DirectoryStore(args.data / "directory.duckdb") as directory,
         ClassificationStore(args.data / "classifications.duckdb") as classifications,
     ):
-        as_of = store.latest_knowledge_time()
+        as_of = vintage.as_of or store.latest_knowledge_time()
         if as_of is None:
             raise SystemExit("bar store is empty")
+        print(f"vintage: bars at {as_of.isoformat()}, classifications at {clock.isoformat()} "
+              f"({vintage.source})")
 
         benchmark = store.as_of(BENCHMARK, Interval.DAY, Series.RAW, as_of)
         if not benchmark.bars:

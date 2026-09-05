@@ -972,7 +972,9 @@ evening returned every one of those sessions, clean. The owner asked; nobody had
       150-instrument pass; all 1,141 selection members identical member for member against the
       pre-change loop written out verbatim; `tools/verify_reproducible.py` reproducing
       `50e1646b933a4a9d` - the hash recorded on `master` before the change - over the full universe;
-      **`tools/run_pr005_replay.py` reproducing all 20 of PR-005's cells** through the backtest
+      **`tools/run_pr005_replay.py` reproducing all 20 of PR-005's cells** — at that store
+      vintage; run today it reports a mean-R drift in the ten holdout cells, from a later vendor
+      revision that says nothing about this code change (§6) — through the backtest
       engine; and **`tools/run_pr012.py` reproducing all 12 of PR-012's cells** - trade counts,
       deferred counts, mean net R and both CI bounds - through `run_book`, the ranking and the
       classification store, ending on the same `REFUSED` for the same reason. So it moves no
@@ -1054,10 +1056,137 @@ evening returned every one of those sessions, clean. The owner asked; nobody had
       **The `why_not` line stays too, and stays falsified in its practical implication** - that is
       what correcting forward means. The bytes are gone; the RESULT came back on the next scheduled
       run, and the note above is the record of it.
-      **What still turns on this is `PR-009`.** It was told to register against this replay's
-      vintage rather than `PR-005`'s published aggregate, and on the current store those agree while
-      the CSV on disk does not. That instruction is unchanged by this ruling: register against a
-      replay anyone can reproduce today, and cite the dated vintage above for why the CSV differs.
+      ~~**What still turns on this is `PR-009`.** It was told to register against this replay's
+      vintage rather than `PR-005`'s published aggregate, and on the current store those agree
+      while the CSV on disk does not.~~ **THEY NO LONGER AGREE — measured 2026-09-05 by running
+      the command this entry opens with.** The instruction stands: register against a replay
+      anyone can reproduce today, and cite the dated vintage above for why the CSV differs.
+      What changed is that "today" is a THIRD vintage rather than `PR-005`'s.
+
+      **RE-MEASURED 2026-09-05, AND THIS ENTRY'S STABILITY CLAIM IS FALSE.** It says *"the
+      in-window `knowledge_time` maximum is 2026-08-17 18:30, so nothing since has touched this
+      sample"*. True on 2026-08-24; false from **2026-08-27**, three days later and three days
+      BEFORE the ruling that rests on it. The in-window maximum is now `2026-08-27 18:30:05`.
+      ```bash
+      PYTHONPATH=$PWD/src python tools/run_pr005_replay.py --data C:/PycharmProjects/SwingDesk/data
+      ```
+      **What it says today: `MISMATCH: 0 cell(s) on trade count, 10 on mean R`.** Every trade
+      count still reproduces. The ten that do not are **exactly the ten holdout cells** and
+      every primary cell is exact — which is the diagnosis rather than a coincidence, because
+      holdout begins 2023-07-28 and every changed bar sits inside it.
+      **One instrument moved, and it is a REVISION, not a backfill.** `LEG`, 220 bars over
+      sessions 2025-08-28 → 2026-07-17, all written by the scheduled pass at 2026-08-27
+      18:30:05. Those sessions were already stored: 222 distinct session dates hold 442 rows,
+      222 of them written before 2026-08-18. Nothing else among the 68 admitted instruments
+      changed inside the window — the rest gained only sessions after 2026-07-31, which is
+      ordinary accretion outside the study.
+      **And the fields that moved are the ones the revision guard does not watch.** Version 1
+      against version 2, over those 220 sessions:
+
+      | field | sessions changed, of 220 |
+      |---|---|
+      | `close` | **0** |
+      | `open` | 20 |
+      | `high` | 70 |
+      | `low` | 81 |
+      | `volume` | 219 |
+
+      The moves are half a cent — `9.820000` → `9.815000`. **`data.revision_epsilon` is scoped
+      to `close` alone** by the owner's ruling on `DR-016` §8.4, for a measured reason that
+      still holds: the wide form raised roughly 94 faults an evening and over close alone it
+      fired zero times. **The guard was silent because nothing it watches changed, and it was
+      right to be.**
+      **The chain from there is checked, not narrated** (`AGENTS.md` §10.4): `high` and `low`
+      are ATR's inputs, ATR is the R denominator, and a cell's mean is taken over R. So gates
+      keyed on the close and the pivots produced **identical trades**, while the denominator
+      moved in the sixth decimal. That is exactly the observed shape — 0 cells differ on count,
+      10 on mean R, and the 10 are the period the revised bars occupy.
+      **MEASURED ACROSS THE WHOLE RESEARCH RECORD, 2026-09-05, because the question below was
+      put abstractly and got the honest answer *"I have no answer"*.** A principle is hard to
+      rule on; a frequency is not. `tools/measure_study_drift.py` asks, per reported study,
+      what the store did to its sample after it ran:
+      ```bash
+      PYTHONPATH=$PWD/src python tools/measure_study_drift.py --data C:/PycharmProjects/SwingDesk/data
+      ```
+      **Two of the three measurable studies cannot be asked at all, and saying so is the
+      result rather than a gap.** `PR-001` and `PR-005` read at 2026-08-03, before ANY of
+      their 68 names had a bar in this store — which is what `PR-005-trades-provenance.json`'s
+      `why_not` already recorded and what `run_pr005_replay.py` reads `now` for. Their drift is
+      unmeasurable by construction, so the tool prints `UNAVAILABLE` instead of a number.
+      **`PR-013` can be asked, and the answer is not the half-cent story above.** Since its
+      recorded snapshot: **1,220 revised rows inside its own window, and zero new sessions** —
+      so every one of them is a rewrite of a session the study had read. Three names carry it:
+
+      | name | revised sessions | what happened to the close |
+      |---|---|---|
+      | `APH` | 727 | **×0.5** — a 2:1 split re-adjusted through history |
+      | `DFNS` | 220 | **×125** — a reverse split, same thing at the other end |
+      | `LEG` | 220 | unchanged — the tick corrections that moved `PR-005` |
+
+      **So there are two populations and only one of them is subtle.** A corporate-action
+      re-adjustment moves prices by a FACTOR and is the vendor being correct; a tick correction
+      moves them by half a cent and is invisible to a close-scoped guard. Both land inside a
+      closed study window, and neither is a fault in the store — it keeps every version.
+      **AND THE RUNNERS DO NOT READ THE SNAPSHOT THEY RECORD.** `run_pr012.py:254` and
+      `run_pr013.py:151` both take `as_of = store.latest_knowledge_time()`, then write
+      `"snapshot": as_of` into the result. The value that would make the study reproducible is
+      recorded and never read back. A re-run today reads `APH` at half the price the study saw
+      and `DFNS` at a hundred and twenty-five times it.
+      **That matters beyond tidiness because a re-run is used as EVIDENCE.** `HANDOFF.md` and
+      §5 of this file both cite `run_pr012.py` reproducing all 12 of `PR-012`'s cells as proof
+      that a code change moved nothing. That argument reads the store at `now`, so a split
+      landing in the window breaks it for a reason that has nothing to do with the code.
+      **The decision is now a small one, and it is still the owner's** (`AGENTS.md` §14 —
+      nothing is built here):
+      - **(a) read the recorded snapshot back.** `store.as_of` already takes a knowledge_time;
+        the runners pass `latest` where they could pass `record["snapshot"]`. Studies whose
+        vintage is IN the store become exactly reproducible, forever, and the byte-identity
+        argument above becomes sound. It does nothing for `PR-001` and `PR-005`, whose bytes
+        were never here.
+      - **(b) leave it and date every re-run**, which is the 2026-08-30 ruling generalised.
+        Cheaper today, and it means no reproduction claim can ever be more than *at that
+        vintage*.
+      ~~**This entry recommends (a) and does not take it.**~~ **RULED (a) AND BUILT 2026-09-05,
+      owner instruction.** `run_pr012.py` and `run_pr013.py` take `--as-of` and `--reproduce`;
+      the shared resolver is `run_pr012.resolve_vintage`, which `run_pr013` already imports
+      from. Four things it does, and the last two are what make it honest:
+      - **`--reproduce` reads the study's own record back** — its `snapshot` for the bars and
+        the directory, its `run_at` for the classifications. **Two stores, two clocks**
+        (`AGENTS.md` §12): pinning the bars and reading classifications at `now` would not be
+        a reproduction, and the first draft of this did exactly that.
+      - **the default is unchanged.** A fresh run still reads `latest_knowledge_time()`;
+        pinning a NEW study to an old vintage is the opposite mistake.
+      - **`--reproduce --write` is REFUSED.** A reproduction that publishes is a republication
+        under an old vintage; `run_pr005_replay.py` refuses the same thing for the same reason.
+      - **a record missing either field refuses rather than falling back.** A study published
+        before those fields existed cannot be reproduced, permanently — reading today's store
+        and printing cells would be the `unavailable`-as-`pass` inversion this file collects.
+      `--as-of` alone says in its own printed line that it pins the bars and **not** the
+      classifications, because claiming both would be the §10.8 overstatement. Every run prints
+      which vintage it used and where that came from.
+      8 tests in `tests/test_study_vintage.py`; mutating `--reproduce` to ignore the record it
+      had just read killed exactly the two that assert it, and nothing else.
+      **Nothing was re-run and no published result was touched.** `PR-012` costs 13m37s and a
+      re-run is the owner's to ask for; what changed is that one is now possible.
+
+      **THE ORIGINAL QUESTION, and it is the owner's, because it changes what a guard is FOR.**
+      `DR-016` §8.4 scoped the revision guard to the DECISION PATH, where the close is what is
+      read and a wider rule cries wolf. **A published study is a different subject with a
+      different sensitivity** — it reaches `high` and `low` through ATR — and nothing watches
+      that. A result can drift silently on a store this project is right to keep refreshing.
+      **Nothing here proposes widening `revision_epsilon`**: that was measured and rejected for
+      the path it governs, and re-opening it on this evidence would be carrying a conclusion
+      across populations, which is the error this file keeps recording. The candidate is a
+      separate check whose subject is a REPLAY rather than a bar.
+      **The 2026-08-30 ruling is not disturbed.** *Leave it and date it* was chosen because both
+      the log and a replay are correct about their own vintage, and a third vintage strengthens
+      that reasoning. What needs saying out loud is that the drift is **ongoing** rather than a
+      single event on 2026-08-17.
+      **Two places cite the replay's 20-cell reproduction and are deliberately NOT rewritten** —
+      `HANDOFF.md`'s optimisation note and §5's version of it. Both claim a CODE CHANGE moved
+      nothing, measured on that store at that time, and both are true of their vintage. Each now
+      carries one clause pointing here, because a reader who runs the command today meets a
+      `MISMATCH` that has nothing to do with what those sentences are about.
 - [ ] **`[c]` UDR-004 — regime ontology.** Three candidate lists now: ТЗ's 8, course v5.0's 11,
       v7.0's 7 (`RECONCILIATION_PLAN.md` §5). Ties to `USER_STORIES.md`:304 (US-004 unsatisfiable
       while `regime.classifier_rule` is contested).
@@ -2822,6 +2951,30 @@ is for where no gate can reach.
       landed on 2026-09-04 and `HANDOFF.md` §2 owns what the number is today
       (`AGENTS.md` §10.5). The command above the fence is the answer, and the wrapper
       rebuilds that block itself for exactly this reason (`AGENTS.md` §10.6).
+      **RAN AGAIN 2026-09-05 ON OWNER INSTRUCTION, AND THE SECOND PASS ADDED NOTHING — which
+      is a finding about the REPORT, not about the pass.** `exit 0`, `fetched 3783, failed
+      217`, and the eligible names covered went **12,948 → 12,948**. The first pass added 71;
+      this one added zero, and it was not idle — it spent its whole budget.
+      **The remainder cannot be covered by any number of passes.** 207 eligible symbols have
+      never been fetched and the vendor serves none of them:
+      - **133** carry `.U`, `.W` or `.R` — units, warrants and rights, which is exactly what
+        `universe.UNMAPPABLE_SUFFIXES` names;
+      - **the other 74 are the same classes spelled without the dot** — `ACAAW`, `APACR`,
+        `FBYDP`, `BCTXL` — so the constant does not catch them.
+      Every one answers *"possibly delisted; no price data found"*.
+      **So `"1 more pass(es) at this budget to cover the directory"` prints forever**, and each
+      pass spends part of its budget re-attempting names the vendor has never served. A line
+      promising convergence over a set that cannot converge is `AGENTS.md` §12's
+      manufactured-alarm shape pointed the other way: it manufactures an expectation.
+      **Two things follow, both the owner's because both change what a scheduled pass does** —
+      nothing is built here:
+      - should the queue skip classes the vendor has never served? It would return budget to
+        names that can use it. Against: a suffix rule is a guess about instrument class, and
+        `UNMAPPABLE_SUFFIXES` as written would catch only 133 of the 207;
+      - should the closing line say **unreachable** instead of counting passes? Nearly free,
+        and it changes no fetch behaviour at all.
+      **The mechanism itself is sound and is not what is in question:** the queue is
+      never-fetched first and then the stalest, and it did add 71 names on its first run.
       **So this entry is closed on both halves**: the tier is registered, and the thing it
       registers has been shown to run.
 
