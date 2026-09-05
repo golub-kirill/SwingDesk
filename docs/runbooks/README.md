@@ -426,6 +426,13 @@ clear it, and both are yours:
 TECH: the book and Alpaca paper trading disagree about 1 position(s) - AIS (book_only)
 ```
 
+**Most of these close themselves now — `DR-038`, 2026-09-04.** The evening's `sync-fills` step
+reads the activities feed, and when a SELL fill traces **by order id** to an order this system sent,
+it closes the position with the venue's own price and prints `CLOSED`. So the message below means
+one of two things: the exit is not traceable to an order of ours — a hand-sale in the dashboard —
+or `sync-fills` refused it and said why, just above. **Neither is a case the machine may decide**,
+which is the point of it stopping.
+
 **This is a position that EXITED at the venue and was never recorded here.** Its stop fired
 overnight, or it was sold in the dashboard. The book still carries it, so it still holds a slot in
 `risk.max_concurrent_positions`, and every pass will keep stopping until the two agree.

@@ -3633,6 +3633,28 @@ is for where no gate can reach.
 
 ## 6b. The operational chain — what a full cycle needs
 
+- [x] **`[v]` THE CLOSING HALF OF THE LOOP IS AUTOMATIC NOW — `DR-038`, owner ruling 2026-09-04.**
+      `DR-031` taught `sync-fills` to OPEN a position from the venue's word and nothing could close
+      one, so a position that ended at the venue held its cap slot for ever and stopped every
+      submission after it. The live instance cost a whole evening: 320 sized `Trade` decisions, an
+      armed switch, and nothing sent.
+      **It closes on a FILL and never on absence**, traced by ORDER ID to a `sent` row in
+      `submissions` — the same standard `DR-031` applies to shares arriving. The exit price is the
+      venue's, share-weighted across the executions; the date is the last fill's session.
+      **The owner was asked the wider question and ruled the narrower answer**, which is recorded in
+      `DR-038` §4 together with the argument this session got WRONG first: absence was called unsafe
+      because an empty response cannot be told from a failed read, and that is false — the adapter
+      raises on any non-200, on bad credentials and on a non-JSON body. The real objection is that
+      absence carries no PRICE, and `b.min_sample` counts closed trades, so a close with no price is
+      a row with no information.
+      Refuses a partial, an oversell and a sell dated before the entry; each leaves the divergence
+      standing so `DR-027` §11 keeps stopping submission, which is the conservative direction.
+      Eight tests on the pure decision, four guards mutated and each kills its own test and no
+      other. Derive the state, never from this entry:
+      ```bash
+      python -m swingdesk.presentation.cli broker --data data
+      ```
+
 - [x] **`[v]` THE BOOK COULD NOT CLOSE WHAT THE VENUE NO LONGER HELD, AND IT STOPPED THE MACHINE
       DEAD — found and fixed 2026-09-04.** Traced from a live symptom rather than a review: the
       18:30 pass produced **320 `Trade` decisions, sized and eligible**, with the switch armed, and

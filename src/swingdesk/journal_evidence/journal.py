@@ -353,6 +353,28 @@ class Journal:
         ).fetchone()
         return Submission(*row) if row else None
 
+    def submission_for_order(self, venue_order_id: str) -> Submission | None:
+        """The attempt this system made that the venue gave `venue_order_id` to, or `None`.
+
+        **An exact anchor rather than the latest row for a symbol**, and that is the whole reason it
+        exists. `DR-038` closes a book position from a SELL fill, and the fill carries the ORDER it
+        settled - so asking "is this order one of ours" is answerable exactly, by id, instead of by
+        assuming the newest attempt for that instrument must be the one that sold. An instrument
+        this system entered, protected and re-protected carries several sent rows, and picking the
+        wrong one would credit a close to an order that did not produce it.
+
+        `outcome = 'sent'` for the same reason `latest_sent_submission` restricts to it: an attempt
+        that never reached the venue cannot have filled.
+        """
+        row = self._connection.execute(
+            "SELECT run_id, client_order_id, attempted_at, session_date, instrument_id, shares, "
+            "limit_price, stop_price, outcome, detail, venue_order_id, venue_status "
+            "FROM submissions WHERE venue_order_id = ? AND outcome = 'sent' "
+            "ORDER BY attempted_at DESC, client_order_id DESC LIMIT 1",
+            [venue_order_id],
+        ).fetchone()
+        return Submission(*row) if row else None
+
     def decisions_for(self, run_id: str) -> list[DecisionRecord]:
         rows = self._connection.execute(
             "SELECT instrument_id, decision, reason_code, reason, parameter_id, previous_decision "

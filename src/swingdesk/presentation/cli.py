@@ -44,7 +44,7 @@ from swingdesk.reference_data.directory import DirectoryStore
 # private import is gone rather than being explained again. Same reasoning promoted
 # `to_base_currency`, which the portfolio cap needs for exactly the DR-010 reason this note gives:
 # reuse the one implementation, never copy the formula.
-from swingdesk.trade_management import drawdown, manage, portfolio
+from swingdesk.trade_management import adoption, drawdown, manage, portfolio
 from swingdesk.trade_management.sizing import (
     Refusal,
     RiskSnapshot,
@@ -1160,6 +1160,7 @@ def _sync_fills(args: argparse.Namespace) -> int:
     print(f"{policy.label}  {len(held)} holding(s) at the venue")
 
     recorded = 0
+    closed = 0
     untraceable: list[str] = []
     refusals: list[str] = []
 
@@ -1221,7 +1222,56 @@ def _sync_fills(args: argparse.Namespace) -> int:
                   f"entry {position.entry_price} stop {position.current_stop} "
                   f"costs {position.initial_costs_per_share}/sh  opened {position.opened_on}")
 
-    if not recorded and not untraceable and not refusals:
+        # ------------------------------------------------------------------ DR-038: the close half
+        #
+        # `DR-031` taught this command to open a position from the venue's word. Until `DR-038` it
+        # could not close one, and `closed_on` was written only for an `EXIT_NOW` the system had
+        # proposed FROM BARS - so a position that ended at the venue stayed open in the book for
+        # ever, held its slot in `risk.max_concurrent_positions`, and `DR-027` §11's guard stopped
+        # every submission after it. Measured 2026-09-04: 320 sized `Trade` decisions and an armed
+        # switch, blocked by one row nothing could write.
+        #
+        # **It closes on a FILL and never on absence.** A position missing from the venue is not
+        # evidence: the silence could be a hand-sale or a transfer. What closes a position is a
+        # positive record of shares leaving, traced by ORDER ID to something this system sent -
+        # the same standard `DR-031` applies to shares arriving. Anything else stays `TECH` and a
+        # person's.
+        at_venue = {holding.symbol for holding in held}
+        for position in store.open_as_of(now):
+            if position.instrument_id in at_venue:
+                continue
+            exit_ = adoption.closing_exit(
+                position, fills, lambda order_id: journal.submission_for_order(order_id) is not None
+            )
+            if exit_ is None:
+                # No sell of ours to attribute it to. `_broker`'s reconciliation reports it and the
+                # owner closes it with `close-position`; this stays silent rather than guessing.
+                continue
+            if isinstance(exit_, Refusal):
+                refusals.append(f"{position.instrument_id}: {exit_}")
+                continue
+
+            if args.dry_run:
+                print(f"  WOULD CLOSE   {position.instrument_id:<10} {exit_.shares} sh "
+                      f"at {exit_.price} on {exit_.closed_on}")
+                closed += 1
+                continue
+
+            reason = (
+                f"closed at the venue: {exit_.shares} share(s) sold at {exit_.price} on "
+                f"{exit_.closed_on}, settling order(s) {', '.join(exit_.order_ids)} placed by this "
+                f"system. Activities {', '.join(exit_.activity_ids)}."
+            )
+            try:
+                _record_venue_close(store, position, exit_, reason, now)
+            except Exception as unwritable:  # noqa: BLE001 - loud, and the rest still record
+                refusals.append(f"{position.instrument_id}: could not be closed: {unwritable}")
+                continue
+            closed += 1
+            print(f"  CLOSED    {position.instrument_id:<10} {exit_.shares} sh "
+                  f"at {exit_.price} on {exit_.closed_on}")
+
+    if not recorded and not closed and not untraceable and not refusals:
         print("  nothing to record - the book already describes every holding")
 
     for reason in refusals:
@@ -1238,6 +1288,52 @@ def _sync_fills(args: argparse.Namespace) -> int:
         return 2
     return 0
 
+
+def _record_venue_close(
+    store: PositionStore, position: Position, exit_: adoption.VenueExit,
+    reason: str, now: datetime,
+) -> None:
+    """Write the close the venue reported, through the one chain that defines what closing means.
+
+    Not a second definition of `closed_on`: the `EXIT_NOW` is proposed, answered and applied exactly
+    as `close-position` and `respond` do it, so there stays one place that knows what closing a
+    position does to the book. The `Fill` carries the venue's own price, which is what makes the
+    trade's outcome computable at all - a close recorded without one is a closed trade with no
+    result, and `b.min_sample` counts closed trades.
+
+    The approval is recorded against `DR-038` rather than a person, and the reason says so. That is
+    the ratified boundary: the trade already happened at the venue, and writing it down is
+    bookkeeping - the same argument `DR-031` makes for the opening half.
+    """
+    from swingdesk.contracts.position import ActionKind
+
+    before = set(store.action_kinds_for(position.position_id))
+    store.propose(ManagementAction(
+        position_id=position.position_id, proposed_at=now, kind=ActionKind.EXIT_NOW,
+        reason_code="TECH", reason=reason, old_stop=position.current_stop,
+    ))
+    appeared = set(store.action_kinds_for(position.position_id)) - before
+    if len(appeared) != 1:
+        raise ValueError(
+            f"{position.position_id} already carries an unanswered EXIT_NOW; answer it with "
+            f"`swingdesk respond` rather than closing around it"
+        )
+    sequence = appeared.pop()
+    store.respond(position.position_id, sequence, choice=ActionStatus.APPROVED,
+                  reason=reason, at=now)
+    proposal = store.proposal_at(position.position_id, sequence)
+    if proposal is None:  # pragma: no cover - written by the `propose` call directly above
+        raise ValueError(f"{position.position_id} #{sequence} vanished between writing and reading")
+    applied = manage.apply_approved(
+        position, proposal.model_copy(update={"status": ActionStatus.APPROVED}), now,
+    )
+    # The venue's date, not the clock's: the store is bitemporal and the exit is an EVENT.
+    store.record(applied.model_copy(update={"closed_on": exit_.closed_on}))
+    store.record_fill(Fill(
+        position_id=position.position_id, sequence=sequence, filled_on=exit_.closed_on,
+        shares=exit_.shares, price=exit_.price, commission=Decimal(0),
+        planned_price=position.current_stop, recorded_at=now,
+    ))
 
 def _broker(args: argparse.Namespace) -> int:
     """Read the paper account, print it, and say whether it agrees with the book.

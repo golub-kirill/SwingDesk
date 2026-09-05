@@ -28,11 +28,12 @@ should say.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 
-from swingdesk.contracts.broker import BrokerPosition, PositionSide
+from swingdesk.contracts.broker import BrokerFill, BrokerPosition, PositionSide, Side
 from swingdesk.contracts.position import Position
 from swingdesk.platform.parameters import ParameterRegistry
 from swingdesk.trade_management.sizing import Refusal, costs_per_share
@@ -129,3 +130,88 @@ def adopt(
 #: listing and its costs are USD. Named rather than defaulted to a base currency, because
 #: `AGENTS.md` §3 keeps USA and Canada separate and `account.base_currency` could one day be either.
 VENUE_CURRENCY = "USD"
+
+
+@dataclass(frozen=True, slots=True)
+class VenueExit:
+    """The venue's own account of how a position ended: what filled, at what, and settling which order."""
+
+    shares: int
+    price: Decimal
+    closed_on: date
+    order_ids: tuple[str, ...]
+    activity_ids: tuple[str, ...]
+
+
+def closing_exit(
+    position: Position,
+    fills: Sequence[BrokerFill],
+    ours: Callable[[str], bool],
+) -> VenueExit | Refusal | None:
+    """How the venue says a position ended, or a coded refusal, or `None` when it cannot say.
+
+    **This is `adopt` in the other direction and it obeys the same rule: only what THIS SYSTEM
+    placed.** `DR-031` adopts an entry because the fill traces to an order in `submissions`; a close
+    is attributed the same way, by asking whether the order the SELL fill settled is one of ours.
+    `ours` answers that by id, which is exact - the alternative, assuming the newest attempt for an
+    instrument must be the one that sold, credits a close to an order that may not have produced it.
+
+    **It never reads ABSENCE.** A position missing from the venue is not evidence of anything here:
+    the venue's silence could be a hand-sale, a transfer, or an account this system does not
+    understand. What closes a position is a POSITIVE record of shares leaving - the same standard
+    `DR-031` applies to shares arriving. `None` means the venue offered no such record, and the
+    caller leaves the divergence to a person (`DR-027` §11).
+
+    Three refusals, each a fact the book cannot describe rather than a threshold:
+
+      - fewer shares sold than held - a PARTIAL exit, which is a different action with different
+        vocabulary and a size the book would otherwise record wrongly;
+      - more shares sold than held - the book and the venue disagree about the size, and guessing
+        which is right is exactly what a reconciliation guard exists to prevent;
+      - a sell dated before the position opened, which cannot have closed it.
+
+    Pure, like everything else here: no store, no clock, no network.
+    """
+    relevant = [
+        fill for fill in fills
+        if fill.symbol == position.instrument_id
+        and fill.side is Side.SELL
+        and ours(fill.order_id)
+    ]
+    if not relevant:
+        return None
+
+    early = [f for f in relevant if f.transaction_time.date() < position.opened_on]
+    if early:
+        return Refusal(
+            "TECH",
+            f"{position.instrument_id}: a sell dated {min(f.transaction_time.date() for f in early)} "
+            f"cannot have closed a position opened {position.opened_on}. The book and the venue "
+            f"disagree about which position this is.",
+        )
+
+    sold = sum((fill.shares for fill in relevant), start=Decimal(0))
+    if sold < position.shares:
+        return Refusal(
+            "TECH",
+            f"{position.instrument_id}: the venue sold {sold} of {position.shares} shares. A "
+            f"partial exit is a different action from a close and this does not record one.",
+        )
+    if sold > position.shares:
+        return Refusal(
+            "TECH",
+            f"{position.instrument_id}: the venue sold {sold} shares against {position.shares} in "
+            f"the book. Which figure is wrong is a person's question.",
+        )
+
+    # Share-weighted, because a position closed over several partial fills left at several prices
+    # and the average of the PRICES would misreport whichever leg was larger.
+    paid = sum((fill.price * fill.shares for fill in relevant), start=Decimal(0))
+    return VenueExit(
+        shares=int(sold),
+        price=paid / sold,
+        # The LAST fill: the position ended when the last share left, not when the first did.
+        closed_on=max(fill.transaction_time.date() for fill in relevant),
+        order_ids=tuple(sorted({fill.order_id for fill in relevant})),
+        activity_ids=tuple(sorted(fill.activity_id for fill in relevant)),
+    )

@@ -142,3 +142,115 @@ def test_the_position_id_is_derived_from_the_instrument_and_the_session_it_opene
     position = _adopt()
     assert isinstance(position, Position)
     assert position.position_id == "POS-AIS-2026-09-02"
+
+
+# ------------------------------------------------- DR-038: the venue says HOW a position ended
+
+
+def _fill(**kwargs):
+    """One execution from the activities feed, shaped like the AIS sell of 2026-09-04."""
+    from swingdesk.contracts.broker import BrokerFill, FillKind, Side
+
+    base = dict(
+        activity_id="20260904154601553::cda80f58", order_id="ours-1", symbol="AIS",
+        side=Side.SELL, kind=FillKind.FILL,
+        transaction_time=datetime(2026, 9, 4, 19, 46, 1, tzinfo=UTC),
+        price=Decimal("70.03"), shares=Decimal(17), observed_at=KNOWLEDGE,
+    )
+    base.update(kwargs)
+    return BrokerFill(**base)
+
+
+def _position(**kwargs) -> Position:
+    base = dict(
+        position_id="POS-AIS-2026-09-02", version=1, instrument_id="AIS", opened_on=OPENED,
+        entry_price=Decimal("65.70"), shares=17, initial_stop=Decimal("61.70"),
+        current_stop=Decimal("61.70"), initial_costs_per_share=Decimal("0.33"),
+        strategy="test", knowledge_time=KNOWLEDGE,
+    )
+    base.update(kwargs)
+    return Position(**base)
+
+
+OURS = lambda order_id: order_id.startswith("ours")  # noqa: E731 - a one-line predicate reads better
+
+
+def test_a_full_sell_of_our_own_order_closes_the_position() -> None:
+    """The live instance, 2026-09-04: the protective OCO's limit leg filled and the book never
+    learned, so the machine stopped with `TECH` every pass afterwards."""
+    result = adoption.closing_exit(_position(), [_fill()], OURS)
+
+    assert isinstance(result, adoption.VenueExit)
+    assert result.shares == 17
+    assert result.price == Decimal("70.03")
+    assert result.closed_on == date(2026, 9, 4)
+    assert result.order_ids == ("ours-1",)
+
+
+def test_the_price_is_share_weighted_across_partial_fills() -> None:
+    """A position closed over several executions left at several prices, and the mean of the PRICES
+    would misreport whichever leg was larger. 10 at 70 and 7 at 60 is 65.88, not 65.00."""
+    result = adoption.closing_exit(
+        _position(),
+        [_fill(activity_id="a", shares=Decimal(10), price=Decimal(70)),
+         _fill(activity_id="b", shares=Decimal(7), price=Decimal(60),
+               transaction_time=datetime(2026, 9, 4, 19, 50, tzinfo=UTC))],
+        OURS,
+    )
+
+    assert isinstance(result, adoption.VenueExit)
+    assert result.price == Decimal("1120") / Decimal(17)
+    assert result.price != Decimal(65), "the mean of the prices is the wrong answer"
+    assert result.closed_on == date(2026, 9, 4)
+
+
+def test_a_sell_that_is_NOT_ours_closes_NOTHING() -> None:
+    """`DR-031`'s rule in the other direction. A sale this system did not place is somebody trading
+    by hand, and adopting it would be this module deciding that anything at the venue must be ours -
+    the assumption most likely to be wrong on the day it matters."""
+    assert adoption.closing_exit(_position(), [_fill(order_id="theirs-9")], OURS) is None
+
+
+def test_absence_alone_closes_nothing() -> None:
+    """The boundary the owner ratified: closing reads a FILL, never the venue's silence."""
+    assert adoption.closing_exit(_position(), [], OURS) is None
+
+
+def test_a_partial_sell_REFUSES_rather_than_recording_a_close() -> None:
+    """A partial exit is a different action with different vocabulary, and recording one as a close
+    would put a position size in the book that never existed."""
+    result = adoption.closing_exit(_position(), [_fill(shares=Decimal(9))], OURS)
+
+    assert isinstance(result, Refusal)
+    assert result.code == "TECH"
+    assert "partial exit" in result.reason
+
+
+def test_selling_MORE_than_the_book_holds_REFUSES() -> None:
+    """Which figure is wrong is a person's question, and guessing is what a reconciliation guard
+    exists to prevent."""
+    result = adoption.closing_exit(_position(), [_fill(shares=Decimal(20))], OURS)
+
+    assert isinstance(result, Refusal)
+    assert "20" in result.reason
+
+
+def test_a_sell_dated_BEFORE_the_position_opened_REFUSES() -> None:
+    """It cannot have closed this position, so the book and the venue disagree about which position
+    this is - and dating a close from it would put the exit before the entry."""
+    result = adoption.closing_exit(
+        _position(),
+        [_fill(transaction_time=datetime(2026, 8, 30, 15, 0, tzinfo=UTC))],
+        OURS,
+    )
+
+    assert isinstance(result, Refusal)
+    assert "cannot have closed" in result.reason
+
+
+def test_a_BUY_fill_is_not_an_exit() -> None:
+    """The entry's own fills sit in the same feed, and reading one as a close would shut a position
+    on the day it opened."""
+    from swingdesk.contracts.broker import Side
+
+    assert adoption.closing_exit(_position(), [_fill(side=Side.BUY)], OURS) is None
