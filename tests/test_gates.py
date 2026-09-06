@@ -567,6 +567,80 @@ def test_claims_gate_still_reads_an_unset_parameter_as_unset(tmp_path: Path) -> 
     assert "0 failure(s)" in out
 
 
+def test_claims_gate_reads_a_docstring_because_a_docstring_is_prose(tmp_path: Path) -> None:
+    """Only markdown was scanned until 2026-09-05, and the worst instances were in code.
+
+    `pipeline.py` told a reader that every candidate Skips with a coded refusal — the LIVE decision
+    path — for nineteen days after `DR-012` set the two parameters that stopped it. A docstring is
+    what somebody reads before changing the thing it describes, which makes it the worse place for
+    a stale status, not a place the gate can skip.
+    """
+    root = _claims_tree(
+        tmp_path,
+        "The book cap needs `risk.max_open_risk`, which is `unset`.",
+        where="src/swingdesk/trade_management/probe.py",
+    )
+    code, out = run_gate("verify_parameter_claims.py", root)
+    assert code == 1
+    assert "says `risk.max_open_risk` is `unset`; the registry has `owner`" in out
+
+
+def test_claims_gate_catches_stays_unset_which_asserts_the_present_state(tmp_path: Path) -> None:
+    """`stays` and `remains` were on the transition list until 2026-09-05, and they are its inverse.
+
+    A transition names one END of a move; these two assert that the present state continues, which
+    is the claim this gate checks. `risk.per_trade_pct` "stays `unset` by course instruction" stood
+    in two specs for twenty-five days after the owner set it to 1.0.
+    """
+    root = _claims_tree(tmp_path, "`risk.max_open_risk` stays `unset` on purpose.")
+    code, out = run_gate("verify_parameter_claims.py", root)
+    assert code == 1
+    assert "says `risk.max_open_risk` is `unset`" in out
+
+    remains = _claims_tree(tmp_path / "b", "`risk.max_open_risk` remains `unset` deliberately.")
+    code, out = run_gate("verify_parameter_claims.py", remains)
+    assert code == 1, out
+
+
+def test_claims_gate_reads_a_strikethrough_that_wraps_over_several_lines(tmp_path: Path) -> None:
+    """The strike is a property of the passage, not of the line the `~~` happens to land on.
+
+    Prose wrapped at a column limit puts the opening `~~` on one line and the claim on the next, and
+    a per-line check called such a passage live. Found the moment code came into scope: this is
+    `portfolio.py`'s shape, and that file is CORRECT — it strikes the sentence and rules the
+    parameter underneath it. A gate that reddens on a properly corrected file is the false positive
+    that gets a gate bypassed (`CI_POLICY.md` §3).
+    """
+    root = _claims_tree(
+        tmp_path,
+        # The claim sits on a line carrying NEITHER `~~` marker - opener above it, closer below.
+        # A two-line fixture proves nothing: the closing `~~` lands on the claim's own line and the
+        # old per-line check catches it there by accident, so the mutation survives.
+        "~~Choosing which candidate gets the last slot is a ranking,\n"
+        "`risk.max_open_risk` is `unset`,\n"
+        "and rule 4 forbids falling back to id order.~~\n"
+        "**That premise is gone.** The owner ruled it on 2026-08-22.",
+    )
+    code, out = run_gate("verify_parameter_claims.py", root)
+    assert code == 0, out
+
+
+def test_claims_gate_does_not_police_its_own_evidence(tmp_path: Path) -> None:
+    """A gate that reddens on its own fixtures is measuring its instrument, not the tree.
+
+    This file builds documents containing stale claims on purpose, and the runner's docstring quotes
+    the historical instances that justify it. Five of the sixteen hits when code came into scope were
+    exactly that, and excluding them is a rule rather than a convenience.
+    """
+    root = _claims_tree(
+        tmp_path,
+        "`risk.max_open_risk` is `unset`, said the fixture.",
+        where="tests/test_gates.py",
+    )
+    code, out = run_gate("verify_parameter_claims.py", root)
+    assert code == 0, out
+
+
 def _study_tree(tmp_path: Path, claim: str, *, verdicts: tuple[str, ...] = ("reject",)) -> Path:
     """A tree with `len(verdicts)` reported studies and a document making `claim`."""
     results = tmp_path / "docs" / "prereg" / "results"

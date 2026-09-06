@@ -53,11 +53,29 @@ and Yahoo serves no delisted history. ~~so that exposure can never be confirmed 
 **Corrected 2026-08-24, and only half of it was true.** The bound has two halves and the free tier
 closes one of them. **How many names vanished** is measurable: SEC EDGAR keeps every filer back to
 1993, free and official, and dates each delisting by Form 25 or 25-NSE — demonstrated by
-`tools/probe_edgar.py`. **What those trades would have returned** is not: no free source serves the
-price path of a symbol that has gone, so the −2R assumption stays an assumption. So the exposure's
-SIZE can be constrained by measurement and its MAGNITUDE cannot, where the sentence struck above
-said neither could. Struck rather than rewritten, per `AGENTS.md` §15: it was an impossibility
-asserted without a test.
+`tools/probe_edgar.py`. ~~**What those trades would have returned** is not: no free source serves
+the price path of a symbol that has gone, so the −2R assumption stays an assumption. So the
+exposure's SIZE can be constrained by measurement and its MAGNITUDE cannot.~~ Struck rather than
+rewritten, per `AGENTS.md` §15: it was an impossibility asserted without a test.
+
+**AND THE SECOND HALF FELL ON 2026-09-05, to the owner's question rather than to a plan.**
+*"Have you checked EDGAR or Alpaca as a second data provider?"* — EDGAR had been checked and
+Alpaca had not, by anyone, ever. `python tools/probe_alpaca_delisted.py` enumerates **19,188**
+inactive US equities and returns complete daily histories for delisted names: `EIO` **767** bars
+to 2019-01-18, `BHBK` **815** to 2019-03-29, `EEP` **747** to 2018-12-19, `YESR` **277** to
+2018-10-04.
+
+**Three limits, because they bound what this licenses and the finding is worth nothing
+overstated.** The free **IEX** feed serves **zero** of it — every history came from `feed=sip`,
+requested with the paper key this project already holds. Coverage begins **2016-01-04**, so a
+window opening earlier is still unserved; `PR-002`'s and `PR-005`'s both open 2016-08-01, inside
+it. And **whether SIP historical is a free-tier entitlement or an attribute of this account is
+not established** — it is the first thing to settle before anything is built on this.
+
+**What it changes, stated narrowly.** The −2R assumption is no longer forced. It was the last
+unmeasurable input to the bound that erases this project's one positive finding, and the route
+to measuring it now exists. **Nothing here re-derives the bound or reopens `PR-002`** — that is
+a research decision and the owner's, and doing it would need a pre-registration like any other.
 
 **And the SIZE half is now measured rather than merely measurable — 2026-08-25.**
 `python tools/classify_departures.py` classifies every symbol that left the directory between two

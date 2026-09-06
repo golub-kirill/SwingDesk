@@ -239,15 +239,24 @@ def _exit_policy(registry: ParameterRegistry) -> ExitPolicy | Refusal:
     management and the checklist used `2x ATR`. So the stop a candidate was sized on and the stop
     that would later exit it were different distances, and neither carried provenance.
 
-    Both are hard-coded defaults for parameters the registry holds UNSET (`exit.atr_stop_multiple`,
-    `exit.max_holding_period`). "Unset is not default" is a non-negotiable, and this was the one
-    place in the decision path that broke it - the more quietly for the value being plausible.
+    Both were hard-coded defaults for parameters the registry then held UNSET
+    (`exit.atr_stop_multiple`, `exit.max_holding_period`). "Unset is not default" is a
+    non-negotiable, and this was the one place in the decision path that broke it - the more
+    quietly for the value being plausible.
 
-    CONSEQUENCE, stated because it is large: with both parameters unset, every candidate now Skips
-    with a coded refusal naming the parameter, and open positions PAUSE rather than being managed on
-    an invented stop. That is the fail-closed design working, and it is the same shape the 4,486
-    `risk.per_trade_pct` refusals took before that parameter was set. The run still completes, and
-    every candidate still leaves with a decision and a reason code.
+    WHAT THIS FUNCTION DOES TODAY, corrected 2026-09-05. `DR-012` set both on 2026-08-17
+    (`assumed`, 2.0 and 20), so the read SUCCEEDS and candidates size against
+    `policy.stop_for()` - the same distance management and the checklist use, which is the
+    disagreement this function was written to fix. The refusal below is the fail-closed path
+    for a registry that does not hold them, not the path a run takes.
+
+    ~~With both parameters unset, every candidate now Skips with a coded refusal naming the
+    parameter, and open positions PAUSE rather than being managed on an invented stop.~~ That
+    described the merge window `DR-012` closed before it opened; `HANDOFF.md` recorded the
+    correction the same day and this docstring did not, which is why it stood for nineteen
+    days telling a reader the live path refuses everything. The shape is real when it
+    happens - it is the one the 4,486 `risk.per_trade_pct` refusals took - and the run still
+    completes with a decision and a reason code either way.
     """
     try:
         multiple, _ = registry.decimal_value("exit.atr_stop_multiple")

@@ -291,8 +291,11 @@ def _draw_from_universe(
     those 68 names are one study's sample, and they proved to be both more correlated with each
     other and more concentrated by sector than the universe a run actually nominates from.
 
-    Uniform, for the reason §14.1 gives: `rs.ranking_method` is `unset`, and a weighted draw would
-    smuggle in an ordering the system refuses to make.
+    Uniform, for the reason §14.1 gives: when this ran, `rs.ranking_method` was unset and a
+    weighted draw would have smuggled in an ordering the system refused to make. `DR-030` set
+    it to `descending` on 2026-09-01. **The measurement is not re-run and its number is not
+    re-derived** - a uniform draw is what produced the result on record, and a study that
+    quietly adopts a parameter set after it ran would change meaning without changing text.
 
     **Both caps are scored on the SAME draw**, because that is how step 6 applies them - book, then
     correlation, then sector. Measuring each on a book of its own would let the two refusal rates

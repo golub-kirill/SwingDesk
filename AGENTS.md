@@ -595,6 +595,17 @@ open question that follows: §10.5 gives every COUNT an owner and nothing does t
   states, broken in the one path whose docstring promises *counted, never discarded*. **When a
   guard is added, ask what else walks the same data.**
 
+- **A refutation reaches the SUMMARY and the claim survives in the SPECIFICATION.** Measured
+  2026-09-05: twelve documents assert *"no free source serves …"* and **three** carry the
+  correction — `EVIDENCE_SUMMARY.md`, `HANDOFF.md`, `TODO_CLOSED.md`, every one of them a
+  document read for STATE. The specifications and decision records, which are what a session
+  reads for a RULE, still stated it flatly. **So the agent that had written the correction
+  repeated the uncorrected form the same week**, and the owner caught it by asking whether the
+  source had actually been checked. §10.5 gave every measured COUNT one owner; **a CLAIM has
+  no owner**, so a refutation lands in one document and the claim goes on living in eleven.
+  **When a claim falls, `git grep` its words and correct every instance whose SUBJECT it was**
+  — and leave the ones whose subject is different, which here was five of nine.
+
 **The habits:**
 
 - **Name the owner before making the claim.** *Which artifact owns this, and have I opened it?* It

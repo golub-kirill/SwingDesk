@@ -54,8 +54,15 @@ class ExitPolicy:
     """Protective stop plus a maximum holding period.
 
     `atr_stop_multiple` and `max_holding_bars` are study constants pinned by the caller, not
-    registry reads - `exit.atr_stop_multiple` and `exit.max_holding_period` are both `unset` and a
-    study that inherited them would change meaning the day they were ratified.
+    registry reads. A study that inherited them would change meaning the next time an owner
+    edits a value, so it pins its own and never reads the registry here.
+
+    The reason used to be that `exit.atr_stop_multiple` and `exit.max_holding_period` were
+    `unset`. `DR-012` set both on 2026-08-17 - `assumed`, value 2.0 and 20 - so THE RULE
+    SURVIVES AND THE REASON DOES NOT, and the rule matters more now than it did then: the
+    day they were ratified is exactly the day an inheriting study would have moved.
+    `DR-012` section 8.3 ordered this correction in the ratifying commit and it did not
+    happen; the sentence stood false for nineteen days.
     """
 
     atr_stop_multiple: Decimal

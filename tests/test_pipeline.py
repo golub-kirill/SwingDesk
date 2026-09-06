@@ -433,10 +433,17 @@ def test_from_state_is_read_as_of_the_run_start_not_as_of_now(stores, registry) 
 
 
 def test_an_unset_exit_policy_refuses_rather_than_defaulting(stores, registry) -> None:
-    """`exit.atr_stop_multiple` and `exit.max_holding_period` are UNSET in the real registry, and
-    the pipeline used to paper over that with a literal `ExitPolicy(Decimal("2.0"), 20)` in two
-    places - while the candidate path sized against `entry - 1x ATR`, a third distance that matched
-    neither.
+    """`DR-012` SET both parameters on 2026-08-17, so this test builds an unset registry rather
+    than finding one - see the `status: unset` override below. It is still the check that
+    matters: it fixes the behaviour for the day a parameter is retired or an owner clears one,
+    which is when "unset is not default" has to hold.
+
+    (The first line read *"are UNSET in the real registry"* until 2026-09-05, which was true
+    when written and false for nineteen days after. The assertions never depended on it.)
+
+    The pipeline used to paper over the unset case with a literal `ExitPolicy(Decimal("2.0"), 20)`
+    in two places - while the candidate path sized against `entry - 1x ATR`, a third distance that
+    matched neither.
 
     "Unset is not default" is a non-negotiable, and this was the one place in the decision path that
     broke it. With the parameters unset every candidate now Skips with a coded refusal naming the
