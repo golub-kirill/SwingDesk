@@ -479,6 +479,47 @@ rather than entries gives −0.365% ±0.821 and a net of +0.049% — nothing. Th
 sparse early dates carrying one instrument; the entry-weighted mean is what a book actually earns
 and is the one reported. A result that flips on a weighting choice has not been shown.
 
+## 13. The universe does not lose to its peers. It loses to `SPY`, and that is a style gap
+
+Measured 2026-09-06. `python tools/measure_benchmark_fit.py`, evidence in
+`docs/decisions/measurements/benchmark-fit-2026-09-06.json`. **EXPLORATORY; sets nothing.**
+`rs.benchmark` is ratified and only the owner moves it.
+
+**Why this was worth measuring.** `PR-014`'s registered control found the equal-weighted admitted
+universe losing to `SPY` by 1.58% a year on the primary window and 4.27% on the holdout — the whole
+pool a card selects from trailing the index that judges it. And the comparison is load-bearing:
+`k.strategy_rejected` fires when *"the expectancy CI lies entirely below the benchmark"*, so a wrong
+benchmark rejects a working strategy or accepts a broken one.
+
+**The criterion is TRACKING, never excess**, and that is the whole design. Choosing the index a card
+beats is choosing the answer. The honest benchmark is the closest passive alternative to the
+universe, and the strategy is nowhere in that calculation.
+
+103 periods of 21 sessions, the full decade:
+
+| index | correlation | tracking error | universe gap | *(card excess)* |
+|---|---|---|---|---|
+| **MDY** | **0.982** | **3.94%** | **+0.36%** | *+6.57%* |
+| RSP | 0.972 | 4.45% | −0.02% | *+6.19%* |
+| IWM | 0.973 | 6.27% | +0.17% | *+6.38%* |
+| VTI | 0.938 | 6.53% | −2.66% | *+3.55%* |
+| **SPY** *(ratified)* | 0.912 | **7.73%** | **−3.02%** | *+3.19%* |
+| QQQ | 0.755 | 13.49% | −8.93% | *−2.72%* |
+
+**`PR-014`'s control finding is an artefact of the benchmark, not a property of the universe.**
+Against MDY, RSP and IWM the gap is **+0.36%, −0.02% and +0.17%** — flat. Against `SPY` it is
+**−3.02%**. The admitted universe is an equal-weighted mid-cap book, and it tracks mid-cap indices
+at half `SPY`'s tracking error. What it "loses" to `SPY` is the mega-cap concentration of 2016–2026,
+which is a different asset rather than a worse strategy.
+
+**The card excess column is a CONSEQUENCE and is italicised for that reason.** It carries no interval
+here; `PR-014` is where the intervals live, and nothing in this section re-establishes significance.
+
+**What it does NOT establish.** Which index the owner wants to be measured against is a preference,
+not a measurement — an owner who wants absolute return should be compared to cash, and one who wants
+to beat the market as a household understands it may well mean `SPY` whatever the tracking says.
+This measures resemblance and nothing else.
+
 ---
 
 **Do not write anything implying more confidence than the above.** `UX_COPY.md` §3 carries the

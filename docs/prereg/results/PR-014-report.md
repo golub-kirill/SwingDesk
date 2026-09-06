@@ -188,6 +188,39 @@ The machine and this page agree: **ACCEPT, 126 sessions, long-short, +9.82% at 3
 is **69 to 81**, and the hurdle from 2.40 to **2.46 sd(SR)**. The pre-registration is not edited:
 §6a was a forecast, and this is where the measured figure belongs.
 
+## AMENDMENT, 2026-09-06, AFTER PUBLICATION: the split is not only a time split
+
+**Found while measuring `rs.benchmark`, and it belongs here rather than buried there.**
+
+`tools/refresh_universe.py` fetches **`--period 2y` by default**, so every instrument the coverage
+pass has ever added carries about two years of bars and no more. Measured over the whole store:
+
+| stored history | instruments | share |
+|---|---|---|
+| a decade (≥ 2000 bars) | 818 | **6.3%** |
+| about two years (400–1999) | 8,741 | 67.2% |
+| under 400 bars | 3,451 | 26.5% |
+
+**This study required 400 bars and admitted 9,544 instruments, but only about 818 of them can be
+priced in 2018.** The cross-section therefore grows from tens of names early to thousands late —
+`quoted-spread-2026-09-06.json` measures the same thing directly: 38 admissible names in February
+2016 against 3,899 in February 2026.
+
+**So the primary window is a SMALL cross-section regime and the holdout is a LARGE one.** The split
+was registered as a time split and is also a population split, and §5 did not say so because nobody
+had measured the store's history distribution.
+
+**What it does and does not change.** Every cell remains correct about what it computed, and the
+horizon ordering is measured within each window separately, so a comparison across horizons inside
+one window is unaffected. What weakens is the **primary-to-holdout confirmation**: the two windows
+do not draw from the same population, so the holdout is a weaker replication than a clean time split
+would be. Combined with the block-length fragility already reported — the holdout's lower bound of
++0.24% does not survive a doubled block — **the honest reading is that the primary window
+establishes the horizon and the holdout does not independently confirm it.**
+
+The fix is a backfill, not a re-analysis: `refresh_universe.py --period 10y` over the admitted
+universe. `TODO.md` §4 carries it.
+
 ## Reproducing
 
 ```bash
