@@ -898,6 +898,42 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 4. Pending decisions
 
+- [ ] **`[v]` THE UNIVERSE ADMITS INSTRUMENTS WHOSE STOP IS NARROWER THAN THE COST OF TRADING THEM
+      — measured 2026-09-06, and it is the owner's to rule.**
+      ```bash
+      PYTHONPATH=$PWD/src python tools/measure_gap_cost.py --data <store>
+      ```
+      `DR-003` screens on **price** and **dollar volume**. Nothing screens on **volatility**, so
+      `SGOV` and `SHV` — Treasury-bill ETFs — clear admission. `SGOV`'s daily range is about
+      **0.011% of price**, so a `2 × ATR` stop on it is roughly 0.02% of price against a round trip
+      costing 0.5%: **the stop is narrower than the cost of trading it by about twenty-five times.**
+      **Measured consequence, `DR-006` §10.3.** Gap cost is monotone in `2 × ATR / price`: below
+      0.005 it is **−5.490R** over 603 gaps, and above 0.05 it is **−1.401R**. **Six per cent of
+      gaps drag the whole mean from about −1.43R to −1.712R.**
+      ~~**This is not a hypothetical corner.** A relative-strength ranking is exactly the selection
+      rule that ranks a steadily-rising T-bill ETF highly in a falling market.~~
+      **TESTED AND REFUTED THE SAME DAY — `DR-006` §11.3.** Across the five worst `SPY` 126-session
+      windows in the store, sub-floor names entered the top decile in **one** of them (the COVID
+      bottom, 8 of 18) and the best of those ranked **52 of 826**. The book holds **four**. A falling
+      market still leaves ninety names up 50–500% — `DRIP`, `DUST`, `VXX`, `AMR`, `BTU` took the top
+      of every window — and a flat instrument at 0% does not outrank them.
+      **So for `CARD-001` the answer is: not worth fixing now.** The card does not select these
+      names, so the screen buys nothing it would ever have paid. It becomes real for a card ranking
+      on something other than relative strength, for a materially larger book, or for any
+      measurement that enters the universe rather than a selection — which is what `DR-006` §10 did
+      and why this surfaced at all.
+      **`risk.stop_too_wide_limit` exists for the opposite case** — `unset`, `read_by: none`,
+      `named_in: [Appendix N code STOP, M48-T0746]`. There is no minimum counterpart.
+      **What is open, and none of it is an agent's:** whether a minimum `ATR / price` belongs in
+      admission at all; whether it is a universe rule (`DR-003`) or a sizing refusal
+      (`RISK_SPEC` §3); and what the value is. `AGENTS.md` §8 — the course names no number here, so
+      if it is a threshold it needs a pre-registration rather than a guess, and if it is a
+      structural exclusion it needs a decision record.
+      **What it does NOT block.** `DR-006` §10.5: at the measured −1.712R a four-position gapping
+      session costs 6.85R against the 6.77R §8 accepted, so **the cap stays at 4** either way. This
+      changes what the book may hold, not how large it may be.
+
+
 - [ ] **`[v]` `DR-039` RATIFIED 2026-09-05, AND WHAT IS LEFT IS THE WIRING — the venue bills a
       published formula, and the model charged an assumed rate for a commission nobody takes.**
       **Both parameters are set** (`owner`), `registry/fee_schedule.yml` holds the effective-dated
