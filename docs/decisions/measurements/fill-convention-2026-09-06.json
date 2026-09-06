@@ -1,0 +1,44 @@
+{
+  "as_of": "2026-09-05T01:16:18.177108-05:00",
+  "hold": 20,
+  "instruments": 3937,
+  "entries": 147712,
+  "liquidity_rule": {
+    "min_price": "5.00",
+    "min_adtv": "5000000",
+    "adtv_window": 20,
+    "min_history": 250,
+    "adtv_lag": 0
+  },
+  "by_kind": [
+    {
+      "kind": "marketable",
+      "share": "0.5059",
+      "entries": 74731,
+      "forward_return_at_open_mean": "0.018712",
+      "ci_half_width": "0.007571"
+    },
+    {
+      "kind": "passive",
+      "share": "0.3282",
+      "entries": 48483,
+      "forward_return_at_open_mean": "0.009438",
+      "ci_half_width": "0.001221"
+    },
+    {
+      "kind": "unfilled",
+      "share": "0.1658",
+      "entries": 24498,
+      "forward_return_at_open_mean": "0.031359",
+      "ci_half_width": "0.011056"
+    }
+  ],
+  "backtest_mean": "0.017765",
+  "live_mean": "0.017529",
+  "adverse_selection": "-0.000236",
+  "gross_of_costs": true,
+  "not_measured": [
+    "cost - every figure here is gross; which fills happen is the question",
+    "the SELECTED subset; this is the whole admitted universe, and a momentum rule would over-weight exactly the names that gap up"
+  ]
+}

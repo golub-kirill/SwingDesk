@@ -41,9 +41,31 @@ bias.
 **`PR-010` closed this on 2026-08-09.** EDGE — the 2024 estimator built to fix both, and the only one
 that reads the open — reports 25.65bp against its own zero-spread floor of **41.87bp** at this
 universe's measured volatility. Two estimators agree to 0.21bp *inside their shared noise*. **The
-level is not obtainable from daily OHLC**; `PR-006`, real fills, is the only route left.
+level is not obtainable from daily OHLC**; ~~`PR-006`, real fills, is the only route left.~~
 
 Treat 25bp as "materially more than 5", never as a measurement of 25.
+
+**THE SECOND CLAUSE IS REFUTED, 2026-09-06 — `python tools/probe_quotes.py`.** The first clause is
+still true and is not what closed the question. What closed it was `DR-004`'s premise underneath:
+
+> spread-derived slippage from quoted bid/ask: correct and unavailable — no free source serves
+> historical intraday spreads point-in-time
+
+**The venue this project already holds an account with serves them.** Consolidated **SIP** NBBO
+quotes, historical, point-in-time, free tier; only the last fifteen minutes are withheld, which is
+the one window a backtest never reads. The probe re-derives it on every run rather than recording
+the answer as prose, because that block read as measured for the whole time it was wrong.
+
+**Why it stayed hidden is worth more than the fact.** The free tier's *real-time* feed is IEX — one
+venue, a few percent of volume — and a single venue's book is far wider than the consolidated one.
+The probe prints both: at the same instant in 2019, `AAPL` reads **0.49bp** on SIP and **621.82bp**
+on IEX. Reading IEX and concluding the data is unusable is a correct measurement of the wrong tape.
+The same source had already been checked, on 2026-09-05, and it was checked for **bars**; nobody
+asked it for **quotes**. That is `AGENTS.md` §17 again — the granularity, not the source.
+
+**What this does NOT overturn.** `PR-005`'s sign, `DR-029` §7's surface and §8a's conversion all
+stand as computed; they are correct at the cost they charge. What moves is the standing of the
+charge itself, and §10 measures it.
 
 ## 3. The one positive finding is fragile at a plausible magnitude
 

@@ -342,8 +342,8 @@ target is a sentence asserting something about the WORLD that nobody tested.
 
 ### THE AUDIT'S OWN BASE RATE — measured 2026-08-25, and the owner's hypothesis holds
 
-**The ask was whether this project had been stopping itself on untested "cannot"s.** Seven
-impossibility claims have now actually been TESTED rather than read. **Four were false.**
+**The ask was whether this project had been stopping itself on untested "cannot"s.** Eight
+impossibility claims have now actually been TESTED rather than read. **Five were false.**
 
 | Claim | Outcome |
 |---|---|
@@ -354,17 +354,22 @@ impossibility claims have now actually been TESTED rather than read. **Four were
 | *"A fourth spread estimator is the same family"* | **survives**, and now carries the mechanism rather than the prediction |
 | *"There is no legal source of probability in this system"* | **survives**, and is now derivable from two gates rather than asserted |
 | *"Batching is not the lever"* | **the claim survives; the PARKING did not** — `NFR.md` §3 had already ruled on concurrency in both directions |
+| *"No free source serves historical intraday spreads point-in-time"* (`DR-004`) | **FALSE, 2026-09-06** — the venue this project already holds an account with serves consolidated **SIP** NBBO back to 2016 on the free tier; only the last fifteen minutes are withheld, which is the one window a backtest never reads. `tools/probe_quotes.py` re-derives it. **The same vendor had been tested twelve days earlier — for BARS.** Nobody asked it for quotes |
 
-**Three of the four refutations came from testing at a FINER GRANULARITY than the original test**,
+**Four of the five refutations came from testing at a FINER GRANULARITY than the original test**,
 which is `AGENTS.md` §17 and is the transferable lesson: the header rather than the host, the six
-routes rather than "none of it", *"no directory in hand"* rather than *"cannot be enumerated"*. The
+routes rather than "none of it", *"no directory in hand"* rather than *"cannot be enumerated"*,
+and now **the FEED rather than the vendor** — the free tier's real-time feed is one venue holding a
+few percent of volume, and at the same instant in 2019 `AAPL` reads 0.49bp on the consolidated tape
+against 621.82bp on that one book. The
 original measurements were not sloppy — each was correct about what it actually measured, and each
 conclusion was drawn one level coarser than the evidence supported.
 
 **And the cost was never symmetric.** Every refuted claim had closed real work: a study dropped half
 its scope, a measurement waited fifteen days on an owner action nobody needed, a guard was described
 as hopeless when half of it was a finite set. `AGENTS.md` §15's asymmetry is not a theory here; it
-is the measured outcome of seven tests.
+is the measured outcome of eight tests, and the eighth is the most expensive yet: it had closed
+the route to the one constant every negative headline in this project is computed at.
 
 **A SECOND POPULATION, AND IT IS A DIFFERENT DISEASE — swept 2026-09-05.** The seven above are
 IMPOSSIBILITY claims: sentences asserting something about the world. The sweep below tested
