@@ -1420,12 +1420,21 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       one R is about two ATR, and these names travel about **three ATR in twenty sessions**. The
       reachable range is therefore structurally about **1.5R**. A wider target is not available by
       choosing one.
-      1. **`[ ]` A TIGHTER STOP - the strongest candidate and never measured.** At `1.0 x ATR` one R
-         halves, so 2R becomes as reachable as 1R is now, bought with a higher stop-out rate. Same
-         store, same tool, one more axis: sweep the stop multiple against the target grid and read
-         the expectancy surface. **This is the one to run first** - it is cheap, it is a decision
-         record's subject rather than a study's, and it is the only lever that does not require the
-         owner to reopen something already ratified.
+      1. ~~**`[ ]` A TIGHTER STOP - the strongest candidate and never measured.** … **This is the
+         one to run first.**~~ **RUN 2026-09-06 AND REFUTED. IT IS THE WORST DIRECTION**
+         (`DR-029` §7, `python tools/measure_exit_surface.py --data <store>`). 123,635
+         non-overlapping entries over 5,069 names; net expectancy at the 1R target, by stop:
+         **0.5 → −0.776R, 1.0 → −0.327R, 2.0 → −0.128R, 3.0 → −0.057R.** Monotone, intervals
+         ±0.004–0.016.
+         **The mechanism the lever missed, and its own record labelled the table `Gross of costs`.**
+         `DR-005` charges a fraction of PRICE and R is a multiple of ATR, so halving the stop
+         **doubles what the same slippage costs in R** — 0.170R → 0.340R → 0.679R, an exact
+         doubling. Reachability improves and expectancy does not.
+         **And no cell of the 25 beats doing nothing.** The grid's null — hold 20 sessions, no stop,
+         no target — is **+0.140R gross / −0.030R net**, against a best cell of +0.084R / −0.036R.
+         The ratified 2.0/1R cell gives up about **0.10R per trade** against simply holding. That is
+         the price of the risk control, now measured rather than assumed.
+         **So expectancy cannot come from the exit; it has to come from lever 3.**
       2. **`[ ]` A LONGER HOLD.** Already scheduled separately and bounded at ~40 sessions by owner
          ruling 2026-08-31. **Two independent measurements now say the same thing about 20**: the
          momentum studies found nothing inside it, and the target grid cannot reach past 1.5R inside
@@ -1461,6 +1470,24 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       | 20 sessions | +1.016% | [−0.321, +2.263] | +0.908% | [−0.255, +2.059] |
       | 63 sessions | +3.148% | [−0.007, +6.207] | +2.184% | [−0.783, +5.153] |
       | **126 sessions** | **+7.271%** | **[+1.899, +12.512]** | **+6.444%** | **[+0.700, +12.214]** |
+
+      **AND THAT SPREAD IS LONG-SHORT, WHICH THIS SYSTEM CANNOT TRADE — measured 2026-09-06.**
+      `_spread` is top decile MINUS bottom decile; `portfolio.py` says *"this system is long-only
+      today"*. A long-only book earns the top decile against the BENCHMARK.
+      ```bash
+      PYTHONPATH=$PWD/src python tools/measure_long_only_horizon.py --data <store>
+      ```
+      | horizon | n | top decile − `SPY`, net |
+      |---|---|---|
+      | 5 | 453 | **−0.393% [−0.623, −0.164]** — significantly negative |
+      | 20 (ratified) | 112 | +0.057% [−0.788, +0.893] |
+      | 63 | 35 | +1.709% [−0.855, +4.628] |
+      | **126** | **17** | **+4.305% [−0.509, +9.625]** |
+      **The significant result does not survive the conversion.** Long-short at 126 excludes zero;
+      long-only does not — gross lower bound **−0.009%**, zero to three decimals.
+      **And the binding constraint is the calendar, not the sample rule.** Seventeen non-overlapping
+      126-session windows exist in a decade: the horizon with the largest effect is the one with the
+      fewest independent observations, and patience does not change that arithmetic.
 
       **The spread rises monotonically with horizon and only excludes zero at 126 sessions.** That
       is the horizon structure J&T report, reproduced on this project's own data.

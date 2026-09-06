@@ -211,6 +211,54 @@ sat wholly below zero was not rejected by it. The numbers are what to read; the 
 understates them. The gap is recorded in that study's report for whoever writes the next
 pre-registration.
 
+### 8a. The horizon result is LONG-SHORT and this system is LONG-ONLY — measured 2026-09-06
+
+`python tools/measure_long_only_horizon.py --data <store>`, evidence in
+`docs/decisions/measurements/long-only-horizon-2026-09-06.json`. **EXPLORATORY; sets nothing.**
+
+**What everybody quotes.** `measure_momentum_horizon` found the decile spread rising monotonically
+with horizon and excluding zero only at 126 sessions — **+7.271% [+1.899, +12.512]**. It is the only
+interval-excluding-zero result about this family in the store, and every argument for a longer hold
+rests on it.
+
+**It is `_spread`: top-decile mean MINUS bottom-decile mean.** Capturing it needs a short leg.
+`trade_management/portfolio.py` states *"this system is long-only today"*, and `CARD-001` holds the
+top decile and shorts nothing. A long-only book earns the top decile against the **benchmark**, not
+against the bottom decile.
+
+**That tool's own docstring says so** — *"a gross spread is not a tradeable result and nothing here
+should be read as one"* — and it was read as one anyway, in this session among others.
+
+**Measured, same formation window, same skips, same liquidity rule, same non-overlapping dates, same
+bootstrap. Only the statistic changes:**
+
+| horizon | n | top decile − `SPY`, gross | net of 25bp/side |
+|---|---|---|---|
+| 5 | 453 | +0.107% [−0.123, +0.336] | **−0.393% [−0.623, −0.164]** ✗ |
+| **20** (ratified) | 112 | +0.557% [−0.288, +1.393] | +0.057% [−0.788, +0.893] |
+| 63 | 35 | +2.209% [−0.355, +5.128] | +1.709% [−0.855, +4.628] |
+| **126** | **17** | **+4.805% [−0.009, +10.125]** | +4.305% [−0.509, +9.625] |
+
+**THE SIGNIFICANT RESULT DOES NOT SURVIVE THE CONVERSION.** Long-short at 126 excludes zero;
+long-only at 126 does **not** — its lower bound is **−0.009%**, which is zero to three decimals. By
+this project's own standard (`b.expectancy`: *bootstrap CI excluding zero*) the tradeable half is
+**not** established.
+
+**And at five sessions the long-only excess is significantly NEGATIVE after costs.** That is
+`PR-013`'s horizon. Its six intervals all included zero gross; the sign is now determined net, and
+it is the wrong one.
+
+**What binds is not the sample rule, it is the calendar.** Seventeen non-overlapping 126-session
+windows exist in a decade. The horizon where the point estimate is largest is the horizon at which
+independent observations are scarcest, and no amount of patience changes the arithmetic: a longer
+hold buys a bigger effect and fewer chances to see it.
+
+**What this does NOT establish.** The family is not refuted — the point estimates are positive and
+monotone in horizon, and 126 misses by a hair on seventeen observations. It is not *shown* either,
+which is the only claim `b.expectancy` accepts. And `exit.max_holding_period` = 20 (`DR-012`,
+ratified) sits in the band where the measurement is indistinguishable from zero, one band above the
+one where it is negative.
+
 ## 9. The risk model is MORE valid on volatile names, not less, and that reverses an intuition
 
 Added 2026-09-04. **`PR-011` REJECTED its own hypothesis, in the opposite direction to the one it

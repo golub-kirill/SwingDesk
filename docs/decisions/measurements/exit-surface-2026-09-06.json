@@ -1,0 +1,451 @@
+{
+  "cells": {
+    "stop=0.5,target=0.5": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.004302216744395026,
+        "mean": -0.1720393826020216
+      },
+      "mix": {
+        "hit": 0.5586039551906823,
+        "stopped": 0.4410401585311603,
+        "time": 0.00035588627815747966
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.01250345328967121,
+        "mean": -0.8511120202261129
+      }
+    },
+    "stop=0.5,target=1.0": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.005940877266828076,
+        "mean": -0.09677972697910722
+      },
+      "mix": {
+        "hit": 0.46362276054515306,
+        "stopped": 0.5357948800905893,
+        "time": 0.0005823593642576941
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.01322166127848732,
+        "mean": -0.7760405137422558
+      }
+    },
+    "stop=0.5,target=1.5": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.007235465231343816,
+        "mean": -0.06569204257379199
+      },
+      "mix": {
+        "hit": 0.387624863509524,
+        "stopped": 0.6116148339871396,
+        "time": 0.0007603025033364339
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.013798512725466346,
+        "mean": -0.7450305485479539
+      }
+    },
+    "stop=0.5,target=2.0": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.008374117930195595,
+        "mean": -0.04038451952612236
+      },
+      "mix": {
+        "hit": 0.3342580984349092,
+        "stopped": 0.664795567598172,
+        "time": 0.0009463339669187528
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.014436679174645894,
+        "mean": -0.7197862943079034
+      }
+    },
+    "stop=0.5,target=3.0": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.010329387238905113,
+        "mean": -0.010857633671614682
+      },
+      "mix": {
+        "hit": 0.26093743680996484,
+        "stopped": 0.737048570388644,
+        "time": 0.0020139928013911917
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.015599543029184326,
+        "mean": -0.690333225668032
+      }
+    },
+    "stop=1.0,target=0.5": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.004225703454591095,
+        "mean": -0.020598414267286723
+      },
+      "mix": {
+        "hit": 0.6637683503862175,
+        "stopped": 0.335107372507785,
+        "time": 0.0011242771059974926
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.007245685865421156,
+        "mean": -0.3602982862719167
+      }
+    },
+    "stop=1.0,target=1.0": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.005905448581668857,
+        "mean": 0.012289117449557576
+      },
+      "mix": {
+        "hit": 0.5194807295668702,
+        "stopped": 0.47728394063169816,
+        "time": 0.0032353298014316336
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.008306930615786943,
+        "mean": -0.3274929733843645
+      }
+    },
+    "stop=1.0,target=1.5": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.00724003072574235,
+        "mean": 0.029031501972080452
+      },
+      "mix": {
+        "hit": 0.42216200913980667,
+        "stopped": 0.5674202288995834,
+        "time": 0.01041776196060986
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.009289151068806567,
+        "mean": -0.31079244482314794
+      }
+    },
+    "stop=1.0,target=2.0": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.00834321550859089,
+        "mean": 0.04236514553721874
+      },
+      "mix": {
+        "hit": 0.3494560601771343,
+        "stopped": 0.6232377562987828,
+        "time": 0.027306183524082987
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.010186077789918471,
+        "mean": -0.2974921353669225
+      }
+    },
+    "stop=1.0,target=3.0": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.00997807895463994,
+        "mean": 0.06029770244421459
+      },
+      "mix": {
+        "hit": 0.23659966837869537,
+        "stopped": 0.6783030695191491,
+        "time": 0.08509726210215554
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.011614658891079668,
+        "mean": -0.27960440985219415
+      }
+    },
+    "stop=1.5,target=0.5": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.004231430396731014,
+        "mean": 0.010075728171380216
+      },
+      "mix": {
+        "hit": 0.6821207586848385,
+        "stopped": 0.31246815222226715,
+        "time": 0.005411089092894407
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.005743446847962774,
+        "mean": -0.2164503731759137
+      }
+    },
+    "stop=1.5,target=1.0": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.005861494983577433,
+        "mean": 0.031539585717414706
+      },
+      "mix": {
+        "hit": 0.5139402272819186,
+        "stopped": 0.454766045213734,
+        "time": 0.031293727504347474
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.007023348060332869,
+        "mean": -0.1950401752737443
+      }
+    },
+    "stop=1.5,target=1.5": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.007027855738437549,
+        "mean": 0.04556600935524969
+      },
+      "mix": {
+        "hit": 0.38865208072147855,
+        "stopped": 0.5248675536862539,
+        "time": 0.08648036559226756
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.008039023743728049,
+        "mean": -0.1810488176950039
+      }
+    },
+    "stop=1.5,target=2.0": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.007857518978860901,
+        "mean": 0.06019571480362151
+      },
+      "mix": {
+        "hit": 0.28819509038702634,
+        "stopped": 0.5555708335018401,
+        "time": 0.15623407611113357
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.008805919300588463,
+        "mean": -0.166455686510253
+      }
+    },
+    "stop=1.5,target=3.0": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.008862038637238806,
+        "mean": 0.08260739112280112
+      },
+      "mix": {
+        "hit": 0.14553322279289846,
+        "stopped": 0.5741416265620577,
+        "time": 0.2803251506450439
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.009792933770058966,
+        "mean": -0.14410003938187135
+      }
+    },
+    "stop=2.0,target=0.5": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.004082436461969206,
+        "mean": 0.022528123198232275
+      },
+      "mix": {
+        "hit": 0.6776721802078699,
+        "stopped": 0.29449589517531444,
+        "time": 0.027831924616815627
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.0050130239651579025,
+        "mean": -0.1474038811299124
+      }
+    },
+    "stop=2.0,target=1.0": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.005569639210363181,
+        "mean": 0.042222403269268766
+      },
+      "mix": {
+        "hit": 0.4733125733004408,
+        "stopped": 0.40875965543737613,
+        "time": 0.11792777126218304
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.006289441453266549,
+        "mean": -0.1277588367590535
+      }
+    },
+    "stop=2.0,target=1.5": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.006481645271939411,
+        "mean": 0.05926008755538618
+      },
+      "mix": {
+        "hit": 0.31699761394427145,
+        "stopped": 0.4479152343592025,
+        "time": 0.23508715169652605
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.007135410092371394,
+        "mean": -0.11076374668365138
+      }
+    },
+    "stop=2.0,target=2.0": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.007039516327201235,
+        "mean": 0.07324027996406153
+      },
+      "mix": {
+        "hit": 0.20103530553645813,
+        "stopped": 0.4595785982933635,
+        "time": 0.33938609617017834
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.0076786392943063286,
+        "mean": -0.09681850475599772
+      }
+    },
+    "stop=2.0,target=3.0": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.007584607595456237,
+        "mean": 0.08370075966797334
+      },
+      "mix": {
+        "hit": 0.07383831439317345,
+        "stopped": 0.46560440004852993,
+        "time": 0.4605572855582966
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.008243561933044192,
+        "mean": -0.08638417625134569
+      }
+    },
+    "stop=3.0,target=0.5": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.003733307325900594,
+        "mean": 0.03219222701059678
+      },
+      "mix": {
+        "hit": 0.6167104784243944,
+        "stopped": 0.2315444655639584,
+        "time": 0.1517450560116472
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.004206639651310085,
+        "mean": -0.08113870957036244
+      }
+    },
+    "stop=3.0,target=1.0": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.00479208681765329,
+        "mean": 0.0563040503067811
+      },
+      "mix": {
+        "hit": 0.34142435394508025,
+        "stopped": 0.27908763699599626,
+        "time": 0.37948800905892344
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.005188397270433541,
+        "mean": -0.05708716583241859
+      }
+    },
+    "stop=3.0,target=1.5": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.005285358224249729,
+        "mean": 0.07008667854359352
+      },
+      "mix": {
+        "hit": 0.1680268532373519,
+        "stopped": 0.28753184777773283,
+        "time": 0.5444412989849152
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.005677834077368163,
+        "mean": -0.04333899416619819
+      }
+    },
+    "stop=3.0,target=2.0": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.005508449208628742,
+        "mean": 0.07373715545924793
+      },
+      "mix": {
+        "hit": 0.07783394669794153,
+        "stopped": 0.28941642738706674,
+        "time": 0.6327496259149917
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.005909526159443804,
+        "mean": -0.03969764344283293
+      }
+    },
+    "stop=3.0,target=3.0": {
+      "gross": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.005694264360861421,
+        "mean": 0.07748212178502155
+      },
+      "mix": {
+        "hit": 0.01987301330529381,
+        "stopped": 0.28992599183079226,
+        "time": 0.690200994863914
+      },
+      "net": {
+        "beats_buy_and_hold": false,
+        "ci_half_width": 0.006087018666275166,
+        "mean": -0.03596203953287374
+      }
+    }
+  },
+  "cost_in_R": {
+    "0.5": 0.6792607867631486,
+    "1.0": 0.3397820908339221,
+    "1.5": 0.226579760991159,
+    "2.0": 0.16998124002832227,
+    "3.0": 0.1133912161391997
+  },
+  "entries_per_cell": 123635,
+  "hold": 20,
+  "instruments": 5069,
+  "measured_on": "2026-09-06",
+  "null_buy_and_hold": {
+    "gross": {
+      "ci_half_width": 0.009927814705012604,
+      "mean": 0.13973409637359618
+    },
+    "net": {
+      "ci_half_width": 0.010367357339034542,
+      "mean": -0.030490922887486897
+    }
+  },
+  "slippage_bps": "25"
+}
