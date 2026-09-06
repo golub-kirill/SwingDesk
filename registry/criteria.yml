@@ -185,8 +185,16 @@ track_b:
     measured_by: evidence record field
     status: ratified
     note: >-
-      Not a threshold - a reporting obligation. No free source serves delisted instruments
-      (ADR-0001 condition 6), so every historical number is optimistic by an unknown amount.
+      Not a threshold - a reporting obligation. Every historical number is optimistic by an unknown
+      amount, and the obligation is unchanged.
+      THE REASON MOVED, 2026-09-05. This note said "no free source serves delisted instruments
+      (ADR-0001 condition 6)" and that is refuted: EDGAR dates the delisting and Alpaca serves the
+      daily price path from 2016 on feed=sip, on an account the owner has ruled free tier (DR-039
+      is a different record; the delisted finding is in EVIDENCE_SUMMARY section 3). What survives
+      is the obligation: MEASURABLE IS NOT MEASURED. No study has used the route, so every number
+      reported today rests on a survivorship-biased sample exactly as before.
+      Corrected here late - the sweeps that fixed the .md carriers on 2026-09-05 did not scan
+      registry/, and this file is where the RULES live rather than the prose.
 
 # ---------------------------------------------------------------------------
 # Kill criteria.

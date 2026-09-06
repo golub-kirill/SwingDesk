@@ -1333,15 +1333,24 @@ parameters:
 
   - id: costs.commission_model
     unit: model
-    value: "0.005 USD per share, each side"
-    status: assumed
-    provenance: "assumed:DR-004"
+    value: "0.00 USD per share - the venue charges no commission on US equities"
+    status: owner
+    provenance: owner
     read_by: none
     named_in: [M72-T1081]
     note: >-
       A model, not a scalar: per-trade, per-share and percentage schedules are different functions
       and the course names none. risk.costs_allowance is the sizing-time allowance; this is what a
       backtest charges.
+      RULED BY THE OWNER 2026-09-05 (DR-039). Was `0.005 USD per share, each side`,
+      assumed:DR-004, for fourteen days after the venue changed. Alpaca's own Brokerage Fee
+      Schedule page 1: 'Alpaca Securities does not charge commissions, except as described below'
+      - the exceptions being index options, the Elite Smart Router and non-retail order flow, none
+      of which a standard retail US equity account meets. On the one real trade this project has
+      journalled, the old model charged $0.170, which was 3.4x the entire real fee bill.
+      `owner` and not `assumed`: `assumed` promises a study will replace the value, and none can -
+      this is a broker's published policy, not a threshold anybody has to find.
+      What the venue DOES bill is costs.regulatory_fee_schedule, kept separate on purpose.
     ui_editable: true
 
   - id: costs.slippage_model
@@ -1360,9 +1369,11 @@ parameters:
 
   - id: costs.regulatory_fee_schedule
     unit: model
-    value: null
-    status: unset
-    provenance: null
+    value: "registry/fee_schedule.yml - effective-dated; SEC 0.0000206 x proceeds and FINRA TAF
+      0.000195/share on SELLS only, FINRA CAT 0.000003/equivalent share both sides, aggregated
+      daily per account per fee type and rounded up to the cent once"
+    status: owner
+    provenance: owner
     read_by: swingdesk.validation.backtest.fees:day_fees
     named_in: [M72-T1081]
     note: >-
@@ -1380,9 +1391,13 @@ parameters:
       today's number in this file would produce exactly the stale-value drift the project spends
       its time removing. The table REFUSES for a session it does not cover rather than charging
       the newest rate backwards.
-      Unset rather than assumed on purpose: the rates are PUBLISHED, so they need a citation and not
-      a study, and `assumed` would queue them for evidence that will never come. Unset until DR-039
-      is ratified, not because the rates are unknown - Alpaca's own schedule gives all three.
+      RATIFIED BY THE OWNER 2026-09-05 (DR-039). `owner` and not `assumed`: the rates are
+      PUBLISHED, so they need a citation rather than a study, and `assumed` would queue them for
+      evidence that never arrives - the permanent-pending state AGENTS.md section 15 is about.
+      A ratified value is not a validated one, and this one is a citation of somebody else's
+      schedule rather than a measurement of anything.
+      NOT WIRED INTO ANY STUDY. Ratifying the rates does not charge them; doing that would change
+      what a backtest computes and is a separate decision.
       RATES ARE THE BROKER'S SCHEDULE, NOT THE REGULATOR'S PAGE. DR-039 was first written from
       FINRA and the SEC and had TAF at 0.000166; the schedule that bills says 0.000195, and a
       17-share sell could not tell them apart because both round up to the same cent. DR-039 s9.

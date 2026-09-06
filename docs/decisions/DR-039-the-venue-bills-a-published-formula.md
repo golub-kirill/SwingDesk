@@ -2,7 +2,7 @@
 
 ```
 date:            2026-09-05
-status:          proposed
+status:          accepted — ratified by the owner 2026-09-05
 parameters:      costs.commission_model (commission component only), costs.regulatory_fee_schedule (new)
 components:      none - swingdesk.validation.backtest.costs implements the model; this sets its inputs
 supersedes:      DR-004's COMMISSION component. DR-005's 25bp slippage stands untouched, and so does
