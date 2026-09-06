@@ -1,0 +1,68 @@
+{
+  "measured_on": "2026-09-05",
+  "source": "Alpaca paper account activity, PA3LY20ABUNE, supplied by the owner",
+  "what_this_is": "The first regulatory fees this project has ever observed. One completed round trip, and the fee formulas are checked against the regulators' own published rates rather than estimated from it.",
+  "why_one_observation_is_enough": "Section 31 and TAF are deterministic functions of proceeds and shares. One observation CHECKS a formula. It would estimate nothing about a distribution, which is why the same sample says nothing about slippage.",
+
+  "round_trip": {
+    "instrument": "AIS",
+    "shares": 17,
+    "buys_2026_09_03": [264.24, 196.83, 196.68, 262.60, 65.58, 65.50, 65.49],
+    "cost_basis": 1116.92,
+    "sell_2026_09_04": 1190.51,
+    "gross_pnl": 73.59
+  },
+
+  "observed_fees": {
+    "REG": {"amount": 0.03, "side": "sell", "billed_for": "proceed of $1190.51"},
+    "TAF": {"amount": 0.01, "side": "sell", "billed_for": "17 shares, 1 trade"},
+    "CAT": {"amount": 0.01, "side": "both", "billed_for": "1 trade"},
+    "CAT_on_the_buy_day": {"amount": 0.01, "billed_for": "12 trades on 2026-09-03"},
+    "total_on_the_round_trip": 0.05
+  },
+
+  "published_rates": {
+    "section_31": {
+      "rate": "20.60 USD per 1,000,000 USD of covered sales",
+      "effective": "2026-04-04",
+      "replaced": "0.00 per million",
+      "side": "sell",
+      "source": "https://www.finra.org/rules-guidance/notices/information-notice-20260317"
+    },
+    "finra_taf": {
+      "rate": "0.000166 USD per share",
+      "side": "sell",
+      "per_trade_maximum": "8.30 USD as the rule text reads; FINRA is phasing in increases during 2026 and a 5.95 figure also appears. NOT ESTABLISHED, and immaterial at this size.",
+      "source": "https://www.finra.org/rules-guidance/guidance/trading-activity-fee"
+    },
+    "cat": {
+      "rate": "NOT ESTABLISHED",
+      "side": "both",
+      "why": "0.01 on one trade and 0.01 on twelve. Not linear in trades, so neither observation constrains a per-trade rate.",
+      "source": "https://docs.alpaca.markets/docs/regulatory-fees"
+    }
+  },
+
+  "verification": {
+    "method": "predicted from the published rate, rounded UP to the cent, compared to the billed amount",
+    "section_31": {"predicted_raw": 0.024524, "predicted_rounded_up": 0.03, "observed": 0.03, "match": true},
+    "finra_taf": {"predicted_raw": 0.002822, "predicted_rounded_up": 0.01, "observed": 0.01, "match": true},
+    "rounding_is_INFERRED_not_published": "Both amounts match under round-up-to-the-cent and neither matches under round-half. Two independent confirmations of the same rule, which is evidence about Alpaca's implementation rather than a published fact."
+  },
+
+  "materiality": {
+    "fees_usd": 0.05,
+    "as_bp_of_the_sell_side": 0.42,
+    "modelled_slippage_usd_at_25bp_per_side": 5.77,
+    "fees_as_share_of_modelled_slippage": "0.9%",
+    "modelled_commission_usd_at_DR_004": 0.170,
+    "note": "DR-004 charges 3.4x the entire real fee bill, for a commission this venue does not charge. The regulatory fees are 0.9% of the slippage term and will not move any verdict."
+  },
+
+  "not_established": [
+    "Whether a paper account is billed the same schedule as a live one.",
+    "The CAT rate.",
+    "The TAF per-trade maximum during the 2026 phase-in.",
+    "Whether Alpaca's round-up is a policy or an artefact of these two amounts."
+  ]
+}
