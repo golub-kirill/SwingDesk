@@ -898,6 +898,33 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 4. Pending decisions
 
+- [ ] **`[v]` `DR-039` PROPOSED 2026-09-05 — the venue bills a published formula, and the model
+      charges an assumed rate for a commission nobody takes.** Owner question: *"Alpaca shows us
+      some fees. Shall we research and take them into a project?"*
+      `docs/decisions/DR-039-the-venue-bills-a-published-formula.md`, evidence in
+      `docs/decisions/measurements/venue-fees-2026-09-05.json`.
+      **Three fee categories appeared on this project's first completed trade and not one of them
+      exists anywhere in this repository** — REG (SEC Section 31), FINRA TAF, CAT. Meanwhile
+      `costs.commission_model` charges `assumed:DR-004`'s 0.005/share, which on that trade is
+      **3.4× the entire real fee bill**, for a commission Alpaca does not take.
+      **Both formulas were verified against the regulators' own notices**, not estimated: Section 31
+      at $20.60 per $1M of proceeds and TAF at $0.000166 per share, each rounded up to the cent,
+      reproduce the billed $0.03 and $0.01 exactly. **One observation can do that because they are
+      FUNCTIONS, not distributions** — and the same observation says nothing whatever about
+      slippage, which this record does not touch.
+      **It changes no verdict and is not offered as one.** The fees are **0.9%** of `DR-005`'s
+      slippage term. What it replaces is an `assumed` promissory note with a citable formula.
+      **What is open is the ruling**, plus four things the record marks unestablished: whether a
+      paper account is billed the live schedule, the CAT rate, the TAF per-trade maximum during
+      FINRA's 2026 phase-in, and whether Alpaca's round-up is policy.
+      **And one thing this session could not do:** Alpaca's own fee schedule PDF is font-encoded,
+      no PDF reader exists in the venv, and installing one was declined rather than done quietly.
+      The rates here come from the SEC and FINRA, who set them; Alpaca passes them through. Reading
+      that PDF is the first thing to close.
+      **Accepting it is not a value swap.** `CostModel.commission()` charges symmetrically on share
+      count; Section 31 is a rate on SELL PROCEEDS. §6 of the record names the signature change.
+
+
 - [ ] **`[v]` `DR-006` §3 ADMITS AN UNAVAILABLE CANDIDATE UNCHECKED, AND A CAP THAT FAILS OPEN IS
       NOT A CAP — five of five council advisors, 2026-08-31, unanimous and the only thing they all
       volunteered.** 145 admitted universe members have no sector served or nothing stored, and

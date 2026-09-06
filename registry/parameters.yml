@@ -1358,6 +1358,29 @@ parameters:
       is not a pre-registered study, however the number was arrived at.
     ui_editable: true
 
+  - id: costs.regulatory_fee_schedule
+    unit: model
+    value: null
+    status: unset
+    provenance: null
+    read_by: none
+    named_in: [M72-T1081]
+    note: >-
+      What the VENUE bills on top of commission, as opposed to what the broker charges. Proposed by
+      DR-039 and not yet ratified. Three fees, and the shape is why this is not folded into
+      costs.commission_model: SEC Section 31 is a rate on SELL PROCEEDS, FINRA TAF a rate per SHARE
+      on SELLS ONLY, and CAT falls on both sides. A commission model charges symmetrically on share
+      count and can express none of that.
+      Section 31 is also TIME-VARYING - $0.00 per million until 2026-04-04 and $20.60 after - so a
+      backtest charging one rate across 2016-2026 would be wrong in a way no test catches. Any
+      implementation is point-in-time.
+      Unset rather than assumed on purpose: the rates are PUBLISHED by the SEC and FINRA, so they
+      need a citation and not a study, and `assumed` would queue them for evidence that will never
+      come. CAT's rate is genuinely unknown - $0.01 on one trade and $0.01 on twelve constrains
+      nothing - which is the honest reason this whole entry stays unset.
+      Evidence: docs/decisions/measurements/venue-fees-2026-09-05.json
+    ui_editable: true
+
   # ---- swing structure (M12-T0201/T0202, added with the pivot component 2026-08-02) ----
 
   - id: pivot.left
