@@ -1374,10 +1374,12 @@ parameters:
       Section 31 is also TIME-VARYING - $0.00 per million until 2026-04-04 and $20.60 after - so a
       backtest charging one rate across 2016-2026 would be wrong in a way no test catches. Any
       implementation is point-in-time.
-      Unset rather than assumed on purpose: the rates are PUBLISHED by the SEC and FINRA, so they
-      need a citation and not a study, and `assumed` would queue them for evidence that will never
-      come. CAT's rate is genuinely unknown - $0.01 on one trade and $0.01 on twelve constrains
-      nothing - which is the honest reason this whole entry stays unset.
+      Unset rather than assumed on purpose: the rates are PUBLISHED, so they need a citation and not
+      a study, and `assumed` would queue them for evidence that will never come. Unset until DR-039
+      is ratified, not because the rates are unknown - Alpaca's own schedule gives all three.
+      RATES ARE THE BROKER'S SCHEDULE, NOT THE REGULATOR'S PAGE. DR-039 was first written from
+      FINRA and the SEC and had TAF at 0.000166; the schedule that bills says 0.000195, and a
+      17-share sell could not tell them apart because both round up to the same cent. DR-039 s9.
       Evidence: docs/decisions/measurements/venue-fees-2026-09-05.json
     ui_editable: true
 
