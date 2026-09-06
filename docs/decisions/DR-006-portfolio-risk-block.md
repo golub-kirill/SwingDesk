@@ -7,8 +7,10 @@ status:     accepted — fully ratified by the owner: four of six 2026-08-22 (§
 parameters: risk.max_open_risk, risk.max_concurrent_positions, risk.max_sector_risk,
             risk.correlation_threshold, risk.correlation_lookback_sessions,
             risk.max_position_value, risk.liquidity_cap_order_to_adtv_pct
-evidence:   measurements/gap-population-2026-09-06.json (section 9, appended 2026-09-06 -
-            the gap cost re-measured on the population it now governs)
+evidence:   measurements/gap-population-2026-09-06.json (section 9 - the gap DISTRIBUTION on
+            the population this record now governs)
+            measurements/gap-cost-2026-09-06.json (section 10 - the same thing in R, which
+            refutes section 9.4's illustration and confirms section 8.1's number)
 components: none - swingdesk.trade_management.portfolio enforces the book and correlation caps,
             swingdesk.derived_observations.correlation supplies the statistic,
             swingdesk.trade_management.sizing the position-value cap
@@ -1170,4 +1172,183 @@ of measuring it: the question was answered, and the answer was small.
 A fresh backtest on the admitted universe producing an R-denominated gap cost the way `PR-005` did.
 That is a study rather than a measurement, it spends a trial against `b.deflated_sharpe`, and
 nothing here proposes one.
+
+## 10. The gap cost measured in R — 2026-09-06, and §9.4's illustration is refuted
+
+Owner instruction, the same day: *"Yes, lets do it."* §9 measured the raw ingredient and could not
+convert it; this converts it. `python tools/measure_gap_cost.py --data <store>`, evidence in
+`measurements/gap-cost-2026-09-06.json`.
+
+**A MEASUREMENT, not a study, and it spends no trial.** `trial_budget.py`'s `NO_SPEND` list carries
+this shape twice already — `PR-008` and `PR-010` measure *a cost input rather than an edge*, so
+there is no Sharpe to deflate. One configuration is evaluated and it is the ratified one: stop
+`2.0 × ATR(14)`, hold 20 sessions, entry at the next open. Nothing is selected for performance.
+**An earlier session statement that this would spend a trial was wrong.**
+
+### 10.1 The headline confirms §8.1 and §9.4 predicted otherwise
+
+**5,069 instruments, 123,635 entries, 57,707 stop-outs, 10,116 of them gapped.**
+
+| | measured 2026-09-06 | §8.1, on 68 names |
+|---|---|---|
+| gap, **net** | **−1.712R** | −1.692R |
+| gap, gross | **−1.360R** | −1.618R |
+| gaps worse than −1.5R | 31.8% | 35% |
+| gaps as a share of stop-outs | 17.5% | 21.8% |
+
+**§9.4 illustrated a gap cost of −1.292R and the answer is −1.712R.** That illustration scaled
+§8.1's number by the ratios of its own inputs, and the inputs did not carry to the output. The
+reason is now visible and it is worth more than the number.
+
+### 10.2 GROSS agrees with §9. NET does not. The difference is entirely cost
+
+Gross, the wider universe gaps **less** — −1.360R against −1.618R — exactly as §9's distribution
+predicted. Net, it gaps **the same**. So §9 was right about gaps and wrong about the conclusion,
+because the cost term changed more than the gap term did.
+
+**The tell was a number that cannot happen: the worst CLEAN stop came back at −21.156R net.** A
+clean stop fills at the stop and costs exactly 1R gross. Only the cost term can produce −21R.
+
+**The arithmetic, and it is not a defect.** `DR-005` charges 25 bps of **price** per side; R is
+`2 × ATR`. Their ratio decides everything:
+
+| price | ATR | R | slippage both sides | as a share of R |
+|---|---|---|---|---|
+| 100 | 2.00 | 4.00 | 0.50 | 0.12R |
+| 100 | 0.50 | 1.00 | 0.50 | 0.50R |
+| 100 | 0.05 | 0.10 | 0.50 | **5.00R** |
+| 100 | 0.01 | 0.02 | 0.50 | **25.00R** |
+
+### 10.3 The cost is concentrated, and it is monotone in `2 × ATR / price`
+
+| `2 × ATR / price` | gaps | gap cost, net |
+|---|---|---|
+| **0.000 – 0.005** | 603 | **−5.490R** |
+| 0.005 – 0.010 | 331 | −1.996R |
+| 0.010 – 0.020 | 728 | −1.736R |
+| 0.020 – 0.050 | 3,906 | −1.462R |
+| 0.050 – 1.000 | 4,548 | −1.401R |
+
+**Six per cent of gaps drag the mean from about −1.43R to −1.712R.** On names whose stop is wider
+than 2% of price — where `PR-005`'s 68 all sat — the gap costs **−1.40R to −1.46R**, materially
+better than §8.1's −1.692R and in the direction §9 predicted.
+
+**These were not filtered out, deliberately.** Dropping them would have produced −1.43R and a
+prettier record, and would have hidden the finding. The banding is reported instead.
+
+### 10.4 What the thin band actually contains, and it is a hole in the admission rule
+
+The instruments with the thinnest range relative to price are **`SGOV`** and **`SHV`** — Treasury-bill
+ETFs — alongside a family of buffered products (`LFBE`, `LFDR`, `LFAW`, `LFAO`, `LFAI`, `CMBO`,
+`LIAU`). `SGOV`'s daily range is about **0.011% of its price**, so a `2 × ATR` stop on it is roughly
+0.02% of price against a round trip costing 0.5% — **the stop is narrower than the cost of trading
+it by about twenty-five times.**
+
+They are admitted because `DR-003` screens on **price and dollar volume** and nothing screens on
+**volatility**. `risk.stop_too_wide_limit` exists for the opposite case and is `unset`,
+`read_by: none`. **There is no minimum.**
+
+**So the honest reading of −1.712R is that it is correct for the book as currently constituted.**
+The way to earn −1.43R is to fix the admission rule, not to filter the measurement — and a
+relative-strength ranking is exactly the selection rule that would rank a steadily-rising T-bill ETF
+highly in a falling market, so this is not a hypothetical corner.
+
+**Whether to add a minimum `ATR / price` to admission is the owner's**, is a new parameter and a new
+decision record, and nothing here proposes one.
+
+### 10.5 What it does to the cap, which was the question
+
+§8 accepted **6.77R** for a whole-book gapping session at a cap of 4. At the measured **−1.712R**
+the same four positions cost **6.85R** — within a per cent of what was accepted. **The cap stays at
+4, and it stays for the reason §8 gave rather than by inertia.**
+
+Had the comparable-band figure of −1.43R been the right one, the same accepted risk would allow a
+cap of about **4.7**. It is not the right one until the admission rule excludes the instruments that
+produce the difference.
+
+**So the clock is unchanged: about two years to `b.min_sample` at 50 closed trades a year.** The
+measurement the owner asked for was worth making and its answer is that the constraint is real.
+
+## 11. §10.4's argument tested and refuted — 2026-09-06
+
+Owner: *"can we fix this hole? does it worth?"* — and the second half turned out to decide it.
+
+### 11.1 There IS a non-arbitrary threshold, and it is derived rather than chosen
+
+`DR-005` charges 25 bps of price per side, so a round trip costs `price × 0.005`. `DR-012` puts R at
+`2 × ATR`. They are equal when
+
+    2 × ATR / price = 0.005
+
+**Below that line a round trip costs more than the entire risk of the trade.** That is arithmetic on
+two ratified parameters, not a tuned number — which would make it a decision record's subject rather
+than a study's (`AGENTS.md` §8). It is also, by coincidence rather than design, exactly the boundary
+of §10.3's worst band: that band was cut for readability before this was worked out.
+
+### 11.2 What the screen would cost, measured
+
+| | |
+|---|---|
+| admitted names below the floor | **166 of 3,958 — 4.19%** |
+| their share of the universe's dollar volume | **1.40%** |
+| median `2 × ATR / price` among them | 0.00291 |
+| what a round trip costs on `SGOV` | **24.1R** |
+
+Every one of the twenty worst is a cash equivalent: `SGOV`, `SHV`, `BIL`, `TBLL`, `BILS`, `GBIL`,
+`CLIP`, `BILZ`, `PMMF`, `VBIL`, `SGVT`, `MINT`, `TBIL`, `TFLO`, `XHLF`, `USFR`, `SBIL`, `BOXX`,
+`VGUS`, `PULS`. Cheap to remove and nobody wanted them.
+
+### 11.3 And §10.4's argument for removing them is REFUTED
+
+§10.4 said: *"a relative-strength ranking is exactly the selection rule that would rank a
+steadily-rising T-bill ETF highly in a falling market, so this is not a hypothetical corner."*
+**Measured on the five worst `SPY` 126-session windows in the store, ranking the admitted universe
+the way `pipeline._selection_rule` does:**
+
+| window | `SPY` | sub-floor names in the top decile | best rank |
+|---|---|---|---|
+| **2020-03-23** | **−25.3%** | **8 of 18** — `AGG` `BIL` `BND` `BNDW` `BSV` `EAGG` `IAGG` `UITB` | **52 of 826** |
+| 2022-06-16 | −22.1% | 0 of 25 | — |
+| 2022-09-30 | −20.9% | 0 of 27 | — |
+| 2022-10-10 | −19.6% | 0 of 27 | — |
+| 2020-04-01 | −16.1% | 0 of 18 | — |
+
+**The book holds four.** Even at the COVID bottom the best sub-floor name ranked **52nd**, because a
+falling market still leaves ninety names up 50–500% — inverse ETFs, volatility, energy, biotech.
+`DRIP`, `DUST`, `VXX`, `AMR`, `BTU` took the top of every one of those windows. A flat instrument at
+about 0% does not outrank them.
+
+**So it is close to a hypothetical corner for THIS card**, and §10.4 asserted the opposite from
+construction rather than from measurement. The first version of this probe used a hand-copied top
+twenty and found one hit in five windows; widening it to all 166 found eight in one window and none
+in four — a different number and the same conclusion.
+
+### 11.4 What that does to §10's own headline
+
+**The population this measurement entered is not the population a card selects.**
+`measure_gap_cost.py` enters *every admitted name every 20 sessions*, which no card does. The
+−1.712R headline is the cost of a stop-out on a randomly entered admitted name; a book selecting the
+top four by relative strength would sit at the **−1.40R** end of §10.3's band, because it does not
+reach the thin-ATR names.
+
+**That is not a correction to −1.712R — it is a statement about which question it answers.** For the
+book as constituted the honest figure is nearer −1.40R, and §10.5's cap arithmetic at that figure
+allows about **4.8 rather than 4.0**. Establishing it properly needs the measurement run over a
+card's actual selections, and a card has made three.
+
+### 11.5 So: is it worth fixing?
+
+**Not urgently, and the reason is measurement rather than caution.**
+
+* **For `CARD-001` as it stands: no.** The card does not select these names. Fixing the hole buys
+  nothing it would ever have paid.
+* **The screen is nearly free** — 4.19% of names, 1.40% of dollar volume, all of it cash proxies —
+  so the cost of doing it is not the argument against.
+* **It becomes real in three cases**, none of which is today: a card that ranks on something other
+  than relative strength (a low-volatility or mean-reversion family would rank these at the TOP);
+  a materially larger book, since rank 52 is inside a fifty-position one; or any measurement that
+  enters the universe rather than a selection — which is what §10 did, and why the finding surfaced.
+
+**Recorded rather than built.** Whether a minimum `ATR / price` belongs in admission is the owner's,
+it is a new parameter, and nothing here proposes one.
 

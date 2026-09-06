@@ -898,6 +898,42 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 4. Pending decisions
 
+- [ ] **`[v]` THE UNIVERSE ADMITS INSTRUMENTS WHOSE STOP IS NARROWER THAN THE COST OF TRADING THEM
+      — measured 2026-09-06, and it is the owner's to rule.**
+      ```bash
+      PYTHONPATH=$PWD/src python tools/measure_gap_cost.py --data <store>
+      ```
+      `DR-003` screens on **price** and **dollar volume**. Nothing screens on **volatility**, so
+      `SGOV` and `SHV` — Treasury-bill ETFs — clear admission. `SGOV`'s daily range is about
+      **0.011% of price**, so a `2 × ATR` stop on it is roughly 0.02% of price against a round trip
+      costing 0.5%: **the stop is narrower than the cost of trading it by about twenty-five times.**
+      **Measured consequence, `DR-006` §10.3.** Gap cost is monotone in `2 × ATR / price`: below
+      0.005 it is **−5.490R** over 603 gaps, and above 0.05 it is **−1.401R**. **Six per cent of
+      gaps drag the whole mean from about −1.43R to −1.712R.**
+      ~~**This is not a hypothetical corner.** A relative-strength ranking is exactly the selection
+      rule that ranks a steadily-rising T-bill ETF highly in a falling market.~~
+      **TESTED AND REFUTED THE SAME DAY — `DR-006` §11.3.** Across the five worst `SPY` 126-session
+      windows in the store, sub-floor names entered the top decile in **one** of them (the COVID
+      bottom, 8 of 18) and the best of those ranked **52 of 826**. The book holds **four**. A falling
+      market still leaves ninety names up 50–500% — `DRIP`, `DUST`, `VXX`, `AMR`, `BTU` took the top
+      of every window — and a flat instrument at 0% does not outrank them.
+      **So for `CARD-001` the answer is: not worth fixing now.** The card does not select these
+      names, so the screen buys nothing it would ever have paid. It becomes real for a card ranking
+      on something other than relative strength, for a materially larger book, or for any
+      measurement that enters the universe rather than a selection — which is what `DR-006` §10 did
+      and why this surfaced at all.
+      **`risk.stop_too_wide_limit` exists for the opposite case** — `unset`, `read_by: none`,
+      `named_in: [Appendix N code STOP, M48-T0746]`. There is no minimum counterpart.
+      **What is open, and none of it is an agent's:** whether a minimum `ATR / price` belongs in
+      admission at all; whether it is a universe rule (`DR-003`) or a sizing refusal
+      (`RISK_SPEC` §3); and what the value is. `AGENTS.md` §8 — the course names no number here, so
+      if it is a threshold it needs a pre-registration rather than a guess, and if it is a
+      structural exclusion it needs a decision record.
+      **What it does NOT block.** `DR-006` §10.5: at the measured −1.712R a four-position gapping
+      session costs 6.85R against the 6.77R §8 accepted, so **the cap stays at 4** either way. This
+      changes what the book may hold, not how large it may be.
+
+
 - [ ] **`[v]` `DR-039` RATIFIED 2026-09-05, AND WHAT IS LEFT IS THE WIRING — the venue bills a
       published formula, and the model charged an assumed rate for a commission nobody takes.**
       **Both parameters are set** (`owner`), `registry/fee_schedule.yml` holds the effective-dated
@@ -1384,12 +1420,21 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       one R is about two ATR, and these names travel about **three ATR in twenty sessions**. The
       reachable range is therefore structurally about **1.5R**. A wider target is not available by
       choosing one.
-      1. **`[ ]` A TIGHTER STOP - the strongest candidate and never measured.** At `1.0 x ATR` one R
-         halves, so 2R becomes as reachable as 1R is now, bought with a higher stop-out rate. Same
-         store, same tool, one more axis: sweep the stop multiple against the target grid and read
-         the expectancy surface. **This is the one to run first** - it is cheap, it is a decision
-         record's subject rather than a study's, and it is the only lever that does not require the
-         owner to reopen something already ratified.
+      1. ~~**`[ ]` A TIGHTER STOP - the strongest candidate and never measured.** … **This is the
+         one to run first.**~~ **RUN 2026-09-06 AND REFUTED. IT IS THE WORST DIRECTION**
+         (`DR-029` §7, `python tools/measure_exit_surface.py --data <store>`). 123,635
+         non-overlapping entries over 5,069 names; net expectancy at the 1R target, by stop:
+         **0.5 → −0.776R, 1.0 → −0.327R, 2.0 → −0.128R, 3.0 → −0.057R.** Monotone, intervals
+         ±0.004–0.016.
+         **The mechanism the lever missed, and its own record labelled the table `Gross of costs`.**
+         `DR-005` charges a fraction of PRICE and R is a multiple of ATR, so halving the stop
+         **doubles what the same slippage costs in R** — 0.170R → 0.340R → 0.679R, an exact
+         doubling. Reachability improves and expectancy does not.
+         **And no cell of the 25 beats doing nothing.** The grid's null — hold 20 sessions, no stop,
+         no target — is **+0.140R gross / −0.030R net**, against a best cell of +0.084R / −0.036R.
+         The ratified 2.0/1R cell gives up about **0.10R per trade** against simply holding. That is
+         the price of the risk control, now measured rather than assumed.
+         **So expectancy cannot come from the exit; it has to come from lever 3.**
       2. **`[ ]` A LONGER HOLD.** Already scheduled separately and bounded at ~40 sessions by owner
          ruling 2026-08-31. **Two independent measurements now say the same thing about 20**: the
          momentum studies found nothing inside it, and the target grid cannot reach past 1.5R inside
@@ -1425,6 +1470,24 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       | 20 sessions | +1.016% | [−0.321, +2.263] | +0.908% | [−0.255, +2.059] |
       | 63 sessions | +3.148% | [−0.007, +6.207] | +2.184% | [−0.783, +5.153] |
       | **126 sessions** | **+7.271%** | **[+1.899, +12.512]** | **+6.444%** | **[+0.700, +12.214]** |
+
+      **AND THAT SPREAD IS LONG-SHORT, WHICH THIS SYSTEM CANNOT TRADE — measured 2026-09-06.**
+      `_spread` is top decile MINUS bottom decile; `portfolio.py` says *"this system is long-only
+      today"*. A long-only book earns the top decile against the BENCHMARK.
+      ```bash
+      PYTHONPATH=$PWD/src python tools/measure_long_only_horizon.py --data <store>
+      ```
+      | horizon | n | top decile − `SPY`, net |
+      |---|---|---|
+      | 5 | 453 | **−0.393% [−0.623, −0.164]** — significantly negative |
+      | 20 (ratified) | 112 | +0.057% [−0.788, +0.893] |
+      | 63 | 35 | +1.709% [−0.855, +4.628] |
+      | **126** | **17** | **+4.305% [−0.509, +9.625]** |
+      **The significant result does not survive the conversion.** Long-short at 126 excludes zero;
+      long-only does not — gross lower bound **−0.009%**, zero to three decimals.
+      **And the binding constraint is the calendar, not the sample rule.** Seventeen non-overlapping
+      126-session windows exist in a decade: the horizon with the largest effect is the one with the
+      fewest independent observations, and patience does not change that arithmetic.
 
       **The spread rises monotonically with horizon and only excludes zero at 126 sessions.** That
       is the horizon structure J&T report, reproduced on this project's own data.

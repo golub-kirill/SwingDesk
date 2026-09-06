@@ -3,6 +3,8 @@
 ```
 date:            2026-09-01
 status:          accepted — ruled by the owner 2026-09-01: "1R is Ok, for sure, as a default"
+evidence:        measurements/exit-surface-2026-09-06.json (section 7 - lever 1 measured and
+                 refuted; no cell of the stop x target grid beats buy-and-hold)
 parameters:      exit.target_r_multiple = 1.0, provenance `owner`
 components:      none. broker.submit:target_price already reads it
 implemented_by:  src/swingdesk/broker/submit.py :: def target_price
@@ -106,3 +108,73 @@ and defers the research to those three. `TODO.md` carries them.
 - **Leaving it unset and running without a target.** Not available any more, and for two independent
   reasons: the owner ruled a target mandatory so that research data comes from a **completed** trade
   rather than one that timed out, and the venue refuses a bracket missing a leg (`DR-027` §9.1).
+
+## 7. Lever 1 measured and REFUTED — 2026-09-06
+
+Appended, never edited above. §5 stands as what was believed and why.
+
+Owner instruction: *"lets test and research"*. `python tools/measure_exit_surface.py --data <store>`,
+evidence in `measurements/exit-surface-2026-09-06.json`. **EXPLORATORY; it sets no parameter.**
+
+### 7.1 §5 called a tighter stop "the strongest candidate". It is the worst direction
+
+**5,069 instruments, 123,635 non-overlapping entries, every admitted name every 20 sessions.**
+Expectancy in R, **net** of `DR-005`'s 25 bps per side, at the ratified 1R target:
+
+| stop | net expectancy | what the same slippage costs, in R |
+|---|---|---|
+| **0.5 × ATR** | **−0.776R** | 0.679R |
+| 1.0 × ATR | −0.327R | 0.340R |
+| 1.5 × ATR | −0.195R | 0.227R |
+| **2.0 × ATR** (ratified) | **−0.128R** | 0.170R |
+| 3.0 × ATR | **−0.057R** | 0.113R |
+
+Monotone, and the intervals are ±0.004 to ±0.016 — this is not noise.
+
+**§5's mechanism was right and its sign was wrong.** *"At `1.0 x ATR` one R halves, so 2R becomes
+as reachable as 1R is now — at the cost of a higher stop-out rate."* True. What §5 could not see is
+that **halving R also doubles what the same slippage costs in R**, because `DR-005` charges a
+fraction of PRICE and R is a multiple of ATR. The cost column above doubles exactly as the multiple
+halves. §3 of this record says of its own table **"Gross of costs"**, and that is precisely the
+column in which the lever looked attractive.
+
+**The direction that helps is the opposite of the lever**: widening to 3.0 × ATR more than halves
+the loss.
+
+### 7.2 And no cell of the grid beats doing nothing
+
+The surface carries its own null — hold 20 sessions, no stop, no target, priced in the same
+ratified R units:
+
+| | null (buy and hold) | best cell in the 25 | ratified cell (2.0 / 1R) |
+|---|---|---|---|
+| gross | **+0.140R** | +0.084R | +0.042R |
+| net | **−0.030R** | −0.036R | −0.128R |
+
+**Not one of the twenty-five beats it, gross or net.** That is not an argument for removing the
+stop — a stop is insurance and insurance costs money — but it prices the premium: **the ratified
+exit policy gives up about 0.10R per trade** against simply holding.
+
+It also fixes the floor. **Net of costs a random 20-session hold loses 0.030R**, so any strategy
+must first earn that back before it earns anything.
+
+**So expectancy cannot come from the exit.** It has to come from §5's lever 3, selection — which is
+what the card is.
+
+### 7.3 The confound, reported rather than assumed away
+
+A wider stop produces more TIME exits, and over 2016–2026 a time exit collects the decade's drift.
+The mix is published beside every cell for that reason: at 3.0 / 3R **69% of entries end on time**,
+at 0.5 / 0.5R **none do**. The null exists to absorb exactly that, which is why every cell is marked
+against buy-and-hold rather than against zero.
+
+### 7.4 What this does NOT license
+
+**A change to `exit.atr_stop_multiple`.** These are unselected entries; §5's own lever 3 says the
+whole table moves once a card raises the hit rate. And the net column rests entirely on
+`assumed:DR-005`'s 25 bps, which was measured from daily OHLC as *"materially more than 5"* rather
+than observed. **The gross table is robust; the net table is only as good as that constant.**
+
+What is established is narrower and harder: **the lever §5 nominated is measurably the wrong way
+round**, and it was nominated from a table its own record labelled gross.
+
