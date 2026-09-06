@@ -1748,11 +1748,22 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       later.
       Corrected forward in `PR-009` §10, `prereg/README.md`, `DR-006` §18, `ALLOCATION_SPEC.md`,
       `GO_LIVE_GATES.md` and `CI_POLICY.md`.
-      **RE-TESTED 2026-09-05 AND IT STILL HOLDS, which is the uncomfortable half.**
-      `validation.max_allowable_drawdown` reads **20, percent of equity, `owner`**, and `PR-009`
-      still names **−15R** in nine places starting with its own title. The registration change
-      this entry called for has not been made in the eleven days since — and it cannot be made
-      quietly, because a pre-registration is append-only (`AGENTS.md` §11 rule 2).
+      ~~**RE-TESTED 2026-09-05 AND IT STILL HOLDS, which is the uncomfortable half.** … The
+      registration change this entry called for has not been made in the eleven days since.~~
+      **THAT NOTE WAS WRONG AND I WROTE IT THE SAME DAY. THE CHANGE WAS MADE ON 2026-08-25.**
+      `docs/prereg/PR-009-drawdown-distribution.md` §10 carries it as a dated **first amendment**,
+      and `docs/prereg/README.md` indexes it — *"its subject moved — see its §10 first amendment"*.
+      The amendment states the same two facts this entry does and cites the same reconciliation.
+      **I read the title and §1, saw −15R nine times, and called an append-only record stale for
+      still saying what it was registered saying.** That is the mechanism working:
+      `docs/05-validation/PREREG_TEMPLATE.md` §3 — *"appended, dated, never edited in place"*. §1
+      MUST still read −15R; the amendment is where the correction lives, and looking only at the
+      head of a file whose contract is *append* is a §17 granularity error.
+      **What remains open is not a defect and is cheap only while it stays that way.** The study has
+      never run, so `PREREG_TEMPLATE.md` rule 3's downgrade-to-exploratory does not bite — §10 says
+      so in its own words. **The moment data is drawn, any further correction costs the study its
+      confirmatory status.** So the open question is whether to re-register under the live threshold
+      BEFORE running, and that is a research decision (`AGENTS.md` §14), not a repair.
 - [ ] **`[v]` Reserved prereg ids with nothing written yet:** PR-001b (unblocked, writable now) ·
       PR-003 (needs a daily return series) · PR-004 (needs ~100 journalled trades) · PR-006 (needs a
       forward test). **Checked 2026-08-30 against `docs/prereg/README.md`**, which is the index gate
