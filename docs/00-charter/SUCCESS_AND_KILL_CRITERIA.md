@@ -64,9 +64,12 @@ Six criteria. The load-bearing choices:
 - **The survivorship marker is mandatory** on every Track B result. Not a threshold — a reporting
   obligation, because ~~no free source serves delisted instruments~~ **— refuted 2026-09-05,
   `python tools/probe_alpaca_delisted.py` serves complete daily paths for delisted names from
-  2016; the free IEX feed serves none of it and the entitlement question is open —** every
+  2016; the free IEX feed serves none of it. ~~The entitlement question is open~~ — **the
+  owner ruled 2026-09-05 that the account is FREE TIER, so the tier serves it —** every
   historical number is
-  therefore optimistic by an unknown amount.
+  therefore optimistic by an unknown amount **until a study actually uses the route, which
+  none has**. The obligation is unchanged: a route that exists and has not been taken
+  corrects nothing, and the marker reports what a result WAS computed on.
 
 ## 4. Kill criteria
 

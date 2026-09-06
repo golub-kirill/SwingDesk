@@ -154,8 +154,14 @@ Also unsettled and named rather than glossed:
   rather than a measurement.
 - **`sd(SR)` across trials is not known**, so the hurdle is in units of it rather than in Sharpe.
   Converting needs each trial's Sharpe, and Track B evaluates on **journalled trades only**
-  (`criteria.yml` v1.1.0) — of which there are none. Until a card is live and journalling, the
-  absolute hurdle is not computable and this document does not pretend otherwise.
+  (`criteria.yml` v1.1.0). ~~Of which there are none. Until a card is live and journalling, the
+  absolute hurdle is not computable~~ — **THE PRECONDITION THIS SENTENCE NAMED HAS BEEN MET.**
+  `CARD-001` went live on 2026-09-01 (`DR-030`), journalled three positions on 2026-09-03, and
+  `POS-AIS-2026-09-03` **closed on 2026-09-04** — one completed trade, 65.70 → 70.03.
+  **The hurdle is still not computable and the reason is now a different one**: one trade is
+  not a sample, and `sd(SR)` across trials needs a Sharpe per trial. That is a counting
+  problem with a clock on it rather than a structural gap, which is the opposite of what this
+  bullet said for twelve days. This document still does not pretend otherwise.
 - **Whether a backtest arm and a journalled strategy count against the same N.** They do here,
   because the search happens either way and the criterion says *programme*. That reading is not
   written anywhere else and is worth a ruling.

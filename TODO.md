@@ -62,7 +62,14 @@ retyping it.
       appears **nowhere** in `src/` or `tools/`, only in `DATA_QUALITY_SPEC.md`'s parameter list.
       So the ruling this item asks for is still the one thing that would move it.
 
-- [ ] **`[v]` ADTV admission reads provisional volume — DR-017 DRAFTED 2026-08-18, needs a ruling.**
+- [ ] **`[v]` ADTV admission reads provisional volume — ~~DR-017 DRAFTED 2026-08-18, needs a
+      ruling~~. RATIFIED BY THE OWNER 2026-08-30; WHAT IS OPEN HERE IS A DIFFERENT QUESTION.**
+      Re-tested 2026-09-05: `DR-017` reads `accepted`, `universe.adtv_lag_sessions` = **3**
+      with provenance `owner`, and `reference_data/universe.py` windows on it in `admits`.
+      **The heading contradicted its own body for six days** — the body's *"Still open and NOT
+      decided by DR-017: is backfilled volume executable?"* was always the live question. This
+      file already carries the same shape under `a.reproducible`: *"a reader who takes a heading
+      as the finding got the opposite of what the paragraph says."*
       `universe.min_adtv_20d` admits on 20-day average dollar volume, and the vendor's recent volume
       is not final: of 7,131 settled bars served twice, **7,129 had volume rewritten** (p50 1.1%,
       p90 32%, p99 83%, max 164×), against a close that moves p90 0.02%. **6 of 1,172 instruments
@@ -78,7 +85,7 @@ retyping it.
       re-observed bootstrap bars. **Age-at-re-fetch is not settlement age** — if nothing looks at a
       bar for five sessions, a revision made at one session old is recorded as five. Only a
       gap-free observation regime separates them, so the measurement is restricted to one.
-      **Proposed:** `universe.adtv_lag_sessions = 3` — three, not two, because two is the oldest age
+      ~~**Proposed:**~~ **SET, `owner`, 2026-08-30:** `universe.adtv_lag_sessions = 3` — three, not two, because two is the oldest age
       at which a revision was *seen*, and three is the first with a measured zero.
       **Council-reviewed, direction chosen 4–1 on reproducibility rather than bias:** a lagged window
       makes admission idempotent, so a replayed screen returns what the live screen returned. One
@@ -328,7 +335,8 @@ target is a sentence asserting something about the WORLD that nobody tested.
 - [ ] **`[c]` Study scope sections — still open, and deliberately last.** `PR-002`'s report is the
       known instance and its Canada citation is already recorded above. Amending a published report
       is governed by `AUDIT_AND_IMMUTABILITY.md`, so this is a different kind of task from editing a
-      live document and should not be done casually.
+      live document and should not be done casually. **Re-tested 2026-09-05: the blocker is real**
+      — `docs/04-journal/AUDIT_AND_IMMUTABILITY.md` exists and is what governs the amendment.
 
 ### A STALE COUNT IN A DOCSTRING, AND WHY GATE 14 STILL SHOULD NOT SCAN CODE — 2026-08-25
 
@@ -339,7 +347,7 @@ impossibility claims have now actually been TESTED rather than read. **Four were
 
 | Claim | Outcome |
 |---|---|
-| *"No free source serves delisted history"* | **half false** — EDGAR gives the fact and date, free and official; prices stay closed |
+| *"No free source serves delisted history"* | ~~**half false** — EDGAR gives the fact and date, free and official; prices stay closed~~ **FULLY FALSE as of 2026-09-05.** Alpaca serves complete daily paths for delisted names from 2016 on `feed=sip`, and the owner ruled the account free tier. **The second half took twelve more days and one owner question** — *"have you checked EDGAR or Alpaca?"* — because nobody had asked the second source |
 | *"Canada cannot be enumerated"* | **false** — TMX serves its directory free, no account |
 | *"None of §3a's six routes is mechanically detectable"* | **false for three of six**, and a fourth was never open |
 | *"`www.sec.gov` 403s, so a lookup by ticker needs an owner-supplied contact"* | **false** — it needed an `Accept` header |
@@ -357,6 +365,31 @@ conclusion was drawn one level coarser than the evidence supported.
 its scope, a measurement waited fifteen days on an owner action nobody needed, a guard was described
 as hopeless when half of it was a finite set. `AGENTS.md` §15's asymmetry is not a theory here; it
 is the measured outcome of seven tests.
+
+**A SECOND POPULATION, AND IT IS A DIFFERENT DISEASE — swept 2026-09-05.** The seven above are
+IMPOSSIBILITY claims: sentences asserting something about the world. The sweep below tested
+**EXPIRED BLOCKERS**: sentences that were TRUE when written and stopped being true while nobody
+looked. They are counted apart on purpose — folding them in would inflate the base rate with a
+second illness, which is the §17 granularity error this table is itself about.
+
+| Blocker | Outcome |
+|---|---|
+| `DR-017` *"needs a ruling"* | **expired** — ratified 2026-08-30, and the heading contradicted its own body for six days |
+| *"journalled trades, of which there are none"* | **expired** — `POS-AIS-2026-09-03` closed 2026-09-04, the first completed trade |
+| *"the entitlement question is open"* | **answered** by the owner, 2026-09-05 |
+| *"a status claim in prose is not exact"* | **false for one subclass** — gate 28 runs on 315 files with 0 false positives |
+| earnings buffer, pass timing, `PR-003`, `PR-004`, `DR-008`, study scope, `code_dirty` | **all held**, each measured against the store or the machine |
+
+**The two that expired had been closed for six and twelve days respectively**, and neither was
+hard to check — one `grep` of a decision record's status line, one `SELECT` against
+`positions.duckdb`. **An expired blocker is cheaper to detect than an impossibility and rots the
+same way**, because nothing re-reads a sentence that was right when it was written.
+
+**And one held claim was nearly mis-scored, which is the §17 lesson landing on the auditor.**
+*"Every scheduled pass since 2026-08-31 is clean"* looked false against the `runs` table until the
+population was separated: the dirty rows are HAND runs. Reading the table without the filter would
+have produced a confident wrong refutation — the exact error the seven above were made of, pointed
+the other way.
 
 **Widen it past documents when the document pass is done.** The same shape lives in code comments
 and in study scope sections - `PR-002`'s report alone carries several - and a study that narrowed
@@ -1096,6 +1129,19 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       either exists or does not. A status claim in prose is not exact, which is the whole difficulty.
       **Recorded rather than proposed.** `AGENTS.md` §14 makes the rule the owner's, and gate 30
       makes `AGENTS.md` its only home.
+      **NEW EVIDENCE 2026-09-05, AND IT NARROWS THE PROBLEM RATHER THAN SOLVING IT.** This entry
+      ends *"a status claim in prose is not exact, which is the whole difficulty"*. **For one
+      subclass that is now measured false.** Gate 28 matches a backticked parameter id against a
+      backticked status word and compares to the registry; widened the same day from 88 files to
+      **315** — docstrings included — it caught **seven** live stale statuses and returned **zero**
+      false positives. A PARAMETER status in prose is exact enough to gate.
+      **What stays open is everything else**, and it is most of it: *"gate 10 is unbuilt"*, *"the
+      check does not exist"*, *"nothing counts this"* name no registry key and have no artefact
+      to compare against. Gate 28 is a fourth shape that shipped, not a general answer.
+      **The three rejected probes are not re-opened by this** — they were rejected on false-positive
+      rates, and this one's rate was measured, not assumed.
+      **Still the owner's call** (`AGENTS.md` §14): whether a status claim must name the artefact
+      that owns it, the way §10.5 makes a count name its command.
 - [ ] **`[v]` THE TRIAL BUDGET — `docs/08-pm/TRIAL_BUDGET.md`, written 2026-08-24, `owner-pending`.**
       The number is the owner's. Derive every figure with `python tools/trial_budget.py`, never from
       this line.
@@ -1118,7 +1164,11 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       cross-sectional / 4 mean-reversion / 2 liquidity corner / 2 reserve.
       **Named, not glossed:** trials are NOT independent, so the table is a conservative upper bound
       rather than a measurement; `sd(SR)` is unknown so the hurdle is in units of it, and converting
-      needs journalled trades, of which there are none.
+      needs journalled trades, ~~of which there are none~~ — **OF WHICH THERE IS NOW ONE.**
+      `POS-AIS-2026-09-03` closed **2026-09-04**, entry 65.70 → fill 70.03, the first completed
+      trade this system has ever journalled. **The conclusion survives and its reason has
+      changed**: the hurdle is still not convertible, not because no trade exists but because
+      one is not a sample. Read the count from `positions.duckdb`, never from this line.
       **Deliberately NOT built: the deflated Sharpe itself.** It cannot be evaluated and building it
       would suggest it can. What was missing was the count, and that now exists.
 
@@ -1222,6 +1272,30 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 - [ ] **`[c]` Course v7.0 adoption** — 7 unexecuted steps, deferred by owner ruling.
 
 ## 5. Studies
+
+- [ ] **`[v]` THE DELISTED-HISTORY ROUTE IS OPEN, RULED FREE-TIER, AND USED BY NOTHING — owner
+      rulings 2026-09-05.**
+      ```bash
+      python tools/probe_alpaca_delisted.py
+      ```
+      **Ruling 1, and it settles what a probe never could.** Asked whether SIP historical is a
+      free-tier entitlement or an attribute of this account, the owner answered that **the account
+      is free tier**. An account's tier is not observable in what the account returns, so this was
+      never measurable from here — it needed the owner, which is why `EVIDENCE_SUMMARY.md` §3 called
+      it *"the first thing to settle before anything is built on this"*. Settled.
+      **Ruling 2 is a DEFERRAL and must not be read as a no** (`AGENTS.md` §15): re-deriving the
+      survivorship bound and reopening `PR-002` happens **"only if we need to"**. The route stays
+      open and unused on purpose.
+      **So the honest status is *measurable*, never *measured*.** No study has used it, and every
+      historical number in this repository is still optimistic by an unknown amount. A route nobody
+      has taken corrects nothing, and the survivorship marker's obligation is unchanged — it reports
+      what a result WAS computed on, not what could have been.
+      **What is NOT established, and it is not pedantry:** this is ONE free account observed serving
+      it, not Alpaca's documented policy for every free account. If the terms change the route closes
+      and nothing here would notice. Coverage also begins **2016-01-04**, so a window opening earlier
+      is still unserved — `PR-002`'s and `PR-005`'s both open 2016-08-01, inside it.
+      **`RISK_REGISTER` D-1 keeps its severity.** Only the word *never* fell.
+
 
 - [ ] **`[ ]` THE THREE LEVERS THAT WOULD OPEN A WIDER TARGET, AND NONE OF THEM IS THE TARGET —
       owner instruction 2026-09-01 ("a good checkup and research in future, to open bigger
@@ -1975,8 +2049,13 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
         typed~~, which the contract
         forbids ("Never derived from the ticker alone"). Typing `BRK-B` mints id `BRK-B`; the
         universe path calls the same instrument `BRK.B`. That is two identities for one instrument
-        in a bitemporal store, which cannot be un-split after the fact. Not yet triggered —
-        `bars.duckdb` holds 12 dotted ids and **zero** dashed — but one CLI invocation away.
+        in a bitemporal store, which cannot be un-split after the fact. **Never triggered**, and
+        re-checked 2026-09-05: `bars.duckdb` holds **zero** dashed ids, which is the half that
+        carries the argument. ~~12 dotted~~ — that number was 12 when written, is 25 now, and
+        this file's own header forbids it holding a count at all (`AGENTS.md` §10.5):
+        ```sql
+        SELECT count(DISTINCT instrument_id) FROM bars WHERE instrument_id LIKE '%-%';
+        ```
       - **(b) — fixed 2026-08-16.** `pipeline.py`:99 `_held_instrument()` never derived the id (it
         preserves it); it derived the *vendor ticker* by stripping `.TO`, so a held `BRK.B` asked
         Yahoo for `BRK.B` where the vendor wants `BRK-B`. The fetch raised `VendorUnavailable`, the
@@ -2055,8 +2134,15 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       2026-08-27 19:30 is dirty, which is the `daily_run.cmd` leftover chain `HANDOFF.md` §8
       describes. **It has stopped:** every scheduled pass since 2026-08-31 is clean. Why it stopped
       is not established here and is marked conjecture (`AGENTS.md` §10.4) — the leftover is a
-      property of what the main checkout is carrying at 18:30, not of the code. Re-derive rather
-      than reading either sentence:
+      property of what the main checkout is carrying at 18:30, not of the code.
+      **RE-TESTED 2026-09-05 AND IT HOLDS ON ITS OWN POPULATION — WHICH IS NARROWER THAN IT
+      READS.** All **11** scheduled passes since 2026-08-31 are clean. But **4 HAND RUNS in the
+      same window are dirty** — 09-02 00:02, 09-02 10:22, 09-03 15:42, 09-03 20:45 — and they sit
+      in the same `runs` table `a.reproducible` reads. *"It has stopped"* is true of the
+      SCHEDULE and false of the JOURNAL, and a reader takes it for the second.
+      **Whether a hand run should be journalled at all is not settled here** and is the more
+      useful question: a manifest nobody will replay costs nothing, and one somebody might
+      costs the criterion. Re-derive rather than reading any sentence above:
       ```sql
       SELECT started_at, code_dirty FROM runs ORDER BY started_at;
       ```
@@ -2090,6 +2176,10 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **$100k**, settable at creation and not changeable afterwards without a reset; **IEX market
       data included at no cost** and the Market Data API is identical between paper and live; the
       API specification is the same as live, so migration is a base-URL change.
+      **AND MORE THAN IEX, ESTABLISHED 2026-09-05.** `feed=sip` served complete daily paths for
+      delisted US names from 2016-01-04 with this project's paper key, and the owner ruled the
+      account is **free tier** — so the free tier reaches historical SIP, not only IEX. The
+      delisted route in §5 is what that opened; nothing has used it.
       **IT FITS `DR-014` EXACTLY.** That record rules no owner capital in the observable state of
       the project — paper only. An Alpaca paper account is that, with a real venue's fills, halts,
       partial fills and rejects instead of a fixture.

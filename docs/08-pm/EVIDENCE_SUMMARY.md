@@ -69,13 +69,28 @@ to 2019-01-18, `BHBK` **815** to 2019-03-29, `EEP` **747** to 2018-12-19, `YESR`
 overstated.** The free **IEX** feed serves **zero** of it — every history came from `feed=sip`,
 requested with the paper key this project already holds. Coverage begins **2016-01-04**, so a
 window opening earlier is still unserved; `PR-002`'s and `PR-005`'s both open 2016-08-01, inside
-it. And **whether SIP historical is a free-tier entitlement or an attribute of this account is
-not established** — it is the first thing to settle before anything is built on this.
+it. ~~And **whether SIP historical is a free-tier entitlement or an attribute of this account
+is not established** — it is the first thing to settle before anything is built on this.~~
+**SETTLED BY THE OWNER 2026-09-05: the account is FREE TIER.** So the free tier serves
+delisted daily history on `feed=sip`, and it is settled by the only party who could settle
+it — an account's tier is not observable in what the account returns, which is why the probe
+was able to measure the DATA and not the ENTITLEMENT.
+**What it still does not establish**, and the distinction is not pedantry: this is ONE free
+account observed serving it, not Alpaca's documented policy for every free account. If the
+terms change the route closes, and nothing here would notice.
 
 **What it changes, stated narrowly.** The −2R assumption is no longer forced. It was the last
 unmeasurable input to the bound that erases this project's one positive finding, and the route
 to measuring it now exists. **Nothing here re-derives the bound or reopens `PR-002`** — that is
 a research decision and the owner's, and doing it would need a pre-registration like any other.
+
+**ANSWERED 2026-09-05: *"only if we need to"*. A DEFERRAL, NOT A NO**, and the difference is
+the whole of `AGENTS.md` §15 — a session that reads silence here as a closed door will cite it
+as settled. The route stays open and unused, deliberately.
+**What "need to" would look like is not ruled and is not mine to invent.** The one condition
+that plainly meets it: **`PR-002` being relied on for a live decision** rather than sitting
+parked, because that is the moment its kill line stops being hypothetical. That reading is
+MINE, not the owner's — anything else is a question to ask, not an inference to act on (§14).
 
 **And the SIZE half is now measured rather than merely measurable — 2026-08-25.**
 `python tools/classify_departures.py` classifies every symbol that left the directory between two
