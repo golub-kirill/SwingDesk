@@ -251,7 +251,7 @@ parameters:
     status: owner
     provenance: owner
     read_by: swingdesk.trade_management.sizing:size_long
-    named_in: [Appendix C, M49-T762]
+    named_in: [Appendix C, M49-T0762]
     ui_editable: true
 
   - id: risk.liquidity_cap_order_to_adtv_pct
@@ -260,7 +260,7 @@ parameters:
     status: owner
     provenance: owner
     read_by: swingdesk.trade_management.sizing:size_long
-    named_in: [Appendix C, M49-T760]
+    named_in: [Appendix C, M49-T0760]
     ui_editable: true
 
   - id: risk.max_open_risk
@@ -269,7 +269,7 @@ parameters:
     status: owner
     provenance: owner
     read_by: swingdesk.trade_management.portfolio:limits
-    named_in: [M51-T780, M93-T1326]
+    named_in: [M51-T0780, M93-T1326]
     ui_editable: true
 
   - id: risk.max_sector_risk
@@ -297,7 +297,7 @@ parameters:
     status: owner
     provenance: owner
     read_by: swingdesk.trade_management.portfolio:sector_limit
-    named_in: [M51-T782, M93-T1327]
+    named_in: [M51-T0782, M93-T1327]
     ui_editable: true
 
   - id: risk.correlation_threshold
@@ -309,7 +309,7 @@ parameters:
       position is refused Skip/RISK; the sign is kept, so the test is r >= threshold and not
       abs(r) >= threshold, because what DR-006 section 2 bounds is duplicate exposure rather than
       any strong relationship. The size adjustment the course names alongside the threshold
-      (M49-T761) is CLOSED by owner ruling 2026-08-23 on DR-006 section 15.4: this refuses and does
+      (M49-T0761) is CLOSED by owner ruling 2026-08-23 on DR-006 section 15.4: this refuses and does
       not resize, and the adjustment is unnecessary rather than merely unauthored. Refusing costs
       nothing measurable in return; halving instead would keep half of an exposure that gaps
       together five times more often, and would buy that by authoring a multiplier nothing here
@@ -322,7 +322,7 @@ parameters:
     status: assumed
     provenance: "assumed:DR-006"
     read_by: swingdesk.trade_management.portfolio:correlation_limit
-    named_in: [M49-T761, M51-T781]
+    named_in: [M49-T0761, M51-T0781]
     ui_editable: true
 
   - id: risk.correlation_lookback_sessions
@@ -339,7 +339,7 @@ parameters:
     status: assumed
     provenance: "assumed:DR-006"
     read_by: swingdesk.trade_management.portfolio:correlation_limit
-    named_in: [M49-T761, M51-T781]
+    named_in: [M49-T0761, M51-T0781]
     ui_editable: true
 
   - id: risk.max_concurrent_positions
@@ -348,7 +348,7 @@ parameters:
     status: owner
     provenance: owner
     read_by: swingdesk.trade_management.portfolio:limits
-    named_in: [M49-T764]
+    named_in: [M49-T0764]
     ui_editable: true
 
   - id: risk.max_daily_loss
@@ -357,7 +357,7 @@ parameters:
     status: unset
     provenance: null
     read_by: none
-    named_in: [M51-T792, M93-T1328]
+    named_in: [M51-T0792, M93-T1328]
     ui_editable: true
 
   - id: risk.max_weekly_loss
@@ -366,7 +366,7 @@ parameters:
     status: unset
     provenance: null
     read_by: none
-    named_in: [M51-T793, M93-T1329]
+    named_in: [M51-T0793, M93-T1329]
     ui_editable: true
 
   - id: risk.drawdown_size_reduction_ladder
@@ -375,7 +375,7 @@ parameters:
     status: unset
     provenance: null
     read_by: none
-    named_in: [M49-T765, M93]
+    named_in: [M49-T0765, M93]
     ui_editable: true
 
   - id: risk.risk_off_ladder
@@ -394,7 +394,7 @@ parameters:
     status: unset
     provenance: null
     read_by: none
-    named_in: [Appendix N code STOP, M48-T746]
+    named_in: [Appendix N code STOP, M48-T0746]
     ui_editable: true
 
   - id: risk.revenge_pause_threshold
