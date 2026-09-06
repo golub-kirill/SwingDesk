@@ -45,13 +45,18 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import os
 import re
 import sys
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
-REPO = Path(__file__).resolve().parents[1]
+#: Root of the tree being checked. Overridable so a test can point the gate at a fixture and
+#: assert it goes red - a gate nobody has seen fail is a gate nobody has tested. The same
+#: reasoning and the same mechanism as `verify_parameter_claims.py`, added 2026-09-06 when
+#: this gate learned to resolve a course citation and had nowhere to prove it.
+REPO = Path(os.environ.get("SWINGDESK_ROOT") or Path(__file__).resolve().parents[1])
 DEFAULT_REGISTRY = REPO / "registry" / "parameters.yml"
 
 REQUIRED_FIELDS = ("id", "unit", "value", "status", "provenance", "named_in", "read_by",
@@ -183,9 +188,27 @@ def reader_failure(entry: dict[str, Any]) -> str | None:
     return None
 
 
+#: A course topic id at the START of a citation. Deliberately a PREFIX match: `M30-T0446 chart
+#: panel` is a legal entry carrying a human note after the id, and two of those exist. Anything not
+#: shaped like a topic id - `DR-003`, `Appendix C` - is a different kind of reference and is not
+#: this check's business.
+TOPIC_CITATION = re.compile(r"^M\d+-T\d+")
+
+
+def course_topic_ids() -> set[str]:
+    """Every topic id the course index knows, version suffix dropped.
+
+    The index keys components as `M49-T0764-v4.0`; a citation names `M49-T0764`. Read as text rather
+    than parsed, so this gate depends on the index's CONTENT and not on its shape.
+    """
+    text = (REPO / "registry" / "course_index.yml").read_text(encoding="utf-8")
+    return set(re.findall(r"M\d+-T\d+", text))
+
+
 def check(entries: list[dict[str, Any]]) -> list[str]:
     failures: list[str] = []
     seen: set[str] = set()
+    course_topics = course_topic_ids()
 
     for index, entry in enumerate(entries):
         label = entry.get("id") or f"<entry {index}>"
@@ -244,6 +267,13 @@ def check(entries: list[dict[str, Any]]) -> list[str]:
 
         if not entry["named_in"]:
             failures.append(f"{label}: named_in is empty - cite the course topic or mark as authored")
+        for reference in entry["named_in"] or []:
+            match = TOPIC_CITATION.match(str(reference))
+            if match and match.group(0) not in course_topics:
+                failures.append(
+                    f"{label}: named_in cites {match.group(0)!r}, which is not a topic in "
+                    f"registry/course_index.yml"
+                )
 
     # 6. Values that code reads as numbers must be numbers.
     numeric = numerically_read_ids()

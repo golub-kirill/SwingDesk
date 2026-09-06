@@ -1018,6 +1018,83 @@ def test_branch_census_survives_a_clone_with_no_master_ref(tmp_path: Path) -> No
     assert "Traceback" not in result.stderr
 
 
+# ------------------------------------------------ gate 1: a course citation that resolves
+
+
+def _registry_tree(tmp_path: Path, named_in: str, *, topic: str = "M49-T0764") -> Path:
+    """A registry holding one parameter, beside a course index holding one topic."""
+    (tmp_path / "registry").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "registry" / "course_index.yml").write_text(
+        "topics:\n  - component: \"" + topic + "-v4.0\"\n", encoding="utf-8"
+    )
+    (tmp_path / "registry" / "parameters.yml").write_text(
+        "parameters:\n"
+        "  - id: risk.probe\n"
+        "    unit: count\n"
+        "    value: 4\n"
+        "    status: owner\n"
+        "    provenance: owner\n"
+        "    read_by: none\n"
+        "    named_in: [" + named_in + "]\n"
+        "    ui_editable: true\n",
+        encoding="utf-8",
+    )
+    return tmp_path
+
+
+def test_gate_one_refuses_a_course_citation_that_names_no_topic(tmp_path: Path) -> None:
+    """`AGENTS.md` §7: a missing citation is invented scope. An UNRESOLVABLE one hid as a present one.
+
+    The check was `if not entry["named_in"]` — non-empty, never resolved. Measured 2026-09-06:
+    122 topic-shaped citations, **thirteen** pointing at nothing, every one the same zero-padding
+    slip and every one in the `risk.*` family. Found while trying to read what the course says about
+    `risk.max_concurrent_positions`, whose citation went nowhere.
+    """
+    root = _registry_tree(tmp_path, "M49-T764")  # the real topic is M49-T0764
+    code, out = run_gate("verify_parameters.py", root)
+    assert code == 1
+    assert "M49-T764" in out and "not a topic" in out
+
+
+def test_gate_one_accepts_the_padded_form(tmp_path: Path) -> None:
+    """The other half of the pair. A gate that only ever fails is not discriminating either."""
+    code, out = run_gate("verify_parameters.py", _registry_tree(tmp_path, "M49-T0764"))
+    assert code == 0, out
+
+
+def test_a_citation_may_carry_a_human_note_after_the_id(tmp_path: Path) -> None:
+    """`M30-T0446 chart panel` is legal and two of them exist, so the match is a PREFIX.
+
+    Matching the whole field would have turned both into failures on the day this check landed —
+    the false positive `CI_POLICY.md` §3 says gets a gate bypassed.
+    """
+    root = _registry_tree(tmp_path, '"M30-T0446 chart panel"', topic="M30-T0446")
+    code, out = run_gate("verify_parameters.py", root)
+    assert code == 0, out
+
+
+def test_a_labelled_citation_is_still_RESOLVED_and_not_merely_tolerated(tmp_path: Path) -> None:
+    """The discriminating case, and the first draft of this file did not have it.
+
+    Asserting only that `M30-T0446 chart panel` passes is satisfied by two different gates: one that
+    resolves the id inside the label, and one that skips labelled citations altogether. Anchoring
+    the pattern with `$` produces the second, and the earlier test survived that mutation.
+
+    Here the label carries an id that names no topic. A gate resolving the prefix catches it; a gate
+    skipping labels does not.
+    """
+    root = _registry_tree(tmp_path, '"M99-T9999 chart panel"', topic="M49-T0764")
+    code, out = run_gate("verify_parameters.py", root)
+    assert code == 1
+    assert "M99-T9999" in out and "not a topic" in out
+
+
+def test_a_non_topic_reference_is_not_this_checks_business(tmp_path: Path) -> None:
+    """`Appendix C` and `DR-003` are legitimate `named_in` entries that name no topic."""
+    code, out = run_gate("verify_parameters.py", _registry_tree(tmp_path, '"Appendix C"'))
+    assert code == 0, out
+
+
 # --------------------------------------------------------------------------- count ownership
 
 
