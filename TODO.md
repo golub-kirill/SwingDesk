@@ -1023,15 +1023,38 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       Section 6 claims the discriminator *"moves no decision output the day it lands"* and then says
       the honest thing: *"it must be measured against the live universe before it is called
       cosmetic."* Measured, and it is not cosmetic.
-      **23 admitted universe members were refused by the section 8.7 guard ON 2026-08-30** — 1,018
-      spendable, 23 degenerate, 101 no sector, 44 nothing stored, of 1,186. Robust to `DR-017`'s
-      lag: 23 under `adtv_lag=0` and 23 under `adtv_lag=3`, checked both ways so it cannot be an
-      artefact of the change that landed the same day.
-      **THOSE FOUR NUMBERS HAVE NO GENERATING TOOL AND ARE NOW STALE — noted 2026-09-05.** They
-      were derived once by hand and typed here, which is exactly what this file's header forbids
-      (`AGENTS.md` §10.5, §10.6). The population has since widened, so *"today"* was doing work
-      the sentence could not support. **Anyone acting on this must re-derive first**, and the
-      command to do it with does not exist yet — that absence is the finding, not the numbers.
+      ~~**23 admitted universe members are refused by the section 8.7 guard today** — 1,018
+      spendable, 23 degenerate, 101 no sector, 44 nothing stored, of 1,186.~~ **That was
+      2026-08-30, and it is not comparable with anything measured after 2026-08-31.**
+      **THE COMMAND NOW EXISTS — built 2026-09-05, because these four numbers had none**
+      (`AGENTS.md` §10.6), and a hand tally typed into the file whose header says it never holds
+      measured counts is how the drift started:
+      ```bash
+      python tools/measure_sector_cap.py --refusals --data <store>
+      ```
+      **AND IT REFUTES THE HEADLINE. `DEGENERATE` IS NOW ZERO.** `DR-025`, accepted **2026-08-31**
+      — the day AFTER this measurement — supersedes `DR-021` §4 and with it `DR-006` §8.7's shape
+      inference. The guard that produced the 23 no longer exists. **Only the vendor's own
+      declared zero refuses now**, and the shape is not consulted at all.
+      **Two rules, two populations, and the entry compared across both:**
+      | | 2026-08-30, by hand | 2026-09-05, by the tool |
+      |---|---|---|
+      | admitted | 1,186 | **3,958** |
+      | spendable | 1,018 | **3,499** |
+      | no sector | 101 | **418** |
+      | nothing stored | 44 | **0** |
+      | refused on SHAPE (`§8.7`) | **23** | the rule is gone |
+      | refused on DECLARED 0% equity (`DR-025`) | not a bucket that existed | **41** |
+      **Neither column is a correction of the other.** Different rule, and a universe that more
+      than tripled meanwhile. Read the command, never the table.
+      **`DR-025` also names what the old guard cost:** it refused **five SPDR Select Sector
+      funds that are 99.7%+ equity** — exactly the instruments a sector cap exists to catch.
+      **The census carries an `other` bucket, and it earned itself on the first run.** The
+      `0% equity` matcher was written against the wrong words and put all 41 there rather than
+      silently folding them under a neighbouring heading. A refusal reason added later shows up
+      as itself.
+      **What this does NOT settle:** whether `DR-021` cost a counter reset. That is a fact about
+      2026-08-30 and stays true of that day. What falls is the present tense.
       ~~**Section 6's error is sampling, not reasoning.** It reasons about the five SPDR Select
       Sector funds, and none of the eleven SPDR funds is in the universe at all — coverage is still
       an alphabetical prefix and the letter X is unreached, the same reason `DR-018` section 2b
@@ -1045,13 +1068,22 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **This makes section 6 MORE checkable, not less wrong.** Its reasoning population now exists
       in the store, so *"the discriminator moves no decision output"* can be tested against the
       very funds it reasoned about instead of being rebutted by their absence. **Stored bars are
-      not admission** — whether these clear the liquidity rule is a separate question and is not
-      measured here. The guard still fires on ANY degenerate-shaped fund.
-      **How many would flip is not measured and is certainly not zero.** `CURE` (3x healthcare
-      equity, reported healthcare), `DPST` (3x regional banks, financial services) and `DRN` (3x
-      real estate, real estate) are being refused on a reason that is false for them, while `BNDW`
-      and `BNDX` are global bond funds reported as **technology** and are refused correctly. The
-      exact split needs `stockPosition`, which is the next item.
+      not admission** — whether these clear the liquidity rule is a separate question.
+      ~~The guard still fires on ANY degenerate-shaped fund.~~ **WRONG, AND IT WAS WRITTEN INTO THIS
+      ENTRY ON 2026-09-05 BY THE SAME SWEEP THAT STRUCK THE SENTENCE ABOVE IT.** `DR-025` deleted
+      the shape trigger on 2026-08-31. Correcting one half of a paragraph and restating the
+      superseded half is the §12 shape at its smallest — and it survived a gate run and a merge.
+      ~~**How many would flip is not measured and is certainly not zero.**~~ **IT IS MEASURED NOW,
+      2026-09-05, AND THE PREDICTION WAS EXACTLY RIGHT — every named instrument went the way this
+      paragraph said it would.** `CURE` (3x healthcare, reported healthcare), `DPST` (3x regional
+      banks, financial services) and `DRN` (3x real estate, real estate) were *"refused on a reason
+      that is false for them"* — **all three are now spendable.** `BNDW` and `BNDX`, the global bond
+      funds reported as **technology** and *"refused correctly"*, **are still refused** — under
+      `DR-025`'s declared-0%-equity rule rather than the shape, so they are refused correctly for a
+      better reason. So is `NEAR`, the fund §8.7 was written about.
+      **That is the rare case of a prediction registered before the fix and checked after it**, and
+      it is worth more than the count: the discriminator did what the entry said, on the names the
+      entry named. Re-derive with the `--refusals` command above, never from this paragraph.
       **The proposed discriminator reads a field this project does not store.** `Classification`
       carries `quote_type`, `industry` and sector weights; so does the table; the vendor adapter
       reads `funds_data.sector_weightings` only. `asset_classes` is read in exactly one place —

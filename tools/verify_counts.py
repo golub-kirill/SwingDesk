@@ -156,6 +156,21 @@ ALLOWED: set[tuple[str, str]] = {
 #: uses `gates` as a VERB. None came from a backticked parameter status or a component activation
 #: state, and the rejection recorded the noise without separating the patterns that produced it.
 #:
+#: **THAT SEPARATION IS DONE, 2026-09-05, AND THE EXCLUSION SURVIVES IT.** Measured per key over
+#: this file: `gates` 1 hit and it is the documented verb; `tests` 4 hits and all four describe
+#: what a change added; `documents` 0; `golden vectors` 0. The two clean keys still do not go in,
+#: and the reason is the PATTERN rather than the count:
+#:
+#:   * `documents` has exactly one pattern, `| Docs | <n> files` - a HANDOFF state-table cell.
+#:     It cannot fire in prose at all, so adding it would buy a guarantee nothing threatens.
+#:   * `golden vectors` matches bare `vectors`, which carries the same weakness that made
+#:     `tests` noisy: "re-recorded 2 vectors" describes a change, not a census. Zero today is
+#:     the absence of that sentence, not the absence of the failure mode.
+#:
+#: **A zero measured on today's file is not a property of the pattern**, and this file is rewritten
+#: constantly - 105 closed items left it on 2026-09-05 alone. Recorded so the next session does not
+#: re-run the probe and read the same zero as permission.
+#:
 #: **What reopened it**, 2026-08-30: the rejection bounded the cost by arguing a stale count here
 #: sits in a closed `[x]` item and "only reads wrong". The instance that motivated this subset was
 #: in an OPEN item - *"6 specified components awaiting activation"* against a registry holding a
