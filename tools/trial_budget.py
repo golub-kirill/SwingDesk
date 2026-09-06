@@ -115,8 +115,12 @@ RULES = {
 #: `b.deflated_sharpe` reads *"the CUMULATIVE trial count across the whole programme"*, and until
 #: this table existed the programme meant `docs/prereg/results/` alone. An exploratory measurement
 #: that sweeps a grid is still a grid of shots at the same data: `measure_exit_surface.py` evaluated
-#: twenty-five stop/target cells against one null and spent nothing by that accounting, which is
-#: more configurations than every pre-registration in the repository put together.
+#: twenty-five stop/target cells against one null and spent nothing by that accounting - more
+#: configurations than any single pre-registration has ever declared.
+#:
+#: **An earlier version of that sentence said "more than every pre-registration put together".**
+#: True when written at 20 registered trials, false hours later when `PR-014` declared 12. The test
+#: that asserted it failed and caught it, which is the only reason it is not still standing here.
 #:
 #: The rule is declared HERE rather than added to the evidence files, for the same reason `RULES`
 #: is: a committed measurement records what was run, and editing one to satisfy a later counter

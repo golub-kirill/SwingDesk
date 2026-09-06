@@ -53,11 +53,18 @@ def test_a_declared_sweep_is_counted_with_its_own_rule(budget):
     assert "stop multiples" in surface.rule
 
 
-def test_the_exit_surface_alone_outweighs_every_pre_registration(budget):
-    """The sentence that justifies this whole change, asserted rather than written down."""
-    registered = sum(s.trials for s in budget.spends())
+def test_one_tool_sweep_outweighs_the_largest_pre_registration(budget):
+    """The claim that justifies this change, in a form that does not go stale.
+
+    **The first version of this test asserted the exit surface outweighed EVERY pre-registration
+    put together.** That was true at 20 registered trials and became false hours later, when
+    `PR-014` declared 12 — the test failed and caught its own sentence expiring. The durable claim
+    is the comparison against the largest single study, which is what makes a tool sweep worth
+    counting at all: it is not a rounding error beside a filing.
+    """
+    largest = max(s.trials for s in budget.spends())
     surface = {r.study: r for r in budget.exploratory_spends()}["exit-surface-2026-09-06"]
-    assert surface.trials > registered
+    assert surface.trials > largest
 
 
 # --- UNDECLARED is not zero --------------------------------------------------------------------
