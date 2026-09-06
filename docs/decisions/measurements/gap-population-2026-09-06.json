@@ -1,0 +1,64 @@
+{
+  "measured_on": "2026-09-06",
+  "question": "DR-006 section 8.1 lowered the position cap from 6 to 4 on one number - the mean loss when an exit gaps through its stop is -1.692R. That number was measured on 68 instruments. Is it a property of the market, or of those 68?",
+  "asked_by": "the owner, while deciding whether to raise the cap: 'померяем ещё раз на пофикшенных?'",
+
+  "part_1_the_record_reproduces": {
+    "method": "recomputed directly from docs/prereg/results/PR-005-trades.csv, 26,351 trades, using the log's own `stop` and `stop_gap` exit reasons",
+    "clean_stop_mean_R": -1.070,
+    "gap_exit_mean_R": -1.692,
+    "worst_gap_R": -11.776,
+    "gaps_worse_than_1_5R": "35% of gaps, 4.0% of all trades",
+    "record_says": "clean -1.070R, gapped -1.692R, worst -11.78R, 35%/4.0%",
+    "verdict": "EXACT on net_r. The record is verified.",
+    "note": "gross_r gives -1.047 and -1.618 - close enough to look right and wrong by 4%. The record's figures are NET of costs, which the record does not say and which a reader re-deriving from the wrong column would not discover."
+  },
+
+  "part_2_the_population": {
+    "pr005_distinct_instruments": 68,
+    "admitted_universe_today": 3958,
+    "why_this_matters": "measure_sector_cap.py was widened for exactly this reason and its docstring names it: '59 usable instruments is a thin cross-section and it leaned heavily financial, so every refusal rate it produced was more likely overstated than understated.' The GAP statistic was never widened, and it is the anchor of the position cap."
+  },
+
+  "part_3_down_gaps_in_atr_units": {
+    "method": "(previous close - today's open) / ATR(14) of the previous session, per instrument, 2016-08-30 to 2026-07-31. A property of the INSTRUMENT, not of a strategy, so it needs no backtest.",
+    "populations": {
+      "pr005_68_names": {
+        "instruments": 68, "observations": 72623,
+        "median": 0.214, "p90": 0.734, "p99": 2.178, "p999": 6.843,
+        "share_beyond_2atr": 0.01190, "mean_when_beyond_2atr": 4.001
+      },
+      "admitted_today": {
+        "instruments": 3958, "observations": 1603209,
+        "median": 0.198, "p90": 0.668, "p99": 1.982, "p999": 5.871,
+        "share_beyond_2atr": 0.00979, "mean_when_beyond_2atr": 3.714
+      },
+      "everything_stored": {
+        "instruments": 12383, "observations": 2952232,
+        "median": 0.228, "p90": 0.842, "p99": 2.539, "p999": 7.387,
+        "share_beyond_2atr": 0.01727, "mean_when_beyond_2atr": 3.800
+      }
+    },
+    "finding": "The ADMITTED universe gaps LESS than PR-005's 68 names at every quantile. Beyond 2 ATR: 0.82x as frequent and 0.93x as severe. So DR-006's -1.692R was measured on a population harsher than the one this system now trades, and the figure is CONSERVATIVE rather than optimistic.",
+    "the_correction_that_mattered": "The first run compared PR-005's 68 against ALL 12,383 stored instruments and found the opposite - the wider set gaps 1.45x more often. That set includes names the liquidity rule refuses and a run never nominates. Against what is actually ADMITTED the direction inverts. The liquidity rule is doing the work: admitted gaps beyond 2 ATR 0.57x as often as the raw store."
+  },
+
+  "part_4_what_this_does_and_does_not_license": {
+    "licensed": "DR-006's gap cost is conservative for today's universe. Both of its inputs - how often a gap exceeds the stop distance, and how far past it opens - are milder on the admitted set.",
+    "NOT_licensed": "A new R figure. Converting a gap distribution into an R cost needs the stop's position relative to the entry and the exit rule, which needs a backtest. The scaling below is an ILLUSTRATION of direction and magnitude, not a measurement.",
+    "illustration_only": {
+      "combined_input_ratio": 0.764,
+      "scaled_gap_cost_R": 1.292,
+      "risk_DR_006_accepted_at_cap_4": "6.77R for a whole-book gapping session",
+      "cap_that_scaled_cost_allows_at_the_same_risk": 5.2,
+      "table": [
+        {"cap": 4, "gap_session_old_R": 6.77, "gap_session_scaled_R": 5.17, "trades_per_year": 50, "years_to_100": 2.0},
+        {"cap": 5, "gap_session_old_R": 8.46, "gap_session_scaled_R": 6.46, "trades_per_year": 63, "years_to_100": 1.6},
+        {"cap": 6, "gap_session_old_R": 10.15, "gap_session_scaled_R": 7.75, "trades_per_year": 76, "years_to_100": 1.3}
+      ],
+      "honest_summary": "Even taken at face value this buys a cap of 5, not 8. Two years becomes about one and a half. It is not the lever that makes the clock short."
+    }
+  },
+
+  "reproduce": "The two probes live outside the repository; the SQL is the whole method and is quoted in DR-006's amendment. Re-derive rather than citing these numbers."
+}

@@ -7,6 +7,8 @@ status:     accepted — fully ratified by the owner: four of six 2026-08-22 (§
 parameters: risk.max_open_risk, risk.max_concurrent_positions, risk.max_sector_risk,
             risk.correlation_threshold, risk.correlation_lookback_sessions,
             risk.max_position_value, risk.liquidity_cap_order_to_adtv_pct
+evidence:   measurements/gap-population-2026-09-06.json (section 9, appended 2026-09-06 -
+            the gap cost re-measured on the population it now governs)
 components: none - swingdesk.trade_management.portfolio enforces the book and correlation caps,
             swingdesk.derived_observations.correlation supplies the statistic,
             swingdesk.trade_management.sizing the position-value cap
@@ -1087,3 +1089,85 @@ parameter id against a numeric claim, one matching it against a cited `DR-NNN` -
 rejected as too sparse to be worth the noise**: 21 and 15 pairings across the whole tree, with one
 and two live disagreements respectively, every one of them a false positive. `CI_POLICY.md` section
 3 is what a noisy gate costs. Recorded so the next session does not re-derive the same negative.
+
+## 9. The gap cost re-measured on the population it governs — 2026-09-06
+
+Appended, never edited above. §8 stands as what was decided and why.
+
+**The owner's question, while deciding whether to raise the cap:** *"померяем ещё раз на
+пофикшенных?"* — measure it again on what we actually trade.
+
+### 9.1 §8.1 reproduces exactly, and on a column it does not name
+
+Recomputed from `PR-005-trades.csv` using the log's own `stop` and `stop_gap` exit reasons:
+
+| | recomputed | §8.1 says |
+|---|---|---|
+| clean stop | **−1.070R** | −1.070R |
+| gap exit | **−1.692R** | −1.692R |
+| worst gap | −11.776R | −11.78R |
+| gaps worse than −1.5R | 35% / 4.0% | 35% / 4.0% |
+
+**Exact — on `net_r`.** The `gross_r` column gives −1.047R and −1.618R, close enough to look right
+and wrong by 4%. §8.1 does not say which column it used, so a reader re-deriving it lands on the
+wrong one and finds a small discrepancy they cannot explain. Recorded here rather than fixed above.
+
+### 9.2 The number was measured on SIXTY-EIGHT instruments
+
+`PR-005-trades.csv` holds 26,351 trades across **68 distinct names**. The admitted universe today
+holds **3,958**.
+
+**This project already knows those 68 are thin.** `measure_sector_cap.py` was widened for exactly
+that reason and its docstring says why: *"59 usable instruments is a thin cross-section and it
+leaned heavily financial, so every refusal rate it produced was more likely overstated than
+understated."* The **gap** statistic was never widened, and it is the anchor of the position cap.
+
+### 9.3 Measured: the admitted universe gaps LESS, not more
+
+Down-gaps in ATR(14) units — `(previous close − open) / ATR` — over 2016-08-30 … 2026-07-31. A
+property of the instrument rather than of a strategy, so it needs no backtest.
+
+| population | names | observations | median | p99 | ≥2 ATR | mean when ≥2 ATR |
+|---|---|---|---|---|---|---|
+| `PR-005`'s 68 | 68 | 72,623 | 0.214 | 2.178 | **1.190%** | **4.001** |
+| **admitted today** | 3,958 | 1,603,209 | 0.198 | 1.982 | **0.979%** | **3.714** |
+| everything stored | 12,383 | 2,952,232 | 0.228 | 2.539 | 1.727% | 3.800 |
+
+**Beyond 2 ATR the admitted set gaps 0.82× as often and 0.93× as hard.** So §8.1's −1.692R was
+measured on a population *harsher* than the one this system now trades, and the figure is
+**conservative** rather than optimistic.
+
+**The correction that produced this, because the first answer was the opposite.** The first run
+compared the 68 against all **12,383** stored instruments and found the wider set gapping **1.45×
+more often** — which would have made §8 optimistic and the cap too high. That set includes names the
+liquidity rule refuses and a run never nominates. Against what is actually **admitted** the
+direction inverts. `DR-003`'s liquidity rule is doing the work: the raw store gaps beyond 2 ATR
+**1.76×** as often as the admitted set.
+
+### 9.4 What this licenses, and it is less than it sounds
+
+**Licensed:** §8's gap cost is conservative for today's universe. Both of its inputs are milder.
+
+**Not licensed: a new R figure.** Converting a gap distribution into an R cost needs the stop's
+position relative to the entry and the exit rule, which needs a backtest. **Scaling §8.1's number by
+its own inputs is an illustration of direction, not a measurement**, and is marked as such:
+
+| cap | gap session at −1.692R | at an illustrative −1.292R | trades/year | years to `b.min_sample` |
+|---|---|---|---|---|
+| **4** | 6.77R | 5.17R | 50 | **2.0** |
+| 5 | 8.46R | 6.46R | 63 | 1.6 |
+| 6 | 10.15R | 7.75R | 76 | 1.3 |
+
+**§8 accepted 6.77R for a whole-book gapping session.** At the same accepted risk, the scaled cost
+allows a cap of about **5**.
+
+**So even taken at face value this buys one more slot, not four.** Two years becomes about one and a
+half. **The position cap is not the lever that makes the clock short**, and saying so is the point
+of measuring it: the question was answered, and the answer was small.
+
+### 9.5 What would settle it
+
+A fresh backtest on the admitted universe producing an R-denominated gap cost the way `PR-005` did.
+That is a study rather than a measurement, it spends a trial against `b.deflated_sharpe`, and
+nothing here proposes one.
+
