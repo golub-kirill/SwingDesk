@@ -898,8 +898,13 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 4. Pending decisions
 
-- [ ] **`[v]` `DR-039` PROPOSED 2026-09-05 — the venue bills a published formula, and the model
-      charges an assumed rate for a commission nobody takes.** Owner question: *"Alpaca shows us
+- [ ] **`[v]` `DR-039` RATIFIED 2026-09-05, AND WHAT IS LEFT IS THE WIRING — the venue bills a
+      published formula, and the model charged an assumed rate for a commission nobody takes.**
+      **Both parameters are set** (`owner`), `registry/fee_schedule.yml` holds the effective-dated
+      rates and `fees.py` refuses outside its range. **Nothing charges them yet**: wiring these into
+      a backtest changes what it computes, which the record says plainly is a separate decision.
+      **Still open: whether a paper account is billed the live schedule.** It is the one of the four
+      unestablished items the schedule could not answer, and only a live statement can. Owner question: *"Alpaca shows us
       some fees. Shall we research and take them into a project?"*
       `docs/decisions/DR-039-the-venue-bills-a-published-formula.md`, evidence in
       `docs/decisions/measurements/venue-fees-2026-09-05.json`.
