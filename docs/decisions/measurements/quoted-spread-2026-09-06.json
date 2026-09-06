@@ -1,0 +1,297 @@
+{
+  "as_of": "2026-09-05T01:16:18.177108-05:00",
+  "measured_as_of": "2026-09-05",
+  "population": {
+    "rebuilt_per_date": true,
+    "seed": 20260906,
+    "by_date": {
+      "2016-02-17": {
+        "admissible": 38,
+        "sampled": 38
+      },
+      "2016-08-17": {
+        "admissible": 34,
+        "sampled": 34
+      },
+      "2019-02-20": {
+        "admissible": 591,
+        "sampled": 60
+      },
+      "2019-08-21": {
+        "admissible": 602,
+        "sampled": 60
+      },
+      "2022-02-16": {
+        "admissible": 753,
+        "sampled": 60
+      },
+      "2022-08-17": {
+        "admissible": 750,
+        "sampled": 60
+      },
+      "2024-02-21": {
+        "admissible": 832,
+        "sampled": 60
+      },
+      "2024-08-21": {
+        "admissible": 872,
+        "sampled": 60
+      },
+      "2026-02-18": {
+        "admissible": 3899,
+        "sampled": 60
+      },
+      "2026-08-19": {
+        "admissible": 3999,
+        "sampled": 60
+      }
+    },
+    "liquidity_rule": {
+      "min_price": "5.00",
+      "min_adtv": "5000000",
+      "adtv_window": 20,
+      "min_history": 250,
+      "adtv_lag": 0
+    }
+  },
+  "convention": "S = (ask - bid) / mid, per side = S/2, identical to DR-005",
+  "source": "consolidated SIP NBBO via the venue's market-data host, free tier",
+  "dates": [
+    "2016-02-17",
+    "2016-08-17",
+    "2019-02-20",
+    "2019-08-21",
+    "2022-02-16",
+    "2022-08-17",
+    "2024-02-21",
+    "2024-08-21",
+    "2026-02-18",
+    "2026-08-19"
+  ],
+  "quotes_per_window": 25,
+  "dr005_per_side_bps": "25.44",
+  "empty_windows": 0,
+  "calls": 2208,
+  "rows": [
+    {
+      "window": "09:30 open",
+      "year": 2016,
+      "instruments": 38,
+      "p10": "2.591",
+      "median": "21.863",
+      "p90": "91.489",
+      "mean": "164.963",
+      "dr005_over_measured": "1.16"
+    },
+    {
+      "window": "09:30 open",
+      "year": 2019,
+      "instruments": 119,
+      "p10": "3.574",
+      "median": "22.657",
+      "p90": "81.086",
+      "mean": "34.988",
+      "dr005_over_measured": "1.12"
+    },
+    {
+      "window": "09:30 open",
+      "year": 2022,
+      "instruments": 115,
+      "p10": "6.028",
+      "median": "24.876",
+      "p90": "77.152",
+      "mean": "34.957",
+      "dr005_over_measured": "1.02"
+    },
+    {
+      "window": "09:30 open",
+      "year": 2024,
+      "instruments": 115,
+      "p10": "4.428",
+      "median": "30.231",
+      "p90": "103.448",
+      "mean": "43.323",
+      "dr005_over_measured": "0.84"
+    },
+    {
+      "window": "09:30 open",
+      "year": 2026,
+      "instruments": 120,
+      "p10": "3.029",
+      "median": "26.460",
+      "p90": "114.033",
+      "mean": "45.411",
+      "dr005_over_measured": "0.96"
+    },
+    {
+      "window": "10:00",
+      "year": 2016,
+      "instruments": 38,
+      "p10": "1.058",
+      "median": "5.563",
+      "p90": "78.125",
+      "mean": "148.501",
+      "dr005_over_measured": "4.57"
+    },
+    {
+      "window": "10:00",
+      "year": 2019,
+      "instruments": 119,
+      "p10": "1.143",
+      "median": "5.070",
+      "p90": "21.097",
+      "mean": "9.022",
+      "dr005_over_measured": "5.02"
+    },
+    {
+      "window": "10:00",
+      "year": 2022,
+      "instruments": 115,
+      "p10": "1.915",
+      "median": "6.687",
+      "p90": "23.147",
+      "mean": "10.077",
+      "dr005_over_measured": "3.80"
+    },
+    {
+      "window": "10:00",
+      "year": 2024,
+      "instruments": 115,
+      "p10": "1.700",
+      "median": "6.817",
+      "p90": "30.436",
+      "mean": "12.085",
+      "dr005_over_measured": "3.73"
+    },
+    {
+      "window": "10:00",
+      "year": 2026,
+      "instruments": 120,
+      "p10": "1.449",
+      "median": "7.491",
+      "p90": "31.008",
+      "mean": "13.963",
+      "dr005_over_measured": "3.40"
+    },
+    {
+      "window": "11:00",
+      "year": 2016,
+      "instruments": 38,
+      "p10": "0.887",
+      "median": "3.913",
+      "p90": "35.143",
+      "mean": "145.989",
+      "dr005_over_measured": "6.50"
+    },
+    {
+      "window": "11:00",
+      "year": 2019,
+      "instruments": 119,
+      "p10": "1.072",
+      "median": "3.341",
+      "p90": "13.057",
+      "mean": "5.748",
+      "dr005_over_measured": "7.61"
+    },
+    {
+      "window": "11:00",
+      "year": 2022,
+      "instruments": 115,
+      "p10": "1.043",
+      "median": "4.191",
+      "p90": "12.587",
+      "mean": "6.239",
+      "dr005_over_measured": "6.07"
+    },
+    {
+      "window": "11:00",
+      "year": 2024,
+      "instruments": 115,
+      "p10": "1.453",
+      "median": "5.262",
+      "p90": "24.518",
+      "mean": "8.482",
+      "dr005_over_measured": "4.83"
+    },
+    {
+      "window": "11:00",
+      "year": 2026,
+      "instruments": 120,
+      "p10": "1.097",
+      "median": "5.747",
+      "p90": "18.364",
+      "mean": "7.899",
+      "dr005_over_measured": "4.43"
+    },
+    {
+      "window": "15:55 close",
+      "year": 2016,
+      "instruments": 38,
+      "p10": "0.741",
+      "median": "1.875",
+      "p90": "26.657",
+      "mean": "143.245",
+      "dr005_over_measured": "13.57"
+    },
+    {
+      "window": "15:55 close",
+      "year": 2019,
+      "instruments": 119,
+      "p10": "0.628",
+      "median": "2.113",
+      "p90": "5.893",
+      "mean": "2.821",
+      "dr005_over_measured": "12.04"
+    },
+    {
+      "window": "15:55 close",
+      "year": 2022,
+      "instruments": 115,
+      "p10": "0.976",
+      "median": "2.564",
+      "p90": "7.841",
+      "mean": "3.754",
+      "dr005_over_measured": "9.92"
+    },
+    {
+      "window": "15:55 close",
+      "year": 2024,
+      "instruments": 115,
+      "p10": "1.206",
+      "median": "3.447",
+      "p90": "8.946",
+      "mean": "4.524",
+      "dr005_over_measured": "7.38"
+    },
+    {
+      "window": "15:55 close",
+      "year": 2026,
+      "instruments": 120,
+      "p10": "1.051",
+      "median": "4.027",
+      "p90": "11.079",
+      "mean": "5.764",
+      "dr005_over_measured": "6.32"
+    }
+  ],
+  "priced_against": "docs\\decisions\\measurements\\exit-surface-2026-09-06.json",
+  "turning_points": [
+    {
+      "subject": "buy and hold, no stop, no target",
+      "gross_r": "0.139734",
+      "break_even_round_trip_bps": "41.10",
+      "break_even_per_side_bps": "20.55"
+    },
+    {
+      "subject": "the ratified cell (stop 2.0 x ATR, target 1R)",
+      "gross_r": "0.042222",
+      "break_even_round_trip_bps": "12.42",
+      "break_even_per_side_bps": "6.21"
+    }
+  ],
+  "not_measured": [
+    "market impact - this is top of book and says nothing about depth",
+    "the cost of a PASSIVE fill; a resting limit that fills has crossed nothing",
+    "realised effective spread, which price improvement can put below the quote"
+  ]
+}

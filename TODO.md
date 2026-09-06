@@ -342,8 +342,8 @@ target is a sentence asserting something about the WORLD that nobody tested.
 
 ### THE AUDIT'S OWN BASE RATE — measured 2026-08-25, and the owner's hypothesis holds
 
-**The ask was whether this project had been stopping itself on untested "cannot"s.** Seven
-impossibility claims have now actually been TESTED rather than read. **Four were false.**
+**The ask was whether this project had been stopping itself on untested "cannot"s.** Eight
+impossibility claims have now actually been TESTED rather than read. **Five were false.**
 
 | Claim | Outcome |
 |---|---|
@@ -354,17 +354,22 @@ impossibility claims have now actually been TESTED rather than read. **Four were
 | *"A fourth spread estimator is the same family"* | **survives**, and now carries the mechanism rather than the prediction |
 | *"There is no legal source of probability in this system"* | **survives**, and is now derivable from two gates rather than asserted |
 | *"Batching is not the lever"* | **the claim survives; the PARKING did not** — `NFR.md` §3 had already ruled on concurrency in both directions |
+| *"No free source serves historical intraday spreads point-in-time"* (`DR-004`) | **FALSE, 2026-09-06** — the venue this project already holds an account with serves consolidated **SIP** NBBO back to 2016 on the free tier; only the last fifteen minutes are withheld, which is the one window a backtest never reads. `tools/probe_quotes.py` re-derives it. **The same vendor had been tested twelve days earlier — for BARS.** Nobody asked it for quotes |
 
-**Three of the four refutations came from testing at a FINER GRANULARITY than the original test**,
+**Four of the five refutations came from testing at a FINER GRANULARITY than the original test**,
 which is `AGENTS.md` §17 and is the transferable lesson: the header rather than the host, the six
-routes rather than "none of it", *"no directory in hand"* rather than *"cannot be enumerated"*. The
+routes rather than "none of it", *"no directory in hand"* rather than *"cannot be enumerated"*,
+and now **the FEED rather than the vendor** — the free tier's real-time feed is one venue holding a
+few percent of volume, and at the same instant in 2019 `AAPL` reads 0.49bp on the consolidated tape
+against 621.82bp on that one book. The
 original measurements were not sloppy — each was correct about what it actually measured, and each
 conclusion was drawn one level coarser than the evidence supported.
 
 **And the cost was never symmetric.** Every refuted claim had closed real work: a study dropped half
 its scope, a measurement waited fifteen days on an owner action nobody needed, a guard was described
 as hopeless when half of it was a finite set. `AGENTS.md` §15's asymmetry is not a theory here; it
-is the measured outcome of seven tests.
+is the measured outcome of eight tests, and the eighth is the most expensive yet: it had closed
+the route to the one constant every negative headline in this project is computed at.
 
 **A SECOND POPULATION, AND IT IS A DIFFERENT DISEASE — swept 2026-09-05.** The seven above are
 IMPOSSIBILITY claims: sentences asserting something about the world. The sweep below tested
@@ -897,6 +902,36 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 ### THE DEGENERACY GUARD REFUSES THE INSTRUMENTS ITS OWN RECORD SAYS IT PROTECTS — measured 2026-08-30
 
 ## 4. Pending decisions
+
+- [ ] **`[v]` THE COST CONSTANT DESCRIBES THE OPENING MINUTE AND IS APPLIED TO EVERY MOMENT —
+      measured 2026-09-06, `DR-040` is `proposed` and the ruling is the owner's.**
+      ```bash
+      PYTHONPATH=$PWD/src python tools/probe_quotes.py
+      PYTHONPATH=$PWD/src python tools/measure_quoted_spread.py --data <store>
+      ```
+      `DR-005`'s **25.44 bps per side** turns out to be **accurate for 09:30** — 0.8x to 1.2x of the
+      measured median in every one of five years — and **4x to 14x too high** from 10:00 onward.
+      `CARD-001` enters at `next session's open`, so the project charges, and pays, the worst value
+      the session offers. Buy-and-hold turns positive below **20.6 bps per side** and the ratified
+      exit cell below **6.2**; the measured close is **4.0**.
+      **Three questions, and none is mine.**
+      1. Does `costs.slippage_model`'s note record which moment its value describes? It reads today
+         as a property of the universe and is a property of the universe *at the open*.
+      2. Does the model gain an execution-time dimension, so a study can state the moment it charges
+         for? One constant on both sides of every fill represents none of the three fill types
+         `tools/measure_fill_convention.py` counts (50.6% marketable, 32.8% passive, 16.6% unfilled).
+      3. Is `CARD-001`'s `entry.method` reopened? It is a card field and changing it creates a new
+         version that resets any validation claim (`STRATEGY_CARD_SPEC` 5 rule 2).
+      **What must NOT happen without the study**: adopting the late-session number. A later entry
+      changes the gross as well as the cost, and the gross was measured at the open. `DR-040` §6
+      names the study; it needs intraday bars, which the venue serves free and `data/` does not hold.
+
+- [ ] **`[v]` INTRADAY BARS ARE NOW WORTH STORING — 2026-09-06, and it is a scope call.**
+      The same free tier that serves quotes serves minute bars back to 2016. Nothing in `data/`
+      holds them, and the execution-time study above cannot run without them. The cost is storage
+      and a vendor adapter; the benefit is the only lever measured this session that is larger than
+      the exit policy it would replace. **Not started, and not to be started on my judgement** —
+      it widens the data contract, which is `ADR-0001` territory.
 
 - [ ] **`[v]` THE UNIVERSE ADMITS INSTRUMENTS WHOSE STOP IS NARROWER THAN THE COST OF TRADING THEM
       — measured 2026-09-06, and it is the owner's to rule.**
