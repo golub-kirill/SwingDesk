@@ -1,0 +1,65 @@
+{
+  "as_of": "2026-09-05T01:16:18.177108-05:00",
+  "rebalance_sessions": 20,
+  "buy_fraction": "0.10",
+  "benchmark": "SPY",
+  "formation": 252,
+  "slippage_bps_per_side": "25",
+  "rows": [
+    {
+      "hold_band": "0.10",
+      "policy": "fixed",
+      "periods": 112,
+      "turnover_per_rebalance": "0.2781",
+      "turnover_monthly": "0.2920",
+      "mean_hold_sessions": "71.9",
+      "gross_excess": "0.005677",
+      "gross_ci": "0.008494",
+      "net_excess": "0.004287",
+      "net_ci": "0.008492"
+    },
+    {
+      "hold_band": "0.20",
+      "policy": "banded",
+      "periods": 112,
+      "turnover_per_rebalance": "0.1453",
+      "turnover_monthly": "0.1526",
+      "mean_hold_sessions": "137.6",
+      "gross_excess": "0.006053",
+      "gross_ci": "0.008629",
+      "net_excess": "0.005327",
+      "net_ci": "0.008629"
+    },
+    {
+      "hold_band": "0.30",
+      "policy": "banded",
+      "periods": 112,
+      "turnover_per_rebalance": "0.1205",
+      "turnover_monthly": "0.1265",
+      "mean_hold_sessions": "166.0",
+      "gross_excess": "0.005517",
+      "gross_ci": "0.008398",
+      "net_excess": "0.004914",
+      "net_ci": "0.008394"
+    },
+    {
+      "hold_band": "0.50",
+      "policy": "banded",
+      "periods": 112,
+      "turnover_per_rebalance": "0.0976",
+      "turnover_monthly": "0.1025",
+      "mean_hold_sessions": "204.9",
+      "gross_excess": "0.006260",
+      "gross_ci": "0.008259",
+      "net_excess": "0.005772",
+      "net_ci": "0.008258"
+    }
+  ],
+  "exploratory": true,
+  "authored_import": "Novy-Marx & Velikov, RFS 2016 - the 50%/month line and the buy/hold spread as the strongest mitigation. Their claim, this universe's measurement.",
+  "not_measured": [
+    "band widths are the literature's, not ratified here",
+    "the cost is DR-005's flat 25bp per side; DR-040 measures 26.46 at the open and 4.03 at the close, and this study charges neither",
+    "survivorship - the directory is today's"
+  ]
+}

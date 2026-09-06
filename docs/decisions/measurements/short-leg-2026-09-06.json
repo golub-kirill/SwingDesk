@@ -1,0 +1,138 @@
+{
+  "as_of": "2026-09-05T01:16:18.177108-05:00",
+  "formation": 252,
+  "decile": "0.10",
+  "benchmark": "SPY",
+  "short_pools": [
+    "1.0",
+    "0.50",
+    "0.25"
+  ],
+  "adtv_window": 20,
+  "bootstrap": {
+    "resamples": 10000,
+    "seed": 20260824
+  },
+  "rows": [
+    {
+      "horizon": 20,
+      "arm": "short_pool=1.0",
+      "n": 112,
+      "mean": 0.009049,
+      "low": -0.004357,
+      "high": 0.021584,
+      "excludes_zero": false,
+      "rebalance_cost": 0.01,
+      "net_mean": -0.000951,
+      "net_low": -0.014357,
+      "net_high": 0.011584,
+      "net_excludes_zero": false
+    },
+    {
+      "horizon": 20,
+      "arm": "short_pool=0.50",
+      "n": 112,
+      "mean": 0.00984,
+      "low": -0.001492,
+      "high": 0.020546,
+      "excludes_zero": false,
+      "rebalance_cost": 0.01,
+      "net_mean": -0.00016,
+      "net_low": -0.011492,
+      "net_high": 0.010546,
+      "net_excludes_zero": false
+    },
+    {
+      "horizon": 20,
+      "arm": "short_pool=0.25",
+      "n": 112,
+      "mean": 0.010691,
+      "low": 0.000489,
+      "high": 0.020671,
+      "excludes_zero": true,
+      "rebalance_cost": 0.01,
+      "net_mean": 0.000691,
+      "net_low": -0.009511,
+      "net_high": 0.010671,
+      "net_excludes_zero": false
+    },
+    {
+      "horizon": 20,
+      "arm": "long_only",
+      "n": 112,
+      "mean": 0.005618,
+      "low": -0.002851,
+      "high": 0.013958,
+      "excludes_zero": false,
+      "rebalance_cost": 0.005,
+      "net_mean": 0.000618,
+      "net_low": -0.007851,
+      "net_high": 0.008958,
+      "net_excludes_zero": false
+    },
+    {
+      "horizon": 126,
+      "arm": "short_pool=1.0",
+      "n": 17,
+      "mean": 0.074442,
+      "low": 0.019963,
+      "high": 0.126905,
+      "excludes_zero": true,
+      "rebalance_cost": 0.01,
+      "net_mean": 0.064442,
+      "net_low": 0.009963,
+      "net_high": 0.116905,
+      "net_excludes_zero": true
+    },
+    {
+      "horizon": 126,
+      "arm": "short_pool=0.50",
+      "n": 17,
+      "mean": 0.079747,
+      "low": 0.030493,
+      "high": 0.12813,
+      "excludes_zero": true,
+      "rebalance_cost": 0.01,
+      "net_mean": 0.069747,
+      "net_low": 0.020493,
+      "net_high": 0.11813,
+      "net_excludes_zero": true
+    },
+    {
+      "horizon": 126,
+      "arm": "short_pool=0.25",
+      "n": 17,
+      "mean": 0.087045,
+      "low": 0.035154,
+      "high": 0.138632,
+      "excludes_zero": true,
+      "rebalance_cost": 0.01,
+      "net_mean": 0.077045,
+      "net_low": 0.025154,
+      "net_high": 0.128632,
+      "net_excludes_zero": true
+    },
+    {
+      "horizon": 126,
+      "arm": "long_only",
+      "n": 17,
+      "mean": 0.048051,
+      "low": -8.7e-05,
+      "high": 0.10125,
+      "excludes_zero": false,
+      "rebalance_cost": 0.005,
+      "net_mean": 0.043051,
+      "net_low": -0.005087,
+      "net_high": 0.09625,
+      "net_excludes_zero": false
+    }
+  ],
+  "gross_of_costs": true,
+  "exploratory": true,
+  "not_measured": [
+    "borrowability itself - dollar volume is a PROXY and the venue's easy_to_borrow flag is today's, which cannot be applied to a decade of history",
+    "borrow fees, hard-to-borrow rates, Regulation SHO locates, the uptick rule",
+    "costs of any kind - every figure here is gross",
+    "survivorship - the directory is today's"
+  ]
+}

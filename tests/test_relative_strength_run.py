@@ -256,16 +256,23 @@ def test_the_rs_line_is_in_the_output_hash(stores, registry_with_benchmark) -> N
 
 # ------------------------------------------------------------------ what the owner is shown
 
-def test_the_report_shows_the_validation_status_and_that_it_selects_nothing(
+def test_the_report_shows_the_validation_status_and_derives_what_the_measure_is_for(
     stores, registry_with_benchmark
 ) -> None:
     """`COMPONENT_REGISTRY_SPEC` §3: an ACTIVE component displays its validation status wherever its
     output appears. That status line is the condition this component was activated under.
 
-    The second assertion is the other direction. `DR-018` §1 measured that ranking a cross-section
-    by this value is identical to ranking by raw return (Spearman 1.000000), so a report printing it
-    beside the decisions without saying it selects nothing would invite the misuse the component's
-    own docstring calls natural.
+    The second half is the other direction, and **the previous version of this test was the reason
+    the report lied for five days.** It asserted the literal string *"rs.benchmark_form is unset"*,
+    which was true when written and was ratified false by `DR-030` on 2026-09-01. The suite then
+    held the stale sentence in place: on 2026-09-06 a live report printed *"CARD-001 is blocked"*
+    beside 392 Trade decisions ranked by that very measure, 3,958 times in one file, and every test
+    passed.
+
+    So the assertion is now about the DERIVATION, not the sentence. `DR-018` §1's warning - ranking
+    by this value is identical to ranking by raw return, Spearman 1.000000, so read it and do not
+    sort by it - is what a run WITH a ranking must say. What a run WITHOUT one says is tested
+    separately, because those are different claims and only one of them can be true per run.
     """
     from swingdesk.presentation.report import render
 
@@ -282,8 +289,18 @@ def test_the_report_shows_the_validation_status_and_that_it_selects_nothing(
     assert "M31-T0464-v5.0" in text
     assert "RS vs benchmark" in text
     assert "Not Applicable" in text
-    assert "selects nothing" in text and "rs.benchmark_form is unset" in text
     assert "BENCHMARK (rs.benchmark, DR-018)" in text
+
+    # Whichever branch this run took, the report must not claim the opposite of what it did.
+    if result.selection is None:
+        assert "selects nothing" in text
+        assert "not the sort key" not in text
+    else:
+        assert "not the sort key" in text
+        assert "Spearman 1.000000" in text
+        assert "selects nothing" not in text
+        assert "is unset" not in text, "a ratified parameter must never be reported as unset"
+        assert "CARD-001 is blocked" not in text
 
 
 def test_an_explicit_instrument_list_still_gets_the_measure(

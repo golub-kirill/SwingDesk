@@ -1,0 +1,69 @@
+{
+  "as_of": "2026-09-05T01:16:18.177108-05:00",
+  "hold": 20,
+  "seed": 20260906,
+  "instruments": 60,
+  "paired_entries": 6176,
+  "bars": "30Min, split-adjusted, venue SIP - NOT the project's store",
+  "spread_source": "measurements/quoted-spread-2026-09-06.json, 2026 medians",
+  "by_execution": [
+    {
+      "execution": "09:30 open",
+      "entries": 6176,
+      "gross_mean": "0.023634",
+      "ci_half_width": "0.023610",
+      "per_side_bps_charged": "26.46",
+      "net_mean": "0.018342"
+    },
+    {
+      "execution": "11:00",
+      "entries": 6176,
+      "gross_mean": "0.022603",
+      "ci_half_width": "0.021313",
+      "per_side_bps_charged": "5.75",
+      "net_mean": "0.021453"
+    },
+    {
+      "execution": "15:30 close",
+      "entries": 6176,
+      "gross_mean": "0.022253",
+      "ci_half_width": "0.020705",
+      "per_side_bps_charged": "4.03",
+      "net_mean": "0.021447"
+    }
+  ],
+  "paired_against_open": [
+    {
+      "execution": "11:00",
+      "gross_delta_mean": "-0.001032",
+      "ci_half_width_cluster_robust": "0.002465",
+      "ci_half_width_naive": "0.002417",
+      "gross_delta_equal_weighted_by_date": "-0.003648",
+      "ci_half_width_equal_weighted_by_date": "0.008210",
+      "clusters": 1777,
+      "gross_delta_excludes_zero": false,
+      "cost_saved": "0.004142",
+      "net_delta": "0.003110",
+      "net_excludes_zero": true
+    },
+    {
+      "execution": "15:30 close",
+      "gross_delta_mean": "-0.001382",
+      "ci_half_width_cluster_robust": "0.003141",
+      "ci_half_width_naive": "0.003061",
+      "gross_delta_equal_weighted_by_date": "-0.004946",
+      "ci_half_width_equal_weighted_by_date": "0.010349",
+      "clusters": 1777,
+      "gross_delta_excludes_zero": false,
+      "cost_saved": "0.004486",
+      "net_delta": "0.003104",
+      "net_excludes_zero": false
+    }
+  ],
+  "exploratory": true,
+  "not_measured": [
+    "selection - every admitted name, not a ranked subset",
+    "market impact",
+    "survivorship - the sample is drawn from names admitted today"
+  ]
+}

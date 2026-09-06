@@ -26,7 +26,8 @@ return spend no trials - they cannot produce a Sharpe to be deflated.
 The hurdle formula is an **authored import** (`AGENTS.md` section 10.3), marked as one:
 Bailey & Lopez de Prado, *The Deflated Sharpe Ratio* (2014), the expected-maximum-Sharpe term.
 
-Stdlib only. Reads `docs/prereg/results/`.
+Stdlib only. Reads `docs/prereg/results/` AND `docs/decisions/measurements/` - a configuration a
+tool swept is a shot at the same data, and until 2026-09-06 only the first directory was counted.
 
     python tools/trial_budget.py
 """
@@ -42,6 +43,7 @@ from statistics import NormalDist
 
 REPO = Path(__file__).resolve().parents[1]
 RESULTS = REPO / "docs" / "prereg" / "results"
+MEASUREMENTS = REPO / "docs" / "decisions" / "measurements"
 
 #: Euler-Mascheroni. Bailey & Lopez de Prado (2014) equation for E[max SR] over N independent
 #: trials; the constant weights the two order-statistic terms.
@@ -108,6 +110,52 @@ RULES = {
 }
 
 
+#: **The counter was blind to every configuration a TOOL tried — found 2026-09-06.**
+#:
+#: `b.deflated_sharpe` reads *"the CUMULATIVE trial count across the whole programme"*, and until
+#: this table existed the programme meant `docs/prereg/results/` alone. An exploratory measurement
+#: that sweeps a grid is still a grid of shots at the same data: `measure_exit_surface.py` evaluated
+#: twenty-five stop/target cells against one null and spent nothing by that accounting, which is
+#: more configurations than every pre-registration in the repository put together.
+#:
+#: The rule is declared HERE rather than added to the evidence files, for the same reason `RULES`
+#: is: a committed measurement records what was run, and editing one to satisfy a later counter
+#: would rewrite the record. Same shape, same file, one more source.
+#:
+#: A measurement file with no row here is reported **UNDECLARED**, never counted as zero - those
+#: are the same number and different claims, which is the sentence `NO_SPEND` already carries.
+EXPLORATORY = {
+    "exit-surface-2026-09-06": (
+        26, "5 stop multiples x 5 targets, plus the buy-and-hold null each cell is marked against; "
+            "the null is a configuration evaluated, not a free reference"),
+    "long-only-horizon-2026-09-06": (
+        8, "4 horizons x 2 formation skips; the gross/net pair is one cost restatement of each, "
+           "not a second shot"),
+    "execution-time-2026-09-06": (
+        3, "3 execution times on one holding period; paired on the same entries, which sharpens "
+           "the estimate and does not reduce the number of configurations tried"),
+    "banding-2026-09-06": (
+        4, "4 hold bands against one buy fraction; the narrowest IS the fixed control, so it is a "
+           "configuration and not a separate baseline"),
+    "short-leg-2026-09-06": (
+        8, "4 arms x 2 horizons. The unrestricted spread and the long-only excess are REPRODUCTIONS "
+           "of already-counted results rather than new shots - but they are re-evaluated here on a "
+           "population this tool rebuilt, so counting them is the conservative reading and the "
+           "flattering one would be to net them out"),
+}
+
+#: Exploratory measurements that spend nothing, and why. Same distinction `NO_SPEND` draws for
+#: pre-registrations: a cost or execution input has no Sharpe to deflate.
+NO_SPEND_MEASUREMENTS = {
+    "quoted-spread-2026-09-06": "the venue's quoted spread - a cost input, not a return",
+    "fill-convention-2026-09-06": "which fills happen - an execution input, not a search over "
+                                  "configurations; the two columns are one convention each and "
+                                  "neither was chosen for its return",
+    "gap-cost-2026-09-06": "the R cost of a stop-out - a cost input",
+    "gap-population-2026-09-06": "a population comparison, no strategy return",
+}
+
+
 def expected_max_sharpe(trials: int) -> float:
     """E[max Sharpe] under the null over `trials` independent shots, in units of sd(SR) across them.
 
@@ -146,6 +194,22 @@ def spends() -> list[Spend]:
     return found
 
 
+def exploratory_spends() -> list[Spend]:
+    """What the TOOLS tried. Every committed measurement, declared or reported undeclared."""
+    found: list[Spend] = []
+    for path in sorted(MEASUREMENTS.glob("*.json")):
+        study = path.stem
+        if study in NO_SPEND_MEASUREMENTS:
+            found.append(Spend(study, 0, "-", NO_SPEND_MEASUREMENTS[study]))
+        elif study in EXPLORATORY:
+            trials, rule = EXPLORATORY[study]
+            found.append(Spend(study, trials, f"{trials} configuration(s)", rule))
+        else:
+            found.append(Spend(study, 0, "UNDECLARED", "no counting rule declared - this is a "
+                                                       "GAP, not a zero"))
+    return found
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="trial_budget")
     parser.add_argument("--budget", type=int, default=None,
@@ -161,15 +225,39 @@ def main() -> int:
     for spend in sorted(found, key=lambda s: s.study):
         print(f"  {spend.study}  {spend.trials:>2} trial(s)   {spend.what}")
         print(f"           rule: {spend.rule}")
-    total = sum(spend.trials for spend in found)
+    registered = sum(spend.trials for spend in found)
     counted = [s for s in found if s.trials]
-    print(f"\n  TOTAL {total} trial(s) across {len(counted)} of {len(found)} reported studies")
+    print(f"\n  {registered} trial(s) across {len(counted)} of {len(found)} reported studies")
     print(f"  (the study census is {len(found)} - a trial is a configuration, not a filing)")
+
+    explored = exploratory_spends()
+    print("\nSPENT - configurations evaluated by a TOOL, outside any pre-registration\n")
+    for spend in explored:
+        marker = "  UNDECLARED" if spend.what == "UNDECLARED" else ""
+        print(f"  {spend.study}  {spend.trials:>2} trial(s)   {spend.what}{marker}")
+        print(f"           rule: {spend.rule}")
+    exploratory_total = sum(spend.trials for spend in explored)
+    undeclared = [s for s in explored if s.what == "UNDECLARED"]
+    print(f"\n  {exploratory_total} trial(s) across {len([s for s in explored if s.trials])} "
+          f"of {len(explored)} committed measurements")
+    if undeclared:
+        print(f"  {len(undeclared)} measurement(s) carry NO counting rule and are reported as a "
+              f"GAP, not as zero:")
+        for spend in undeclared:
+            print(f"      {spend.study}")
+
+    total = registered + exploratory_total
+    print(f"\n  TOTAL {total} trial(s) - {registered} registered, {exploratory_total} exploratory.")
+    print(f"  Counting only the pre-registrations would report {registered}, understating the "
+          f"search")
+    print(f"  by {total - registered} configurations in the flattering direction.")
 
     print("\nTHE HURDLE - E[max Sharpe] under the null, in units of sd(SR) across trials")
     print(f"{'N':>5} {'hurdle':>9} {'marginal':>10}   ")
     previous = None
-    for n in (1, 5, 10, total, 15, 20, 30, 50, 100):
+    # Sorted, and the spent total merged into the ladder rather than appended: an unsorted rung
+    # makes the marginal column read as a DECREASE, which is the opposite of what the curve does.
+    for n in sorted({1, 5, 10, 15, 20, 30, 50, 100, total}):
         if n < 1:
             continue
         value = expected_max_sharpe(n)

@@ -364,6 +364,121 @@ open and charges all of them a spread. The resulting adverse selection is real a
 the limit misses do run better (+3.136% against +1.777%), the cheaper fills offset it, and the net
 is **-0.024% per entry**.
 
+## 11. Restricting the short leg to names you could borrow makes the spread BIGGER
+
+Measured 2026-09-06. `python tools/measure_short_leg.py`, evidence in
+`docs/decisions/measurements/short-leg-2026-09-06.json`. **EXPLORATORY; sets nothing.**
+
+**The question.** §8a established that this project's one interval-excluding-zero result is a
+LONG-SHORT spread and that the tradeable half does not survive the conversion. Before anyone builds
+a short leg, the thing worth knowing is whether the spread survives being restricted to names a
+short leg could actually reach. Borrowability is not in the store; **dollar volume is a proxy and is
+labelled one** — the venue's `easy_to_borrow` flag is TODAY's, and applying today's flag to a decade
+of history is the population-across-time error `DR-040` had to correct once already.
+
+**Both controls reproduce**, which is what makes the rest readable: long-only at 126 sessions is
+**+4.805% [−0.009, +10.125]**, identical to §8a, and the unrestricted spread is +7.444% against the
++7.271% `measure_momentum_horizon` published.
+
+| horizon | short leg drawn from | n | gross | net of costs |
+|---|---|---|---|---|
+| **20** | the whole universe | 112 | +0.905% [−0.436, +2.158] | −0.095% [−1.436, +1.158] |
+| **20** | the liquid **quartile** | 112 | **+1.069% [+0.049, +2.067]** ✗ | +0.069% [−0.951, +1.067] |
+| **20** | long-only (control) | 112 | +0.562% [−0.285, +1.396] | +0.062% [−0.785, +0.896] |
+| **126** | the whole universe | 17 | +7.444% [+1.996, +12.690] ✗ | +6.444% [+0.996, +11.691] ✗ |
+| **126** | the liquid **quartile** | 17 | **+8.704% [+3.515, +13.863]** ✗ | **+7.705% [+2.515, +12.863]** ✗ |
+| **126** | long-only (control) | 17 | +4.805% [−0.009, +10.125] | +4.305% [−0.509, +9.625] |
+
+✗ marks an interval excluding zero.
+
+**The restriction HELPS, and the direction was not the one expected.** The true bottom decile of a
+liquidity-screened universe is still full of thin, volatile names whose forward returns are noisy
+and mean-reverting. Restricting the short leg to the most-traded quarter selects losers that go on
+losing and drops the ones that snap back — a higher mean AND a tighter interval, at both horizons.
+
+**And survivorship runs the conservative way here, for once.** The directory is today's, so a name
+that delisted is absent — and a bottom-decile name that went to zero would have been the most
+profitable short in the sample. The measured spread therefore UNDERSTATES the true one. Every other
+result in this document is biased the flattering way; this one is not.
+
+**Then the costs, and they decide it.** A long-short rebalance turns FOUR sides, not two: both legs
+are bought and sold. At `DR-005`'s 25 bps that is **1.00% per rebalance**, against a 20-session
+gross of 1.069%.
+
+**So the finding is exact:**
+
+* **At the ratified 20-session hold, nothing survives.** The gross excludes zero and the net does
+  not. Four sides eat the whole spread.
+* **At 126 sessions the spread survives costs and excludes zero — the only construction in this
+  project that does.** Net **+7.705% [+2.515, +12.863]** for the liquid quartile. The same 1.00% is
+  paid a quarter as often.
+* **Long-only survives at neither horizon.**
+
+**What it does NOT establish.** Borrow fees, hard-to-borrow rates, Regulation SHO locates and the
+uptick rule are all costs of the short leg and none is priced, so the net column is a **floor on the
+cost** and a ceiling on the result. `n=17` at 126 sessions is the calendar binding again, exactly as
+in §8a. And the system is long-only: `trade_management/portfolio.py` says so, `CARD-001` requires a
+stop BELOW the entry, and `registry/broker_policy.yml` sends `side: buy`. This measures a book the
+system cannot currently hold.
+
+## 12. The band fixes a turnover problem that lives somewhere else, and the clock is suggestive
+
+Two measurements that came back negative, recorded because the reasoning that motivated them was
+sound and the answers were not what it predicted.
+
+**The band works and it is inside the noise.** `python tools/measure_banding.py`. Buying the top
+decile and holding until a name leaves a wider band cuts one-sided turnover from **29.2% a month to
+10.2%** and lengthens the mean hold from 72 to 205 sessions, with gross excess unchanged
+(+0.568% → +0.626%) and net rising +0.429% → +0.577%. **Every one of those intervals is ±0.83 or
+wider, so none of them excludes zero** — neither the improvement nor the book itself. The fixed
+policy reproduces §8a's 20-session number (+0.568% against +0.557% on the same 112 periods), which
+is what makes the comparison readable.
+
+**And the premise was wrong in a way worth keeping.** The tool's first draft said this system runs
+*"above 100% turnover a month"*, reasoning from `exit.max_holding_period` = 20 and `DR-029` §7's
+mix, where 88.2% of entries leave on a stop or target before the cap. That is true of the **exit
+policy** and false of the **selection rule**: a top-decile book that sells only on rank turns over
+**29.2%**, already below the 50% line the cost literature puts the survival boundary at. So banding
+was fixing something that was not broken — **the turnover lives in the stops and targets, not in the
+ranking.**
+
+**Moving the trade off the open is SUGGESTIVE and not established.**
+`python tools/measure_execution_time.py`, answering `DR-040` §6 directly. 60 instruments, 6,176
+paired entries, the same trade priced at 09:30, 11:00 and 15:30 — only the clock moves.
+
+| executed at | gross vs the open | cost saved | net |
+|---|---|---|---|
+| 11:00 | −0.103% ±0.246 | +0.414% | **+0.311% ±0.246** — excludes zero |
+| 15:30 close | −0.138% ±0.314 | +0.449% | +0.310% ±0.314 — includes zero |
+
+**`DR-040` §4's worry was right in direction and small in size.** It refused to conclude that a
+later entry was free, because *"a later entry changes the GROSS as well as the cost"*. The gross
+does decay — the price drifts up after the open, so a later entry buys the same name higher — but
+by about a quarter of what the spread saves.
+
+**The interval is date-clustered, and the correction turned out to be tiny for a reason worth
+recording.** Entries that share a date share that day's overnight gap, so treating 6,176 of them as
+independent overstates precision. It barely does here: the 60 instruments' every-20th-session grids
+start from their own first bars and scatter across **1,777 distinct dates**, about 3.5 entries each,
+so there is almost nothing to pool. ±0.242 becomes ±0.246.
+
+**Three reasons this is not called established, and the first is the largest.**
+
+1. **The cost saving is not a statistical estimate.** It is the difference of two MEDIAN spreads
+   applied uniformly, and §10's distribution is violently skewed — at the open in 2026, p10 is
+   3.03 bps against a median of 26.46 and a p90 of 114.03. A four-name book of liquid momentum
+   winners lives near p10, where there is far less to save. **The whole net result rests on this
+   term.**
+2. **Clustered by date and not by instrument.** A name's own intraday profile is a second source of
+   dependence, and sixty instruments would give a materially wider interval than 1,777 dates do.
+3. **The sample is the admitted universe, not the traded decile.** The names a card would buy are
+   not a random draw from it.
+
+**And the estimator choice moves the answer, which is itself the finding.** Equal-weighting DATES
+rather than entries gives −0.365% ±0.821 and a net of +0.049% — nothing. That estimator over-weights
+sparse early dates carrying one instrument; the entry-weighted mean is what a book actually earns
+and is the one reported. A result that flips on a weighting choice has not been shown.
+
 ---
 
 **Do not write anything implying more confidence than the above.** `UX_COPY.md` §3 carries the
