@@ -376,8 +376,11 @@ def assess_correlation(
 
     **Against the OPEN BOOK alone, never against other candidates.** Same owner ruling as the book
     cap (`DR-006` §9.2 rule 2): a `Watch` is not a position, and choosing between two admissible
-    candidates that correlate with each other is a ranking. `rs.ranking_method` is `unset` and
-    `ALLOCATION_SPEC` §6 rule 4 forbids falling back to id order.
+    candidates that correlate with each other is a ranking, and at the time of the ruling
+    `rs.ranking_method` was unset with `ALLOCATION_SPEC` §6 rule 4 forbidding a fall back to
+    id order. `DR-030` set it to `descending` on 2026-09-01, which this module's own header
+    records and this docstring did not - THE RULING STANDS ON ITS OTHER LEG: a `Watch` is not
+    a position, and that was never a fact about the ranking parameter.
 
     **The sign is not taken away.** The test is `r >= threshold`, not `abs(r) >= threshold`. This
     system is long-only today, so what `DR-006` §2 bounds is duplicate exposure - two names that

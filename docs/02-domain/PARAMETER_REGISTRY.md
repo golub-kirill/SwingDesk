@@ -31,9 +31,11 @@ owner is the fix (gate 14).
 `DR-006-portfolio-risk-block.md` (**proposed**). Ratified still means `assumed`: a decision record
 never produces a `validated` value, however it was approved.
 
-**`risk.per_trade_pct` stays `unset` on purpose.** Appendix C reserves it to the owner — *`Риск %
-задаётся личным планом`* — so no decision record drafts it, and sizing refuses until the owner sets
-it.
+**`risk.per_trade_pct` was reserved to the owner, and the owner has set it.** Appendix C
+reserves it — *`Риск % задаётся личным планом`* — so no decision record drafts it. ~~It stays
+`unset` on purpose … sizing refuses until the owner sets it.~~ **Set 2026-08-11: value 1.0,
+status `owner`, and sizing stopped refusing that day.** The reservation is the durable rule;
+the status was a fact about a date, and this line kept it for twenty-five days.
 
 The registry shipped at 74, all `unset`, and that sentence stood in this document after twelve of
 them had been set. It was caught by an audit rather than by a gate, which is the honest version of

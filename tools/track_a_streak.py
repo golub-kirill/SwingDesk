@@ -53,9 +53,11 @@ gate could not measure is not reported as one it did (`AGENTS.md` §10.6).
 **The idle-day line, added 2026-08-16, council-reviewed.** `CLEAN_EXIT_CODES = (0, 2)` is correct
 and unchanged: a coded refusal is a real, non-crash outcome, and `a.run_completes`'s ratified text
 only ever claimed the run completes and produces a report. What it does not claim, and what people
-read into the number anyway, is that the run did anything - and once `exit.atr_stop_multiple` /
-`exit.max_holding_period` merge unset, every candidate Skips and every position Pauses for the
-identical reason, and every one of those days still counts as clean. `idle_days()` answers that
+read into the number anyway, is that the run did anything - and if every candidate Skips and
+every position Pauses for the identical reason, every one of those days still counts as clean.
+(This was written expecting `exit.atr_stop_multiple` / `exit.max_holding_period` to merge
+unset. `DR-012` set both on 2026-08-17, so THAT window never opened - but the gap the line
+measures is permanent and does not depend on which parameter is missing.) `idle_days()` answers that
 separately, from `data/journal.duckdb` rather than the log (which has no decision-level detail): of
 the streak's counted sessions, how many had a run where nothing distinguished one candidate's
 outcome from another's. It changes nothing about the count above it - only makes the gap visible.

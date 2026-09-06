@@ -5,8 +5,10 @@ one as its own precondition, so nothing about the corporate-actions gate could b
 existed.
 
 **Nothing here is wired into the decision path**, and that is deliberate: the gate needs
-`data.revision_epsilon`, which is `unset` and awaiting an owner ruling. Storing an action changes no
-decision, so this cannot affect the scheduled run - which is exactly why it is safe to land first.
+`data.revision_epsilon`, which was unset and awaiting an owner ruling when this landed. THE OWNER
+HAS SINCE SET IT (0.001, `owner`), so the precondition this file names is met and the wiring is
+work nobody has done rather than work nobody could do. Storing an action changes no decision, so
+this file still cannot affect the scheduled run.
 """
 
 from __future__ import annotations

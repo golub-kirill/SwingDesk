@@ -105,9 +105,14 @@ Two things follow, and they are different:
   *degraded* data; it does not govern a check the system was never able to perform, and conflating
   those is the error `HANDOFF.md` §7 calls the most damaging this product can make.
 
-None of this enables trading. `risk.per_trade_pct` stays `unset` by course instruction
+~~None of this enables trading. `risk.per_trade_pct` stays `unset` by course instruction
 (`RISK_SPEC.md` §4 — *`Риск % задаётся личным планом`*), so `size_long` still returns a coded
-refusal and the allocation path has nothing to allocate.
+refusal and the allocation path has nothing to allocate.~~
+**THE RESERVATION HELD AND THE OWNER EXERCISED IT — corrected 2026-09-05.** `RISK_SPEC.md` §4
+reserves the number to the owner and no decision record drafts it; that is unchanged and it is
+the part worth keeping. What changed is that the owner set it: `risk.per_trade_pct` = **1.0**,
+`owner`, since **2026-08-11**. **So `size_long` no longer refuses**, and the sentence stood for
+twenty-five days describing a live path that had stopped behaving that way.
 
 `CODES.md` already reserves the outcome — `RISK`: *open/sector/currency/event limit exceeded*, action
 *Skip or choose better candidate*. The skip code for a candidate that lost the allocation exists;

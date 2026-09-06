@@ -1,8 +1,10 @@
 """What a trade costs, charged rather than mentioned.
 
-`costs.commission_model` and `costs.slippage_model` are registry entries and both are `unset`
-(M72-T1081, M72-T1082). They are models rather than scalars because a per-share commission and a
-proportional spread are different functions, and the course names both concepts and chooses neither.
+`costs.commission_model` and `costs.slippage_model` are registry entries (M72-T1081, M72-T1082).
+Both read `unset` here until 2026-09-05; both are `assumed` - `DR-004` charges 0.005 USD per
+share each side, `DR-005` 25 bps of price each side. They are models rather than scalars because
+a per-share commission and a proportional spread are different functions, and the course names
+both concepts and chooses neither.
 
 A study pins its own values and records them. This class takes them as arguments and reads no
 registry, so a result cannot silently change meaning when a value is later ratified.

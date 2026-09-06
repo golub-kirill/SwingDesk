@@ -1578,8 +1578,14 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       (about 0.6). **Further from raw return is not better.** Both departures are real, neither is
       evidence, and which one predicts is a question only a pre-registration answers.
       **Four measured options now exist** — market or sector, point-to-point or path — and none is
-      ratified. `rs.benchmark_form` stays `unset` on purpose: having four characterised options
-      rather than one guessed one is what `DR-018` was for.
+      ratified. ~~`rs.benchmark_form` stays `unset` on purpose: having four characterised options
+      rather than one guessed one is what `DR-018` was for.~~
+      **RULED 2026-09-01 (`DR-030`): value `path`, status `owner`.** The four characterised
+      options are still the reason the ruling could be made rather than guessed, which is what
+      `DR-018` bought. Corrected 2026-09-05, four days late, and **gate 28 could not see it
+      because *"stays"* was on its transition-word list** — a word that asserts the present
+      state rather than naming one end of a move. That word is off the list now, and the gate
+      reads docstrings as well as markdown, which is where the worse instances were.
 
 - [ ] **`[v]` PR-007** registered, unreported — **checked 2026-08-30 against the files rather than
       the mark**: `docs/prereg/PR-007-base-strategy-measured-costs.md` exists and
@@ -1658,6 +1664,46 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       overturning the conclusion: what was foreclosed is the cheap check, not the study.
 
 ## 6. Code & gates
+
+- [ ] **`[v]` GATE 28 WAS BLIND TO SEVEN LIVE INSTANCES OF THE EXACT DRIFT IT EXISTS FOR, AND BOTH
+      BLIND SPOTS WERE INSIDE THE GATE — found and fixed 2026-09-05.**
+      ```bash
+      python tools/verify_parameter_claims.py
+      ```
+      **The two defects, each exact rather than general.** `_documents()` globbed `docs/**/*.md` and
+      `*.md`, so no docstring was ever read — and a docstring is what somebody reads BEFORE changing
+      the thing it describes. And `stays` / `remains` sat on the transition-exclusion list beside
+      `was`, `moved` and `from`, though they are that list's inverse: they assert the present state
+      continues, which is the claim itself.
+      **A third defect surfaced only once code was in scope**: `~~` was matched per line, so a struck
+      sentence wrapped at the column limit read as struck on its first line and live on its second.
+      That would have reddened `portfolio.py`, a file that is CORRECT, which is the false positive
+      `CI_POLICY.md` §3 says gets a gate bypassed.
+      **Seven live instances, and the staleness is measured in weeks, not days:**
+      | where | parameter | called | registry | stale since |
+      |---|---|---|---|---|
+      | `pipeline.py`, `exits.py`, `test_pipeline.py`, `track_a_streak.py` | `exit.atr_stop_multiple`, `exit.max_holding_period` | `unset` | `assumed` | 2026-08-17 |
+      | `ALLOCATION_SPEC.md`, `PARAMETER_REGISTRY.md` | `risk.per_trade_pct` | `unset` | `owner` | 2026-08-11 |
+      | `portfolio.py`, `measure_sector_cap.py` | `rs.ranking_method` | `unset` | `owner` | 2026-09-01 |
+      | `TODO.md` | `rs.benchmark_form` | `unset` | `owner` | 2026-09-01 |
+      | `test_corporate_actions.py` | `data.revision_epsilon` | `unset` | `owner` | — |
+      | the backtest costs module | `costs.slippage_model` (and its commission twin) | `unset` | `assumed` | — |
+      **THE SHARPEST ONE IS `DR-012` §8.3, and it is an argument about governance rather than about
+      a docstring.** That record did not merely make `ExitPolicy`'s docstring stale — it **named the
+      file and ordered the correction in the ratifying commit**, quoting the sentence and saying
+      which half survives. It did not happen, and nothing noticed for nineteen days. **A stated
+      intention with no check is not a control.**
+      **And it is today's §12 trap one carrier further out.** The trap says a refutation reaches the
+      SUMMARY and dies before the SPECIFICATION. Here `HANDOFF.md` had it right the same day —
+      *"`DR-012` ratified both parameters on 2026-08-17, so that window never opened"* — and the
+      CODE never heard. Two of the seven were in files whose own headers already carried the
+      correction: `portfolio.py` strikes the claim at line 23 and repeats it at line 379.
+      **Mutation-tested**: each of the three changes reverted in turn, each kills its own test.
+      **What is NOT claimed.** The gate reads a status word near a parameter id on one line. It does
+      not understand a claim spread over a paragraph, and `measure_stale_claims.py`'s null result
+      earlier today is the same limit from the other side: a claim nobody struck has nothing to
+      compare against. This closes the backtickable form, which is the form that recurs.
+
 
 - [ ] **`[v]` A BLOCKER EXPIRES AND THE ENTRY THAT NAMED IT DOES NOT — three found in one evening,
       2026-09-04.** Not a hypothesis: three open entries were opened for unrelated reasons and all
@@ -1785,10 +1831,31 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       over a number `check_gates.py` has never registered. Measured before building: 363 citations
       across every tracked document, **0 unresolved** once a year and a date are excluded, both from
       one real false positive.
-      **Row 10 stays `to build` deliberately.** About twenty documents refer to gate 10 as the thing
-      they are waiting for and every one of those sentences is true; gate 38's vocabulary is the
-      inventory rather than the runner precisely so those stay legal. Retiring the row would make
-      twenty documents stale to save one line.
+      **Row 10 stays `to build` deliberately, and the decision survives its own arithmetic being
+      wrong.** ~~About twenty documents refer to gate 10 as the thing they are waiting for …
+      Retiring the row would make twenty documents stale to save one line.~~
+      **RE-DERIVED 2026-09-05: ELEVEN NAME IT, AND EIGHT STATE IT AS UNBUILT** — `REQUIREMENTS.md`,
+      `USER_STORIES.md`, `EXPECTATION_MODEL.md`, `CI_POLICY.md`, `KNOWLEDGE_GRAPH.md`, `ROADMAP.md`,
+      `HANDOFF.md` and this file. The remaining three name it without asserting a status.
+      ```bash
+      grep -rlEi "gate[ -]10\b" docs/ AGENTS.md HANDOFF.md TODO.md README.md
+      ```
+      The rest of the sentence holds: gate 38's vocabulary is the inventory and not the runner, so
+      a row marked `to build` keeps every one of those citations legal. **Eight stale documents to
+      save one inventory line is still a bad trade, so the row stays** — but the trade was argued
+      from a figure two and a half times the tree's, and nothing had derived it.
+      **This is `AGENTS.md` §12's *"a number you worked out in your head is still a number"*, and
+      it is also the ownerless-claim trap added to §12 today** — `CI_POLICY.md` row 38 carried the
+      same *"twenty-odd"*, so correcting only this file would have left it standing. Corrected in
+      both.
+      **AND THE COUNT FOUND A REAL DEFECT, which is the argument for re-deriving rather than
+      re-reading.** One of the eleven does not treat gate 10 as pending at all: `FRD.md`'s preamble
+      said the traceability check *"fails on an orphan in either direction"* — present tense, about
+      a gate `check_gates.py` does not register. **Fixed at the generator** (`tools/build_frd.py`),
+      because the document says *do not edit by hand* (`AGENTS.md` §10.6).
+      **What IS verified in this entry**, checked 2026-09-05 rather than carried: `REQUIREMENTS.md`
+      §7 exists — *"What enforces each — the linkage §6 has been waiting for"* — and gate 35's
+      runner does name it.
       **The original entry, kept because its reasoning is what narrowed this:** **Weighed
       and not built 2026-08-25**, with the reason recorded so it is not re-derived: its three checks
       are *a course id with no requirement row*, *a requirement with no test*, and *a spec id cited

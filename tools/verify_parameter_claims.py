@@ -5,6 +5,14 @@ Gate 1 checks the registry against itself and against the code that reads it. No
 and the citation stays. Six live instances on 2026-08-24, every one the same shape - a parameter
 was given a value by an owner ruling and a document still called it `unset`.
 
+**WIDENED 2026-09-05 AFTER IT MISSED SEVEN MORE, and both blind spots were in this file.**
+`stays` and `remains` sat on the `TRANSITION` exclusion list, though they assert the present
+state rather than one end of a move; and only markdown was ever read, though the worst
+instances were docstrings. `pipeline.py` told a reader that every candidate Skips with a coded
+refusal - the live decision path - for nineteen days after `DR-012` set the parameters that
+stopped it. `DR-012` section 8.3 had ORDERED that docstring corrected in the ratifying commit,
+which is the sharpest available proof that intent does not survive without a check.
+
 `UX_TASK_FLOWS.md` said the risk budget needs `risk.max_open_risk` "and friends, all `unset`" two
 days after `DR-006` ratified four of them. `GO_LIVE_GATES.md` listed
 `validation.max_allowable_drawdown` as `unset` sixteen days after `DR-007` gave it a value - and
@@ -52,19 +60,34 @@ STATUSES = ("unset", "assumed", "owner", "validated")
 #: may not do.
 APPEND_ONLY = ("docs/decisions/", "docs/prereg/", "docs/adr/")
 
+#: This gate's own instrument. A GATE MAY NOT POLICE ITS OWN EVIDENCE: this module's docstring
+#: quotes the historical instances that justify it, and the test builds fixture documents
+#: containing stale claims on purpose - a gate that goes red on those is measuring itself and
+#: not the tree. Five of the sixteen hits when code came into scope were exactly that.
+OWN_EVIDENCE = ("tools/verify_parameter_claims.py", "tests/test_gates.py")
+
 #: `risk.max_open_risk` ... `unset`, on one line and close together. Widening the gap or crossing
 #: lines buys hits that are mostly coincidence.
 CLAIM = re.compile(
     r"`(?P<pid>[a-z_]+\.[a-z0-9_]+)`(?P<gap>[^`\n]{0,80}?)`(?P<status>" + "|".join(STATUSES) + r")`"
 )
 
+#: A struck passage, newlines included. Non-greedy so two separate strikes do not merge into
+#: one span that swallows the live sentence between them.
+STRUCK = re.compile(r"~~.+?~~", re.S)
+
 #: A line recording what was true on a date, or a decision being taken. Same convention as
 #: `verify_counts.py`: history is not drift and rewriting it would falsify the record.
 HISTORICAL = re.compile(r"~~|\b(DONE|CLOSED|REACHED|RULED|RATIFIED|CORRECTED|SUPERSEDED)\b")
 
 #: A status named as one end of a move rather than as the current state.
+#:
+#: `stays` and `remains` were on this list until 2026-09-05 and are the OPPOSITE of a
+#: transition: they assert that the present state continues, which is exactly the claim this
+#: gate exists to check. Three live instances hid behind them, one for twenty-five days
+#: (`risk.per_trade_pct` "stays `unset` by course instruction", set by the owner 2026-08-11).
 TRANSITION = re.compile(
-    r"\b(was|were|had been|until|since|stays?|remains?|used to|no longer|moves?|moved|went|"
+    r"\b(was|were|had been|until|since|used to|no longer|moves?|moved|went|"
     r"becomes?|became|from)\b|->|→"
 )
 
@@ -99,11 +122,33 @@ def _registry_status() -> dict[str, str]:
 
 
 def _documents() -> list[Path]:
+    """Markdown, plus the docstrings - prose is prose wherever it is written.
+
+    Code was out of scope until 2026-09-05, and the four worst instances found that day were
+    all in it: `pipeline.py` told a reader the live decision path refuses every candidate,
+    nineteen days after `DR-012` set the two parameters that made it stop doing so. A
+    docstring is what somebody reads BEFORE changing the thing it describes.
+    """
     paths = sorted(REPO.glob("docs/**/*.md")) + sorted(REPO.glob("*.md"))
+    for pattern in ("src/**/*.py", "tools/**/*.py", "tests/**/*.py"):
+        paths += sorted(REPO.glob(pattern))
     return [
         path for path in paths
-        if not path.relative_to(REPO).as_posix().startswith(APPEND_ONLY)
+        if path.is_file()
+        and not path.relative_to(REPO).as_posix().startswith(APPEND_ONLY)
+        and path.relative_to(REPO).as_posix() not in OWN_EVIDENCE
     ]
+
+
+def _struck_spans(text: str) -> list[tuple[int, int]]:
+    """Character ranges inside `~~ ... ~~`, ACROSS LINES.
+
+    `HISTORICAL` sees one line at a time, so a struck sentence wrapped at the column limit
+    looked struck on its first line and live on its second. Found 2026-09-05 the moment code
+    came into scope: `portfolio.py` strikes the ranking sentence and rules the parameter
+    underneath it, and the gate called that correct file a failure.
+    """
+    return [(m.start(), m.end()) for m in STRUCK.finditer(text)]
 
 
 def main() -> int:
@@ -114,7 +159,11 @@ def main() -> int:
     for path in _documents():
         scanned += 1
         relative = path.relative_to(REPO).as_posix()
-        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        text = path.read_text(encoding="utf-8")
+        struck = _struck_spans(text)
+        offset = 0
+        for number, line in enumerate(text.splitlines(), 1):
+            here, offset = offset, offset + len(line) + 1
             for match in CLAIM.finditer(line):
                 pid, claimed = match.group("pid"), match.group("status")
                 actual = status.get(pid)
@@ -124,6 +173,9 @@ def main() -> int:
                 if actual == claimed:
                     continue
                 governing = line[max(0, match.start() - NEGATION_LOOKBEHIND):match.end()]
+                absolute = here + match.start()
+                if any(start <= absolute < end for start, end in struck):
+                    continue  # inside a strike-through, however many lines it spans
                 if (HISTORICAL.search(line) or TRANSITION.search(match.group("gap"))
                         or NEGATION.search(governing)):
                     continue
