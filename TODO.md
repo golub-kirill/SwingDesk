@@ -1023,14 +1023,30 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       Section 6 claims the discriminator *"moves no decision output the day it lands"* and then says
       the honest thing: *"it must be measured against the live universe before it is called
       cosmetic."* Measured, and it is not cosmetic.
-      **23 admitted universe members are refused by the section 8.7 guard today** — 1,018 spendable,
-      23 degenerate, 101 no sector, 44 nothing stored, of 1,186. Robust to `DR-017`'s lag: 23 under
-      `adtv_lag=0` and 23 under `adtv_lag=3`, checked both ways so it cannot be an artefact of the
-      change that landed the same day.
-      **Section 6's error is sampling, not reasoning.** It reasons about the five SPDR Select Sector
-      funds, and none of the eleven SPDR funds is in the universe at all — coverage is still an
-      alphabetical prefix and the letter X is unreached, the same reason `DR-018` section 2b found
-      the benchmark ETFs missing. The guard fires on ANY degenerate-shaped fund, and 23 are admitted.
+      **23 admitted universe members were refused by the section 8.7 guard ON 2026-08-30** — 1,018
+      spendable, 23 degenerate, 101 no sector, 44 nothing stored, of 1,186. Robust to `DR-017`'s
+      lag: 23 under `adtv_lag=0` and 23 under `adtv_lag=3`, checked both ways so it cannot be an
+      artefact of the change that landed the same day.
+      **THOSE FOUR NUMBERS HAVE NO GENERATING TOOL AND ARE NOW STALE — noted 2026-09-05.** They
+      were derived once by hand and typed here, which is exactly what this file's header forbids
+      (`AGENTS.md` §10.5, §10.6). The population has since widened, so *"today"* was doing work
+      the sentence could not support. **Anyone acting on this must re-derive first**, and the
+      command to do it with does not exist yet — that absence is the finding, not the numbers.
+      ~~**Section 6's error is sampling, not reasoning.** It reasons about the five SPDR Select
+      Sector funds, and none of the eleven SPDR funds is in the universe at all — coverage is still
+      an alphabetical prefix and the letter X is unreached, the same reason `DR-018` section 2b
+      found the benchmark ETFs missing.~~
+      **REFUTED 2026-09-05 BY THE COVERAGE WIDENING: X IS REACHED AND ALL ELEVEN SPDR FUNDS HAVE
+      STORED BARS** — `XLB XLC XLE XLF XLI XLK XLP XLRE XLU XLV XLY`, and **253** instruments
+      beginning with X carry bars.
+      ```sql
+      SELECT count(DISTINCT instrument_id) FROM bars WHERE instrument_id LIKE 'X%';
+      ```
+      **This makes section 6 MORE checkable, not less wrong.** Its reasoning population now exists
+      in the store, so *"the discriminator moves no decision output"* can be tested against the
+      very funds it reasoned about instead of being rebutted by their absence. **Stored bars are
+      not admission** — whether these clear the liquidity rule is a separate question and is not
+      measured here. The guard still fires on ANY degenerate-shaped fund.
       **How many would flip is not measured and is certainly not zero.** `CURE` (3x healthcare
       equity, reported healthcare), `DPST` (3x regional banks, financial services) and `DRN` (3x
       real estate, real estate) are being refused on a reason that is false for them, while `BNDW`
@@ -1700,6 +1716,11 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       later.
       Corrected forward in `PR-009` §10, `prereg/README.md`, `DR-006` §18, `ALLOCATION_SPEC.md`,
       `GO_LIVE_GATES.md` and `CI_POLICY.md`.
+      **RE-TESTED 2026-09-05 AND IT STILL HOLDS, which is the uncomfortable half.**
+      `validation.max_allowable_drawdown` reads **20, percent of equity, `owner`**, and `PR-009`
+      still names **−15R** in nine places starting with its own title. The registration change
+      this entry called for has not been made in the eleven days since — and it cannot be made
+      quietly, because a pre-registration is append-only (`AGENTS.md` §11 rule 2).
 - [ ] **`[v]` Reserved prereg ids with nothing written yet:** PR-001b (unblocked, writable now) ·
       PR-003 (needs a daily return series) · PR-004 (needs ~100 journalled trades) · PR-006 (needs a
       forward test). **Checked 2026-08-30 against `docs/prereg/README.md`**, which is the index gate
