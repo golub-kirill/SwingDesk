@@ -926,6 +926,24 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       changes the gross as well as the cost, and the gross was measured at the open. `DR-040` §6
       names the study; it needs intraday bars, which the venue serves free and `data/` does not hold.
 
+- [ ] **`[v]` THE ONE CONSTRUCTION THAT SURVIVES COSTS NEEDS A SHORT LEG THIS SYSTEM DOES NOT
+      HAVE — measured 2026-09-06, and whether to build one is the owner's.**
+      ```bash
+      PYTHONPATH=$PWD/src python tools/measure_short_leg.py --data <store>
+      ```
+      Restricting the short leg to the most-traded QUARTILE of the admitted universe makes the
+      spread **bigger**, not smaller — the true bottom decile is full of thin names that snap back.
+      At 126 sessions the liquid quartile nets **+7.705% [+2.515, +12.863]** after charging all four
+      sides of a rebalance. **It is the only construction in this project whose net interval
+      excludes zero.** Long-only at the same horizon is +4.305% [−0.509, +9.625] and does not.
+      **At the ratified 20-session hold nothing survives**: gross +1.069% against 1.00% of cost.
+      **What building it would mean**: `trade_management/portfolio.py` states the system is
+      long-only; `CARD-001` requires a stop BELOW the entry; `registry/broker_policy.yml` sends
+      `side: buy` and `protect_side: sell`. Shorting also brings borrow fees, hard-to-borrow rates,
+      Regulation SHO locates and the uptick rule — **none of which is priced**, so the net column is
+      a FLOOR on the cost. And `n=17`: the calendar binds here exactly as it does everywhere else.
+      **Not mine to start.** It changes what the system can hold, not how well it holds it.
+
 - [ ] **`[v]` INTRADAY BARS ARE NOW WORTH STORING — 2026-09-06, and it is a scope call.**
       The same free tier that serves quotes serves minute bars back to 2016. Nothing in `data/`
       holds them, and the execution-time study above cannot run without them. The cost is storage

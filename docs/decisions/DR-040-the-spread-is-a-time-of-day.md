@@ -176,3 +176,64 @@ times the true cost, and conclude correctly from a wrong input.
 * **`EVIDENCE_SUMMARY` §2's second clause is struck**, with the refutation beside it.
 * **The audit's base rate moves to eight impossibility claims tested, five false** (`TODO.md` §2).
 * **Intraday bars become worth storing.** Nothing in `data/` holds them today, and §6 needs them.
+
+## 9. §6's study, run — 2026-09-06
+
+Appended, never edited above. §6 named the measurement that would settle this and stated its own
+overturning condition; this is that measurement.
+
+**The header's `trial_spend: ZERO` describes this record as it was written and no longer describes
+the file.** §6 said the study *"is not run"*, and it now is: three execution times on one holding
+period, three configurations, declared in `tools/trial_budget.py`'s `EXPLORATORY` table with the
+rule beside them. The header is left standing because a decision record keeps what was believed at
+the time it was signed; the counter is the place that must be current, and it is.
+
+`python tools/measure_execution_time.py --data <store>`, evidence in
+`measurements/execution-time-2026-09-06.json`. 60 instruments, **6,176 paired entries** — the same
+trade priced at 09:30, 11:00 and 15:30, only the clock moving, so the market-wide variation that
+dominates the level cancels out of the difference.
+
+### 9.1 The condition §6 set, and what happened to it
+
+> If the gross decays by more than the cost saved, this record is refuted and the open is correct.
+
+| executed at | gross vs the open | cost saved | net |
+|---|---|---|---|
+| **11:00** | −0.103% ±0.246 | +0.414% | **+0.311% ±0.246**, excludes zero |
+| 15:30 close | −0.138% ±0.314 | +0.449% | +0.310% ±0.314, includes zero |
+
+**The gross does decay and it decays by about a quarter of what the spread saves.** §4's worry was
+right in direction and small in size: a later entry buys the same name higher, because price drifts
+up after the open. The record is not refuted by its own condition.
+
+### 9.2 It is still NOT established, and the reason is the cost term rather than the return
+
+**The +0.414% is not a statistical estimate.** It is the difference between two MEDIAN spreads from
+§2, applied uniformly to every entry. That distribution is violently skewed — at the open in 2026,
+p10 **3.03 bps**, median **26.46**, p90 **114.03**. A four-name book of liquid momentum winners
+trades near p10, where the saving is a few basis points rather than twenty-two. **The entire net
+result rests on a term measured at the median of a distribution the strategy does not sample from.**
+
+Two smaller gaps, both stated rather than discovered later: the interval is clustered by DATE and
+not by instrument, and a name's own intraday profile is a second dependence sixty instruments would
+price much more widely; and the sample is drawn from the admitted universe rather than the traded
+decile.
+
+### 9.3 The estimator moved the answer, and that is itself a result
+
+Equal-weighting DATES instead of entries gives a gross decay of −0.365% ±0.821 and a net of
+**+0.049%** — nothing at all. That estimator over-weights sparse early dates carrying a single
+instrument; the entry-weighted mean with a date-clustered error is what a book actually earns and is
+what the table above reports. **A finding that flips on a weighting choice has not been shown**, and
+this record says so rather than quoting the arm that flatters it.
+
+**This was reported the wrong way round first.** The crude equal-weight-by-date estimator was run
+before the cluster-robust one, and its −0.365% was reported as a refutation of the whole lever. It
+was not; it was a different estimator. Both are in the evidence file and the tool prints both.
+
+### 9.4 What would settle it
+
+Measure the spread of the names a card would ACTUALLY buy — the top decile on the entry date — at
+each execution time, rather than the median of the admitted universe. That replaces the one term the
+result rests on with a measurement of the right population. It needs no new data: `probe_quotes.py`
+already reaches the quotes and `measure_quoted_spread.py` already rebuilds a per-date universe.

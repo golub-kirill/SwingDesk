@@ -182,8 +182,19 @@ def _capacity_block(result: RunResult) -> list[str]:
         lines.append(f"  room           {capacity.reason}")
     lines.append("")
     lines.append("  Each candidate is measured against the BOOK ALONE. Watch names do not consume")
-    lines.append("  capacity from one another, so the room above is for ONE more position, not for")
-    lines.append("  every candidate below it (ALLOCATION_SPEC §6 rule 4 - rs.ranking_method unset).")
+    lines.append("  capacity from one another, so the room above is what fits IN TOTAL, not what")
+    lines.append("  each candidate below it may take.")
+    # DERIVED from this run, never asserted. This line read "rs.ranking_method unset" on every run
+    # from `DR-030`'s ratification on 2026-09-01 until 2026-09-06 - five days of telling the reader
+    # there was no order while the same report ranked 3,926 names and emitted Trade decisions.
+    # `AGENTS.md` §10.6: a fact a tool can derive is derived by it.
+    if result.selection is None:
+        lines.append("  NO RANKING on this run, so nothing may be allocated at all: "
+                     "ALLOCATION_SPEC §6 rule 4")
+        lines.append("  forbids falling back to the order the system happens to hold.")
+    else:
+        lines.append("  The room is filled in CARD-001's own rank order (ALLOCATION_SPEC §6 rule 4);")
+        lines.append("  `swingdesk scan --submit` takes them best-first until a cap binds.")
     return lines
 
 
@@ -471,7 +482,18 @@ def render(result: RunResult) -> str:
             lines.append(f"  {rs.component} v{rs.component_version}")
             lines.append(f"      RS vs benchmark    {reading}  {rs.units}")
             lines.append(f"      validation         {rs.validation_status}")
-            lines.append("      selects nothing    rs.benchmark_form is unset; CARD-001 is blocked")
+            # DERIVED, never asserted. This line said "rs.benchmark_form is unset; CARD-001 is
+            # blocked" on every candidate of every run from `DR-030`'s ratification on 2026-09-01
+            # until 2026-09-06 - printed 3,958 times in a single report that also emitted 392
+            # Trade decisions ranked by relative strength. A reader deciding whether to run this
+            # card would have read "blocked" beside the trade it was proposing.
+            if result.selection is None:
+                lines.append("      selects nothing    no ranking ran; CARD-001 selected nothing")
+            else:
+                lines.append("      not the sort key   DR-018 §1: ranking a cross-section by this "
+                             "value is identical")
+                lines.append("                         to ranking by raw return, Spearman 1.000000."
+                             " Read it, do not sort by it.")
 
         risk = outcome.risk
         if isinstance(risk, Refusal):
