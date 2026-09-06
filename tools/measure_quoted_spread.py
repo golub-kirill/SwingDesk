@@ -57,10 +57,8 @@ from zoneinfo import ZoneInfo
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from swingdesk.application import universe as selection_rules
+from swingdesk.contracts.market import Bar, Interval, Series
 from swingdesk.market_data import BarStore
-from swingdesk.reference_data import universe as rules
-from swingdesk.reference_data.directory import DirectoryStore
 
 #: `DR-003`'s liquidity rule, pinned rather than read from the registry - the same practice
 #: `tools/measure_spread.py` uses, and for the same reason: a committed measurement records what it
@@ -211,32 +209,61 @@ def break_even_round_trip_bps(
     return charged_round_trip_bps * gross_r / cost_r
 
 
-def admitted_tickers(data: Path) -> tuple[list[str], datetime]:
-    """The `DR-003`-admitted universe at the bars' own knowledge instant, and that instant.
+def admissible_on(bars: list[Bar], when: date) -> bool:
+    """Would `DR-003`'s rule have admitted this instrument on `when`, from the bars up to `when`?
 
-    The instant is returned rather than formatted because it is the run's only clock: it dates the
-    evidence file and bounds the sampled dates, and both would otherwise reach for a wall clock.
+    **The store cannot answer this the usual way and that is the point.** `application/universe.py`
+    `select()` takes a KNOWLEDGE time, and every bar in this store was ingested recently, so asking
+    it for the 2016 universe returns nothing - we knew nothing in 2016. The rule is therefore
+    re-applied here against the price and volume history a decision on that date would have had.
+
+    **What this does NOT repair: the directory is today's.** A name that delisted before `when` is
+    absent, so the reconstructed universe is survivorship-biased toward names that made it. That
+    biases the measured spread DOWN - survivors are the liquid ones - so a finding that costs were
+    HIGHER in the past survives the bias rather than being produced by it.
+    """
+    index = None
+    for i, bar in enumerate(bars):
+        if bar.session_date <= when:
+            index = i
+        else:
+            break
+    if index is None or index + 1 < MIN_HISTORY:
+        return False
+    if bars[index].close < MIN_PRICE:
+        return False
+    # No partial-window guard, deliberately: `MIN_HISTORY` is 250 and `ADTV_WINDOW` is 20, so the
+    # history floor above already guarantees a full window. A guard nothing can trip is a guard no
+    # test can prove, and mutation testing found this one alive - it survived being deleted.
+    window = bars[index - ADTV_WINDOW + 1: index + 1]
+    adtv = sum((b.close * b.volume for b in window), Decimal(0)) / ADTV_WINDOW
+    return adtv >= MIN_ADTV
+
+
+def universes_by_date(data: Path, days: list[date]) -> tuple[dict[date, list[str]], datetime]:
+    """The admissible ticker set on each sampled date, and the store's knowledge instant.
+
+    One pass over the store: every instrument's series is read once and tested against every date,
+    because re-reading 12,000 series per date is the population-times-per-item cost this project
+    has already paid for once.
     """
     store = BarStore(data / "bars.duckdb")
-    directory = DirectoryStore(data / "directory.duckdb")
     try:
         as_of = store.latest_knowledge_time()
         if as_of is None:
             raise QuoteFeedUnavailable("the bar store is empty; there is no universe to measure")
-        rule = rules.LiquidityRule(
-            min_price=MIN_PRICE,
-            min_adtv=MIN_ADTV,
-            adtv_window=ADTV_WINDOW,
-            min_history=MIN_HISTORY,
-            adtv_lag=ADTV_LAG,
-        )
-        selection = selection_rules.select(directory, store, rule, as_of)
-        return sorted(m.instrument.ticker for m in selection.members), as_of
+        by_date: dict[date, list[str]] = {d: [] for d in days}
+        for instrument_id in store.instrument_ids(as_of):
+            series = store.as_of(instrument_id, Interval.DAY, Series.RAW, as_of)
+            bars = list(series.bars) if series else []
+            if len(bars) < MIN_HISTORY:
+                continue
+            for day in days:
+                if admissible_on(bars, day):
+                    by_date[day].append(instrument_id)
+        return {d: sorted(v) for d, v in by_date.items()}, as_of
     finally:
-        # Two connections to one DuckDB file with different configuration is an error, and the
-        # universe builder holds both. Close before anything else opens the store.
         store.close()
-        directory.close()
 
 
 def sample_dates(years: list[int], horizon: date) -> list[date]:
@@ -277,15 +304,31 @@ def main() -> int:
     args = parser.parse_args()
 
     credentials = _credentials()
-    admitted, as_of = admitted_tickers(args.data)
-    random.seed(args.seed)
-    drawn = sorted(random.sample(admitted, min(args.sample, len(admitted))))
-    days = sample_dates(args.years, as_of.date())
+    # The dates are chosen before the universes, because each universe is the one that date had.
+    probe_store = BarStore(args.data / "bars.duckdb")
+    knowledge = probe_store.latest_knowledge_time()
+    probe_store.close()
+    if knowledge is None:
+        print("the bar store is empty; nothing to measure")
+        return 1
+    days = sample_dates(args.years, knowledge.date())
+    by_date, as_of = universes_by_date(args.data, days)
 
-    print(f"as_of {as_of.isoformat()}")
-    print(f"admitted universe: {len(admitted)}   sampled: {len(drawn)} (seed {args.seed})")
-    print(f"dates: {len(days)} across {len(args.years)} years   "
-          f"windows: {len(WINDOWS)}   calls: {len(drawn) * len(days) * len(WINDOWS):,}\n")
+    # **Sampled per date, from that date's own universe.** Drawing one sample from TODAY's admitted
+    # names and pricing it in 2016 measures what today's survivors cost then, which is a different
+    # and much less useful quantity - and it is the population error `AGENTS.md` §17 keeps catching.
+    drawn_by_date: dict[date, list[str]] = {}
+    for day in days:
+        pool = by_date[day]
+        random.seed(args.seed + day.toordinal())
+        drawn_by_date[day] = sorted(random.sample(pool, min(args.sample, len(pool))))
+
+    calls_planned = sum(len(drawn_by_date[d]) for d in days) * len(WINDOWS)
+    print(f"as_of {as_of.isoformat()}   seed {args.seed}")
+    print(f"{'date':<12}{'admissible that day':>21}{'sampled':>9}")
+    for day in days:
+        print(f"{day.isoformat():<12}{len(by_date[day]):>21,}{len(drawn_by_date[day]):>9}")
+    print(f"\nwindows: {len(WINDOWS)}   calls: {calls_planned:,}\n")
 
     # (window, year) -> ticker -> the per-date medians for that ticker
     collected: dict[tuple[str, int], dict[str, list[Decimal]]] = {}
@@ -294,7 +337,7 @@ def main() -> int:
     for label, at in WINDOWS:
         for day in days:
             start = utc_start(day, at)
-            for ticker in drawn:
+            for ticker in drawn_by_date[day]:
                 spread = proportional_spread_bps(
                     fetch_quotes(ticker, start, QUOTES_PER_WINDOW, credentials)
                 )
@@ -354,7 +397,7 @@ def main() -> int:
         print("WHAT THE CONSTANT IS WORTH")
         print(f"  `{args.against.name}` charges {charged} bps round trip, which is "
               f"{float(cost_r):.3f}R at a {ratified_stop} x ATR stop.")
-        print(f"  {'subject':<44}{'gross R':>9}{'break-even round trip':>24}")
+        print(f"  {'subject':<44}{'gross R':>9}   {'break-even round trip':>26}")
         for label, gross in subjects:
             point = break_even_round_trip_bps(gross, cost_r, charged)
             turning_points.append({
@@ -364,7 +407,7 @@ def main() -> int:
             })
             shown = f"{float(point):.1f} bps ({float(point) / 2:.1f} per side)" \
                 if point else "never - it loses gross"
-            print(f"  {label:<44}{float(gross):>+9.3f}{shown:>24}")
+            print(f"  {label:<44}{float(gross):>+9.3f}   {shown:>26}")
         print()
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
@@ -374,7 +417,13 @@ def main() -> int:
         # same store on any machine and on any day (`REQ-DATA-001`).
         "measured_as_of": as_of.date().isoformat(),
         "population": {
-            "admitted": len(admitted), "sampled": len(drawn), "seed": args.seed,
+            "rebuilt_per_date": True,
+            "seed": args.seed,
+            "by_date": {
+                day.isoformat(): {
+                    "admissible": len(by_date[day]), "sampled": len(drawn_by_date[day]),
+                } for day in days
+            },
             "liquidity_rule": {
                 "min_price": str(MIN_PRICE), "min_adtv": str(MIN_ADTV),
                 "adtv_window": ADTV_WINDOW, "min_history": MIN_HISTORY, "adtv_lag": ADTV_LAG,

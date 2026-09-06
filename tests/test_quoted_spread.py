@@ -146,6 +146,78 @@ def test_the_sample_is_fixed_so_two_runs_compare(spread):
     assert spread.sample_dates([2019, 2022], HORIZON) == spread.sample_dates([2019, 2022], HORIZON)
 
 
+# --- the universe each date actually had -------------------------------------------------------
+
+def _bars(module, n: int, close: str = "50", volume: int = 1_000_000, start_day: int = 0):
+    """`n` daily bars from 2015-01-01 + `start_day`, all identical but for the date."""
+    from datetime import UTC, datetime, timedelta
+
+    from swingdesk.contracts.market import Bar, Interval, Series
+    when = datetime(2015, 1, 1, tzinfo=UTC)
+    price = Decimal(close)
+    return [
+        Bar(
+            instrument_id="TEST", interval=Interval.DAY, series=Series.RAW,
+            event_time=when, session_date=date(2015, 1, 1) + timedelta(days=start_day + i),
+            open=price, high=price, low=price, close=price,
+            volume=Decimal(volume), knowledge_time=when,
+        )
+        for i in range(n)
+    ]
+
+
+def test_a_name_admissible_late_is_not_admissible_early(spread):
+    """The whole reason the universe is rebuilt per date, in one assertion.
+
+    Volume is tiny for the first 300 sessions and large afterwards. On a date inside the thin
+    stretch the rule must refuse; on a later date it must admit. A tool that used one of today's
+    universe for every date would answer the same on both.
+    """
+    thin = _bars(spread, 300, close="50", volume=1_000)
+    thick = _bars(spread, 300, close="50", volume=1_000_000, start_day=300)
+    bars = thin + thick
+    assert spread.admissible_on(bars, bars[290].session_date) is False
+    assert spread.admissible_on(bars, bars[-1].session_date) is True
+
+
+def test_bars_after_the_date_are_not_read(spread):
+    """A name that becomes liquid tomorrow was not admissible today. This is the lookahead."""
+    bars = _bars(spread, 300, volume=1_000) + _bars(spread, 60, volume=99_000_000, start_day=300)
+    cutoff = bars[299].session_date
+    assert spread.admissible_on(bars, cutoff) is False
+
+
+def test_the_price_floor_binds(spread):
+    """Volume is set high enough that ONLY the price can refuse.
+
+    At the obvious 1,000,000 shares a $4.99 name turns over $4.99m and is refused by the DOLLAR
+    floor, so the fixture passes with the price check deleted — caught by mutation, not by the run.
+    """
+    cheap = _bars(spread, 300, close="4.99", volume=4_000_000)
+    assert spread.admissible_on(cheap, date(2016, 6, 1)) is False
+    assert spread.admissible_on(
+        _bars(spread, 300, close="5.00", volume=4_000_000), date(2016, 6, 1)) is True
+
+
+def test_the_dollar_volume_floor_binds(spread):
+    """$5m over a 20-bar window: 100,000 shares at $50 is exactly the floor."""
+    assert spread.admissible_on(
+        _bars(spread, 300, close="50", volume=99_999), date(2016, 6, 1)) is False
+    assert spread.admissible_on(
+        _bars(spread, 300, close="50", volume=100_000), date(2016, 6, 1)) is True
+
+
+def test_a_short_history_is_refused(spread):
+    """`min_history` is 250 bars; 249 is not a shorter version of enough."""
+    assert spread.admissible_on(_bars(spread, 249), date(2020, 1, 1)) is False
+    assert spread.admissible_on(_bars(spread, 250), date(2020, 1, 1)) is True
+
+
+def test_a_date_before_the_series_starts_is_refused(spread):
+    assert spread.admissible_on(_bars(spread, 300), date(2014, 1, 1)) is False
+    assert spread.admissible_on([], date(2020, 1, 1)) is False
+
+
 # --- the summary -----------------------------------------------------------------------------
 
 def test_percentiles_order_and_mean(spread):

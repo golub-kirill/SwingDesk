@@ -903,6 +903,36 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 4. Pending decisions
 
+- [ ] **`[v]` THE COST CONSTANT DESCRIBES THE OPENING MINUTE AND IS APPLIED TO EVERY MOMENT —
+      measured 2026-09-06, `DR-040` is `proposed` and the ruling is the owner's.**
+      ```bash
+      PYTHONPATH=$PWD/src python tools/probe_quotes.py
+      PYTHONPATH=$PWD/src python tools/measure_quoted_spread.py --data <store>
+      ```
+      `DR-005`'s **25.44 bps per side** turns out to be **accurate for 09:30** — 0.8x to 1.2x of the
+      measured median in every one of five years — and **4x to 14x too high** from 10:00 onward.
+      `CARD-001` enters at `next session's open`, so the project charges, and pays, the worst value
+      the session offers. Buy-and-hold turns positive below **20.6 bps per side** and the ratified
+      exit cell below **6.2**; the measured close is **4.0**.
+      **Three questions, and none is mine.**
+      1. Does `costs.slippage_model`'s note record which moment its value describes? It reads today
+         as a property of the universe and is a property of the universe *at the open*.
+      2. Does the model gain an execution-time dimension, so a study can state the moment it charges
+         for? One constant on both sides of every fill represents none of the three fill types
+         `tools/measure_fill_convention.py` counts (50.6% marketable, 32.8% passive, 16.6% unfilled).
+      3. Is `CARD-001`'s `entry.method` reopened? It is a card field and changing it creates a new
+         version that resets any validation claim (`STRATEGY_CARD_SPEC` 5 rule 2).
+      **What must NOT happen without the study**: adopting the late-session number. A later entry
+      changes the gross as well as the cost, and the gross was measured at the open. `DR-040` §6
+      names the study; it needs intraday bars, which the venue serves free and `data/` does not hold.
+
+- [ ] **`[v]` INTRADAY BARS ARE NOW WORTH STORING — 2026-09-06, and it is a scope call.**
+      The same free tier that serves quotes serves minute bars back to 2016. Nothing in `data/`
+      holds them, and the execution-time study above cannot run without them. The cost is storage
+      and a vendor adapter; the benefit is the only lever measured this session that is larger than
+      the exit policy it would replace. **Not started, and not to be started on my judgement** —
+      it widens the data contract, which is `ADR-0001` territory.
+
 - [ ] **`[v]` THE UNIVERSE ADMITS INSTRUMENTS WHOSE STOP IS NARROWER THAN THE COST OF TRADING THEM
       — measured 2026-09-06, and it is the owner's to rule.**
       ```bash

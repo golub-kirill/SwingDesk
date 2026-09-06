@@ -312,6 +312,58 @@ nothing, and no figure here corrects for that.
 is not a set of trades, survivorship is absent, and `HANDOFF.md` §7 closes the new-entry-filter
 family by evidence anyway.
 
+## 10. The cost constant is right about one minute of the day, and the card trades in it
+
+Measured 2026-09-06, `DR-040`. `python tools/measure_quoted_spread.py`, evidence in
+`docs/decisions/measurements/quoted-spread-2026-09-06.json`. **EXPLORATORY; it sets no parameter,
+and it spends no trial — a cost input has no Sharpe to deflate (`trial_budget.py`, the `PR-008` /
+`PR-010` rule).**
+
+**The route was open the whole time.** §2's *"`PR-006`, real fills, is the only route left"* rested
+on `DR-004`'s premise that no free source serves historical intraday spreads. The venue this
+project already holds an account with serves consolidated SIP NBBO, point-in-time, back to 2016;
+only the last fifteen minutes are withheld. `tools/probe_quotes.py` re-derives it on every run.
+
+**2,208 windows, the venue's own NBBO, the same `S/2 per side` convention `DR-005` reports.** The
+universe is rebuilt on each sampled date from the bars that date had — a sample drawn from today's
+admitted names and priced in 2016 measures what today's survivors cost then, which is a different
+quantity. Median per-side spread, bps:
+
+| window | 2016 | 2019 | 2022 | 2024 | 2026 | vs `DR-005`'s 25.44 |
+|---|---|---|---|---|---|---|
+| **09:30 open** | 21.9 | 22.7 | 24.9 | 30.2 | 26.5 | **right — 0.8x to 1.2x** |
+| 10:00 | 5.6 | 5.1 | 6.7 | 6.8 | 7.5 | 3.4x to 5.0x too high |
+| 11:00 | 3.9 | 3.3 | 4.2 | 5.3 | 5.8 | 4.4x to 7.6x too high |
+| **15:55 close** | 1.9 | 2.1 | 2.6 | 3.5 | 4.0 | **6.3x to 13.6x too high** |
+
+**`DR-005` is vindicated and the card is not.** Two daily-OHLC estimators reproduced the opening
+spread to within a factor of 1.2, across five years and a universe growing from 38 admissible names
+to 3,999. And `CARD-001`'s `entry.method` is **`next session's open`** — the one moment of the
+session that costs **6.6x** the close.
+
+**What that is worth, in this document's own published numbers.** The exit surface reported gross
+expectancy and the R cost of the charged 50 bps together, so the turning point is arithmetic:
+
+| subject | gross | break-even per side | at the open (26.5) | at the close (4.0) |
+|---|---|---|---|---|
+| buy and hold, 20 sessions | +0.140R | 20.6 bps | **negative** | positive |
+| the ratified 2.0/1R cell | +0.042R | 6.2 bps | **negative** | positive |
+
+**THE LIMIT, AND IT IS THE WHOLE CAVEAT.** A later entry is not the same trade at a better price: it
+changes the gross return as well as the cost, and the gross column above was measured on entries
+struck at the open. **Subtracting a smaller cost from an unchanged gross is exactly the error
+`DR-029` §5 made** when it read a lever off a table labelled *"Gross of costs"*. Nothing here says
+the strategy is profitable later in the day. What it says is that **the published results are all
+computed at the top of a curve nobody knew was a curve**, and that settling it needs intraday bars
+this project does not store — `DR-040` §6 registers what that study would be.
+
+**And the live path pays a spread on only half its entries.** `tools/measure_fill_convention.py`,
+over 147,712 non-overlapping entries: the limit resting at the prior close is **50.6% marketable at
+the open, 32.8% passive at the limit, 16.6% never filled**. The backtest fills all of them at the
+open and charges all of them a spread. The resulting adverse selection is real and small — the names
+the limit misses do run better (+3.136% against +1.777%), the cheaper fills offset it, and the net
+is **-0.024% per entry**.
+
 ---
 
 **Do not write anything implying more confidence than the above.** `UX_COPY.md` §3 carries the
