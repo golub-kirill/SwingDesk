@@ -236,5 +236,45 @@ measured non-overlapping and stand as measured; this study is where the overlapp
 tested, and the 126-session long-short cell is the one that will say whether the ceiling was the
 data or the estimator.
 
+### A-2 · 2026-09-06 · BEFORE THE RUN — §5's formation was wrong, and finding out why is a result on its own
+
+**No data has been seen.** Found while building the tool, before it ran.
+
+**§5 said `formation: 252 sessions` and §2 said `rs.lookback = 126`. Those contradict, and the
+252 was copied from `measure_momentum_horizon.py` rather than read from the registry.** The
+ratified value is **126**, `status: owner`, `read_by: swingdesk.application.pipeline:_selection_rule`.
+
+**Chasing that turned up a second and larger mismatch.** `rs.benchmark_form` is **`path`**, ruled by
+the owner via `DR-030`, and the live pipeline implements it as
+`decision_logic.ranking.ByMarketPathStrength` — *"share of sessions the name beat `rs.benchmark`"*.
+Every exploratory measurement of this family instead ranked on
+`measure_momentum_horizon._formation_return`, a **point-to-point return over 252 sessions**.
+
+**Those are not the same signal and the repository already says so.** `ByMarketPathStrength`'s own
+docstring: *"Measured at Spearman ~0.6 against a raw-return ranking, so it is a genuinely different
+signal... It is not proposed; a pre-registration picks it or does not."* And `rs.benchmark_form`'s
+registry note records that the point-to-point form *"is measured to be a lie about the card's own
+name"*.
+
+**So `EVIDENCE_SUMMARY` §§8, 8a and 11 do not measure the ratified selection rule.** They measure
+252-session point-to-point momentum. The card ranks on 126-session path strength, and **no study has
+ever measured what the card actually does.** That is not a defect in those results — each is correct
+about what it computed — and it is exactly the `AGENTS.md` §17 granularity error this project keeps
+paying for, found here before it was paid for again.
+
+**What changes in this study:** the score is `ranking.ByMarketPathStrength` at `rs.lookback` = 126,
+called through the live implementation rather than reimplemented, so the study and the system cannot
+drift apart. §5's `formation: 252` is void.
+
+**What that costs §3.** The numeric prediction was extrapolated from figures measured on the OTHER
+signal, so its anchor is gone. The qualitative prediction stands unchanged and is what the decision
+rule reads: under H1 at least one horizon ≥ 42 sessions has an interval strictly above zero; under
+H0 none does. **A weaker prediction registered before the run is worth more than a precise one
+borrowed from a different measurement**, and §6's thresholds were never expressed in those numbers.
+
+**And it adds a reading this study did not set out to produce:** if the path form at 126 behaves
+unlike the point-to-point form at 252, the difference is a fact about `DR-030`'s ruling that nothing
+else in the repository has measured.
+
 Any amendment after the run is appended, dated, and downgrades this study to exploratory
 (`PREREG_TEMPLATE` rule 3).
