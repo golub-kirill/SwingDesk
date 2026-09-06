@@ -1363,7 +1363,7 @@ parameters:
     value: null
     status: unset
     provenance: null
-    read_by: none
+    read_by: swingdesk.validation.backtest.fees:day_fees
     named_in: [M72-T1081]
     note: >-
       What the VENUE bills on top of commission, as opposed to what the broker charges. Proposed by
@@ -1374,6 +1374,12 @@ parameters:
       Section 31 is also TIME-VARYING - $0.00 per million until 2026-04-04 and $20.60 after - so a
       backtest charging one rate across 2016-2026 would be wrong in a way no test catches. Any
       implementation is point-in-time.
+      THE VALUES LIVE OUTSIDE THIS FILE, owner ruling 2026-09-05: registry/fee_schedule.yml holds an
+      effective-dated table and parameters.yml has no temporal field, so a rate with a start date has
+      nowhere to sit here. read_by names the code that consumes that table. Section 31 was $0.00 per million until 2026-04-04; storing
+      today's number in this file would produce exactly the stale-value drift the project spends
+      its time removing. The table REFUSES for a session it does not cover rather than charging
+      the newest rate backwards.
       Unset rather than assumed on purpose: the rates are PUBLISHED, so they need a citation and not
       a study, and `assumed` would queue them for evidence that will never come. Unset until DR-039
       is ratified, not because the rates are unknown - Alpaca's own schedule gives all three.

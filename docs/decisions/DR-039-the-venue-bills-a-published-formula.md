@@ -8,8 +8,16 @@ components:      none - swingdesk.validation.backtest.costs implements the model
 supersedes:      DR-004's COMMISSION component. DR-005's 25bp slippage stands untouched, and so does
                  DR-004's reasoning for charging slippage to the fill rather than deducting it after
 evidence:        measurements/venue-fees-2026-09-05.json
-implementation:  none - proposed. Section 6 says what accepting it would cost the code, and the
-                 shape currently in `CostModel` cannot express it
+implemented_by:  src/swingdesk/validation/backtest/fees.py :: def day_fees
+data:            registry/fee_schedule.yml - the effective-dated rates, committed and gated
+implementation_note:
+                 BUILT BEFORE RATIFICATION, 2026-09-05, and the order is deliberate. Gate 20
+                 SKIPS an accepted record declaring `implementation: none`, and this record's
+                 whole content is a code change - so ratifying it that way would have made the
+                 change an intention nothing checks. That is DR-012 section 8.3, which named a
+                 file, quoted the sentence and was missed for nineteen days; it became a trap in
+                 AGENTS.md section 12 the same morning this record was written. The pointer is
+                 never ahead of the code it names, which is DR-012's own rule turned around.
 ```
 
 ## 1. What made this necessary: the first real fee this project has ever seen
@@ -137,9 +145,60 @@ fees makes it *slightly more*. Neither moves a verdict, and this record does not
 **What it changes is honesty, not arithmetic.** An `assumed` model is a promissory note. This
 replaces one component of it with a formula anybody can check against a regulator's own notice.
 
-## 6. What accepting this costs the code, and the current shape cannot express it
+## 6. What it cost the code — BUILT 2026-09-05, before ratification and on purpose
 
-`swingdesk.validation.backtest.costs.CostModel` charges commission as:
+`src/swingdesk/validation/backtest/fees.py` and `registry/fee_schedule.yml`, with
+`tests/test_fees.py` beside them.
+
+**Owner ruling the same day: the effective-dated table does not go in
+`registry/parameters.yml`**, whose eight fields carry no temporal one, so a rate with a start
+date has nowhere to sit in it. `costs.regulatory_fee_schedule` points at the module instead.
+
+**GATE 7 THEN MOVED THE TABLE OUT OF THE CODE, and it was right to.** The first build held
+`date(2026, 4, 4)` in `fees.py`. `REQ-DATA-001` is unconditional — *no event date may appear as
+a literal in executable code* — and an effective date is precisely what that rule protects.
+Rewriting it as `date.fromisoformat("2026-04-04")` would have passed the AST check and been
+evasion, so the gate's own remedy was taken instead: *"read it from the calendar, the store or
+a parameter"*. **This is a refinement of the ruling, not a departure from it** — the values are
+still out of `parameters.yml`, still owned by the cost domain, still effective-dated, still
+pinned by a test.
+
+**And gate 22's argument for the directory policy transfers whole:** *"A limit in a literal is
+changed by editing a line. A limit here is changed by a commit a gate reads and a reviewer
+sees."* These rates are set by the SEC and FINRA. When one moves, that file gains an entry and
+no code changes.
+
+**The table REFUSES outside its range, which is the part §6 could previously only warn about.**
+`rates_on(date(2016, 8, 1))` returns a `FeeRefusal`, not the newest rates. A backtest opening in
+2016 that silently charged the 2026 rate would be arithmetically consistent everywhere and wrong
+throughout — the failure no test catches. Now it cannot happen: `AGENTS.md` §3, a refusal rather
+than a guess.
+
+**One entry in the table, and the honesty is in how few.** Alpaca's schedule states today's
+rates, not last year's. The pre-2026-04-04 Section 31 rate of $0.00 per million is recorded in
+this record and deliberately **not** added as a second entry: the TAF and CAT rates in force on
+that date are unknown, and an entry getting one fee right while guessing two others would refuse
+nothing while being wrong twice.
+
+**Ten mutations, ten dead tests — seven in the code and three in the DATA.** Refusal removed;
+round-half instead of round-up; per-trade aggregation instead of daily; the TAF cap applied to
+the day instead of the trade; the SEC fee charged on shares instead of proceeds; the OTC
+equivalence ignored; an empty schedule accepted. Then, in `registry/fee_schedule.yml`: the TAF
+rate reverted to the regulator's page, the effective date moved one day earlier, and the OTC
+equivalence set to one. **Mutating the data matters as much as mutating the code**, because
+the rates are now data and a test that only exercises the code would let them rot.
+
+**The tests read the committed file rather than a copy of its numbers.** Retyping the rates
+into the fixture would let the file and the test drift while both stayed green, which is the
+failure this whole record is about.
+
+**And one test exists because of §9.** The original check used a 17-share sell, where 0.000166
+and 0.000195 both round up to $0.01 — so it passed against a wrong rate. `test_fees.py` sells
+**345 shares**, the smallest size at which the two rates differ by a cent.
+
+### What the shape had to become, and why it is not `CostModel`
+
+`CostModel` in the same package charges commission as:
 
 ```python
 def commission(self, shares: int) -> Decimal:
@@ -148,9 +207,22 @@ def commission(self, shares: int) -> Decimal:
 ```
 
 **Symmetric by construction.** Section 31 and TAF fall on the **sell only**, and Section 31 is a
-function of *proceeds* rather than of shares — a quantity `commission()` is never given. So this is
-a signature change and a new cost term, not a value swap. Named here so that accepting the record
-is not mistaken for a one-line edit.
+function of *proceeds* rather than of shares — a quantity `commission()` is never given. So a new
+module rather than two more fields: `CostModel` prices a BROKER's service, and these are set by
+regulators, fall asymmetrically, and move on a calendar nobody here controls.
+
+**`day_fees()` takes a SESSION, not a trade**, because the schedule aggregates per fee type at
+the daily per-account level and rounds up once. Ten sub-cent sales cost one cent aggregated and
+ten charged separately — a factor of ten, pinned by a test rather than described.
+
+**`load_schedule` is the only function that touches disk and nothing else calls it.** A caller
+loads once and passes the result, so a study records which schedule it ran against instead of
+inheriting whatever the file says the day somebody re-reads it. That is the cost module’s standing
+rule — *a study pins its own values and records them* — and it matters more here, because a
+rate that moved underneath a finished study would change its meaning without changing its text.
+
+**Nothing is wired into a study.** Charging these would change what a backtest computes, which
+is a separate decision.
 
 **And a study must not silently inherit it.** That module's docstring already carries the rule —
 *"a study pins its own values and records them"* — and it matters more here than usual, because the

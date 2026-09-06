@@ -1,0 +1,45 @@
+# The venue's regulatory fee schedule, effective-dated. DR-039.
+#
+# WHY THIS IS DATA AND NOT A CONSTANT IN `fees.py`. Gate 7 enforces REQ-DATA-001 - no event date may
+# appear as a literal in executable code - and an effective date is exactly that. The gate's own
+# remedy is "read it from the calendar, the store or a parameter". This is the store.
+#
+# It is also the shape gate 22 argues for on the directory collector, for a reason that transfers
+# whole: "A limit in a literal is changed by editing a line. A limit here is changed by a commit a
+# gate reads and a reviewer sees." These rates are set by the SEC and FINRA and change on their
+# calendar, not ours. When one moves, this file gains an entry and no code changes.
+#
+# NOT `registry/parameters.yml`, on the owner's ruling of 2026-09-05: that file's eight fields carry
+# no temporal one, so a rate with a start date has nowhere to sit in it. `costs.regulatory_fee_schedule`
+# points here.
+#
+# ONE ENTRY, AND THE HONESTY IS IN HOW FEW. Alpaca's schedule states today's rates, not last year's.
+# Section 31 was $0.00 per million until 2026-04-04 - that is recorded in DR-039 and deliberately NOT
+# added below as a second entry, because the TAF and CAT rates in force before that date are not
+# known to this project. An entry that got one fee right while guessing two others would refuse
+# nothing while being wrong twice. `rates_on` REFUSES for any session this file does not cover.
+
+source: Alpaca Clearing Brokerage Fee Schedule, template updated 2026-09-01
+source_url: https://files.alpaca.markets/disclosures/library/BrokFeeSched.pdf
+evidence: docs/decisions/measurements/venue-fees-2026-09-05.json
+
+# Verbatim from page 4, and it is a rule about the DAY rather than the trade:
+#   "Fees are calculated on the exact executed quantity, including fractional shares, with no
+#    rounding of share quantity. Each fee type is aggregated separately at the daily, per-account
+#    level. After aggregation, each fee total is rounded up to the nearest cent $0.01."
+aggregation: daily, per account, per fee type, then rounded up to the cent once
+
+# OTC equities count for a hundredth of a share against CAT; NMS equities one for one. The only
+# place in this schedule where a share means something other than itself.
+otc_cat_equivalence: "0.01"
+
+schedules:
+  - effective: 2026-04-04
+    # $0.0000206 x trade value. SELLS ONLY.
+    sec_rate_on_value: "0.0000206"
+    # $0.000195 per share, SELLS ONLY, capped per TRADE rather than per day.
+    taf_per_share: "0.000195"
+    # 50,205 x 0.000195 = 9.789975, so the cap and the rate corroborate each other exactly.
+    taf_max_per_trade: "9.79"
+    # $0.000003 per executed equivalent share, BUYS AND SELLS.
+    cat_per_equivalent_share: "0.000003"
