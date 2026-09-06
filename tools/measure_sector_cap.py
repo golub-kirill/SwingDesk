@@ -279,6 +279,90 @@ def _universe_cross_section(data: Path) -> dict[str, object]:
     }
 
 
+#: How a refusal from `look_through` is bucketed for the census. Matched on a distinctive fragment
+#: of each message rather than on the whole string, so re-wording a sentence does not silently move
+#: an instrument into `other`. Order matters only in that the first match wins.
+REFUSAL_KINDS: tuple[tuple[str, str], ...] = (
+    ("no classification is stored", "nothing stored"),
+    ("served no sector", "no sector"),
+    ("contradicts itself", "vendor self-contradiction"),
+    # "holds 0% equity", not "no equity": the first draft of this bucket used the latter, matched
+    # nothing, and put all 41 into `other` - which is exactly what `other` is for and why the census
+    # was right the first time it ran.
+    ("holds 0% equity", "0% equity (DR-025)"),
+)
+
+
+def _refusal_kind(reason: str) -> str:
+    """Which bucket a refusal falls in, or `other` when it is a reason this census has not met.
+
+    `other` is deliberate and is not a catch-all for tidiness: a refusal reason added to
+    `look_through` after this was written must appear AS ITSELF in the output, because a new
+    refusal quietly counted under an old heading is the drift this tool exists to end.
+    """
+    for fragment, bucket in REFUSAL_KINDS:
+        if fragment in reason:
+            return bucket
+    return "other"
+
+
+def _universe_refusals(data: Path) -> dict[str, object]:
+    """The look-through census over the admitted universe, by refusal reason.
+
+    Written 2026-09-05 because `TODO.md` held this breakdown as four hand-typed numbers with no
+    command behind them (`AGENTS.md` §10.6) - and those numbers were measured on 2026-08-30,
+    one day before `DR-025` deleted the shape inference that produced most of the refusals.
+
+    Reads both stores at NOW rather than at the bar store's knowledge time, for the reason
+    `_universe_cross_section` records: the two stores are filled by different passes, and reading
+    classifications at the bar store's as-of hides every one pulled since the last bar refresh.
+    """
+    registry = ParameterRegistry.load()
+    built = universe_builder.rule_from_registry(registry)
+    if isinstance(built, Refusal):
+        return {"unavailable": str(built)}
+
+    rule, parameters = built
+    with (
+        BarStore(data / "bars.duckdb") as bars,
+        ClassificationStore(data / "classifications.duckdb") as store,
+        DirectoryStore(data / "directory.duckdb") as directory,
+    ):
+        if bars.latest_knowledge_time() is None:
+            return {"unavailable": "the bar store holds nothing"}
+        as_of = datetime.now(UTC)
+        selection = universe_builder.select(
+            directory, bars, rule, as_of, parameters=parameters
+        )
+        members = sorted(member.instrument.id for member in selection.members)
+        judged = {
+            symbol: look_through(store.as_of(symbol, as_of), symbol) for symbol in members
+        }
+
+    refused: dict[str, list[str]] = defaultdict(list)
+    for symbol, exposure in judged.items():
+        if exposure.unavailable is not None:
+            refused[_refusal_kind(exposure.unavailable)].append(symbol)
+
+    spendable = sum(1 for exposure in judged.values() if exposure.is_available)
+    return {
+        "measured_at": as_of.isoformat(),
+        "admitted": len(members),
+        "spendable": spendable,
+        "refused": {kind: len(symbols) for kind, symbols in sorted(refused.items())},
+        # Named, not just counted. A census that says "23" and cannot say WHICH 23 sends the next
+        # reader back to the store, which is how the hand tally happened in the first place.
+        "refused_instruments": {
+            kind: sorted(symbols)[:40] for kind, symbols in sorted(refused.items())
+        },
+        "note": (
+            "DR-025 (2026-08-31) superseded DR-006 8.7's shape inference: the vendor's own "
+            "declared zero equity refuses, the SHAPE of the weights does not. A breakdown taken "
+            "before that date is not comparable with this one."
+        ),
+    }
+
+
 def _draw_from_universe(
     names: list[str],
     usable: dict[str, Exposure],
@@ -437,15 +521,30 @@ def _correlation_overlap(exposures: dict[str, Exposure], data: Path) -> dict[str
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="measure_sector_cap")
-    parser.add_argument("--classifications", type=Path, required=True)
+    # Not required: `--refusals` does not read it. The check below refuses without it for
+    # every other path, which keeps the old contract exactly.
+    parser.add_argument("--classifications", type=Path, default=None)
     parser.add_argument("--data", type=Path, default=Path("data"))
     parser.add_argument("--out", type=Path, default=None)
     parser.add_argument("--wide", action="store_true",
                         help="also measure the sector mix and the correlation cross-tab over the "
                              "WHOLE admitted universe, which needs no trade log and closes the "
                              "thin-cross-section limit in DR-006 14.5")
+    parser.add_argument("--refusals", action="store_true",
+                        help="ONLY the look-through census over the admitted universe, by "
+                             "refusal reason. Needs no trade log and no classifications file, "
+                             "and skips the correlation pass. This is the command TODO.md must "
+                             "name instead of carrying the numbers (AGENTS.md 10.6)")
     args = parser.parse_args(argv)
 
+    # Before `--classifications` is required, because this path does not read it: the census
+    # comes from the live ClassificationStore the run itself reads.
+    if args.refusals:
+        print(json.dumps(_universe_refusals(args.data), indent=2, sort_keys=True))
+        return 0
+
+    if args.classifications is None:
+        parser.error("--classifications is required unless --refusals is given")
     exposures = _exposures(args.classifications)
     usable = sorted(s for s, e in exposures.items() if e.is_available)
     refused = sorted(s for s, e in exposures.items() if not e.is_available)

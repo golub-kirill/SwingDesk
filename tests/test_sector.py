@@ -855,3 +855,59 @@ def test_a_single_sector_equity_share_is_unaffected() -> None:
     """The guard applies to FUNDS. An ordinary share at 100% of its own sector carries no equity
     share at all and must keep being admitted."""
     assert look_through(_equity("AAA.1", "energy"), "AAA.1").is_available
+
+
+# ------------------------------------------------ the refusal census, added 2026-09-05
+
+
+def _refusal_bucket(reason: str) -> str:
+    """`measure_sector_cap._refusal_kind`, imported without importing the whole tool.
+
+    The tool is a script under `tools/` and pulls in a trade log at import time; the classifier is
+    a pure function and is the only part worth pinning here.
+    """
+    import importlib.util
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    spec = importlib.util.spec_from_file_location(
+        "_msc", root / "tools" / "measure_sector_cap.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module._refusal_kind(reason)
+
+
+def test_every_refusal_look_through_can_produce_has_a_named_bucket() -> None:
+    """Asserted against the messages `look_through` ACTUALLY returns, never against copies.
+
+    Written because the first draft of the census matched `"no equity"` while `look_through` says
+    `"holds 0% equity"`, and all 41 instruments landed in `other`. Copying the string into the test
+    would have reproduced the same mistake twice and called it agreement, so each case is built by
+    calling the real function.
+
+    `other` is the census's fail-visible bucket and must stay reachable — this asserts that nothing
+    look_through produces today lands there, not that the bucket is dead.
+    """
+    nothing_stored = look_through(None, "AAA.1")
+    no_sector = look_through(_classification("BBB.1", "ETF", {}), "BBB.1")
+    zero_equity = look_through(
+        _classification("NEAR.1", "ETF", {"healthcare": "1"}, equity_share="0"), "NEAR.1"
+    )
+
+    for exposure, expected in (
+        (nothing_stored, "nothing stored"),
+        (no_sector, "no sector"),
+        (zero_equity, "0% equity (DR-025)"),
+    ):
+        assert exposure.unavailable is not None, exposure
+        assert _refusal_bucket(exposure.unavailable) == expected, exposure.unavailable
+
+
+def test_an_unrecognised_refusal_is_reported_as_other_rather_than_guessed() -> None:
+    """A reason added to `look_through` later must appear AS ITSELF in the census.
+
+    Folding an unknown refusal under the nearest known heading is precisely the drift the census
+    was built to end, so the fallback is visible rather than tidy.
+    """
+    assert _refusal_bucket("some reason nobody has written yet") == "other"
