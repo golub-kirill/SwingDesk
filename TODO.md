@@ -926,6 +926,32 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       changes the gross as well as the cost, and the gross was measured at the open. `DR-040` §6
       names the study; it needs intraday bars, which the venue serves free and `data/` does not hold.
 
+- [ ] **`[v]` THE RATIFIED HOLDING PERIOD IS THE MOST EXPENSIVE OF SIX, AND FIXING IT NEEDS NO
+      NEW CAPABILITY — `PR-014`, reported 2026-09-06.**
+      ```bash
+      PYTHONPATH=$PWD/src python tools/run_pr014.py --data <store>
+      ```
+      **This is the long-only reading, and it is the one this system can act on.**
+      `exit.max_holding_period` is **20 sessions, `assumed:DR-012`**, never tested until now, and it
+      is the worst of the six horizons measured. A long-only book turns 12.6 times a year at 20
+      sessions and twice at 126, so it pays **6.30% a year against 1.00%** — a difference that is
+      arithmetic, not an estimate.
+      | horizon | cost/yr | primary net | holdout net |
+      |---|---|---|---|
+      | **20 (ratified)** | **6.30%** | −3.41% | −3.63% |
+      | 126 | **1.00%** | **+3.12%** | **+1.39%** |
+      **What it does NOT say.** No long-only cell's interval excludes zero at any horizon, so this
+      is not evidence the card beats `SPY`. The point estimate moves from negative on both windows
+      to positive on both, and the cost falls by 5.30 points; that is all.
+      **What the control added.** The equal-weighted admitted universe loses to `SPY` by 1.58% a
+      year (primary) and 4.27% (holdout), so at 126 sessions the top decile is **+4.70% against the
+      universe it selects from**. The ranking picks better names than its own pool; `SPY` is what
+      neither beats.
+      **The ruling is the owner's**: `exit.max_holding_period` is a ratified parameter, and changing
+      it creates a new `CARD-001` version that resets any validation claim
+      (`STRATEGY_CARD_SPEC` 5 rule 2). Nothing about this needs a short book, new data or a new
+      component — which is why it is the smallest complete thing available.
+
 - [ ] **`[v]` THE ONE CONSTRUCTION THAT SURVIVES COSTS NEEDS A SHORT LEG THIS SYSTEM DOES NOT
       HAVE — measured 2026-09-06, and whether to build one is the owner's.**
       ```bash

@@ -4,7 +4,7 @@
 id:            PR-014
 date:          2026-09-06
 author:        Claude, at the owner's instruction 2026-09-06
-status:        registered
+status:        reported   (2026-09-06 - results/PR-014-report.md, verdict ACCEPT at 126 sessions)
 ```
 
 ---
