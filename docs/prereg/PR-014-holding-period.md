@@ -42,6 +42,9 @@ market. The standard construction in this literature holds `K` overlapping sub-p
 period apart, so every formation date contributes and the book turns over `1/K` of itself per
 period. §5 registers it, and §5b registers the inference it requires.
 
+**The constraint was an owner rule and the owner lifted it on 2026-09-06 — see §10, amendment A-1,
+made before the tool existed.** This paragraph is left as written.
+
 ---
 
 ## 1. Question
@@ -207,5 +210,31 @@ one — which is the question that prompted it.
 
 ## 10. Amendments
 
-None. Any amendment after the run is appended, dated, and downgrades this study to exploratory
+### A-1 · 2026-09-06 · BEFORE THE RUN — the non-overlapping constraint was an owner rule, and the owner has lifted it
+
+**No data has been seen.** The tool this study describes does not exist at the time of this
+amendment, so `PREREG_TEMPLATE` rule 3 does not apply and the study is not downgraded.
+
+**What changes is the provenance of §5's construction, not the construction.** §0 attributed the
+non-overlapping windows to the studies that used them and presented overlapping portfolios as this
+study's methodological proposal. The owner ruled on 2026-09-06, verbatim: *"my mistake, thay could
+intersect"* — the constraint was theirs, and it is withdrawn.
+
+**Why that matters enough to record.** A method an agent proposes and a method the owner rules are
+different objects in this repository. Under the first, §5's construction is a claim this study has
+to defend; under the second it is a ratified premise, and the seventeen-observation ceiling in every
+prior result becomes a **known artefact of a withdrawn rule** rather than a limit of the data.
+
+**What it does NOT change.** The rest of §5b stands unaltered and is still load-bearing: overlapping
+sub-portfolios share holdings, so the moving-block bootstrap is required rather than optional, and
+**overlapping windows still create no new information.** Ten years remain ten years. A result that
+needs 2016–2026 to clear zero is a result about one decade, and §9 says so. Lifting the constraint
+lowers the variance of the estimate; it does not lower the risk of being wrong about a decade.
+
+**And the prior results are not retroactively repaired by it.** `EVIDENCE_SUMMARY` §§8a and 11 were
+measured non-overlapping and stand as measured; this study is where the overlapping construction is
+tested, and the 126-session long-short cell is the one that will say whether the ceiling was the
+data or the estimator.
+
+Any amendment after the run is appended, dated, and downgrades this study to exploratory
 (`PREREG_TEMPLATE` rule 3).
