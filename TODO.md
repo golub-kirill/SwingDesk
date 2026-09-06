@@ -1245,6 +1245,10 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
          and 1.5R mean anything. This is `CARD-001`'s four unset inputs and the `PR-012` redesign,
          and it is the one of the three that needs a PRE-REGISTRATION rather than a decision record
          (`ALLOCATION_SPEC` §3).
+      **RE-TESTED 2026-09-05 AND IT HOLDS.** `DR-029` §5 exists, names these same three levers,
+      and closes with *"`TODO.md` carries them"* — the link resolves in both directions. The
+      arithmetic's inputs are set rather than assumed-in-prose: `exit.atr_stop_multiple` = 2.0
+      and `exit.max_holding_period` = 20, both `assumed:DR-012`.
       **Do not run these as a single study.** 1 and 2 are exit-policy thresholds and belong to decision
       records; 3 is an ordering and belongs to a pre-registration. Merging them would let an
       ordering inherit an exit threshold's authority, which is the exact confusion §3 exists to stop.
@@ -1338,6 +1342,12 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       `PR-002` carried a full three-way train/validation/test block from the day it ran while the
       question of what it bought went unasked for the study's whole life. A condition satisfied by
       the presence of a `split` key would have passed `PR-002` and `PR-012` both. A test pins that.
+      **THE BLOCKER WAS TESTED 2026-09-05 AND IT IS REAL** — which the first three sweeps could
+      not assume, four of their seven "impossible" claims having been false.
+      `PREREG_TEMPLATE.md` rule 3: *"An amendment made after seeing data downgrades the study to
+      exploratory."* The rest of the entry checks out too — the `split buys` field is in §5's
+      form, §7 carries the accounting, rule 7 states it, and gate 25's condition lives in
+      `verify_prereg_conformance.py`.
       **What is NOT closed:** the pooled re-run. Rule 3 still downgrades it to exploratory for
       whoever has read the numbers, and this session has.
 
@@ -1413,6 +1423,12 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       for obeying the template. And `trial_budget.py` counted PR-012 as **0** trials because it had
       no per-study rule — it now reads a study's own declared `trials`, which is what §6 of the
       template requires a study to state before it runs.
+      **BOTH GATE FIXES RE-TESTED 2026-09-05 AGAINST THE RUNNERS, not against this line.**
+      `verify_studies.py` holds `VERDICTS = ("ACCEPT", "REJECT", "INCONCLUSIVE", "REFUSED")`
+      with a comment dating the addition to the day the sample rule fired, and
+      `trial_budget.py` reads a study's declared `trials` field. The ceiling's two inputs are
+      both ratified as the entry says: `risk.max_concurrent_positions` is `owner`,
+      `exit.max_holding_period` `assumed:DR-012`.
       **Open:** pooling the primary window is the honest route to a sample, and §5 fixed the split
       before the run, so it needs a NEW pre-registration rather than an amendment.
 

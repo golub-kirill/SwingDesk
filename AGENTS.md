@@ -606,6 +606,19 @@ open question that follows: §10.5 gives every COUNT an owner and nothing does t
   **When a claim falls, `git grep` its words and correct every instance whose SUBJECT it was**
   — and leave the ones whose subject is different, which here was five of nine.
 
+- **A record's *Consequences* section is a list of intentions, and no gate reads it.** Measured
+  2026-09-05. `DR-012` §8.3 did not merely leave `ExitPolicy`'s docstring stale — it **named the
+  file, quoted the sentence, said which half survives, and ordered the correction in the
+  ratifying commit**. It did not happen, and nothing noticed for **nineteen days**, during which
+  `pipeline.py` told every reader that the live decision path refuses every candidate. **Gate 20
+  passed the record honestly** — it checks that a decision reached CODE (`implemented_by` names
+  a token that must appear there), never that the record's own enumerated obligations were
+  discharged. **15 of 39 records carry such a section.**
+  **A consequence you wrote down is not a consequence you checked.** When a record lists
+  obligations, the ones that are not the parameter or the component are the ones to do FIRST —
+  they are the ones nothing will ever remind you of. `git grep` the quoted sentence before
+  closing the record.
+
 **The habits:**
 
 - **Name the owner before making the claim.** *Which artifact owns this, and have I opened it?* It
