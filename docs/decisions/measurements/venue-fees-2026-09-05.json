@@ -1,8 +1,10 @@
 {
   "measured_on": "2026-09-05",
+  "corrected_on": "2026-09-05, same day, against Alpaca's own Brokerage Fee Schedule",
   "source": "Alpaca paper account activity, PA3LY20ABUNE, supplied by the owner",
-  "what_this_is": "The first regulatory fees this project has ever observed. One completed round trip, and the fee formulas are checked against the regulators' own published rates rather than estimated from it.",
-  "why_one_observation_is_enough": "Section 31 and TAF are deterministic functions of proceeds and shares. One observation CHECKS a formula. It would estimate nothing about a distribution, which is why the same sample says nothing about slippage.",
+  "what_this_is": "The first regulatory fees this project has ever observed. One completed round trip, with the fee formulas checked against the schedule that actually bills rather than estimated from the trade.",
+  "why_one_observation_is_enough": "These are deterministic functions of proceeds and share count. One observation CHECKS a formula. It would estimate nothing about a distribution, which is why the same sample says nothing about slippage.",
+  "why_one_observation_was_NOT_enough_after_all": "See `the_check_passed_on_a_wrong_rate` below. A single 17-share sell cannot tell 0.000166 from 0.000195 per share, because both round up to the same cent. The formula check passed against a rate that was wrong.",
 
   "round_trip": {
     "instrument": "AIS",
@@ -16,38 +18,40 @@
   "observed_fees": {
     "REG": {"amount": 0.03, "side": "sell", "billed_for": "proceed of $1190.51"},
     "TAF": {"amount": 0.01, "side": "sell", "billed_for": "17 shares, 1 trade"},
-    "CAT": {"amount": 0.01, "side": "both", "billed_for": "1 trade"},
-    "CAT_on_the_buy_day": {"amount": 0.01, "billed_for": "12 trades on 2026-09-03"},
+    "CAT_sell_day": {"amount": 0.01, "side": "both", "billed_for": "1 trade on 2026-09-04"},
+    "CAT_buy_day": {"amount": 0.01, "billed_for": "12 trades on 2026-09-03, 47 shares across AIS, BTSG and DINO"},
     "total_on_the_round_trip": 0.05
   },
 
-  "published_rates": {
-    "section_31": {
-      "rate": "20.60 USD per 1,000,000 USD of covered sales",
-      "effective": "2026-04-04",
-      "replaced": "0.00 per million",
-      "side": "sell",
-      "source": "https://www.finra.org/rules-guidance/notices/information-notice-20260317"
-    },
-    "finra_taf": {
-      "rate": "0.000166 USD per share",
-      "side": "sell",
-      "per_trade_maximum": "8.30 USD as the rule text reads; FINRA is phasing in increases during 2026 and a 5.95 figure also appears. NOT ESTABLISHED, and immaterial at this size.",
-      "source": "https://www.finra.org/rules-guidance/guidance/trading-activity-fee"
-    },
+  "schedule": {
+    "document": "Alpaca Clearing Brokerage Fee Schedule, template updated 2026-09-01",
+    "url": "https://files.alpaca.markets/disclosures/library/BrokFeeSched.pdf",
+    "commission": "Page 1: 'Alpaca Securities does not charge commissions, except as described below' - the exceptions are index options, the Elite Smart Router, and non-retail order flow. A standard retail US equity account pays none of them.",
+    "sec_transaction_fee": {"rate": "$0.0000206 * trade value", "side": "sell only"},
+    "finra_taf": {"rate": "$0.000195 per share", "side": "sell only", "maximum": "$9.79 per trade, binding at 50,205 shares or more"},
     "cat": {
-      "rate": "NOT ESTABLISHED",
-      "side": "both",
-      "why": "0.01 on one trade and 0.01 on twelve. Not linear in trades, so neither observation constrains a per-trade rate.",
-      "source": "https://docs.alpaca.markets/docs/regulatory-fees"
-    }
+      "rate": "$0.000003 per executed equivalent share",
+      "side": "buys and sells",
+      "equivalence": "NMS equities 1 share = 1 executed equivalent share; OTC equities 1 share = 0.01"
+    },
+    "rounding_and_aggregation": "Page 4, verbatim: 'Fees are calculated on the exact executed quantity, including fractional shares, with no rounding of share quantity. Each fee type is aggregated separately at the daily, per-account level. After aggregation, each fee total is rounded up to the nearest cent $0.01.'"
   },
 
   "verification": {
-    "method": "predicted from the published rate, rounded UP to the cent, compared to the billed amount",
-    "section_31": {"predicted_raw": 0.024524, "predicted_rounded_up": 0.03, "observed": 0.03, "match": true},
-    "finra_taf": {"predicted_raw": 0.002822, "predicted_rounded_up": 0.01, "observed": 0.01, "match": true},
-    "rounding_is_INFERRED_not_published": "Both amounts match under round-up-to-the-cent and neither matches under round-half. Two independent confirmations of the same rule, which is evidence about Alpaca's implementation rather than a published fact."
+    "method": "predicted from the schedule's rate, aggregated per day per fee type, rounded UP to the cent",
+    "sec_transaction_fee": {"predicted_raw": 0.02452451, "rounded_up": 0.03, "observed": 0.03, "match": true},
+    "finra_taf": {"predicted_raw": 0.003315, "rounded_up": 0.01, "observed": 0.01, "match": true},
+    "cat_sell_day": {"shares": 17, "predicted_raw": 0.000051, "rounded_up": 0.01, "observed": 0.01, "match": true},
+    "cat_buy_day": {"shares": 47, "predicted_raw": 0.000141, "rounded_up": 0.01, "observed": 0.01, "match": true},
+    "internal_corroboration": "50,205 x 0.000195 = $9.79 exactly, so the schedule's TAF cap and its TAF rate agree with each other."
+  },
+
+  "the_check_passed_on_a_wrong_rate": {
+    "what_happened": "This record was first written from FINRA's and the SEC's own pages, on the reasoning that they set the rates and the broker passes them through. FINRA's guidance page gives TAF as $0.000166 per share. Alpaca's schedule gives $0.000195.",
+    "why_the_check_did_not_catch_it": "17 x 0.000166 = 0.002822 and 17 x 0.000195 = 0.003315. Both round UP to $0.01. The observation could not discriminate them.",
+    "what_would_have": "A sell of about 345 shares, where the two rates differ by a cent - or reading the billing document first.",
+    "the_rule": "A claim about what you are CHARGED is tested against the schedule that charges you, not against the regulator whose rate that schedule quotes. AGENTS.md section 15 rule 2 says test a claim about a source against the source; the source here is the broker.",
+    "the_cat_version_of_the_same_error": "Two observations of $0.01 - one trade and twelve - were read as 'not linear in trades' and then as 'so no rate is constrained'. The first half was right and the second did not follow: CAT is per SHARE and aggregated per DAY, so trade count was never the variable."
   },
 
   "materiality": {
@@ -59,10 +63,13 @@
     "note": "DR-004 charges 3.4x the entire real fee bill, for a commission this venue does not charge. The regulatory fees are 0.9% of the slippage term and will not move any verdict."
   },
 
-  "not_established": [
-    "Whether a paper account is billed the same schedule as a live one.",
-    "The CAT rate.",
-    "The TAF per-trade maximum during the 2026 phase-in.",
-    "Whether Alpaca's round-up is a policy or an artefact of these two amounts."
+  "still_not_established": [
+    "Whether a paper account is billed the same schedule as a live one. This is now the only open item of the four this record started with."
+  ],
+
+  "resolved_by_reading_the_schedule": [
+    "The CAT rate - $0.000003 per executed equivalent share, both sides.",
+    "The TAF per-trade maximum - $9.79, binding at 50,205 shares.",
+    "Whether the round-up is policy - it is published, and the aggregation is daily and per-account rather than per trade."
   ]
 }
