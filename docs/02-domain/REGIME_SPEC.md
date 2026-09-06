@@ -127,11 +127,18 @@ out"* — the same sentence `EVIDENCE_SUMMARY.md` §3 struck on 2026-08-24, whic
 propagated here. **The bound has two halves and the free tier closes only one.** How many names
 vanished, and when, is **measurable**: SEC EDGAR keeps every filer back to 1993, free and official,
 and an empty ticker/exchange list with a Form 25 or 25-NSE dates the event
-(`python tools/probe_edgar.py`). What those trades would have **returned** is not — no free source
-serves the price path of a symbol that has gone — so the −2R assumption stays an assumption. The
-exposure's SIZE can be constrained by measurement; its MAGNITUDE cannot. Kept as an amendment
-rather than a silent rewrite, per `AGENTS.md` §15: it was an impossibility asserted without a test,
-and it survived here for a day after being refuted in its home document.
+(`python tools/probe_edgar.py`). ~~What those trades would have **returned** is not — no free
+source serves the price path of a symbol that has gone — so the −2R assumption stays an
+assumption. The exposure's SIZE can be constrained by measurement; its MAGNITUDE cannot.~~
+**BOTH HALVES ARE NOW MEASURABLE — refuted 2026-09-05.** `python tools/probe_alpaca_delisted.py`
+returns complete daily paths for delisted names from 2016-01-04 on `feed=sip`, and the owner
+ruled the same day that the account is free tier. **MEASURABLE IS NOT MEASURED**: no study has
+used the route and the −2R figure is still an assumption in every number this document cites.
+**AND THE SURVIVAL OF THAT SENTENCE HERE IS THE POINT.** The paragraph above it records this
+exact failure happening on 2026-08-25 — *"it survived here for a day after being refuted in
+its home document"* — and then it happened again to the very next sentence, for a day, in the
+same paragraph, caught only by a second sweep. A document that has written down how it fails
+does not thereby stop failing that way (`AGENTS.md` §12).
 
 The variant selection deserves its own line: `BREADTH_X_VOL` — the two-axis classifier — was
 registered and **not** selected. It lost on **stability** (5.777 label flips per 100 sessions
