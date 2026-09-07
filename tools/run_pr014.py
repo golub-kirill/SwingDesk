@@ -17,9 +17,18 @@ reimplementing it, so the study and the system cannot drift apart (amendment A-2
 **2. Windows overlap.** Ten years hold seventeen non-overlapping 126-session windows, which is why
 nothing at that horizon could ever be resolved - a property of the estimator, not the market. The
 owner lifted the constraint on 2026-09-06 (amendment A-1). This holds `K = horizon / 21` overlapping
-sub-portfolios formed 21 sessions apart: every formation date contributes and `1/K` of the book
-turns over per rebalance. **It creates no information** - ten years remain ten years - and the
-moving-block bootstrap in `§5b` is what keeps the interval honest about that.
+sub-portfolios formed 21 sessions apart, so every formation date contributes. **It creates no
+information** - ten years remain ten years - and the moving-block bootstrap in `§5b` is what keeps
+the interval honest about that.
+
+**3. THE COST MODEL WAS WRONG WHEN THIS STUDY PUBLISHED, and amendment A-3 records it.** §5
+registered `1/K` of the book turning per rebalance and this file charged exactly that:
+`252 / horizon` FULL turns a year. `1/K` is ROTATED - the oldest sub-portfolio closes, a new one
+opens - but a name the new one re-selects is **held, not sold and re-bought**. That is gross
+turnover where a book pays net, it overcharged by 2.7x at twenty sessions and not at all at a year,
+and it withdrew this study's ACCEPT. Cost now comes from `turnover()` between consecutive books;
+`annual_cost_as_first_published` is kept beside it so the error stays visible in the evidence file.
+`tools/attribute_pr014_flip.py` attributes the flip.
 
     python tools/run_pr014.py --data <store>
 """
