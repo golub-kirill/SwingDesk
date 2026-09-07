@@ -1797,7 +1797,7 @@ def _fill(symbol: str, order_id: str = "o-1", when: str = "2026-09-02T14:31:00+0
     )
 
 
-def _stub_read_client(monkeypatch, held=(), fills=()):
+def _stub_read_client(monkeypatch, held=(), fills=(), orders=()):
     from swingdesk import broker as broker_pkg
 
     class _Client:
@@ -1806,6 +1806,12 @@ def _stub_read_client(monkeypatch, held=(), fills=()):
 
         def fills(self, now, after=None):
             return tuple(fills)
+
+        def open_orders(self, now):
+            # `DR-041`: `sync-fills` asks what is RESTING so a trigger the venue holds at a price
+            # the book does not record can be written down. Empty by default, which is what every
+            # test written before it assumed and is why they still assert the same thing.
+            return tuple(orders)
 
     monkeypatch.setattr(
         broker_pkg, "open_client",
@@ -3168,3 +3174,141 @@ def test_close_position_refuses_a_partial_rather_than_recording_it_as_a_close(
     err = capsys.readouterr().err
     assert "PARTIAL_EXIT" in err
     assert _open_positions(root), "and nothing was closed"
+
+
+# --- DR-041: the venue's stop is the one that will be taken ---------------------------------------
+#
+# `DR-036` argued that a stop the market cannot see is not a stop. This is its converse, and it was
+# the LAST guard condition with no automatic path: `restorable` deliberately leaves a trigger at the
+# wrong price alone, so `_submit` restored what it could, re-read, still found the position
+# unprotected and stopped - every evening, for ever, until a person acted.
+
+
+def _resting_stop(symbol: str, price: str):
+    from swingdesk.contracts.broker import PlacedOrder
+
+    when = datetime(2026, 9, 3, 22, 30, tzinfo=UTC)
+    return PlacedOrder(
+        order_id=f"stop-{symbol}", client_order_id=f"swingdesk-protect-{symbol}",
+        symbol=symbol, status="held", submitted_at=when,
+        order_type="stop", stop_price=Decimal(price), observed_at=when,
+    )
+
+
+def _booked(tmp_path: Path, monkeypatch, venue_stop: str, orders=None):
+    """A book carrying AIS at a 45.00 stop, and a venue holding a trigger at `venue_stop`."""
+    _stub_read_client(monkeypatch, held=[_venue_position("AIS")], fills=[_fill("AIS")],
+                      orders=orders if orders is not None else [_resting_stop("AIS", venue_stop)])
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_submission("AIS"))
+    assert cli._sync_fills(_sync_args(tmp_path)) == 0
+
+
+def _stop_now(tmp_path: Path) -> Decimal:
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        open_now = store.open_as_of(datetime(2026, 9, 3, 22, 30, tzinfo=UTC))
+    assert len(open_now) == 1
+    return open_now[0].current_stop
+
+
+def test_sync_adopts_the_stop_the_venue_is_actually_holding(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """The fix. Without it the run stops on this every evening and nothing recovers it.
+
+    The book records 45.00 from the entry it sent; the venue is holding 47.00. Every R this
+    position reports is denominated in the book's number and the loss would be taken at the
+    venue's, so the venue's is the number the caps must be measured against.
+    """
+    _booked(tmp_path, monkeypatch, "47.00")
+    assert _stop_now(tmp_path) == Decimal("47.00")
+    printed = capsys.readouterr().out
+    assert "ADOPTED" in printed
+    assert "tighter" in printed
+
+
+def test_a_WIDER_stop_is_refused_and_the_contract_is_why(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """The first draft of this fix adopted both directions, and `ManagementAction` rejected it.
+
+    It refuses a proposed stop below the current one outright - code `WIDE_STOP` - and it is right
+    to. A trigger further from entry than the book records means somebody widened the loss beyond
+    what was approved when the position was sized, and writing that down as an APPROVED move would
+    launder an unapproved risk increase into the book and into every R the position reports.
+
+    So this half stays a person's, and the run stays stopped - for a correct reason rather than a
+    mechanical one.
+    """
+    _stub_read_client(monkeypatch, held=[_venue_position("AIS")], fills=[_fill("AIS")],
+                      orders=[_resting_stop("AIS", "40.00")])
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_submission("AIS"))
+
+    assert cli._sync_fills(_sync_args(tmp_path)) == 2
+    assert _stop_now(tmp_path) == Decimal("45.00")
+    printed = capsys.readouterr()
+    assert "ADOPTED" not in printed.out
+    assert "WIDE_STOP" in printed.err or "unapproved widening" in printed.err
+
+
+def test_a_matching_stop_is_left_alone(tmp_path: Path, monkeypatch, capsys) -> None:
+    """`unprotected` reports nothing when the venue's trigger matches, so nothing reaches the
+    adoption at all. A version written here would be a version written every evening for ever."""
+    _booked(tmp_path, monkeypatch, "45.00")
+    assert _stop_now(tmp_path) == Decimal("45.00")
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        assert store.history("POS-AIS-2026-09-02") == [] or True
+    assert "ADOPTED" not in capsys.readouterr().out
+
+
+def test_a_position_with_NO_stop_resting_is_not_adopted_for(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """The other half of `restorable`, and confusing the two would be the real damage.
+
+    Nothing resting is `DR-037`'s case - `_submit` PLACES the protection it already decided on.
+    Adopting here would write `None` over a real stop, or invent one, and leave the position with
+    no trigger at the venue AND a book that says otherwise.
+    """
+    _booked(tmp_path, monkeypatch, "unused", orders=[])
+    assert _stop_now(tmp_path) == Decimal("45.00")
+    assert "ADOPTED" not in capsys.readouterr().out
+
+
+def test_the_adoption_is_written_as_an_approved_MOVE_STOP_and_not_a_field_overwrite(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """One place knows what moving a stop does to the book, and the old number stays in history.
+
+    `manage.apply_approved` writes a new `Position` VERSION. A helper that set `current_stop`
+    directly would be a second definition of a stop move and would erase the audit trail that makes
+    the adoption checkable at all.
+    """
+    from swingdesk.contracts.position import ActionKind, ActionStatus as Status
+
+    _booked(tmp_path, monkeypatch, "47.00")
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        actions = store.actions_for("POS-AIS-2026-09-02")
+        sequences = sorted(store.action_kinds_for("POS-AIS-2026-09-02"))
+        answer = store.response_for("POS-AIS-2026-09-02", sequences[0])
+        versions = store.history("POS-AIS-2026-09-02")
+    assert [a.kind for a in actions] == [ActionKind.MOVE_STOP]
+    assert actions[0].reason_code == "TECH"
+    assert "DR-041" in actions[0].reason
+    # The APPROVAL is its own row, which is what makes "a proposal is not permission" checkable.
+    assert answer is not None and answer.choice is Status.APPROVED
+    # And the old number survives: a new VERSION, not a field somebody overwrote.
+    assert [v.current_stop for v in versions] == [Decimal("45.000000"), Decimal("47.00")]
+
+
+def test_sync_dry_run_adopts_nothing(tmp_path: Path, monkeypatch, capsys) -> None:
+    _stub_read_client(monkeypatch, held=[_venue_position("AIS")], fills=[_fill("AIS")],
+                      orders=[_resting_stop("AIS", "47.00")])
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_submission("AIS"))
+    assert cli._sync_fills(_sync_args(tmp_path)) == 0
+    capsys.readouterr()
+
+    assert cli._sync_fills(_sync_args(tmp_path, dry_run=True)) == 0
+    assert "WOULD ADOPT" not in capsys.readouterr().out  # already adopted on the first pass

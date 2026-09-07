@@ -254,3 +254,67 @@ def test_a_BUY_fill_is_not_an_exit() -> None:
     from swingdesk.contracts.broker import Side
 
     assert adoption.closing_exit(_position(), [_fill(side=Side.BUY)], OURS) is None
+
+
+# --- DR-041: the trigger the venue is actually holding --------------------------------------------
+#
+# `DR-036` argued that a stop the market cannot see is not a stop; this is its converse. It was the
+# last guard condition with no automatic path: `restorable` deliberately leaves a trigger at the
+# WRONG price alone, so the run restored what it could, re-read, still found the position
+# unprotected and stopped - every evening, until a person acted.
+#
+# **The rules live here and not in the CLI**, which was found by mutation: removing any of these
+# guards left every CLI test green, because `ManagementAction` refuses a widening move anyway and
+# the caller turns every raise into the same refusal. Defence in depth is good and it makes the
+# outer test blind, so the inner one has to exist.
+
+
+def test_a_tighter_venue_stop_is_adopted() -> None:
+    """The recoverable half. The book says 61.70 and the venue is holding 63.00, so the loss would
+    be taken at 63.00 - and that is the number every R and every cap must be measured against."""
+    taken = adoption.moved_stop(_position(), Decimal("63.00"))
+
+    assert isinstance(taken, adoption.AdoptedStop)
+    assert taken.book_stop == Decimal("61.70")
+    assert taken.venue_stop == Decimal("63.00")
+    assert taken.tightens_risk is True
+
+
+def test_a_WIDER_venue_stop_is_refused_and_carries_the_course_code() -> None:
+    """The unrecoverable half, and the first draft of this function got it wrong.
+
+    A trigger BELOW the book's means somebody widened the loss beyond what was approved when the
+    position was sized. Adopting it would record an unapproved risk increase as APPROVED, and
+    `ManagementAction` refuses exactly that - `WIDE_STOP`. This refuses it one layer earlier, where
+    the reason can be said in a sentence instead of a validation error.
+    """
+    refused = adoption.moved_stop(_position(), Decimal("55.00"))
+
+    assert isinstance(refused, Refusal)
+    assert refused.code == "WIDE_STOP"
+    assert "more risk than was approved" in refused.reason
+
+
+def test_a_stop_that_already_matches_is_refused_rather_than_rewritten() -> None:
+    """Reaching here means `unprotected` and this disagree about what matching means. Writing a
+    new version anyway would write one every evening for ever, which is the shape of the defect
+    the whole `DR-041` change exists to remove."""
+    refused = adoption.moved_stop(_position(), Decimal("61.70"))
+
+    assert isinstance(refused, Refusal)
+    assert "nothing to adopt" in refused.reason
+
+
+def test_a_non_price_is_refused() -> None:
+    """Zero is not a stop, and a negative one is not a number this system should write down."""
+    for nonsense in (Decimal(0), Decimal("-1.00")):
+        refused = adoption.moved_stop(_position(), nonsense)
+        assert isinstance(refused, Refusal)
+        assert "not a price" in refused.reason
+
+
+def test_an_adopted_stop_can_never_describe_a_widening() -> None:
+    """`tightens_risk` is asserted rather than assumed, so a caller that ever builds an
+    `AdoptedStop` by hand fails here instead of writing a risk increase into the book."""
+    assert adoption.AdoptedStop("AIS", Decimal("61.70"), Decimal("63.00")).tightens_risk is True
+    assert adoption.AdoptedStop("AIS", Decimal("61.70"), Decimal("55.00")).tightens_risk is False
