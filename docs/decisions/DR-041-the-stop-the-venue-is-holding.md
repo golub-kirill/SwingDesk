@@ -2,7 +2,7 @@
 
 ```
 date:            2026-09-07
-status:          proposed — the owner's ruling is asked for in §6
+status:          accepted — ruled by the owner 2026-09-07
 parameters:      none
 components:      none - swingdesk.trade_management.adoption:moved_stop decides; the CLI writes
 supersedes:      nothing. DR-036 stands and this is its converse; DR-031 and DR-038 are the precedent
@@ -121,3 +121,22 @@ exactly that state in the other direction.
 
 **Until it is ruled, nothing changes in behaviour that was not already stopped** — the code refuses
 the widening half and adopts the tightening half, and both were previously a permanent stop.
+
+## 7. The ruling
+
+**Ratified by the owner on 2026-09-07.** §2 stands as written: a stop resting ABOVE the book's is
+adopted, a stop resting BELOW it is refused and stays a person's.
+
+**What is now live**, from the first run that uses this code:
+
+* `sync-fills` reads the venue's resting orders as well as its positions and fills — one more `GET`,
+  no new write verb — and writes a tighter trigger into the book through
+  `propose` → `respond` → `manage.apply_approved`, so the old number survives as a `Position`
+  version and the approval is its own row.
+* The approval is recorded against this decision record rather than a person, and the reason names
+  both prices and the direction.
+* A WIDER trigger is refused with `WIDE_STOP` and the run still stops on it. That half is unchanged
+  and needs no ruling: `ManagementAction` already refuses to record a widening as approved.
+
+**It has still never fired.** §1a stands: measured 2026-09-07, both open positions have their stops
+standing at the book's price. This ratifies what happens when that stops being true.
