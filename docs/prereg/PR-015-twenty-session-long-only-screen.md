@@ -349,6 +349,16 @@ measured 63.6% of the top DECILE surviving a 20-session gap. The top *one* name 
 question and the answer is not derivable from that figure, so turnover is measured inside this study
 from the book it actually holds — which is what `PR-014` amendment A-3 was about.
 
+**"No good place" is a rule, and under this eligibility screen it will almost never fire.** The
+owner's instruction was *"or non-overlapping if there is no good place"*, and the tool implements
+it: a freed slot stays empty when no eligible name is unheld. But eligibility here is the **top
+decile**, which is about 130 names against a book of four — so the slot is fillable at essentially
+every rebalance, and the branch is defensive rather than expected. **It is not left as an
+assumption**: the tool counts `rebalances_with_an_empty_slot` per arm and window, and the report
+states the number even when it is zero. A quality bar that would make the branch bite — enter only
+above some score — is a THRESHOLD, and `AGENTS.md` §8 says a threshold needs a pre-registration
+rather than a guess made while building the tool. If the owner wants one, it is its own study.
+
 **The 5-session entry grid is an APPROXIMATION and is declared as one.** The live pipeline scans
 every session and would enter whenever a slot happened to be free, so real entries would stagger
 unevenly rather than landing exactly 5 sessions apart. Even spacing is the standard
