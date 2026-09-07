@@ -195,11 +195,18 @@ number from this study's `trials` field.
 that is about the question rather than about the budget. The 1x/3x cost stress is a restatement of
 each arm and the three windows are readings of one fit, so neither multiplies the search.
 
-**What it costs.** The programme has spent **81** and the hurdle stands at **2.46 sd(SR)**. Five more
-takes it to **86**, and the hurdle to about **2.48**. That the marginal cost is small is not an
-argument for spending freely — it is `trial_budget.py`'s own finding that the expensive trials are
-the first ones — but it is the honest accounting: this study is cheap because the programme has
-already paid for the expensive part of the search.
+**What it costs.** The programme has spent **90** and the hurdle stands at **2.49 sd(SR)**. Five
+more takes it to **95**, and the hurdle to **2.51**. Derive both with `tools/trial_budget.py`
+(`AGENTS.md` §10.5); the figures are here because a pre-registration has to name its own price
+before it runs, not because this page owns them.
+
+**Those numbers were 81 and 2.46 when this file was first drafted on 2026-09-07, and they were
+wrong.** Fourteen committed measurements carried no counting rule, and two of them were searches —
+nine configurations the programme had tried and never counted. Corrected the same day, before this
+study ran. That the marginal cost of five more is small is not an argument for spending freely — it
+is `trial_budget.py`'s own finding that the expensive trials are the first ones — but it is the
+honest accounting: this study is cheap because the programme has already paid for the expensive
+part of the search.
 
 ## 7. Stopping rule
 
@@ -240,6 +247,26 @@ edge of 3% and the report may not claim otherwise.
 
 ## 10. Amendments
 
-None. Any amendment after the run is appended, dated, and downgrades this study to exploratory
-(`PREREG_TEMPLATE` rule 3) — which is exactly what happened to `PR-014` on 2026-09-07, and the
-reason that rule is quoted here rather than assumed.
+### A-1 · 2026-09-07 · BEFORE THE RUN — the fourth cell of the 2×2 exists, and it is reported
+
+**No data has been seen.** Found while building the tool, before it ran.
+
+§5a registers three windows over a 2×2 of time and names, which leaves a fourth cell: **formations
+after 2021-12-31, names in half B.** The tool computes it, because refusing to compute a number that
+falls out of the same loop is not restraint — it is a gap in the record that nobody could audit.
+
+**It is written to the result as `diagnostic_both`, and §6 must never read it.** The decision
+rule consults `primary`, `holdout_time` and `holdout_names` and nothing else. **This registers a
+requirement on the tool**: it must carry a test that fails if the rule ever grows a branch reading
+the fourth cell, because a study that selected on four windows while registering three would be
+spending a holdout it never declared, and nothing else would notice.
+
+**Why it is worth having.** If the selected arm passes both registered holdouts and fails the
+fourth, that is a fact about the arm the report must carry — not a fourth chance to find one that
+passes.
+
+### Anything after the run
+
+Appended, dated, and it downgrades this study to exploratory (`PREREG_TEMPLATE` rule 3) — which is
+exactly what happened to `PR-014` on 2026-09-07, and the reason that rule is quoted here rather
+than assumed.
