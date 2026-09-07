@@ -1,23 +1,42 @@
-# PR-014 RESULT: the ratified twenty sessions is the WORST cell of twelve, and the horizon that works is six months
+# PR-014 RESULT: no holding period between one month and a year survives a holdout, and the six-month ACCEPT this page published was an artefact of its own cost model
 
 ```
 prereg:        PR-014
-ran:           2026-09-06
-verdict:       ACCEPT - H1, at 126 sessions, LONG-SHORT
-tool:          tools/run_pr014.py
-evidence:      PR-014.json
-trials:        12, declared before the run
+ran:           2026-09-06, re-priced 2026-09-07
+status:        EXPLORATORY - amendment A-3 was made after the data was seen
+verdict:       INCONCLUSIVE. ~~ACCEPT - H1, at 126 sessions, LONG-SHORT~~, WITHDRAWN 2026-09-07
+tool:          tools/run_pr014.py, tools/attribute_pr014_flip.py
+evidence:      PR-014.json, PR-014-cost-attribution.json
+trials:        12, declared before the run. The 2026-09-07 re-price spent NONE
 ```
+
+> ⚠️ **THE VERDICT BELOW IS WITHDRAWN AND THE REPORT IS KEPT.** This page was published on
+> 2026-09-06 under the title *"the ratified twenty sessions is the WORST cell of twelve, and the
+> horizon that works is six months"*. The first clause survives; the second does not. Everything down to
+> §"CORRECTION, 2026-09-07" is the report as published on 2026-09-06, with the claims that did not
+> survive struck through in place. **It priced the book at `252 / horizon` FULL turns a year —
+> gross turnover, as if every rebalance sold everything.** A book nets: a name still in the decile
+> is held, not sold and re-bought. Every cost figure above the correction is too high, by 2.7x at
+> twenty sessions and by nothing at all at a year.
+>
+> Read §"CORRECTION, 2026-09-07" first. It carries the corrected table, the attribution of the flip
+> between the two things that changed, and what it cost this study's standing.
 
 ---
 
 ## Read this first
 
-**The verdict follows the registered rule and the rule was written before the data.** It is still
+~~**The verdict follows the registered rule and the rule was written before the data.** It is still
 weaker than the headline number, and one diagnostic is the reason: **the holdout window's exclusion
 of zero survives at the registered block length and does not survive a doubled one.** That is
 stated here, before the numbers, because a reader who takes +11.00% and stops has taken the part of
-this result that is least robust.
+this result that is least robust.~~
+
+**WITHDRAWN.** The sentence is true of the rule and false of the inputs. The rule was indeed fixed
+before the data and is still applied mechanically; what a reader's judgement had no way to enter,
+an arithmetic error did. The caveat above turned out to understate the problem by a wide margin —
+under corrected costs the selected cell's holdout does not exclude zero at the registered block
+length either.
 
 ## What ran
 
@@ -30,12 +49,19 @@ live class — rather than reimplementing it (amendment A-2).
 sessions apart, so every formation date contributes and `1/K` of the book turns per rebalance.
 Inference is a moving-block bootstrap, block `max(K, 6)`, 10,000 resamples, seed `20260906`.
 
-**Overlapping did not make turnover cheaper** and the tool asserts it: cost is `252 / horizon` full
-turns a year whatever `K` is, two sides for a long-only book and four for a spread.
+~~**Overlapping did not make turnover cheaper** and the tool asserts it: cost is `252 / horizon` full
+turns a year whatever `K` is, two sides for a long-only book and four for a spread.~~
 
-## The numbers
+**WITHDRAWN — this is the error.** Overlapping did not make turnover cheaper; **selection
+persistence** did, and the tool was blind to it. A name in the top decile at one rebalance and still
+there at the next is held, not traded. Measured net turnover at horizon 20 is **39.0% of the book
+per rebalance**, not one full turn. §CORRECTION has the table.
 
-Annualised **net** excess over `rs.benchmark`, after `DR-005`'s 25 bps a side:
+## The numbers ~~as published~~ — PRICED ON THE WITHDRAWN COST MODEL
+
+Annualised **net** excess over `rs.benchmark`, after `DR-005`'s 25 bps a side. **Every `cost/yr`
+below is gross turnover and every net figure is too low.** The table is kept because the corrected
+one in §CORRECTION is only readable beside it.
 
 | horizon | K | arm | cost/yr | PRIMARY net | HOLDOUT net |
 |---|---|---|---|---|---|
@@ -176,7 +202,10 @@ tie-break is deliberately **fail-closed**: §6 names a horizon and not an arm, s
 at the same shortest horizon returns `inconclusive` rather than a choice made after the run. Only
 one arm qualifies here, so that branch does not fire.
 
-The machine and this page agree: **ACCEPT, 126 sessions, long-short, +9.82% at 3× costs.**
+~~The machine and this page agree: **ACCEPT, 126 sessions, long-short, +9.82% at 3× costs.**~~
+
+**WITHDRAWN.** They agreed, and they agreed on the wrong inputs. The machine still executes
+§6 and is still the only thing that decides; `PR-014.json` now records `inconclusive`.
 
 ## What it costs the programme
 
@@ -225,7 +254,156 @@ universe. `TODO.md` §4 carries it.
 
 ```bash
 PYTHONPATH=$PWD/src python tools/run_pr014.py --data <store>
+PYTHONPATH=$PWD/src python tools/attribute_pr014_flip.py
 ```
 
 Every per-period series is committed in `PR-014.json` so the interval can be re-tested at another
 block length without a thirty-five-minute re-run.
+
+**The withdrawn run reproduces too, and needs no re-fetch.** The store is bitemporal:
+`--as-of 2026-09-06T11:00:01.845569-05:00` reconstructs the sample this page was written on. That
+run is committed as `PR-014-cost-attribution.json` and the published bytes as
+`PR-014-as-published.json`; `attribute_pr014_flip.py` reads both and checks the reproduction before
+it attributes anything.
+
+---
+
+# CORRECTION, 2026-09-07: the cost model charged for trades the book never makes
+
+```bash
+PYTHONPATH=$PWD/src python tools/attribute_pr014_flip.py
+```
+
+**The `ACCEPT` above is withdrawn. The verdict is `INCONCLUSIVE` and this study is now
+EXPLORATORY** (`PREREG_TEMPLATE` rule 3 — amendment `A-3` was made after the data was seen). It may
+generate the next pre-registration; it may not advance a validation status. **Nothing in the
+repository was resting on it** — no ratified parameter and no card cites `PR-014` — so the cost of
+the downgrade is this study's standing and nothing else.
+
+## What was wrong
+
+§5 registered *"turnover: `1/K` per 21 sessions BY CONSTRUCTION"* and the tool charged
+`252 / horizon` **full book turns** a year. `1/K` of the book is **rotated** each rebalance — the
+oldest sub-portfolio closes and a new one opens — but a name the opening sub-portfolio selects that
+the closing one already held is **not traded**. It is held.
+
+**The registered figure is GROSS turnover. What a book pays is NET.** Measured between consecutive
+books rather than assumed:
+
+| horizon | K | charged | measured net per rebalance | long-only cost/yr charged | measured | overcharge |
+|---|---|---|---|---|---|---|
+| **20** | 1 | 12.60 turns/yr | **39.0%** | **6.30%** | **2.34%** | **2.69×** |
+| 42 | 2 | 6.00 | 27.1% | 3.00% | 1.62% | 1.85× |
+| 63 | 3 | 4.00 | 21.8% | 2.00% | 1.31% | 1.53× |
+| 126 | 6 | 2.00 | 14.9% | 1.00% | 0.89% | 1.12× |
+| 189 | 9 | 1.33 | 10.3% | 0.67% | 0.62% | 1.08× |
+| 252 | 12 | 1.00 | 8.2% | 0.50% | 0.49% | 1.02× |
+
+**The shape is the finding, not the size.** A cost model wrong by a constant moves every cell
+together and changes no ordering. This one is a monotone function of the holding period — 2.69× at
+twenty sessions, 1.02× at a year — and the holding period is the only variable this study varied.
+**It taxed short holds and waved long ones through, and §6 selects the SHORTEST qualifying
+horizon.** The error and the decision rule were pointed at the same axis.
+
+## The corrected numbers
+
+Same rule, same bootstrap, same block length, same seed, same split, same twelve cells. Annualised
+**net** excess over `rs.benchmark`, on the current (post-backfill) sample:
+
+| horizon | K | arm | turn/reb | cost/yr | PRIMARY net | HOLDOUT net |
+|---|---|---|---|---|---|---|
+| **20** | 1 | long-only | 39.0% | **2.34%** | −0.38% [−6.58, +9.30] | −1.34% [−7.90, +7.61] |
+| 20 | 1 | long-short | 39.0% | 4.68% | +5.61% [−6.14, +22.07] | +3.79% [−9.97, +17.67] |
+| 42 | 2 | long-only | 27.1% | 1.62% | +1.10% [−5.59, +12.13] | −0.61% [−6.43, +7.20] |
+| **42** | **2** | **long-short** | 27.1% | 3.25% | **+13.46% [+0.57, +28.73]** ✗ | +5.57% [−6.37, +17.04] |
+| 63 | 3 | long-only | 21.8% | 1.31% | +1.30% [−5.10, +12.79] | +0.39% [−5.31, +7.78] |
+| 63 | 3 | long-short | 21.8% | 2.61% | +14.77% [+2.26, +31.46] ✗ | +9.45% [−2.31, +20.00] |
+| 126 | 6 | long-only | 14.9% | 0.89% | +1.73% [−4.02, +11.54] | +1.27% [−4.14, +7.28] |
+| 126 | 6 | long-short | 14.9% | 1.78% | +15.27% [+6.53, +28.23] ✗ | +11.34% [−0.00, +21.26] |
+| 189 | 9 | long-only | 10.3% | 0.62% | +0.84% [−3.94, +11.45] | +1.04% [−4.07, +6.01] |
+| 189 | 9 | long-short | 10.3% | 1.24% | +11.29% [+3.03, +23.69] ✗ | +11.24% [−1.17, +21.09] |
+| 252 | 12 | long-only | 8.2% | 0.49% | +0.30% [−3.07, +11.97] | +0.06% [−4.74, +4.12] |
+| 252 | 12 | long-short | 8.2% | 0.98% | +9.57% [+4.79, +23.71] ✗ | +8.49% [−4.58, +17.94] |
+
+✗ marks an interval excluding zero with the sample rule met, on the primary window.
+
+**§6 selects 42 sessions, long-short, and its holdout interval contains zero. `INCONCLUSIVE`.**
+
+**Look at 126 long-short's holdout: `[−0.00%, +21.26%]`.** The cell that carried the published
+`ACCEPT` still very nearly excludes zero — it misses by less than a basis point — but the rule does
+not select it any more, because cheaper costs let 42 and 63 through on the primary window ahead of
+it. **The published `ACCEPT` existed because inflated costs suppressed the shorter horizons.**
+
+## Attributing the flip: two things changed, and each one is sufficient
+
+Between publication and the re-run, the cost model was corrected **and** the admitted universe was
+backfilled from about two years of bars to a decade. A re-run changes both at once and attributes
+nothing.
+
+**The store is bitemporal, so the earlier sample was recovered rather than re-fetched.** Re-running
+at the published run's own `as_of` — `2026-09-06T11:00:01.845569-05:00` — reproduces it **exactly**:
+all twelve cells, both windows, identical `gross_annual` to the last committed digit. The tool
+checks this and refuses to be trusted if it fails; the check is not a sentence in this report. That
+run is committed as `PR-014-cost-attribution.json`, and the published bytes as
+`PR-014-as-published.json` — `AGENTS.md` §11 rule 2 corrects a record forward rather than
+overwriting it, and the regeneration had overwritten one.
+
+Every cell below is decided by `run_pr014.decide`, the same function the study runs:
+
+| sample | cost model | shortest qualifying | verdict |
+|---|---|---|---|
+| **pre-backfill (as published)** | **as first published (gross)** | **126, long-short** | **ACCEPT** |
+| pre-backfill (as published) | corrected (measured net) | 42, long-short | INCONCLUSIVE |
+| post-backfill (current) | as first published (gross) | 63, long-short | INCONCLUSIVE |
+| post-backfill (current) | corrected (measured net) | 42, long-short | INCONCLUSIVE |
+
+**Each change is INDEPENDENTLY sufficient to withdraw the `ACCEPT`.** Correcting the cost with the
+sample held fixed moves the selected horizon from 126 to 42 and flips the verdict. Backfilling with
+the cost model held fixed moves it from 126 to 63 and flips the verdict. The published result
+required both errors at once, which is a weaker thing than it looked like the day it was published.
+
+> **This corrects what I reported to the owner earlier on 2026-09-07.** I said the cost error alone
+> flipped the verdict and that the backfill moved the horizon without changing it. The first half is
+> right; the second half was an inference from a control run at the wrong knowledge instant — 17:59
+> rather than the 11:00 the published run recorded — and it is wrong. The fourth cell of the 2×2
+> settles it: the backfill alone flips it too.
+
+## Why this was foreseeable, and what else carries it
+
+Novy-Marx & Velikov (*RFS* 2016) — an authored import, `AGENTS.md` §10.3 — report that survival
+after costs turns on **net** one-sided turnover, and that buy/hold overlap is the strongest
+mitigation available to a rebalanced book. §5's clause discarded exactly that overlap. The
+measurement here is this repository's own; the reason to have expected it is not.
+
+**The same error is in two more tools.** `measure_short_leg.py`'s `rebalance_cost` and
+`run_pr013.py`'s `COST_SIDES_PER_FORMATION = 4` both charge a full round trip on the whole book at
+every formation. `measure_banding.py` does not — it charges only the fraction that trades — which
+shows this was never a hard problem, only an unasked question. Overcharging is conservative for a
+positive claim and **is not conservative for a comparison across horizons**, so every horizon
+ranking published here is tilted toward long holds by an unmeasured amount. `TODO.md` §5 carries it
+as open work, and the next study needs it measured first: a screen for a 14–20 session hold priced
+on gross turnover would repeat this error where it is largest.
+
+## What this costs the programme
+
+**Nothing.** No new configuration was evaluated — the same twelve cells were re-priced, and
+`tools/trial_budget.py` declares that as zero new trials with the rule printed beside it: *a shot at
+the data is a configuration you would have KEPT had it come out well, and a re-price could not have
+been kept.* The total stands at **81**, the hurdle at **2.46 sd(SR)**.
+
+## What the study now says
+
+**For the owner's question — a 14–20 session long-only hold — the correction cuts both ways, and
+the second way matters more.**
+
+* **The cost objection is much smaller than reported.** Twenty sessions costs **2.34% a year, not
+  6.30%**, and the gap to 126 sessions is **1.45 points, not 5.30**. Twenty sessions is not
+  ruinously expensive; it is mildly expensive.
+* **And there is no edge at any horizon to spend it on.** No long-only cell's interval excludes zero
+  on either window, at any of the six horizons. The long-short cells that qualify on the primary
+  window do not replicate on the holdout, and the one that used to is no longer selected.
+
+**So the honest reading is not "hold for six months instead of twenty sessions".** It is that this
+selection rule, measured against `SPY` on this sample, does not produce a net excess that survives a
+holdout at any holding period between one month and a year. **The horizon was never the binding
+constraint.** `TODO.md` §5 carries what to measure next.

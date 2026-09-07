@@ -926,27 +926,34 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       changes the gross as well as the cost, and the gross was measured at the open. `DR-040` §6
       names the study; it needs intraday bars, which the venue serves free and `data/` does not hold.
 
-- [ ] **`[v]` NINETY-FOUR PERCENT OF THE STORE HAS NO DECADE, AND EVERY BACKTEST HERE INHERITS IT
-      — measured 2026-09-06.**
-      ```bash
-      PYTHONPATH=$PWD/src python tools/refresh_universe.py --data <store> --symbols-from <list> --period 10y
-      ```
-      `refresh_universe.py` fetches **`--period 2y` by default**, so every instrument the coverage
-      pass has added carries about two years and no more.
-      | stored history | instruments | share |
-      |---|---|---|
-      | a decade (>= 2000 bars) | 818 | **6.3%** |
-      | about two years | 8,741 | 67.2% |
-      | under 400 bars | 3,451 | 26.5% |
-      **The consequence is not theoretical.** `PR-014`'s primary window is a small-cross-section
-      regime and its holdout a large one, so its split is a POPULATION split as well as a time
-      split — recorded as an amendment to that report. `measure_benchmark_fit.py` was minutes from
-      publishing a two-year comparison as a decade: three of its six candidate indices held 503
-      bars, and the run reported 23 periods until they were backfilled, then 103.
-      **The fix is a backfill and it is cheap** — three symbols took seconds. Over the admitted
-      universe it is a budgeted pass, which is what that tool is for.
-      **Not started on my judgement**: it rewrites the sample every committed study ran on, and
-      whether prior results are re-run against it is the owner's call, not a side effect of a fetch.
+- [ ] **`[v]` `refresh_universe.py`'s OWN DEFAULT IS STILL `2y`, so a hand-run repeats the trap —
+      2026-09-06.**
+      The scheduled pass was fixed the day the trap was found: `tools/widen_universe.cmd` now
+      passes **`--period 10y`** (owner ruling, 2026-09-06), and the admitted universe was
+      backfilled. The tool's default did not move with it, because other callers share it —
+      `run_pr005`, `PR-007`'s reproduction and any future `--symbols-from` caller read it — and a
+      default is not one caller's choice to make.
+      **The number it would replace bought nothing**: 0.40s a symbol at `10y` against 0.45s at
+      `2y`, because the vendor charges per REQUEST rather than per bar. There was never a saving to
+      weigh against the history.
+      The lesson is promoted to `AGENTS.md` §12; what is open is the one-line default.
+
+- [ ] **`[v]` WHETHER THE REMAINING PRIOR STUDIES ARE RE-RUN ON THE WIDENED SAMPLE — 2026-09-06,
+      updated 2026-09-07, and my recommendation is still NO.**
+      **`PR-014` is settled and is no longer the example**: its cost model was wrong, correcting it
+      forced a re-run regardless of the backfill, and the earlier sample was recovered from the
+      store's own bitemporal history rather than re-fetched — so both changes were separated after
+      the fact. See `docs/prereg/results/PR-014-report.md` §CORRECTION. **It spent no new trials**:
+      the same twelve configurations, re-priced, declared as zero in `tools/trial_budget.py`.
+      **For everything else the case against re-running is the trial budget.** 81 spent, hurdle
+      **2.46 sd(SR)**. Re-running a study against changed data is its full trial count again, to
+      re-answer a question `CARD-002`'s own study will ask better, on a clean sample, with a
+      holdout that has not been spent.
+      **The exception is the COST INPUTS**: `measure_quoted_spread.py` and
+      `measure_benchmark_fit.py` spend no trials at all — there is no Sharpe in a spread to deflate
+      — and they are inputs to everything else, so re-running them after the backfill is free and
+      worth doing. Not yet done.
+      **The ruling is yours**; this is a recommendation with its reasoning, not a decision taken.
 
 - [ ] **`[v]` THE SECTOR RANKER CANNOT BE BACKTESTED, AND THIS ONE IS A REAL BLOCKER — tested
       2026-09-06 rather than assumed.**
@@ -961,31 +968,38 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       and a new component. (3) Accumulate classification history forward and wait years.
       **This is the one impossibility claim tested today that survived.**
 
-- [ ] **`[v]` THE RATIFIED HOLDING PERIOD IS THE MOST EXPENSIVE OF SIX, AND FIXING IT NEEDS NO
-      NEW CAPABILITY — `PR-014`, reported 2026-09-06.**
+- [ ] **`[v]` THE RATIFIED HOLDING PERIOD IS STILL THE MOST EXPENSIVE OF SIX, BUT THE GAP IS
+      1.45 POINTS AND NOT 5.30 — `PR-014`, reported 2026-09-06, CORRECTED 2026-09-07.**
       ```bash
       PYTHONPATH=$PWD/src python tools/run_pr014.py --data <store>
       ```
-      **This is the long-only reading, and it is the one this system can act on.**
-      `exit.max_holding_period` is **20 sessions, `assumed:DR-012`**, never tested until now, and it
-      is the worst of the six horizons measured. A long-only book turns 12.6 times a year at 20
-      sessions and twice at 126, so it pays **6.30% a year against 1.00%** — a difference that is
-      arithmetic, not an estimate.
-      | horizon | cost/yr | primary net | holdout net |
-      |---|---|---|---|
-      | **20 (ratified)** | **6.30%** | −3.41% | −3.63% |
-      | 126 | **1.00%** | **+3.12%** | **+1.39%** |
-      **What it does NOT say.** No long-only cell's interval excludes zero at any horizon, so this
-      is not evidence the card beats `SPY`. The point estimate moves from negative on both windows
-      to positive on both, and the cost falls by 5.30 points; that is all.
-      **What the control added.** The equal-weighted admitted universe loses to `SPY` by 1.58% a
-      year (primary) and 4.27% (holdout), so at 126 sessions the top decile is **+4.70% against the
-      universe it selects from**. The ranking picks better names than its own pool; `SPY` is what
-      neither beats.
+      **Read the correction before acting on this.** The version of this item posted on 2026-09-06
+      priced the book at `252/horizon` FULL turns a year — GROSS turnover, as if every rebalance
+      sold everything. A book nets: a name still in the decile is held, not sold and re-bought.
+      Measured net turnover is **39.0% of the book per rebalance at 20 sessions**, not one full
+      turn. The overcharge was 2.7× at the short end and nil at the long end, so it flattered
+      exactly the recommendation this item was making.
+      **What survives.** `exit.max_holding_period` is **20 sessions, `assumed:DR-012`**, never
+      tested until `PR-014`, and it is still the most expensive of the six horizons and still the
+      weakest long-only cell on both windows.
+      | horizon | cost/yr AS FIRST POSTED | cost/yr MEASURED | primary net | holdout net |
+      |---|---|---|---|---|
+      | **20 (ratified)** | 6.30% | **2.34%** | −0.38% | −1.34% |
+      | 126 | 1.00% | **0.89%** | +1.73% | +1.27% |
+      **What it does NOT say, and this is now most of the item.** No long-only cell's interval
+      excludes zero at any horizon on either window, and the corrected spread between 20 and 126
+      sessions is **1.45 points of cost**, against the 5.30 first posted. The point estimates still
+      move from negative to positive, and they still sit inside intervals that contain zero at
+      every horizon. **`PR-014` is now EXPLORATORY** (`PREREG_TEMPLATE` rule 3 — it amended after
+      seeing data), so it may not advance a validation status at all.
+      **What the control added.** The equal-weighted admitted universe loses to `SPY`, so the top
+      decile beats the pool it selects from at every horizon. `SPY` is what neither beats.
       **The ruling is the owner's**: `exit.max_holding_period` is a ratified parameter, and changing
       it creates a new `CARD-001` version that resets any validation claim
-      (`STRATEGY_CARD_SPEC` 5 rule 2). Nothing about this needs a short book, new data or a new
-      component — which is why it is the smallest complete thing available.
+      (`STRATEGY_CARD_SPEC` 5 rule 2). **My recommendation has changed with the number**: 1.45
+      points of cost is not worth resetting a card's validation for, on an exploratory study whose
+      long-only intervals all contain zero. The horizon question is worth re-asking inside
+      `CARD-002`'s own pre-registration, on the sample the backfill just widened.
 
 - [ ] **`[v]` THE ONE CONSTRUCTION THAT SURVIVES COSTS NEEDS A SHORT LEG THIS SYSTEM DOES NOT
       HAVE — measured 2026-09-06, and whether to build one is the owner's.**
@@ -1502,6 +1516,32 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 - [ ] **`[c]` Course v7.0 adoption** — 7 unexecuted steps, deferred by owner ruling.
 
 ## 5. Studies
+
+- [ ] **`[v]` THE SAME GROSS-TURNOVER ERROR IS IN TWO MORE TOOLS, AND EVERY HORIZON COMPARISON IN
+      THIS REPOSITORY INHERITS IT — found 2026-09-07 while correcting `PR-014`.**
+      ```bash
+      grep -n "SIDES_PER_LEG\|COST_SIDES_PER_FORMATION" tools/measure_short_leg.py tools/run_pr013.py
+      ```
+      `PR-014` charged a full round trip on the whole book at every rebalance. So do
+      **`measure_short_leg.py`** (`rebalance_cost`: `legs x 2 x 25bp`, charged at every
+      non-overlapping formation) and **`run_pr013.py`** (`COST_SIDES_PER_FORMATION = 4`, the same
+      shape). A name in the top decile at one formation and still there at the next is **held**, not
+      sold and re-bought, and neither tool asks whether it is.
+      **`measure_banding.py` got it right** and is the counter-example that proves it is not a hard
+      problem: `cost_of(bought, size, bps)` charges only the fraction that TRADES. That tool exists
+      to measure turnover, so its author was thinking about turnover.
+      **The direction matters more than the size.** Overcharging is conservative for a POSITIVE
+      claim — `EVIDENCE_SUMMARY` §11's *"the only construction whose net interval excludes zero"*
+      (+7.705% at 126 sessions) can only get better — but it is NOT conservative for a comparison
+      ACROSS horizons, because the overcharge is a monotone function of horizon. In `PR-014` it was
+      2.7x at 20 sessions and nil at 252. **Every horizon ranking this repository has published is
+      tilted toward long holds by an unmeasured amount.**
+      **And it blocks the next study, which is the reason this is here rather than in the backlog.**
+      The owner's standing goal is a 14-20 session long-only rule. A screen that prices those holds
+      with gross turnover would repeat this exact error at the horizon where it is largest. **The
+      measurement needed first is decile persistence**: what fraction of the selected names survive
+      to the next formation, at 14, 20 and 126 sessions. That is a cost input, spends no trials, and
+      is the input the screen needs before it runs.
 
 - [ ] **`[v]` THE DELISTED-HISTORY ROUTE IS OPEN, RULED FREE-TIER, AND USED BY NOTHING — owner
       rulings 2026-09-05.**

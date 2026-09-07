@@ -26,6 +26,9 @@ return spend no trials - they cannot produce a Sharpe to be deflated.
 The hurdle formula is an **authored import** (`AGENTS.md` section 10.3), marked as one:
 Bailey & Lopez de Prado, *The Deflated Sharpe Ratio* (2014), the expected-maximum-Sharpe term.
 
+Side records in `results/` - a file with no `prereg`, such as a re-price at an earlier knowledge
+instant - are declared to spend nothing rather than silently skipped.
+
 Stdlib only. Reads `docs/prereg/results/` AND `docs/decisions/measurements/` - a configuration a
 tool swept is a shot at the same data, and until 2026-09-06 only the first directory was counted.
 
@@ -160,6 +163,59 @@ NO_SPEND_MEASUREMENTS = {
 }
 
 
+#: **A file in `results/` with no `prereg` key is a SIDE RECORD, and silence about it is a claim.**
+#:
+#: `spends()` skips such a file, and it has to - a provenance dump is not a study. But "skipped" and
+#: "spent nothing" print identically as an absence, which is the exact confusion `NO_SPEND` exists to
+#: prevent one line above. So every side record is named here with the reason it costs nothing, and
+#: one that is not named is reported UNDECLARED rather than passed over.
+#:
+#: The rule for a RE-PRICE, which is what the first entry is: correcting a cost model re-evaluates
+#: configurations the programme has already counted and searches nothing. `b.deflated_sharpe` counts
+#: shots at the data. Re-pricing twelve cells is not a thirteenth shot, and counting it as twelve
+#: more would inflate the hurdle for arithmetic that could not have found an edge.
+#: **Two of these were already sitting in `results/` and nothing had ever said what they cost.**
+#: They were found by adding this table, not before it - which is the argument for the table.
+#:
+#: The rule that covers all three: a re-evaluation spends nothing when **no selection is made on
+#: its output.** `PR-005`'s replay re-ran five counted arms to test whether the store reproduces
+#: the study's inputs, and chose no arm on the answer. `PR-014`'s control re-prices twelve counted
+#: cells to attribute a verdict change, and chooses no horizon on the answer. A shot at the data is
+#: a configuration you would have KEPT had it come out well; neither of these could have been kept.
+SIDE_RECORDS = {
+    "PR-002-survivorship-bound": "no trials: a POST-HOC bound computed from PR-002.json, reading a "
+                                 "committed result rather than evaluating a configuration",
+    "PR-005-trades-provenance": "no new trials: a replay of PR-005's five counted gate arms at the "
+                                "local store's vintage, run to test whether the inputs reproduce. "
+                                "No arm was selected on its output",
+    "PR-014-as-published": "no new trials: the PRESERVED BYTES of PR-014's 2026-09-06 result, kept "
+                           "because the cost correction regenerated the result file in place. It "
+                           "is the same twelve, counted once in PR-014.json, not a second run",
+    "PR-014-cost-attribution": "no new trials: PR-014's OWN twelve configurations, re-run at an "
+                               "earlier knowledge instant to separate the cost correction from the "
+                               "2026-09-06 backfill. A re-price of counted shots is not a new shot",
+}
+
+
+def side_records() -> list[Spend]:
+    """Result files that carry no `prereg`, and the declared reason each spends nothing."""
+    found: list[Spend] = []
+    for path in sorted(RESULTS.glob("*.json")):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        if isinstance(data, dict) and data.get("prereg"):
+            continue
+        name = path.stem
+        if name in SIDE_RECORDS:
+            found.append(Spend(name, 0, "-", SIDE_RECORDS[name]))
+        else:
+            found.append(Spend(name, 0, "UNDECLARED", "no counting rule declared for this side "
+                                                      "record - this is a GAP, not a zero"))
+    return found
+
+
 def expected_max_sharpe(trials: int) -> float:
     """E[max Sharpe] under the null over `trials` independent shots, in units of sd(SR) across them.
 
@@ -233,6 +289,15 @@ def main() -> int:
     counted = [s for s in found if s.trials]
     print(f"\n  {registered} trial(s) across {len(counted)} of {len(found)} reported studies")
     print(f"  (the study census is {len(found)} - a trial is a configuration, not a filing)")
+
+    aside = side_records()
+    if aside:
+        print()
+        print("  SIDE RECORDS in the same directory, each declared to spend nothing:")
+        for spend in aside:
+            marker = "  UNDECLARED" if spend.what == "UNDECLARED" else ""
+            print(f"      {spend.study}{marker}")
+            print(f"           rule: {spend.rule}")
 
     explored = exploratory_spends()
     print("\nSPENT - configurations evaluated by a TOOL, outside any pre-registration\n")
