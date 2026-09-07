@@ -3285,7 +3285,8 @@ def test_the_adoption_is_written_as_an_approved_MOVE_STOP_and_not_a_field_overwr
     directly would be a second definition of a stop move and would erase the audit trail that makes
     the adoption checkable at all.
     """
-    from swingdesk.contracts.position import ActionKind, ActionStatus as Status
+    from swingdesk.contracts.position import ActionKind
+    from swingdesk.contracts.position import ActionStatus as Status
 
     _booked(tmp_path, monkeypatch, "47.00")
     with PositionStore(tmp_path / "positions.duckdb") as store:

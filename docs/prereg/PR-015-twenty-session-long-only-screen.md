@@ -5,7 +5,11 @@ id:            PR-015
 date:          2026-09-07
 author:        Claude, at the owner's instruction 2026-09-06 — "research a good strategy for
                14-20 days of holding, longs"
-status:        registered
+status:        reported   (2026-09-07 - results/PR-015-report.md)
+verdict:       INCONCLUSIVE. The only arm whose interval excludes zero is LOWVOL_126, and
+               it LOSES - so section 6's both-negative branch fires. The finding that is
+               not the verdict: the four-position book's four cells disagree by up to 96.6
+               points where the decile it selects from disagrees by 7.5
 ```
 
 ---

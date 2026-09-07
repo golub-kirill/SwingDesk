@@ -35,6 +35,24 @@ stops. Every evening. For ever.** That is the same shape `DR-035` names two guar
 *"a stopped-out position stays open in the book for ever, holds its slot, and after four stop-outs
 the machine submits nothing again, silently."*
 
+## 1a. It has never fired, and that belongs here rather than in a reply
+
+**Measured 2026-09-07, against the live account:** two open positions, `BTSG` and `DINO`, book and
+venue agreeing on every field, and *"every open position has its stop standing at the venue"*. The
+condition this record is about has not occurred.
+
+**So it is a LATENT deadlock, not a live one.** It needs somebody to move a stop in the venue's
+dashboard, or a partial fill to leave a leg at another price. Neither has happened. What makes it
+worth ruling on rather than leaving is that when it does happen the machine stops **permanently**,
+with no path back that does not involve a person at a keyboard — and the two conditions that DID
+occur, on 2026-09-03 and 2026-09-04, each looked exactly that harmless until the evening they
+stopped four sessions of submissions.
+
+**This is not a stop-distance decision and touches no parameter.** `exit.atr_stop_multiple`,
+`exit.target_r_multiple` (ruled **1R** by the owner on 2026-09-01, `DR-029`) and
+`exit.max_holding_period` are all untouched. The word *tighter* below describes the direction of a
+disagreement that already exists at the broker, never a choice to use tighter stops.
+
 ## 2. The rule
 
 **A stop resting ABOVE the book's is adopted into the book.** `reconcile.unprotected` already

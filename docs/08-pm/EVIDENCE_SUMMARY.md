@@ -617,6 +617,58 @@ the repository's state is not the fixture.
 **What it does NOT establish.** Nothing about whether anything works. A higher hurdle is a higher
 bar for a result this programme has not produced; `parameters:validated` is still **0**.
 
+## 16. Four positions cannot carry a cross-sectional signal, and that is now measured
+
+**`PR-015`, reported 2026-09-07. The first study here to vary the SIGNAL rather than the horizon,
+the construction, the universe or the cost.**
+
+```bash
+PYTHONPATH=$PWD/src python tools/run_pr015.py --report
+```
+
+**The verdict was `INCONCLUSIVE`** — the only arm whose interval excluded zero was `LOWVOL_126`, on
+the losing side, so §6's both-negative branch fired. **The verdict is not the result.**
+
+**The result is one table.** Four cells of the same signal, same dates, same universe. The only
+difference is how many names the book holds:
+
+| arm | four-name book, worst → best | spread | its own decile, worst → best | spread |
+|---|---|---|---|---|
+| `PATH_126` | −10.09% → +2.51% | 12.60 | −2.75% → +3.18% | 5.93 |
+| `HIGH_52W` | −17.64% → −11.56% | 6.09 | −13.01% → −10.12% | 2.89 |
+| `LOWVOL_126` | −19.44% → −12.99% | 6.45 | −13.92% → −11.64% | 2.28 |
+| **`MOM_252_21`** | **+1.57% → +40.72%** | **39.15** | +5.83% → +10.21% | **4.38** |
+| **`REVERSAL_21`** | **−76.45% → +20.18%** | **96.63** | −0.46% → +7.04% | **7.50** |
+
+**`MOM_252_21`'s decile earns between +5.83% and +10.21% on four independent readings. The same
+signal in four positions reads +1.57%, +14.62%, +39.26% and +40.72%.** The signal is stable and the
+book is not.
+
+**Why, in one sentence.** Cross-sectional ranking is a claim about a decile drifting up relative to
+its pool; it says nothing about which name will. A four-position book cannot hold that claim — it
+holds four draws whose mean is the claim and whose variance is everything else.
+`risk.max_concurrent_positions` is 4, `status: owner`, and it is the binding constraint on this
+whole family of strategy.
+
+**The book is net and the decile is gross, so the LEVELS are not comparable and the SPREADS are** —
+a cost charged to every cell alike cannot make four cells disagree with each other.
+
+**What replicated.** `LOWVOL_126` loses on all four cells with intervals excluding zero: −18.22%,
+−12.99%, −19.44%, −14.09%. It is the cheapest arm (1.06% a year), its decile loses 13.92% GROSS, and
+against the pool it selected from it is −9 to −18 points. Picking the calmest names out of this
+universe is materially worse than picking from it at random — **over 2017–2026, a decade that was
+extraordinary for mega-cap growth and poor for low volatility.** That caveat is not decoration.
+
+**What the power floor caught.** Registered in §8 before any number existed. `MOM_252_21` and
+`REVERSAL_21` exceed it on every cell — 102 and up to 203 points wide — and they are the two arms
+with the largest quotable estimates. Without it a reader would find *"+40% on both holdouts,
+replicated"* in that table. **A-1's unregistered fourth cell is what breaks it: `MOM_252_21` reads
++1.57% there.** Two of three, not two of two.
+
+**What it does NOT establish.** Nothing about whether `MOM_252_21` works. The decile column is
+gross, carries no interval, and §6 never reads it. What it establishes is that the four-position
+book would not have shown an edge of that size either way — which is a fact about the instrument.
+
 ---
 
 **Do not write anything implying more confidence than the above.** `UX_COPY.md` §3 carries the

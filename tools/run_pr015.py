@@ -411,6 +411,74 @@ def decide(rows: list[dict[str, object]]) -> dict[str, object]:
             **common}
 
 
+#: One slot of `MAX_CONCURRENT` frees at every rebalance, so a book that treats every exit as an
+#: exit turns over exactly this much, whatever it re-selects.
+FULL_TURNOVER = Decimal(1) / Decimal(MAX_CONCURRENT)
+
+
+def realised_hold(turnover_per_rebalance: Decimal) -> Decimal:
+    """How long the book ACTUALLY held a name, in sessions, given its measured turnover.
+
+    §5 registered *"20 sessions, fixed"*. It is not what the tool delivered for every arm, and the
+    reason is in §5's own words: a position *"reaches the cap and closes"* and the freed slot takes
+    *"the highest-ranked eligible name NOT already held"* - and a name that has just closed is no
+    longer held, so it can be re-selected at the same rebalance. Under the registered NET cost model
+    that re-selection is not a trade, so the position never really closed.
+
+    `1 / turnover` rebalances is how long a slot survives on average; times `STEP` gives sessions.
+    """
+    if turnover_per_rebalance <= 0:
+        return Decimal(0)
+    return Decimal(STEP) / turnover_per_rebalance
+
+
+def reprice_at_full_turnover(row: dict[str, object]) -> dict[str, object]:
+    """One arm, re-priced as if every exit were an exit and every entry an entry.
+
+    **The registration did not disambiguate two readings and this is the second one.** §5 says a
+    position closes at `exit.max_holding_period` AND that cost comes from measured net turnover
+    between consecutive books. Those disagree exactly when a name is re-selected the moment its
+    slot frees: the literal exit costs a round trip, the netted reading costs nothing.
+
+    Neither is obviously right and the run answers both, because cost enters as a CONSTANT annual
+    subtraction from a bootstrapped gross interval - the same property `attribute_pr014_flip.py`
+    relies on. Re-pricing is arithmetic on numbers already in the file, not a re-estimate.
+
+    Under this reading every arm pays the same `6.30%` a year, the holding period IS 20 sessions
+    for all of them, and the arms are comparable at a common horizon. Under the other, the measured
+    turnover is a statement about how PERSISTENT each signal's top pick is - which is a finding, and
+    a different one.
+    """
+    cost = annual_cost(FULL_TURNOVER, STEP, "long_only", SLIPPAGE_BPS)
+    priced: dict[str, object] = {"arm": row["arm"], "annual_cost": float(cost)}
+    for window in ("primary", "holdout_time", "holdout_names", "diagnostic_both"):
+        cell = dict(row.get(window, {}))
+        # Every field the re-price READS, not just the one it reports. A cell carrying `net_annual`
+        # without the cost it was priced at cannot be re-priced, and crashing the reader on a
+        # partial result is worse than declining to re-price that window.
+        if not {"net_annual", "net_low", "net_high", "annual_cost", "gross_annual"} <= set(cell):
+            priced[window] = cell
+            continue
+        was = Decimal(str(cell["annual_cost"]))
+        for key in ("net_annual", "net_low", "net_high"):
+            cell[key] = float(Decimal(str(cell[key])) + was - cost)
+        cell["annual_cost"] = float(cost)
+        cell["net_annual_3x"] = float(
+            Decimal(str(cell["gross_annual"])) - cost * STRESS_MULTIPLE)
+        cell["net_excludes_zero"] = qualifies(cell)
+        cell["inside_power_floor"] = not underpowered(cell)
+        if "control_universe_annual" in cell:
+            cell["both_negative"] = bool(
+                cell["net_annual"] < 0 and cell["control_universe_annual"] < 0)
+        priced[window] = cell
+    return priced
+
+
+#: The three windows §5a registers plus the fourth cell A-1 reports and §6 never reads. Named once,
+#: so a reading cannot quietly consult a different set from the one the decision rule does.
+CELLS = ("primary", "holdout_time", "holdout_names", "diagnostic_both")
+
+
 def report(result: dict[str, object]) -> int:
     """Read a committed result and print what the book earned OVER ITS OWN POOL.
 
@@ -449,6 +517,62 @@ def report(result: dict[str, object]) -> int:
             pool = Decimal(str(cell["control_universe_annual"]))
             print(f"  {row['arm']:<13}{window:<16}{book * 100:>+11.2f}%{pool * 100:>+12.2f}%"
                   f"{(book - pool) * 100:>+13.2f}%")
+
+    print()
+    print("HOW MUCH THE FOUR CELLS DISAGREE - the four-name book against the decile it selects from")
+    print("  Same signal, same dates, same universe. The only difference is how many names it holds.")
+    print(f"  {'arm':<13}{'book: worst':>13}{'best':>9}{'spread':>9}   "
+          f"{'decile: worst':>15}{'best':>9}{'spread':>9}")
+    for row in rows:
+        book = [Decimal(str(row[w]["net_annual"])) for w in CELLS
+                if "net_annual" in row.get(w, {})]
+        deci = [Decimal(str(row[w]["diagnostic_decile_gross_annual"])) for w in CELLS
+                if "diagnostic_decile_gross_annual" in row.get(w, {})]
+        if len(book) < 2 or len(deci) < 2:
+            continue
+        print(f"  {row['arm']:<13}{min(book) * 100:>+12.2f}%{max(book) * 100:>+8.2f}%"
+              f"{(max(book) - min(book)) * 100:>8.2f}%   "
+              f"{min(deci) * 100:>+14.2f}%{max(deci) * 100:>+8.2f}%"
+              f"{(max(deci) - min(deci)) * 100:>8.2f}%")
+    print("  The book is NET and the decile is GROSS, so the levels are not comparable and the")
+    print("  SPREADS are: a cost charged to every cell alike cannot make four cells disagree.")
+
+    print()
+    print("HOW LONG THE BOOK ACTUALLY HELD A NAME, against the 20 sessions section 5 registered")
+    print(f"  {'arm':<13}{'turn/reb':>10}{'realised hold':>15}")
+    for row in rows:
+        cell = row.get("primary", {})
+        if "turnover_per_rebalance" not in cell:
+            continue
+        turns = Decimal(str(cell["turnover_per_rebalance"]))
+        print(f"  {row['arm']:<13}{turns * 100:>9.1f}%{realised_hold(turns):>13.0f} sessions")
+    print("  A name re-selected the moment its slot frees is never sold, so the hold is emergent.")
+    print("  Section 5 said 20 and did not say which of its two readings wins - see the table below.")
+
+    print()
+    print("RE-PRICED as if every exit were an exit: one slot of four, every rebalance, always")
+    print(f"  {'arm':<13}{'cost/yr':>8}  {'PRIMARY':>9}{'interval':>21}  {'HOLD-TIME':>10}"
+          f"  {'HOLD-NAMES':>11}")
+    repriced = [reprice_at_full_turnover(row) for row in rows]
+    for row in repriced:
+        primary = row["primary"]
+        if "net_low" not in primary:
+            continue
+        star = "*" if primary.get("net_excludes_zero") else " "
+        line = (f"  {row['arm']:<13}{primary['annual_cost'] * 100:>7.2f}%"
+                f"{primary['net_annual'] * 100:>+10.2f}%{star}"
+                f" [{primary['net_low'] * 100:+7.2f}%,{primary['net_high'] * 100:+7.2f}%]")
+        for window in ("holdout_time", "holdout_names"):
+            cell = row[window]
+            mark = "*" if cell.get("net_excludes_zero") else " "
+            line += (f"  {cell['net_annual'] * 100:>+9.2f}%{mark}"
+                     if "net_annual" in cell else f"  {'-':>10}")
+        print(line)
+    outcome = decide(repriced)
+    print()
+    print(f"  VERDICT under this reading: {str(outcome['verdict']).upper()}"
+          f"   {outcome.get('arm', '')}")
+    print(f"  because {outcome['why']}")
     return 0
 
 
@@ -643,6 +767,13 @@ def main() -> int:
                     # inventing a cost for a portfolio that does not exist.
                     cell["diagnostic_decile_gross_annual"] = float(round(
                         (sum(whole, Decimal(0)) / len(whole)) * periods, 6))
+                    # Stored so the diagnostic can be given an interval WITHOUT another run. The
+                    # first run kept only the mean, which left the steadiest positive number in
+                    # the study - MOM_252_21's decile, +5.83% to +10.21% across four cells -
+                    # impossible to bootstrap. Storing data spends no trials; drawing a conclusion
+                    # from it does, and that needs its own pre-registration and its own declared
+                    # position count.
+                    cell["diagnostic_decile_series"] = [float(round(v, 8)) for v in whole]
                 cell["series"] = [float(round(v, 8)) for v in values]
             row[window] = cell
         rows.append(row)
@@ -735,6 +866,18 @@ def main() -> int:
             "diagnostic_both": "formations after 2021-12-31, names in half B - NOT registered in "
                                "§5a, reported and never read by §6 (amendment A-1)",
             "halves": "sha256(instrument_id)[0] % 2 == 0 -> A",
+            # Gate 25 requires this and it was missing from the first run: section 5a registered
+            # what the split buys and the tool did not write it down. The dates and the hash say
+            # what the split IS and never what it is FOR.
+            "buys": "TWO protections at once, over the same five arms, at no extra configuration. "
+                    "The TIME holdout guards against a five-arm screen naming its own best on one "
+                    "regime. The NAME holdout guards against a signal that works on a handful of "
+                    "names - a failure a time split cannot see, and one no study in this "
+                    "repository had ever tested for. Requiring both is strictly harder than "
+                    "requiring either. PR-014's holdout turned out to be a population split as "
+                    "well as a time split because 94% of the store held two years of bars; the "
+                    "backfill fixed the population and left the fact that EVERY time window here "
+                    "is now spent by a prior study, which is why a second dimension was needed",
         },
         "perturbations": {
             "registered": ["cost_stress_1x", "cost_stress_3x"],
@@ -758,6 +901,10 @@ def main() -> int:
             "any horizon but 20 sessions - PR-014 answered the horizon question",
             "any cap but 4 - risk.max_concurrent_positions is ratified `owner`, and sweeping it "
             "would be five more configurations and a parameter this study has no standing to move",
+            "an INTERVAL on the decile diagnostic. Its per-period series is stored so one can be "
+            "computed, but a decile book of ~130 names is not one this system can hold at a cap "
+            "of 4, so a conclusion drawn from it is a configuration that could only be kept if "
+            "the owner moved the cap - which makes it a new pre-registration, not a reading",
         ],
     }, indent=2) + "\n", encoding="utf-8")
     print(f"\nwrote {args.out}")

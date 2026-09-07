@@ -485,3 +485,81 @@ def test_the_pool_reading_subtracts_the_style_gap_and_nothing_else(pr015, capsys
     assert primary.split() == ["REVERSAL_21", "primary", "-1.00%", "-3.00%", "+2.00%"]
     # A window with no cell is skipped rather than printed as a zero.
     assert "holdout_names" not in printed
+
+
+# --- the two readings section 5 did not disambiguate ---------------------------------------------
+
+def test_the_realised_hold_is_derived_from_turnover_and_not_assumed(pr015):
+    """§5 registered "20 sessions, fixed" and the run did not deliver one for every arm.
+
+    A name re-selected the moment its slot frees is never sold, so under the registered NET cost
+    model the position never really closed. 25% turnover per rebalance IS a 20-session hold; 4.2%
+    is a 119-session one, and that arm's "20-session" label would be fiction.
+    """
+    assert pr015.realised_hold(Decimal("0.25")) == Decimal(20)
+    assert pr015.realised_hold(Decimal("0.042")).quantize(Decimal(1)) == Decimal(119)
+    # A book that never trades has no holding period to report rather than an infinite one.
+    assert pr015.realised_hold(Decimal(0)) == Decimal(0)
+
+
+def test_full_turnover_prices_every_arm_the_same_and_at_the_no_netting_rate(pr015):
+    """The other reading: one slot of four closes every rebalance whatever is re-selected.
+
+    It is the SAME 6.30% a year a 20-session hold with no netting costs, which is the anchor the
+    cost model was pinned against, and it makes the arms comparable at a common horizon.
+    """
+    row = {"arm": "X", "primary": cell(0.05, -0.01, 0.11)}
+    row["primary"]["annual_cost"] = 0.0106
+    row["primary"]["gross_annual"] = 0.0606
+    priced = pr015.reprice_at_full_turnover(row)
+    assert priced["primary"]["annual_cost"] == float(Decimal("0.063"))
+    # 1.06% became 6.30%, so every figure falls by 5.24 points.
+    assert round(priced["primary"]["net_annual"], 6) == round(0.05 - (0.063 - 0.0106), 6)
+
+
+def test_repricing_re_derives_the_qualification_rather_than_copying_it(pr015):
+    """The same mutation `attribute_pr014_flip.py` exists to catch, in the same shape: a re-price
+    that carries the old flag reports the old verdict under the new cost."""
+    row = {"arm": "X", "primary": cell(0.05, 0.01, 0.09)}
+    row["primary"]["annual_cost"] = 0.0
+    row["primary"]["gross_annual"] = 0.05
+    assert row["primary"]["net_excludes_zero"] is True
+    priced = pr015.reprice_at_full_turnover(row)
+    # [+1%, +9%] priced 6.3 points dearer is [-5.3%, +2.7%] and straddles zero.
+    assert priced["primary"]["net_excludes_zero"] is False
+
+
+def test_repricing_leaves_a_window_with_no_cell_alone(pr015):
+    row = {"arm": "X", "primary": {"rebalances": 0, "sample_rule_met": False}}
+    assert pr015.reprice_at_full_turnover(row)["primary"] == {
+        "rebalances": 0, "sample_rule_met": False}
+
+
+def test_the_spread_reading_uses_all_four_cells_and_reports_the_range(pr015, capsys):
+    """The study's central reading, and the one a wrong constant would quietly shrink.
+
+    Four cells of the same signal on the same dates. If the reading consulted only the three §5a
+    registers it would miss `diagnostic_both` - which is exactly where MOM_252_21's apparent
+    replication falls apart - and the book would look steadier than it is.
+    """
+    assert pr015.CELLS == ("primary", "holdout_time", "holdout_names", "diagnostic_both")
+
+    def window(net: float, decile: float) -> dict[str, object]:
+        return {"net_annual": net, "diagnostic_decile_gross_annual": decile,
+                "control_universe_annual": -0.02}
+
+    result = {"rows": [{"arm": "X", "primary": window(0.10, 0.05),
+                        "holdout_time": window(0.40, 0.06),
+                        "holdout_names": window(0.35, 0.055),
+                        "diagnostic_both": window(0.01, 0.045)}]}
+    pr015.report(result)
+    printed = capsys.readouterr().out
+    # Taken from INSIDE the spread section. Selecting by "the line starting with X" picks the pool
+    # table's row instead - three tables in one report all name the same arm, and a first version
+    # of this test asserted against the wrong one.
+    section = printed.split("HOW MUCH THE FOUR CELLS DISAGREE")[1]
+    spread = next(line for line in section.splitlines() if line.strip().startswith("X"))
+    # book 1% to 40% is a 39-point spread; the decile 4.5% to 6% is 1.5. Both must be the RANGE,
+    # not a mean and not a standard deviation - the claim is "these four disagree by this much".
+    assert "39.00%" in spread
+    assert "1.50%" in spread
