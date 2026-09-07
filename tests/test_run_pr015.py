@@ -21,6 +21,7 @@ No store, no network.
 from __future__ import annotations
 
 import importlib.util
+import random
 import sys
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
@@ -563,3 +564,49 @@ def test_the_spread_reading_uses_all_four_cells_and_reports_the_range(pr015, cap
     # not a mean and not a standard deviation - the claim is "these four disagree by this much".
     assert "39.00%" in spread
     assert "1.50%" in spread
+
+
+def _dispersed(count: int) -> list[float]:
+    """A wide series with no repeating pattern, seeded so the test is deterministic."""
+    rng = random.Random(11)
+    return [round(rng.gauss(0.001, 0.06), 6) for _ in range(count)]
+
+
+def test_the_decile_reading_names_whether_its_interval_excludes_zero(pr015, capsys):
+    """The reading that corrected this study's own headline, and the one it would be easiest to
+    quietly not print.
+
+    The report first concluded that the signal was stable and the four-position book was not,
+    which invites *"a bigger book would find something"*. Given an interval of its own the decile
+    does not separate from zero either. A table that showed only the WIDTH would have supported
+    the original framing and hidden the thing that refutes it, so `excl 0` is asserted here.
+    """
+    # NOT a repeating pattern: a block bootstrap over `[+5%, -5%, +6%, -4%] * 8` returns a TIGHT
+    # interval, because every block of six carries almost the same mean. A first version of this
+    # fixture did exactly that and the "noisy" arm came back excluding zero.
+    steady = [0.001, 0.0012, 0.0009, 0.0011] * 8   # tight and positive: separates
+    noisy = _dispersed(32)
+    result = {"step": 5, "bootstrap": {"block": 6, "seed": 20260907, "resamples": 500}, "rows": [
+        {"arm": "STEADY", "primary": {
+            "net_annual": 0.1, "control_universe_annual": -0.02, "interval_width": 0.4,
+            "diagnostic_decile_series": steady, "diagnostic_decile_gross_annual": 0.05}},
+        {"arm": "NOISY", "primary": {
+            "net_annual": 0.1, "control_universe_annual": -0.02, "interval_width": 0.4,
+            "diagnostic_decile_series": noisy, "diagnostic_decile_gross_annual": 0.05}},
+    ]}
+    pr015.report(result)
+    section = capsys.readouterr().out.split("WHAT THE CAP COSTS")[1]
+    steady_line = next(line for line in section.splitlines() if line.strip().startswith("STEADY"))
+    noisy_line = next(line for line in section.splitlines() if line.strip().startswith("NOISY"))
+    assert "YES" in steady_line
+    assert "YES" not in noisy_line
+
+    # The ratio is BOOK width over DECILE width and the report quotes it as "the cap costs this
+    # much resolving power". Inverted it reads below one and says the opposite, which no assertion
+    # on the presence of an "x" can tell apart - a mutant that flipped it survived the first pass.
+    def ratio(line: str) -> float:
+        return float(line.split()[-1].rstrip("x"))
+
+    assert ratio(steady_line) > 1
+    # The steady decile has the narrower interval, so the cap costs MORE against it.
+    assert ratio(steady_line) > ratio(noisy_line)

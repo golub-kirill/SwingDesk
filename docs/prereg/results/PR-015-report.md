@@ -1,4 +1,4 @@
-# PR-015 RESULT: no signal earns anything at four positions, and the four positions are why
+# PR-015 RESULT: no signal separates from zero — not in a four-position book, and not in the decile it selects from
 
 ```
 prereg:        PR-015
@@ -18,20 +18,19 @@ trials:        5, declared before the run
 year** — and it does so on all four cells. §6's both-negative branch fires and the verdict is
 `inconclusive`, because comparing a losing arm to a losing universe is not a finding.
 
-**But the verdict is not the result.** The result is what the study measured about the BOOK:
+**And the decile it selects from does not separate either.** That is the sentence this report was
+missing when it was first written, and §"VALIDATION" records how it was found: the four-position
+book is genuinely noisier — **1.4× to 3.9× wider intervals, measured** — but at ~130 names, GROSS,
+before any cost at all, `MOM_252_21` still reads **+9.75% [−5.46%, +24.76%]** and contains zero on
+every window. So does `REVERSAL_21`. So does the incumbent.
 
-| | the four-name book | the decile it selects from |
-|---|---|---|
-| `MOM_252_21` across four cells | **+1.57% to +40.72%** | +5.83% to +10.21% |
-| `REVERSAL_21` across four cells | **−76.45% to +20.18%** | −0.46% to +7.04% |
+**Two arms DO separate, and both lose**: `HIGH_52W` and `LOWVOL_126` exclude zero on all three
+windows at the decile level, gross, at −10% to −14% a year.
 
-Same signal. Same dates. Same universe. **The only difference is how many names it holds** — and
-the four-name book's four readings disagree by up to **96.63 points** where the decile's disagree by
-**7.50**. The book is not measuring the signal. It is measuring which four names it happened to
-hold.
-
-**`risk.max_concurrent_positions` is the binding constraint on this whole family of strategy**, and
-that is now measured rather than argued.
+**So the honest ordering is: nothing here earns, and the book size is a real but secondary
+constraint.** The four-position cap costs roughly a factor of two to four in resolving power, which
+matters — and closing that gap entirely would still leave every positive arm's interval containing
+zero.
 
 ## What ran
 
@@ -81,7 +80,7 @@ The rule is applied by `run_pr015.decide` and the tool prints the branch it took
 mechanical treatment `PR-014` used, and the reason there is no step here for a reader's judgement
 to enter.
 
-## The finding that is not the verdict: four positions cannot carry a cross-sectional signal
+## The finding that is not the verdict: four positions cost a factor of two to four
 
 ```bash
 PYTHONPATH=$PWD/src python tools/run_pr015.py --report
@@ -99,19 +98,24 @@ every cell alike cannot make four cells disagree with each other.
 | **`MOM_252_21`** | **+1.57% → +40.72%** | **39.15** | +5.83% → +10.21% | **4.38** |
 | **`REVERSAL_21`** | **−76.45% → +20.18%** | **96.63** | −0.46% → +7.04% | **7.50** |
 
-**Read the last two rows twice.** `MOM_252_21`'s decile earns between +5.83% and +10.21% on all four
-cells — four independent readings agreeing within four and a half points. The same signal expressed
-in four positions reads +1.57%, +14.62%, +39.26% and +40.72%. **The signal is stable and the book is
-not.**
+`MOM_252_21`'s decile earns between +5.83% and +10.21% on all four cells — four readings agreeing
+within four and a half points. The same signal in four positions reads +1.57%, +14.62%, +39.26% and
++40.72%.
+
+**A spread of four readings is a weak statistic and this report first leaned on it too hard.** The
+per-period series settle it properly: the four-name book's 5-session excess has a standard deviation
+**1.34× to 8.11× the decile's, averaging 2.70×** across twenty cells, and its bootstrap intervals
+run **1.4× to 3.9× wider**. §"VALIDATION" has both tables. The direction survives; the magnitude
+was overstated by taking a range of four draws as if it were a dispersion.
 
 **Cross-sectional ranking is a diversification claim.** It says the top decile drifts up relative to
-the pool; it does not say which name will. A four-position book cannot hold that claim — it holds
-four draws from a distribution whose mean is the claim and whose variance is everything else. This
-study did not set out to measure that and it is the clearest thing in it.
+the pool; it does not say which name will. A four-position book holds four draws whose mean is the
+claim and whose variance is everything else. **That much is real and measured.**
 
-**What it does NOT say.** The decile column is GROSS, carries no interval, and is a diagnostic §6
-never reads. It is not evidence that `MOM_252_21` works. It is evidence that the four-position book
-would not have shown it either way.
+**What it does NOT say, and this is the correction that matters.** It does not say the signal works
+and the book hides it. Given an interval of its own, `MOM_252_21`'s decile is
+**+9.75% [−5.46%, +24.76%]** and contains zero on every window — gross, at ~130 names, before any
+cost. Closing the book-size gap entirely would not turn any positive arm into a finding.
 
 ## `LOWVOL_126` is the one thing that replicates, and it loses
 
@@ -225,18 +229,21 @@ signals and the answer is no** — and it identifies the reason, which is worth 
 
 * **No signal earns a net excess that excludes zero on the upside**, at any of the three registered
   windows, under either cost reading.
-* **The signal that looks best is the one that cannot be measured.** `MOM_252_21`'s decile is
-  consistently +5.83% to +10.21% gross across four cells; its four-name book is unmeasurable.
-* **The constraint is the book, not the horizon and not (on this evidence) the signal.**
-  `risk.max_concurrent_positions` is a ratified `owner` parameter. Changing it is the owner's call
-  and it is not a small one — it changes position sizing, `risk.max_open_risk`, and creates a new
-  `CARD-001` version that resets any validation claim (`STRATEGY_CARD_SPEC` 5 rule 2).
+* **The signal that looks best still does not separate.** `MOM_252_21`'s decile is +5.83% to
+  +10.21% gross across four cells, and every one of its intervals contains zero.
+* **The book costs a factor of two to four in resolving power**, which is real and worth knowing —
+  and is NOT what stands between this project and a working strategy. Moving
+  `risk.max_concurrent_positions` would sharpen the instrument and change no verdict here.
 
-**What I would ask next, and it is one study rather than five:** does `MOM_252_21`'s decile edge
-survive an interval, a cost and a holdout on a book large enough to hold it? That needs the decile's
-per-period series, which this run did not store — a defect in this tool, recorded in `TODO.md` §5.
-It spends no new trials on the signal side; it does need a registered position count, and that is
-the owner's number.
+**What I would ask next is not another signal screen.** Five signals, one horizon, two holdouts and
+a diagnostic at thirty times the book size all say the same thing: cross-sectional selection on
+daily bars over this universe does not produce a long-only edge that separates from zero. The
+programme has now spent 95 trials establishing that.
+
+What has NOT been varied is the **universe** — `liquidity-floor-2026-08-23` chose the admitted pool
+on coverage, never on return, and `EVIDENCE_SUMMARY` §13 measures that pool losing 3.02% a year to
+`SPY` as a style gap. Selecting the best decile of a pool nobody chose for its returns is a hard way
+to win, and it is the one input every study here has held fixed.
 
 ## Reproducing
 
@@ -253,3 +260,83 @@ here can be re-tested at another block length without a re-run. The decile diagn
 re-estimates nothing, and decides nothing. `AGENTS.md` §10.6 rule 4 is why the book-against-its-pool
 figures, the four-cell spreads, the realised holds and the reprice are computed there rather than
 typed onto this page.
+
+---
+
+# VALIDATION, 2026-09-07: the owner asked for a check before moving on, and it corrected the headline
+
+```bash
+PYTHONPATH=$PWD/src python tools/run_pr015.py --report
+```
+
+**What was checked, and in this order.** Every percentage quoted on this page against `PR-015.json`
+— fifteen figures, all matching. The re-run against the first run — every field across five arms and
+four windows, zero differences. Then the claim the report was actually built on, which is where it
+broke.
+
+## The claim that did not survive
+
+The first version of this page said the four cells disagree *"by up to 96.63 points where the
+decile's disagree by 7.50"*, and concluded that the signal was stable and the book was not.
+
+**A range of four draws is not a dispersion.** The stored per-period series measure it properly:
+
+| | 4-name book, sd of the 5-session excess | its decile | ratio |
+|---|---|---|---|
+| `PATH_126`, primary | 3.52% | 1.40% | 2.52× |
+| `LOWVOL_126`, primary | 2.79% | 1.75% | 1.60× |
+| `MOM_252_21`, primary | 7.10% | 2.46% | 2.88× |
+| `REVERSAL_21`, `holdout_time` | 13.65% | 2.72% | 5.02× |
+| **twenty cells** | | | **mean 2.70×, range 1.34–8.11×** |
+
+And on the interval, which is what a verdict reads: **1.4× to 3.9× wider**, one outlier at 6.86×.
+
+**The direction survives and the magnitude was overstated.** A four-position book really is two to
+four times noisier than the decile it selects from. It is not nine times, and the ratio a
+range-of-four suggested was an artefact of the statistic.
+
+## The correction that changes the conclusion
+
+The decile's series were stored on the re-run, so the diagnostic could be given an interval — the
+same bootstrap, the same block, the same seed:
+
+| arm | primary, gross | interval | excludes zero |
+|---|---|---|---|
+| `PATH_126` | +3.18% | [−5.94%, +13.07%] | no |
+| `HIGH_52W` | −11.36% | [−20.39%, −2.49%] | **yes — losing** |
+| `LOWVOL_126` | −13.92% | [−22.69%, −4.51%] | **yes — losing** |
+| `MOM_252_21` | +9.75% | [−5.46%, +24.76%] | no |
+| `REVERSAL_21` | +7.04% | [−9.67%, +25.12%] | no |
+
+Both holdouts agree with the primary on every row.
+
+**So the four-position cap is not what stands between this project and a working strategy.** At
+thirty times the book size, gross, before any cost, no positive arm separates from zero. The
+report's original framing — *"the signal is stable and the book is not"* — invited the reading that
+a bigger book would find something, and this table says it would not.
+
+## Why this is reported and why it is not a verdict
+
+**Reported**, because withholding a number that weakens my own claim is the worse error. §6 never
+reads it, and it changes no branch of the decision rule.
+
+**Not a verdict**, because a ~130-name decile is not a book this system can hold at
+`risk.max_concurrent_positions` = 4. A study that wanted to CLAIM the decile edge would need its own
+pre-registration, its own declared trials, and a position count the owner has ruled on.
+
+**And it spends no new trial.** A-2 registered the decile return as a diagnostic before the run;
+this adds an interval to a registered quantity rather than evaluating a new configuration. The
+discriminator is direction: the deflated Sharpe penalises searching for a winner, and this reading
+only ever removed a claim. Had it come out the other way — the decile separating from zero — it
+would have needed the pre-registration above before it could be claimed, and this paragraph is the
+commitment to that.
+
+## What still stands
+
+Everything the verdict rests on. `LOWVOL_126` loses on all four cells at both cost readings; two
+arms exceed the power floor and cannot be read at all; A-1's fourth cell contradicts
+`MOM_252_21`'s apparent replication; the realised holding period ran 21 to 119 sessions against a
+registered 20; and the verdict is `INCONCLUSIVE` under both readings of §5's cost clause.
+
+**What changed is the emphasis, and it changed against me.** The study is a cleaner null than the
+first version of this page reported.

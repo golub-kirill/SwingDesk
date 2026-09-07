@@ -617,7 +617,7 @@ the repository's state is not the fixture.
 **What it does NOT establish.** Nothing about whether anything works. A higher hurdle is a higher
 bar for a result this programme has not produced; `parameters:validated` is still **0**.
 
-## 16. Four positions cannot carry a cross-sectional signal, and that is now measured
+## 16. Nothing separates from zero — not at four positions, and not at a hundred and thirty
 
 **`PR-015`, reported 2026-09-07. The first study here to vary the SIGNAL rather than the horizon,
 the construction, the universe or the cost.**
@@ -640,18 +640,28 @@ difference is how many names the book holds:
 | **`MOM_252_21`** | **+1.57% → +40.72%** | **39.15** | +5.83% → +10.21% | **4.38** |
 | **`REVERSAL_21`** | **−76.45% → +20.18%** | **96.63** | −0.46% → +7.04% | **7.50** |
 
-**`MOM_252_21`'s decile earns between +5.83% and +10.21% on four independent readings. The same
-signal in four positions reads +1.57%, +14.62%, +39.26% and +40.72%.** The signal is stable and the
-book is not.
+**A range of four readings is a weak statistic, and the first version of this section leaned on it
+too hard.** Corrected the same day, from the per-period series: the four-name book's 5-session
+excess has a standard deviation **2.70× the decile's** on average over twenty cells, and its
+bootstrap intervals run **1.4× to 3.9× wider**. The direction survives; nine-to-thirteen times was an
+artefact of taking a range of four draws as a dispersion.
 
-**Why, in one sentence.** Cross-sectional ranking is a claim about a decile drifting up relative to
-its pool; it says nothing about which name will. A four-position book cannot hold that claim — it
-holds four draws whose mean is the claim and whose variance is everything else.
-`risk.max_concurrent_positions` is 4, `status: owner`, and it is the binding constraint on this
-whole family of strategy.
+**And the correction that matters more: the decile does not separate from zero either.** Given an
+interval of its own — same bootstrap, same block, same seed — `MOM_252_21` reads
+**+9.75% [−5.46%, +24.76%]** on the primary window, and contains zero on both holdouts. So does
+`REVERSAL_21`, and so does the incumbent. **At thirty times the book size, gross, before any cost,
+no positive arm is separable from zero.**
 
-**The book is net and the decile is gross, so the LEVELS are not comparable and the SPREADS are** —
-a cost charged to every cell alike cannot make four cells disagree with each other.
+| arm | decile, primary, gross | interval | excludes zero |
+|---|---|---|---|
+| `PATH_126` | +3.18% | [−5.94%, +13.07%] | no |
+| `HIGH_52W` | −11.36% | [−20.39%, −2.49%] | **yes — losing** |
+| `LOWVOL_126` | −13.92% | [−22.69%, −4.51%] | **yes — losing** |
+| `MOM_252_21` | +9.75% | [−5.46%, +24.76%] | no |
+| `REVERSAL_21` | +7.04% | [−9.67%, +25.12%] | no |
+
+**So `risk.max_concurrent_positions` is a real constraint and not the binding one.** Raising it
+would sharpen the instrument by a factor of two to four and would change no verdict here.
 
 **What replicated.** `LOWVOL_126` loses on all four cells with intervals excluding zero: −18.22%,
 −12.99%, −19.44%, −14.09%. It is the cheapest arm (1.06% a year), its decile loses 13.92% GROSS, and
@@ -665,9 +675,14 @@ with the largest quotable estimates. Without it a reader would find *"+40% on bo
 replicated"* in that table. **A-1's unregistered fourth cell is what breaks it: `MOM_252_21` reads
 +1.57% there.** Two of three, not two of two.
 
-**What it does NOT establish.** Nothing about whether `MOM_252_21` works. The decile column is
-gross, carries no interval, and §6 never reads it. What it establishes is that the four-position
-book would not have shown an edge of that size either way — which is a fact about the instrument.
+**What it does NOT establish.** Nothing about whether `MOM_252_21` works — its decile interval
+contains zero, and §6 never reads it in either direction. And it is not a verdict about a
+130-name book: this system cannot hold one at a cap of 4, so a study wanting to CLAIM a decile edge
+needs its own pre-registration and its own declared trials.
+
+**It spends no trial.** Amendment A-2 registered the decile return as a diagnostic before the run,
+and this adds an interval to a registered quantity. The discriminator is direction — the deflated
+Sharpe penalises searching for a winner, and this reading only ever removed a claim.
 
 ---
 

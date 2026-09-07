@@ -1519,22 +1519,6 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 5. Studies
 
-- [ ] **`[v]` THE DECILE'S SERIES IS NOT STORED, SO THE ONE PROMISING NUMBER IN `PR-015` HAS NO
-      INTERVAL — a defect in my own tool, found 2026-09-07 while writing the report.**
-      ```bash
-      PYTHONPATH=$PWD/src python tools/run_pr015.py --report
-      ```
-      `run_pr015.py` stores the four-position book's per-period series and only the MEAN of the
-      eligible decile's. So `MOM_252_21`'s decile — **+5.83% to +10.21% gross on four independent
-      cells**, the steadiest positive number this repository has produced — cannot be bootstrapped
-      without a re-run.
-      **Storing it is three lines** and the re-run spends no new trials on the signal side: the
-      same five configurations, the same seed, one more diagnostic column.
-      **What it would answer, and what it would not.** It would say whether that decile edge
-      excludes zero. It would NOT say the strategy works: a decile book of ~130 names is not one
-      this system can hold at `risk.max_concurrent_positions` = 4, and charging it a turnover it
-      never paid would invent a cost for a portfolio that does not exist.
-
 - [ ] **`[v]` WHETHER `risk.max_concurrent_positions` MOVES — `PR-015`, 2026-09-07, and this is
       the owner's number, not mine.**
       **The measurement is done and it is unambiguous.** The four-position book's four readings of
@@ -1548,11 +1532,19 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **What NOT changing it costs.** Every cross-sectional study this project runs will keep
       producing intervals too wide to read. `PR-012` refused a verdict on a four-position book;
       `PR-015` selected an arm on one and the interval that decided it was 31.9 points wide.
-      **My recommendation is to decide the QUESTION before the number**: either the strategy is
-      cross-sectional, in which case the book has to be big enough to hold a cross-section, or the
-      book stays at four and the strategy should be one where you know WHICH name — a breakout or a
-      trend entry, not a decile rank. The two are different projects and this repository is
-      currently running the first with the risk profile of the second.
+      **CORRECTED THE SAME DAY, and the correction cuts against my own recommendation.** Given an
+      interval of its own the decile does not separate from zero either: `MOM_252_21` reads
+      **+9.75% [−5.46%, +24.76%]** gross at ~130 names, before any cost, and contains zero on both
+      holdouts. **So raising the cap would sharpen the instrument by two to four times and change
+      no verdict here.** The report's VALIDATION section has the table.
+      **My recommendation is therefore NOT to move it yet.** It is a real constraint on measurement
+      and it is not the reason nothing works. Moving a ratified `owner` parameter that resets a
+      card's validation, to sharpen an instrument pointed at a null, buys a sharper null.
+      **The question worth deciding first** is whether the strategy is cross-sectional at all. If it
+      is, the book must eventually be big enough to hold a cross-section. If it stays at four, the
+      strategy should be one where you know WHICH name — a breakout or a trend entry, not a decile
+      rank. Those are different projects and this repository is running the first with the risk
+      profile of the second.
 
 - [ ] **`[v]` THE SAME GROSS-TURNOVER ERROR IS IN TWO MORE TOOLS, AND EVERY HORIZON COMPARISON IN
       THIS REPOSITORY INHERITS IT — found 2026-09-07 while correcting `PR-014`.**

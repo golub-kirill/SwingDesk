@@ -519,6 +519,35 @@ def report(result: dict[str, object]) -> int:
                   f"{(book - pool) * 100:>+13.2f}%")
 
     print()
+    print("WHAT THE CAP COSTS IN RESOLVING POWER, and what the decile says when it is given an")
+    print("  interval of its own. Same bootstrap, same block, same seed. GROSS - the decile pays")
+    print("  no turnover because nobody trades it. Section 6 reads NONE of this.")
+    print(f"  {'arm':<13}{'window':<15}{'gross':>9}{'interval':>22}{'excl 0':>8}"
+          f"{'book width':>12}{'ratio':>10}")
+    for row in rows:
+        for window in ("primary", "holdout_time", "holdout_names"):
+            cell = row.get(window, {})
+            series = cell.get("diagnostic_decile_series")
+            if not series or "interval_width" not in cell:
+                continue
+            interval = moving_block_bootstrap(
+                [Decimal(str(v)) for v in series], BLOCK, BOOTSTRAP_SEED, BOOTSTRAP_RESAMPLES)
+            if interval is None:  # pragma: no cover - a stored series is never shorter than 2
+                continue
+            periods = Decimal(252) / Decimal(STEP)
+            mean, low, high = (Decimal(str(v)) * periods for v in interval)
+            excludes = "YES" if (low > 0 or high < 0) else "no"
+            width = float(high - low) * 100
+            print(f"  {row['arm']:<13}{window:<15}{float(mean) * 100:>+8.2f}%"
+                  f"  [{float(low) * 100:>+7.2f}%,{float(high) * 100:>+7.2f}%]{excludes:>8}"
+                  f"{cell['interval_width'] * 100:>11.1f}%"
+                  f"{cell['interval_width'] * 100 / width:>9.2f}x")
+    print("  NOT a verdict and not evidence the signal works: a ~130-name decile is not a book")
+    print("  this system can hold at a cap of 4, and section 6 never reads it. It is reported")
+    print("  because withholding it would let the four-position finding be read as bigger than")
+    print("  it is - the decile fails to separate from zero too, wherever the book does.")
+
+    print()
     print("HOW MUCH THE FOUR CELLS DISAGREE - the four-name book against the decile it selects from")
     print("  Same signal, same dates, same universe. The only difference is how many names it holds.")
     print(f"  {'arm':<13}{'book: worst':>13}{'best':>9}{'spread':>9}   "
