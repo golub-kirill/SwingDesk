@@ -77,16 +77,55 @@ def test_a_cost_input_spends_nothing_and_says_so(budget):
     assert "cost input" in row.rule
 
 
-def test_an_unknown_measurement_is_reported_as_a_gap_not_a_zero(budget):
-    """This is the assertion that fails if UNDECLARED is ever collapsed into a plain zero."""
+def test_an_unknown_measurement_is_reported_as_a_gap_not_a_zero(budget, tmp_path, monkeypatch):
+    """This is the assertion that fails if UNDECLARED is ever collapsed into a plain zero.
+
+    **It used to assert that a real undeclared measurement existed**, with the note *"add one or
+    drop this test"*. Fourteen did exist, uncounted, from the day this table was written until
+    2026-09-07 — and the test that was watching the mechanism passed the whole time, because it
+    was fed by the gap it was meant to make intolerable. The gap is closed now, so the mechanism
+    is exercised on a measurement invented HERE: the tool's behaviour is the subject, and the
+    repository's state is not the fixture.
+    """
+    unknown = tmp_path / "not-declared-anywhere-2026-01-01.json"
+    unknown.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(budget, "MEASUREMENTS", tmp_path)
     rows = budget.exploratory_spends()
-    undeclared = [r for r in rows if r.what == "UNDECLARED"]
-    assert undeclared, "no undeclared measurement to judge; add one or drop this test"
-    for row in undeclared:
-        assert row.trials == 0
-        assert "GAP" in row.rule
-        assert row.study not in budget.NO_SPEND_MEASUREMENTS
-        assert row.study not in budget.EXPLORATORY
+    assert len(rows) == 1
+    row = rows[0]
+    assert row.what == "UNDECLARED"
+    assert row.trials == 0
+    assert "GAP" in row.rule
+    assert row.study not in budget.NO_SPEND_MEASUREMENTS
+    assert row.study not in budget.EXPLORATORY
+
+
+def test_every_committed_measurement_carries_a_counting_rule(budget):
+    """The regression guard that did not exist, and its absence cost nine trials of understatement.
+
+    Fourteen committed measurements sat UNDECLARED for as long as the counter existed. Nothing
+    failed: `UNDECLARED` printed honestly every run, the total was reported as 81, and nobody had
+    to read fourteen files to find out that two of them were searches. **A gap reported honestly
+    is still a gap**, and `b.deflated_sharpe` reads the total rather than the disclosure.
+
+    A new measurement must therefore be declared in the same change that commits it — as a spend
+    with its rule, or as zero with its reason. Those are different claims and this test refuses to
+    let the second be made by silence.
+    """
+    undeclared = [r.study for r in budget.exploratory_spends() if r.what == "UNDECLARED"]
+    assert not undeclared, (
+        "these committed measurements carry no counting rule; declare each in EXPLORATORY (with "
+        f"the configurations it evaluated) or in NO_SPEND_MEASUREMENTS (with why it spends "
+        f"nothing): {undeclared}"
+    )
+
+
+def test_every_side_record_carries_a_counting_rule(budget):
+    """The same guard on the other directory. `results/` holds side records with no `prereg` id -
+    a preserved copy, a replay, a post-hoc bound - and `spends()` must skip them. Skipping is not
+    the same claim as costing nothing, and only this table can make the second one."""
+    undeclared = [r.study for r in budget.side_records() if r.what == "UNDECLARED"]
+    assert not undeclared, f"side records with no counting rule: {undeclared}"
 
 
 def test_declared_and_no_spend_are_disjoint(budget):
@@ -150,3 +189,30 @@ def test_counting_only_pre_registrations_understates_the_search(budget):
     assert exploratory > 0
     assert budget.expected_max_sharpe(registered + exploratory) > \
         budget.expected_max_sharpe(registered)
+
+
+def test_an_undeclared_side_record_is_reported_and_not_skipped(budget, tmp_path, monkeypatch):
+    """The mutant that survived the first pass, and it survived for the same reason the gap did.
+
+    `test_every_side_record_carries_a_counting_rule` asserts the list is EMPTY, which a tool that
+    silently skips undeclared side records also satisfies. The guard and the bug produce the same
+    output, so the mechanism needs a side record invented here: a `results/` file with no `prereg`
+    id must come back as UNDECLARED rather than not come back at all.
+    """
+    (tmp_path / "SOMETHING-side.json").write_text('{"note": "no prereg id"}', encoding="utf-8")
+    monkeypatch.setattr(budget, "RESULTS", tmp_path)
+    rows = budget.side_records()
+    assert [r.study for r in rows] == ["SOMETHING-side"]
+    assert rows[0].what == "UNDECLARED"
+    assert "GAP" in rows[0].rule
+
+
+def test_the_two_spends_the_audit_found_are_pinned(budget):
+    """Nine of the ninety trials are these two rows, and a number nothing pins is a number that
+    drifts back. Both were UNDECLARED until 2026-09-07; both are searches scored on a RETURN, which
+    is what separates them from the twelve measurements declared at zero beside them."""
+    rows = {r.study: r for r in budget.exploratory_spends()}
+    assert rows["pivots-2026-08-24"].trials == 7
+    assert "pivot.left" in rows["pivots-2026-08-24"].rule
+    assert rows["correlation-cap-calibration-2026-08-23"].trials == 2
+    assert "net R" in rows["correlation-cap-calibration-2026-08-23"].rule
