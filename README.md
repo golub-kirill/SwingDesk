@@ -51,6 +51,14 @@ horizon and separates from zero only at about six months. That measurement is **
 sets no parameter and advances no validation status — and the holding period stays at 20 sessions
 by owner ruling. `TODO.md` carries the bounded study that would test the question properly.
 
+**Corrected 2026-09-07: the "only at about six months" half of that sentence is BIASED and has not
+been re-measured.** The tools behind it charge a full round trip on the whole book at every
+formation — gross turnover — where a book that re-picks a name **holds** it. The overcharge grows as
+the holding period shortens, so it suppresses short horizons and lets long ones through. `PR-014`
+measured 2.69× at twenty sessions against 1.02× at a year and its own `ACCEPT` did not survive the
+correction. The monotone-rise claim survives as a description of gross returns; where the spread
+first separates from zero does not. `TODO.md` §5 carries the fix.
+
 Everything that keeps those claims from blurring runs from a single command:
 
 ```bash
