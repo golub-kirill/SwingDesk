@@ -926,6 +926,41 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       changes the gross as well as the cost, and the gross was measured at the open. `DR-040` §6
       names the study; it needs intraday bars, which the venue serves free and `data/` does not hold.
 
+- [ ] **`[v]` NINETY-FOUR PERCENT OF THE STORE HAS NO DECADE, AND EVERY BACKTEST HERE INHERITS IT
+      — measured 2026-09-06.**
+      ```bash
+      PYTHONPATH=$PWD/src python tools/refresh_universe.py --data <store> --symbols-from <list> --period 10y
+      ```
+      `refresh_universe.py` fetches **`--period 2y` by default**, so every instrument the coverage
+      pass has added carries about two years and no more.
+      | stored history | instruments | share |
+      |---|---|---|
+      | a decade (>= 2000 bars) | 818 | **6.3%** |
+      | about two years | 8,741 | 67.2% |
+      | under 400 bars | 3,451 | 26.5% |
+      **The consequence is not theoretical.** `PR-014`'s primary window is a small-cross-section
+      regime and its holdout a large one, so its split is a POPULATION split as well as a time
+      split — recorded as an amendment to that report. `measure_benchmark_fit.py` was minutes from
+      publishing a two-year comparison as a decade: three of its six candidate indices held 503
+      bars, and the run reported 23 periods until they were backfilled, then 103.
+      **The fix is a backfill and it is cheap** — three symbols took seconds. Over the admitted
+      universe it is a budgeted pass, which is what that tool is for.
+      **Not started on my judgement**: it rewrites the sample every committed study ran on, and
+      whether prior results are re-run against it is the owner's call, not a side effect of a fetch.
+
+- [ ] **`[v]` THE SECTOR RANKER CANNOT BE BACKTESTED, AND THIS ONE IS A REAL BLOCKER — tested
+      2026-09-06 rather than assumed.**
+      `decision_logic.ranking.BySectorRelativeStrength` is built, tested and used by no card. It
+      needs a sector per name, and `data/classifications.duckdb` holds knowledge times from
+      **2026-08-23 only — fourteen days.** The module refuses to answer a 2016 question with
+      today's classification and says why: *"It does not, and must not."* Applying today's sectors
+      to a decade is a look-ahead the store is deliberately built to prevent.
+      **Three routes, and none is free.** (1) Run it contaminated and label it — cheap, and breaks
+      a design rule the repository states explicitly. (2) Build a point-in-time sector proxy from
+      bars alone, assigning each name to the sector ETF it tracked over a TRAILING window — real,
+      and a new component. (3) Accumulate classification history forward and wait years.
+      **This is the one impossibility claim tested today that survived.**
+
 - [ ] **`[v]` THE RATIFIED HOLDING PERIOD IS THE MOST EXPENSIVE OF SIX, AND FIXING IT NEEDS NO
       NEW CAPABILITY — `PR-014`, reported 2026-09-06.**
       ```bash

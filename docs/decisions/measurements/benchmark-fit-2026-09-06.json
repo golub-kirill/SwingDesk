@@ -1,0 +1,71 @@
+{
+  "as_of": "2026-09-06T17:59:02.037100-05:00",
+  "step": 21,
+  "horizon": 126,
+  "lookback": 126,
+  "periods": 103,
+  "incumbent": "SPY",
+  "selection_criterion": "lowest annualised tracking error against the equal-weighted admitted universe. Card excess is reported and is NOT an input",
+  "rows": [
+    {
+      "correlation": 0.9824617261404972,
+      "tracking_error_annual": 0.03943863226920625,
+      "mean_gap_annual": 0.0036166017571496135,
+      "periods": 103,
+      "card_excess_annual": 0.06572293085896426,
+      "benchmark": "MDY",
+      "incumbent": false
+    },
+    {
+      "correlation": 0.9717496614116057,
+      "tracking_error_annual": 0.04445607604063723,
+      "mean_gap_annual": -0.00022844225411546015,
+      "periods": 103,
+      "card_excess_annual": 0.06187788684769919,
+      "benchmark": "RSP",
+      "incumbent": false
+    },
+    {
+      "correlation": 0.9734498597253901,
+      "tracking_error_annual": 0.06272862142976952,
+      "mean_gap_annual": 0.0016741188046083132,
+      "periods": 103,
+      "card_excess_annual": 0.06378044790642295,
+      "benchmark": "IWM",
+      "incumbent": false
+    },
+    {
+      "correlation": 0.9378448397697305,
+      "tracking_error_annual": 0.06525155799166202,
+      "mean_gap_annual": -0.02658274907128936,
+      "periods": 103,
+      "card_excess_annual": 0.03552358003052528,
+      "benchmark": "VTI",
+      "incumbent": false
+    },
+    {
+      "correlation": 0.911674626954618,
+      "tracking_error_annual": 0.07730733063959307,
+      "mean_gap_annual": -0.030187868698651407,
+      "periods": 103,
+      "card_excess_annual": 0.031918460403163235,
+      "benchmark": "SPY",
+      "incumbent": true
+    },
+    {
+      "correlation": 0.7554045867070233,
+      "tracking_error_annual": 0.13485081767832294,
+      "mean_gap_annual": -0.08926457525529341,
+      "periods": 103,
+      "card_excess_annual": -0.02715824615347878,
+      "benchmark": "QQQ",
+      "incumbent": false
+    }
+  ],
+  "exploratory": true,
+  "not_measured": [
+    "an index's fees and tracking of its own benchmark",
+    "survivorship - the directory is today's",
+    "whether an equal-weighted book is what the owner wants to hold at all, which is a different question than which index it resembles"
+  ]
+}
