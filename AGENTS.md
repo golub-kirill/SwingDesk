@@ -645,6 +645,23 @@ open question that follows: §10.5 gives every COUNT an owner and nothing does t
 - **Rollback is mostly supersede, not revert.** `CHANGE_MANAGEMENT.md` §3 says what can be undone
   and what can only be corrected forward.
 
+### A generated file counts the WORKING TREE, and an untracked file is in it
+
+**Cost two CI failures on 2026-09-07, both of which passed locally.** `tools/build_state.py`
+regenerates `HANDOFF.md` section 2 by counting what is on disk — tests, documents, components. Run
+it while a new tool and its tests sit **untracked**, and it writes those counts into a commit that
+does not contain them. Gate 14 and gate 24 then fail on CI, which sees only what was pushed, and
+pass locally, which sees the tree.
+
+**The symptom is a local PASS**, exactly like the worktree `PYTHONPATH` trap above, and for the same
+reason: the checker and the artefact disagree about what the repository is. A generated derivative
+is only evidence about the commit it lands in if it was generated from that commit's contents.
+
+**The habit.** Regenerate a derived file with a clean tree — `git status --short` empty apart from
+what you are about to commit — or move the untracked files aside first and bring them back after.
+`git stash` is the obvious answer and is the wrong one here: the stash stack is shared with every
+other worktree and another session may pop yours (section 12's parallel-worktree entry).
+
 ### A scheduled pass's default silently caps what every backtest can ever measure
 
 **Measured 2026-09-06.** `tools/widen_universe.cmd` called `refresh_universe.py` with no
