@@ -349,6 +349,16 @@ measured 63.6% of the top DECILE surviving a 20-session gap. The top *one* name 
 question and the answer is not derivable from that figure, so turnover is measured inside this study
 from the book it actually holds — which is what `PR-014` amendment A-3 was about.
 
+**The 5-session entry grid is an APPROXIMATION and is declared as one.** The live pipeline scans
+every session and would enter whenever a slot happened to be free, so real entries would stagger
+unevenly rather than landing exactly 5 sessions apart. Even spacing is the standard
+overlapping-portfolio construction (Jegadeesh & Titman 1993, and `PR-014` amendment A-1 by the
+owner's ruling), it makes each of the four sub-books an equal share of the capital, and it is what
+this study can compute: ranking a cross-section of ~1,300 names took twenty minutes at 313 dates,
+and a daily grid is 2,500. **What it costs is realism about ENTRY TIMING, not about the cap** — the
+book still holds at most four names for at most twenty sessions each. If an arm survives, the entry
+grid is the first thing a follow-up should relax.
+
 **The whole eligible decile's return is still computed**, reported beside the capped book and never
 read by §6. It is what separates *"the signal is weak"* from *"four positions cannot express it"*.
 
