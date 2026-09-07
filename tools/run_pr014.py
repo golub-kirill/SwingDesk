@@ -17,9 +17,18 @@ reimplementing it, so the study and the system cannot drift apart (amendment A-2
 **2. Windows overlap.** Ten years hold seventeen non-overlapping 126-session windows, which is why
 nothing at that horizon could ever be resolved - a property of the estimator, not the market. The
 owner lifted the constraint on 2026-09-06 (amendment A-1). This holds `K = horizon / 21` overlapping
-sub-portfolios formed 21 sessions apart: every formation date contributes and `1/K` of the book
-turns over per rebalance. **It creates no information** - ten years remain ten years - and the
-moving-block bootstrap in `§5b` is what keeps the interval honest about that.
+sub-portfolios formed 21 sessions apart, so every formation date contributes. **It creates no
+information** - ten years remain ten years - and the moving-block bootstrap in `§5b` is what keeps
+the interval honest about that.
+
+**3. THE COST MODEL WAS WRONG WHEN THIS STUDY PUBLISHED, and amendment A-3 records it.** §5
+registered `1/K` of the book turning per rebalance and this file charged exactly that:
+`252 / horizon` FULL turns a year. `1/K` is ROTATED - the oldest sub-portfolio closes, a new one
+opens - but a name the new one re-selects is **held, not sold and re-bought**. That is gross
+turnover where a book pays net, it overcharged by 2.7x at twenty sessions and not at all at a year,
+and it withdrew this study's ACCEPT. Cost now comes from `turnover()` between consecutive books;
+`annual_cost_as_first_published` is kept beside it so the error stays visible in the evidence file.
+`tools/attribute_pr014_flip.py` attributes the flip.
 
     python tools/run_pr014.py --data <store>
 """
@@ -32,7 +41,7 @@ import random
 import statistics
 import sys
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -192,16 +201,63 @@ def moving_block_bootstrap(
     return mean, means[int(0.025 * resamples)], means[int(0.975 * resamples) - 1]
 
 
-def annual_cost(horizon: int, arm: str, per_side_bps: Decimal) -> Decimal:
-    """What a year of this arm's turnover costs, as a fraction.
+def book_weights(legs: list[date], picks: dict[date, list[str]]) -> dict[str, Decimal]:
+    """Each held name's weight: the share of the K active sub-portfolios that hold it.
 
-    `K = horizon / STEP` sub-portfolios means `1/K` of the book turns per rebalance and there are
-    `252/STEP` rebalances a year, so the horizon cancels into `252/horizon` full turns - the same
-    figure a non-overlapping book pays. **Overlapping spreads the turnover out; it does not reduce
-    it**, and a tool that reported otherwise would be selling the construction as a free lunch.
+    A name selected by four of six sub-portfolios carries four sixths of the book, which is what
+    the return calculation already implies by averaging across legs. Turnover has to read the same
+    weights or the two halves of the arithmetic describe different portfolios.
     """
-    turns = Decimal(SESSIONS_PER_YEAR) / Decimal(horizon)
-    return turns * Decimal(SIDES[arm]) * per_side_bps / Decimal(10000)
+    if not legs:
+        return {}
+    per_leg = Decimal(1) / Decimal(len(legs))
+    held: dict[str, Decimal] = {}
+    for leg in legs:
+        names = picks.get(leg, ())
+        if not names:
+            continue
+        # Divided by the leg's OWN size as well as by K, so each sub-portfolio contributes 1/K in
+        # total and the whole book sums to one. Weighting by 1/K alone made a leg holding four
+        # names four times the size of one holding a single name, and the turnover it implied was
+        # four times too large - caught by the fixtures below, not by the run.
+        share = per_leg / Decimal(len(names))
+        for name in names:
+            held[name] = held.get(name, Decimal(0)) + share
+    return held
+
+
+def turnover(previous: dict[str, Decimal], current: dict[str, Decimal]) -> Decimal:
+    """One-sided turnover: the fraction of the book BOUGHT, netting names that stayed.
+
+    **This is the correction that this function exists for, and the first version of it was wrong.**
+    `PR-014` originally charged `252 / horizon` full turns a year - the whole book at a 20-session
+    horizon - on the reasoning that an overlapping construction retires one sub-portfolio per
+    rebalance. It does, but **a name the retiring sub-portfolio held and the new one re-selects is
+    not sold and re-bought**; a real book keeps it. That charged GROSS turnover where a book pays
+    NET, and it overcharged short horizons most, because that is where the same names recur.
+
+    Only weight INCREASES are bought. A name whose weight falls is sold, and its sale is already
+    paid for by the round trip charged when it was bought.
+    """
+    return sum(
+        (max(Decimal(0), current.get(name, Decimal(0)) - previous.get(name, Decimal(0)))
+         for name in set(previous) | set(current)),
+        Decimal(0),
+    )
+
+
+def annual_cost_from(turns: list[Decimal], arm: str, per_side_bps: Decimal) -> Decimal:
+    """A year of MEASURED turnover, charged a round trip a side at entry.
+
+    `SIDES` is two for a long-only book and four for a spread, because both legs turn. The round
+    trip is charged when a position is opened rather than split across its life: a position that is
+    bought will be sold, and deferring half the cost to a later period prices the same decision in
+    two places.
+    """
+    if not turns:
+        return Decimal(0)
+    mean = sum(turns, Decimal(0)) / len(turns)
+    return mean * Decimal(SIDES[arm]) * per_side_bps / Decimal(10000) * PERIODS_PER_YEAR
 
 
 def decide(rows: list[dict[str, object]], stress: Decimal) -> dict[str, object]:
@@ -256,12 +312,19 @@ def decide(rows: list[dict[str, object]], stress: Decimal) -> dict[str, object]:
 def main() -> int:
     parser = argparse.ArgumentParser(prog="run_pr014")
     parser.add_argument("--data", type=Path, default=Path("data"))
+    parser.add_argument("--as-of", default=None,
+                        help="read the store at this knowledge instant instead of the latest. The "
+                             "store is bitemporal, so this reconstructs the sample a PAST run saw "
+                             "- which is how the cost correction and the 2026-09-06 backfill were "
+                             "separated after both landed in the same re-run")
     parser.add_argument("--out", type=Path,
                         default=Path("docs/prereg/results/PR-014.json"))
     args = parser.parse_args()
 
     store = BarStore(args.data / "bars.duckdb")
-    as_of = store.latest_knowledge_time()
+    as_of = (
+        datetime.fromisoformat(args.as_of) if args.as_of else store.latest_knowledge_time()
+    )
     if as_of is None:
         print("the bar store is empty")
         return 1
@@ -322,6 +385,8 @@ def main() -> int:
         for arm in ("long_only", "long_short"):
             windows: dict[str, list[Decimal]] = {"primary": [], "holdout": []}
             control: dict[str, list[Decimal]] = {"primary": [], "holdout": []}
+            turns: list[Decimal] = []
+            previous_book: dict[str, Decimal] = {}
             for i, session in enumerate(rebalances[:-1]):
                 nxt = rebalances[i + 1]
                 if nxt not in index_of[BENCHMARK]:
@@ -347,6 +412,10 @@ def main() -> int:
                             shorts.append(short_return)
                 if not longs:
                     continue
+                # The book this rebalance actually holds, and what it had to BUY to get there.
+                current_book = book_weights(legs, {f: picks[f][0] for f in legs})
+                turns.append(turnover(previous_book, current_book))
+                previous_book = current_book
                 long_leg = sum(longs, Decimal(0)) / len(longs)
                 bench = period_return(
                     benchmark, index_of[BENCHMARK][session], index_of[BENCHMARK][nxt]
@@ -371,10 +440,17 @@ def main() -> int:
                     if everything is not None:
                         control[where].append(everything - bench)
 
-            cost = annual_cost(horizon, arm, SLIPPAGE_BPS)
+            cost = annual_cost_from(turns, arm, SLIPPAGE_BPS)
+            realised = (sum(turns, Decimal(0)) / len(turns)) if turns else Decimal(0)
             row: dict[str, object] = {
                 "horizon": horizon, "arm": arm, "K": k,
                 "annual_cost": float(round(cost, 6)),
+                "turnover_per_rebalance": float(round(realised, 4)),
+                # What the first version of this study charged, kept beside the corrected figure so
+                # the size of the error is visible rather than quietly absorbed.
+                "annual_cost_as_first_published": float(round(
+                    Decimal(SESSIONS_PER_YEAR) / Decimal(horizon)
+                    * Decimal(SIDES[arm]) * SLIPPAGE_BPS / Decimal(10000), 6)),
             }
             for window, values in windows.items():
                 block = max(k, MIN_BLOCK)
@@ -434,11 +510,12 @@ def main() -> int:
             rows.append(row)
 
     print("ANNUALISED NET EXCESS over the benchmark, by holding period")
-    print(f"  {'horizon':>8}{'K':>4}  {'arm':<11}{'cost/yr':>9}"
+    print(f"  {'horizon':>8}{'K':>4}  {'arm':<11}{'turn/reb':>9}{'cost/yr':>9}"
           f"{'PRIMARY net':>13}{'interval':>24}{'n':>5}"
           f"{'HOLDOUT net':>13}{'interval':>24}{'n':>5}")
     for row in rows:
-        line = f"  {row['horizon']:>8}{row['K']:>4}  {row['arm']:<11}{row['annual_cost'] * 100:>8.2f}%"
+        line = (f"  {row['horizon']:>8}{row['K']:>4}  {row['arm']:<11}"
+                f"{row['turnover_per_rebalance'] * 100:>8.1f}%{row['annual_cost'] * 100:>8.2f}%")
         for window in ("primary", "holdout"):
             cell = row[window]
             if "net_annual" not in cell:

@@ -79,7 +79,26 @@ for %%F in ("%LOG%") do if %%~zF GTR 50000000 move /Y "%LOG%" "%LOG%.1" >nul 2>&
 echo. >> "%LOG%"
 echo ===== [%DATE% %TIME%] coverage pass starting, budget %BUDGET% >> "%LOG%"
 
-"%PY%" -X utf8 "%REPO%\tools\refresh_universe.py" --data "%REPO%\data" --budget %BUDGET% >> "%LOG%" 2>&1
+REM --period 10y, OWNER RULING 2026-09-06, and the number it replaces cost more than
+REM it saved. This line carried no --period until today, so every symbol this pass
+REM has ever fetched got refresh_universe.py's default of 2y. MEASURED 2026-09-06:
+REM 818 of 13,010 stored instruments held a decade - 6.3% - and 8,741 held about
+REM two years. PR-014 admitted 9,544 instruments on a 400-bar floor and could only
+REM price about 818 of them in 2018, so its primary window was a small
+REM cross-section and its holdout a large one: a split registered as a TIME split
+REM behaving as a POPULATION split. That is recorded as an amendment to its report.
+REM
+REM AND THE DEFAULT BOUGHT NOTHING. Timed 2026-09-06 at 20 symbols in 8 seconds on
+REM --period 10y - 0.40s each, against the 0.45s this file's own budget comment
+REM measured at 2y. The vendor charges per REQUEST, not per bar, so a decade costs
+REM the same wall clock as two years. The 4,000-symbol budget below still finishes
+REM inside a weekend morning.
+REM
+REM THE TRAP IS NOT FULLY CLOSED. `refresh_universe.py --period` still DEFAULTS to
+REM 2y, so a hand-run without the flag repeats this exactly. TODO.md section 4
+REM carries whether that default moves too; it is a change to a tool other callers
+REM share, not to this pass.
+"%PY%" -X utf8 "%REPO%\tools\refresh_universe.py" --data "%REPO%\data" --budget %BUDGET% --period 10y >> "%LOG%" 2>&1
 set RC=%ERRORLEVEL%
 
 echo ===== [%DATE% %TIME%] coverage pass finished, exit %RC% >> "%LOG%"

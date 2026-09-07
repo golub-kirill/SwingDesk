@@ -520,6 +520,54 @@ not a measurement — an owner who wants absolute return should be compared to c
 to beat the market as a household understands it may well mean `SPY` whatever the tracking says.
 This measures resemblance and nothing else.
 
+## 14. The cost model charged for trades the book never makes, and the error grew as the holding period shrank
+
+**Measured 2026-09-07. It withdrew this repository's only `ACCEPT`.**
+
+```bash
+PYTHONPATH=$PWD/src python tools/attribute_pr014_flip.py
+```
+
+**What was wrong.** `PR-014` §5 registered *"turnover: 1/K per 21 sessions BY CONSTRUCTION"* and the
+tool charged `252 / horizon` **full book turns** a year. `1/K` of the book is *rotated* each
+rebalance — the oldest sub-portfolio closes, a new one opens — but a name the new sub-portfolio
+selects that the old one already held is **not traded**. It is held. The registered figure is GROSS
+turnover; what a book pays is NET.
+
+**What the book actually turns, measured between consecutive books rather than assumed:**
+
+| horizon | charged | measured net per rebalance | long-only cost/yr charged | measured | overcharge |
+|---|---|---|---|---|---|
+| **20** | 12.60 turns/yr | **39.0%** | **6.30%** | **2.34%** | **2.69×** |
+| 42 | 6.00 | 27.1% | 3.00% | 1.62% | 1.85× |
+| 63 | 4.00 | 21.8% | 2.00% | 1.31% | 1.53× |
+| 126 | 2.00 | 14.9% | 1.00% | 0.89% | 1.12× |
+| 189 | 1.33 | 10.3% | 0.67% | 0.62% | 1.08× |
+| 252 | 1.00 | 8.2% | 0.50% | 0.49% | 1.02× |
+
+**The shape is the finding, not the size.** A cost model wrong by a constant moves every cell
+together and changes no ordering. This one is a monotone function of the holding period — 2.69× at
+twenty sessions, 1.02× at a year — and holding period is the only variable `PR-014` varied. **It
+taxed short holds and waved long ones through, and §6 selects the SHORTEST qualifying horizon.**
+
+**Why it was foreseeable.** Novy-Marx & Velikov (*RFS* 2016) — an authored import, `AGENTS.md`
+§10.3 — report that survival after costs turns on *net* one-sided turnover and that buy/hold overlap
+is the strongest mitigation a rebalanced book has. The registered clause discarded exactly that
+overlap. The measurement is this repository's own; the reason to expect it is not.
+
+**The same error is in two more tools and is not yet fixed.** `measure_short_leg.py`'s
+`rebalance_cost` and `run_pr013.py`'s `COST_SIDES_PER_FORMATION = 4` both charge a full round trip
+on the whole book at every formation. `measure_banding.py` does not — it charges only the fraction
+that trades — which is the counter-example showing this was never hard. **Overcharging is
+conservative for a positive claim** (§11's +7.705% can only improve) **and is not conservative for
+a comparison across horizons**, so every horizon ranking published here is tilted toward long holds
+by an amount nobody has measured. `TODO.md` §5 carries it.
+
+**What it does NOT establish.** Nothing about whether the strategy works. The corrected numbers are
+weaker, not stronger: no long-only cell's interval excludes zero at any horizon on either window,
+and the corrected 20-vs-126 cost gap is 1.45 points rather than 5.30. This section is about an
+input, and the study it corrects is now exploratory.
+
 ---
 
 **Do not write anything implying more confidence than the above.** `UX_COPY.md` §3 carries the

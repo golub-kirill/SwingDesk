@@ -4,7 +4,15 @@
 id:            PR-014
 date:          2026-09-06
 author:        Claude, at the owner's instruction 2026-09-06
-status:        reported   (2026-09-06 - results/PR-014-report.md, verdict ACCEPT at 126 sessions)
+status:        EXPLORATORY (2026-09-07). Reported 2026-09-06 as confirmatory; amendment A-3 was
+               made after the data was seen, and PREREG_TEMPLATE rule 3 downgrades a study that
+               amends after the run. It may generate the next pre-registration; it may not
+               advance a validation status
+verdict:       INCONCLUSIVE, corrected 2026-09-07. Published ACCEPT at 126 sessions the day
+               before, on a cost model that charged GROSS turnover. See A-3 and the report's
+               CORRECTION section: no horizon replicates on the holdout once the cost is
+               taken from measured net turnover
+result:        results/PR-014-report.md, PR-014.json, PR-014-cost-attribution.json
 ```
 
 ---
@@ -278,3 +286,59 @@ else in the repository has measured.
 
 Any amendment after the run is appended, dated, and downgrades this study to exploratory
 (`PREREG_TEMPLATE` rule 3).
+
+### A-3 · 2026-09-07 · AFTER THE RUN — §5's `turnover` clause charged for trades the book never makes
+
+**Data has been seen. `PREREG_TEMPLATE` rule 3 applies and this study is downgraded to
+EXPLORATORY.** It may generate the next pre-registration; it may not advance a validation status,
+and the `ACCEPT` it published on 2026-09-06 is withdrawn. That cost is stated first because it is
+the real one — the arithmetic below is cheap and the standing is not.
+
+**What §5 registered:**
+
+> `turnover: 1/K per 21 sessions BY CONSTRUCTION, which is what makes the cost fall with horizon
+> rather than staying flat`
+
+and `run_pr014.py` charged exactly that: `252 / horizon` full book turns a year, two sides for the
+long-only arm and four for the spread.
+
+**It is wrong, and it is wrong in one direction.** `1/K` of the book is **rotated** each rebalance —
+the oldest sub-portfolio closes and a new one opens. But a name the opening sub-portfolio selects
+that the closing one already held is **not traded**. It is held. The clause prices a rotation as a
+round trip, so it charges for every name in the exiting leg whether or not the entering leg wants it
+back. The registered figure is GROSS turnover; the cost of a book is NET.
+
+**What the book actually turns, measured between consecutive books rather than assumed:**
+
+| horizon | K | charged (`252/horizon`) | measured net per rebalance | long-only cost/yr charged | measured |
+|---|---|---|---|---|---|
+| 20 | 1 | 12.60 turns/yr | **39.0%** | 6.30% | **2.34%** |
+| 42 | 2 | 6.00 | 27.1% | 3.00% | 1.62% |
+| 63 | 3 | 4.00 | 21.8% | 2.00% | 1.31% |
+| 126 | 6 | 2.00 | 14.9% | 1.00% | 0.89% |
+| 189 | 9 | 1.33 | 10.3% | 0.67% | 0.62% |
+| 252 | 12 | 1.00 | 8.2% | 0.50% | 0.49% |
+
+**The error is 2.7× at the short end and nil at the long end.** That is the part that matters. A
+cost model wrong by a constant would have moved every cell together and changed no ordering; this
+one is a monotone function of the very variable the study was built to choose over. **It taxed short
+holding periods and let long ones through, and §6 selects the SHORTEST qualifying horizon.**
+
+**Why the shape is knowable in advance, and was not derived here.** Novy-Marx & Velikov (RFS 2016) —
+an authored import (`AGENTS.md` §10.3) — report that a strategy's survival after costs turns on
+*net* one-sided turnover, and that buy/hold overlap is the single strongest mitigation available to
+a rebalanced book. The registered clause discarded exactly that overlap. The measurement here is
+this repository's own; the reason to expect it is not.
+
+**What changes in the tool.** Cost is computed from the measured turnover between consecutive books
+(`book_weights` → `turnover` → `annual_cost_from`), and every row now carries
+`annual_cost_as_first_published` beside it so the size of the error stays visible in the evidence
+file rather than being quietly absorbed by a re-run. `PR-014.json` is regenerated; the published
+run is preserved as a side record and the flip is attributed in
+`tools/attribute_pr014_flip.py`.
+
+**What does NOT change.** §6 is untouched and still applied mechanically by `run_pr014.decide` — the
+verdict moved because its inputs were corrected, not because the rule was. The bootstrap, the block
+length, the seed, the split, the horizons and the arms are all as registered. No new configuration
+was evaluated: the same twelve cells were re-priced, and `tools/trial_budget.py` declares that as
+zero new trials with the rule printed beside it.

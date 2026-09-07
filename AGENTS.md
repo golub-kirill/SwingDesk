@@ -645,6 +645,34 @@ open question that follows: §10.5 gives every COUNT an owner and nothing does t
 - **Rollback is mostly supersede, not revert.** `CHANGE_MANAGEMENT.md` §3 says what can be undone
   and what can only be corrected forward.
 
+### A scheduled pass's default silently caps what every backtest can ever measure
+
+**Measured 2026-09-06.** `tools/widen_universe.cmd` called `refresh_universe.py` with no
+`--period`, so every symbol the weekly coverage pass had ever fetched got that tool's default of
+**2y**. Nothing was broken, nothing failed, and no gate could see it — the store filled up exactly
+as designed, two years at a time.
+
+| stored history | instruments | share |
+|---|---|---|
+| a decade (≥ 2000 bars) | 818 | **6.3%** |
+| about two years | 8,741 | 67.2% |
+| under 400 bars | 3,451 | 26.5% |
+
+**What it cost.** `PR-014` admitted 9,544 instruments on a 400-bar floor and could price about 818
+of them in 2018, so its primary window was a small cross-section and its holdout a large one: a
+split registered as a TIME split behaving as a POPULATION split. `measure_benchmark_fit.py` was
+minutes from publishing a two-year comparison as a decade — three of its six candidate indices held
+503 bars, and the run reported 23 periods until they were backfilled, then 103.
+
+**And the default bought nothing.** Timed at 20 symbols in 8 seconds on `--period 10y` — 0.40s
+each, against the 0.45s `widen_universe.cmd`'s own budget comment measured at 2y. **The vendor
+charges per REQUEST, not per bar.** There was never a saving to weigh against the history.
+
+**The habit.** A fetch, a pass or a job that takes a RANGE takes it by default too, and a default
+chosen for one caller becomes the sample every later study runs on. Before trusting a backtest's
+early years, ask how the bars got there — not whether the store has them, but what asked for them.
+`select count(*) from bars group by instrument_id` answers it in one query and nobody had run it.
+
 ## 13. How to talk to the owner — owner instruction, 2026-08-17
 
 **Scope: chat replies only.** It governs what an agent *says to the owner in conversation* and

@@ -6,9 +6,14 @@ information**. Four things carry that and none raises an error when wrong:
 * **the block bootstrap** — overlapping sub-portfolios share holdings, so an i.i.d. resample reports
   an interval several times too narrow. That is the flattering direction, so a test that only
   checked "an interval comes back" would pass through the bug the method exists to prevent.
-* **the cost** — `1/K` of the book turns per rebalance and there are `252/21` rebalances a year, so
-  the horizon cancels into `252/horizon` full turns. Overlapping SPREADS turnover out; it does not
-  reduce it, and a tool reporting otherwise sells the construction as a free lunch.
+* **the cost** — and this is where the study was WRONG when it published. It charged `252/horizon`
+  FULL book turns a year, which is GROSS turnover: what a book would trade if every rebalance sold
+  everything. A real book nets — a name still in the decile is held, not sold and re-bought — and
+  the measured net turnover is 39.0% of the book per rebalance at horizon 20 against the 12.6 full
+  turns charged. The overcharge was 2.7x at short horizons and nil at long ones, so it tilted the
+  study's own conclusion toward long holding periods. The cost now comes from MEASURED turnover
+  between consecutive books and the fixtures below pin that, because the analytic form looked
+  right and was not.
 * **the ranking** — `PR-014` A-2: the study must score the way the card scores. The selection is
   taken from the LIVE `ByMarketPathStrength`, and both legs come from ONE ordering.
 * **a missing price** — a name whose bar cannot be read on either end contributes nothing, rather
@@ -61,29 +66,82 @@ def series(name: str, closes: list[str]) -> BarSeries:
     )
 
 
-# --- what a year of turnover costs ---------------------------------------------------------------
+# --- what a year of turnover costs, and the netting the first version got wrong ------------------
 
-def test_the_horizon_cancels_into_full_turns_a_year(pr014):
-    """252/horizon full turns, whatever K is. A 20-session hold turns 12.6 times, a 252 once."""
-    assert pr014.annual_cost(252, "long_only", Decimal(25)) == Decimal("0.005")
-    assert pr014.annual_cost(126, "long_only", Decimal(25)) == Decimal("0.01")
-    assert pr014.annual_cost(20, "long_only", Decimal(25)) == Decimal("0.063")
+def test_a_name_that_stays_in_the_book_is_not_rebought(pr014):
+    """**The correction.** The first version charged a full turn every rebalance at K=1.
+
+    Two consecutive selections sharing three of four names buy one name, not four. Charging four
+    is charging GROSS turnover where a book pays NET, and it is why the 20-session cell was first
+    published at 6.30% a year against a measured 1.75%.
+    """
+    from datetime import date as d
+    before = pr014.book_weights([d(2024, 1, 1)], {d(2024, 1, 1): ["A", "B", "C", "D"]})
+    after = pr014.book_weights([d(2024, 2, 1)], {d(2024, 2, 1): ["A", "B", "C", "E"]})
+    assert pr014.turnover(before, after) == Decimal("0.25")
+
+
+def test_an_unchanged_book_turns_over_nothing(pr014):
+    from datetime import date as d
+    book = pr014.book_weights([d(2024, 1, 1)], {d(2024, 1, 1): ["A", "B"]})
+    assert pr014.turnover(book, book) == Decimal(0)
+
+
+def test_a_completely_replaced_book_turns_over_once(pr014):
+    from datetime import date as d
+    before = pr014.book_weights([d(2024, 1, 1)], {d(2024, 1, 1): ["A", "B"]})
+    after = pr014.book_weights([d(2024, 2, 1)], {d(2024, 2, 1): ["C", "D"]})
+    assert pr014.turnover(before, after) == Decimal(1)
+
+
+def test_the_book_sums_to_one_whatever_the_legs_hold(pr014):
+    """Each sub-portfolio contributes 1/K in total, however many names it picked.
+
+    Weighting a name by 1/K alone makes a leg of four names four times the size of a leg of one,
+    and the turnover that implies is four times too large. Caught here, not by the run.
+    """
+    from datetime import date as d
+    legs = [d(2024, m, 1) for m in (1, 2, 3, 4)]
+    picks = {legs[0]: ["A", "B"], legs[1]: ["A", "B"], legs[2]: ["C"], legs[3]: ["D"]}
+    weights = pr014.book_weights(legs, picks)
+    assert sum(weights.values()) == Decimal(1)
+    assert weights["A"] == Decimal("0.25"), "half of two legs, each of two names"
+    assert weights["C"] == Decimal("0.25"), "all of one leg"
+
+
+def test_an_empty_leg_does_not_break_the_weighting(pr014):
+    from datetime import date as d
+    legs = [d(2024, 1, 1), d(2024, 2, 1)]
+    weights = pr014.book_weights(legs, {legs[0]: ["A"], legs[1]: []})
+    assert weights == {"A": Decimal("0.5")}
+
+
+def test_only_weight_INCREASES_are_bought(pr014):
+    """A name being trimmed is sold, and its sale was paid for by the round trip at entry."""
+    before = {"A": Decimal("0.5"), "B": Decimal("0.5")}
+    after = {"A": Decimal("0.75"), "B": Decimal("0.25")}
+    assert pr014.turnover(before, after) == Decimal("0.25")
 
 
 def test_a_spread_pays_four_sides_and_a_long_only_book_two(pr014):
-    assert pr014.annual_cost(126, "long_short", Decimal(25)) == \
-        2 * pr014.annual_cost(126, "long_only", Decimal(25))
+    turns = [Decimal("0.25")] * 4
+    assert pr014.annual_cost_from(turns, "long_short", Decimal(25)) == \
+        2 * pr014.annual_cost_from(turns, "long_only", Decimal(25))
 
 
-def test_overlapping_does_not_reduce_turnover(pr014):
-    """The free-lunch check. Cost depends on the HORIZON alone, never on how it is sliced.
+def test_the_cost_is_read_from_measured_turnover_not_from_the_horizon(pr014):
+    """Two books with the same horizon and different turnover must not cost the same.
 
-    If this ever fails, the tool is claiming that holding the same names for the same time became
-    cheaper by bookkeeping.
+    This is the property the first version could not express: its cost was a function of the
+    horizon alone, so a book that held its names and one that churned them were charged identically.
     """
-    longer = pr014.annual_cost(252, "long_only", Decimal(25))
-    shorter = pr014.annual_cost(21, "long_only", Decimal(25))
-    assert shorter == longer * 12
+    churning = pr014.annual_cost_from([Decimal(1)] * 10, "long_only", Decimal(25))
+    holding = pr014.annual_cost_from([Decimal("0.1")] * 10, "long_only", Decimal(25))
+    assert churning == holding * 10
+
+
+def test_no_rebalances_costs_nothing_rather_than_dividing(pr014):
+    assert pr014.annual_cost_from([], "long_only", Decimal(25)) == Decimal(0)
 
 
 # --- the interval must survive autocorrelation -----------------------------------------------------
