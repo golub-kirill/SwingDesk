@@ -408,6 +408,10 @@ def test_a_position_with_nothing_resting_is_restored() -> None:
     keep, leave = restorable([_finding("AIS", None)])
     assert [f.instrument_id for f in keep] == ["AIS"]
     assert leave == ()
+    # `DR-041`'s adoption in `sync-fills` reads only `leave` and dereferences `venue_stop` without
+    # a guard that could ever fire. THIS is the assertion that makes that safe: a finding with
+    # nothing resting must never appear there, or the adoption would try to write a stop of `None`
+    # over a real one.
 
 
 def test_a_stop_resting_at_the_wrong_price_is_left_alone() -> None:

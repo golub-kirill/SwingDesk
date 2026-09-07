@@ -59,6 +59,9 @@ The specific claim. Names the component and version it concerns.
 ## 3. Prediction
 What the result looks like if the hypothesis is TRUE, stated numerically before the run.
 And what it looks like if FALSE. If both look the same, stop here - the study cannot inform.
+  minimum detectable effect: the smallest effect this study could resolve, and where the number
+                             came from. REQUIRED - gate 44. A null from an instrument that could
+                             not have seen the effect is not evidence of absence.
 
 ## 4. Data
   universe:      the rule, not a ticker list
@@ -123,6 +126,16 @@ and downgrades the result to exploratory.
 8. **A decision rule needs a branch for "both the arm and the control are negative".** §8 has the
    case. Comparing two losers on which loses less is not a finding, and a rule without that branch
    files it as `inconclusive`.
+9. **A study says the smallest effect it could DETECT, before it spends a trial.** Owner
+   instruction, 2026-09-07, and gate 44 enforces it. `PR-012` refused a verdict for want of sample
+   after spending its trials; `PR-013`'s six gross intervals all include zero; `PR-014` could not
+   have resolved a 3%-a-year edge and reported `inconclusive`, which a reader cannot tell apart
+   from *"there is nothing there"*. **A null from an instrument too blunt to see the effect is not
+   evidence of absence and it is not free** - `b.deflated_sharpe` counts every configuration
+   evaluated, so the study raises the hurdle for every study after it and can never repay it. Where
+   the number comes from is part of the statement: a prior study's interval half-width, a variance
+   estimate, or a simulation - but not a guess, and §6's thresholds may not be the answer, because
+   a threshold is what you will accept and this is what you could see.
 
 ## 4. Section 0 deserves its own explanation
 

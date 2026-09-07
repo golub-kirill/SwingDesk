@@ -1166,6 +1166,9 @@ def _sync_fills(args: argparse.Namespace) -> int:
         # the bitemporal split `open-position` keeps by hand and this keeps by machine - and, since
         # `DR-038`, for the sells that ended a position.
         fills = client.fills(now, after=since)
+        # `DR-041`: what is RESTING, so a trigger the venue holds at a price the book does not
+        # record can be written down before the scan measures its caps against the wrong number.
+        live_orders = client.open_orders(now)
     except broker_pkg.BrokerUnavailable as unavailable:
         print(f"sync UNAVAILABLE  {unavailable}", file=sys.stderr)
         return 2
@@ -1182,6 +1185,7 @@ def _sync_fills(args: argparse.Namespace) -> int:
 
     recorded = 0
     closed = 0
+    adopted = 0
     untraceable: list[str] = []
     refusals: list[str] = []
 
@@ -1258,6 +1262,7 @@ def _sync_fills(args: argparse.Namespace) -> int:
         # the same standard `DR-031` applies to shares arriving. Anything else stays `TECH` and a
         # person's.
         at_venue = {holding.symbol for holding in held}
+        just_closed: set[str] = set()
         for position in store.open_as_of(now):
             if position.instrument_id in at_venue:
                 continue
@@ -1289,10 +1294,69 @@ def _sync_fills(args: argparse.Namespace) -> int:
                 refusals.append(f"{position.instrument_id}: could not be closed: {unwritable}")
                 continue
             closed += 1
+            just_closed.add(position.position_id)
             print(f"  CLOSED    {position.instrument_id:<10} {exit_.shares} sh "
                   f"at {exit_.price} on {exit_.closed_on}")
 
-    if not recorded and not closed and not untraceable and not refusals:
+        # --------------------------------------------------------------- DR-041: the moved stop
+        #
+        # `DR-036` argued that a stop the market cannot see is not a stop. This is its converse, and
+        # `reconcile.unprotected` already writes the reason for it: *"Every R this position reports
+        # is denominated in the book's number, and the loss would be taken at the venue's."*
+        #
+        # **Why it stalls everything.** `restorable` places for a position holding NOTHING and
+        # deliberately leaves a trigger at the WRONG price alone - a second stop on one position
+        # would apply a move nobody approved. So `_submit` restores what it can, re-reads, still
+        # finds the position unprotected, and stops. Every evening. For ever. That is the shape
+        # `DR-035` names two guards earlier, and it was the last one with no automatic path.
+        #
+        # **Bookkeeping, not a management action.** Nothing is sent and nothing is moved: the
+        # trigger is already resting at that price. Refusing to write it down does not undo the
+        # move - it keeps the book wrong AND the system stopped. The caps then bind on the number
+        # that will actually be taken, in whichever direction that cuts.
+        still_open = [p for p in store.open_as_of(now) if p.position_id not in just_closed]
+        by_id = {p.instrument_id: p for p in still_open}
+        _, moved = broker_pkg.restorable(
+            broker_pkg.unprotected(still_open, live_orders, policy.market)
+        )
+        for finding in moved:
+            # NOT `position`: that name is already bound in this function to a `Position | Refusal`
+            # from the adoption loop above, and reusing it made mypy the only thing that noticed.
+            open_position = by_id.get(finding.instrument_id)
+            # BOTH branches are UNREACHABLE, and saying so is more honest than calling them guards.
+            # `restorable` puts every finding with no resting stop in the OTHER half - asserted in
+            # `test_a_position_with_nothing_resting_is_restored` - and `by_id` is built from the
+            # same list `unprotected` just read. They stay for the narrowing mypy needs on
+            # `venue_stop: Decimal | None`; a mutant that deletes them survives, which is what
+            # unreachable means.
+            if open_position is None or finding.venue_stop is None:  # pragma: no cover
+                continue
+            taken = adoption.moved_stop(open_position, finding.venue_stop)
+            if isinstance(taken, Refusal):
+                refusals.append(str(taken))
+                continue
+            if args.dry_run:
+                print(f"  WOULD ADOPT   {taken.instrument_id:<10} stop {taken.book_stop} -> "
+                      f"{taken.venue_stop}")
+                adopted += 1
+                continue
+            reason = (
+                f"adopted from the venue: a stop is resting at {taken.venue_stop} where the book "
+                f"recorded {taken.book_stop}, which is TIGHTER. The loss would be taken at the "
+                f"venue's number, so that is the number the caps are measured against (DR-041). "
+                f"A stop BELOW the book's is refused instead - that is an unapproved widening."
+            )
+            try:
+                _record_venue_stop(store, open_position, taken, reason, now)
+            except Exception as unwritable:  # noqa: BLE001 - loud, and the rest still record
+                refusals.append(f"{taken.instrument_id}: the venue's stop could not be "
+                                f"adopted: {unwritable}")
+                continue
+            adopted += 1
+            print(f"  ADOPTED   {taken.instrument_id:<10} stop {taken.book_stop} -> "
+                  f"{taken.venue_stop}  (tighter)")
+
+    if not recorded and not closed and not adopted and not untraceable and not refusals:
         print("  nothing to record - the book already describes every holding")
 
     for reason in refusals:
@@ -1308,6 +1372,46 @@ def _sync_fills(args: argparse.Namespace) -> int:
     if refusals:
         return 2
     return 0
+
+
+def _record_venue_stop(
+    store: PositionStore, position: Position, taken: adoption.AdoptedStop,
+    reason: str, now: datetime,
+) -> None:
+    """Write the trigger the venue is holding, through the one chain that defines a stop move.
+
+    Not a second definition of `current_stop`: the `MOVE_STOP` is proposed, answered and applied
+    exactly as `respond` does it, so there stays one place that knows what moving a stop does to
+    the book. `manage.apply_approved` writes a new `Position` VERSION rather than overwriting a
+    field, which is what makes the adoption auditable - the old number is still in the history.
+
+    The approval is recorded against `DR-041` rather than a person, and the reason says so, with
+    the direction spelled out. That is the ratified boundary `DR-031` and `DR-038` already draw:
+    the move already happened at the venue, and writing it down is bookkeeping. Nothing is sent.
+    """
+    from swingdesk.contracts.position import ActionKind
+
+    before = set(store.action_kinds_for(position.position_id))
+    store.propose(ManagementAction(
+        position_id=position.position_id, proposed_at=now, kind=ActionKind.MOVE_STOP,
+        reason_code="TECH", reason=reason,
+        old_stop=taken.book_stop, new_stop=taken.venue_stop,
+    ))
+    appeared = set(store.action_kinds_for(position.position_id)) - before
+    if len(appeared) != 1:
+        raise ValueError(
+            f"{position.position_id} already carries an unanswered MOVE_STOP; answer it with "
+            f"`swingdesk respond` rather than adopting around it"
+        )
+    sequence = appeared.pop()
+    store.respond(position.position_id, sequence, choice=ActionStatus.APPROVED,
+                  reason=reason, at=now)
+    proposal = store.proposal_at(position.position_id, sequence)
+    if proposal is None:  # pragma: no cover - written by the `propose` call directly above
+        raise ValueError(f"{position.position_id} #{sequence} vanished between writing and reading")
+    store.record(manage.apply_approved(
+        position, proposal.model_copy(update={"status": ActionStatus.APPROVED}), now,
+    ))
 
 
 def _record_venue_close(

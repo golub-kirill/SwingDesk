@@ -191,6 +191,9 @@ def main() -> int:
         "43 open work only": _run("a CLOSED item in TODO.md, which AGENTS.md 10.7 gives one job - "
                                   "every open item, and only open items",
                                   [python, "tools/verify_open_work.py"]),
+        "44 minimum effect": _run("a pre-registration that never says the smallest effect it "
+                                  "could detect",
+                                  [python, "tools/verify_minimum_effect.py"]),
     }
 
     print("\n" + "=" * 62)

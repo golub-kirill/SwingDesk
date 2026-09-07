@@ -215,3 +215,82 @@ def closing_exit(
         order_ids=tuple(sorted({fill.order_id for fill in relevant})),
         activity_ids=tuple(sorted(fill.activity_id for fill in relevant)),
     )
+
+
+@dataclass(frozen=True, slots=True)
+class AdoptedStop:
+    """A stop the venue is holding at a price the book does not record. `DR-041`."""
+
+    instrument_id: str
+    book_stop: Decimal
+    venue_stop: Decimal
+
+    @property
+    def tightens_risk(self) -> bool:
+        """Always true, and asserted rather than assumed.
+
+        `moved_stop` only ever builds this for a venue stop ABOVE the book's, because a stop below
+        it is a widening and `ManagementAction` refuses to record one as approved. The property
+        exists so a caller that ever constructs an `AdoptedStop` by hand fails a test rather than
+        writing a risk increase into the book.
+        """
+        return self.venue_stop > self.book_stop
+
+
+def moved_stop(position: Position, venue_stop: Decimal) -> AdoptedStop | Refusal:
+    """The venue's trigger, ready to be written into the book. `DR-041`.
+
+    **`DR-036` argued that a stop the market cannot see is not a stop. This is its converse.**
+    `reconcile.unprotected` already says why, in the reason it emits for this exact case: *"Every R
+    this position reports is denominated in the book's number, and the loss would be taken at the
+    venue's."* The number that will actually be taken is the one the caps should be measured
+    against, and a book recording the other one bounds nothing - which is the defect `DR-036` found,
+    arrived at from the other side.
+
+    **Why it stalls the whole system and not just one position.** `restorable` places for a position
+    holding NOTHING and deliberately leaves this case alone, because putting a second trigger on a
+    position would apply a move nobody approved. So the run re-checks, still finds the position
+    unprotected, and stops - every evening, for ever, until a person acts. That is the same shape as
+    the defect `DR-035` names two guards earlier: *"a stopped-out position stays open in the book
+    for ever ... and after four stop-outs the machine submits nothing again, silently."*
+
+    **This is bookkeeping, not a management action.** It sends nothing and it moves nothing: the
+    trigger is already resting at the venue at this price, and refusing to write it down does not
+    undo it - it only keeps the book wrong AND the system stopped. `DR-031` makes the same argument
+    for an opening and `DR-038` for a closing.
+
+    Pure: no store, no clock, no network.
+    """
+    if venue_stop <= 0:
+        return Refusal(
+            "TECH",
+            f"{position.instrument_id}: the venue reports a stop at {venue_stop}, which is not a "
+            f"price. Nothing is adopted and the guard goes on stopping.",
+        )
+    if venue_stop == position.current_stop:
+        return Refusal(
+            "TECH",
+            f"{position.instrument_id}: the venue's stop already matches the book at "
+            f"{venue_stop}, so there is nothing to adopt. Reaching here means `unprotected` and "
+            f"this disagree about what a matching stop is.",
+        )
+    if venue_stop < position.current_stop:
+        # A WIDER stop is NOT adopted, and `ManagementAction` is where that rule already lives:
+        # it refuses a proposed stop below the current one outright, code `WIDE_STOP`. The first
+        # draft of this function tried to adopt both directions and the contract rejected it -
+        # correctly, and the rejection is the argument.
+        #
+        # A trigger further from entry than the book records means somebody widened the loss this
+        # position can take, beyond what was approved when it was sized. Writing that down as an
+        # APPROVED move would launder an unapproved risk increase into the book and into every R
+        # the position reports. It is the same class as a holding that traces to no order of ours:
+        # the venue's word is the fact, and what to do about it is a person's.
+        return Refusal(
+            "WIDE_STOP",
+            f"{position.instrument_id}: the venue is holding a stop at {venue_stop}, BELOW the "
+            f"book's {position.current_stop}. That is more risk than was approved when the "
+            f"position was sized, and adopting it would record an unapproved widening as "
+            f"approved. New entries stay paused: move the stop back at the venue, or answer it "
+            f"with `swingdesk respond`.",
+        )
+    return AdoptedStop(position.instrument_id, position.current_stop, venue_stop)

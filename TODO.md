@@ -1519,6 +1519,34 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 5. Studies
 
+- [ ] **`[v]` WHETHER `risk.max_concurrent_positions` MOVES — `PR-015`, 2026-09-07, and this is
+      the owner's number, not mine.**
+      **The measurement is done.** The four-position book's 5-session excess has a standard
+      deviation **2.70×** the decile's over twenty cells, and its bootstrap intervals run **1.4× to
+      3.9× wider**. Cross-sectional ranking is a claim about a decile relative to its pool, and four
+      positions express it badly. (An earlier version of this item quoted 96.63 against 7.50 — a
+      range of four draws read as a dispersion, corrected 2026-09-07.)
+      **What changing it costs.** `risk.max_concurrent_positions` is `status: owner`. Moving it
+      changes position sizing and interacts with `risk.max_open_risk` (4 R, also `owner`) — they
+      are *"the same constraint counted two ways"* (`DR-006` §1) — and it creates a new `CARD-001`
+      version that resets any validation claim (`STRATEGY_CARD_SPEC` 5 rule 2).
+      **What NOT changing it costs.** Every cross-sectional study this project runs will keep
+      producing intervals too wide to read. `PR-012` refused a verdict on a four-position book;
+      `PR-015` selected an arm on one and the interval that decided it was 31.9 points wide.
+      **CORRECTED THE SAME DAY, and the correction cuts against my own recommendation.** Given an
+      interval of its own the decile does not separate from zero either: `MOM_252_21` reads
+      **+9.75% [−5.46%, +24.76%]** gross at ~130 names, before any cost, and contains zero on both
+      holdouts. **So raising the cap would sharpen the instrument by two to four times and change
+      no verdict here.** The report's VALIDATION section has the table.
+      **My recommendation is therefore NOT to move it yet.** It is a real constraint on measurement
+      and it is not the reason nothing works. Moving a ratified `owner` parameter that resets a
+      card's validation, to sharpen an instrument pointed at a null, buys a sharper null.
+      **The question worth deciding first** is whether the strategy is cross-sectional at all. If it
+      is, the book must eventually be big enough to hold a cross-section. If it stays at four, the
+      strategy should be one where you know WHICH name — a breakout or a trend entry, not a decile
+      rank. Those are different projects and this repository is running the first with the risk
+      profile of the second.
+
 - [ ] **`[v]` THE SAME GROSS-TURNOVER ERROR IS IN TWO MORE TOOLS, AND EVERY HORIZON COMPARISON IN
       THIS REPOSITORY INHERITS IT — found 2026-09-07 while correcting `PR-014`.**
       ```bash

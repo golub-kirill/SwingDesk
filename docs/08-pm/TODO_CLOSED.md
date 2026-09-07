@@ -2693,3 +2693,21 @@ closes, which is exactly what the council's suspend-research call asked for — 
 can carry shadow/paper positions, so the chain can prove itself closes end-to-end without waiting on
 the owner's real capital — resolves the "necessary but not sufficient" ceiling multiple advisors
 named (closing the loop still depends on the owner actually trading, which is outside code).
+
+## The decile's series was not stored, so PR-015's one promising number had no interval — closed 2026-09-07
+
+**Opened and closed the same day.** Found while writing `PR-015`'s report: `run_pr015.py` stored the
+four-position book's per-period series and only the MEAN of the eligible decile's, so
+`MOM_252_21`'s decile — +5.83% to +10.21% gross on four cells, the steadiest positive number this
+repository had produced — could not be bootstrapped without a re-run.
+
+**Fixed and answered.** The re-run (needed anyway, because gate 25 caught a missing `split.buys`)
+stores the series. The interval was computed with the same bootstrap, block and seed:
+**+9.75% [−5.46%, +24.76%]** on the primary window, containing zero, and containing zero on both
+holdouts.
+
+**The lesson is promoted, which is why this entry may move.** It is in
+`docs/prereg/results/PR-015-report.md` §VALIDATION and `EVIDENCE_SUMMARY` §16: at thirty times the
+book size, gross, before any cost, no positive arm separates from zero — so the four-position cap
+is a real constraint on measurement and **not** what stands between this project and a working
+strategy. The report's original framing invited the opposite reading and was corrected.
