@@ -568,6 +568,55 @@ weaker, not stronger: no long-only cell's interval excludes zero at any horizon 
 and the corrected 20-vs-126 cost gap is 1.45 points rather than 5.30. This section is about an
 input, and the study it corrects is now exploratory.
 
+## 15. Nine of the ninety trials this programme has spent were never counted
+
+**Found 2026-09-07, by a table built the day before to make exactly this visible.**
+
+```bash
+PYTHONPATH=$PWD/src python tools/trial_budget.py
+```
+
+`b.deflated_sharpe` is ratified and reads *"the CUMULATIVE trial count across the whole
+programme"*. `trial_budget.py` supplies that count, and since 2026-09-06 it has printed
+**`UNDECLARED`** beside any committed measurement carrying no counting rule — never zero, because
+*"not counted"* and *"counted as zero"* are the same number and different claims.
+
+**It printed `UNDECLARED` fourteen times, every run, and the total was reported as 81 anyway.** A
+gap disclosed honestly is still a gap: the criterion reads the total, not the disclosure. Reading
+the fourteen files is the only thing that closes it, and nobody had.
+
+**The rule used to classify them.** A trial is a configuration you would have KEPT had it come out
+well. A grid scored on a forward **return** is a search. A grid scored on how many names a floor
+admits, how often a guard refuses, or how two rankings correlate is a **population statistic**:
+there is no Sharpe in it to deflate and no cell of it could have become a bet.
+
+**Two were searches:**
+
+| measurement | trials | why |
+|---|---|---|
+| `pivots-2026-08-24` | **7** | seven left/right pivot-width pairs, each scored on forward confirmation drift in ATR. `pivot.left` and `pivot.right` are registry parameters — the best cell was one somebody would have kept |
+| `correlation-cap-calibration-2026-08-23` | **2** | the admitted and refused books, each evaluated on mean net R over `PR-005`'s trades |
+
+**Twelve were not**, and each now carries its reason rather than its silence: two spread and fee
+measurements, a turnover, a tracking error, a Spearman comparison between two rankings, an ADTV
+floor sweep scored on coverage, a sector-cap sweep scored on how often the guard refuses, a
+classification dump, an ADTV sample, a revisions census and a file-size census.
+
+**The total moves 81 → 90 and the hurdle 2.46 → 2.49 sd(SR)**, both in the conservative direction —
+which is the direction an uncounted trial always hides, because the flattering error is to under-
+report the search.
+
+**What changed so it cannot recur.** Two tests now fail if any committed measurement or any
+`results/` side record carries no counting rule. The test that was already watching this mechanism
+did not catch it: it asserted that an undeclared measurement *existed* — *"add one or drop this
+test"* — and was fed, for the whole day the counter had existed, by the very gap it was meant to
+make intolerable. **A test whose fixture is the bug cannot fail on the bug.** It now builds
+its own undeclared measurement in a temporary directory, so the tool's behaviour is the subject and
+the repository's state is not the fixture.
+
+**What it does NOT establish.** Nothing about whether anything works. A higher hurdle is a higher
+bar for a result this programme has not produced; `parameters:validated` is still **0**.
+
 ---
 
 **Do not write anything implying more confidence than the above.** `UX_COPY.md` §3 carries the

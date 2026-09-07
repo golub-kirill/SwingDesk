@@ -136,7 +136,7 @@ def main() -> int:
           f"formation dates to rank {len(wanted)}   lookback {LOOKBACK} (ratified, path form)")
 
     admitted = {n: _admitted_dates(s, RULE, wanted) for n, s in series_by_name.items()}
-    picks: dict[date, list[str]] = {}
+    picks: dict[date, tuple[list[str], list[str]]] = {}
     for session in wanted:
         candidates = [
             Candidate(name, positions[session])
@@ -148,51 +148,73 @@ def main() -> int:
         ranker = ByMarketPathStrength(
             series=series_by_name, benchmark=benchmark, lookback=LOOKBACK
         )
-        top, _ = select(ranker, candidates, DECILE)
-        if top:
-            picks[session] = top
+        top, bottom = select(ranker, candidates, DECILE)
+        if top and bottom:
+            picks[session] = (top, bottom)
     print(f"  dates with a full cross-section: {len(picks)}\n")
 
     rows: list[dict[str, object]] = []
     for horizon in HORIZONS:
         grid = [d for d in grids[horizon] if d in picks]
-        turns: list[Decimal] = []
-        kept: list[Decimal] = []
+        turns: dict[str, list[Decimal]] = {"top": [], "bottom": []}
+        kept: dict[str, list[Decimal]] = {"top": [], "bottom": []}
         sizes: list[int] = []
         for i in range(1, len(grid)):
-            before, after = picks[grid[i - 1]], picks[grid[i]]
-            turns.append(one_sided(before, after))
-            survivors = len(set(before) & set(after))
-            kept.append(Decimal(survivors) / Decimal(len(before)))
-            sizes.append(len(after))
-        if not turns:
+            for end, position in (("top", 0), ("bottom", 1)):
+                before = picks[grid[i - 1]][position]
+                after = picks[grid[i]][position]
+                turns[end].append(one_sided(before, after))
+                kept[end].append(Decimal(len(set(before) & set(after))) / Decimal(len(before)))
+            sizes.append(len(picks[grid[i]][0]))
+        if not turns["top"]:
             continue
-        mean = sum(turns, Decimal(0)) / len(turns)
+        mean = {e: sum(v, Decimal(0)) / len(v) for e, v in turns.items()}
         row: dict[str, object] = {
             "horizon": horizon,
-            "rebalances": len(turns),
-            "sample_rule_met": len(turns) >= MIN_REBALANCES,
+            "rebalances": len(turns["top"]),
+            "sample_rule_met": len(turns["top"]) >= MIN_REBALANCES,
             "mean_book_size": round(sum(sizes) / len(sizes), 1),
-            "one_sided_turnover": float(round(mean, 4)),
-            "names_retained": float(round(sum(kept, Decimal(0)) / len(kept), 4)),
+            "one_sided_turnover": float(round(mean["top"], 4)),
+            "one_sided_turnover_bottom": float(round(mean["bottom"], 4)),
+            "names_retained": float(round(sum(kept["top"], Decimal(0)) / len(kept["top"]), 4)),
+            "names_retained_bottom": float(round(
+                sum(kept["bottom"], Decimal(0)) / len(kept["bottom"]), 4)),
         }
+        # A long-only book pays two sides on the top decile alone. A SPREAD pays two sides on each
+        # end, and the two ends are measured separately rather than assumed equal - which is what
+        # the first version of this tool did, and it is the same class of assumption the whole
+        # correction is about.
+        row["annual_cost_long_only"] = float(round(
+            annual_cost(mean["top"], horizon, "long_only", SLIPPAGE_BPS), 6))
+        row["annual_cost_long_short"] = float(round(
+            annual_cost(mean["top"], horizon, "long_only", SLIPPAGE_BPS)
+            + annual_cost(mean["bottom"], horizon, "long_only", SLIPPAGE_BPS), 6))
         for arm in SIDES:
-            row[f"annual_cost_{arm}"] = float(round(annual_cost(mean, horizon, arm, SLIPPAGE_BPS), 6))
             row[f"annual_cost_{arm}_as_charged"] = float(round(
                 annual_cost(Decimal(1), horizon, arm, SLIPPAGE_BPS), 6))
-        row["overcharge"] = float(round(1 / mean, 2)) if mean > 0 else None
+        row["overcharge"] = float(round(1 / mean["top"], 2)) if mean["top"] > 0 else None
+        row["overcharge_long_short"] = (
+            float(round(Decimal(str(row["annual_cost_long_short_as_charged"]))
+                        / Decimal(str(row["annual_cost_long_short"])), 2))
+            if row["annual_cost_long_short"] else None)
         rows.append(row)
 
     print("ONE-SIDED TURNOVER of the ratified top decile, non-overlapping formations")
-    print(f"  {'horizon':>8}{'rebals':>8}{'names':>7}{'bought/reb':>12}{'retained':>10}"
-          f"{'long-only cost/yr':>19}{'as charged':>12}{'overcharge':>12}")
+    print(f"  {'horizon':>8}{'rebals':>7}{'names':>7}{'TOP bought':>12}{'kept':>7}"
+          f"{'BTM bought':>12}{'kept':>7}{'long-only':>11}{'charged':>9}{'over':>7}"
+          f"{'spread':>9}{'charged':>9}{'over':>7}")
     for row in rows:
-        flag = "" if row["sample_rule_met"] else "  (thin)"
-        print(f"  {row['horizon']:>8}{row['rebalances']:>8}{row['mean_book_size']:>7.0f}"
-              f"{row['one_sided_turnover'] * 100:>11.1f}%{row['names_retained'] * 100:>9.1f}%"
-              f"{row['annual_cost_long_only'] * 100:>18.2f}%"
-              f"{row['annual_cost_long_only_as_charged'] * 100:>11.2f}%"
-              f"{row['overcharge']:>11.2f}x{flag}")
+        flag = "  (thin)" if not row["sample_rule_met"] else ""
+        print(f"  {row['horizon']:>8}{row['rebalances']:>7}{row['mean_book_size']:>7.0f}"
+              f"{row['one_sided_turnover'] * 100:>11.1f}%{row['names_retained'] * 100:>6.1f}%"
+              f"{row['one_sided_turnover_bottom'] * 100:>11.1f}%"
+              f"{row['names_retained_bottom'] * 100:>6.1f}%"
+              f"{row['annual_cost_long_only'] * 100:>10.2f}%"
+              f"{row['annual_cost_long_only_as_charged'] * 100:>8.2f}%"
+              f"{row['overcharge']:>6.2f}x"
+              f"{row['annual_cost_long_short'] * 100:>8.2f}%"
+              f"{row['annual_cost_long_short_as_charged'] * 100:>8.2f}%"
+              f"{row['overcharge_long_short']:>6.2f}x{flag}")
     print(f"\n  Cost at DR-005's {SLIPPAGE_BPS} bps a side, {SIDES['long_only']} sides for a "
           f"long-only book and {SIDES['long_short']} for a spread.")
     print("  'as charged' is what measure_short_leg.py and run_pr013.py charge today: the WHOLE "

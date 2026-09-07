@@ -217,6 +217,10 @@ one arm qualifies here, so that branch does not fire.
 is **69 to 81**, and the hurdle from 2.40 to **2.46 sd(SR)**. The pre-registration is not edited:
 §6a was a forecast, and this is where the measured figure belongs.
 
+**And 69 and 81 were themselves understated, found 2026-09-07.** Nine configurations sat in
+`docs/decisions/measurements/` with no counting rule, so the true move was **78 to 90**. The
+correction is recorded under "What this costs the programme" below.
+
 ## AMENDMENT, 2026-09-06, AFTER PUBLICATION: the split is not only a time split
 
 **Found while measuring `rs.benchmark`, and it belongs here rather than buried there.**
@@ -389,7 +393,14 @@ on gross turnover would repeat this error where it is largest.
 **Nothing.** No new configuration was evaluated — the same twelve cells were re-priced, and
 `tools/trial_budget.py` declares that as zero new trials with the rule printed beside it: *a shot at
 the data is a configuration you would have KEPT had it come out well, and a re-price could not have
-been kept.* The total stands at **81**, the hurdle at **2.46 sd(SR)**.
+been kept.* ~~The total stands at **81**, the hurdle at **2.46 sd(SR)**.~~
+
+**Corrected the same day: the total was 90 and the hurdle 2.49.** Not because this study spent
+anything — it did not — but because **fourteen committed measurements carried no counting rule at
+all**, and two of them were searches: `pivots-2026-08-24` swept seven pivot widths scored on
+forward drift, and `correlation-cap-calibration-2026-08-23` evaluated two books on net R. Both were
+reported as `UNDECLARED` by `trial_budget.py` and neither was in the total. The tool is the number's
+one owner (`AGENTS.md` §10.5); run it rather than reading a figure off this page.
 
 ## What the study now says
 

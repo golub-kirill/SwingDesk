@@ -144,6 +144,15 @@ EXPLORATORY = {
     "banding-2026-09-06": (
         4, "4 hold bands against one buy fraction; the narrowest IS the fixed control, so it is a "
            "configuration and not a separate baseline"),
+    # The two spends the 2026-09-07 audit found. See the note above NO_SPEND_MEASUREMENTS.
+    "pivots-2026-08-24": (
+        7, "7 left/right pivot-width pairs (`grid`), each scored on forward confirmation drift in "
+           "ATR and on breakout rate. `pivot.left` and `pivot.right` are registry parameters, so "
+           "the best cell was a cell somebody would have kept"),
+    "correlation-cap-calibration-2026-08-23": (
+        2, "the ADMITTED and REFUSED books, each evaluated on mean net R over PR-005's trades "
+           "(`cost`). The `premise` block compares event RATES rather than returns and is not a "
+           "third shot; the 0.70 threshold was fixed by DR before this ran rather than swept"),
     "short-leg-2026-09-06": (
         8, "4 arms x 2 horizons. The unrestricted spread and the long-only excess are REPRODUCTIONS "
            "of already-counted results rather than new shots - but they are re-evaluated here on a "
@@ -151,6 +160,25 @@ EXPLORATORY = {
            "flattering one would be to net them out"),
 }
 
+#: **Fourteen measurements sat here UNDECLARED until 2026-09-07 and the total was wrong by nine.**
+#:
+#: The `UNDECLARED` line below has printed since this table was built on 2026-09-06, and it printed
+#: for every measurement committed before that date - which was all of them. A gap that is reported
+#: honestly is still a gap, and reading fourteen files is the only thing that closes it.
+#:
+#: **The rule used to classify them, stated once here rather than fourteen times below:** a trial is
+#: a configuration you would have KEPT had it come out well. A grid scored on a forward RETURN is a
+#: search - somebody would have adopted the best cell. A grid scored on how many names a floor
+#: admits, how often a guard refuses, or how two rankings correlate is a POPULATION statistic: there
+#: is no Sharpe in it to deflate, and no cell of it could have become a bet.
+#:
+#: **Two of the fourteen were spends and twelve were not.** `pivots-2026-08-24` swept seven
+#: left/right widths and scored each on forward drift in ATR, and `pivot.left` / `pivot.right` are
+#: real parameters in `registry/parameters.yml` - somebody would have kept the best of the seven.
+#: `correlation-cap-calibration-2026-08-23` evaluated the admitted and refused books on NET R over
+#: `PR-005`'s trades, which is two configurations scored on a return. The total moves 81 -> 90 and
+#: the hurdle 2.46 -> 2.50, both in the conservative direction, which is the direction an
+#: undeclared gap always hides.
 #: Exploratory measurements that spend nothing, and why. Same distinction `NO_SPEND` draws for
 #: pre-registrations: a cost or execution input has no Sharpe to deflate.
 NO_SPEND_MEASUREMENTS = {
@@ -160,6 +188,36 @@ NO_SPEND_MEASUREMENTS = {
                                   "neither was chosen for its return",
     "gap-cost-2026-09-06": "the R cost of a stop-out - a cost input",
     "gap-population-2026-09-06": "a population comparison, no strategy return",
+    "decile-persistence-2026-09-07": "one-sided TURNOVER of the selected book - a cost input. It "
+                                     "compares no return and selects nothing; the seven horizons "
+                                     "are one book measured at seven spacings, not seven "
+                                     "strategies",
+    "benchmark-2026-08-24": "SPEARMAN CORRELATIONS between two rankings. It measures whether the "
+                            "path form and a raw return order names differently, never what "
+                            "either earns - there is no return in the file to deflate",
+    "benchmark-fit-2026-09-06": "TRACKING ERROR against the admitted universe. The record states "
+                                "its own selection criterion - `card excess is reported and is "
+                                "NOT an input` - so no cell was ever scored on a return",
+    "directory-file-sizes-2026-08-10": "HTTP HEAD content lengths on two vendor files. "
+                                       "Infrastructure, not a strategy",
+    "liquidity-floor-2026-08-23": "ten ADTV floors scored on how many names each ADMITS and what "
+                                  "coverage each costs. A population census: the floor was chosen "
+                                  "on the plateau in coverage, not on any return",
+    "liquidity-sample": "a 120-name ADTV sample used to size the floor. A measurement of the "
+                        "universe, not of a strategy",
+    "revisions-2026-08-23": "a data-quality census of restated bars. No book, no return",
+    "sector-cap-calibration-2026-08-23": "three caps scored on how often the GUARD REFUSES and on "
+                                         "R concentration in the heaviest sector. A guard is not a "
+                                         "bet: no cell of this could have been kept for what it "
+                                         "earned, because it earns nothing",
+    "sector-classifications-2026-08-23": "a per-name classification dump. Reference data",
+    "sector-relative-2026-08-24": "the record refuses the claim itself - `not_measured: whether "
+                                  "the sector signal PREDICTS anything. This measures that the "
+                                  "denominator changes the order, not that the order is better`",
+    "spread-sample": "two spread estimators on one sample - a cost input, and PR-008 and PR-010 "
+                     "are where its verdict lives",
+    "venue-fees-2026-09-05": "the venue's regulatory fee schedule, checked against one observed "
+                             "round trip. A cost input, and a deterministic one",
 }
 
 

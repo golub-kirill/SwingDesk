@@ -945,8 +945,10 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       store's own bitemporal history rather than re-fetched — so both changes were separated after
       the fact. See `docs/prereg/results/PR-014-report.md` §CORRECTION. **It spent no new trials**:
       the same twelve configurations, re-priced, declared as zero in `tools/trial_budget.py`.
-      **For everything else the case against re-running is the trial budget.** 81 spent, hurdle
-      **2.46 sd(SR)**. Re-running a study against changed data is its full trial count again, to
+      **For everything else the case against re-running is the trial budget.** 90 spent, hurdle
+      **2.49 sd(SR)** — the figure moved from 81 on 2026-09-07 when fourteen committed
+      measurements turned out to carry no counting rule and two of them were searches. Derive it
+      with `tools/trial_budget.py`; do not quote this line. Re-running a study against changed data is its full trial count again, to
       re-answer a question `CARD-002`'s own study will ask better, on a clean sample, with a
       holdout that has not been spent.
       **The exception is the COST INPUTS**: `measure_quoted_spread.py` and
@@ -1536,12 +1538,27 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       ACROSS horizons, because the overcharge is a monotone function of horizon. In `PR-014` it was
       2.7x at 20 sessions and nil at 252. **Every horizon ranking this repository has published is
       tilted toward long holds by an unmeasured amount.**
-      **And it blocks the next study, which is the reason this is here rather than in the backlog.**
-      The owner's standing goal is a 14-20 session long-only rule. A screen that prices those holds
-      with gross turnover would repeat this exact error at the horizon where it is largest. **The
-      measurement needed first is decile persistence**: what fraction of the selected names survive
-      to the next formation, at 14, 20 and 126 sessions. That is a cost input, spends no trials, and
-      is the input the screen needs before it runs.
+      **THE INPUT IS NOW MEASURED — `decile-persistence-2026-09-07`, 2026-09-07.** Both ends of the
+      ranking, separately, on the non-overlapping construction those two tools use:
+      | horizon | TOP bought/reb | kept | BTM bought/reb | long-only over | spread over |
+      |---|---|---|---|---|---|
+      | 14 | 31.7% | 69.4% | 33.7% | **3.16x** | **3.06x** |
+      | 20 | 37.2% | 63.6% | 39.3% | **2.69x** | **2.61x** |
+      | 42 | 53.2% | 48.7% | 54.2% | 1.88x | 1.86x |
+      | 63 | 63.7% | 38.2% | 64.0% | 1.57x | 1.57x |
+      | 126 | 84.1% | 17.7% | 83.0% | 1.19x | 1.20x |
+      **The two legs do NOT turn at the same rate** — the bottom decile churns about two points
+      more at every horizon — so a spread priced by doubling the long leg is an assumption, and
+      that is what the first version of this measurement made before it was corrected.
+      **What is left is the re-price itself**, and it is arithmetic rather than a new study: replace
+      the constant in `rebalance_cost` and `COST_SIDES_PER_FORMATION` with the measured turnover
+      between consecutive books, exactly as `run_pr014.py` now does. It spends **no trials** — the
+      same configurations, re-priced.
+      **It may move a published claim, which is why it is worth doing rather than noting.**
+      `EVIDENCE_SUMMARY` §11 reports the 20-session spread as *"nothing survives: gross +1.069%
+      against 1.00% of cost"* per formation. At the measured turnover that cost is **0.39% per
+      formation**, not 1.00%. Whether the interval then excludes zero is not knowable from here and
+      must be re-run, not inferred — the point estimate moving is not the finding.
 
 - [ ] **`[v]` THE DELISTED-HISTORY ROUTE IS OPEN, RULED FREE-TIER, AND USED BY NOTHING — owner
       rulings 2026-09-05.**
