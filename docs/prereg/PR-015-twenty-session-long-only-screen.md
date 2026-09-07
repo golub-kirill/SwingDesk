@@ -40,9 +40,10 @@ has never been run here.
 
 ## 1. Question
 
-Held for twenty sessions, long-only, does any of five selection signals earn an annualised net
-excess over `rs.benchmark` whose bootstrap interval excludes zero on the primary window **and**
-excludes zero on both holdouts without re-selection?
+Held for twenty sessions in a **four-position long-only book** — the ratified
+`risk.max_concurrent_positions` — does any of five selection signals earn an annualised net excess
+over `rs.benchmark` whose bootstrap interval excludes zero on the primary window **and** excludes
+zero on both holdouts without re-selection?
 
 It can come out "no": if no arm's primary interval excludes zero, the family is rejected at this
 horizon.
@@ -50,14 +51,19 @@ horizon.
 ## 2. Hypothesis
 
 **H1.** At least one of `REVERSAL_21`, `HIGH_52W`, `LOWVOL_126`, `MOM_252_21` and the ratified
-`PATH_126` produces a long-only top-decile book whose annualised net excess over `SPY` excludes zero
-on the primary window and on both holdouts.
+`PATH_126`, traded as a four-position book at a twenty-session hold, produces an annualised net
+excess over `SPY` that excludes zero on the primary window and on both holdouts.
 
-**H0.** None does — twenty-session long-only selection earns nothing separable from zero on this
-universe, whatever it ranks on.
+**H0.** None does — a four-position twenty-session long-only book earns nothing separable from zero
+on this universe, whatever it ranks on.
+
+Concerns the BOOK as well as the signal, and A-2 is why: `risk.max_concurrent_positions` binds long
+before the decile does, so a result here is about what this system can hold and not about a
+portfolio of a hundred and thirty names.
 
 Concerns `decision_logic.ranking` (the `PATH_126` arm calls the live `ByMarketPathStrength`; the
-other four have no component and are implemented in the study tool, declared in §5).
+other four have no component and are implemented in the study tool, declared in §5) and
+`trade_management.portfolio` (the cap).
 
 ## 3. Prediction, stated numerically before the run
 
@@ -69,10 +75,19 @@ band `PR-014` measured for the incumbent long-only book: **−1.5% to +2%** annu
 
 **THIS STUDY CANNOT RESOLVE A SMALL EDGE, AND THAT IS REGISTERED HERE RATHER THAN DISCOVERED
 AFTERWARDS.** `PR-014`'s long-only cells returned bootstrap intervals about **±8 percentage points**
-wide at this horizon and sample. A true edge of 3% a year — which would be a good long-only
-strategy — is invisible to this instrument. **So a null result refutes only a LARGE edge**, and the
-study's honest ceiling is: it can find a big effect, and it can rule one out. `PREREG_TEMPLATE` §3
-asks whether the true and false cases look different; they do, but only above roughly 8%.
+wide at this horizon on a book of ~260 names. **This book holds FOUR** (A-2), so its idiosyncratic
+variance is far higher and its interval will be wider by an amount nobody can state in advance.
+`PR-012` measured a four-position book and **refused a verdict for want of sample**.
+
+**So §8 registers a POWER FLOOR rather than a prediction dressed as one.** If the selected arm's
+primary interval is wider than **±25 percentage points**, the study reports the measurement and
+declines to read a null as evidence of absence — the instrument would not have detected an edge
+worth trading. That threshold is fixed now, before any number exists, and it is deliberately loose:
+its job is to catch the case where the answer is "this cannot be measured on four positions", which
+is a finding about the construction and not about the signal.
+
+**A null result therefore refutes only a LARGE edge.** `PREREG_TEMPLATE` §3 asks whether the true
+and false cases look different; on the capped book they do, but only well above 8%.
 
 ## 4. Data
 
@@ -107,9 +122,15 @@ survivorship:  ABSENT. The directory is today's, so a name that delisted is miss
 ```
 horizon:        20 sessions, fixed. The ratified exit.max_holding_period (assumed:DR-012), the
                 top of the owner's 14-20 band, and the value the system would actually trade
-rebalance:      every 20 sessions, NON-OVERLAPPING. The book is rebuilt at each formation and
-                held to the next
-book:           the top DECILE of the admitted cross-section, equal-weighted, long only
+book:           at most FOUR concurrent positions - `risk.max_concurrent_positions`, value 4,
+                status `owner` - equal-weighted, long only. See A-2: the decile is the
+                ELIGIBILITY screen and the ratified cap picks who is taken
+rebalance:      every 5 sessions = 20 / 4, OVERLAPPING. One slot frees each rebalance because the
+                position opened 20 sessions earlier reaches the cap and closes; it is refilled
+                with the highest-ranked eligible name NOT already held. Positions therefore
+                overlap four deep, each held its full 20 sessions, and a slot stays EMPTY when no
+                eligible name is available rather than being filled with something worse
+eligible:       the top DECILE of the admitted cross-section under that arm's signal
 arms:           five, one per signal. Every other choice is identical across them
 signals:        PATH_126     ByMarketPathStrength, lookback 126 - the RATIFIED rule, called
                              through the live class (PR-014 amendment A-2). The control arm
@@ -131,6 +152,20 @@ benchmark:      SPY (rs.benchmark, assumed:DR-018). Excess is the book's return 
 control:        the EQUAL-WEIGHTED admitted universe OF THE SAME HALF, so section 6's
                 both-negative branch compares the book to the pool it actually selected from
                 rather than to a different population. Not an arm and never selected
+diagnostic:     the whole eligible DECILE's return, equal-weighted, reported beside the capped
+                book and NEVER read by section 6. It is what separates "the signal is weak" from
+                "four positions is too few to express it", and that distinction is the first
+                thing a reader will ask for
+caps NOT applied, and why, because a cap left unmentioned reads as a cap enforced:
+                `risk.max_open_risk` (4 R) constrains RISK rather than count, and pricing it needs
+                a stop, a position size and an equity curve - none of which this study models.
+                `risk.max_sector_risk` (2 R) needs a point-in-time sector and
+                `data/classifications.duckdb` holds fourteen days of knowledge times; the module
+                refuses to answer a 2016 question with today's classification and it is right to.
+                `risk.correlation_threshold` (0.70) is computable from bars alone and is left out
+                on purpose: it is a risk guard whose bite `correlation-cap-calibration-2026-08-23`
+                already measured, and applying it here would confound a comparison BETWEEN signals
+                with a guard that fires at different rates for each
 statistic:      annualised net excess = mean per-rebalance excess x 252/20, minus the annual
                 cost computed from measured turnover
 ```
@@ -164,9 +199,11 @@ perturbations:  WALKFORWARD_SPEC 4, numbers 3 and 4 - cost stress at 1x and 3x D
                 EVERY arm and not only on the selected one
 inference:      moving-block bootstrap over the rebalance-date series, block 6 rebalances,
                 10,000 resamples, seed 20260907, percentile interval. Block 6 rather than 1
-                because consecutive books share names - measured 2026-09-07, 63.6% of the top
-                decile survives a 20-session rebalance - so an i.i.d. resample would report an
-                interval too narrow, which is the flattering direction
+                because the book overlaps FOUR deep BY CONSTRUCTION (A-2): consecutive 5-session
+                returns share three of their four positions, so the dependence spans four
+                rebalances and is a property of the design rather than an empirical guess. Six
+                covers it with a margin. An i.i.d. resample would report an interval several
+                times too narrow, which is the flattering direction
 ```
 
 ## 6. Decision rule
@@ -175,7 +212,13 @@ inference:      moving-block bootstrap over the rebalance-date series, block 6 r
 accept if:      the arm chosen by section 5a's selection rule has a net interval excluding zero
                 on the primary window at 1x costs, a point estimate still positive at 3x, AND
                 net intervals excluding zero on BOTH holdouts
-reject if:      no arm's primary-window net interval excludes zero at 1x costs
+reject if:      no arm's primary-window net interval excludes zero at 1x costs AND at least one
+                arm's primary interval is inside the §8 power floor. A grid where NOTHING was
+                measurable is not a refutation and must not be recorded as one
+underpowered:   if the arm §5a selects has a primary interval wider than the §8 power floor, or
+                if no arm qualifies and no arm's interval is inside the floor, the verdict is
+                `inconclusive` and the report says the instrument, not the signal, is what
+                failed. Fixed before any number exists
 both negative:  if the selected arm's net excess AND the equal-weighted universe control are
                 both below zero, the verdict is `inconclusive` regardless of which loses less.
                 Comparing two losers on which loses less is not a finding
@@ -222,14 +265,21 @@ minimum:        24 rebalances in each window, the same minimum PR-014 §8 uses, 
                 applied per half rather than to the whole). Applying it to the whole would let
                 a half fall to fifty names and still pass, which is the granularity error
                 AGENTS.md §17 names
-if not met:     the study reports the measurement and REFUSES a verdict for that window, the
-                way PR-012 did. A window below the minimum cannot support an interval and
-                saying so is the finding
+power floor:    the SELECTED arm's primary-window net interval must be no wider than 50
+                percentage points end to end (±25). Registered in §3 and fixed before any
+                number exists. A wider interval means the instrument could not have detected an
+                edge worth trading, and a null read off it would be evidence of nothing
+if not met:     either failure - too few rebalances, or an interval wider than the floor - and
+                the study reports the measurement and REFUSES to treat the window as evidence,
+                the way PR-012 did. A window that cannot support an interval, or supports one
+                too wide to inform, is a finding about the instrument and saying so is the point
 ```
 
-Expected, from the calendar: about 126 non-overlapping 20-session formations over the store's span,
-roughly 65 before 2022 and 61 after. The name split does not reduce the number of formations, only
-the width of each cross-section.
+Expected, from the calendar: with a 5-session step (A-2) there are roughly **500 rebalance dates**
+over the store's span, about 270 before 2022 and 230 after. **The unit of observation is a
+5-session return of the four-position book, not a trade** — which is why this study has a sample
+where `PR-012`, counting trades against a minimum of 200, did not. The name split does not reduce
+the number of rebalances, only the width of each cross-section they select from.
 
 ## 9. What would refute this
 
@@ -264,6 +314,43 @@ spending a holdout it never declared, and nothing else would notice.
 **Why it is worth having.** If the selected arm passes both registered holdouts and fails the
 fourth, that is a fact about the arm the report must carry — not a fourth chance to find one that
 passes.
+
+### A-2 · 2026-09-07 · BEFORE THE RUN — the book this system trades holds FOUR names, not a decile
+
+**No data has been seen. Owner instruction, 2026-09-07**, and the registry had already said it.
+
+§5 registered *"every 20 sessions, NON-OVERLAPPING… the top DECILE of the admitted cross-section"*.
+That is not a book this system can hold. `risk.max_concurrent_positions` is **4**, `status: owner`,
+read by `trade_management.portfolio:limits` — and `screen.relative_strength_rule`'s own registry
+note has said the consequence since `DR-030`:
+
+> *"At ~1,100 admitted names the top decile is ~110 and `risk.max_concurrent_positions` (4) binds
+> LONG before it does, so this value picks who is ELIGIBLE and the ratified caps pick who is
+> TAKEN."*
+
+**The decile is the eligibility screen. The cap is the book.** A study measuring the whole decile
+measures a portfolio of ~130 names that this system would never hold, and its result would be about
+a construction rather than about a strategy.
+
+**What replaces it.** At most four concurrent positions, each held its full 20 sessions, entered
+**5 sessions apart** — `20 / 4`, so exactly one slot frees per rebalance and the positions overlap
+four deep. The freed slot takes the highest-ranked eligible name **not already held**; if no
+eligible name is available the slot stays **empty** rather than being filled with something worse.
+Non-overlapping was never a property worth having here — it was an artefact of measuring a decile.
+
+**What it costs, and it is not small.** A four-name book has far higher idiosyncratic variance than
+a 260-name one, and `PR-012` refused a verdict on a four-position book for want of sample. §3 and §8
+now register a **power floor** in response, fixed before any number exists. What this study has that
+`PR-012` did not is a different unit of observation: **a 5-session book return, of which there are
+about 500, rather than a completed trade, of which there were 181 against a minimum of 200.**
+
+**And it changes the cost question rather than settling it.** `decile-persistence-2026-09-07`
+measured 63.6% of the top DECILE surviving a 20-session gap. The top *one* name is a different
+question and the answer is not derivable from that figure, so turnover is measured inside this study
+from the book it actually holds — which is what `PR-014` amendment A-3 was about.
+
+**The whole eligible decile's return is still computed**, reported beside the capped book and never
+read by §6. It is what separates *"the signal is weak"* from *"four positions cannot express it"*.
 
 ### Anything after the run
 
