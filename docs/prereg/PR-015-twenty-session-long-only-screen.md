@@ -8,8 +8,10 @@ author:        Claude, at the owner's instruction 2026-09-06 — "research a goo
 status:        reported   (2026-09-07 - results/PR-015-report.md)
 verdict:       INCONCLUSIVE. The only arm whose interval excludes zero is LOWVOL_126, and
                it LOSES - so section 6's both-negative branch fires. The finding that is
-               not the verdict: the four-position book's four cells disagree by up to 96.6
-               points where the decile it selects from disagrees by 7.5
+               not the verdict: NOTHING separates from zero. Given an interval of its own the
+               eligible decile does not either - MOM_252_21 reads +9.75% [-5.46%, +24.76%] gross
+               at ~130 names. The four-position book is 1.4x to 3.9x noisier, which is real and
+               is NOT what stands between this project and a working strategy
 ```
 
 ---

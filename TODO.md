@@ -1521,10 +1521,11 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 - [ ] **`[v]` WHETHER `risk.max_concurrent_positions` MOVES — `PR-015`, 2026-09-07, and this is
       the owner's number, not mine.**
-      **The measurement is done and it is unambiguous.** The four-position book's four readings of
-      one signal disagree by up to **96.63 points** where the decile it selects from disagrees by
-      **7.50**. Cross-sectional ranking is a claim about a decile relative to its pool; four
-      positions cannot hold that claim.
+      **The measurement is done.** The four-position book's 5-session excess has a standard
+      deviation **2.70×** the decile's over twenty cells, and its bootstrap intervals run **1.4× to
+      3.9× wider**. Cross-sectional ranking is a claim about a decile relative to its pool, and four
+      positions express it badly. (An earlier version of this item quoted 96.63 against 7.50 — a
+      range of four draws read as a dispersion, corrected 2026-09-07.)
       **What changing it costs.** `risk.max_concurrent_positions` is `status: owner`. Moving it
       changes position sizing and interacts with `risk.max_open_risk` (4 R, also `owner`) — they
       are *"the same constraint counted two ways"* (`DR-006` §1) — and it creates a new `CARD-001`
