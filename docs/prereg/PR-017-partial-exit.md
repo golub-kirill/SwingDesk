@@ -7,8 +7,22 @@ author:        Claude. Raised by `EVIDENCE_SUMMARY` §17.4 — the partial is th
                this system that has never been measured, and the only construction whose
                arithmetic on `PR-005`'s log came out positive where both pure alternatives are
                negative
-status:        registered
-verdict:       (not yet run)
+status:        reported   (2026-09-08 - results/PR-017-report.md)   PRELIMINARY
+verdict:       INCONCLUSIVE by §6's rule, and the word understates it: this is a POWERED
+               null. +0.0015R [-0.0286, +0.0378] in sample and +0.0247R [-0.0162, +0.0780]
+               out - both intervals INSIDE §8's 0.15R floor at half-widths of 0.033R and
+               0.047R, against a registered minimum detectable effect of 0.05R. Selling half
+               at 1R earns the same as closing it all there.
+               THE FINDINGS THAT ARE NOT THE VERDICT. (1) The partial reshapes the TAIL for
+               nothing: p95 goes +0.970R -> +1.625R, two thirds of the distance to the
+               no-target arm's +2.407R, while the mean does not move. Against a capped
+               incumbent the partial caps LESS. (2) M54-T0830's "Математические недостатки"
+               is real and is NOT the argument the course gives: at 3x costs the partial is
+               worse by -0.0356R [-0.0627, -0.0043], because it is a THIRD FILL and pays
+               slippage for it. A transaction cost, not a forgone tail. (3) §9's question
+               about the stop move is answered against it - leaving the stop where it was is
+               worth about +0.010R more and costs 4.5 points of win rate.
+               §6 has no branch for a powered null and could not say any of this.
 ```
 
 ---

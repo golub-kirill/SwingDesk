@@ -136,6 +136,19 @@ and downgrades the result to exploratory.
    the number comes from is part of the statement: a prior study's interval half-width, a variance
    estimate, or a simulation - but not a guess, and §6's thresholds may not be the answer, because
    a threshold is what you will accept and this is what you could see.
+10. **A decision rule must be able to say "we looked properly and there is nothing".** Rule 9 makes
+    a study STATE the smallest effect it could detect; this makes §6 READ it. A rule whose only
+    non-affirmative outcome is `inconclusive` files two opposite situations under one word — *the
+    instrument was too blunt* and *the instrument was sharp and the effect is absent* — and the
+    first invites another study while the second closes the question. §9 has the case; the branch
+    is `null`, and it needs both windows inside the power floor with intervals containing zero.
+    **Earned by `PR-016` and `PR-017`, both on 2026-09-08.** `PR-016` returned `ACCEPT` on a
+    difference between two
+    arms that both lose money, because §6 read the difference and never asked whether either arm
+    was profitable — rule 8's shape, one level up. `PR-017` returned `INCONCLUSIVE` on half-widths
+    of 0.033R and 0.047R against its own registered 0.05R minimum, which is the strongest null this
+    programme has produced and reads on the page exactly like `PR-012`'s refusal for want of
+    sample. Neither verdict was wrong by its own rule. Both rules could not say what had happened.
 
 ## 4. Section 0 deserves its own explanation
 
@@ -252,3 +265,42 @@ it, which is correct and is why the fix has to live here.
 So the form now requires the branch in advance. A study whose arms could plausibly be negative
 should say — before running — whether that is a `reject`, an `inconclusive`, or a refusal to
 report a comparison at all.
+
+## 9. `null` — the branch that says the instrument was sharp and there was nothing
+
+**Added 2026-09-08. `PR-016` and `PR-017` paid for it on the same day.**
+
+`PR-016` returned **`ACCEPT`**. Its §6 read one quantity — the paired difference between the
+ratified screen and no screen — and that difference excluded zero on both windows. It never asked
+whether either arm made money, and **neither did**: −0.100R a trade against −0.192R. The verdict is
+correct by its own rule and the word on the page is the one a reader takes to mean *it works*. That
+is §8's failure one level up: §8 catches a losing ARM against a losing CONTROL, and this is a
+winning DIFFERENCE between two losers.
+
+`PR-017` returned **`INCONCLUSIVE`** on realised half-widths of **0.033R and 0.047R** against a
+registered minimum detectable effect of **0.05R** — both intervals comfortably inside their own
+power floor, both containing zero. That is the strongest null this programme has produced. It reads
+on the page exactly like `PR-012`, which refused a verdict because its sample never arrived.
+
+**Two opposite situations, one word.** *The instrument was too blunt to see anything* invites
+another study and another trial. *The instrument was sharp and the effect is absent* closes the
+question and should stop anyone spending a trial on it again. A decision rule that cannot tell them
+apart will have the closed questions reopened and the open ones abandoned.
+
+So §6 now needs a fourth branch:
+
+```
+NULL          every window meets the sample rule, every window's interval is INSIDE the
+              power floor, and every one contains zero. Registered in advance like the
+              others, and it is an affirmative finding: the effect is smaller than the
+              minimum this design was built to detect, and rule 9 says what that is.
+```
+
+**It costs nothing to add and it cannot be added afterwards.** Rule 3 downgrades a decision rule
+patched after seeing data, which is exactly why `PR-016` and `PR-017` keep their verdicts and their
+reports carry the reading in prose instead. The next study gets the branch.
+
+**And the level is not the difference.** A study comparing two arms should also say, in advance,
+what it will report when the difference is real and both arms lose. `PR-016`'s §6 licensed one
+sentence and its report leads with the other one; the branch is what makes that automatic rather
+than a matter of how carefully the report was written.
