@@ -89,31 +89,37 @@ ATR_REGISTRY = ParameterRegistry({
 })
 
 
+#: The keys `_r_multiples` collects. Named once, so the accumulator in `main` cannot drift from the
+#: collector - which it did on 2026-09-08, killing a forty-minute run with a `KeyError` after the
+#: whole store had been walked.
+_EMPTY_COLLECTION = (
+    # the three-way split that carries DR-006 §9's finding, gross and net
+    "clean_gross", "clean_net",
+    "gap_gross", "gap_net",
+    "time_gross", "time_net",
+    # 2 x ATR / entry, per entry. DR-005 charges slippage as a fraction of PRICE and R is a
+    # multiple of ATR, so this ratio is what decides whether costs are a rounding error or larger
+    # than the risk itself. Carried for every entry, banded on report.
+    "risk_over_price",
+    # gap outcomes paired with their ratio, so the net figure can be read by band rather than as
+    # one number over a population that is not homogeneous
+    "gap_net_by_ratio",
+    # EVERY entry paired with its ratio, added 2026-09-07. The band table shows what a floor on
+    # this ratio would REMOVE and says nothing about what it would COST: a floor removes whole
+    # entries, so it removes their time-exit WINS along with their gap losses, and `time_net`
+    # averages +0.93R. A threshold argued from the damage side alone is a threshold argued from
+    # half the arithmetic - which is why `floor_table` exists and why this had to be collected.
+    "net_by_ratio",
+)
+
+
 def _r_multiples(series, dates: set) -> dict[str, list[float]]:
     """Every entry window's outcome in R, split by how it ended.
 
     Returns gross and net lists per outcome. Net charges `DR-005`'s slippage on both fills - the
     buyer pays up, the seller receives less - which is what makes these comparable with §8.1.
     """
-    out: dict[str, list[float]] = {
-        "clean_gross": [], "clean_net": [],
-        "gap_gross": [], "gap_net": [],
-        "time_gross": [], "time_net": [],
-        # 2 x ATR / entry, per entry. `DR-005` charges slippage as a fraction of PRICE and R
-        # is a multiple of ATR, so this ratio is what decides whether costs are a rounding
-        # error or larger than the risk itself. Carried for every entry, banded on report.
-        "risk_over_price": [],
-        # gap outcomes paired with their ratio, so the net figure can be read by band
-        # rather than as one number over a population that is not homogeneous.
-        "gap_net_by_ratio": [],
-        # EVERY entry paired with its ratio, added 2026-09-07. The band table above shows what a
-        # floor on this ratio would REMOVE and says nothing about what it would COST: a floor
-        # removes whole entries, so it removes their time-exit WINS along with their gap losses,
-        # and `time_net` averages +0.93R. A threshold argued from the damage side alone is a
-        # threshold argued from half the arithmetic - which is why `floor_table` below exists and
-        # why this list had to be collected to build it (`AGENTS.md` §10.6 rule 4).
-        "net_by_ratio": [],
-    }
+    out: dict[str, list[float]] = {key: [] for key in _EMPTY_COLLECTION}
     bars = series.bars
     values = atr.compute(series, ATR_REGISTRY)
     by_time = {o.event_time: o.value for o in values.observations}
@@ -228,11 +234,11 @@ def main() -> int:
     args = parser.parse_args()
 
     as_of = datetime.now().astimezone()
-    totals: dict[str, list[float]] = {
-        key: [] for key in
-        ("clean_gross", "clean_net", "gap_gross", "gap_net", "time_gross", "time_net",
-         "risk_over_price", "gap_net_by_ratio")
-    }
+    # Keyed off `_r_multiples`'s own dict rather than a second hand-written list. The first cut
+    # spelled the keys out twice, `net_by_ratio` was added to one copy and not the other, and the
+    # run died with a KeyError forty minutes in - after the store had been walked. A collector and
+    # its accumulator that can disagree will.
+    totals: dict[str, list[float]] = {key: [] for key in _EMPTY_COLLECTION}
 
     with BarStore(args.data / "bars.duckdb") as store:
         names = sorted(store.instrument_ids(as_of))
