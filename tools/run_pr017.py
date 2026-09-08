@@ -199,10 +199,13 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             config = BacktestConfig(arm=arm, exits=policy,
                                     costs=stress_costs if arm in stressed else costs,
                                     trigger=trigger, risk_per_trade=RISK_PER_TRADE)
-            result = run_arm(series, gate, atr_series, config)
-            trades[arm].extend(result.trades)
-            partials[arm] += result.partials
-            ambiguous[arm] += result.ambiguous_exits
+            # `armed`, not `result` - the outer name is the study's own dict, and shadowing it
+            # here is the defect `PR-016` already fixed once. Copying a structure copies its
+            # mistakes, and mypy is what catches this rather than any test.
+            armed = run_arm(series, gate, atr_series, config)
+            trades[arm].extend(armed.trades)
+            partials[arm] += armed.partials
+            ambiguous[arm] += armed.ambiguous_exits
         if count % 500 == 0:
             print(f"  simulated {count}/{len(series_by_name)} instruments")
 
