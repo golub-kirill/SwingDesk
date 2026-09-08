@@ -1,0 +1,1364 @@
+{
+  "prereg": "PR-017",
+  "trials": 2,
+  "as_of": "2026-09-06T22:36:49.635786-05:00",
+  "country": "USA",
+  "preliminary": {
+    "status": "PRELIMINARY - not a final result",
+    "why": "DR-042's tie-break is unruled and this study runs under it, exactly as PR-016 does. On a bar reaching both the stop and a profit leg - target or partial trigger - the STOP is taken. Measured 2026-09-08 on PR-016's own bars: the rule takes the wrong leg 56.2% of the time and is consulted on 0.05% of exits, so the effect is at most 0.0006R a trade. The ruling is still the owner's and this file may not close it.",
+    "direction": "the assumption can only UNDERSTATE every arm, and it understates them equally.",
+    "settled_by": "docs/decisions/DR-042 §8"
+  },
+  "window": {
+    "start": "2016-01-04",
+    "end": "2026-09-04",
+    "sessions": 2522
+  },
+  "exit": {
+    "atr_period": 14,
+    "atr_stop_multiple": "2.0",
+    "max_holding_period": 20,
+    "target_r_multiple": "1.0",
+    "partial_trigger": "1.0",
+    "partial_fraction": "0.5",
+    "stop_after_partial": "breakeven"
+  },
+  "split": {
+    "in_sample": "entries on or before 2021-12-31",
+    "out_of_sample": "entries after 2021-12-31",
+    "buys": "a second window at PR-014's and PR-016's own boundary, so the cut was not chosen after seeing these data, and three studies are comparable at one place"
+  },
+  "perturbations": {
+    "registered": [
+      "cost_stress_1x",
+      "cost_stress_3x"
+    ],
+    "run": [
+      "cost_stress_1x",
+      "cost_stress_3x"
+    ],
+    "note": "re-simulated at 3x and each arm differenced against its OWN cost level - PR-016 learned that one the hard way"
+  },
+  "stress_multiple": 3,
+  "power_floor": "0.15",
+  "minimum_detectable_effect": "0.05",
+  "bootstrap": {
+    "unit": "entry month",
+    "block": 3,
+    "seed": 20260908,
+    "resamples": 10000
+  },
+  "instruments": 10330,
+  "formation_dates": 119,
+  "partials_taken": {
+    "all_out_1r": 0,
+    "partial_half": 89210,
+    "no_target": 0,
+    "partial_third": 89117,
+    "partial_half_no_stop_move": 84145,
+    "all_out_1r_3x": 0,
+    "partial_half_3x": 78619,
+    "no_target_3x": 0
+  },
+  "ambiguous_exits": {
+    "all_out_1r": 118,
+    "partial_half": 84,
+    "no_target": 0,
+    "partial_third": 84,
+    "partial_half_no_stop_move": 78,
+    "all_out_1r_3x": 129,
+    "partial_half_3x": 98,
+    "no_target_3x": 0
+  },
+  "survivorship": "ABSENT and material, as PR-016 records: 2,598 of 2,598 decade-long instruments in this store are still trading",
+  "not_measured": [
+    "the psychological advantage M54-T0829 names - not a property of a price series and not smuggled in as one",
+    "any selection. Entries are unselected, so no arm claims an edge",
+    "the book: one trade at a time, no cap and no capacity"
+  ],
+  "arms": {
+    "all_out_1r": {
+      "full": {
+        "trades": 258954,
+        "instruments": 5079,
+        "win_rate": 0.4719,
+        "mean_net_r": -0.1919,
+        "median_net_r": -0.3626,
+        "sd_net_r": 1.1667,
+        "mean_win_r": 0.8688,
+        "mean_loss_r": -1.1397,
+        "payoff_ratio": 0.7623,
+        "break_even_win_rate": 0.5675,
+        "skew": -2.4073,
+        "worst": -47.2358,
+        "best": 1.2391,
+        "mean_mfe_r": 0.7436,
+        "mean_mae_r": -0.8635,
+        "gap_loss_share": 0.0964,
+        "exit_reasons": {
+          "target": 108995,
+          "stop": 97270,
+          "time": 26642,
+          "stop_gap": 24960,
+          "end_of_data": 1087
+        },
+        "holding_days_median": 10.0,
+        "percentiles": {
+          "p1": -2.8665,
+          "p5": -1.3802,
+          "p10": -1.1495,
+          "p25": -1.0576,
+          "p50": -0.3626,
+          "p75": 0.9399,
+          "p90": 0.9625,
+          "p95": 0.9706,
+          "p99": 0.9808
+        },
+        "months": 111,
+        "mean_interval": {
+          "low": -0.2619,
+          "high": -0.1191
+        },
+        "win_rate_interval": {
+          "low": 0.4386,
+          "high": 0.5065
+        }
+      },
+      "in_sample": {
+        "trades": 104108,
+        "instruments": 2876,
+        "win_rate": 0.4864,
+        "mean_net_r": -0.1759,
+        "median_net_r": -0.1623,
+        "sd_net_r": 1.2132,
+        "mean_win_r": 0.8561,
+        "mean_loss_r": -1.153,
+        "payoff_ratio": 0.7425,
+        "break_even_win_rate": 0.5739,
+        "skew": -3.3404,
+        "worst": -25.7998,
+        "best": 0.9931,
+        "mean_mfe_r": 0.7384,
+        "mean_mae_r": -0.8617,
+        "gap_loss_share": 0.0886,
+        "exit_reasons": {
+          "target": 44222,
+          "stop": 38982,
+          "time": 11678,
+          "stop_gap": 9226
+        },
+        "holding_days_median": 10.0,
+        "percentiles": {
+          "p1": -2.7082,
+          "p5": -1.3493,
+          "p10": -1.1414,
+          "p25": -1.0598,
+          "p50": -0.1623,
+          "p75": 0.9363,
+          "p90": 0.961,
+          "p95": 0.9702,
+          "p99": 0.9816
+        },
+        "months": 57,
+        "mean_interval": {
+          "low": -0.28,
+          "high": -0.0737
+        },
+        "win_rate_interval": {
+          "low": 0.4369,
+          "high": 0.5336
+        }
+      },
+      "out_of_sample": {
+        "trades": 154846,
+        "instruments": 5077,
+        "win_rate": 0.4621,
+        "mean_net_r": -0.2028,
+        "median_net_r": -0.4918,
+        "sd_net_r": 1.1342,
+        "mean_win_r": 0.8777,
+        "mean_loss_r": -1.1312,
+        "payoff_ratio": 0.7759,
+        "break_even_win_rate": 0.5631,
+        "skew": -1.6373,
+        "worst": -47.2358,
+        "best": 1.2391,
+        "mean_mfe_r": 0.7471,
+        "mean_mae_r": -0.8648,
+        "gap_loss_share": 0.1016,
+        "exit_reasons": {
+          "target": 64773,
+          "stop": 58288,
+          "stop_gap": 15734,
+          "time": 14964,
+          "end_of_data": 1087
+        },
+        "holding_days_median": 10.0,
+        "percentiles": {
+          "p1": -2.9496,
+          "p5": -1.3997,
+          "p10": -1.1549,
+          "p25": -1.056,
+          "p50": -0.4918,
+          "p75": 0.9421,
+          "p90": 0.9633,
+          "p95": 0.9708,
+          "p99": 0.9803
+        },
+        "months": 54,
+        "mean_interval": {
+          "low": -0.2875,
+          "high": -0.0971
+        },
+        "win_rate_interval": {
+          "low": 0.4217,
+          "high": 0.5124
+        }
+      }
+    },
+    "partial_half": {
+      "full": {
+        "trades": 209377,
+        "instruments": 5079,
+        "win_rate": 0.4728,
+        "mean_net_r": -0.1766,
+        "median_net_r": -0.3019,
+        "sd_net_r": 1.2884,
+        "mean_win_r": 0.9125,
+        "mean_loss_r": -1.1531,
+        "payoff_ratio": 0.7913,
+        "break_even_win_rate": 0.5582,
+        "skew": -1.8304,
+        "worst": -47.2358,
+        "best": 14.0975,
+        "mean_mfe_r": 1.0626,
+        "mean_mae_r": -0.8778,
+        "gap_loss_share": 0.1276,
+        "exit_reasons": {
+          "stop": 103860,
+          "time": 77410,
+          "stop_gap": 26714,
+          "end_of_data": 1393
+        },
+        "holding_days_median": 20,
+        "percentiles": {
+          "p1": -3.2631,
+          "p5": -1.4255,
+          "p10": -1.1575,
+          "p25": -1.0569,
+          "p50": -0.3019,
+          "p75": 0.7081,
+          "p90": 1.3435,
+          "p95": 1.698,
+          "p99": 2.4846
+        },
+        "months": 111,
+        "mean_interval": {
+          "low": -0.2582,
+          "high": -0.0899
+        },
+        "win_rate_interval": {
+          "low": 0.438,
+          "high": 0.5101
+        },
+        "difference_mean": {
+          "observed": 0.0154,
+          "low": -0.0117,
+          "high": 0.0496
+        },
+        "difference_win_rate": {
+          "observed": 0.0009,
+          "low": -0.0069,
+          "high": 0.0104
+        }
+      },
+      "in_sample": {
+        "trades": 84975,
+        "instruments": 2876,
+        "win_rate": 0.485,
+        "mean_net_r": -0.1744,
+        "median_net_r": -0.1534,
+        "sd_net_r": 1.3261,
+        "mean_win_r": 0.8827,
+        "mean_loss_r": -1.1697,
+        "payoff_ratio": 0.7546,
+        "break_even_win_rate": 0.5699,
+        "skew": -2.8129,
+        "worst": -25.7998,
+        "best": 9.469,
+        "mean_mfe_r": 1.0418,
+        "mean_mae_r": -0.8787,
+        "gap_loss_share": 0.1188,
+        "exit_reasons": {
+          "stop": 42529,
+          "time": 32353,
+          "stop_gap": 10093
+        },
+        "holding_days_median": 20,
+        "percentiles": {
+          "p1": -3.131,
+          "p5": -1.3891,
+          "p10": -1.1472,
+          "p25": -1.0598,
+          "p50": -0.1534,
+          "p75": 0.7317,
+          "p90": 1.3004,
+          "p95": 1.6255,
+          "p99": 2.3835
+        },
+        "months": 57,
+        "mean_interval": {
+          "low": -0.2922,
+          "high": -0.0548
+        },
+        "win_rate_interval": {
+          "low": 0.4294,
+          "high": 0.5374
+        },
+        "difference_mean": {
+          "observed": 0.0015,
+          "low": -0.0286,
+          "high": 0.0378
+        },
+        "difference_win_rate": {
+          "observed": -0.0014,
+          "low": -0.0126,
+          "high": 0.0097
+        }
+      },
+      "out_of_sample": {
+        "trades": 124402,
+        "instruments": 5077,
+        "win_rate": 0.4644,
+        "mean_net_r": -0.178,
+        "median_net_r": -0.3979,
+        "sd_net_r": 1.262,
+        "mean_win_r": 0.9337,
+        "mean_loss_r": -1.1421,
+        "payoff_ratio": 0.8175,
+        "break_even_win_rate": 0.5502,
+        "skew": -1.049,
+        "worst": -47.2358,
+        "best": 14.0975,
+        "mean_mfe_r": 1.0768,
+        "mean_mae_r": -0.8771,
+        "gap_loss_share": 0.1336,
+        "exit_reasons": {
+          "stop": 61331,
+          "time": 45057,
+          "stop_gap": 16621,
+          "end_of_data": 1393
+        },
+        "holding_days_median": 20.0,
+        "percentiles": {
+          "p1": -3.3631,
+          "p5": -1.4492,
+          "p10": -1.167,
+          "p25": -1.0548,
+          "p50": -0.3979,
+          "p75": 0.6887,
+          "p90": 1.3747,
+          "p95": 1.7453,
+          "p99": 2.5466
+        },
+        "months": 54,
+        "mean_interval": {
+          "low": -0.2813,
+          "high": -0.0475
+        },
+        "win_rate_interval": {
+          "low": 0.4216,
+          "high": 0.518
+        },
+        "difference_mean": {
+          "observed": 0.0247,
+          "low": -0.0162,
+          "high": 0.078
+        },
+        "difference_win_rate": {
+          "observed": 0.0023,
+          "low": -0.0089,
+          "high": 0.0155
+        }
+      }
+    },
+    "no_target": {
+      "full": {
+        "trades": 195546,
+        "instruments": 5079,
+        "win_rate": 0.3876,
+        "mean_net_r": -0.1505,
+        "median_net_r": -1.0172,
+        "sd_net_r": 1.5614,
+        "mean_win_r": 1.3716,
+        "mean_loss_r": -1.1139,
+        "payoff_ratio": 1.2314,
+        "break_even_win_rate": 0.4482,
+        "skew": -0.1794,
+        "worst": -47.2358,
+        "best": 27.2207,
+        "mean_mfe_r": 1.1189,
+        "mean_mae_r": -0.9273,
+        "gap_loss_share": 0.1083,
+        "exit_reasons": {
+          "time": 93839,
+          "stop": 78970,
+          "stop_gap": 21186,
+          "end_of_data": 1551
+        },
+        "holding_days_median": 28.0,
+        "percentiles": {
+          "p1": -3.4799,
+          "p5": -1.49,
+          "p10": -1.1902,
+          "p25": -1.0629,
+          "p50": -1.0172,
+          "p75": 0.7869,
+          "p90": 1.8496,
+          "p95": 2.5429,
+          "p99": 4.1069
+        },
+        "months": 111,
+        "mean_interval": {
+          "low": -0.2573,
+          "high": -0.0383
+        },
+        "win_rate_interval": {
+          "low": 0.3488,
+          "high": 0.428
+        },
+        "difference_mean": {
+          "observed": 0.0414,
+          "low": -0.0183,
+          "high": 0.11
+        },
+        "difference_win_rate": {
+          "observed": -0.0843,
+          "low": -0.1021,
+          "high": -0.0658
+        }
+      },
+      "in_sample": {
+        "trades": 79628,
+        "instruments": 2876,
+        "win_rate": 0.4048,
+        "mean_net_r": -0.1495,
+        "median_net_r": -1.0179,
+        "sd_net_r": 1.5763,
+        "mean_win_r": 1.297,
+        "mean_loss_r": -1.1333,
+        "payoff_ratio": 1.1445,
+        "break_even_win_rate": 0.4663,
+        "skew": -1.0018,
+        "worst": -25.7998,
+        "best": 17.9488,
+        "mean_mfe_r": 1.097,
+        "mean_mae_r": -0.9286,
+        "gap_loss_share": 0.1002,
+        "exit_reasons": {
+          "time": 39095,
+          "stop": 32555,
+          "stop_gap": 7978
+        },
+        "holding_days_median": 28.0,
+        "percentiles": {
+          "p1": -3.2973,
+          "p5": -1.4473,
+          "p10": -1.1694,
+          "p25": -1.0664,
+          "p50": -1.0179,
+          "p75": 0.8159,
+          "p90": 1.7674,
+          "p95": 2.4074,
+          "p99": 3.9186
+        },
+        "months": 57,
+        "mean_interval": {
+          "low": -0.286,
+          "high": 0.0047
+        },
+        "win_rate_interval": {
+          "low": 0.3492,
+          "high": 0.4697
+        },
+        "difference_mean": {
+          "observed": 0.0263,
+          "low": -0.0313,
+          "high": 0.108
+        },
+        "difference_win_rate": {
+          "observed": -0.0816,
+          "low": -0.0983,
+          "high": -0.0555
+        }
+      },
+      "out_of_sample": {
+        "trades": 115918,
+        "instruments": 5077,
+        "win_rate": 0.3758,
+        "mean_net_r": -0.1512,
+        "median_net_r": -1.017,
+        "sd_net_r": 1.5512,
+        "mean_win_r": 1.4268,
+        "mean_loss_r": -1.1012,
+        "payoff_ratio": 1.2957,
+        "break_even_win_rate": 0.4356,
+        "skew": 0.4134,
+        "worst": -47.2358,
+        "best": 27.2207,
+        "mean_mfe_r": 1.1339,
+        "mean_mae_r": -0.9264,
+        "gap_loss_share": 0.1139,
+        "exit_reasons": {
+          "time": 54744,
+          "stop": 46415,
+          "stop_gap": 13208,
+          "end_of_data": 1551
+        },
+        "holding_days_median": 28.0,
+        "percentiles": {
+          "p1": -3.5652,
+          "p5": -1.5173,
+          "p10": -1.2086,
+          "p25": -1.0604,
+          "p50": -1.017,
+          "p75": 0.7646,
+          "p90": 1.9118,
+          "p95": 2.6377,
+          "p99": 4.2253
+        },
+        "months": 54,
+        "mean_interval": {
+          "low": -0.2919,
+          "high": 0.0174
+        },
+        "win_rate_interval": {
+          "low": 0.3278,
+          "high": 0.431
+        },
+        "difference_mean": {
+          "observed": 0.0516,
+          "low": -0.0383,
+          "high": 0.1573
+        },
+        "difference_win_rate": {
+          "observed": -0.0864,
+          "low": -0.1153,
+          "high": -0.0607
+        }
+      }
+    }
+  },
+  "diagnostics": {
+    "partial_third": {
+      "full": {
+        "trades": 209350,
+        "instruments": 5079,
+        "win_rate": 0.4668,
+        "mean_net_r": -0.1715,
+        "median_net_r": -0.3279,
+        "sd_net_r": 1.3453,
+        "mean_win_r": 0.9399,
+        "mean_loss_r": -1.1445,
+        "payoff_ratio": 0.8212,
+        "break_even_win_rate": 0.5491,
+        "skew": -1.2892,
+        "worst": -47.2358,
+        "best": 18.5713,
+        "mean_mfe_r": 1.0626,
+        "mean_mae_r": -0.8779,
+        "gap_loss_share": 0.1276,
+        "exit_reasons": {
+          "stop": 103810,
+          "time": 77440,
+          "stop_gap": 26707,
+          "end_of_data": 1393
+        },
+        "holding_days_median": 20.0,
+        "percentiles": {
+          "p1": -3.268,
+          "p5": -1.4291,
+          "p10": -1.1585,
+          "p25": -1.057,
+          "p50": -0.3279,
+          "p75": 0.6505,
+          "p90": 1.4799,
+          "p95": 1.9546,
+          "p99": 3.002
+        },
+        "months": 111,
+        "mean_interval": {
+          "low": -0.2568,
+          "high": -0.0812
+        },
+        "win_rate_interval": {
+          "low": 0.4321,
+          "high": 0.5042
+        },
+        "difference_mean": {
+          "observed": 0.0205,
+          "low": -0.012,
+          "high": 0.0609
+        },
+        "difference_win_rate": {
+          "observed": -0.0051,
+          "low": -0.0133,
+          "high": 0.005
+        }
+      },
+      "in_sample": {
+        "trades": 84954,
+        "instruments": 2876,
+        "win_rate": 0.4792,
+        "mean_net_r": -0.1718,
+        "median_net_r": -0.1891,
+        "sd_net_r": 1.3746,
+        "mean_win_r": 0.9031,
+        "mean_loss_r": -1.1607,
+        "payoff_ratio": 0.7781,
+        "break_even_win_rate": 0.5624,
+        "skew": -2.2661,
+        "worst": -25.7998,
+        "best": 12.2884,
+        "mean_mfe_r": 1.0419,
+        "mean_mae_r": -0.8789,
+        "gap_loss_share": 0.1187,
+        "exit_reasons": {
+          "stop": 42495,
+          "time": 32373,
+          "stop_gap": 10086
+        },
+        "holding_days_median": 20.0,
+        "percentiles": {
+          "p1": -3.1347,
+          "p5": -1.3918,
+          "p10": -1.1479,
+          "p25": -1.0599,
+          "p50": -0.1891,
+          "p75": 0.6822,
+          "p90": 1.4244,
+          "p95": 1.8568,
+          "p99": 2.8687
+        },
+        "months": 57,
+        "mean_interval": {
+          "low": -0.291,
+          "high": -0.0498
+        },
+        "win_rate_interval": {
+          "low": 0.4234,
+          "high": 0.5323
+        },
+        "difference_mean": {
+          "observed": 0.0041,
+          "low": -0.0308,
+          "high": 0.047
+        },
+        "difference_win_rate": {
+          "observed": -0.0072,
+          "low": -0.019,
+          "high": 0.0044
+        }
+      },
+      "out_of_sample": {
+        "trades": 124396,
+        "instruments": 5077,
+        "win_rate": 0.4584,
+        "mean_net_r": -0.1712,
+        "median_net_r": -0.4183,
+        "sd_net_r": 1.3249,
+        "mean_win_r": 0.9661,
+        "mean_loss_r": -1.1339,
+        "payoff_ratio": 0.8521,
+        "break_even_win_rate": 0.5399,
+        "skew": -0.543,
+        "worst": -47.2358,
+        "best": 18.5713,
+        "mean_mfe_r": 1.0768,
+        "mean_mae_r": -0.8772,
+        "gap_loss_share": 0.1336,
+        "exit_reasons": {
+          "stop": 61315,
+          "time": 45067,
+          "stop_gap": 16621,
+          "end_of_data": 1393
+        },
+        "holding_days_median": 20.0,
+        "percentiles": {
+          "p1": -3.3742,
+          "p5": -1.4517,
+          "p10": -1.1682,
+          "p25": -1.0549,
+          "p50": -0.4183,
+          "p75": 0.6278,
+          "p90": 1.5207,
+          "p95": 2.0145,
+          "p99": 3.0801
+        },
+        "months": 54,
+        "mean_interval": {
+          "low": -0.2795,
+          "high": -0.034
+        },
+        "win_rate_interval": {
+          "low": 0.4162,
+          "high": 0.5114
+        },
+        "difference_mean": {
+          "observed": 0.0315,
+          "low": -0.0171,
+          "high": 0.0953
+        },
+        "difference_win_rate": {
+          "observed": -0.0038,
+          "low": -0.0156,
+          "high": 0.01
+        }
+      }
+    },
+    "partial_half_no_stop_move": {
+      "full": {
+        "trades": 195546,
+        "instruments": 5079,
+        "win_rate": 0.4281,
+        "mean_net_r": -0.1694,
+        "median_net_r": -0.2947,
+        "sd_net_r": 1.321,
+        "mean_win_r": 1.0381,
+        "mean_loss_r": -1.0732,
+        "payoff_ratio": 0.9674,
+        "break_even_win_rate": 0.5083,
+        "skew": -1.7972,
+        "worst": -47.2358,
+        "best": 14.0975,
+        "mean_mfe_r": 1.1017,
+        "mean_mae_r": -0.9268,
+        "gap_loss_share": 0.1084,
+        "exit_reasons": {
+          "time": 93835,
+          "stop": 78956,
+          "stop_gap": 21204,
+          "end_of_data": 1551
+        },
+        "holding_days_median": 28.0,
+        "percentiles": {
+          "p1": -3.4325,
+          "p5": -1.4491,
+          "p10": -1.1637,
+          "p25": -1.0571,
+          "p50": -0.2947,
+          "p75": 0.8552,
+          "p90": 1.3927,
+          "p95": 1.7396,
+          "p99": 2.5265
+        },
+        "months": 111,
+        "mean_interval": {
+          "low": -0.2593,
+          "high": -0.075
+        },
+        "win_rate_interval": {
+          "low": 0.39,
+          "high": 0.4687
+        },
+        "difference_mean": {
+          "observed": 0.0225,
+          "low": -0.0141,
+          "high": 0.0673
+        },
+        "difference_win_rate": {
+          "observed": -0.0438,
+          "low": -0.0576,
+          "high": -0.0282
+        }
+      },
+      "in_sample": {
+        "trades": 79628,
+        "instruments": 2876,
+        "win_rate": 0.44,
+        "mean_net_r": -0.1649,
+        "median_net_r": -0.181,
+        "sd_net_r": 1.3643,
+        "mean_win_r": 1.0115,
+        "mean_loss_r": -1.089,
+        "payoff_ratio": 0.9288,
+        "break_even_win_rate": 0.5185,
+        "skew": -2.742,
+        "worst": -25.7998,
+        "best": 9.469,
+        "mean_mfe_r": 1.0811,
+        "mean_mae_r": -0.9281,
+        "gap_loss_share": 0.1003,
+        "exit_reasons": {
+          "time": 39093,
+          "stop": 32548,
+          "stop_gap": 7987
+        },
+        "holding_days_median": 28.0,
+        "percentiles": {
+          "p1": -3.27,
+          "p5": -1.4095,
+          "p10": -1.1518,
+          "p25": -1.0604,
+          "p50": -0.181,
+          "p75": 0.871,
+          "p90": 1.3511,
+          "p95": 1.6717,
+          "p99": 2.4288
+        },
+        "months": 57,
+        "mean_interval": {
+          "low": -0.2903,
+          "high": -0.0305
+        },
+        "win_rate_interval": {
+          "low": 0.3824,
+          "high": 0.503
+        },
+        "difference_mean": {
+          "observed": 0.011,
+          "low": -0.0275,
+          "high": 0.0619
+        },
+        "difference_win_rate": {
+          "observed": -0.0464,
+          "low": -0.0622,
+          "high": -0.0239
+        }
+      },
+      "out_of_sample": {
+        "trades": 115918,
+        "instruments": 5077,
+        "win_rate": 0.4199,
+        "mean_net_r": -0.1725,
+        "median_net_r": -0.3742,
+        "sd_net_r": 1.2905,
+        "mean_win_r": 1.0574,
+        "mean_loss_r": -1.0627,
+        "payoff_ratio": 0.995,
+        "break_even_win_rate": 0.5013,
+        "skew": -1.0275,
+        "worst": -47.2358,
+        "best": 14.0975,
+        "mean_mfe_r": 1.1158,
+        "mean_mae_r": -0.9259,
+        "gap_loss_share": 0.114,
+        "exit_reasons": {
+          "time": 54742,
+          "stop": 46408,
+          "stop_gap": 13217,
+          "end_of_data": 1551
+        },
+        "holding_days_median": 28.0,
+        "percentiles": {
+          "p1": -3.5107,
+          "p5": -1.4712,
+          "p10": -1.1753,
+          "p25": -1.0546,
+          "p50": -0.3742,
+          "p75": 0.8422,
+          "p90": 1.4238,
+          "p95": 1.7881,
+          "p99": 2.5865
+        },
+        "months": 54,
+        "mean_interval": {
+          "low": -0.288,
+          "high": -0.0326
+        },
+        "win_rate_interval": {
+          "low": 0.3734,
+          "high": 0.4746
+        },
+        "difference_mean": {
+          "observed": 0.0302,
+          "low": -0.0271,
+          "high": 0.0977
+        },
+        "difference_win_rate": {
+          "observed": -0.0423,
+          "low": -0.0633,
+          "high": -0.0215
+        }
+      }
+    },
+    "all_out_1r_3x": {
+      "full": {
+        "trades": 259722,
+        "instruments": 5079,
+        "win_rate": 0.4024,
+        "mean_net_r": -0.5981,
+        "median_net_r": -1.0728,
+        "sd_net_r": 2.1011,
+        "mean_win_r": 0.7692,
+        "mean_loss_r": -1.5189,
+        "payoff_ratio": 0.5064,
+        "break_even_win_rate": 0.6638,
+        "skew": -10.0682,
+        "worst": -77.3995,
+        "best": 0.9881,
+        "mean_mfe_r": 0.6452,
+        "mean_mae_r": -1.0092,
+        "gap_loss_share": 0.1244,
+        "exit_reasons": {
+          "stop": 106734,
+          "target": 93574,
+          "stop_gap": 32315,
+          "time": 26109,
+          "end_of_data": 990
+        },
+        "holding_days_median": 9.0,
+        "percentiles": {
+          "p1": -7.3385,
+          "p5": -1.9709,
+          "p10": -1.4421,
+          "p25": -1.1957,
+          "p50": -1.0728,
+          "p75": 0.8051,
+          "p90": 0.8845,
+          "p95": 0.9101,
+          "p99": 0.9418
+        },
+        "months": 111,
+        "mean_interval": {
+          "low": -0.6703,
+          "high": -0.5199
+        },
+        "win_rate_interval": {
+          "low": 0.3714,
+          "high": 0.4348
+        }
+      },
+      "in_sample": {
+        "trades": 104425,
+        "instruments": 2876,
+        "win_rate": 0.4111,
+        "mean_net_r": -0.6103,
+        "median_net_r": -1.0759,
+        "sd_net_r": 2.366,
+        "mean_win_r": 0.7511,
+        "mean_loss_r": -1.5608,
+        "payoff_ratio": 0.4813,
+        "break_even_win_rate": 0.6751,
+        "skew": -12.1547,
+        "worst": -77.3995,
+        "best": 0.9794,
+        "mean_mfe_r": 0.6351,
+        "mean_mae_r": -1.0209,
+        "gap_loss_share": 0.1201,
+        "exit_reasons": {
+          "stop": 42904,
+          "target": 37473,
+          "stop_gap": 12543,
+          "time": 11505
+        },
+        "holding_days_median": 9,
+        "percentiles": {
+          "p1": -7.2223,
+          "p5": -1.8971,
+          "p10": -1.4344,
+          "p25": -1.2057,
+          "p50": -1.0759,
+          "p75": 0.7924,
+          "p90": 0.8793,
+          "p95": 0.9087,
+          "p99": 0.9443
+        },
+        "months": 57,
+        "mean_interval": {
+          "low": -0.7263,
+          "high": -0.4867
+        },
+        "win_rate_interval": {
+          "low": 0.3627,
+          "high": 0.4582
+        }
+      },
+      "out_of_sample": {
+        "trades": 155297,
+        "instruments": 5077,
+        "win_rate": 0.3965,
+        "mean_net_r": -0.5899,
+        "median_net_r": -1.071,
+        "sd_net_r": 1.9023,
+        "mean_win_r": 0.7818,
+        "mean_loss_r": -1.4914,
+        "payoff_ratio": 0.5242,
+        "break_even_win_rate": 0.6561,
+        "skew": -6.9556,
+        "worst": -56.3807,
+        "best": 0.9881,
+        "mean_mfe_r": 0.6519,
+        "mean_mae_r": -1.0014,
+        "gap_loss_share": 0.1273,
+        "exit_reasons": {
+          "stop": 63830,
+          "target": 56101,
+          "stop_gap": 19772,
+          "time": 14604,
+          "end_of_data": 990
+        },
+        "holding_days_median": 8,
+        "percentiles": {
+          "p1": -7.4164,
+          "p5": -1.9988,
+          "p10": -1.4473,
+          "p25": -1.1886,
+          "p50": -1.071,
+          "p75": 0.8135,
+          "p90": 0.8872,
+          "p95": 0.9108,
+          "p99": 0.9401
+        },
+        "months": 54,
+        "mean_interval": {
+          "low": -0.673,
+          "high": -0.4845
+        },
+        "win_rate_interval": {
+          "low": 0.3593,
+          "high": 0.443
+        }
+      }
+    },
+    "partial_half_3x": {
+      "full": {
+        "trades": 215318,
+        "instruments": 5079,
+        "win_rate": 0.4014,
+        "mean_net_r": -0.6168,
+        "median_net_r": -1.0682,
+        "sd_net_r": 2.3039,
+        "mean_win_r": 0.821,
+        "mean_loss_r": -1.5811,
+        "payoff_ratio": 0.5192,
+        "break_even_win_rate": 0.6582,
+        "skew": -9.1215,
+        "worst": -77.3995,
+        "best": 13.9575,
+        "mean_mfe_r": 0.9163,
+        "mean_mae_r": -1.0319,
+        "gap_loss_share": 0.1534,
+        "exit_reasons": {
+          "stop": 109244,
+          "time": 71763,
+          "stop_gap": 33031,
+          "end_of_data": 1280
+        },
+        "holding_days_median": 16.0,
+        "percentiles": {
+          "p1": -8.7952,
+          "p5": -2.1487,
+          "p10": -1.4831,
+          "p25": -1.197,
+          "p50": -1.0682,
+          "p75": 0.4256,
+          "p90": 1.1445,
+          "p95": 1.5028,
+          "p99": 2.2923
+        },
+        "months": 111,
+        "mean_interval": {
+          "low": -0.7008,
+          "high": -0.5246
+        },
+        "win_rate_interval": {
+          "low": 0.3681,
+          "high": 0.4371
+        },
+        "difference_mean": {
+          "observed": -0.0187,
+          "low": -0.0418,
+          "high": 0.0114
+        },
+        "difference_win_rate": {
+          "observed": -0.001,
+          "low": -0.008,
+          "high": 0.0076
+        }
+      },
+      "in_sample": {
+        "trades": 87616,
+        "instruments": 2876,
+        "win_rate": 0.4066,
+        "mean_net_r": -0.6459,
+        "median_net_r": -1.0763,
+        "sd_net_r": 2.5737,
+        "mean_win_r": 0.783,
+        "mean_loss_r": -1.6249,
+        "payoff_ratio": 0.4819,
+        "break_even_win_rate": 0.6748,
+        "skew": -11.177,
+        "worst": -77.3995,
+        "best": 9.3482,
+        "mean_mfe_r": 0.8838,
+        "mean_mae_r": -1.0474,
+        "gap_loss_share": 0.1493,
+        "exit_reasons": {
+          "stop": 44759,
+          "time": 29774,
+          "stop_gap": 13083
+        },
+        "holding_days_median": 16.0,
+        "percentiles": {
+          "p1": -8.4485,
+          "p5": -2.1144,
+          "p10": -1.4701,
+          "p25": -1.21,
+          "p50": -1.0763,
+          "p75": 0.4248,
+          "p90": 1.0959,
+          "p95": 1.4144,
+          "p99": 2.1532
+        },
+        "months": 57,
+        "mean_interval": {
+          "low": -0.7748,
+          "high": -0.5086
+        },
+        "win_rate_interval": {
+          "low": 0.3529,
+          "high": 0.4595
+        },
+        "difference_mean": {
+          "observed": -0.0356,
+          "low": -0.0627,
+          "high": -0.0043
+        },
+        "difference_win_rate": {
+          "observed": -0.0045,
+          "low": -0.015,
+          "high": 0.0058
+        }
+      },
+      "out_of_sample": {
+        "trades": 127702,
+        "instruments": 5077,
+        "win_rate": 0.3979,
+        "mean_net_r": -0.5969,
+        "median_net_r": -1.0638,
+        "sd_net_r": 2.0987,
+        "mean_win_r": 0.8476,
+        "mean_loss_r": -1.5515,
+        "payoff_ratio": 0.5463,
+        "break_even_win_rate": 0.6467,
+        "skew": -6.1903,
+        "worst": -56.3807,
+        "best": 13.9575,
+        "mean_mfe_r": 0.9386,
+        "mean_mae_r": -1.0213,
+        "gap_loss_share": 0.1562,
+        "exit_reasons": {
+          "stop": 64485,
+          "time": 41989,
+          "stop_gap": 19948,
+          "end_of_data": 1280
+        },
+        "holding_days_median": 17.0,
+        "percentiles": {
+          "p1": -9.0065,
+          "p5": -2.1653,
+          "p10": -1.4965,
+          "p25": -1.188,
+          "p50": -1.0638,
+          "p75": 0.426,
+          "p90": 1.1785,
+          "p95": 1.5601,
+          "p99": 2.3669
+        },
+        "months": 54,
+        "mean_interval": {
+          "low": -0.6973,
+          "high": -0.4644
+        },
+        "win_rate_interval": {
+          "low": 0.3578,
+          "high": 0.4479
+        },
+        "difference_mean": {
+          "observed": -0.007,
+          "low": -0.0415,
+          "high": 0.0404
+        },
+        "difference_win_rate": {
+          "observed": 0.0014,
+          "low": -0.0084,
+          "high": 0.0133
+        }
+      }
+    },
+    "no_target_3x": {
+      "full": {
+        "trades": 202977,
+        "instruments": 5079,
+        "win_rate": 0.3257,
+        "mean_net_r": -0.6101,
+        "median_net_r": -1.09,
+        "sd_net_r": 2.4885,
+        "mean_win_r": 1.2845,
+        "mean_loss_r": -1.5251,
+        "payoff_ratio": 0.8423,
+        "break_even_win_rate": 0.5428,
+        "skew": -7.4468,
+        "worst": -77.3995,
+        "best": 26.9928,
+        "mean_mfe_r": 0.9616,
+        "mean_mae_r": -1.0754,
+        "gap_loss_share": 0.1403,
+        "exit_reasons": {
+          "stop": 86787,
+          "time": 86319,
+          "stop_gap": 28479,
+          "end_of_data": 1392
+        },
+        "holding_days_median": 21,
+        "percentiles": {
+          "p1": -9.288,
+          "p5": -2.2717,
+          "p10": -1.5327,
+          "p25": -1.2114,
+          "p50": -1.09,
+          "p75": 0.4631,
+          "p90": 1.5491,
+          "p95": 2.2472,
+          "p99": 3.8093
+        },
+        "months": 111,
+        "mean_interval": {
+          "low": -0.7123,
+          "high": -0.4984
+        },
+        "win_rate_interval": {
+          "low": 0.2898,
+          "high": 0.3633
+        },
+        "difference_mean": {
+          "observed": -0.0119,
+          "low": -0.0623,
+          "high": 0.0476
+        },
+        "difference_win_rate": {
+          "observed": -0.0767,
+          "low": -0.0929,
+          "high": -0.0602
+        }
+      },
+      "in_sample": {
+        "trades": 82872,
+        "instruments": 2876,
+        "win_rate": 0.3364,
+        "mean_net_r": -0.6405,
+        "median_net_r": -1.1003,
+        "sd_net_r": 2.7403,
+        "mean_win_r": 1.1977,
+        "mean_loss_r": -1.5721,
+        "payoff_ratio": 0.7618,
+        "break_even_win_rate": 0.5676,
+        "skew": -9.6366,
+        "worst": -77.3995,
+        "best": 17.6633,
+        "mean_mfe_r": 0.9304,
+        "mean_mae_r": -1.0893,
+        "gap_loss_share": 0.1356,
+        "exit_reasons": {
+          "stop": 35865,
+          "time": 35771,
+          "stop_gap": 11236
+        },
+        "holding_days_median": 20.0,
+        "percentiles": {
+          "p1": -8.9054,
+          "p5": -2.2497,
+          "p10": -1.5013,
+          "p25": -1.2241,
+          "p50": -1.1003,
+          "p75": 0.4889,
+          "p90": 1.4617,
+          "p95": 2.0925,
+          "p99": 3.5704
+        },
+        "months": 57,
+        "mean_interval": {
+          "low": -0.7794,
+          "high": -0.4765
+        },
+        "win_rate_interval": {
+          "low": 0.2837,
+          "high": 0.3989
+        },
+        "difference_mean": {
+          "observed": -0.0301,
+          "low": -0.0785,
+          "high": 0.0391
+        },
+        "difference_win_rate": {
+          "observed": -0.0747,
+          "low": -0.0897,
+          "high": -0.051
+        }
+      },
+      "out_of_sample": {
+        "trades": 120105,
+        "instruments": 5077,
+        "win_rate": 0.3183,
+        "mean_net_r": -0.5891,
+        "median_net_r": -1.0843,
+        "sd_net_r": 2.2985,
+        "mean_win_r": 1.3478,
+        "mean_loss_r": -1.4935,
+        "payoff_ratio": 0.9025,
+        "break_even_win_rate": 0.5256,
+        "skew": -4.6918,
+        "worst": -56.3807,
+        "best": 26.9928,
+        "mean_mfe_r": 0.9831,
+        "mean_mae_r": -1.0658,
+        "gap_loss_share": 0.1436,
+        "exit_reasons": {
+          "stop": 50922,
+          "time": 50548,
+          "stop_gap": 17243,
+          "end_of_data": 1392
+        },
+        "holding_days_median": 21,
+        "percentiles": {
+          "p1": -9.4672,
+          "p5": -2.2816,
+          "p10": -1.5637,
+          "p25": -1.2019,
+          "p50": -1.0843,
+          "p75": 0.4401,
+          "p90": 1.6149,
+          "p95": 2.3569,
+          "p99": 3.9452
+        },
+        "months": 54,
+        "mean_interval": {
+          "low": -0.717,
+          "high": -0.4247
+        },
+        "win_rate_interval": {
+          "low": 0.2753,
+          "high": 0.3689
+        },
+        "difference_mean": {
+          "observed": 0.0009,
+          "low": -0.0748,
+          "high": 0.0946
+        },
+        "difference_win_rate": {
+          "observed": -0.0782,
+          "low": -0.1039,
+          "high": -0.0558
+        }
+      }
+    }
+  },
+  "measured_span": {
+    "first_entry": "2017-03-17",
+    "last_entry": "2026-08-07",
+    "years": 9.39,
+    "meets_the_ten_year_instruction": false
+  },
+  "verdict": "inconclusive"
+}

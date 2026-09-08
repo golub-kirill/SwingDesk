@@ -108,6 +108,11 @@ class ArmResult:
     ambiguous_exits: int = 0
     ambiguous_trades: list[Trade] = field(default_factory=list)
 
+    #: How many positions took the profit slot's partial. Not a `Skipped` reason and not a trade
+    #: count: a partial is an event WITHIN a trade, and folding it into either would make a
+    #: half-closed position look like a whole one.
+    partials: int = 0
+
     @property
     def net_r_values(self) -> list[Decimal]:
         return [trade.net_r for trade in self.trades]
@@ -119,6 +124,7 @@ class ArmResult:
         self.unevaluable_bars += other.unevaluable_bars
         self.ambiguous_exits += other.ambiguous_exits
         self.ambiguous_trades.extend(other.ambiguous_trades)
+        self.partials += other.partials
 
 
 def run_arm(
@@ -157,7 +163,28 @@ def run_arm(
                 # than it is unless this is counted.
                 result.skipped[Skipped.POSITION_OPEN] += 1
             held = index - position["entry_index"]
-            decision = config.exits.evaluate(bar, position["stop"], held, position["target"])
+            decision = config.exits.evaluate(bar, position["working_stop"], held,
+                                             position["target"], position["partial"])
+            if decision.partial and decision.price is not None:
+                # The profit slot's PARTIAL. The position is reduced and keeps walking, the stop
+                # moves where `M54-T0827` says, and `position["partial"]` goes to None so the slot
+                # cannot fire twice - `evaluate` holds no memory of its own, deliberately, because
+                # one `ExitPolicy` is shared by every position in a run.
+                taken = int(position["shares"] * config.exits.partial_fraction)
+                if 0 < taken < position["shares"]:
+                    position["partial_shares"] = taken
+                    position["partial_price"] = config.costs.sell_fill(decision.price)
+                    position["partial_date"] = bar.session_date
+                    position["working_stop"] = config.exits.stop_after(
+                        position["entry_price"], position["working_stop"]
+                    )
+                    result.partials += 1
+                # A fraction that rounds to nothing, or to the whole position, is not a partial.
+                # Either way the slot is spent: re-arming it would take the same trigger twice on
+                # a later bar, and a position that keeps trying is not the rule the study
+                # registered.
+                position["partial"] = None
+                continue
             if decision.ambiguous:
                 # The bar reached both legs and the policy took the stop. Counted AND kept, because
                 # the honest way to report an assumption is to report how often it bound and to
@@ -231,14 +258,27 @@ def run_arm(
             continue
 
         position = {
+            # **Two stops, and conflating them cost a contract violation.** `stop` is the INITIAL
+            # protective stop - the R denominator, `Trade.stop_price`, "fixed at entry" in its own
+            # field description and fixed forever. `working_stop` is where the trigger currently
+            # rests, which `M54-T0827` moves after a partial. The first version moved `stop` and
+            # `Trade` refused the record: with the stop at breakeven it equals the entry, and a
+            # long stop at its own entry is not a stop. The contract was right and the model was
+            # wrong - `initial_risk_per_share` is fixed forever precisely so R cannot drift under
+            # a position's feet.
             "instrument_id": series.instrument_id,
             "signal_date": bar.session_date,
             "entry_index": index + 1,
             "entry_date": entry_bar.session_date,
             "entry_price": entry_price,
             "stop": stop,
+            "working_stop": stop,
             "risk_per_share": risk_per_share,
             "target": config.exits.target_for(entry_price, risk_per_share),
+            "partial": config.exits.partial_for(entry_price, risk_per_share),
+            "partial_shares": 0,
+            "partial_price": None,
+            "partial_date": None,
             "shares": shares,
             "mfe": Decimal(0),
             "mae": Decimal(0),
@@ -266,6 +306,9 @@ def close_position(position: dict[str, Any], bar: Bar, quoted: Decimal, reason: 
     """
     exit_price = config.costs.sell_fill(quoted)
     return Trade(
+        partial_shares=position.get("partial_shares", 0),
+        partial_price=position.get("partial_price"),
+        partial_date=position.get("partial_date"),
         instrument_id=position["instrument_id"],
         arm=config.arm,
         signal_date=position["signal_date"],

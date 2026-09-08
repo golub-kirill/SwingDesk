@@ -934,3 +934,101 @@ the study re-run rather than reported with arithmetic done by hand.
 **And `DR-042`'s tie-break is immaterial: 132 ambiguous bars in 286,096 trades, 0.05%.** Reaching a
 stop 2 ATR below entry and a target 1R above it in one session needs a four-ATR range. The ruling is
 still the owner's.
+
+## 19. Selling half at 1R earns the same as closing it all — and the course's objection is a transaction cost
+
+`PR-017`, run 2026-09-08. **A POWERED null**, filed as `INCONCLUSIVE` because §6 had no branch for
+one — see `PREREG_TEMPLATE` §9, which this study and `PR-016` paid for together. `PRELIMINARY` on
+`DR-042`'s terms. 2 trials; cumulative 99.
+
+Derive every figure with `python tools/run_pr017.py --report`, never from these lines.
+
+### 19.1 What was measured
+
+Three exits on **one entry set** — same names, same dates, same fills — so every difference between
+them is the profit slot and can be nothing else. Unselected entries, 9.39 years, ~10⁵ trades an arm.
+
+| window | partial_half − all_out_1r | 95% interval | half-width | floor |
+|---|---|---|---|---|
+| in-sample | +0.0015R | [−0.0286, +0.0378] | **0.033** | 0.15 ✓ |
+| out-of-sample | +0.0247R | [−0.0162, +0.0780] | **0.047** | 0.15 ✓ |
+
+Against §3's registered minimum detectable effect of **0.05R**. **The instrument could have seen the
+effect and there is no effect**: selling half at 1R earns the same as closing the whole position
+there.
+
+**§9's reproduction check passed first.** `all_out_1r` reproduces `PR-016`'s `unselected` arm to
+every digit out of sample — 154,846 trades, −0.2028R, 46.21% — and `no_target` reproduces its
+`unselected_two_slot` diagnostic the same way. In sample the two differ by 197 trades (0.19%),
+because `PR-016` skips formation dates too thin to decile and this study builds no decile.
+
+### 19.2 The finding that is not the verdict: the partial buys tail shape for nothing
+
+| | all_out_1r | partial_half | no_target |
+|---|---|---|---|
+| **p95** | **+0.970R** | **+1.625R** | +2.407R |
+| payoff ratio | 0.743 | 0.755 | 1.145 |
+| break-even win rate | 57.39% | 56.99% | 46.63% |
+| skew | −3.34 | −2.81 | −1.00 |
+| exits at a target | 42% | none — the slot is a partial | none |
+
+**p95 is the whole story.** The incumbent's 95th percentile IS the target minus costs, and nothing
+sits above it by construction. The partial's is +1.625R, two thirds of the way to the no-target
+arm's +2.407R, because half of every winner is still running — and the mean does not move.
+
+**That is not the trade `M54` describes.** The course frames the partial as psychology bought with
+expectancy. Measured against a **capped** incumbent it is tail shape bought with nothing, because
+what the runner adds the extra fill takes away.
+
+### 19.3 The course's `Математические недостатки` is real, and it is not the argument the course gives
+
+| window | partial_half_3x − all_out_1r_3x | 95% interval |
+|---|---|---|
+| in-sample | **−0.0356R** | **[−0.0627, −0.0043]** — excludes zero |
+| out-of-sample | −0.0070R | [−0.0415, +0.0404] |
+
+**A partial is a third fill.** Selling half costs half a side's slippage the all-out arm never pays:
+at the median `2 × ATR / price` of 0.0524 that is about **0.024R** at ratified costs and **0.072R**
+at triple. Inside the noise at 1×; dominant at 3×.
+
+So the disadvantage is **a transaction cost, not a forgone tail** — and against this incumbent the
+partial forgoes *less* tail, not more. Same mechanism as §17.4 and §18.3: slippage is charged on
+price, R is `2 × ATR`, and everything in this system that looks like a strategy effect has to be
+checked against that ratio first.
+
+### 19.4 The stop move costs a little and buys win rate
+
+| | mean net R, in sample | win rate | vs the incumbent |
+|---|---|---|---|
+| `partial_half`, stop → breakeven | −0.1744 | 48.50% | +0.0015 [−0.0286, +0.0378] |
+| `partial_half_no_stop_move` | **−0.1649** | 44.00% | +0.0110 [−0.0275, +0.0619] |
+
+§9 asked whether the stop move carries the effect. **It works against it**: leaving the stop alone
+is worth about +0.010R more and costs 4.5 points of win rate, because the runner can then reach −1R
+instead of about zero. Both intervals contain zero, so neither is established; the direction is
+recorded because the question was registered.
+
+`partial_third` sits between the half and no target on every column — +0.0041R and +0.0315R against
+the incumbent, p95 +1.857R. **Monotone in how much is banked early**, which is what a mechanism
+looks like and what an artefact usually does not.
+
+### 19.5 The registered predictions
+
+**Win-rate ordering `all_out_1r > partial_half > no_target`: right in sample (48.64 > 48.50 >
+40.48), WRONG out of sample (46.21 < 46.44 > 37.58).** Half a position banked at 1R with the rest
+stopped at breakeven is a small win — but it is still a win, and the runner sometimes adds to it.
+
+**Skew between the other two: right on both windows.** −3.34 < −2.81 < −1.00 and −1.64 < −1.05 <
++0.41, and the mechanism is the registered one: a 1R target caps every winner, a partial caps half
+of each.
+
+### 19.6 What it does not establish
+
+* **That anything is profitable.** Every arm loses; the best on the page loses 0.15R a trade.
+* **That the partial is worthless.** It is worthless *for the mean* and it demonstrably reshapes the
+  tail. `M54-T0829`'s psychological advantage is not a property of a price series.
+* **Anything about selection.** Entries are unselected.
+* **Ten years.** 9.39, for the reason `TODO` §4 records.
+* **Anything without the survivorship caveat**, and the QA stage has NOT been run for this study —
+  `verify_pr016_qa.py` is specific to `PR-016`'s sample and constants, and a partial's three fills
+  need their own reconstruction.
