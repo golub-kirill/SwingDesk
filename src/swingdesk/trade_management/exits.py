@@ -12,6 +12,12 @@ the thing being excluded is named as discretionary hindsight.
 This implements three of the course's four exit slots (`EXIT_MODEL_SPEC.md`): protective, profit
 and time. The contextual slot is absent.
 
+**The profit slot has two forms and they are alternatives, not a sequence.** `target_r_multiple`
+closes the whole position; `partial_trigger` with `partial_fraction` sells part of it and lets the
+rest run (`M54`, twelve topics, the one exit the course specifies in detail). A policy may carry
+either. Carrying both would be a third strategy nobody has registered, and the caller decides which
+by which price it passes to `evaluate`.
+
 **The profit slot arrived on 2026-09-07 (`DR-042`) and is OPTIONAL, which is the whole design.**
 `target_r_multiple` defaults to None and a policy without one behaves exactly as this file did
 before - same branches, same order, same prices. That is not politeness to callers: `PR-002`,
@@ -49,6 +55,7 @@ class ExitDecision:
     price: Decimal | None = None
     reason: ExitReason | None = None
     ambiguous: bool = False
+    partial: bool = False
 
     def __post_init__(self) -> None:
         """An exit without a price or a reason is not an exit.
@@ -60,6 +67,14 @@ class ExitDecision:
         """
         if self.exited and (self.price is None or self.reason is None):
             raise ValueError("an exit must carry both a price and a reason")
+        if self.partial:
+            # A partial REDUCES a position and never ends it, so `exited` stays False and there is
+            # no `ExitReason` - the position is still open and will end for a reason of its own
+            # later. Letting both be true would let a caller book the same shares twice.
+            if self.exited:
+                raise ValueError("a partial reduces a position; it does not exit it")
+            if self.price is None:
+                raise ValueError("a partial must carry the price it filled at")
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,17 +97,79 @@ class ExitPolicy:
     max_holding_bars: int
     target_r_multiple: Decimal | None = None
 
+    #: `exit.partial_trigger` (M54-T0821/0822) in R, and `exit.partial_fraction` (M54-T0823 a half,
+    #: M54-T0824 a third) as a share of the position. Both unset in the registry; a study pins its
+    #: own, as `DR-012` requires of every study constant.
+    partial_trigger: Decimal | None = None
+    partial_fraction: Decimal | None = None
+
+    #: `exit.stop_move_after_partial`, M54-T0827, an Operational Course Rule. `"breakeven"` moves
+    #: the stop to the entry FILL - not to the quoted entry and not to entry-plus-costs, both of
+    #: which are defensible and neither of which is this. A study that wants another rule names it.
+    stop_after_partial: str | None = None
+
     def __post_init__(self) -> None:
         if self.atr_stop_multiple <= 0:
             raise ValueError(f"atr_stop_multiple must be > 0, got {self.atr_stop_multiple}")
         if self.max_holding_bars < 1:
             raise ValueError(f"max_holding_bars must be >= 1, got {self.max_holding_bars}")
+        self._check_partial()
         if self.target_r_multiple is not None and self.target_r_multiple <= 0:
             # Same refusal `broker/submit.py:target_price` makes on the live path, for the same
             # reason: a target at or below the entry is an instruction to sell at a loss, and the
             # OCO contract rejects it. The harness must not be able to express what the venue
             # would refuse.
             raise ValueError(f"target_r_multiple must be > 0, got {self.target_r_multiple}")
+
+    def _check_partial(self) -> None:
+        """The three partial fields are one rule; two of them is a policy that cannot be executed.
+
+        A fraction at or above 1 would close the whole position and call it a reduction, which
+        `Trade` also refuses - the same invariant on both sides of the boundary, because the
+        harness must not be able to build a record the contract would reject.
+        """
+        given = [self.partial_trigger is not None, self.partial_fraction is not None]
+        if any(given) and not all(given):
+            raise ValueError(
+                f"a partial needs a trigger AND a fraction, got trigger={self.partial_trigger} "
+                f"fraction={self.partial_fraction}"
+            )
+        if self.partial_trigger is None:
+            if self.stop_after_partial is not None:
+                raise ValueError(
+                    f"stop_after_partial={self.stop_after_partial!r} with no partial to follow"
+                )
+            return
+        if self.partial_trigger <= 0:
+            raise ValueError(f"partial_trigger must be > 0, got {self.partial_trigger}")
+        if self.partial_fraction is None or not (0 < self.partial_fraction < 1):
+            raise ValueError(
+                f"partial_fraction must be strictly between 0 and 1, got {self.partial_fraction}"
+            )
+        if self.stop_after_partial not in (None, "breakeven"):
+            raise ValueError(
+                f"stop_after_partial={self.stop_after_partial!r} is not a rule this implements; "
+                f"M54-T0827 names the concept and the course quantifies nothing"
+            )
+
+    def partial_for(self, entry_price: Decimal, risk_per_share: Decimal) -> Decimal | None:
+        """The price the partial fills at, or None when the slot is unused.
+
+        Same denominator argument as `target_for`: R is the position's own, passed in.
+        """
+        if self.partial_trigger is None:
+            return None
+        return entry_price + self.partial_trigger * risk_per_share
+
+    def stop_after(self, entry_price: Decimal, current_stop: Decimal) -> Decimal:
+        """Where the stop sits once the partial has filled (`M54-T0827`).
+
+        `"breakeven"` is the entry FILL, which is the price actually paid. Moving to the QUOTED
+        entry would leave the position short of breakeven by one side's slippage and call it flat.
+        With no rule the stop does not move, which is the course's other reading and is what an
+        unset `exit.stop_move_after_partial` means.
+        """
+        return entry_price if self.stop_after_partial == "breakeven" else current_stop
 
     def stop_for(self, entry_price: Decimal, atr: Decimal) -> Decimal:
         """Initial protective stop. Set before size, always (RISK_SPEC 3)."""
@@ -114,7 +191,8 @@ class ExitPolicy:
         return entry_price + self.target_r_multiple * risk_per_share
 
     def evaluate(
-        self, bar: Bar, stop: Decimal, bars_held: int, target: Decimal | None = None
+        self, bar: Bar, stop: Decimal, bars_held: int, target: Decimal | None = None,
+        partial: Decimal | None = None,
     ) -> ExitDecision:
         """Check one bar against the policy. Every ambiguity resolves against the strategy.
 
@@ -138,6 +216,14 @@ class ExitPolicy:
         Note 3 and 4 together mean a bar can satisfy the target and still exit at the stop. That is
         the cost of daily bars, and `DR-042` records it as an assumption with a measured size
         rather than as an implementation detail.
+
+        **`partial` is the price the profit slot's PARTIAL would fill at, and passing it is what
+        arms the slot.** The caller passes None once it has been taken, so this method needs no
+        memory. It sits with the target in the ordering - both are the profit slot - and it is
+        checked AFTER the stop for the same reason the target is: a bar that reached the stop and
+        the partial trigger is the same unknowable sequence, resolved the same pessimistic way.
+
+        A partial returns `exited=False`, so the caller reduces the position and keeps walking.
         """
         # (1) and (2): the open, where the sequence is known rather than assumed.
         if bar.open <= stop:
@@ -145,13 +231,18 @@ class ExitPolicy:
             return ExitDecision(True, bar.open, ExitReason.STOP_GAP)
         if target is not None and bar.open >= target:
             return ExitDecision(True, target, ExitReason.TARGET)
+        if partial is not None and bar.open >= partial:
+            return ExitDecision(False, partial, partial=True)
 
         # (3): intraday, where it is not. `ambiguous` says the bar could have gone either way.
-        both_reachable = target is not None and bar.low <= stop and bar.high >= target
+        profit_leg = target if target is not None else partial
+        both_reachable = profit_leg is not None and bar.low <= stop and bar.high >= profit_leg
         if bar.low <= stop:
             return ExitDecision(True, stop, ExitReason.STOP, ambiguous=both_reachable)
         if target is not None and bar.high >= target:
             return ExitDecision(True, target, ExitReason.TARGET)
+        if partial is not None and bar.high >= partial:
+            return ExitDecision(False, partial, partial=True)
 
         # (4): the clock, last.
         if bars_held >= self.max_holding_bars:

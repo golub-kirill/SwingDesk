@@ -483,3 +483,98 @@ def test_an_atr_larger_than_half_the_price_is_counted_rather_than_crashing_the_r
     assert result.skipped[Skipped.STOP_NOT_BELOW_ENTRY] == 0, (
         "the first guard does not catch it, which is the whole reason for the second"
     )
+
+
+# --- the profit slot's partial, through the engine (M54, DR-042 §3) ------------------------------
+
+PARTIAL_POLICY = ExitPolicy(
+    atr_stop_multiple=Decimal(2), max_holding_bars=20,
+    partial_trigger=Decimal(1), partial_fraction=Decimal("0.5"), stop_after_partial="breakeven",
+)
+
+
+def _partial_series() -> BarSeries:
+    """Breaks out, runs to +1R, then falls back through the entry.
+
+    ATR is pinned at 5, so R is 10 and the entry near 100 puts the partial at ~110 and the
+    original stop at ~90. The fall-back only reaches 95 — above the original stop and below
+    breakeven — so the runner can only be closed by a stop that MOVED.
+    """
+    return _series(
+        [("100", "101", "99", "100")] * 4          # base, so the breakout has something to break
+        + [("100", "105", "99", "104")]            # the trigger bar
+        + [("100", "101", "99", "100")]            # entry fills here at the open
+        + [("100", "112", "99", "111")]            # reaches +1R: the partial fires
+        + [("100", "101", "95", "96")] * 3         # falls back to 95
+    )
+
+
+def test_a_partial_produces_ONE_trade_carrying_both_legs() -> None:
+    """Not two trades. A partial is an event within a trade, and recording it as a second trade
+    would double the count, halve the average size and make a win rate unreadable."""
+    series = _partial_series()
+    config = _config(exits=PARTIAL_POLICY, trigger=BreakoutHigh(3))
+    result = run_arm(series, [True] * len(series.bars), _atr(series, "5"), config)
+    assert len(result.trades) == 1
+    assert result.partials == 1
+    trade = result.trades[0]
+    assert trade.partial_shares == trade.shares // 2
+    assert trade.partial_date is not None
+    assert trade.runner_shares == trade.shares - trade.partial_shares
+
+
+def test_the_stop_moves_to_breakeven_and_the_runner_is_closed_by_it() -> None:
+    """The mechanism `M54-T0827` describes. The fall-back to 95 never reaches the ORIGINAL stop
+    near 90, so a run that did not move the stop would carry the position to its time exit and
+    report a different price. That is the whole reason the fixture stops at 95."""
+    series = _partial_series()
+    result = run_arm(series, [True] * len(series.bars), _atr(series, "5"),
+                     _config(exits=PARTIAL_POLICY, trigger=BreakoutHigh(3)))
+    trade = result.trades[0]
+    assert trade.exit_reason in (ExitReason.STOP, ExitReason.STOP_GAP)
+    assert trade.exit_price == pytest.approx(trade.entry_price)
+
+
+def test_the_partial_fires_at_most_once() -> None:
+    """A second bar above the trigger must not sell another half. `evaluate` holds no memory, so
+    the engine disarms the slot - and if it did not, a strong position would be sold away."""
+    series = _series(
+        [("100", "101", "99", "100")] * 4
+        + [("100", "105", "99", "104")]
+        + [("100", "101", "99", "100")]
+        + [("100", "112", "99", "111")]            # partial here
+        + [("111", "120", "110", "119")] * 4       # and well above the trigger afterwards
+    )
+    result = run_arm(series, [True] * len(series.bars), _atr(series, "5"),
+                     _config(exits=PARTIAL_POLICY, trigger=BreakoutHigh(3)))
+    assert result.partials == 1
+    assert result.trades[0].partial_shares == result.trades[0].shares // 2
+
+
+def test_a_policy_without_the_slot_records_no_partial_at_all() -> None:
+    """The default that protects every published log: same series, two-slot policy, and the trade
+    comes out with `partial_shares` at 0 and prices identical to what it always produced."""
+    series = _partial_series()
+    result = run_arm(series, [True] * len(series.bars), _atr(series, "5"),
+                     _config(exits=ExitPolicy(Decimal(2), 20), trigger=BreakoutHigh(3)))
+    assert result.partials == 0
+    assert result.trades[0].partial_shares == 0
+    assert result.trades[0].partial_price is None
+
+
+def test_the_INITIAL_stop_survives_the_move_and_stays_the_R_denominator() -> None:
+    """What the contract caught. `Trade.stop_price` is "fixed at entry" and `initial_risk_per_share`
+    is "the R denominator, fixed forever" — so moving the stop to breakeven must move the WORKING
+    trigger and not the record. The first version moved both, and `Trade` refused a long stop
+    sitting at its own entry.
+
+    A study that let R drift would report a position's outcome in units that changed mid-trade.
+    """
+    series = _partial_series()
+    result = run_arm(series, [True] * len(series.bars), _atr(series, "5"),
+                     _config(exits=PARTIAL_POLICY, trigger=BreakoutHigh(3)))
+    trade = result.trades[0]
+    assert trade.stop_price < trade.entry_price
+    assert trade.initial_risk_per_share == trade.entry_price - trade.stop_price
+    # ATR is pinned at 5 and the multiple is 2, so R is exactly 10 whatever the stop did later.
+    assert trade.initial_risk_per_share == Decimal(10)
