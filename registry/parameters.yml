@@ -795,6 +795,31 @@ parameters:
     named_in: [M54-T0821, M54-T0822]
     ui_editable: true
 
+  - id: exit.partial_fraction
+    unit: fraction of the position
+    value: null
+    status: unset
+    provenance: null
+    read_by: none
+    named_in: [M54-T0823 - "Продажа половины позиции", M54-T0824 - "Продажа трети позиции"]
+    note: >-
+      HOW MUCH is taken at exit.partial_trigger. Registered 2026-09-08 because the concept had no
+      entry at all while its trigger and its follow-up rule both did - exit.partial_trigger
+      (M54-T0821/0822) and exit.stop_move_after_partial (M54-T0827). A parameter with no entry is
+      one no gate can see is unset, which is the failure PARAMETER_REGISTRY exists to prevent.
+      THE COURSE NAMES TWO CANDIDATES AND PICKS NEITHER, exactly as M53 did for the target before
+      DR-029: a half (M54-T0823) and a third (M54-T0824). So the form is the course's and any value
+      would be the owner's.
+      Module 54 is unusual in this course: twelve topics, and it supplies the trigger level, both
+      fractions and the stop move. It still quantifies nothing - EXIT_MODEL_SPEC section 4's audit
+      stands, because these are topic TITLES rather than thresholds, and AGENTS.md 16 governs what
+      a course rule licenses.
+      NOT to be set from M54-T0830 ("Математические недостатки") either: the course asserts the
+      partial has a mathematical disadvantage, and that argument is against a no-target exit. This
+      system's target is ratified at 1R and already caps every winner, so the comparison that
+      would inform a value here is the three-way one - all-out at 1R, partial at 1R, no target.
+    ui_editable: true
+
   - id: exit.stop_move_after_partial
     unit: rule
     value: null
