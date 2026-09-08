@@ -12,6 +12,12 @@ the thing being excluded is named as discretionary hindsight.
 This implements three of the course's four exit slots (`EXIT_MODEL_SPEC.md`): protective, profit
 and time. The contextual slot is absent.
 
+**The protective slot can be switched off, and that is a STUDY construct.** `protective=False`
+still computes the stop - R is `entry - stop` and every reported figure is denominated in it - and
+simply never acts on it. It exists so `PR-018` can ask whether the exit policy earns its keep
+against holding to the clock, which is the one comparison `measure_exit_surface` makes and no study
+has made on selected entries. It must never reach the live path.
+
 **The profit slot has two forms and they are alternatives, not a sequence.** `target_r_multiple`
 closes the whole position; `partial_trigger` with `partial_fraction` sells part of it and lets the
 rest run (`M54`, twelve topics, the one exit the course specifies in detail). A policy may carry
@@ -108,6 +114,20 @@ class ExitPolicy:
     #: which are defensible and neither of which is this. A study that wants another rule names it.
     stop_after_partial: str | None = None
 
+    #: **The protective slot, switchable OFF, and only a study may do it.** `PR-018` needs a null
+    #: arm that holds the position for the full period and never stops out - the comparison
+    #: `measure_exit_surface` makes against `buy and hold` and which no study has ever made on
+    #: SELECTED entries.
+    #:
+    #: The stop is still COMPUTED when this is False, because R is `entry - stop` and every figure
+    #: this project reports is denominated in it (`RISK_SPEC` 2). What changes is that `evaluate`
+    #: never acts on it. A null arm priced in different units is not a comparison.
+    #:
+    #: **It must never reach the live path**, where a position without a standing stop is what
+    #: `DR-036`, `DR-037` and every cap in `risk.*` exist to prevent. `application/pipeline.py`
+    #: builds its policy from registry values and cannot express this; a test asserts that.
+    protective: bool = True
+
     def __post_init__(self) -> None:
         if self.atr_stop_multiple <= 0:
             raise ValueError(f"atr_stop_multiple must be > 0, got {self.atr_stop_multiple}")
@@ -128,6 +148,11 @@ class ExitPolicy:
         `Trade` also refuses - the same invariant on both sides of the boundary, because the
         harness must not be able to build a record the contract would reject.
         """
+        if not self.protective and self.target_r_multiple is not None:
+            raise ValueError(
+                "a policy with no protective stop and a take-profit is neither the null arm nor a "
+                "strategy anyone registered - the null holds to the clock"
+            )
         given = [self.partial_trigger is not None, self.partial_fraction is not None]
         if any(given) and not all(given):
             raise ValueError(
@@ -225,6 +250,16 @@ class ExitPolicy:
 
         A partial returns `exited=False`, so the caller reduces the position and keeps walking.
         """
+        if not self.protective:
+            # The null arm: hold to the clock, whatever the price does. Checked FIRST so no other
+            # branch can quietly stop the position out, and `stop` is still the R denominator the
+            # caller sized on.
+            if partial is not None and bar.high >= partial:
+                return ExitDecision(False, partial, partial=True)
+            if bars_held >= self.max_holding_bars:
+                return ExitDecision(True, bar.close, ExitReason.TIME)
+            return ExitDecision(False)
+
         # (1) and (2): the open, where the sequence is known rather than assumed.
         if bar.open <= stop:
             # Gapped through. The fill is the open, not the stop.

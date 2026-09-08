@@ -903,6 +903,56 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 4. Pending decisions
 
+- [ ] **`[v]` THE RATIFIED EXIT COSTS 0.098R OF GROSS AND THE COMPARISON HAS NEVER BEEN MADE ON
+      SELECTED ENTRIES.** Raised 2026-09-08 from `EVIDENCE_SUMMARY` §10 and the exit surface.
+      ```bash
+      PYTHONPATH=$PWD/src python tools/measure_exit_surface.py --data data
+      ```
+      Same entries, same ONE round trip, so the same cost:
+      | | gross | net at 50 bps |
+      |---|---|---|
+      | buy and hold, 20 sessions | **+0.140R** | −0.031R |
+      | ratified `2.0 x 1R` | **+0.042R** | −0.128R |
+      Decomposed: the **1R target** costs about 0.04R of gross (at a 3R target gross is +0.084R),
+      the **2 ATR stop** about 0.056R more. **Together the exit policy is the largest destroyer of
+      return measured in this project** — bigger than the screen is worth, bigger than the clock.
+      **And lowering costs makes it worse, not better.** At 11:00's measured 5.75 bps a side the
+      cost falls to 0.039R, so buy-and-hold reads **+0.101R** and the ratified exit **+0.003R**.
+      **`PR-018` is registered to settle it on SELECTED entries and to read the risk side too** —
+      an exit policy that costs return and buys survivability is a different answer from one that
+      is simply wrong, and a study reading only the mean would not know which it had found.
+      Nothing here is a proposal: `exit.atr_stop_multiple` and `exit.target_r_multiple` are the
+      owner's, every cap in `risk.*` is denominated in the stop, and removing it removes the risk
+      model.
+
+- [ ] **`[v]` THE SYSTEM ENTERS AT THE MOST EXPENSIVE MINUTE OF THE SESSION.** Raised 2026-09-08.
+      `CARD-001`'s `entry.method` is `next session's open`, and `DR-040` measured that minute at
+      **26.5 bps a side against 4.0 at the close** — 6.6x. `measure_execution_time` then measured
+      what moving off it does, paired, 6,176 entries: gross changes by **−0.0010 [±0.0025]**, which
+      contains zero, while the cost saving is **+0.0041**, and the net difference **+0.0031
+      EXCLUDES zero**. About **0.13R a trade** of recovered cost — more than the entire ratified
+      screen is worth.
+      ```bash
+      PYTHONPATH=$PWD/src python tools/measure_execution_time.py --data data
+      ```
+      **Do not move the card on that number.** It is 60 instruments, unselected entries, and
+      exploratory. It needs a registered study on the live selection, and the store holds no
+      intraday bars — though `probe_ambiguous_bar.py` established 2026-09-08 that the venue serves
+      minute bars from 2016-01-05 on `feed=sip`, which is the data `DR-040` §6 said was missing.
+
+- [ ] **`[v]` WHAT FRACTION OF THE RISK BUDGET MAY THE ROUND TRIP CONSUME?** Raised 2026-09-08.
+      `R = 2 x ATR` and `DR-005` charges 25 bp of PRICE a side, so the round trip costs
+      `0.005 / (2 x ATR / price)` in R. Below a ratio of 0.005 that exceeds **one whole R**.
+      ```bash
+      PYTHONPATH=$PWD/src python tools/measure_gap_cost.py --data data
+      ```
+      The floor table prints both sides. Cutting **1.02%** of entries takes the pooled mean net R
+      from **−0.126R to −0.073R**; at a 0.03 floor it reaches −0.0155R for 18% of entries.
+      **The threshold is DERIVED, not fitted**: answer the question above and the floor follows —
+      1R → 0.005, 0.5R → 0.01, 0.25R → 0.02. That escapes `PREREG_TEMPLATE` rule 3, which a value
+      read off the outcome table would not. There is no registry entry for it yet; a ruling creates
+      one, `assumed`, the shape `DR-012` gave the stop.
+
 - [ ] **`[v]` THE STORE HOLDS TEN YEARS OF BARS, SO NO STUDY CAN HAVE TEN YEARS OF ENTRIES.**
       Raised 2026-09-07, against the owner's instruction that the backtest cover *"minimum za last
       10y"*.

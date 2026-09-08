@@ -370,7 +370,7 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 69 script(s), of which 14 are things you type
+### The tools — 70 script(s), of which 14 are things you type
 
 #### Operator tools — 14
 
@@ -420,7 +420,7 @@ Invoked by `python tools/check_gates.py`, not singly. Listed so a failing gate c
 | `python tools/verify_parameters.py` | Enforce the parameter-registry contract. | `--registry` |
 | `python tools/verify_transcription.py` | Verify that every `verbatim` claim in the documents still matches the course. | `--course-root` · `--docs` |
 
-#### Evidence-bound research runners — 42
+#### Evidence-bound research runners — 43
 
 Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions/measurements/` and reproduces it. They ran once, on a date. Nobody types these; they exist so a number can be re-derived.
 
@@ -468,5 +468,6 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/run_pr015.py` | `PR-015`: at a twenty-session hold, does ANY long-only selection signal earn a net excess? | `--data` · `--as-of` · `--out` · `--report` |
 | `python tools/run_pr016.py` | `PR-016` — the outcome distribution of the RATIFIED exit, over a decade, in and out of sample. | `--data` · `--as-of` · `--from` · `--to` · `--out` · `--report` |
 | `python tools/run_pr017.py` | `PR-017` — three exits on ONE entry set: all-out at 1R, half at 1R, and no target at all. | `--data` · `--as-of` · `--from` · `--to` · `--out` · `--report` |
+| `python tools/run_pr018.py` | `PR-018` — on the entries the screen actually selects, does the exit policy beat doing nothing? | `--data` · `--as-of` · `--from` · `--to` · `--out` · `--report` |
 
 <!-- END GENERATED COMMANDS -->
