@@ -9,10 +9,25 @@ describes fetching `1H` and `30m`; not one such bar has ever been written. A dai
 prices and no times, so the sequence is not merely unknown, it is absent from the data.
 
 **Where the answer comes from.** `probe_alpaca_delisted.py` established on 2026-09-05 that Alpaca
-`feed=sip` serves history from 2016-01-04 on this project's existing credentials. Same host, same
-read-only boundary, one-minute resolution instead of daily. `data.alpaca.markets` is neither the
-allowlisted broker host nor the forbidden live one — `registry/broker_policy.yml`'s allowlist bounds
-which ACCOUNT may be written, and this writes nothing.
+`feed=sip` serves DAILY history from 2016-01-04 on this project's existing credentials. Same host,
+same read-only boundary. `data.alpaca.markets` is neither the allowlisted broker host nor the
+forbidden live one — `registry/broker_policy.yml`'s allowlist bounds which ACCOUNT may be written,
+and this writes nothing.
+
+**That the same is true at ONE-MINUTE resolution was a separate claim, and it is measured rather
+than inherited.** 2026-09-08, `AAPL`:
+
+    2016-01-05   694 minute bars      feed=sip
+    2016-09-07   667 minute bars      feed=sip
+    2017-03-01   638 minute bars      feed=sip
+    2018-02-05   804 minute bars      feed=sip
+    2024-08-05   926 minute bars      feed=sip
+    2017-03-01     0 minute bars      feed=iex
+
+So the whole of any window this store can support is covered, and `feed=iex` serves none of it —
+the same split the daily probe found. The windows returned run 08:00Z–23:59Z, which is pre-market
+through after-hours: a stop resting at the venue can be taken in the pre-market print, and a window
+drawn around regular hours would quietly classify that as never having happened.
 
 **What it measures, and the one thing it cannot.** For each sampled session it walks the minutes in
 order and records which leg was touched first. A minute bar is itself a bar, so a MINUTE that
