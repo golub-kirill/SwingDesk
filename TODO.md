@@ -903,6 +903,33 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 4. Pending decisions
 
+- [ ] **`[v]` THE EVENING RUN TOOK 41 MINUTES AGAINST 17.7 THREE SESSIONS EARLIER, AND THE SECOND
+      PASS IS 60 MINUTES BEHIND IT — measured 2026-09-07, and the schedule is the owner's.**
+      ```bash
+      grep -E "daily run (starting|finished)" data/daily_run.log | tail -6
+      ```
+      | date | duration |
+      |---|---|
+      | 2026-09-03 | 7.4 min |
+      | 2026-09-04 | 17.7 min |
+      | **2026-09-07** | **41.4 min** |
+      **The cause is the backfill and it is not a defect.** The run evaluated **3,935 candidates**
+      tonight; before the 10y coverage pass most of the universe could not clear
+      `universe.min_bar_history` (250) and was never admitted. More names now carry real history,
+      which is what the backfill was for, and the run costs what that costs.
+      **It is NOT the fetch period.** The nightly pull is `period="1y"` per instrument — 253 rows —
+      and that is the shortest span the pipeline's own indicators need. It also carries a second
+      job: refetching a year is how a restated close is detected at all (`DR-016` §10.4). Shrinking
+      it would trade a slow run for a blind one.
+      **The margin tonight was 19 minutes.** `DR-015` §3 puts the retry at 19:30, one hour after the
+      scheduled pass, and provides for a RETRY rather than a concurrent run. At the current growth
+      the two will overlap, and both write the same stores.
+      **The ruling is yours** and the options are: move the second pass later, accept the overlap
+      and make the pass refuse to start while one is running, or cap the candidate set. The last one
+      is a strategy change wearing an operations costume and I do not recommend it.
+      **Measure before deciding**: 2026-09-07 was a holiday with no session to collect, so tomorrow
+      is the first honest reading of a full run on the widened universe.
+
 - [ ] **`[v]` THE COST CONSTANT DESCRIBES THE OPENING MINUTE AND IS APPLIED TO EVERY MOMENT —
       measured 2026-09-06, `DR-040` is `proposed` and the ruling is the owner's.**
       ```bash

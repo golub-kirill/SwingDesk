@@ -194,6 +194,8 @@ def main() -> int:
         "44 minimum effect": _run("a pre-registration that never says the smallest effect it "
                                   "could detect",
                                   [python, "tools/verify_minimum_effect.py"]),
+        "45 command reference": _run("README's command and flag reference is generated, not typed",
+                                     [python, "tools/build_commands.py", "--check-only"]),
     }
 
     print("\n" + "=" * 62)
