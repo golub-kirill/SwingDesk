@@ -6,8 +6,20 @@ date:          2026-09-08
 author:        Claude, at the owner's instruction 2026-09-08 — "proceed on 2 as a solid step",
                where 2 is the comparison EVIDENCE_SUMMARY §10 and the exit surface imply and
                nothing has ever run on selected entries
-status:        registered
-verdict:       (not yet run)
+status:        reported   (2026-09-08 - results/PR-018-report.md)   PRELIMINARY
+verdict:       INCONCLUSIVE by §6's rule - both difference intervals are WIDER than §8's 0.15R
+               floor, 0.451 in sample and 0.268 out, so no branch fires and no parameter moves.
+               §3's minimum detectable effect of 0.05R was WRONG and amendment A-1 said why
+               before the run: the arms do not share entries, 7,305 hold-only against 11,019
+               ratified. What the study MEASURED, and §6 requires in the same paragraph:
+               hold_only earns +0.0645R and +0.0404R where the ratified exit loses 0.0797R
+               and 0.1144R - the first positive mean net R on selected entries this project
+               has produced - and pays for it with a tail in which 21.7% of trades run below
+               -2R against the ratified policy's 2.3%, worst excursion -23.81R against -7.74R.
+               The stop does that work and the target does not: ratified_no_target reads
+               -0.0261R / -0.0650R at 3.0% below -2R. AND selection is not separable from the
+               exit - hold_only is +0.0404R on the selected decile against -0.1174R on every
+               admitted name out of sample, a +0.158R screen effect larger than PR-016's.
 ```
 
 ---

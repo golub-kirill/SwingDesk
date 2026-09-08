@@ -288,6 +288,20 @@ def run_arm(
         # The window ended with the position open. Closed at the last close and flagged, never
         # dropped - a dropped open position is a silently removed outcome, and open positions at
         # the end of a window are not randomly distributed.
+        #
+        # **This ABSORBS time exits that land on the final stored bar, and both labels are true.**
+        # The loop runs `range(len(bars) - 1)` because forming an ENTRY needs `bars[i + 1]`, so the
+        # last bar is never evaluated for an exit either: a position completing its holding period
+        # exactly there arrives here and is recorded `END_OF_DATA` at the same close it would have
+        # got as `TIME`. Identical bar, identical price, identical net R - only the reason differs,
+        # and `ExitReason.END_OF_DATA`'s own description ("the window ended while the position was
+        # open") is accurate for these too.
+        #
+        # Found by `PR-016`'s QA stage on 2026-09-08: 10 of 2,400 sampled trades, every one an
+        # entry dated 2026-08-07. It is left as it is BECAUSE both labels are true and because
+        # changing it would move the `exit_reason` mix of every published trade log without moving
+        # a single price. What it costs a reader is that an `end_of_data` count is an upper bound
+        # on positions the data genuinely cut short.
         last = bars[-1]
         result.trades.append(close_position(position, last, last.close, ExitReason.END_OF_DATA, config))
 
