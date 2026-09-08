@@ -182,6 +182,12 @@ EXPLORATORY = {
 #: Exploratory measurements that spend nothing, and why. Same distinction `NO_SPEND` draws for
 #: pre-registrations: a cost or execution input has no Sharpe to deflate.
 NO_SPEND_MEASUREMENTS = {
+    "ambiguous-bar": "which LEG printed first on a session that reached both - a property of the "
+                     "price path, not a configuration of a strategy. It evaluates no rule, "
+                     "compares no return and selects nothing; it says how often DR-042's tie-break "
+                     "takes the wrong leg (56.2%) and how often it is consulted at all (0.05% of "
+                     "exits), whose product is 0.0006R. A measurement of an ASSUMPTION's size is "
+                     "not a shot at the data",
     "quoted-spread-2026-09-06": "the venue's quoted spread - a cost input, not a return",
     "fill-convention-2026-09-06": "which fills happen - an execution input, not a search over "
                                   "configurations; the two columns are one convention each and "

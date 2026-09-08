@@ -828,3 +828,109 @@ and not a finding; it needs its own pre-registration.
 python tools/measure_gap_cost.py --data data
 python tools/measure_exit_surface.py --data data
 ```
+
+## 18. The first affirmative verdict, and both arms lose money
+
+`PR-016`, run 2026-09-08. **`ACCEPT` by §6's registered rule, and `PRELIMINARY`** until `DR-042` §8
+closes. 2 trials, declared before the run; cumulative 97, hurdle 2.52 sd(SR).
+
+Derive every figure with `python tools/run_pr016.py --report`, never from these lines.
+
+### 18.1 What was measured and what it licenses
+
+The ratified exit — stop `2.0 × ATR(14)`, target `1.0R`, time exit at session 20 — had never been
+simulated. `ExitPolicy` carried two of the course's four slots until `DR-042`, so every backtested
+trade ran the stop and the clock while every live order also carried a take-profit leg.
+
+Two arms over 8.91 years and 286,096 trades: **`unselected`**, every liquid name every 20 sessions,
+and **`ranked`**, the top decile by the live `ByMarketPathStrength`. §6 reads one quantity, the
+paired difference in mean net R, resampled on entry months.
+
+| window | ranked − unselected | 95% interval | width vs 0.20 floor |
+|---|---|---|---|
+| in-sample (51 months) | **+0.096R** | [+0.057, +0.137] | 0.080 ✓ |
+| out-of-sample (54 months) | **+0.088R** | [+0.018, +0.158] | 0.140 ✓ |
+| at 3× costs, in-sample | **+0.311R** | [+0.268, +0.359] | 0.091 ✓ |
+| at 3× costs, out-of-sample | +0.231R | [+0.085, +0.342] | 0.256 — over the floor |
+
+**And both arms lose.** The ranked arm reads **−0.100R a trade** at a win rate of 49.04% against a
+break-even of 54.22%; the control reads −0.192R. §6 reads the DIFFERENCE and never asks whether
+either arm is profitable, so the sentence this licenses is that **the screen loses less than no
+screen**, by about a tenth of an R.
+
+**The control contains the treatment.** The decile is a subset of the admitted names — 27,339
+trades of 258,757 — so the difference is attenuated by roughly a tenth. Decile-against-the-rest
+reads about +0.107R in sample. That direction is conservative.
+
+### 18.2 The finding that is not the verdict: the target makes the tail
+
+`PR-005`'s log at the same stop and hold **without a target** is right-skewed at **+1.61** — losses
+cluster at −1R and a thin right tail pays for them (§17). Under the ratified exit that reverses:
+
+| | control | ranked |
+|---|---|---|
+| skew | **−2.41** | −0.25 |
+| sd of net R | 1.167 | 1.014 |
+| p1 | −2.863R | **−1.735R** |
+| worst single trade | **−47.24R** | −7.16R |
+| **p95** | **+0.971R** | **+0.971R** |
+
+**A 1R target caps every winner and no loser.** p95 is identical in both arms and equals the target
+minus costs; the left side runs to −47R, and it is `stop_gap` on names whose stop is a small
+fraction of their price — §17 and `DR-006` §10.3 appearing in a third measurement.
+
+**So the screen's largest measurable effect is the left tail, not the winners.** p95 identical, p1
+better by 1.13R, worst trade better by 40R, standard deviation better by 13%.
+
+### 18.3 Where the difference comes from, decomposed
+
+| | control | ranked |
+|---|---|---|
+| reached the target | 42.48% | **44.72%** |
+| stopped, gapped | 8.86% | **6.73%** |
+| timed out | 11.22% | 9.21% |
+
+Gap avoidance is worth about **+0.012R** at §17's measured gap premium — roughly **13%** of the
+in-sample difference and less out of sample. The rest is the target being reached more often.
+
+**Stated as a hypothesis and not a finding:** the difference GROWS at triple costs while both
+levels collapse, which is what an arm with a larger `ATR / price` would do, since slippage is
+charged on price and R is `2 × ATR`. Untested here.
+
+### 18.4 The ratified target costs money, and it does not separate from zero
+
+| window | no target − 1R target | 95% interval | win rate |
+|---|---|---|---|
+| in-sample | +0.026R | [−0.039, +0.093] | **−8.16pp** |
+| out-of-sample | +0.052R | [−0.038, +0.157] | **−8.64pp** |
+
+The direction agrees with §17's arithmetic on `PR-005`'s log and **both intervals contain zero**.
+What IS established is the trade the target makes: about **8.5 percentage points of win rate** for
+a payoff ratio of 0.743 against 1.145. `DR-029` chose it so a trade completes and can be observed,
+not for expectancy, and that reason is untouched.
+
+### 18.5 What it does not establish
+
+* **That anything is profitable.** Both arms lose; nothing here is a reason to trade.
+* **Anything about a book** — the unit is one trade, with no cap, sector limit or capacity.
+  `PR-015` measured the book and found nothing separable from zero. `ranked_top4` here does not
+  replicate: +0.159R in sample, +0.051R out with an interval containing zero, both over the floor.
+* **That the screen forecasts rather than selects a cost profile.** Part is gap avoidance, measured.
+* **Ten years.** 8.91, because the store holds ten years of bars and a study needs its lookback
+  first. `TODO` §4 carries the owner's decision on a wider fetch.
+* **Anything, without the survivorship caveat.** Of 2,598 instruments here with a decade of history,
+  2,598 still trade.
+
+### 18.6 Two defects this study found in itself
+
+**The cost stress was differenced against the wrong control** — every arm against the 1× control,
+so `ranked_3x` carried a selection change and a cost change added together. `PR-002`'s exact shape
+and gate 25's reason for existing. Found by reading the verdict before reporting it; corrected, and
+the study re-run rather than reported with arithmetic done by hand.
+
+**The history floor was charged twice**, discarding a year of sample: 113 formation dates where
+2,522 sessions at a 20-session step give 126. Found by arithmetic that did not match, not by a test.
+
+**And `DR-042`'s tie-break is immaterial: 132 ambiguous bars in 286,096 trades, 0.05%.** Reaching a
+stop 2 ATR below entry and a target 1R above it in one session needs a four-ATR range. The ruling is
+still the owner's.

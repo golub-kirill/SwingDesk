@@ -450,7 +450,7 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/measure_study_drift.py` | How far has the store moved under each REPORTED study since it ran? | `--data` · `--results` |
 | `python tools/measure_target_reachability.py` | Which R target is REACHABLE inside the holding period this project actually runs? | `--data` · `--out` · `--limit` |
 | `python tools/probe_alpaca_delisted.py` | Does Alpaca serve the PRICE PATH of a delisted equity? Asked because nobody had asked. | `--sample` |
-| `python tools/probe_ambiguous_bar.py` | On a session that reached BOTH the stop and the target, which one printed first? Measured. | `--bars` · `--sample` · `--seed` · `--feed` · `--out` |
+| `python tools/probe_ambiguous_bar.py` | On a session that reached BOTH the stop and the target, which one printed first? Measured. | `--bars` · `--sample` · `--seed` · `--feed` · `--result` · `--out` |
 | `python tools/probe_canada.py` | Can the Canadian universe be enumerated? Asked of TMX, because the claim had hardened. | `--full` |
 | `python tools/probe_events.py` | Is there a free source for the pre-trade event calendar? Asked of the source, not of our code. | `--days` · `--data` · `--as-of` |
 | `python tools/probe_paper_order.py --symbol --limit --stop --target` | Place ONE order at the paper venue, deliberately, to prove the write path works end to end. | `--symbol` **(required)** · `--shares` · `--limit` **(required)** · `--stop` **(required)** · `--target` **(required)** · `--data` |

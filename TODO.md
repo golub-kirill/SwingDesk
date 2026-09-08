@@ -938,7 +938,14 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       So the number is owed BEFORE the ruling, and two things bind until it lands: the conservative
       rule is temporary, and **every `PR-016` figure is PRELIMINARY and must say so where it is
       published**. `DR-042` §4a carries this.
-      The measurement is `tools/probe_ambiguous_bar.py` — the store holds daily bars only
+      **MEASURED 2026-09-08, and it splits in two.** 132 ambiguous bars, all sampled, 130
+      resolved: the stop printed first **43.8%** [35.6%, 52.4%] of the time, so as a CONVENTION
+      the rule is wrong more often than right. But it is consulted on **0.05% of exits**, so as an
+      EFFECT it is worth **at most 0.0006R a trade** against a `PR-016` finding of +0.096R.
+      `DR-042` §4c carries both, §4d carries the three readings and their costs. The agent's
+      recommendation changed on the evidence: **keep stop-first**, because §4a's own threshold was
+      about the share of exits and that share is 0.05%.
+      The measurement was `tools/probe_ambiguous_bar.py` — the store holds daily bars only
       (`interval` is `1d` and nothing else, measured 2026-09-07), so the intraday sequence comes
       from Alpaca `feed=sip`, the route `probe_alpaca_delisted.py` established on 2026-09-05.
       **Recorded before the number exists so it cannot be adjusted afterwards: above ~15% the

@@ -7,8 +7,18 @@ author:        Claude, at the owner's instruction 2026-09-07 — "доля вы�
                форма хвостов на ратифицированном ... minimum za last 10y s vozmozhnostu progona
                po specific date, minimalnym limitom (~ ne menshe 200 dney mezhdu datami)
                iis-oos and needed safety measures"
-status:        registered
-verdict:       (not yet run)
+status:        reported   (2026-09-08 - results/PR-016-report.md)   PRELIMINARY
+verdict:       ACCEPT by §6's rule - the paired difference in mean net R excludes zero on both
+               windows, +0.096R [+0.057, +0.137] in sample and +0.088R [+0.018, +0.158] out.
+               AND BOTH ARMS LOSE MONEY: the ranked arm -0.100R a trade against a break-even
+               win rate of 54.22%, the control -0.192R. §6 reads the DIFFERENCE and never asks
+               whether either arm is profitable, so the sentence this licenses is that the
+               screen LOSES LESS than no screen. The finding that is not the verdict: the
+               ratified 1R target caps every winner and no loser, so the distribution is
+               left-skewed - skew -2.41 on the control against PR-005's +1.61 without a
+               target - and the screen's largest measurable effect is on that left tail,
+               p1 -1.735R against -2.863R, not on the winners, where p95 is identical.
+               PRELIMINARY until DR-042 §8 closes; the ambiguous share is 0.05%
 ```
 
 ---

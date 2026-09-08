@@ -68,10 +68,26 @@ RESULT = REPO / "docs" / "decisions" / "measurements" / "ambiguous-bar.json"
 SEED = 20260908
 SAMPLE = 200
 
-#: `DR-042` §4a: the agent's stated threshold, registered before the number existed. Above this the
-#: conservative rule stops being a small conservatism and becomes a systematic distortion. Printed
-#: beside the answer so the reader does not have to take the interpretation on trust.
-MATERIAL_SHARE = 0.15
+#: `DR-042` §4a's registered threshold, fixed before any number existed - and it is about the share
+#: of EXITS that are ambiguous, NOT about how often the rule gets an ambiguous bar wrong. `TODO` §4
+#: states it in those words: *"at 2% of exits the choice barely matters, at 20% it is the single
+#: largest assumption"*.
+#:
+#: **The first cut of this file compared it to the wrong quantity.** It measured the mis-assignment
+#: rate WITHIN ambiguous bars - 56.2% on the first real run - and printed that against this 15%,
+#: which made a 0.0006R effect read as a systematic distortion. Two different denominators. Found
+#: 2026-09-08, immediately after the first measurement and before it reached a record.
+#:
+#: So the probe reports THREE numbers and lets none of them stand for the others: how often the rule
+#: is wrong, how often it is consulted at all, and the product - which is the only one that moves a
+#: published figure.
+AMBIGUOUS_SHARE_THRESHOLD = 0.15
+
+#: A flip is worth about this much: the target sits 1R above entry and the stop 1R below it, so a
+#: bar reassigned from stop to target moves that trade by roughly 2R. Approximate on purpose - the
+#: exact fills differ by the cost of one side - and it is an UPPER bound, which is the safe
+#: direction for an impact estimate.
+FLIP_R = 2.0
 
 
 def headers() -> dict[str, str]:
@@ -156,6 +172,38 @@ def interval(successes: int, trials: int) -> tuple[float, float]:
     return (max(0.0, centre - spread), min(1.0, centre + spread))
 
 
+def report_impact(result_path: Path, wrong_rate: float) -> dict[str, Any]:
+    """Turn a mis-assignment RATE into an effect on each arm's mean net R.
+
+    `rate x share x FLIP_R`. The rate is how often the rule takes the wrong leg on a bar where it
+    is consulted at all; the share is how often it is consulted. **Neither stands for the other**,
+    and reporting the rate alone is how a 0.0006R effect reads as a systematic distortion.
+
+    Returns nothing when the study result is absent, and the caller says so rather than guessing:
+    a rate with no share behind it is not an impact.
+    """
+    if not result_path.exists():
+        return {"arms": {}, "lines": [f"{result_path.name} is not there"]}
+    result = json.loads(result_path.read_text(encoding="utf-8"))
+    ambiguous = result.get("ambiguous_exits", {})
+    arms: dict[str, Any] = {}
+    lines: list[str] = []
+    for group in ("arms", "diagnostics"):
+        for name, cells in result.get(group, {}).items():
+            count = ambiguous.get(name)
+            trades = cells.get("full", {}).get("trades", 0)
+            if count is None or not trades:
+                continue
+            share = count / trades
+            arms[name] = {
+                "ambiguous_bars": count, "trades": trades, "ambiguous_share": share,
+                "impact_r_per_trade": share * wrong_rate * FLIP_R,
+            }
+            lines.append(f"{name:16} {count:>5} ambiguous of {trades:>7} trades "
+                         f"= {share * 100:.3f}% of exits")
+    return {"arms": arms, "lines": lines or ["no arm carried an ambiguous bar"]}
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--bars", type=Path, default=AMBIGUOUS_BARS,
@@ -163,6 +211,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--sample", type=int, default=SAMPLE, help="how many to fetch")
     parser.add_argument("--seed", type=int, default=SEED, help="recorded with the result")
     parser.add_argument("--feed", default="sip", help="alpaca data feed")
+    parser.add_argument("--result", type=Path,
+                        default=REPO / "docs" / "prereg" / "results" / "PR-016.json",
+                        help="the study whose ambiguous share turns this rate into an impact")
     parser.add_argument("--out", type=Path, default=RESULT)
     args = parser.parse_args(argv)
 
@@ -227,23 +278,44 @@ def main(argv: list[str] | None = None) -> int:
     if resolved:
         share = outcomes["stop"] / resolved
         low, high = interval(outcomes["stop"], resolved)
+        wrong = 1 - share
         report["stop_first_share"] = share
         report["stop_first_interval"] = {"low": low, "high": high}
-        print(f"\n  STOP FIRST: {share * 100:.1f}%  95% [{low * 100:.1f}%, {high * 100:.1f}%]")
-        print("  The harness assumes 100%. The gap between that and this is the size of "
-              "DR-042 §4's assumption.")
-        overstated = 1 - share
-        report["assumption_overstates_stops_by"] = overstated
-        print(f"  It overstates stop-outs by {overstated * 100:.1f} percentage points of the "
-              f"ambiguous bars.")
-        if overstated > MATERIAL_SHARE:
-            print(f"  ABOVE the {MATERIAL_SHARE:.0%} threshold registered in DR-042 §4a before this "
-                  f"number existed: the conservative rule is a systematic distortion, not a small "
-                  f"conservatism, and the measured split should replace it.")
+        report["assumption_is_wrong_on_this_share_of_ambiguous_bars"] = wrong
+
+        print("\n  1. HOW OFTEN THE RULE IS WRONG")
+        print(f"     stop first {share * 100:.1f}%  95% [{low * 100:.1f}%, {high * 100:.1f}%]")
+        print(f"     The harness assumes 100%, so on an ambiguous bar it takes the wrong leg "
+              f"{wrong * 100:.1f}% of the time.")
+        if low <= 0.5 <= high:
+            print("     The interval spans 50%: which leg comes first is not distinguishable "
+                  "from a coin toss.")
+
+        print("\n  2. HOW OFTEN IT IS CONSULTED AT ALL")
+        impacts = report_impact(args.result, wrong)
+        for line in impacts["lines"]:
+            print(f"     {line}")
+        report["impact"] = impacts["arms"]
+
+        print("\n  3. THE PRODUCT, which is the only one that moves a published figure")
+        if impacts["arms"]:
+            worst = max(impacts["arms"].values(), key=lambda a: abs(a["impact_r_per_trade"]))
+            print(f"     at most {worst['impact_r_per_trade']:+.5f} R a trade, and that is an "
+                  f"upper bound")
+            print("     DR-042 §4a's registered threshold is about the share of EXITS that are "
+                  "ambiguous,")
+            print("     never about how often the rule is wrong. Against it:")
+            for name, arm in sorted(impacts["arms"].items()):
+                verdict = "ABOVE" if arm["ambiguous_share"] > AMBIGUOUS_SHARE_THRESHOLD else "below"
+                print(f"       {name:16} {arm['ambiguous_share'] * 100:7.3f}% of exits - "
+                      f"{verdict} {AMBIGUOUS_SHARE_THRESHOLD:.0%}")
         else:
-            print(f"  BELOW the {MATERIAL_SHARE:.0%} threshold registered in DR-042 §4a before this "
-                  f"number existed: the conservative rule is a small conservatism.")
+            print("     no study result to read a share from, so the rate above cannot be turned "
+                  "into an impact and must not be reported as one")
+
         print("\n  This is EVIDENCE for the ruling and is not the ruling. DR-042 §8 is the owner's.")
+        print("  The two numbers point different ways on purpose: as a CONVENTION the rule is")
+        print("  wrong more often than right, and as an EFFECT on anything published it is noise.")
 
     args.out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(f"\nwrote {args.out}")

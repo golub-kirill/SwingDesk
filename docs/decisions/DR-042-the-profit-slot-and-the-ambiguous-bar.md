@@ -153,6 +153,68 @@ cannot be adjusted afterwards: an ambiguous share above ~15%.** Below that the c
 a small conservatism; above it, it is a systematic distortion of the sample and the measured split
 should be used instead.
 
+### 4c. MEASURED, 2026-09-08 — and it splits into two answers that point opposite ways
+
+`python tools/probe_ambiguous_bar.py`. Evidence in
+`docs/decisions/measurements/ambiguous-bar.json`. **EXPLORATORY, and it spends no trial** — it
+measures a property of the price path, not a configuration of a strategy.
+
+`PR-016` recorded **132** ambiguous bars across 286,096 trades. All 132 were sampled; the feed
+served every one.
+
+```
+served and resolved      130
+  stop printed first      57      43.8%   95% [35.6%, 52.4%]
+  target printed first    73      56.2%
+one minute reached both    2      the floor on what any bar can resolve
+reached neither            0      the two feeds agree on every session
+```
+
+**1. As a CONVENTION the rule is wrong more often than it is right.** The harness assumes the stop
+prints first 100% of the time; it printed first **43.8%** of the time. The interval spans 50%, so
+which leg comes first is not distinguishable from a coin toss — but it is distinguishable from
+certainty, and certainty is what the rule asserts.
+
+**2. As an EFFECT the rule is noise.** It is only consulted on **0.05% of exits** — 118 of 258,757
+in the control and 14 of 27,339 in the ranked arm. Reaching a stop 2 ATR below entry and a target
+1R above it in one session needs a **four-ATR range**, which is rare. Rate × share × the ~2R a flip
+is worth gives **at most +0.00058R a trade**, against a `PR-016` finding of +0.096R. **Six tenths of
+one percent of it.**
+
+**§4a's registered threshold was about the second quantity, and the probe's first cut compared it
+to the first.** `TODO` §4 states it in words — *"at 2% of exits the choice barely matters, at 20% it
+is the single largest assumption"* — and the probe measured the mis-assignment rate WITHIN
+ambiguous bars, 56.2%, and printed it against 15% as though the rule were a systematic distortion.
+Two different denominators. Corrected the same day, before it reached this record, and the probe
+now reports all three numbers and lets none stand for the others.
+
+**What this does NOT settle.** Two of 132 sessions reached both legs inside a single minute. A
+minute bar records four prices and no times exactly as a daily one does, so **1.5% of the sample is
+unresolvable by any bar-based method** and is reported rather than assigned.
+
+### 4d. What the measurement changes about the ask
+
+**The conservative rule costs nothing, so keeping it is free.** No number in `PR-016` moves by more
+than 0.0006R under any tie-break.
+
+**But it is wrong more often than right**, so a reader who takes `exit.slot_resolution_order` as a
+description of what happens would be misled — and §4b established that this record is what SETS
+that parameter, which is a description the M58 standard requires.
+
+**Three readings, and the choice is the owner's:**
+
+| ruling | what it says | cost |
+|---|---|---|
+| **stop first** | the pessimistic convention, unchanged | understates by ≤0.0006R a trade; wrong on 56% of the bars it touches |
+| **the measured split** | assign ambiguous bars 44/56 | matches the data; adds a measured constant to a rule, which has to be re-measured when the universe changes |
+| **target first** | the optimistic reading | flatters by ≤0.0006R; also wrong, 44% of the time, and in the direction `FAIL_CLOSED_POLICY` warns against |
+
+**The agent's recommendation, and it changed on the evidence: keep STOP FIRST.** Not because it is
+accurate — it is not — but because the effect is three orders of magnitude below the finding it
+would touch, and a rule that can only ever understate is the one a research instrument should
+carry when the choice is free. The 15% threshold §4a registered was about the share of exits; that
+share is 0.05%, so §4a's own test says the choice barely matters.
+
 ## 5. Where it runs
 
 `ExitPolicy` lives in `trade_management` and is the one implementation both paths use

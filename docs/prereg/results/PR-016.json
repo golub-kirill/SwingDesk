@@ -45,6 +45,7 @@
       "cost_stress_1x",
       "cost_stress_3x"
     ],
+    "difference_at_3x": "ranked_3x is differenced against unselected_3x, never against the 1x control. A perturbation that is run and not read into the comparison is PR-002's failure and gate 25's reason for existing.",
     "note": "re-SIMULATED at 3x, not re-priced: a worse entry fill moves the stop, so different bars take it. Run on both arms and every window, never only on the one section 6 reads."
   },
   "stress_multiple": 3,
@@ -765,16 +766,6 @@
         "win_rate_interval": {
           "low": 0.3707,
           "high": 0.4334
-        },
-        "difference_mean": {
-          "observed": -0.406,
-          "low": -0.43,
-          "high": -0.3805
-        },
-        "difference_win_rate": {
-          "observed": -0.0695,
-          "low": -0.0753,
-          "high": -0.0635
         }
       },
       "in_sample": {
@@ -820,16 +811,6 @@
         "win_rate_interval": {
           "low": 0.3604,
           "high": 0.4561
-        },
-        "difference_mean": {
-          "observed": -0.434,
-          "low": -0.4671,
-          "high": -0.3952
-        },
-        "difference_win_rate": {
-          "observed": -0.0752,
-          "low": -0.0846,
-          "high": -0.0666
         }
       },
       "out_of_sample": {
@@ -876,16 +857,6 @@
         "win_rate_interval": {
           "low": 0.3593,
           "high": 0.443
-        },
-        "difference_mean": {
-          "observed": -0.3872,
-          "low": -0.4185,
-          "high": -0.3556
-        },
-        "difference_win_rate": {
-          "observed": -0.0656,
-          "low": -0.0731,
-          "high": -0.0591
         }
       }
     },
@@ -936,14 +907,14 @@
           "high": 0.4661
         },
         "difference_mean": {
-          "observed": -0.143,
-          "low": -0.213,
-          "high": -0.0857
+          "observed": 0.263,
+          "low": 0.1807,
+          "high": 0.3334
         },
         "difference_win_rate": {
-          "observed": -0.0399,
-          "low": -0.0557,
-          "high": -0.0216
+          "observed": 0.0295,
+          "low": 0.0125,
+          "high": 0.0482
         }
       },
       "in_sample": {
@@ -991,14 +962,14 @@
           "high": 0.4881
         },
         "difference_mean": {
-          "observed": -0.1229,
-          "low": -0.1621,
-          "high": -0.0779
+          "observed": 0.3111,
+          "low": 0.2676,
+          "high": 0.3588
         },
         "difference_win_rate": {
-          "observed": -0.0454,
-          "low": -0.0645,
-          "high": -0.0245
+          "observed": 0.0297,
+          "low": 0.0099,
+          "high": 0.0522
         }
       },
       "out_of_sample": {
@@ -1047,14 +1018,14 @@
           "high": 0.4785
         },
         "difference_mean": {
-          "observed": -0.1566,
-          "low": -0.2802,
-          "high": -0.0669
+          "observed": 0.2305,
+          "low": 0.0853,
+          "high": 0.3417
         },
         "difference_win_rate": {
-          "observed": -0.0362,
-          "low": -0.0602,
-          "high": -0.0088
+          "observed": 0.0294,
+          "low": 0.0052,
+          "high": 0.0583
         }
       }
     }

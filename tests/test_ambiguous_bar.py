@@ -17,6 +17,7 @@ No network.
 from __future__ import annotations
 
 import importlib.util
+import json
 import sys
 from decimal import Decimal
 from pathlib import Path
@@ -130,11 +131,70 @@ def test_no_trials_yields_no_interval_rather_than_a_division_by_zero(probe) -> N
 
 # --- what the probe promises about itself --------------------------------------------------------
 
-def test_the_material_threshold_matches_the_one_registered_in_dr_042(probe) -> None:
+def test_the_registered_threshold_is_about_the_share_of_EXITS_not_the_error_rate(probe) -> None:
     """Registered in `DR-042` §4a before the number existed, so it cannot be adjusted to suit the
     answer. A test is what stops the constant drifting to meet a result."""
-    assert probe.MATERIAL_SHARE == 0.15
+    assert probe.AMBIGUOUS_SHARE_THRESHOLD == 0.15
 
 
 def test_the_sample_is_seeded_so_it_is_a_sample_and_not_a_choice(probe) -> None:
     assert probe.SEED == 20260908
+
+
+# --- the rate is not the impact ------------------------------------------------------------------
+#
+# The first cut of this probe compared the mis-assignment rate WITHIN ambiguous bars (56.2% on the
+# first real run) against a threshold registered for the share of EXITS that are ambiguous (0.05%).
+# Two different denominators, and it printed "systematic distortion" for an effect of 0.0006R.
+
+def test_the_impact_is_the_rate_TIMES_the_share_and_not_either_alone(probe, tmp_path) -> None:
+    result = tmp_path / "study.json"
+    result.write_text(json.dumps({
+        "ambiguous_exits": {"ranked": 14},
+        "arms": {"ranked": {"full": {"trades": 27339}}},
+    }), encoding="utf-8")
+    got = probe.report_impact(result, 0.562)["arms"]["ranked"]
+    assert got["ambiguous_share"] == pytest.approx(14 / 27339)
+    # 0.000512 x 0.562 x 2R
+    assert got["impact_r_per_trade"] == pytest.approx(14 / 27339 * 0.562 * 2.0)
+    assert got["impact_r_per_trade"] < 0.001
+
+
+def test_a_high_error_rate_on_a_tiny_share_is_still_a_tiny_impact(probe, tmp_path) -> None:
+    """The confusion this exists to stop: being wrong every single time on one exit in two
+    thousand is noise, and the rate alone says the opposite."""
+    result = tmp_path / "study.json"
+    result.write_text(json.dumps({
+        "ambiguous_exits": {"a": 1}, "arms": {"a": {"full": {"trades": 2000}}},
+    }), encoding="utf-8")
+    assert probe.report_impact(result, 1.0)["arms"]["a"]["impact_r_per_trade"] == pytest.approx(
+        0.001
+    )
+
+
+def test_no_study_result_yields_no_impact_rather_than_a_guess(probe, tmp_path) -> None:
+    """A rate with no share behind it is not an impact, and reporting it as one is the defect."""
+    got = probe.report_impact(tmp_path / "absent.json", 0.5)
+    assert got["arms"] == {}
+    assert "is not there" in got["lines"][0]
+
+
+def test_an_arm_with_no_trades_is_skipped_rather_than_divided_by(probe, tmp_path) -> None:
+    result = tmp_path / "study.json"
+    result.write_text(json.dumps({
+        "ambiguous_exits": {"a": 3}, "arms": {"a": {"full": {"trades": 0}}},
+    }), encoding="utf-8")
+    assert probe.report_impact(result, 0.5)["arms"] == {}
+
+
+def test_diagnostics_are_measured_too_and_not_only_the_arms(probe, tmp_path) -> None:
+    result = tmp_path / "study.json"
+    result.write_text(json.dumps({
+        "ambiguous_exits": {"d": 5},
+        "arms": {}, "diagnostics": {"d": {"full": {"trades": 100}}},
+    }), encoding="utf-8")
+    assert "d" in probe.report_impact(result, 0.5)["arms"]
+
+
+def test_a_flip_is_worth_about_two_R_because_the_legs_are_one_R_either_side(probe) -> None:
+    assert probe.FLIP_R == 2.0
