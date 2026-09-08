@@ -27,10 +27,24 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
+Q = chr(34)
+
 REPO = Path(__file__).resolve().parents[1]
 README = REPO / "README.md"
 CLI = REPO / "src" / "swingdesk" / "presentation" / "cli.py"
 TOOLS = REPO / "tools"
+
+#: A research runner is bound to a committed result and reproduces it. It ran once, on a date, and
+#: is kept so the number can be re-derived - not because anybody types it.
+RESEARCH_PREFIXES = ("run_pr", "measure_", "probe_", "attribute_")
+
+#: The four kinds. Sixty-five rows in ONE table is an inventory rather than a reference: it buries
+#: the thirteen an operator types under thirty-nine that reproduce old studies. Grouping is derived
+#: from the tree and the gate runner, so a new tool lands in the right place by itself.
+OPERATOR = "Operator tools"
+GENERATOR = "Generators"
+GATE = "Gate implementations"
+RESEARCH_KIND = "Evidence-bound research runners"
 
 BEGIN = "<!-- BEGIN GENERATED COMMANDS - build_commands.py writes this, do not edit -->"
 END = "<!-- END GENERATED COMMANDS -->"
@@ -61,6 +75,7 @@ class Command:
 
     name: str
     summary: str
+    kind: str = ""
     arguments: list[Argument] = field(default_factory=list)
 
     @property
@@ -165,6 +180,36 @@ def cli_commands(path: Path) -> list[Command]:
     return [found[name] for name in sorted(found)]
 
 
+def gate_registered() -> set[str]:
+    """Tool filenames `check_gates.py` runs. A plain scan rather than a regex: the pattern needed
+    to match a quoted path is exactly the kind of escaping that reads wrong six months later."""
+    text = (TOOLS / "check_gates.py").read_text(encoding="utf-8")
+    found = set()
+    marker = Q + "tools/"
+    for chunk in text.split(marker)[1:]:
+        name = chunk.split(Q)[0]
+        if name.endswith(".py"):
+            found.add(name)
+    return found
+
+
+def classify(name: str, gates: set[str]) -> str:
+    """Which of the four kinds a tool is. **The order matters and the first version had it wrong.**
+
+    A generator is checked BEFORE gate registration, because every one of them is both: the gate
+    runs it as `--check-only` and a person runs it to regenerate. What a reader needs is the action
+    they take, and for `build_state.py` that is "run it after changing what it derives from" - not
+    "the gate runs this, leave it alone".
+    """
+    if name.startswith(RESEARCH_PREFIXES):
+        return RESEARCH_KIND
+    if name.startswith("build_"):
+        return GENERATOR
+    if name in gates:
+        return GATE
+    return OPERATOR
+
+
 def tool_command(path: Path) -> Command | None:
     """One `tools/*.py`, or None when it declares no parser and is therefore not invocable."""
     tree = ast.parse(path.read_text(encoding="utf-8"))
@@ -181,7 +226,7 @@ def tool_command(path: Path) -> Command | None:
         return None
     doc = ast.get_docstring(tree) or ""
     summary = " ".join(doc.split("\n\n")[0].split()) if doc else ""
-    command = Command(f"python tools/{path.name}", summary)
+    command = Command(f"python tools/{path.name}", summary, classify(path.name, gate_registered()))
     for receiver in receivers:
         for call in _calls_on(tree, receiver, "add_argument"):
             argument = _argument(call)
@@ -213,15 +258,34 @@ def render(cli: list[Command], tools: list[Command]) -> str:
             lines.append("|---|---|")
             lines.extend(f"| {a.shown} | {a.described or '—'} |" for a in command.arguments)
             lines.append("")
-    lines.append(f"### The tools — {len(tools)} invocable script(s)")
-    lines.append("")
-    lines.append("| command | what it does | arguments |")
-    lines.append("|---|---|---|")
+    grouped: dict[str, list[Command]] = {}
     for command in tools:
-        flags = " · ".join(a.shown for a in command.arguments) or "—"
-        summary = command.summary or "—"
-        lines.append(f"| `{command.invocation}` | {summary} | {flags} |")
-    lines.extend(["", END])
+        grouped.setdefault(command.kind, []).append(command)
+
+    lines.append(f"### The tools — {len(tools)} script(s), of which "
+                 f"{len(grouped.get(OPERATOR, []))} are things you type")
+    lines.append("")
+    for kind, note in (
+        (OPERATOR, "Run these. Everything else below either runs itself or ran once."),
+        (GENERATOR, "Each WRITES a generated block that a gate then checks. Run one after "
+                    "changing what it derives from, never to keep a document tidy."),
+        (GATE, "Invoked by `python tools/check_gates.py`, not singly. Listed so a failing gate "
+               "can be re-run alone to read its full output."),
+        (RESEARCH_KIND, "Each is bound to a committed result in `docs/prereg/results/` or "
+                        "`docs/decisions/measurements/` and reproduces it. They ran once, on a "
+                        "date. Nobody types these; they exist so a number can be re-derived."),
+    ):
+        commands = grouped.get(kind, [])
+        if not commands:
+            continue
+        lines.extend([f"#### {kind} — {len(commands)}", "", note, "",
+                      "| command | what it does | arguments |", "|---|---|---|"])
+        for command in commands:
+            flags = " · ".join(a.shown for a in command.arguments) or "—"
+            summary = command.summary or "—"
+            lines.append(f"| `{command.invocation}` | {summary} | {flags} |")
+        lines.append("")
+    lines.append(END)
     return "\n".join(lines)
 
 

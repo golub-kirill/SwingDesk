@@ -191,3 +191,53 @@ parser.add_argument("--symbol", required=True, help="x")
     assert argument.required is True
     assert argument.names == ("--symbol",)
     assert "required" not in argument.described
+
+
+# --- grouping: sixty-five rows in one table is an inventory, not a reference ---------------------
+
+
+def test_the_four_kinds_are_derived_and_a_gate_tool_is_not_an_operator_tool(build):
+    """Two rules that a prefix alone gets wrong, in opposite directions.
+
+    `verify_reproducible.py` and `verify_submission_guards.py` start with `verify_` and are NOT
+    registered as gates - a classifier keyed on the name would file them with the implementations
+    nobody types. And every `build_*` IS gate-registered as `--check-only`, so a classifier keyed
+    on registration would hide the generators an operator runs to regenerate. Order decides.
+    """
+    gates = build.gate_registered()
+    assert "verify_open_work.py" in gates
+    assert "verify_reproducible.py" not in gates
+    assert build.classify("verify_open_work.py", gates) == build.GATE
+    assert build.classify("verify_reproducible.py", gates) == build.OPERATOR
+    assert build.classify("run_pr014.py", gates) == build.RESEARCH_KIND
+    assert build.classify("measure_short_leg.py", gates) == build.RESEARCH_KIND
+    assert build.classify("build_state.py", gates) == build.GENERATOR
+    assert build.classify("refresh_universe.py", gates) == build.OPERATOR
+
+
+def test_the_operator_count_is_what_the_heading_promises(build):
+    """The heading says how many are things you type. If the grouping and the count came from two
+    different places they would disagree the first time a tool was added."""
+    tools = [
+        command for command in (build.tool_command(p) for p in sorted(build.TOOLS.glob("*.py")))
+        if command is not None
+    ]
+    operator = [c for c in tools if c.kind == build.OPERATOR]
+    block = build.render([], tools)
+    assert f"of which {len(operator)} are things you type" in block
+    assert f"#### {build.OPERATOR} — {len(operator)}" in block
+
+
+def test_every_tool_lands_in_exactly_one_group(build):
+    """A tool in no group vanishes from the reference; one in two is listed twice. Neither raises."""
+    tools = [
+        command for command in (build.tool_command(p) for p in sorted(build.TOOLS.glob("*.py")))
+        if command is not None
+    ]
+    block = build.render([], tools)
+    for command in tools:
+        assert block.count(f"| `{command.invocation}` |") == 1, command.name
+    assert sum(
+        block.count(f"#### {kind} — ")
+        for kind in (build.OPERATOR, build.GENERATOR, build.GATE, build.RESEARCH_KIND)
+    ) == len({c.kind for c in tools})
