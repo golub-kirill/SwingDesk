@@ -1578,10 +1578,18 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **The two legs do NOT turn at the same rate** — the bottom decile churns about two points
       more at every horizon — so a spread priced by doubling the long leg is an assumption, and
       that is what the first version of this measurement made before it was corrected.
-      **What is left is the re-price itself**, and it is arithmetic rather than a new study: replace
-      the constant in `rebalance_cost` and `COST_SIDES_PER_FORMATION` with the measured turnover
-      between consecutive books, exactly as `run_pr014.py` now does. It spends **no trials** — the
-      same configurations, re-priced.
+      **`measure_short_leg.py` IS CORRECTED — 2026-09-07.** `rebalance_cost` now charges the
+      measured one-sided turnover between consecutive selections, and **each leg pays its own**,
+      because the bottom decile churns about two points more than the top at every horizon. The old
+      formula is kept as `gross_rebalance_cost` so the size of the error stays checkable. **The
+      re-run is still pending** — the evening pass held the store — so `EVIDENCE_SUMMARY` §11 still
+      carries the gross figures.
+      **`run_pr013.py` is NOT corrected, on purpose.** All six of its GROSS intervals include zero,
+      and a cost is a constant subtraction from a gross interval, so every net interval includes
+      zero whatever the cost. Its verdict cannot move. What the error WOULD distort is a comparison
+      across horizons, and `PR-013` measures one formation length. The reasoning is recorded beside
+      the constant; the re-price stays open here because a number nobody corrected is not the same
+      as a number that did not need it.
       **It may move a published claim, which is why it is worth doing rather than noting.**
       `EVIDENCE_SUMMARY` §11 reports the 20-session spread as *"nothing survives: gross +1.069%
       against 1.00% of cost"* per formation. At the measured turnover that cost is **0.39% per

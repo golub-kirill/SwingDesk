@@ -41,6 +41,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -49,6 +50,7 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(REPO / "tools"))
 
+from measure_decile_persistence import one_sided
 from measure_momentum_horizon import FORMATION, RULE, _formation_return
 from run_pr012 import BOOTSTRAP_RESAMPLES, BOOTSTRAP_SEED, bootstrap_interval
 from run_pr013 import MIN_NAMES_PER_DATE, _admitted_dates, _forward_returns
@@ -99,6 +101,48 @@ def eligible_shorts(adtv: dict[str, Decimal], fraction: Decimal) -> set[str]:
     return {name for name, _ in ranked[:size]}
 
 
+def _mean(values: list[Decimal]) -> Decimal:
+    """The mean turnover, or zero when a leg never traded. A long-only arm has no bottom leg and
+    its `bottom_turnover` is zero by construction, not by accident."""
+    return sum(values, Decimal(0)) / len(values) if values else Decimal(0)
+
+
+def selected(
+    scores: dict[str, Decimal],
+    forward: dict[str, Decimal],
+    shortable: set[str] | None,
+) -> tuple[list[str], list[str]] | None:
+    """`(top, bottom)` instrument ids at the decile cutoff, or None when the cross-section refuses.
+
+    **Extracted for `DR-041`'s sibling correction, and it removes a duplication that was already
+    there**: `restricted_spread` and `long_only_excess` each ranked the cross-section themselves,
+    so the two could have drifted about where a decile falls. Now one function decides and both
+    read it - and the names it returns are what makes TURNOVER measurable at all, which is the
+    whole reason this refactor happened.
+
+    The ranking is never restricted; only the short SELECTION is. A name that cannot be borrowed
+    still competes for the top decile and still sets where the deciles fall.
+    """
+    ranked = sorted(
+        ((s, n) for n, s in scores.items() if n in forward),
+        key=lambda pair: (-pair[0], pair[1]),
+    )
+    if len(ranked) < MIN_NAMES_PER_DATE:
+        return None
+    size = int(len(ranked) * DECILE)
+    if size < 1:
+        return None
+    top = [n for _, n in ranked[:size]]
+    if shortable is None:
+        return top, [n for _, n in ranked[-size:]]
+    # Worst first among borrowable names, then the same number of positions as the long leg. A
+    # short book smaller than the long one is a different portfolio, not a restricted version.
+    borrowable = [n for _, n in reversed(ranked) if n in shortable]
+    if len(borrowable) < size:
+        return None
+    return top, borrowable[:size]
+
+
 def restricted_spread(
     scores: dict[str, Decimal],
     forward: dict[str, Decimal],
@@ -113,40 +157,44 @@ def restricted_spread(
 
     `shortable=None` is the unrestricted control and must reproduce `run_pr013._spread` exactly.
     """
-    ranked = sorted(
-        ((s, n) for n, s in scores.items() if n in forward),
-        key=lambda pair: (-pair[0], pair[1]),
-    )
-    if len(ranked) < MIN_NAMES_PER_DATE:
+    picked = selected(scores, forward, shortable)
+    if picked is None:
         return None
-    size = int(len(ranked) * DECILE)
-    if size < 1:
-        return None
-    top = [forward[n] for _, n in ranked[:size]]
-
-    if shortable is None:
-        bottom = [forward[n] for _, n in ranked[-size:]]
-    else:
-        # Worst first among borrowable names, then take the same number of positions as the long
-        # leg. A short book smaller than the long one is a different portfolio, not a restricted
-        # version of this one.
-        borrowable = [n for _, n in reversed(ranked) if n in shortable]
-        if len(borrowable) < size:
-            return None
-        bottom = [forward[n] for n in borrowable[:size]]
+    top, bottom = ([forward[n] for n in side] for side in picked)
     return (sum(top, Decimal(0)) / len(top)) - (sum(bottom, Decimal(0)) / len(bottom))
 
 
-def rebalance_cost(arm: str, per_side_bps: Decimal) -> Decimal:
-    """What one rebalance of this arm costs, as a fraction, at `per_side_bps` a side.
+def rebalance_cost(
+    arm: str, per_side_bps: Decimal, top_turnover: Decimal, bottom_turnover: Decimal,
+) -> Decimal:
+    """What one rebalance of this arm costs, charged on the fraction that actually TRADES.
 
-    A long-short book pays a round trip on BOTH legs; a long-only book pays one. Returning the same
-    number for both would flatter the spread arms against the control they are compared to, which is
-    the only comparison this study exists to make.
+    **This function charged GROSS turnover until 2026-09-07 and the correction is `PR-014`'s.**
+    It returned `legs x 2 x bps` at every formation - the whole book sold and rebought - when a name
+    still in the decile at the next formation is HELD. `PR-014` amendment A-3 has the full argument
+    and the size of the error there: 2.7x at twenty sessions and nil at a year, so it was not a
+    constant, it was a monotone function of the holding period this study varies.
 
-    **Borrow is not in here and cannot be.** A short position pays a borrow rate for every day it is
-    held, and this project has no source for it. The figure below is therefore a FLOOR on the cost
+    **Each leg is charged its OWN turnover.** `decile-persistence-2026-09-07` measured the bottom
+    decile churning about two points more than the top at every horizon, so doubling the long leg's
+    number would be an assumption where a measurement is available - the same class of assumption
+    the correction is about.
+
+    **Borrow is still not in here and still cannot be.** A short position pays a borrow rate for
+    every day it is held and this project has no source for it, so the figure is a FLOOR on the cost
     of the short arms and an exact charge for the long-only one.
+    """
+    side = per_side_bps / Decimal(10000)
+    if arm == "long_only":
+        return top_turnover * Decimal(SIDES_PER_LEG) * side
+    return (top_turnover + bottom_turnover) * Decimal(SIDES_PER_LEG) * side
+
+
+def gross_rebalance_cost(arm: str, per_side_bps: Decimal) -> Decimal:
+    """What this tool charged before 2026-09-07, kept so the size of the error stays visible.
+
+    `PR-014` keeps the same figure beside its corrected one for the same reason: a re-run that
+    quietly absorbed the difference would leave nothing to check the correction against.
     """
     legs = 1 if arm == "long_only" else LEGS
     return Decimal(legs * SIDES_PER_LEG) * per_side_bps / Decimal(10000)
@@ -156,16 +204,10 @@ def long_only_excess(
     scores: dict[str, Decimal], forward: dict[str, Decimal], benchmark: Decimal
 ) -> Decimal | None:
     """Top-decile mean minus the benchmark - the half a long-only book can hold today."""
-    ranked = sorted(
-        ((s, n) for n, s in scores.items() if n in forward),
-        key=lambda pair: (-pair[0], pair[1]),
-    )
-    if len(ranked) < MIN_NAMES_PER_DATE:
+    picked = selected(scores, forward, None)
+    if picked is None:
         return None
-    size = int(len(ranked) * DECILE)
-    if size < 1:
-        return None
-    top = [forward[n] for _, n in ranked[:size]]
+    top = [forward[n] for n in picked[0]]
     return (sum(top, Decimal(0)) / len(top)) - benchmark
 
 
@@ -193,6 +235,10 @@ def measure(store: BarStore, as_of: datetime) -> list[dict[str, object]]:
 
         collected: dict[str, list[Decimal]] = {f"short_pool={p}": [] for p in SHORT_POOLS}
         collected["long_only"] = []
+        # Turnover per (arm, leg), and the book each arm last held. Reset per horizon, because a
+        # 20-session book and a 126-session one are different books that happen to share a ranking.
+        turns: defaultdict[tuple[str, str], list[Decimal]] = defaultdict(list)
+        held: dict[tuple[str, str], list[str]] = {}
         for session in dates:
             if session not in bench:
                 continue
@@ -214,24 +260,44 @@ def measure(store: BarStore, as_of: datetime) -> list[dict[str, object]]:
             observed = {n: forward[n][session] for n in scores if session in forward[n]}
 
             for pool in SHORT_POOLS:
+                arm = f"short_pool={pool}"
                 shortable = None if pool >= 1 else eligible_shorts(adtv, pool)
                 value = restricted_spread(scores, observed, shortable)
                 if value is not None:
-                    collected[f"short_pool={pool}"].append(value)
+                    collected[arm].append(value)
+                # The NAMES, so the cost can be charged on what actually trades rather than on a
+                # constant. Measured against this arm's OWN previous selection: the arms hold
+                # different books and a turnover borrowed from one is an assumption in the other.
+                picked = selected(scores, observed, shortable)
+                if picked is not None:
+                    for side, names in zip(("top", "bottom"), picked, strict=True):
+                        turns[(arm, side)].append(one_sided(held.get((arm, side), []), names))
+                        held[(arm, side)] = names
             excess = long_only_excess(scores, observed, bench[session])
             if excess is not None:
                 collected["long_only"].append(excess)
+            picked = selected(scores, observed, None)
+            if picked is not None:
+                turns[("long_only", "top")].append(one_sided(held.get(("long_only", "top"), []),
+                                                             picked[0]))
+                held[("long_only", "top")] = picked[0]
 
         for arm, values in collected.items():
             interval = bootstrap_interval(values, BOOTSTRAP_SEED, BOOTSTRAP_RESAMPLES)
             row: dict[str, object] = {"horizon": horizon, "arm": arm, "n": len(values)}
             if interval:
                 mean, low, high = interval
-                cost = float(rebalance_cost(arm, SLIPPAGE_BPS))
+                top_turn = _mean(turns[(arm, "top")])
+                bottom_turn = _mean(turns[(arm, "bottom")])
+                cost = float(rebalance_cost(arm, SLIPPAGE_BPS, top_turn, bottom_turn))
                 row |= {
                     "mean": round(mean, 6), "low": round(low, 6), "high": round(high, 6),
                     "excludes_zero": low > 0 or high < 0,
+                    "top_turnover": float(round(top_turn, 4)),
+                    "bottom_turnover": float(round(bottom_turn, 4)),
                     "rebalance_cost": round(cost, 6),
+                    "rebalance_cost_as_first_published": float(round(
+                        gross_rebalance_cost(arm, SLIPPAGE_BPS), 6)),
                     "net_mean": round(mean - cost, 6),
                     "net_low": round(low - cost, 6), "net_high": round(high - cost, 6),
                     "net_excludes_zero": (low - cost) > 0 or (high - cost) < 0,

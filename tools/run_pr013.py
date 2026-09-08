@@ -80,6 +80,19 @@ MIN_NAMES_FOR_WINDOW_START = 200
 HOLDOUT_FROM = date(2023, 10, 12)
 
 #: A decile-spread portfolio turns over both legs at each rebalance: two sides on each of two legs.
+#:
+#: **This charges GROSS turnover and it is the error `PR-014` amendment A-3 corrects.** A name still
+#: in the decile at the next formation is HELD, not sold and re-bought, so the whole book does not
+#: turn. `measure_short_leg.py` was corrected on 2026-09-07 and this was NOT, deliberately:
+#:
+#: **`PR-013`'s verdict cannot move.** All six of its GROSS intervals include zero, and a cost is a
+#: constant subtraction from a gross interval - so every net interval includes zero too, whatever
+#: the cost. Correcting it here would change the printed net figures and no conclusion, on a study
+#: already `inconclusive` and already exploratory by its own §0b.
+#:
+#: What it WOULD change is a comparison ACROSS horizons, and `PR-013` makes none: it measures one
+#: formation length. `TODO.md` §5 carries the re-price as open work rather than closed, because a
+#: number nobody has corrected is not the same as a number that did not need correcting.
 COST_SIDES_PER_FORMATION = 4
 
 ARMS = ("MOMENTUM", "MARKET", "SECTOR")
