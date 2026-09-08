@@ -713,3 +713,224 @@ Sharpe penalises searching for a winner, and this reading only ever removed a cl
 
 **Do not write anything implying more confidence than the above.** `UX_COPY.md` §3 carries the
 standing warning verbatim.
+
+## 17. The strategy sits one tenth of a percentage point from break-even, and the ratified target moves it the wrong way
+
+**Read on 2026-09-07 from evidence already committed**, not from a new run: `PR-005`'s trade log
+(`docs/prereg/results/PR-005-trades.csv`, 26,351 trades, of which **13,099 at 1× costs**) and
+`measure_exit_surface`'s grid (`docs/decisions/measurements/exit-surface-2026-09-06.json`, 123,635
+entries per cell, 5,069 instruments). **EXPLORATORY. It sets nothing and spends no trial** — every
+configuration below is one `PR-016` §6a already declares, and counting it twice would raise the
+programme's hurdle for arithmetic that searched for nothing.
+
+Derive every figure with the commands in §17.4, never from these lines.
+
+### 17.1 The distribution nobody had reported
+
+`Trade` has carried `net_r`, `mfe`, `mae` and `exit_reason` since `PR-005`. No study had ever
+reported their **distribution** — this file carried annualised excesses and nothing else. At the
+ratified stop and the ratified twenty-session hold, **without a target**, over 13,099 trades:
+
+| | |
+|---|---|
+| win rate | **41.07%** |
+| mean net R | **−0.0023** |
+| median net R | −1.007 — more than half of all trades are stop-outs |
+| mean win / mean loss | +1.493R / −1.045R |
+| payoff ratio | 1.429 |
+| **break-even win rate** | **41.17%** |
+| p1 / p95 | −2.565R / +2.779R |
+| worst / best | −11.47R / +17.41R |
+| skew | +1.61 |
+
+**The observed win rate is 0.10 percentage points below the one the payoff ratio requires.** The
+strategy does not lose and does not win; it sits on break-even to within a rounding error. The
+right skew is the whole reason it gets there: losses cluster tightly at −1R because the stop works,
+and a thin right tail pays for them.
+
+### 17.2 Where the losses come from — by count the stop, by damage the gap
+
+7,719 losing trades, **−8,064R** in total:
+
+| exit | n | share of losers | mean net R | **share of all loss** |
+|---|---|---|---|---|
+| `stop` | 5,277 | 68.4% | −1.033 | 67.6% |
+| **`stop_gap`** | **1,452** | **18.8%** | **−1.560** | **28.1%** |
+| `time` | 953 | 12.3% | −0.348 | 4.1% |
+| `end_of_data` | 37 | 0.5% | −0.476 | 0.2% |
+
+**A gap costs half an R more than the stop it jumped**, and gaps are the only loss that exceeds its
+share of the population. The time exit — the slot most often blamed for cutting winners short —
+accounts for **4% of the damage**.
+
+**This is `DR-006` §10.3 and `PR-011` arriving at the same place from two directions.**
+`measure_gap_cost` finds gap cost monotone in `2 × ATR / price`: **−5.490R** below 0.005 against
+−1.401R above 0.05, and the bottom two bands are 9.2% of gaps carrying **22.9% of gap damage**.
+`PR-011` measured overshoot by volatility band on a different population and found the same shape
+reversed into its own hypothesis — gap-through rate falls from **20.9%** on names whose ATR is ≤3%
+of price to **13.8%** on names at 10–50%. **The quiet names are the dangerous ones**, because a
+stop two ATR wide is a small fraction of price and an ordinary overnight move is several R.
+
+### 17.3 What the ratified 1R target does, and it is not what it looks like
+
+`DR-029` ruled the target at 1R on 2026-09-01. Re-pricing `PR-005`'s own log as though it had been
+in force — **arithmetic on a published log, not a run**:
+
+| | win rate | mean net R |
+|---|---|---|
+| as published, no target | 41.07% | **−0.0023R** |
+| with a 1R target | **50.94%** | **−0.0495R** |
+
+**The target buys a coin-flip win rate and pays for it with expectancy.** 4,685 winners are capped
+and give up **3,054R**; 1,293 losers are rescued and gain **2,435R**; the net is **−619R** over
+13,099 trades. Mechanically it cannot be otherwise: winners average +1.493R with p90 at +1.98R, so
+a 1R cap removes exactly the right tail that carries the payoff ratio, and the break-even win rate
+rises from 41% to about 51%.
+
+**Two limits, and both point the same way.** The estimate **overstates** the target's benefit — it
+credits every trade whose MFE reached +1R, where `DR-042`'s tie-break gives an ambiguous bar to the
+stop — and `PR-005`'s entries are breakout-with-trend-gate rather than the ratified screen. The
+measured version is `PR-016`'s registered `unselected_two_slot` diagnostic.
+
+**`DR-029` did not choose the target for expectancy** and says so: the reason is that a completed
+trade is observable where a timed-out one is not. That reason is untouched by this. What is new is
+its price.
+
+### 17.4 The exit grid rises monotonically away from the ratified pair, and still beats nothing
+
+`measure_exit_surface`, 25 cells, net R per trade, unselected entries:
+
+| stop × target | target hit | stopped | time | **net R** |
+|---|---|---|---|---|
+| **2.0 × 1.0 — ratified** | 47.3% | 40.9% | 11.8% | **−0.1278** |
+| 2.0 × 2.0 | 20.1% | 46.0% | 33.9% | −0.0968 |
+| 2.0 × 3.0 | 7.4% | 46.6% | 46.1% | −0.0864 |
+| 3.0 × 3.0 | 2.0% | 29.0% | 69.0% | **−0.0360** |
+| *buy and hold, 20 sessions* | | | | *−0.0305* |
+
+**Net expectancy rises monotonically in both axes across all 25 cells**, and the ratified pair sits
+in the worst corner of the surface. The mechanism is the one §10 already recorded: R is
+`stop_multiple × ATR`, slippage and gap overshoot are fixed in **price**, so a narrower stop makes
+the same cost larger in R.
+
+**And no cell beats the null.** `beats_buy_and_hold` is false in all 25, gross and net. Widening
+improves the exit; it does not produce an edge. Anything read from this table is a statement about
+the exit policy against the market and never about selection.
+
+**The one lever nobody has measured is the partial.** `exit.partial_trigger` and
+`exit.stop_move_after_partial` are in the registry, both `unset`, and every cell of the grid is
+all-or-nothing. On `PR-005`'s log a half-position banked at +1R with the remainder carried at
+break-even is the only construction on the table whose arithmetic comes out positive — roughly
+**+263R** where both pure alternatives are negative. That is a hypothesis with a number attached
+and not a finding; it needs its own pre-registration.
+
+```bash
+python tools/measure_gap_cost.py --data data
+python tools/measure_exit_surface.py --data data
+```
+
+## 18. The first affirmative verdict, and both arms lose money
+
+`PR-016`, run 2026-09-08. **`ACCEPT` by §6's registered rule, and `PRELIMINARY`** until `DR-042` §8
+closes. 2 trials, declared before the run; cumulative 97, hurdle 2.52 sd(SR).
+
+Derive every figure with `python tools/run_pr016.py --report`, never from these lines.
+
+### 18.1 What was measured and what it licenses
+
+The ratified exit — stop `2.0 × ATR(14)`, target `1.0R`, time exit at session 20 — had never been
+simulated. `ExitPolicy` carried two of the course's four slots until `DR-042`, so every backtested
+trade ran the stop and the clock while every live order also carried a take-profit leg.
+
+Two arms over 8.91 years and 286,096 trades: **`unselected`**, every liquid name every 20 sessions,
+and **`ranked`**, the top decile by the live `ByMarketPathStrength`. §6 reads one quantity, the
+paired difference in mean net R, resampled on entry months.
+
+| window | ranked − unselected | 95% interval | width vs 0.20 floor |
+|---|---|---|---|
+| in-sample (51 months) | **+0.096R** | [+0.057, +0.137] | 0.080 ✓ |
+| out-of-sample (54 months) | **+0.088R** | [+0.018, +0.158] | 0.140 ✓ |
+| at 3× costs, in-sample | **+0.311R** | [+0.268, +0.359] | 0.091 ✓ |
+| at 3× costs, out-of-sample | +0.231R | [+0.085, +0.342] | 0.256 — over the floor |
+
+**And both arms lose.** The ranked arm reads **−0.100R a trade** at a win rate of 49.04% against a
+break-even of 54.22%; the control reads −0.192R. §6 reads the DIFFERENCE and never asks whether
+either arm is profitable, so the sentence this licenses is that **the screen loses less than no
+screen**, by about a tenth of an R.
+
+**The control contains the treatment.** The decile is a subset of the admitted names — 27,339
+trades of 258,757 — so the difference is attenuated by roughly a tenth. Decile-against-the-rest
+reads about +0.107R in sample. That direction is conservative.
+
+### 18.2 The finding that is not the verdict: the target makes the tail
+
+`PR-005`'s log at the same stop and hold **without a target** is right-skewed at **+1.61** — losses
+cluster at −1R and a thin right tail pays for them (§17). Under the ratified exit that reverses:
+
+| | control | ranked |
+|---|---|---|
+| skew | **−2.41** | −0.25 |
+| sd of net R | 1.167 | 1.014 |
+| p1 | −2.863R | **−1.735R** |
+| worst single trade | **−47.24R** | −7.16R |
+| **p95** | **+0.971R** | **+0.971R** |
+
+**A 1R target caps every winner and no loser.** p95 is identical in both arms and equals the target
+minus costs; the left side runs to −47R, and it is `stop_gap` on names whose stop is a small
+fraction of their price — §17 and `DR-006` §10.3 appearing in a third measurement.
+
+**So the screen's largest measurable effect is the left tail, not the winners.** p95 identical, p1
+better by 1.13R, worst trade better by 40R, standard deviation better by 13%.
+
+### 18.3 Where the difference comes from, decomposed
+
+| | control | ranked |
+|---|---|---|
+| reached the target | 42.48% | **44.72%** |
+| stopped, gapped | 8.86% | **6.73%** |
+| timed out | 11.22% | 9.21% |
+
+Gap avoidance is worth about **+0.012R** at §17's measured gap premium — roughly **13%** of the
+in-sample difference and less out of sample. The rest is the target being reached more often.
+
+**Stated as a hypothesis and not a finding:** the difference GROWS at triple costs while both
+levels collapse, which is what an arm with a larger `ATR / price` would do, since slippage is
+charged on price and R is `2 × ATR`. Untested here.
+
+### 18.4 The ratified target costs money, and it does not separate from zero
+
+| window | no target − 1R target | 95% interval | win rate |
+|---|---|---|---|
+| in-sample | +0.026R | [−0.039, +0.093] | **−8.16pp** |
+| out-of-sample | +0.052R | [−0.038, +0.157] | **−8.64pp** |
+
+The direction agrees with §17's arithmetic on `PR-005`'s log and **both intervals contain zero**.
+What IS established is the trade the target makes: about **8.5 percentage points of win rate** for
+a payoff ratio of 0.743 against 1.145. `DR-029` chose it so a trade completes and can be observed,
+not for expectancy, and that reason is untouched.
+
+### 18.5 What it does not establish
+
+* **That anything is profitable.** Both arms lose; nothing here is a reason to trade.
+* **Anything about a book** — the unit is one trade, with no cap, sector limit or capacity.
+  `PR-015` measured the book and found nothing separable from zero. `ranked_top4` here does not
+  replicate: +0.159R in sample, +0.051R out with an interval containing zero, both over the floor.
+* **That the screen forecasts rather than selects a cost profile.** Part is gap avoidance, measured.
+* **Ten years.** 8.91, because the store holds ten years of bars and a study needs its lookback
+  first. `TODO` §4 carries the owner's decision on a wider fetch.
+* **Anything, without the survivorship caveat.** Of 2,598 instruments here with a decade of history,
+  2,598 still trade.
+
+### 18.6 Two defects this study found in itself
+
+**The cost stress was differenced against the wrong control** — every arm against the 1× control,
+so `ranked_3x` carried a selection change and a cost change added together. `PR-002`'s exact shape
+and gate 25's reason for existing. Found by reading the verdict before reporting it; corrected, and
+the study re-run rather than reported with arithmetic done by hand.
+
+**The history floor was charged twice**, discarding a year of sample: 113 formation dates where
+2,522 sessions at a 20-session step give 126. Found by arithmetic that did not match, not by a test.
+
+**And `DR-042`'s tie-break is immaterial: 132 ambiguous bars in 286,096 trades, 0.05%.** Reaching a
+stop 2 ATR below entry and a target 1R above it in one session needs a four-ATR range. The ruling is
+still the owner's.

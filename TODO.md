@@ -903,6 +903,54 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 4. Pending decisions
 
+- [ ] **`[v]` THE STORE HOLDS TEN YEARS OF BARS, SO NO STUDY CAN HAVE TEN YEARS OF ENTRIES.**
+      Raised 2026-09-07, against the owner's instruction that the backtest cover *"minimum za last
+      10y"*.
+      `tools/widen_universe.cmd` fetches `--period 10y` — **owner ruling 2026-09-06**, and the
+      number it replaced cost more than it saved, so this is not a defect. But a study needs a
+      lookback BEFORE its first entry: `rs.lookback` is 126 sessions and `DR-003`'s `min_history`
+      is 250, so the earliest entry sits roughly a year inside the earliest bar.
+      ```bash
+      PYTHONPATH=$PWD/src python tools/run_pr016.py --report
+      ```
+      The `window MEASURED` line is the honest span; the `window ASKED FOR` line is not.
+      **Ten years of ENTRIES needs about eleven years of BARS.** The lever is one flag on one
+      periodic pass. What it costs: `refresh_universe.py` measured 0.40s a symbol at `10y`, so a
+      wider period is a longer coverage pass and a bigger store, on a machine whose evening run is
+      already 41 minutes (§4's other open item). Nothing is blocked meanwhile — a nine-year study
+      is a nine-year study and says so.
+
+- [ ] **`[v]` `DR-042`: ON A BAR THAT REACHED BOTH THE STOP AND THE TARGET, WHICH FIRED FIRST?**
+      Raised 2026-09-07. A daily bar records four prices and no times, so the sequence has to be
+      assumed. The rule implemented is **the stop, always** — the pessimistic reading, and the one
+      `backtesting.py` uses for the same stated reason. **`PR-016` is not blocked by this**: the
+      conservative rule stands until ruled, and understating is the direction `FAIL_CLOSED_POLICY`
+      points.
+      ```bash
+      PYTHONPATH=$PWD/src python tools/run_pr016.py --report
+      ```
+      **This is a parameter the course REQUIRES and nobody set** — `exit.slot_resolution_order`,
+      `value: null`, `read_by: none`, `named_in: [M58 standard - "указать количество и порядок
+      исполнения"]`. Found 2026-09-08. `PR-016` is the first study here that needs it, because it
+      is the first to run more than one exit slot at once. Ruling it sets that entry to
+      `protective, profit, time`, `provenance: assumed:DR-042` — the shape `DR-012` gave the stop.
+      **The owner ruled on the FORM of the question 2026-09-07 — *"(b) Покажи долю, потом решу"*.**
+      So the number is owed BEFORE the ruling, and two things bind until it lands: the conservative
+      rule is temporary, and **every `PR-016` figure is PRELIMINARY and must say so where it is
+      published**. `DR-042` §4a carries this.
+      **MEASURED 2026-09-08, and it splits in two.** 132 ambiguous bars, all sampled, 130
+      resolved: the stop printed first **43.8%** [35.6%, 52.4%] of the time, so as a CONVENTION
+      the rule is wrong more often than right. But it is consulted on **0.05% of exits**, so as an
+      EFFECT it is worth **at most 0.0006R a trade** against a `PR-016` finding of +0.096R.
+      `DR-042` §4c carries both, §4d carries the three readings and their costs. The agent's
+      recommendation changed on the evidence: **keep stop-first**, because §4a's own threshold was
+      about the share of exits and that share is 0.05%.
+      The measurement was `tools/probe_ambiguous_bar.py` — the store holds daily bars only
+      (`interval` is `1d` and nothing else, measured 2026-09-07), so the intraday sequence comes
+      from Alpaca `feed=sip`, the route `probe_alpaca_delisted.py` established on 2026-09-05.
+      **Recorded before the number exists so it cannot be adjusted afterwards: above ~15% the
+      conservative rule stops being a small conservatism and becomes a systematic distortion.**
+
 - [ ] **`[v]` THE EVENING RUN TOOK 41 MINUTES AGAINST 17.7 THREE SESSIONS EARLIER, AND THE SECOND
       PASS IS 60 MINUTES BEHIND IT — measured 2026-09-07, and the schedule is the owner's.**
       ```bash

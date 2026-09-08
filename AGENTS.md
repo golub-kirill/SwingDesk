@@ -619,6 +619,16 @@ open question that follows: §10.5 gives every COUNT an owner and nothing does t
   they are the ones nothing will ever remind you of. `git grep` the quoted sentence before
   closing the record.
 
+**An expensive run is smoke-tested on a synthetic store, or it is debugged at fifty minutes a
+  go.** Cost two killed runs on 2026-09-07/08. A study here loads ~10,000 instruments and prints
+  nothing for the best part of an hour, so a defect that is not about the data still costs an hour
+  to find: a bootstrap that pooled 200,000 trades on every one of 10,000 resamples, and a history
+  floor applied twice that silently discarded a year of sample. **The synthetic run afterwards took
+  five seconds and immediately showed a third.** ~130 names of random walk in a DuckDB carrying the
+  store's own schema, above `DR-003`'s price and ADTV floors and over `MIN_NAMES_PER_DATE`, with
+  the benchmark symbol present. It tests the SHAPE and never the answer: that every writer fires,
+  every derived field computes, and the report prints.
+
 **The habits:**
 
 - **Name the owner before making the claim.** *Which artifact owns this, and have I opened it?* It

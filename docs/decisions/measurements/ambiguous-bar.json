@@ -1,0 +1,47 @@
+{
+  "asked_by": "the owner, 2026-09-07, ruling on the form of the question: measure first",
+  "assumption_is_wrong_on_this_share_of_ambiguous_bars": 0.5615384615384615,
+  "exploratory": true,
+  "feed": "sip",
+  "impact": {
+    "ranked": {
+      "ambiguous_bars": 14,
+      "ambiguous_share": 0.0005120889571674165,
+      "impact_r_per_trade": 0.0005751152903572523,
+      "trades": 27339
+    },
+    "ranked_top4": {
+      "ambiguous_bars": 0,
+      "ambiguous_share": 0.0,
+      "impact_r_per_trade": 0.0,
+      "trades": 444
+    },
+    "unselected": {
+      "ambiguous_bars": 118,
+      "ambiguous_share": 0.0004560263103993322,
+      "impact_r_per_trade": 0.0005121526255254039,
+      "trades": 258757
+    }
+  },
+  "measured_on": "2026-09-07",
+  "not_measured": [
+    "which leg a REAL OCO would have filled: the venue's matching order is not observable here, and a minute bar is still a bar.",
+    "sessions the feed does not serve; those are reported and never imputed."
+  ],
+  "outcomes": {
+    "neither": 0,
+    "stop": 57,
+    "target": 73,
+    "within_a_minute": 2
+  },
+  "population": 132,
+  "question": "DR-042 \u00a74 - on a session reaching both the stop and the target, which first?",
+  "sampled": 132,
+  "seed": 20260908,
+  "stop_first_interval": {
+    "high": 0.5243115604029815,
+    "low": 0.3561441424577135
+  },
+  "stop_first_share": 0.43846153846153846,
+  "unserved": []
+}

@@ -1,0 +1,157 @@
+{
+  "clean_gross": {
+    "mean": -1.0,
+    "median": -1.0,
+    "n": 115247,
+    "p01": -1.0,
+    "share_worse_than_minus_1_5R": 0.0,
+    "worst": -1.0
+  },
+  "clean_net": {
+    "mean": -1.1535205410483917,
+    "median": -1.0949459320433574,
+    "n": 115247,
+    "p01": -2.319641786225882,
+    "share_worse_than_minus_1_5R": 0.03466467673778927,
+    "worst": -26.412465114192532
+  },
+  "entries": 294498,
+  "floor_table": [
+    {
+      "entries_removed": 3014,
+      "entries_removed_share": 0.010234364919286379,
+      "floor": 0.0025,
+      "gap_damage_removed_share": 0.17265975801627118,
+      "gaps_removed": 1138,
+      "pooled_net_after": -0.07310785123690969,
+      "pooled_net_before": -0.1260475431104749,
+      "removed_mean_net_r": -5.2458461980787146
+    },
+    {
+      "entries_removed": 6345,
+      "entries_removed_share": 0.02154513782776114,
+      "floor": 0.005,
+      "gap_damage_removed_share": 0.20844569036534089,
+      "gaps_removed": 1731,
+      "pooled_net_after": -0.05679247510586896,
+      "pooled_net_before": -0.1260475431104749,
+      "removed_mean_net_r": -3.2712099719097196
+    },
+    {
+      "entries_removed": 9703,
+      "entries_removed_share": 0.03294759217380084,
+      "floor": 0.0075,
+      "gap_damage_removed_share": 0.23273152491345547,
+      "gaps_removed": 2263,
+      "pooled_net_after": -0.046181793669840335,
+      "pooled_net_before": -0.1260475431104749,
+      "removed_mean_net_r": -2.4702056500820833
+    },
+    {
+      "entries_removed": 12276,
+      "entries_removed_share": 0.04168449361285985,
+      "floor": 0.01,
+      "gap_damage_removed_share": 0.2498578156532629,
+      "gaps_removed": 2685,
+      "pooled_net_after": -0.04042652801754346,
+      "pooled_net_before": -0.1260475431104749,
+      "removed_mean_net_r": -2.094452082175096
+    },
+    {
+      "entries_removed": 17236,
+      "entries_removed_share": 0.05852671325441938,
+      "floor": 0.015,
+      "gap_damage_removed_share": 0.27870102352108644,
+      "gaps_removed": 3456,
+      "pooled_net_after": -0.03493478165415602,
+      "pooled_net_before": -0.1260475431104749,
+      "removed_mean_net_r": -1.5917070039425636
+    },
+    {
+      "entries_removed": 26405,
+      "entries_removed_share": 0.08966105032971361,
+      "floor": 0.02,
+      "gap_damage_removed_share": 0.3226407764296483,
+      "gaps_removed": 4657,
+      "pooled_net_after": -0.026877013596242363,
+      "pooled_net_before": -0.1260475431104749,
+      "removed_mean_net_r": -1.1329373279640684
+    },
+    {
+      "entries_removed": 53751,
+      "entries_removed_share": 0.18251736853900535,
+      "floor": 0.03,
+      "gap_damage_removed_share": 0.4277794234692105,
+      "gaps_removed": 7853,
+      "pooled_net_after": -0.015549682210292277,
+      "pooled_net_before": -0.1260475431104749,
+      "removed_mean_net_r": -0.6209597962431842
+    }
+  ],
+  "gap_gross": {
+    "mean": -1.3565123926361464,
+    "median": -1.1540053518953735,
+    "n": 26175,
+    "p01": -3.9253729377637954,
+    "share_worse_than_minus_1_5R": 0.19006685768863418,
+    "worst": -48.35243328477327
+  },
+  "gap_net": {
+    "mean": -1.733745286874254,
+    "median": -1.3180038226543411,
+    "n": 26175,
+    "p01": -8.936920459609993,
+    "share_worse_than_minus_1_5R": 0.33020057306590256,
+    "worst": -48.52342178089856
+  },
+  "gap_net_by_band": {
+    "0.0-0.005": {
+      "gap_net_mean": -5.464719016499819,
+      "n": 1731
+    },
+    "0.005-0.01": {
+      "gap_net_mean": -1.9699315161985786,
+      "n": 954
+    },
+    "0.01-0.02": {
+      "gap_net_mean": -1.6749227893727179,
+      "n": 1972
+    },
+    "0.02-0.05": {
+      "gap_net_mean": -1.4799976747466228,
+      "n": 10449
+    },
+    "0.05-1.0": {
+      "gap_net_mean": -1.3799436404235712,
+      "n": 11069
+    }
+  },
+  "hold": 20,
+  "instruments": 5096,
+  "measured_on": "2026-09-08",
+  "risk_over_price": {
+    "median": 0.052400761538048374,
+    "p01": 0.002437580826451995,
+    "p10": 0.021321660067206854,
+    "p90": 0.11295482196694857
+  },
+  "slippage_bps": "25",
+  "stop_multiple": "2.0",
+  "stop_outs": 141422,
+  "time_gross": {
+    "mean": 1.0925504541168447,
+    "median": 0.9082603132937423,
+    "n": 153076,
+    "p01": -0.7687813297164026,
+    "share_worse_than_minus_1_5R": 0.0,
+    "worst": -0.9985299042878214
+  },
+  "time_net": {
+    "mean": 0.9224164162062568,
+    "median": 0.7750911749752718,
+    "n": 153076,
+    "p01": -1.2605143822429823,
+    "share_worse_than_minus_1_5R": 0.00821160730617471,
+    "worst": -26.365788512280517
+  }
+}

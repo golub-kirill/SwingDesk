@@ -201,3 +201,83 @@ def test_net_charges_slippage_on_both_fills(gap_cost) -> None:
     assert net < gross, "costs make a loss larger, never smaller"
     # entry 100 x 1.0025 = 100.25, exit 98 x 0.9975 = 97.755, over R = 2.00
     assert net == pytest.approx((97.755 - 100.25) / 2.0, abs=1e-6)
+
+
+# --- the floor table, added 2026-09-07 -----------------------------------------------------------
+#
+# `gap_net_by_band` shows what a floor on `2 x ATR / price` would REMOVE and says nothing about what
+# it would COST. A floor removes whole entries, so it removes their time-exit wins along with their
+# gap losses, and `time_net` in the 2026-09-06 run averages +0.93R. These tests exist because a
+# threshold argued from the damage side alone is a threshold argued from half the arithmetic, and
+# the failure would be invisible: every number in the band table would still be correct.
+
+def _pairs(rows: list[tuple[float, float]]) -> list[float]:
+    """The flat [ratio, net, ratio, net, ...] shape `_r_multiples` emits."""
+    return [value for pair in rows for value in pair]
+
+
+def test_a_floor_that_removes_only_losers_raises_the_pooled_mean(gap_cost) -> None:
+    entries = _pairs([(0.002, -5.0), (0.002, -4.0), (0.05, 1.0), (0.05, 1.0)])
+    rows = {r["floor"]: r for r in gap_cost.floor_table(entries, _pairs([(0.002, -5.0)]))}
+    row = rows[0.005]
+    assert row["entries_removed"] == 2
+    assert row["entries_removed_share"] == pytest.approx(0.5)
+    assert row["pooled_net_before"] == pytest.approx(-1.75)
+    assert row["pooled_net_after"] == pytest.approx(1.0)
+
+
+def test_gap_damage_removed_is_weighted_by_SIZE_and_not_by_count(gap_cost) -> None:
+    """A mutant that counted gaps instead of summing them survived the first pass, because every
+    other fixture removed all of the gaps at once and 1.0 == 1.0. The whole argument for a floor is
+    that the gaps it removes are the LARGE ones, so the share has to be of damage."""
+    entries = _pairs([(0.002, -5.0), (0.05, -1.0), (0.05, 1.0)])
+    gaps = _pairs([(0.002, -5.0), (0.05, -1.0)])
+    row = {r["floor"]: r for r in gap_cost.floor_table(entries, gaps)}[0.005]
+    assert row["gaps_removed"] == 1                                    # half the gaps by count
+    assert row["gap_damage_removed_share"] == pytest.approx(5 / 6)     # five sixths of the damage
+
+
+def test_a_floor_that_also_removes_WINNERS_can_lower_the_pooled_mean(gap_cost) -> None:
+    """The column the table exists for. Every low-ratio name here is profitable on average; the
+    damage side would still show a gap being removed, and the floor would still be a mistake."""
+    entries = _pairs([(0.002, 3.0), (0.002, 3.0), (0.002, -5.0), (0.05, 0.1)])
+    rows = {r["floor"]: r for r in gap_cost.floor_table(entries, _pairs([(0.002, -5.0)]))}
+    row = rows[0.005]
+    assert row["gap_damage_removed_share"] == pytest.approx(1.0)   # all of the damage
+    assert row["removed_mean_net_r"] == pytest.approx(1 / 3)       # and they were net WINNERS
+    assert row["pooled_net_after"] < row["pooled_net_before"]
+
+
+def test_the_floor_is_a_FLOOR_and_keeps_entries_sitting_exactly_on_it(gap_cost) -> None:
+    """`>=`, not `>`, and the assertion has to be on what is KEPT.
+
+    The first version of this test asserted `entries_removed == 0` and a mutant survived it:
+    `removed` is `ratio < floor` either way, so an entry sitting exactly on the floor disappeared
+    from BOTH sides and the removed count never moved. `removed` and `kept` must partition the
+    sample, and `pooled_net_after` is where that shows.
+    """
+    entries = _pairs([(0.005, -1.0), (0.05, 1.0)])
+    rows = {r["floor"]: r for r in gap_cost.floor_table(entries, [])}
+    assert rows[0.005]["entries_removed"] == 0
+    assert rows[0.005]["pooled_net_after"] == pytest.approx(0.0)
+    assert rows[0.005]["pooled_net_after"] == pytest.approx(rows[0.005]["pooled_net_before"])
+
+
+def test_a_floor_that_would_empty_the_sample_is_omitted_rather_than_reported_as_zero(
+    gap_cost,
+) -> None:
+    """Reporting a pooled mean over nothing is worse than reporting no row."""
+    entries = _pairs([(0.001, -1.0), (0.003, -1.0)])
+    assert [r["floor"] for r in gap_cost.floor_table(entries, [])] == [0.0025]
+
+
+def test_no_candidate_floor_is_named_as_a_recommendation(gap_cost) -> None:
+    """`PREREG_TEMPLATE` rule 3 and `PARAMETER_REGISTRY`: the value is the owner's, and an agent
+    that has seen the band table cannot pick one without picking it after seeing the result. The
+    tool offers a span and no default."""
+    assert len(gap_cost.FLOORS) >= 5
+    assert gap_cost.FLOORS == tuple(sorted(gap_cost.FLOORS))
+
+
+def test_an_empty_sample_yields_no_table_rather_than_a_division_by_zero(gap_cost) -> None:
+    assert gap_cost.floor_table([], []) == []

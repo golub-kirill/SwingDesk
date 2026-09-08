@@ -125,6 +125,8 @@ class BookResult:
     deferred: int = 0
     sessions: int = 0
     max_concurrent: int = 0
+    ambiguous_exits: int = 0
+    ambiguous_trades: list[Trade] = field(default_factory=list)
 
     @property
     def net_r_values(self) -> list[Decimal]:
@@ -187,7 +189,9 @@ def run_book(
                 continue  # no bar for this name today; the position is carried, not evaluated
             bar = series_by_instrument[instrument_id].bars[index]
             held = index - position["entry_index"]
-            decision = config.exits.evaluate(bar, position["stop"], held)
+            decision = config.exits.evaluate(bar, position["stop"], held, position["target"])
+            if decision.ambiguous:
+                result.ambiguous_exits += 1
 
             high_r = (bar.high - position["entry_price"]) / position["risk_per_share"]
             low_r = (bar.low - position["entry_price"]) / position["risk_per_share"]
@@ -195,9 +199,10 @@ def run_book(
             position["mae"] = min(position["mae"], low_r)
 
             if decision.exited and decision.price is not None and decision.reason is not None:
-                result.trades.append(
-                    close_position(position, bar, decision.price, decision.reason, config)
-                )
+                trade = close_position(position, bar, decision.price, decision.reason, config)
+                result.trades.append(trade)
+                if decision.ambiguous:
+                    result.ambiguous_trades.append(trade)
                 del positions[instrument_id]
 
         # --- rule 1: admissibility per instrument, decided exactly as run_arm decides it
@@ -279,6 +284,7 @@ def run_book(
                 "entry_price": candidate.entry_price,
                 "stop": candidate.stop,
                 "risk_per_share": candidate.risk_per_share,
+                "target": config.exits.target_for(candidate.entry_price, candidate.risk_per_share),
                 "shares": candidate.shares,
                 "mfe": Decimal(0),
                 "mae": Decimal(0),

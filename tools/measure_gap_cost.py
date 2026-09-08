@@ -89,24 +89,37 @@ ATR_REGISTRY = ParameterRegistry({
 })
 
 
+#: The keys `_r_multiples` collects. Named once, so the accumulator in `main` cannot drift from the
+#: collector - which it did on 2026-09-08, killing a forty-minute run with a `KeyError` after the
+#: whole store had been walked.
+_EMPTY_COLLECTION = (
+    # the three-way split that carries DR-006 §9's finding, gross and net
+    "clean_gross", "clean_net",
+    "gap_gross", "gap_net",
+    "time_gross", "time_net",
+    # 2 x ATR / entry, per entry. DR-005 charges slippage as a fraction of PRICE and R is a
+    # multiple of ATR, so this ratio is what decides whether costs are a rounding error or larger
+    # than the risk itself. Carried for every entry, banded on report.
+    "risk_over_price",
+    # gap outcomes paired with their ratio, so the net figure can be read by band rather than as
+    # one number over a population that is not homogeneous
+    "gap_net_by_ratio",
+    # EVERY entry paired with its ratio, added 2026-09-07. The band table shows what a floor on
+    # this ratio would REMOVE and says nothing about what it would COST: a floor removes whole
+    # entries, so it removes their time-exit WINS along with their gap losses, and `time_net`
+    # averages +0.93R. A threshold argued from the damage side alone is a threshold argued from
+    # half the arithmetic - which is why `floor_table` exists and why this had to be collected.
+    "net_by_ratio",
+)
+
+
 def _r_multiples(series, dates: set) -> dict[str, list[float]]:
     """Every entry window's outcome in R, split by how it ended.
 
     Returns gross and net lists per outcome. Net charges `DR-005`'s slippage on both fills - the
     buyer pays up, the seller receives less - which is what makes these comparable with §8.1.
     """
-    out: dict[str, list[float]] = {
-        "clean_gross": [], "clean_net": [],
-        "gap_gross": [], "gap_net": [],
-        "time_gross": [], "time_net": [],
-        # 2 x ATR / entry, per entry. `DR-005` charges slippage as a fraction of PRICE and R
-        # is a multiple of ATR, so this ratio is what decides whether costs are a rounding
-        # error or larger than the risk itself. Carried for every entry, banded on report.
-        "risk_over_price": [],
-        # gap outcomes paired with their ratio, so the net figure can be read by band
-        # rather than as one number over a population that is not homogeneous.
-        "gap_net_by_ratio": [],
-    }
+    out: dict[str, list[float]] = {key: [] for key in _EMPTY_COLLECTION}
     bars = series.bars
     values = atr.compute(series, ATR_REGISTRY)
     by_time = {o.event_time: o.value for o in values.observations}
@@ -148,10 +161,57 @@ def _r_multiples(series, dates: set) -> dict[str, list[float]]:
         out[f"{kind}_gross"].append(float((quoted_exit - quoted_entry) / risk))
         out[f"{kind}_net"].append(net)
         out["risk_over_price"].append(ratio)
+        out["net_by_ratio"].append(ratio)
+        out["net_by_ratio"].append(net)
         if kind == "gap":
             out["gap_net_by_ratio"].append(ratio)
             out["gap_net_by_ratio"].append(net)
     return out
+
+
+#: Candidate floors on `2 x ATR / price`, spanning the bands the 2026-09-06 run reported. These are
+#: CANDIDATES and none of them is a proposal: the value is the owner's (`PARAMETER_REGISTRY`), and
+#: an agent that has already seen the band table cannot choose one without choosing it after seeing
+#: the result (`PREREG_TEMPLATE` rule 3). What this table does is make both sides of each candidate
+#: visible at once, so the choice is between numbers.
+FLOORS = (0.0025, 0.005, 0.0075, 0.01, 0.015, 0.02, 0.03)
+
+
+def floor_table(pairs: list[float], gap_pairs: list[float]) -> list[dict[str, float]]:
+    """For each candidate floor: what it removes, what it costs, and where the pooled mean lands.
+
+    `pairs` and `gap_pairs` are flat [ratio, net, ratio, net, ...] lists, the shape `_r_multiples`
+    already emits.
+
+    The column that matters is `pooled_net_after`. A floor is worth having only if removing those
+    entries RAISES the mean of the ones that remain, and the damage table alone cannot say that -
+    the entries a floor removes are not all gaps, and the ones that are not include winners.
+    """
+    entries = [(pairs[i], pairs[i + 1]) for i in range(0, len(pairs), 2)]
+    gaps = [(gap_pairs[i], gap_pairs[i + 1]) for i in range(0, len(gap_pairs), 2)]
+    if not entries:
+        return []
+    total_gap_damage = sum(net for _, net in gaps)
+    rows = []
+    for floor in FLOORS:
+        removed = [net for ratio, net in entries if ratio < floor]
+        kept = [net for ratio, net in entries if ratio >= floor]
+        gaps_removed = [net for ratio, net in gaps if ratio < floor]
+        if not kept:
+            continue
+        rows.append({
+            "floor": floor,
+            "entries_removed": len(removed),
+            "entries_removed_share": len(removed) / len(entries),
+            "removed_mean_net_r": statistics.mean(removed) if removed else 0.0,
+            "gaps_removed": len(gaps_removed),
+            "gap_damage_removed_share": (
+                sum(gaps_removed) / total_gap_damage if total_gap_damage else 0.0
+            ),
+            "pooled_net_before": statistics.mean([net for _, net in entries]),
+            "pooled_net_after": statistics.mean(kept),
+        })
+    return rows
 
 
 def _summary(values: list[float]) -> dict[str, float]:
@@ -174,11 +234,11 @@ def main() -> int:
     args = parser.parse_args()
 
     as_of = datetime.now().astimezone()
-    totals: dict[str, list[float]] = {
-        key: [] for key in
-        ("clean_gross", "clean_net", "gap_gross", "gap_net", "time_gross", "time_net",
-         "risk_over_price", "gap_net_by_ratio")
-    }
+    # Keyed off `_r_multiples`'s own dict rather than a second hand-written list. The first cut
+    # spelled the keys out twice, `net_by_ratio` was added to one copy and not the other, and the
+    # run died with a KeyError forty minutes in - after the store had been walked. A collector and
+    # its accumulator that can disagree will.
+    totals: dict[str, list[float]] = {key: [] for key in _EMPTY_COLLECTION}
 
     with BarStore(args.data / "bars.duckdb") as store:
         names = sorted(store.instrument_ids(as_of))
@@ -267,6 +327,24 @@ def main() -> int:
             banded[f"{low}-{high}"] = {"n": len(inside), "gap_net_mean": mean}
             print(f"    {low:>7.3f}-{high:<8.3f} {len(inside):>8,d} {mean:>+11.3f}")
         report["gap_net_by_band"] = banded
+
+    rows = floor_table(totals["net_by_ratio"], totals["gap_net_by_ratio"])
+    if rows:
+        print()
+        print("  WHAT A FLOOR ON THAT RATIO WOULD COST. The band table above is the damage side")
+        print("  only. A floor removes whole ENTRIES, so it removes their time-exit wins too -")
+        print("  and `pooled net after` is the only column that says whether that trade is worth")
+        print("  making. None of these floors is a proposal; the value is the owner's.")
+        print(f"    {'floor':>7} {'entries cut':>12} {'share':>7} {'their meanR':>12} "
+              f"{'gaps cut':>9} {'gap damage':>11} {'pooled net':>11}")
+        for row in rows:
+            print(f"    {row['floor']:>7.4f} {row['entries_removed']:>12,d} "
+                  f"{row['entries_removed_share'] * 100:>6.2f}% {row['removed_mean_net_r']:>+12.3f} "
+                  f"{row['gaps_removed']:>9,d} {row['gap_damage_removed_share'] * 100:>10.2f}% "
+                  f"{row['pooled_net_after']:>+11.4f}")
+        print(f"    {'(none)':>7} {0:>12,d} {0.0:>6.2f}% {'':>12} {0:>9,d} {0.0:>10.2f}% "
+              f"{rows[0]['pooled_net_before']:>+11.4f}")
+        report["floor_table"] = rows
 
     if args.out:
         args.out.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")

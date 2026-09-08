@@ -182,11 +182,23 @@ EXPLORATORY = {
 #: Exploratory measurements that spend nothing, and why. Same distinction `NO_SPEND` draws for
 #: pre-registrations: a cost or execution input has no Sharpe to deflate.
 NO_SPEND_MEASUREMENTS = {
+    "ambiguous-bar": "which LEG printed first on a session that reached both - a property of the "
+                     "price path, not a configuration of a strategy. It evaluates no rule, "
+                     "compares no return and selects nothing; it says how often DR-042's tie-break "
+                     "takes the wrong leg (56.2%) and how often it is consulted at all (0.05% of "
+                     "exits), whose product is 0.0006R. A measurement of an ASSUMPTION's size is "
+                     "not a shot at the data",
     "quoted-spread-2026-09-06": "the venue's quoted spread - a cost input, not a return",
     "fill-convention-2026-09-06": "which fills happen - an execution input, not a search over "
                                   "configurations; the two columns are one convention each and "
                                   "neither was chosen for its return",
     "gap-cost-2026-09-06": "the R cost of a stop-out - a cost input",
+    "gap-cost-2026-09-08": "the same cost input on the widened store, plus the floor table. The "
+                           "seven candidate floors are not seven strategies: they are one "
+                           "population cut at seven places, and the cut is DERIVED from DR-005's "
+                           "already-ratified slippage rather than searched - `2 x ATR / price` "
+                           "below a floor means the round trip costs more than that fraction of "
+                           "R, which is arithmetic and not a shot at the data",
     "gap-population-2026-09-06": "a population comparison, no strategy return",
     "short-leg-2026-09-07": "no new trials: the same 8 configurations short-leg-2026-09-06 "
                             "declared, re-priced on measured turnover and re-run on the widened "
