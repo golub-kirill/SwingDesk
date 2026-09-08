@@ -3,8 +3,9 @@
 ```
 date:            2026-09-07
 status:          proposed — the tie-break in §4 is the owner's to ratify
-parameters:      none. exit.target_r_multiple is already ratified at 1.0 (DR-029); this record
-                 does not choose a value, it makes the ratified one simulable
+parameters:      exit.slot_resolution_order - UNSET, and this record is what would set it.
+                 exit.target_r_multiple is already ratified at 1.0 (DR-029); this record does not
+                 choose that value, it makes the ratified one simulable
 components:      none - swingdesk.trade_management.exits:ExitPolicy decides
 supersedes:      nothing. DR-012 and DR-029 stand; this implements the second one
 implemented_by:  src/swingdesk/trade_management/exits.py :: ExitPolicy.evaluate, target_for
@@ -68,6 +69,37 @@ of daily bars, and it is why the count in §4 is reported.
 ## 4. What is asked of the owner: the tie-break
 
 **When one session's low reached the stop and its high reached the target, which fired first?**
+
+### 4b. This is not a modelling convention. It is a parameter the course REQUIRES and nobody set
+
+Found 2026-09-08, after §4 was written and while looking for something else:
+
+```
+  - id: exit.slot_resolution_order
+    unit: ordering
+    value: null
+    status: unset
+    read_by: none
+    named_in: [M58 standard - "указать количество и порядок исполнения"]
+    note: Course requires an order be stated; it does not state one.
+```
+
+**The M58 standard obliges this system to state the number of exit slots and the order they
+execute in.** The registry has carried the slot since the transcription, `value: null`, `read_by:
+none`. `EXIT_MODEL_SPEC` §4 audits all 92 topics in M52-M58 and finds no exit carrying a numeric
+parameter, which is why this one is unset like every other; but unlike the others it is an
+**ordering**, and §3's table is exactly that ordering written down.
+
+So this record does not invent a convention. It fills a slot the course opened, the registry
+reserved, and no study has ever been able to cite. `PR-016` is the first thing here that needs it,
+because it is the first study to run more than one exit slot at once - with two slots there is
+nothing to order.
+
+**What that changes about the ask.** Ruling §4 sets `exit.slot_resolution_order` to
+`protective, profit, time` with the intraday tie to the protective slot, `provenance:
+assumed:DR-042`, `status: assumed` - the same shape `DR-012` gave the stop and `DR-029` the target.
+It stays `assumed` rather than `validated` because no study has compared orderings, and none can:
+the true order is not in a daily bar, which is what §4a's measurement is for.
 
 The rule implemented is **the stop, always**, and the bar is flagged `ambiguous` so the number of
 times the assumption bound is counted and printed beside every result.
@@ -136,6 +168,9 @@ should be used instead.
 ## 6. What it does not do
 
 * It does not touch `exit.target_r_multiple`'s value, status or provenance. `DR-029` owns those.
+* It does not WRITE `exit.slot_resolution_order` into the registry. §4b says what the ruling would
+  set; setting a parameter is the owner's act and the registry entry moves in the ratifying commit,
+  not before it.
 * It does not add the **contextual** slot. Three of four, and the fourth is still absent.
 * It does not re-run any published study. `PR-005`, `PR-011` and `PR-012` keep their policies and
   their logs, which is what the optional default protects.

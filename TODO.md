@@ -929,6 +929,11 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       ```bash
       PYTHONPATH=$PWD/src python tools/run_pr016.py --report
       ```
+      **This is a parameter the course REQUIRES and nobody set** — `exit.slot_resolution_order`,
+      `value: null`, `read_by: none`, `named_in: [M58 standard - "указать количество и порядок
+      исполнения"]`. Found 2026-09-08. `PR-016` is the first study here that needs it, because it
+      is the first to run more than one exit slot at once. Ruling it sets that entry to
+      `protective, profit, time`, `provenance: assumed:DR-042` — the shape `DR-012` gave the stop.
       **The owner ruled on the FORM of the question 2026-09-07 — *"(b) Покажи долю, потом решу"*.**
       So the number is owed BEFORE the ruling, and two things bind until it lands: the conservative
       rule is temporary, and **every `PR-016` figure is PRELIMINARY and must say so where it is
