@@ -309,12 +309,19 @@ def measure(store: BarStore, as_of: datetime) -> list[dict[str, object]]:
 def main() -> int:
     parser = argparse.ArgumentParser(prog="measure_short_leg")
     parser.add_argument("--data", type=Path, default=Path("data"))
+    parser.add_argument("--as-of", default=None,
+                        help="read the store at this knowledge instant instead of the latest. The "
+                             "store is bitemporal, so this reconstructs the sample a PAST run saw "
+                             "- which is the only way to tell a cost correction apart from the "
+                             "2026-09-06 backfill when both land in one re-run (PR-014 A-3)")
     parser.add_argument("--out", type=Path,
                         default=Path("docs/decisions/measurements/short-leg-2026-09-06.json"))
     args = parser.parse_args()
 
     store = BarStore(args.data / "bars.duckdb")
-    as_of = store.latest_knowledge_time()
+    as_of = (
+        datetime.fromisoformat(args.as_of) if args.as_of else store.latest_knowledge_time()
+    )
     if as_of is None:
         print("the bar store is empty")
         return 1

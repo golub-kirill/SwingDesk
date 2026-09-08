@@ -401,18 +401,42 @@ that delisted is absent — and a bottom-decile name that went to zero would hav
 profitable short in the sample. The measured spread therefore UNDERSTATES the true one. Every other
 result in this document is biased the flattering way; this one is not.
 
-**Then the costs, and they decide it.** A long-short rebalance turns FOUR sides, not two: both legs
-are bought and sold. At `DR-005`'s 25 bps that is **1.00% per rebalance**, against a 20-session
-gross of 1.069%.
+~~**Then the costs, and they decide it.** A long-short rebalance turns FOUR sides, not two: both
+legs are bought and sold. At `DR-005`'s 25 bps that is **1.00% per rebalance**, against a
+20-session gross of 1.069%.~~
 
-**So the finding is exact:**
+**WITHDRAWN 2026-09-07 — the costs did not decide it, and charging them this way was the same
+gross-turnover error `PR-014` amendment A-3 corrects.** `rebalance_cost` charged the whole book at
+every formation. A name still in the decile is HELD: measured, the top decile turns **28.1%** per
+20-session rebalance and the bottom **24.9%**, so the real charge is **0.27%**, not 1.00%.
 
-* **At the ratified 20-session hold, nothing survives.** The gross excludes zero and the net does
-  not. Four sides eat the whole spread.
-* **At 126 sessions the spread survives costs and excludes zero — the only construction in this
-  project that does.** Net **+7.705% [+2.515, +12.863]** for the liquid quartile. The same 1.00% is
-  paid a quarter as often.
-* **Long-only survives at neither horizon.**
+**Two things changed between the published run and the corrected one, and they are separated rather
+than confounded.** The control re-run at the published knowledge instant reproduces the published
+GROSS **exactly on all eight cells**, which is what makes the attribution clean:
+
+| liquid quartile | cost/rebalance | net | interval | excludes zero |
+|---|---|---|---|---|
+| **20**, as published | 1.00% | +0.069% | [−0.951, +1.067] | no |
+| **20**, cost corrected | **0.27%** | +0.804% | [−0.216, +1.802] | **no** |
+| **20**, and post-backfill | 0.25% | +0.818% | [−0.237, +1.845] | **no** |
+| **126**, as published | 1.00% | +7.705% | [+2.515, +12.863] | yes |
+| **126**, cost corrected | **0.59%** | **+8.117%** | [+2.927, +13.275] | yes |
+| **126**, and post-backfill | 0.57% | **+5.835%** | [+1.205, +10.333] | yes |
+
+**The cost fix RAISES every arm; the backfill lowers the 126-session ones.** They pull in opposite
+directions, which is exactly why a single re-run would have attributed nothing.
+
+**So the finding, corrected:**
+
+* **At the ratified 20-session hold nothing survives — but NOT because costs ate it.** That was the
+  published reasoning and it was wrong. The real cost is 0.27% against a 1.069% gross, leaving
+  **+0.804%**. It does not survive because **the interval includes zero**, and it included zero in
+  the published run too — [−0.951, +1.067]. The number was never distinguishable from nothing; the
+  cost model gave a wrong reason for a right conclusion.
+* **At 126 sessions the spread still excludes zero and is still the only construction in this
+  project that does** — now **+5.835% [+1.205, +10.333]** for the liquid quartile. It fell 1.87
+  points from the published figure, and the backfill is what took them, not the cost fix.
+* **Long-only survives at neither horizon**, unchanged.
 
 **What it does NOT establish.** Borrow fees, hard-to-borrow rates, Regulation SHO locates and the
 uptick rule are all costs of the short leg and none is priced, so the net column is a **floor on the
@@ -559,7 +583,8 @@ overlap. The measurement is this repository's own; the reason to expect it is no
 `rebalance_cost` and `run_pr013.py`'s `COST_SIDES_PER_FORMATION = 4` both charge a full round trip
 on the whole book at every formation. `measure_banding.py` does not — it charges only the fraction
 that trades — which is the counter-example showing this was never hard. **Overcharging is
-conservative for a positive claim** (§11's +7.705% can only improve) **and is not conservative for
+conservative for a positive claim** (§11's figure did improve, to +8.117%, before the backfill took
+it to +5.835%) **and is not conservative for
 a comparison across horizons**, so every horizon ranking published here is tilted toward long holds
 by an amount nobody has measured. `TODO.md` §5 carries it.
 

@@ -188,6 +188,10 @@ NO_SPEND_MEASUREMENTS = {
                                   "neither was chosen for its return",
     "gap-cost-2026-09-06": "the R cost of a stop-out - a cost input",
     "gap-population-2026-09-06": "a population comparison, no strategy return",
+    "short-leg-2026-09-07": "no new trials: the same 8 configurations short-leg-2026-09-06 "
+                            "declared, re-priced on measured turnover and re-run on the widened "
+                            "sample. Counted once, in that measurement. A re-price of counted "
+                            "shots is not a new shot",
     "decile-persistence-2026-09-07": "one-sided TURNOVER of the selected book - a cost input. It "
                                      "compares no return and selects nothing; the seven horizons "
                                      "are one book measured at seven spacings, not seven "

@@ -1612,12 +1612,18 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **The two legs do NOT turn at the same rate** — the bottom decile churns about two points
       more at every horizon — so a spread priced by doubling the long leg is an assumption, and
       that is what the first version of this measurement made before it was corrected.
-      **`measure_short_leg.py` IS CORRECTED — 2026-09-07.** `rebalance_cost` now charges the
-      measured one-sided turnover between consecutive selections, and **each leg pays its own**,
-      because the bottom decile churns about two points more than the top at every horizon. The old
-      formula is kept as `gross_rebalance_cost` so the size of the error stays checkable. **The
-      re-run is still pending** — the evening pass held the store — so `EVIDENCE_SUMMARY` §11 still
-      carries the gross figures.
+      **`measure_short_leg.py` IS CORRECTED AND RE-RUN — 2026-09-07**, and `EVIDENCE_SUMMARY` §11
+      carries the result. `rebalance_cost` charges the measured one-sided turnover and **each leg
+      pays its own**; the old formula stays as `gross_rebalance_cost` so the error remains
+      checkable. `--as-of` was added so the cost fix could be told apart from the backfill, and the
+      control at the published knowledge instant reproduces the published GROSS **exactly on all
+      eight cells**.
+      **The two changes pull opposite ways**: the cost fix raises every arm (126 quartile
+      +7.705% → **+8.117%**), the backfill lowers the long-horizon ones (→ **+5.835%**). A single
+      re-run would have attributed neither.
+      **And it corrected a REASON, not only a number.** §11 said the 20-session spread does not
+      survive because four sides eat it. The real cost is 0.27%, not 1.00%, and what actually
+      happens is that the interval includes zero — as it did in the published run too.
       **`run_pr013.py` is NOT corrected, on purpose.** All six of its GROSS intervals include zero,
       and a cost is a constant subtraction from a gross interval, so every net interval includes
       zero whatever the cost. Its verdict cannot move. What the error WOULD distort is a comparison

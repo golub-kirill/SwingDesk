@@ -139,8 +139,8 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 
 | | |
 |---|---|
-| Journal | 61 runs, 8 incomplete · **23 run(s) recorded against a dirty tree** and therefore not replayable from their SHA |
-| Decisions | 64672 recorded · 0 uncoded refusals (`a.no_uncoded_failures` requires 0) |
+| Journal | 62 runs, 8 incomplete · **23 run(s) recorded against a dirty tree** and therefore not replayable from their SHA |
+| Decisions | 68633 recorded · 0 uncoded refusals (`a.no_uncoded_failures` requires 0) |
 | Bar store | 12,025,561 rows across 13,010 instruments |
 | PIT integrity | **CLEAN** - bars whose `event_time` postdates their `knowledge_time`: 0 |
 | Directory | **26 pulls** · **16 confirmed** against the response's own `Last-Modified` (`source_session_date`); of the rest, **7** predate the field and stay permanently unattributed (`DR-008` c3); **3** do NOT - they were taken after the field existed and the vendor file had not regenerated, so `DirectoryStore.record`'s monotonicity check dropped the claim. Each of those is a re-pull of an already-recorded session, which `DR-008` says should make **zero requests** |

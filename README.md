@@ -445,7 +445,7 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/measure_revisions.py` | What the vendor actually rewrites, per field, and where a threshold could cut. | `--data` · `--out` |
 | `python tools/measure_sector_cap.py` | Calibrate `risk.max_sector_risk` against the only trade log this project holds. | `--classifications` · `--data` · `--out` · `--wide` · `--refusals` |
 | `python tools/measure_sector_relative.py` | Sector-relative strength: the other way out of the identity `DR-018` found. | `--data` · `--out` |
-| `python tools/measure_short_leg.py` | How much of the ONE significant result survives a short leg you could actually borrow? | `--data` · `--out` |
+| `python tools/measure_short_leg.py` | How much of the ONE significant result survives a short leg you could actually borrow? | `--data` · `--as-of` · `--out` |
 | `python tools/measure_spread.py` | Measure the effective spread across the stored universe, to inform DR-005. | `--data` · `--limit` · `--min-pairs` · `--out` |
 | `python tools/measure_study_drift.py` | How far has the store moved under each REPORTED study since it ran? | `--data` · `--results` |
 | `python tools/measure_target_reachability.py` | Which R target is REACHABLE inside the holding period this project actually runs? | `--data` · `--out` · `--limit` |
