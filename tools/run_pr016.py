@@ -430,6 +430,22 @@ def underpowered(cell: dict[str, Any]) -> bool:
     return bool((interval["high"] - interval["low"]) > float(POWER_FLOOR))
 
 
+def control_arm_for(arm: str) -> str:
+    """Which series an arm is differenced AGAINST: the control at its own cost level.
+
+    **The first cut of this sent every arm to the 1x control**, which made `ranked_3x`'s difference
+    `ranked at 3x minus unselected at 1x` - a selection change and a cost change added together,
+    which is not a quantity anyone asked for. Found 2026-09-08 by reading the first affirmative
+    verdict this project has ever produced, before reporting it.
+
+    It is exactly `PR-002`'s shape and gate 25's reason for existing: a perturbation declared, run,
+    and never actually read into the comparison. The cost stress is the one robustness check an
+    affirmative verdict most needs, so getting it wrong would have put the whole finding on a
+    number that meant nothing.
+    """
+    return "unselected_3x" if arm.endswith("_3x") else "unselected"
+
+
 def cell_for(arm_trades: list[Trade], control_trades: list[Trade]) -> dict[str, Any]:
     cell = distribution(arm_trades)
     if not arm_trades:
@@ -636,6 +652,11 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         "perturbations": {
             "registered": ["cost_stress_1x", "cost_stress_3x"],
             "run": ["cost_stress_1x", "cost_stress_3x"],
+            "difference_at_3x": (
+                "ranked_3x is differenced against unselected_3x, never against the 1x control. "
+                "A perturbation that is run and not read into the comparison is PR-002's failure "
+                "and gate 25's reason for existing."
+            ),
             "note": (
                 "re-SIMULATED at 3x, not re-priced: a worse entry fill moves the stop, so different "
                 "bars take it. Run on both arms and every window, never only on the one section 6 "
@@ -673,10 +694,11 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
 
     for arm in series_names:
         cells: dict[str, Any] = {}
+        against = control_arm_for(arm)
         for window, (first, last) in windows.items():
             selected = [t for t in trades[arm] if first <= t.entry_date <= last]
-            control = [t for t in trades["unselected"] if first <= t.entry_date <= last]
-            cells[window] = cell_for(selected, control if arm != "unselected" else selected)
+            control = [t for t in trades[against] if first <= t.entry_date <= last]
+            cells[window] = cell_for(selected, control if arm != against else selected)
         target = result["arms"] if arm in ARMS else result["diagnostics"]
         target[arm] = cells
 

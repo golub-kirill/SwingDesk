@@ -360,3 +360,38 @@ def test_the_qa_sample_is_stratified_so_the_control_cannot_swamp_the_hypothesis(
     assert pr016.QA_SEED == 20260908
     assert "arm" in pr016.TRADE_COLUMNS
     assert "net_r" in pr016.TRADE_COLUMNS
+
+
+# --- the control an arm is differenced against ---------------------------------------------------
+#
+# Found 2026-09-08 by reading the first affirmative verdict this project has produced, before
+# reporting it. Every arm was differenced against the 1x control, so `ranked_3x` carried
+# `ranked at 3x minus unselected at 1x` - a selection change and a cost change added together.
+# `PR-002`'s exact shape: a perturbation declared, run, and never read into the comparison.
+
+def test_a_stressed_arm_is_differenced_against_the_stressed_control(pr016) -> None:
+    assert pr016.control_arm_for("ranked_3x") == "unselected_3x"
+    assert pr016.control_arm_for("unselected_3x") == "unselected_3x"
+
+
+def test_an_unstressed_arm_is_differenced_against_the_unstressed_control(pr016) -> None:
+    for arm in ("ranked", "unselected", "ranked_top4", "unselected_two_slot"):
+        assert pr016.control_arm_for(arm) == "unselected"
+
+
+def test_every_arm_the_study_runs_has_a_control_that_the_study_also_runs(pr016) -> None:
+    """A control naming a series nobody simulated would silently produce no difference at all,
+    and a missing difference reads as an underpowered one rather than as a defect."""
+    series = [*pr016.ARMS, *pr016.DIAGNOSTICS, "unselected_two_slot",
+              *(f"{a}_3x" for a in pr016.ARMS)]
+    for arm in series:
+        assert pr016.control_arm_for(arm) in series
+
+
+def test_each_control_is_its_own_control_so_no_arm_is_differenced_against_itself_wrongly(
+    pr016,
+) -> None:
+    """`cell_for` skips the difference when the control IS the arm, by identity. That only works
+    if the mapping sends a control to itself."""
+    assert pr016.control_arm_for("unselected") == "unselected"
+    assert pr016.control_arm_for("unselected_3x") == "unselected_3x"
