@@ -39,6 +39,7 @@ sys.path.insert(0, str(REPO / "tools"))
 
 from measure_momentum_horizon import RULE
 from run_pr013 import _admitted_dates
+from run_pr014 import BENCHMARK as PR016_BENCHMARK
 from run_pr016 import (
     ATR_PERIOD,
     BLOCK,
@@ -62,7 +63,6 @@ from run_pr016 import (
     cell_for,
     window_sessions,
 )
-from run_pr014 import BENCHMARK as PR016_BENCHMARK
 from swingdesk.contracts.market import BarSeries, Interval, Series
 from swingdesk.contracts.trade import Trade
 from swingdesk.derived_observations import atr as atr_component
