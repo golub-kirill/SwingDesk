@@ -156,6 +156,33 @@ MAX_CONCURRENT = 4
 RESULT = REPO / "docs" / "prereg" / "results" / "PR-016.json"
 WINDOW_LOG = REPO / "docs" / "prereg" / "results" / "PR-016-windows.jsonl"
 
+#: Where the ambiguous bars themselves are written - the (instrument, session) pairs on which the
+#: tie-break decided the outcome. A COUNT cannot be checked against anything; the pairs can be
+#: fetched at one-minute resolution and the true order measured, which is what `DR-042` §4a says is
+#: owed before the ruling. Written beside the result and never inside it: there may be tens of
+#: thousands, and a result file nobody can read is a result file nobody checks.
+AMBIGUOUS_BARS = REPO / "docs" / "prereg" / "results" / "PR-016-ambiguous-bars.jsonl"
+
+#: `DR-042` §4a, owner ruling 2026-09-07 - *"Покажи долю, потом решу"*. The tie-break is UNRULED,
+#: so every figure this tool produces carries an assumption the owner has not accepted. The label
+#: travels in the result file and on the report, because labelling a number afterwards is not the
+#: same as labelling it now.
+PRELIMINARY = {
+    "status": "PRELIMINARY - not a final result",
+    "why": (
+        "DR-042's tie-break is unruled. On a bar reaching both the stop and the target this run "
+        "takes the STOP, which is the pessimistic reading and is not yet the owner's ruling. The "
+        "owner ruled on 2026-09-07 that the measured share comes first (DR-042 §4a), so these "
+        "figures stand until probe_ambiguous_bar.py reports it and the tie-break is settled."
+    ),
+    "direction": (
+        "the assumption can only UNDERSTATE: every ambiguous bar recorded as a stop would "
+        "otherwise have been a target. So the win rate and the mean net R here are lower bounds, "
+        "and the size of the gap is exactly the ambiguous share."
+    ),
+    "settled_by": "docs/decisions/DR-042 §8, once tools/probe_ambiguous_bar.py has reported",
+}
+
 
 def atr_registry() -> ParameterRegistry:
     return ParameterRegistry({
@@ -489,6 +516,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                     *(f"{a}_3x" for a in ARMS)]
     trades: dict[str, list[Trade]] = {a: [] for a in series_names}
     ambiguous: Counter[str] = Counter()
+    ambiguous_bars: list[dict[str, str]] = []
     skipped: Counter[str] = Counter()
     for count, (name, series) in enumerate(sorted(series_by_name.items()), start=1):
         needed = {a: chosen[a].get(name) for a in (*ARMS, *DIAGNOSTICS)}
@@ -501,6 +529,12 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             armed = simulate(series, frozenset(dates), arm, ratified, costs, atr_series)
             trades[arm].extend(armed.trades)
             ambiguous[arm] += armed.ambiguous_exits
+            ambiguous_bars.extend(
+                {"instrument_id": t.instrument_id, "session_date": t.exit_date.isoformat(),
+                 "arm": arm, "entry_price": str(t.entry_price), "stop": str(t.stop_price),
+                 "target": str(t.entry_price + TARGET_R * t.initial_risk_per_share)}
+                for t in armed.ambiguous_trades
+            )
             skipped.update(armed.skipped)
             if arm in ARMS:
                 # The registered cost perturbation. Re-simulated rather than re-priced: at 3x, the
@@ -566,7 +600,9 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         "instruments": len(series_by_name),
         "formation_dates": len(formations),
         "formations_skipped_for_a_thin_cross_section": thin,
+        "preliminary": PRELIMINARY,
         "ambiguous_exits": dict(ambiguous),
+        "ambiguous_bars_written_to": AMBIGUOUS_BARS.name,
         "skipped_signals": dict(skipped.most_common()),
         "survivorship": (
             "ABSENT. Every instrument with a decade of history in this store is still trading — "
@@ -599,11 +635,23 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         target[arm] = cells
 
     result["verdict"] = verdict_for(result["arms"]["ranked"])
+    if ambiguous_bars:
+        with AMBIGUOUS_BARS.open("w", encoding="utf-8") as handle:
+            for row in ambiguous_bars:
+                handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+        print(f"wrote {len(ambiguous_bars)} ambiguous bars to {AMBIGUOUS_BARS.name}")
     return result
 
 
 def report(result: dict[str, Any]) -> None:
     exits = result["exit"]
+    preliminary = result.get("preliminary")
+    if preliminary:
+        # First line, not a footnote. `DR-042` §4a: a number carrying an unruled assumption is not
+        # a final number, and the label has to be where the number is read.
+        print(f"*** {preliminary['status']} ***")
+        print(f"    {preliminary['why']}")
+        print(f"    {preliminary['direction']}\n")
     print(f"PR-016   as_of {result['as_of']}   verdict {result['verdict'].upper()}")
     print(f"  ratified exit: stop {exits['atr_stop_multiple']} x ATR({exits['atr_period']}), "
           f"target {exits['target_r_multiple']}R, time {exits['max_holding_period']} sessions")
@@ -648,7 +696,14 @@ def report(result: dict[str, Any]) -> None:
 
     print(f"\n  exit reasons, ranked arm, full window: "
           f"{result['arms']['ranked']['full'].get('exit_reasons')}")
-    print(f"  ambiguous exit bars (both legs reachable, stop taken): {result['ambiguous_exits']}")
+    ambiguous = result["ambiguous_exits"]
+    print(f"  ambiguous exit bars (both legs reachable, stop taken): {ambiguous}")
+    for arm in ("unselected", "ranked"):
+        total = result["arms"][arm]["full"].get("trades", 0)
+        if total and arm in ambiguous:
+            print(f"    {arm}: {ambiguous[arm]} of {total} trades = "
+                  f"{ambiguous[arm] / total * 100:.2f}% - THE SIZE OF DR-042's UNRULED ASSUMPTION")
+    print(f"  the bars themselves: {result.get('ambiguous_bars_written_to')}")
     print(f"\n  SURVIVORSHIP: {result['survivorship']}")
 
 

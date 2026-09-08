@@ -88,6 +88,12 @@ class ArmResult:
     `ambiguous_exits` counts EXIT bars on which both legs were reachable and the tie-break decided
     the outcome (`DR-042`). It is the size of an assumption, not a defect count.
 
+    `ambiguous_trades` carries those trades themselves, and it exists because a COUNT cannot be
+    checked against anything. The owner ruled on 2026-09-07 that the tie-break is settled on the
+    measured share (`DR-042` §4a), and measuring it means fetching those exact sessions at
+    one-minute resolution and reading which leg printed first. A study that reported only the
+    number would have made its own assumption unfalsifiable.
+
     `unevaluable_bars` is deliberately not a `Skipped` reason. Those count SIGNALS that produced no
     trade; this counts BARS on which the trigger could not be evaluated at all, for want of a
     lookback window. Folding the two together would report an unanswerable bar as a rejected signal,
@@ -100,6 +106,7 @@ class ArmResult:
     signals: int = 0
     unevaluable_bars: int = 0
     ambiguous_exits: int = 0
+    ambiguous_trades: list[Trade] = field(default_factory=list)
 
     @property
     def net_r_values(self) -> list[Decimal]:
@@ -111,6 +118,7 @@ class ArmResult:
         self.signals += other.signals
         self.unevaluable_bars += other.unevaluable_bars
         self.ambiguous_exits += other.ambiguous_exits
+        self.ambiguous_trades.extend(other.ambiguous_trades)
 
 
 def run_arm(
@@ -151,8 +159,9 @@ def run_arm(
             held = index - position["entry_index"]
             decision = config.exits.evaluate(bar, position["stop"], held, position["target"])
             if decision.ambiguous:
-                # The bar reached both legs and the policy took the stop. Counted, because the
-                # honest way to report an assumption is to report how often it bound.
+                # The bar reached both legs and the policy took the stop. Counted AND kept, because
+                # the honest way to report an assumption is to report how often it bound and to
+                # hand over the bars on which it did.
                 result.ambiguous_exits += 1
 
             high_r = (bar.high - position["entry_price"]) / position["risk_per_share"]
@@ -161,7 +170,10 @@ def run_arm(
             position["mae"] = min(position["mae"], low_r)
 
             if decision.exited and decision.price is not None and decision.reason is not None:
-                result.trades.append(close_position(position, bar, decision.price, decision.reason, config))
+                trade = close_position(position, bar, decision.price, decision.reason, config)
+                result.trades.append(trade)
+                if decision.ambiguous:
+                    result.ambiguous_trades.append(trade)
                 position = None
             continue
 

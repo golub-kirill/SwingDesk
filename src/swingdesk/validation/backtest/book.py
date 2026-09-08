@@ -126,6 +126,7 @@ class BookResult:
     sessions: int = 0
     max_concurrent: int = 0
     ambiguous_exits: int = 0
+    ambiguous_trades: list[Trade] = field(default_factory=list)
 
     @property
     def net_r_values(self) -> list[Decimal]:
@@ -198,9 +199,10 @@ def run_book(
             position["mae"] = min(position["mae"], low_r)
 
             if decision.exited and decision.price is not None and decision.reason is not None:
-                result.trades.append(
-                    close_position(position, bar, decision.price, decision.reason, config)
-                )
+                trade = close_position(position, bar, decision.price, decision.reason, config)
+                result.trades.append(trade)
+                if decision.ambiguous:
+                    result.ambiguous_trades.append(trade)
                 del positions[instrument_id]
 
         # --- rule 1: admissibility per instrument, decided exactly as run_arm decides it

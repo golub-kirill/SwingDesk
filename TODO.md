@@ -912,11 +912,15 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       ```bash
       PYTHONPATH=$PWD/src python tools/run_pr016.py --report
       ```
-      The `ambiguous_exits` line in that report is the size of the assumption. **Rule it on that
-      number, not on taste**: at 2% of exits the choice barely matters, at 20% it is the single
-      largest assumption in every backtest this project will run from now on. The alternatives are
-      a 50/50 split of ambiguous bars or the optimistic reading; both would raise every future win
-      rate and every future mean R.
+      **The owner ruled on the FORM of the question 2026-09-07 — *"(b) Покажи долю, потом решу"*.**
+      So the number is owed BEFORE the ruling, and two things bind until it lands: the conservative
+      rule is temporary, and **every `PR-016` figure is PRELIMINARY and must say so where it is
+      published**. `DR-042` §4a carries this.
+      The measurement is `tools/probe_ambiguous_bar.py` — the store holds daily bars only
+      (`interval` is `1d` and nothing else, measured 2026-09-07), so the intraday sequence comes
+      from Alpaca `feed=sip`, the route `probe_alpaca_delisted.py` established on 2026-09-05.
+      **Recorded before the number exists so it cannot be adjusted afterwards: above ~15% the
+      conservative rule stops being a small conservatism and becomes a systematic distortion.**
 
 - [ ] **`[v]` THE EVENING RUN TOOK 41 MINUTES AGAINST 17.7 THREE SESSIONS EARLIER, AND THE SECOND
       PASS IS 60 MINUTES BEHIND IT — measured 2026-09-07, and the schedule is the owner's.**

@@ -95,6 +95,32 @@ study.
 **Until it is ruled, the conservative rule stands** — a study that cannot start is worse than one
 that understates, and understating is the direction `FAIL_CLOSED_POLICY` points.
 
+### 4a. The owner has ruled on the FORM of the question, 2026-09-07
+
+Asked whether this is a **policy** (the stop wins for ever, whatever the true split is) or a
+**calibration** (rule on the measured share), the owner chose calibration:
+
+> *"(b) Покажи долю, потом решу"*
+
+**Three things follow, and they bind.**
+
+1. **The rule in §4 is TEMPORARY.** It stands only until the share is measured, and this record may
+   not be closed by an agent deciding the number is small enough.
+2. **Every result produced under it is PRELIMINARY**, and must say so where it is published —
+   `PR-016`'s report and result file included. A number carrying an unruled assumption is not a
+   final number, and labelling it afterwards is not the same as labelling it now.
+3. **The measurement is owed before the ruling, not after it.** `tools/probe_ambiguous_bar.py` is
+   what settles it: the store holds daily bars only — measured 2026-09-07, `interval` is `1d` and
+   nothing else, 12.0M rows across 13,010 instruments — so the intraday sequence has to come from
+   outside it. `probe_alpaca_delisted.py` established on 2026-09-05 that Alpaca `feed=sip` serves
+   history from 2016-01-04 on this project's existing credentials, which is the same route and the
+   same read-only boundary.
+
+**What the agent said would change its own recommendation, recorded before the number exists so it
+cannot be adjusted afterwards: an ambiguous share above ~15%.** Below that the conservative rule is
+a small conservatism; above it, it is a systematic distortion of the sample and the measured split
+should be used instead.
+
 ## 5. Where it runs
 
 `ExitPolicy` lives in `trade_management` and is the one implementation both paths use
@@ -135,4 +161,5 @@ Seven of seven. A green suite is not evidence (`AGENTS.md` §12); this is.
 
 ## 8. The ruling
 
-*(open — §4 is the question)*
+**Open.** §4a records the owner's ruling on the FORM of the question — measure first — and
+§4's tie-break itself is unruled. Nothing here may be reported as final until it is.
