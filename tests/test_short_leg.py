@@ -149,31 +149,63 @@ def test_the_unrestricted_pool_is_every_measured_name(short_leg):
 
 # --- what a rebalance costs -----------------------------------------------------------------------
 
+ONE = Decimal(1)
+
+
 def test_a_spread_pays_four_sides_and_a_long_only_book_pays_two(short_leg):
-    """The long leg turns and so does the short one. Charging one round trip halves the cost."""
-    assert short_leg.rebalance_cost("short_pool=1.0", Decimal(25)) == Decimal("0.01")
-    assert short_leg.rebalance_cost("long_only", Decimal(25)) == Decimal("0.005")
+    """The long leg turns and so does the short one. Charging one round trip halves the cost.
+
+    At FULL turnover this reproduces what the tool charged before 2026-09-07, which is what
+    `gross_rebalance_cost` is kept for.
+    """
+    assert short_leg.rebalance_cost("short_pool=1.0", Decimal(25), ONE, ONE) == Decimal("0.01")
+    assert short_leg.rebalance_cost("long_only", Decimal(25), ONE, ONE) == Decimal("0.005")
+    assert short_leg.gross_rebalance_cost("short_pool=1.0", Decimal(25)) == Decimal("0.01")
+    assert short_leg.gross_rebalance_cost("long_only", Decimal(25)) == Decimal("0.005")
 
 
-def test_every_spread_arm_is_charged_the_same(short_leg):
-    """Restricting the borrow pool changes which names are shorted, not how many legs turn."""
+def test_the_cost_is_charged_on_what_TRADES_and_not_on_the_whole_book(short_leg):
+    """**The correction.** `PR-014` amendment A-3: a name still in the decile at the next formation
+    is HELD, not sold and re-bought. Charging the whole book overstates by `1 / turnover`, and the
+    overstatement is a monotone function of the holding period this study varies - 2.7x at twenty
+    sessions and nil at a year - so it is not a constant that changes no ordering.
+    """
+    half = short_leg.rebalance_cost("short_pool=1.0", Decimal(25), Decimal("0.5"), Decimal("0.5"))
+    assert half == short_leg.gross_rebalance_cost("short_pool=1.0", Decimal(25)) / 2
+    assert short_leg.rebalance_cost("short_pool=1.0", Decimal(25), Decimal(0), Decimal(0)) == 0
+
+
+def test_each_leg_is_charged_its_OWN_turnover(short_leg):
+    """`decile-persistence-2026-09-07` measured the bottom decile churning about two points more
+    than the top at every horizon. Doubling the long leg's number would be an assumption where a
+    measurement exists - the same class of assumption the whole correction is about."""
+    lopsided = short_leg.rebalance_cost(
+        "short_pool=1.0", Decimal(25), Decimal("0.2"), Decimal("0.8"))
+    symmetric = short_leg.rebalance_cost(
+        "short_pool=1.0", Decimal(25), Decimal("0.5"), Decimal("0.5"))
+    assert lopsided == symmetric  # 0.2 + 0.8 == 0.5 + 0.5, and the sum is what is charged
+    assert short_leg.rebalance_cost(
+        "short_pool=1.0", Decimal(25), Decimal("0.2"), Decimal("0.2")) < symmetric
+
+
+def test_a_long_only_book_is_not_charged_for_a_short_leg_it_does_not_hold(short_leg):
+    """`bottom_turnover` is zero for a long-only arm by construction. Reading it anyway would
+    charge the control for a book it never had, and the control is what every arm is measured
+    against."""
+    assert short_leg.rebalance_cost(
+        "long_only", Decimal(25), Decimal("0.4"), Decimal("0.9")
+    ) == short_leg.rebalance_cost("long_only", Decimal(25), Decimal("0.4"), Decimal(0))
+
+
+def test_every_spread_arm_is_charged_the_same_AT_THE_SAME_TURNOVER(short_leg):
+    """Restricting the borrow pool changes which names are shorted, not how many legs turn - so at
+    equal turnover the arms cost the same. What differs BETWEEN arms now is their measured
+    turnover, which is the point of the correction."""
     costs = {
-        short_leg.rebalance_cost(f"short_pool={p}", Decimal(25)) for p in short_leg.SHORT_POOLS
+        short_leg.rebalance_cost(f"short_pool={p}", Decimal(25), ONE, ONE)
+        for p in short_leg.SHORT_POOLS
     }
     assert len(costs) == 1
-
-
-def test_the_20_session_spread_is_roughly_erased_by_costs_and_the_126_one_is_not(short_leg):
-    """The arithmetic that decides whether this finding is actionable, asserted rather than said.
-
-    A four-sided rebalance at `DR-005`'s 25 bps is 1.00%. The measured 20-session spread for the
-    liquid quartile is +1.069% gross, so what is left is a rounding error; the 126-session spread is
-    +8.704% and pays the same 1.00% a quarter as often.
-    """
-    cost = short_leg.rebalance_cost("short_pool=0.25", short_leg.SLIPPAGE_BPS)
-    assert cost == Decimal("0.01")
-    assert Decimal("0.01069") - cost < Decimal("0.001"), "the ratified horizon nets to nothing"
-    assert Decimal("0.08704") - cost > Decimal("0.07"), "the long horizon survives comfortably"
 
 
 # --- the long-only control ------------------------------------------------------------------------

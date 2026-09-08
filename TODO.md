@@ -903,6 +903,40 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 4. Pending decisions
 
+- [ ] **`[v]` THE EVENING RUN TOOK 41 MINUTES AGAINST 17.7 THREE SESSIONS EARLIER, AND THE SECOND
+      PASS IS 60 MINUTES BEHIND IT — measured 2026-09-07, and the schedule is the owner's.**
+      ```bash
+      grep -E "daily run (starting|finished)" data/daily_run.log | tail -6
+      ```
+      | date | pass | duration |
+      |---|---|---|
+      | 2026-09-03 | 18:30 | 7.4 min |
+      | 2026-09-04 | 18:30 | 17.7 min |
+      | 2026-09-04 | 19:30 | 18.1 min |
+      | **2026-09-07** | **18:30** | **41.4 min** |
+      | **2026-09-07** | **19:30** | **50.0 min** |
+      **The second pass took FIFTY minutes on a day with no session to collect.** That locates the
+      cost: it is the candidate evaluation, not the arrival of new bars. 3,935 names are ranked,
+      correlated against the open book and sized whether or not the market traded.
+      **The cause is the backfill and it is not a defect.** The run evaluated **3,935 candidates**
+      tonight; before the 10y coverage pass most of the universe could not clear
+      `universe.min_bar_history` (250) and was never admitted. More names now carry real history,
+      which is what the backfill was for, and the run costs what that costs.
+      **It is NOT the fetch period.** The nightly pull is `period="1y"` per instrument — 253 rows —
+      and that is the shortest span the pipeline's own indicators need. It also carries a second
+      job: refetching a year is how a restated close is detected at all (`DR-016` §10.4). Shrinking
+      it would trade a slow run for a blind one.
+      **The margin tonight was 19 minutes**, and it is the FIRST pass that has to fit: `DR-015` §3
+      puts the retry at 19:30, one hour behind, and provides for a RETRY rather than a concurrent
+      run. Both write the same stores, and DuckDB refuses the second writer — so an overlap does not
+      corrupt anything, it makes the retry fail on a lock and lose the evening it exists to save.
+      At 41 minutes and growing, one more session's worth of admitted names closes that gap.
+      **The ruling is yours** and the options are: move the second pass later, accept the overlap
+      and make the pass refuse to start while one is running, or cap the candidate set. The last one
+      is a strategy change wearing an operations costume and I do not recommend it.
+      **Measure before deciding**: 2026-09-07 was a holiday with no session to collect, so tomorrow
+      is the first honest reading of a full run on the widened universe.
+
 - [ ] **`[v]` THE COST CONSTANT DESCRIBES THE OPENING MINUTE AND IS APPLIED TO EVERY MOMENT —
       measured 2026-09-06, `DR-040` is `proposed` and the ruling is the owner's.**
       ```bash
@@ -1578,10 +1612,24 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **The two legs do NOT turn at the same rate** — the bottom decile churns about two points
       more at every horizon — so a spread priced by doubling the long leg is an assumption, and
       that is what the first version of this measurement made before it was corrected.
-      **What is left is the re-price itself**, and it is arithmetic rather than a new study: replace
-      the constant in `rebalance_cost` and `COST_SIDES_PER_FORMATION` with the measured turnover
-      between consecutive books, exactly as `run_pr014.py` now does. It spends **no trials** — the
-      same configurations, re-priced.
+      **`measure_short_leg.py` IS CORRECTED AND RE-RUN — 2026-09-07**, and `EVIDENCE_SUMMARY` §11
+      carries the result. `rebalance_cost` charges the measured one-sided turnover and **each leg
+      pays its own**; the old formula stays as `gross_rebalance_cost` so the error remains
+      checkable. `--as-of` was added so the cost fix could be told apart from the backfill, and the
+      control at the published knowledge instant reproduces the published GROSS **exactly on all
+      eight cells**.
+      **The two changes pull opposite ways**: the cost fix raises every arm (126 quartile
+      +7.705% → **+8.117%**), the backfill lowers the long-horizon ones (→ **+5.835%**). A single
+      re-run would have attributed neither.
+      **And it corrected a REASON, not only a number.** §11 said the 20-session spread does not
+      survive because four sides eat it. The real cost is 0.27%, not 1.00%, and what actually
+      happens is that the interval includes zero — as it did in the published run too.
+      **`run_pr013.py` is NOT corrected, on purpose.** All six of its GROSS intervals include zero,
+      and a cost is a constant subtraction from a gross interval, so every net interval includes
+      zero whatever the cost. Its verdict cannot move. What the error WOULD distort is a comparison
+      across horizons, and `PR-013` measures one formation length. The reasoning is recorded beside
+      the constant; the re-price stays open here because a number nobody corrected is not the same
+      as a number that did not need it.
       **It may move a published claim, which is why it is worth doing rather than noting.**
       `EVIDENCE_SUMMARY` §11 reports the 20-session spread as *"nothing survives: gross +1.069%
       against 1.00% of cost"* per formation. At the measured turnover that cost is **0.39% per

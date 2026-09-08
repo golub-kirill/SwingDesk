@@ -167,8 +167,13 @@ def main(argv: list[str] | None = None) -> int:
     scan.add_argument("--limit", type=int, default=None,
                       help="cap the universe by dollar volume. A cap is a RANKING, not the rule, "
                            "and the report says so")
-    scan.add_argument("--data", type=Path, default=DEFAULT_DATA)
-    scan.add_argument("--lookback", default="1y")
+    scan.add_argument("--data", type=Path, default=DEFAULT_DATA,
+                        help="the store directory: bars, positions, journal and the "
+                             "arming switch all live here")
+    scan.add_argument("--lookback", default="1y",
+                      help="how much history to fetch per instrument. A year is the "
+                           "shortest span the indicators need AND what makes a restated "
+                           "close visible (DR-016 10.4)")
     scan.add_argument("--as-of", default=None,
                       help="ISO instant; pins the clock so the run is reproducible")
     scan.add_argument("--report-dir", type=Path, default=None,
@@ -184,7 +189,9 @@ def main(argv: list[str] | None = None) -> int:
 
     pending = sub.add_parser(
         "pending", help="proposals on open positions awaiting your answer (US-010)")
-    pending.add_argument("--data", type=Path, default=DEFAULT_DATA)
+    pending.add_argument("--data", type=Path, default=DEFAULT_DATA,
+                        help="the store directory: bars, positions, journal and the "
+                             "arming switch all live here")
     pending.add_argument("--as-of", default=None,
                          help="ISO instant to judge staleness at (DR-013); defaults to now")
 
@@ -200,7 +207,9 @@ def main(argv: list[str] | None = None) -> int:
     respond.add_argument("--reason", required=True,
                          help="why. Required - Production Rules 3.8: an approval with no stated "
                               "reason is an unlogged judgment")
-    respond.add_argument("--data", type=Path, default=DEFAULT_DATA)
+    respond.add_argument("--data", type=Path, default=DEFAULT_DATA,
+                        help="the store directory: bars, positions, journal and the "
+                             "arming switch all live here")
     respond.add_argument("--as-of", default=None,
                          help="ISO instant this answer is recorded at; defaults to now")
 
@@ -208,14 +217,17 @@ def main(argv: list[str] | None = None) -> int:
         "record-fill",
         help="report what the broker actually did for an approved action (US-011)",
     )
-    fill.add_argument("position_id")
+    fill.add_argument("position_id",
+                      help="e.g. POS-AAPL-2026-08-10; `swingdesk pending` lists them")
     fill.add_argument("sequence", type=int, help="the approved action this settles")
     fill.add_argument("--price", type=Decimal, required=True, help="the actual fill price")
     fill.add_argument("--shares", type=int, required=True, help="shares actually transacted")
     fill.add_argument("--commission", type=Decimal, required=True,
                       help="as charged, not the modelled estimate")
     fill.add_argument("--filled-on", default=None, help="ISO date; defaults to today")
-    fill.add_argument("--data", type=Path, default=DEFAULT_DATA)
+    fill.add_argument("--data", type=Path, default=DEFAULT_DATA,
+                        help="the store directory: bars, positions, journal and the "
+                             "arming switch all live here")
     fill.add_argument("--as-of", default=None,
                      help="ISO instant this is recorded at; defaults to now")
 
@@ -225,7 +237,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     opened.add_argument("ticker", help="e.g. AAPL or CNQ.TO")
     opened.add_argument("--entry", type=Decimal, required=True, help="fill price, per share")
-    opened.add_argument("--shares", type=int, required=True)
+    opened.add_argument("--shares", type=int, required=True,
+                        help="shares actually filled at the venue, not the size that was planned")
     opened.add_argument("--stop", type=Decimal, required=True, help="initial stop, per share")
     opened.add_argument("--opened-on", default=None,
                         help="ISO date the fill happened; defaults to today")
@@ -239,7 +252,9 @@ def main(argv: list[str] | None = None) -> int:
                              "printed - an override nobody can audit is not an override")
     opened.add_argument("--position-id", default=None,
                         help="override the default POS-<instrument id>-<opened-on> identity")
-    opened.add_argument("--data", type=Path, default=DEFAULT_DATA)
+    opened.add_argument("--data", type=Path, default=DEFAULT_DATA,
+                        help="the store directory: bars, positions, journal and the "
+                             "arming switch all live here")
     opened.add_argument("--as-of", default=None,
                         help="ISO instant this is being recorded as of; defaults to now")
 
@@ -265,7 +280,9 @@ def main(argv: list[str] | None = None) -> int:
                              "--as-of on purpose: one is the event, the other is when we learned")
     closed.add_argument("--reason-code", default=None,
                         help="the course's code for why, when one applies")
-    closed.add_argument("--data", type=Path, default=DEFAULT_DATA)
+    closed.add_argument("--data", type=Path, default=DEFAULT_DATA,
+                        help="the store directory: bars, positions, journal and the "
+                             "arming switch all live here")
     closed.add_argument("--as-of", default=None,
                         help="ISO instant this is being recorded as of; defaults to now")
 
@@ -274,7 +291,9 @@ def main(argv: list[str] | None = None) -> int:
         help="record positions for entries THIS system placed that have since filled (DR-031). "
              "Reads the venue, writes the book, places no order",
     )
-    sync.add_argument("--data", type=Path, default=DEFAULT_DATA)
+    sync.add_argument("--data", type=Path, default=DEFAULT_DATA,
+                        help="the store directory: bars, positions, journal and the "
+                             "arming switch all live here")
     sync.add_argument("--as-of", default=None,
                       help="ISO instant this is recorded at; defaults to now")
     sync.add_argument("--dry-run", action="store_true",
@@ -285,7 +304,9 @@ def main(argv: list[str] | None = None) -> int:
         help="read the paper account and reconcile it against the book. Reads only - it has no "
              "way to place, amend or cancel anything (D1/BR-1, DR-026)",
     )
-    broker_cmd.add_argument("--data", type=Path, default=DEFAULT_DATA)
+    broker_cmd.add_argument("--data", type=Path, default=DEFAULT_DATA,
+                        help="the store directory: bars, positions, journal and the "
+                             "arming switch all live here")
     broker_cmd.add_argument("--as-of", default=None,
                             help="ISO instant this observation is recorded as of; defaults to now")
     broker_cmd.add_argument("--fills", action="store_true",
