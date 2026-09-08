@@ -218,6 +218,44 @@ PYTHONPATH=$PWD/src python tools/run_pr016.py --data data
 PYTHONPATH=$PWD/src python tools/run_pr016.py --report
 ```
 
-The QA stage (`BACKTEST_PROTOCOL` §7) has its sample: 2,400 trades, 400 per series, seeded 20260908
-in `PR-016-trades-sample.csv`. **The re-check itself has not been done** and is an open item — a
-sample written is not a sample checked.
+```bash
+PYTHONPATH=$PWD/src python tools/verify_pr016_qa.py --data data
+```
+
+## The QA stage, done
+
+`BACKTEST_PROTOCOL` §7 asks for *"a repeat INDEPENDENT check of part of the sample"*, reconstructed
+*"from the stored evidence alone... not from the run's own output"*. `tools/verify_pr016_qa.py`
+imports nothing from the harness it checks — not `ExitPolicy`, not `run_arm`, not `derived_observations.atr:compute`,
+not `CostModel`. Wilder's true range and smoothing, both fill rules and the four ordering rules are
+written out again from the specifications they come from. It rebuilds each sampled trade from
+`(instrument, entry date)` plus the ratified parameters, and refuses outright if the constants it
+restates differ from the ones `PR-016.json` recorded.
+
+| | |
+|---|---|
+| sampled, seeded 20260908, 400 per series | **2,400** over 1,525 instruments |
+| **agreed on every field** | **2,390** |
+| label only, final bar | 10 |
+| **disagreed** | **0** |
+| not reconstructable | **0** |
+
+Entry price, stop, exit price, exit date, exit reason, shares, risk per share and costs, compared
+as exact `Decimal` — §7's own sentence is that a disagreement is a defect and not a rounding
+difference to wave through, so nothing is compared approximately.
+
+**What the re-check found that no test had.** Ten trades — every one an entry dated 2026-08-07 —
+are recorded `end_of_data` where the evidence says `time`. `run_arm` iterates `range(len(bars) - 1)`
+because forming an ENTRY needs `bars[i + 1]`, so the final stored bar is never evaluated for an
+EXIT either: a position that completes its holding period there is closed as `END_OF_DATA` at the
+last close instead of as `TIME` at the same close.
+
+**Identical bar, identical price, identical net R.** No figure in this report moves. What does move
+is the `exit_reason` mix: the control shows 1,087 `end_of_data` out of sample and an unknown share
+of those are time exits under another name. Counted in its own bucket rather than folded into
+either — burying it in "agreed" would hide a real disagreement between the record and the evidence,
+and calling it a defect would overstate one that changes nothing.
+
+**What this does and does not say.** It says the trade log says what the evidence says. It says
+nothing about whether the STUDY is right — a faithful log of a badly designed study is still a
+faithful log.
