@@ -713,3 +713,118 @@ Sharpe penalises searching for a winner, and this reading only ever removed a cl
 
 **Do not write anything implying more confidence than the above.** `UX_COPY.md` §3 carries the
 standing warning verbatim.
+
+## 17. The strategy sits one tenth of a percentage point from break-even, and the ratified target moves it the wrong way
+
+**Read on 2026-09-07 from evidence already committed**, not from a new run: `PR-005`'s trade log
+(`docs/prereg/results/PR-005-trades.csv`, 26,351 trades, of which **13,099 at 1× costs**) and
+`measure_exit_surface`'s grid (`docs/decisions/measurements/exit-surface-2026-09-06.json`, 123,635
+entries per cell, 5,069 instruments). **EXPLORATORY. It sets nothing and spends no trial** — every
+configuration below is one `PR-016` §6a already declares, and counting it twice would raise the
+programme's hurdle for arithmetic that searched for nothing.
+
+Derive every figure with the commands in §17.4, never from these lines.
+
+### 17.1 The distribution nobody had reported
+
+`Trade` has carried `net_r`, `mfe`, `mae` and `exit_reason` since `PR-005`. No study had ever
+reported their **distribution** — this file carried annualised excesses and nothing else. At the
+ratified stop and the ratified twenty-session hold, **without a target**, over 13,099 trades:
+
+| | |
+|---|---|
+| win rate | **41.07%** |
+| mean net R | **−0.0023** |
+| median net R | −1.007 — more than half of all trades are stop-outs |
+| mean win / mean loss | +1.493R / −1.045R |
+| payoff ratio | 1.429 |
+| **break-even win rate** | **41.17%** |
+| p1 / p95 | −2.565R / +2.779R |
+| worst / best | −11.47R / +17.41R |
+| skew | +1.61 |
+
+**The observed win rate is 0.10 percentage points below the one the payoff ratio requires.** The
+strategy does not lose and does not win; it sits on break-even to within a rounding error. The
+right skew is the whole reason it gets there: losses cluster tightly at −1R because the stop works,
+and a thin right tail pays for them.
+
+### 17.2 Where the losses come from — by count the stop, by damage the gap
+
+7,719 losing trades, **−8,064R** in total:
+
+| exit | n | share of losers | mean net R | **share of all loss** |
+|---|---|---|---|---|
+| `stop` | 5,277 | 68.4% | −1.033 | 67.6% |
+| **`stop_gap`** | **1,452** | **18.8%** | **−1.560** | **28.1%** |
+| `time` | 953 | 12.3% | −0.348 | 4.1% |
+| `end_of_data` | 37 | 0.5% | −0.476 | 0.2% |
+
+**A gap costs half an R more than the stop it jumped**, and gaps are the only loss that exceeds its
+share of the population. The time exit — the slot most often blamed for cutting winners short —
+accounts for **4% of the damage**.
+
+**This is `DR-006` §10.3 and `PR-011` arriving at the same place from two directions.**
+`measure_gap_cost` finds gap cost monotone in `2 × ATR / price`: **−5.490R** below 0.005 against
+−1.401R above 0.05, and the bottom two bands are 9.2% of gaps carrying **22.9% of gap damage**.
+`PR-011` measured overshoot by volatility band on a different population and found the same shape
+reversed into its own hypothesis — gap-through rate falls from **20.9%** on names whose ATR is ≤3%
+of price to **13.8%** on names at 10–50%. **The quiet names are the dangerous ones**, because a
+stop two ATR wide is a small fraction of price and an ordinary overnight move is several R.
+
+### 17.3 What the ratified 1R target does, and it is not what it looks like
+
+`DR-029` ruled the target at 1R on 2026-09-01. Re-pricing `PR-005`'s own log as though it had been
+in force — **arithmetic on a published log, not a run**:
+
+| | win rate | mean net R |
+|---|---|---|
+| as published, no target | 41.07% | **−0.0023R** |
+| with a 1R target | **50.94%** | **−0.0495R** |
+
+**The target buys a coin-flip win rate and pays for it with expectancy.** 4,685 winners are capped
+and give up **3,054R**; 1,293 losers are rescued and gain **2,435R**; the net is **−619R** over
+13,099 trades. Mechanically it cannot be otherwise: winners average +1.493R with p90 at +1.98R, so
+a 1R cap removes exactly the right tail that carries the payoff ratio, and the break-even win rate
+rises from 41% to about 51%.
+
+**Two limits, and both point the same way.** The estimate **overstates** the target's benefit — it
+credits every trade whose MFE reached +1R, where `DR-042`'s tie-break gives an ambiguous bar to the
+stop — and `PR-005`'s entries are breakout-with-trend-gate rather than the ratified screen. The
+measured version is `PR-016`'s registered `unselected_two_slot` diagnostic.
+
+**`DR-029` did not choose the target for expectancy** and says so: the reason is that a completed
+trade is observable where a timed-out one is not. That reason is untouched by this. What is new is
+its price.
+
+### 17.4 The exit grid rises monotonically away from the ratified pair, and still beats nothing
+
+`measure_exit_surface`, 25 cells, net R per trade, unselected entries:
+
+| stop × target | target hit | stopped | time | **net R** |
+|---|---|---|---|---|
+| **2.0 × 1.0 — ratified** | 47.3% | 40.9% | 11.8% | **−0.1278** |
+| 2.0 × 2.0 | 20.1% | 46.0% | 33.9% | −0.0968 |
+| 2.0 × 3.0 | 7.4% | 46.6% | 46.1% | −0.0864 |
+| 3.0 × 3.0 | 2.0% | 29.0% | 69.0% | **−0.0360** |
+| *buy and hold, 20 sessions* | | | | *−0.0305* |
+
+**Net expectancy rises monotonically in both axes across all 25 cells**, and the ratified pair sits
+in the worst corner of the surface. The mechanism is the one §10 already recorded: R is
+`stop_multiple × ATR`, slippage and gap overshoot are fixed in **price**, so a narrower stop makes
+the same cost larger in R.
+
+**And no cell beats the null.** `beats_buy_and_hold` is false in all 25, gross and net. Widening
+improves the exit; it does not produce an edge. Anything read from this table is a statement about
+the exit policy against the market and never about selection.
+
+**The one lever nobody has measured is the partial.** `exit.partial_trigger` and
+`exit.stop_move_after_partial` are in the registry, both `unset`, and every cell of the grid is
+all-or-nothing. On `PR-005`'s log a half-position banked at +1R with the remainder carried at
+break-even is the only construction on the table whose arithmetic comes out positive — roughly
+**+263R** where both pure alternatives are negative. That is a hypothesis with a number attached
+and not a finding; it needs its own pre-registration.
+
+```bash
+python tools/measure_gap_cost.py --data data
+python tools/measure_exit_surface.py --data data
+```
