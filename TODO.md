@@ -903,6 +903,23 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 4. Pending decisions
 
+- [ ] **`[v]` THE STORE HOLDS TEN YEARS OF BARS, SO NO STUDY CAN HAVE TEN YEARS OF ENTRIES.**
+      Raised 2026-09-07, against the owner's instruction that the backtest cover *"minimum za last
+      10y"*.
+      `tools/widen_universe.cmd` fetches `--period 10y` — **owner ruling 2026-09-06**, and the
+      number it replaced cost more than it saved, so this is not a defect. But a study needs a
+      lookback BEFORE its first entry: `rs.lookback` is 126 sessions and `DR-003`'s `min_history`
+      is 250, so the earliest entry sits roughly a year inside the earliest bar.
+      ```bash
+      PYTHONPATH=$PWD/src python tools/run_pr016.py --report
+      ```
+      The `window MEASURED` line is the honest span; the `window ASKED FOR` line is not.
+      **Ten years of ENTRIES needs about eleven years of BARS.** The lever is one flag on one
+      periodic pass. What it costs: `refresh_universe.py` measured 0.40s a symbol at `10y`, so a
+      wider period is a longer coverage pass and a bigger store, on a machine whose evening run is
+      already 41 minutes (§4's other open item). Nothing is blocked meanwhile — a nine-year study
+      is a nine-year study and says so.
+
 - [ ] **`[v]` `DR-042`: ON A BAR THAT REACHED BOTH THE STOP AND THE TARGET, WHICH FIRED FIRST?**
       Raised 2026-09-07. A daily bar records four prices and no times, so the sequence has to be
       assumed. The rule implemented is **the stop, always** — the pessimistic reading, and the one

@@ -281,3 +281,26 @@ def test_the_split_boundary_is_inherited_and_not_chosen_here(pr016):
     """`PR-014` and `PR-015` both end their primary window here. A boundary chosen today would be
     one chosen after seeing this data."""
     assert pr016.PRIMARY_END == date(2021, 12, 31)
+
+
+# --- the window the study MEASURED, not the one it was asked for ---------------------------------
+#
+# Found 2026-09-07 by an arithmetic check: the run reported 113 formation dates where 2,522 sessions
+# at a 20-session step should give 126. The missing 13 are 260 sessions - the history floor, charged
+# a second time against the benchmark's calendar after `DR-003`'s `min_history` had already charged
+# it against every instrument. The header window would still have read `2016-01-04 .. 2026-09-04`,
+# and the owner asked for at least ten years.
+
+def test_the_benchmark_gate_is_the_rankers_lookback_and_not_the_instrument_floor(pr016) -> None:
+    """The constant this defect was. `HISTORY` is what an INSTRUMENT needs and `DR-003` already
+    enforces it per name per date; the benchmark needs `rs.lookback` and no more. Charging 252
+    twice costs a year of sample and nothing notices."""
+    assert pr016.LOOKBACK < pr016.HISTORY
+    assert pr016.LOOKBACK == 126
+
+
+def test_the_instrument_floor_is_still_enforced_where_it_belongs(pr016) -> None:
+    """Relaxing the benchmark gate must not relax the per-name one, or the two arms stop drawing
+    from one pool. `DR-003`'s rule carries it."""
+    assert pr016.RULE.min_history >= 250
+    assert pr016.HISTORY == 252

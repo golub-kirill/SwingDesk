@@ -478,9 +478,19 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
 
     index_of = {n: {b.session_date: i for i, b in enumerate(s.bars)}
                 for n, s in series_by_name.items()}
-    # Formation dates start HISTORY bars into the BENCHMARK's calendar and inside the window, so
-    # every arm has its full lookback and no arm sees a bar the date has not reached.
-    earliest = calendar[HISTORY] if len(calendar) > HISTORY else calendar[-1]
+    # Formation dates start once the BENCHMARK has its own lookback, and inside the window.
+    #
+    # `LOOKBACK`, not `HISTORY`, and the difference is a YEAR of sample. `HISTORY` is what an
+    # INSTRUMENT needs, and `DR-003`'s `min_history` (250) already enforces that inside
+    # `_admitted_dates` for every name on every date. Applying it a second time to the benchmark's
+    # calendar charges the same floor twice and throws away the first year of the window for
+    # nothing. What the benchmark itself needs is `rs.lookback` - 126 sessions of relative-strength
+    # history - and no more.
+    #
+    # Found 2026-09-07 by an arithmetic check that did not match: the run reported 113 formation
+    # dates where 2,522 sessions at a 20-session step should give 126, and 13 is exactly 260
+    # sessions. The header window would still have read `2016-01-04 .. 2026-09-04`.
+    earliest = calendar[LOOKBACK] if len(calendar) > LOOKBACK else calendar[-1]
     formations = [d for d in sessions[::STEP] if d >= earliest and d <= sessions[-HOLD - 1]] \
         if len(sessions) > HOLD else []
     print(f"as_of {as_of.isoformat()}   instruments {len(series_by_name)}   "
@@ -634,6 +644,21 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         target = result["arms"] if arm in ARMS else result["diagnostics"]
         target[arm] = cells
 
+    # **The requested window is not the measured one, and only the trades know which.** The owner
+    # asked for at least ten years; the header window can say 2016-01-04 while the first entry sits
+    # in 2017 because the store's own history begins later and a lookback runs on top of it. A
+    # study that reports the window it was ASKED for rather than the one it MEASURED has answered a
+    # question nobody can check.
+    entered = sorted(t.entry_date for t in trades["unselected"])
+    if entered:
+        span_days = (entered[-1] - entered[0]).days
+        result["measured_span"] = {
+            "first_entry": entered[0].isoformat(),
+            "last_entry": entered[-1].isoformat(),
+            "years": round(span_days / 365.25, 2),
+            "requested_window_years": round((end - start).days / 365.25, 2),
+            "meets_the_ten_year_instruction": span_days / 365.25 >= 10.0,
+        }
     result["verdict"] = verdict_for(result["arms"]["ranked"])
     if ambiguous_bars:
         with AMBIGUOUS_BARS.open("w", encoding="utf-8") as handle:
@@ -655,8 +680,13 @@ def report(result: dict[str, Any]) -> None:
     print(f"PR-016   as_of {result['as_of']}   verdict {result['verdict'].upper()}")
     print(f"  ratified exit: stop {exits['atr_stop_multiple']} x ATR({exits['atr_period']}), "
           f"target {exits['target_r_multiple']}R, time {exits['max_holding_period']} sessions")
-    print(f"  window {result['window']['start']} .. {result['window']['end']} "
+    print(f"  window ASKED FOR {result['window']['start']} .. {result['window']['end']} "
           f"({result['window']['sessions']} sessions), {result['formation_dates']} formation dates")
+    span = result.get("measured_span")
+    if span:
+        verdict = "MEETS" if span["meets_the_ten_year_instruction"] else "SHORT OF"
+        print(f"  window MEASURED  {span['first_entry']} .. {span['last_entry']} "
+              f"= {span['years']} years of entries - {verdict} the ten-year instruction")
     print(f"  {result['instruments']} instruments, {result['slippage_bps_per_side']} bps a side\n")
 
     head = (f"  {'arm':22} {'window':14} {'n':>7} {'win%':>6} {'b/e%':>6} {'meanR':>7} "
