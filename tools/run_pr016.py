@@ -34,8 +34,11 @@ whose reslicings nobody counts is `data snooping` with a command-line flag
 
 **Registered diagnostics, reported and never read by §6** — the same device `PR-015` amendment A-1
 used: the top FOUR by rank (which is what `risk.max_concurrent_positions` would actually take), and
-the same entries re-priced under the two-slot exit `PR-005` ran, which is what says whether the
-ratified target bought anything.
+the control's own signal DATES re-priced under the two-slot exit `PR-005` ran, which is what says
+whether the ratified target bought anything. **Dates, not realised entries** - a position that runs
+its full hold is still open on the next formation date and the entry never happens, where one the
+target closed early frees its name in time. Amendment A-1 registers that and both counts are
+reported.
 
     PYTHONPATH=$PWD/src python tools/run_pr016.py --data <store>
     PYTHONPATH=$PWD/src python tools/run_pr016.py --data <store> --from 2016-01-04 --to 2019-12-31
@@ -781,11 +784,16 @@ def report(result: dict[str, Any]) -> None:
                 if not cell.get("trades"):
                     continue
                 pct = cell.get("percentiles", {})
+                # `distribution` refuses a percentile ladder below 100 trades rather than
+                # interpolating one out of nine. Printing `nan` there reads as a defect; a dash
+                # reads as what it is - a sample too small for that question.
+                p5 = f"{pct['p5']:>+7.3f}" if "p5" in pct else f"{'-':>7}"
+                p95 = f"{pct['p95']:>+7.3f}" if "p95" in pct else f"{'-':>7}"
                 print(f"  {arm:22} {window:14} {cell['trades']:>7} "
                       f"{cell['win_rate'] * 100:>6.2f} "
                       f"{(cell['break_even_win_rate'] or 0) * 100:>6.2f} "
                       f"{cell['mean_net_r']:>+7.3f} {cell['median_net_r']:>+7.3f} "
-                      f"{pct.get('p5', float('nan')):>+7.3f} {pct.get('p95', float('nan')):>+7.3f} "
+                      f"{p5} {p95} "
                       f"{cell['payoff_ratio'] or 0:>7.3f}")
         print()
 

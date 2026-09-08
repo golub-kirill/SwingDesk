@@ -185,7 +185,8 @@ bad for everything is drawn for both or neither.
   * `ranked_top4` — the top FOUR by rank, which is what `risk.max_concurrent_positions` would
     actually take. Reported because it is the owner's real book size; not read, because it is a
     third selection rule and §6 registered two.
-  * `unselected_two_slot` — the same control entries under the exit `PR-005` ran, no target. This is
+  * `unselected_two_slot` — the control's own signal DATES under the exit `PR-005` ran (**dates,
+    not realised entries — amendment A-1**), no target. This is
     what says whether the ratified target bought anything, and it is a diagnostic rather than an arm
     because choosing a target is `DR-029`'s act, not this study's.
 
@@ -223,7 +224,7 @@ book, would be needed before anything traded differently.
 **Two**, declared here and entered in `trial_budget.py`.
 
   1. the `ranked` arm — one selection rule evaluated;
-  2. `unselected_two_slot` — the same entries under a DIFFERENT exit, which is a second
+  2. `unselected_two_slot` — the same signal dates under a DIFFERENT exit, which is a second
      configuration and not a cost restatement of the first.
 
 **The control spends nothing**, for `PR-008`'s and `PR-010`'s reason: it carries no signal, so no
@@ -277,4 +278,47 @@ different entry rule, 25 bps against 5, and a wider store. The report must show 
 
 ## 10. Amendments
 
-None.
+### A-1 — the two-slot diagnostic shares signal DATES, not realised entries
+
+**2026-09-08, before this study's own data produced any result.**
+
+§5 called `unselected_two_slot` *"the same control entries under the exit `PR-005` ran"*. **It
+cannot be.** The step and the holding period are both 20 sessions, so a position that runs to its
+time exit is still open on the next formation date, the engine records `POSITION_OPEN`, and that
+entry never happens. A position the target closes early frees its name in time.
+
+Measured while smoke-testing the pipeline on a SYNTHETIC store of random prices, 2026-09-08:
+**1,868 two-slot entries against 2,535 control entries from the same 27 dates.**
+
+**This is a property of the exit being compared, not a defect.** A target that frees capital sooner
+takes more trades, and that is part of what a target does. The amendment is therefore to the
+DESCRIPTION and to how the diagnostic may be read: both entry counts are reported, and the
+diagnostic is never read as a paired comparison.
+
+**§6 is untouched.** It reads `ranked` against `unselected`, which run the same exit and are
+genuinely paired. Rule 3's clock is not started by this: it comes from the harness's behaviour on
+random prices, not from this study's data.
+
+### A-2 — the 252-session floor is per INSTRUMENT; the benchmark's own gate is `rs.lookback`
+
+**2026-09-08, before this study's own data produced any result.**
+
+§4 says *"history floor: 252 sessions before any formation date, applied to EVERY arm so the
+control and the hypothesis draw from one pool"*, and that is unchanged: `DR-003`'s `min_history`
+(250) is evaluated for every name on every date, and a series shorter than `252 + 20 + 1` is never
+loaded.
+
+The first cut of the runner ALSO applied 252 to the benchmark's calendar, which charges the same
+floor twice — an instrument's requirement imposed on `SPY`, which needs only its own `rs.lookback`
+of 126 to be rankable against. Caught by arithmetic that did not match: the first run reported
+**113 formation dates where 2,522 sessions at a 20-session step give 126**, and 13 dates are
+exactly 260 sessions.
+
+Corrected to `rs.lookback`. **No arm's admission changes** — only the first year of the window
+stops being discarded. Registered here because a reader comparing §4 to the code would otherwise
+find two numbers and no reason.
+
+**And what it does not fix.** The store holds ten years of bars (`--period 10y`, owner ruling
+2026-09-06), so even without the double floor the first entry sits a lookback inside the earliest
+bar. §4's window is the one asked for; the result file now carries `measured_span`, which is the
+one obtained, and says whether it meets the ten-year instruction. It does not.
