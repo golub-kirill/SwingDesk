@@ -908,11 +908,16 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       ```bash
       grep -E "daily run (starting|finished)" data/daily_run.log | tail -6
       ```
-      | date | duration |
-      |---|---|
-      | 2026-09-03 | 7.4 min |
-      | 2026-09-04 | 17.7 min |
-      | **2026-09-07** | **41.4 min** |
+      | date | pass | duration |
+      |---|---|---|
+      | 2026-09-03 | 18:30 | 7.4 min |
+      | 2026-09-04 | 18:30 | 17.7 min |
+      | 2026-09-04 | 19:30 | 18.1 min |
+      | **2026-09-07** | **18:30** | **41.4 min** |
+      | **2026-09-07** | **19:30** | **50.0 min** |
+      **The second pass took FIFTY minutes on a day with no session to collect.** That locates the
+      cost: it is the candidate evaluation, not the arrival of new bars. 3,935 names are ranked,
+      correlated against the open book and sized whether or not the market traded.
       **The cause is the backfill and it is not a defect.** The run evaluated **3,935 candidates**
       tonight; before the 10y coverage pass most of the universe could not clear
       `universe.min_bar_history` (250) and was never admitted. More names now carry real history,
@@ -921,9 +926,11 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       and that is the shortest span the pipeline's own indicators need. It also carries a second
       job: refetching a year is how a restated close is detected at all (`DR-016` §10.4). Shrinking
       it would trade a slow run for a blind one.
-      **The margin tonight was 19 minutes.** `DR-015` §3 puts the retry at 19:30, one hour after the
-      scheduled pass, and provides for a RETRY rather than a concurrent run. At the current growth
-      the two will overlap, and both write the same stores.
+      **The margin tonight was 19 minutes**, and it is the FIRST pass that has to fit: `DR-015` §3
+      puts the retry at 19:30, one hour behind, and provides for a RETRY rather than a concurrent
+      run. Both write the same stores, and DuckDB refuses the second writer — so an overlap does not
+      corrupt anything, it makes the retry fail on a lock and lose the evening it exists to save.
+      At 41 minutes and growing, one more session's worth of admitted names closes that gap.
       **The ruling is yours** and the options are: move the second pass later, accept the overlap
       and make the pass refuse to start while one is running, or cap the candidate set. The last one
       is a strategy change wearing an operations costume and I do not recommend it.
