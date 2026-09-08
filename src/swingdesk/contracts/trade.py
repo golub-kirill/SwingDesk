@@ -20,11 +20,19 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 class ExitReason(StrEnum):
     """How a trade ended. Four slots exist in the course's exit model (EXIT_MODEL_SPEC); this
-    harness implements the protective and time slots and says so rather than pretending otherwise.
+    harness implements the protective, profit and time slots, and says so rather than pretending
+    otherwise. The contextual slot is still absent.
+
+    `TARGET` arrived on 2026-09-07 with `DR-042`. Before it, the harness could not simulate the exit
+    this system actually places: `exit.target_r_multiple` was ratified at 1R on 2026-09-01
+    (`DR-029`) and lived only in `broker/submit.py`, so every backtested trade ran the stop and the
+    clock while every live trade also carried a take-profit leg. A study measuring "the ratified
+    exit" was measuring two thirds of it.
     """
 
     STOP = "stop"                 # protective slot: the stop was touched intraday
     STOP_GAP = "stop_gap"         # protective slot: the session opened through the stop
+    TARGET = "target"             # profit slot: the take-profit limit was reached
     TIME = "time"                 # time slot: maximum holding period reached
     END_OF_DATA = "end_of_data"   # the window ended while the position was open
 

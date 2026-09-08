@@ -903,6 +903,21 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 4. Pending decisions
 
+- [ ] **`[v]` `DR-042`: ON A BAR THAT REACHED BOTH THE STOP AND THE TARGET, WHICH FIRED FIRST?**
+      Raised 2026-09-07. A daily bar records four prices and no times, so the sequence has to be
+      assumed. The rule implemented is **the stop, always** — the pessimistic reading, and the one
+      `backtesting.py` uses for the same stated reason. **`PR-016` is not blocked by this**: the
+      conservative rule stands until ruled, and understating is the direction `FAIL_CLOSED_POLICY`
+      points.
+      ```bash
+      PYTHONPATH=$PWD/src python tools/run_pr016.py --report
+      ```
+      The `ambiguous_exits` line in that report is the size of the assumption. **Rule it on that
+      number, not on taste**: at 2% of exits the choice barely matters, at 20% it is the single
+      largest assumption in every backtest this project will run from now on. The alternatives are
+      a 50/50 split of ambiguous bars or the optimistic reading; both would raise every future win
+      rate and every future mean R.
+
 - [ ] **`[v]` THE EVENING RUN TOOK 41 MINUTES AGAINST 17.7 THREE SESSIONS EARLIER, AND THE SECOND
       PASS IS 60 MINUTES BEHIND IT — measured 2026-09-07, and the schedule is the owner's.**
       ```bash

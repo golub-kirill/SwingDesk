@@ -9,10 +9,16 @@ two (Production Rules 3.8).
 Appendix J's Exit stage: all rules, without discretionary hindsight - every exit follows a rule, and
 the thing being excluded is named as discretionary hindsight.
 
-This implements two of the course's four exit slots (`EXIT_MODEL_SPEC.md`): protective and time.
-The profit and contextual slots are absent, and that is a stated limitation of the harness rather
-than an oversight - adding a profit target would mean PR-005 compared five gates through two exit
-models, which is a different study.
+This implements three of the course's four exit slots (`EXIT_MODEL_SPEC.md`): protective, profit
+and time. The contextual slot is absent.
+
+**The profit slot arrived on 2026-09-07 (`DR-042`) and is OPTIONAL, which is the whole design.**
+`target_r_multiple` defaults to None and a policy without one behaves exactly as this file did
+before - same branches, same order, same prices. That is not politeness to callers: `PR-002`,
+`PR-005`, `PR-011` and `PR-012` all published trade logs under the two-slot policy, and a default
+target would silently re-price every one of them. The sentence this paragraph replaces said adding
+a target "would mean PR-005 compared five gates through two exit models, which is a different
+study". It still would - so PR-005 keeps its policy and PR-016 states its own.
 
 Gap handling is the part worth reading. A session that OPENS below the stop fills at the open, and
 the loss recorded is the actual loss. Assuming every stopped trade loses exactly 1R is the single
@@ -31,11 +37,18 @@ from swingdesk.contracts.trade import ExitReason
 
 @dataclass(frozen=True, slots=True)
 class ExitDecision:
-    """What happened to the position on this bar."""
+    """What happened to the position on this bar.
+
+    `ambiguous` marks a bar on which BOTH legs were reachable intraday - the low took out the stop
+    and the high reached the target - and a daily bar cannot say which came first. The flag exists
+    so the size of the tie-break assumption is a counted number rather than an implied one. It is
+    never a reason to change the answer; `evaluate` resolves it the same way every time.
+    """
 
     exited: bool
     price: Decimal | None = None
     reason: ExitReason | None = None
+    ambiguous: bool = False
 
     def __post_init__(self) -> None:
         """An exit without a price or a reason is not an exit.
@@ -67,30 +80,80 @@ class ExitPolicy:
 
     atr_stop_multiple: Decimal
     max_holding_bars: int
+    target_r_multiple: Decimal | None = None
 
     def __post_init__(self) -> None:
         if self.atr_stop_multiple <= 0:
             raise ValueError(f"atr_stop_multiple must be > 0, got {self.atr_stop_multiple}")
         if self.max_holding_bars < 1:
             raise ValueError(f"max_holding_bars must be >= 1, got {self.max_holding_bars}")
+        if self.target_r_multiple is not None and self.target_r_multiple <= 0:
+            # Same refusal `broker/submit.py:target_price` makes on the live path, for the same
+            # reason: a target at or below the entry is an instruction to sell at a loss, and the
+            # OCO contract rejects it. The harness must not be able to express what the venue
+            # would refuse.
+            raise ValueError(f"target_r_multiple must be > 0, got {self.target_r_multiple}")
 
     def stop_for(self, entry_price: Decimal, atr: Decimal) -> Decimal:
         """Initial protective stop. Set before size, always (RISK_SPEC 3)."""
         return entry_price - self.atr_stop_multiple * atr
 
-    def evaluate(self, bar: Bar, stop: Decimal, bars_held: int) -> ExitDecision:
-        """Check one bar against the policy, protective slot first.
+    def target_for(self, entry_price: Decimal, risk_per_share: Decimal) -> Decimal | None:
+        """The take-profit limit, `target_r_multiple` R above entry. None when the slot is unused.
 
-        Order matters and is not arbitrary: the protective exit is checked before the time exit,
-        because a bar that both breaks the stop and completes the holding period is a stop-out. The
-        opposite order would silently convert some losses into time exits at their closing price,
-        which is usually a better price.
+        `risk_per_share` is the position's own denominator - `entry - stop`, frozen at entry
+        (`RISK_SPEC` 2) - so the target is volatility-normalised by construction, which is the
+        argument `DR-029` gave for expressing it in R rather than in percent.
+
+        Deliberately takes the risk per share rather than recomputing `stop_for`: the live path's
+        R includes costs and the backtest's does not, and a target that silently recomputed its own
+        denominator would disagree with the position it belongs to. One denominator, passed in.
         """
+        if self.target_r_multiple is None:
+            return None
+        return entry_price + self.target_r_multiple * risk_per_share
+
+    def evaluate(
+        self, bar: Bar, stop: Decimal, bars_held: int, target: Decimal | None = None
+    ) -> ExitDecision:
+        """Check one bar against the policy. Every ambiguity resolves against the strategy.
+
+        **The order is the rule.** A daily bar records four prices and no times, so on a bar that
+        touches more than one leg the sequence is unknowable and has to be assumed. Each assumption
+        here is the pessimistic one:
+
+        1. **The open is not ambiguous** - it is the session's first trade, so a leg the open
+           itself satisfies fired before anything intraday could. A gap through the stop fills at
+           the OPEN, which is worse than the stop.
+        2. **A gap through the target fills at the TARGET, not at the open.** A real limit order
+           would have filled at the better price; this does not credit it. Carried over verbatim
+           from `measure_exit_surface.py`, which set the convention on 2026-09-06.
+        3. **Intraday, the stop is checked BEFORE the target.** When the low reached the stop and
+           the high reached the target on the same bar, the stop is taken. This is what
+           `backtesting.py` (kernc) does for the same reason, and the bar is flagged `ambiguous`
+           so the count is reportable.
+        4. **The stop is checked before the TIME exit** - unchanged, and the reason is unchanged:
+           the opposite order converts some losses into time exits at a usually better price.
+
+        Note 3 and 4 together mean a bar can satisfy the target and still exit at the stop. That is
+        the cost of daily bars, and `DR-042` records it as an assumption with a measured size
+        rather than as an implementation detail.
+        """
+        # (1) and (2): the open, where the sequence is known rather than assumed.
         if bar.open <= stop:
             # Gapped through. The fill is the open, not the stop.
             return ExitDecision(True, bar.open, ExitReason.STOP_GAP)
+        if target is not None and bar.open >= target:
+            return ExitDecision(True, target, ExitReason.TARGET)
+
+        # (3): intraday, where it is not. `ambiguous` says the bar could have gone either way.
+        both_reachable = target is not None and bar.low <= stop and bar.high >= target
         if bar.low <= stop:
-            return ExitDecision(True, stop, ExitReason.STOP)
+            return ExitDecision(True, stop, ExitReason.STOP, ambiguous=both_reachable)
+        if target is not None and bar.high >= target:
+            return ExitDecision(True, target, ExitReason.TARGET)
+
+        # (4): the clock, last.
         if bars_held >= self.max_holding_bars:
             return ExitDecision(True, bar.close, ExitReason.TIME)
         return ExitDecision(False)

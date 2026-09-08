@@ -138,10 +138,26 @@ its sample sufficient.
 
 ## 6. Survivorship: the requirement this project cannot meet
 
-The course requires delisted instruments (topic 1084, and the `Пропуски` stage). **No free data
-source provides them**, and this was established by measurement rather than assumption
-(`DATA_QUALITY_SPEC.md`): Yahoo returns zero rows for a delisted ticker; Questrade resolves the
-symbol as a non-tradable stub whose candle endpoint returns `code 1019`.
+The course requires delisted instruments (topic 1084, and the `Пропуски` stage). ~~**No free data
+source provides them**~~ — that was established by measurement (`DATA_QUALITY_SPEC.md`): Yahoo
+returns zero rows for a delisted ticker; Questrade resolves the symbol as a non-tradable stub whose
+candle endpoint returns `code 1019`.
+
+**REFUTED 2026-09-05, and this section was the last document still carrying it.**
+`tools/probe_alpaca_delisted.py` enumerated **19,188** inactive US equity assets and asked Alpaca
+for daily bars on eight of them: **seven returned a full daily path**, from 2016-01-04 on
+`feed=sip`. The correction reached `EVIDENCE_RECORD_SPEC.md`, `REGIME_SPEC.md` §133,
+`SUCCESS_AND_KILL_CRITERIA.md` and `EVIDENCE_SUMMARY.md` §3 on the day, and did not reach here for
+two days — which is `AGENTS.md` §11 working exactly as it should and being caught late.
+
+**What changes and what does not.** The remedy is no longer *"a paid vendor, and that is a budget
+decision"*: it is a fetch this project already has credentials for. What has NOT changed is that
+nobody has run it — no study's universe has been repaired, so every consequence below stands
+unaltered until one is. **The bias is now measurable and unmeasured, which is a different sentence
+from unmeasurable**, and a study that reports `survivorship: ABSENT` today is reporting a choice
+rather than a limit. Three limits on the refutation itself are in the probe's own docstring; the
+first — whether SIP history is a free-tier entitlement or an attribute of this account — is the one
+to settle before anything is built on it.
 
 The consequence, stated without softening:
 

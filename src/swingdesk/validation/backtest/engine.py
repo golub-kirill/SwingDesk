@@ -85,6 +85,9 @@ class BacktestConfig:
 class ArmResult:
     """One arm's trades, plus what it refused to trade and why.
 
+    `ambiguous_exits` counts EXIT bars on which both legs were reachable and the tie-break decided
+    the outcome (`DR-042`). It is the size of an assumption, not a defect count.
+
     `unevaluable_bars` is deliberately not a `Skipped` reason. Those count SIGNALS that produced no
     trade; this counts BARS on which the trigger could not be evaluated at all, for want of a
     lookback window. Folding the two together would report an unanswerable bar as a rejected signal,
@@ -96,6 +99,7 @@ class ArmResult:
     skipped: Counter[str] = field(default_factory=Counter)
     signals: int = 0
     unevaluable_bars: int = 0
+    ambiguous_exits: int = 0
 
     @property
     def net_r_values(self) -> list[Decimal]:
@@ -106,6 +110,7 @@ class ArmResult:
         self.skipped.update(other.skipped)
         self.signals += other.signals
         self.unevaluable_bars += other.unevaluable_bars
+        self.ambiguous_exits += other.ambiguous_exits
 
 
 def run_arm(
@@ -144,7 +149,11 @@ def run_arm(
                 # than it is unless this is counted.
                 result.skipped[Skipped.POSITION_OPEN] += 1
             held = index - position["entry_index"]
-            decision = config.exits.evaluate(bar, position["stop"], held)
+            decision = config.exits.evaluate(bar, position["stop"], held, position["target"])
+            if decision.ambiguous:
+                # The bar reached both legs and the policy took the stop. Counted, because the
+                # honest way to report an assumption is to report how often it bound.
+                result.ambiguous_exits += 1
 
             high_r = (bar.high - position["entry_price"]) / position["risk_per_share"]
             low_r = (bar.low - position["entry_price"]) / position["risk_per_share"]
@@ -217,6 +226,7 @@ def run_arm(
             "entry_price": entry_price,
             "stop": stop,
             "risk_per_share": risk_per_share,
+            "target": config.exits.target_for(entry_price, risk_per_share),
             "shares": shares,
             "mfe": Decimal(0),
             "mae": Decimal(0),
