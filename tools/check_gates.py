@@ -196,6 +196,8 @@ def main() -> int:
                                   [python, "tools/verify_minimum_effect.py"]),
         "45 command reference": _run("README's command and flag reference is generated, not typed",
                                      [python, "tools/build_commands.py", "--check-only"]),
+        "46 window": _run("a study reaching past 48 months argues for the old market",
+                          [python, "tools/verify_window.py"]),
     }
 
     print("\n" + "=" * 62)

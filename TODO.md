@@ -2259,6 +2259,34 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 6. Code & gates
 
+- [ ] **`[v]` NOTHING IN THIS REPOSITORY ANSWERS "IS THE ANSWER STILL TRUE".** Raised by the owner
+      2026-09-08, asking how a 48-month window (`AGENTS.md` §19) proves the strategy is current.
+      **The honest answer is that it does not, and neither did the ten-year one.**
+      `measure_study_drift.py` looks like the mechanism and is not: it measures how far the STORE
+      has moved under a reported study — whether a replay would still reproduce it — which is a
+      question about data, not about whether the finding holds.
+      ```bash
+      PYTHONPATH=$PWD/src python tools/measure_study_drift.py --data data
+      ```
+      **A single measurement of any length cannot answer it.** A verdict is one draw; currency is a
+      property of a SEQUENCE of draws. What is missing is a tool that re-runs a reported study on a
+      rolling window at its own `as_of`, appends the result to a series, and reports how the answer
+      has moved — so that a finding going stale is visible as a trend rather than discovered by
+      accident years later.
+      **It spends no trial — owner ruling 2026-09-08**: *"no, because we have to do it because of
+      our mistake, not the research itself."* The re-measurement exists because the apparatus
+      cannot tell a live finding from a stale one; charging the hurdle for repairing its own blind
+      spot would make the repair cost more the more honestly it is done. `AGENTS.md` §19.7 and
+      `trial_budget.py` both carry it.
+      **The guard the ruling needs, or it is a hole**: consecutive rolling windows overlap heavily
+      — quarterly on 48 months shares 45 of them — so re-running until the answer flips is
+      searching in TIME rather than in configuration space. **Scheduled, and every result recorded
+      whatever it says.** A published series cannot be a search; an on-demand re-run whose
+      unwelcome results go unwritten is one.
+      **And it interacts with §19.** A rolling 48-month window is what makes the series meaningful;
+      a fixed window from 2016 would re-measure the same old market every quarter and call the
+      stability reassuring.
+
 - [ ] **`[v]` GATE 28 WAS BLIND TO SEVEN LIVE INSTANCES OF THE EXACT DRIFT IT EXISTS FOR, AND BOTH
       BLIND SPOTS WERE INSIDE THE GATE — found and fixed 2026-09-05.**
       ```bash

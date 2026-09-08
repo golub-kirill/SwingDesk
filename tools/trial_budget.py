@@ -96,6 +96,22 @@ def _configurations(path: Path) -> tuple[int, str] | None:
 
 #: Why a reported study spends no trials against this criterion. Listed rather than silently
 #: skipped: "not counted" and "counted as zero" are the same number and different claims.
+#: **A scheduled re-observation of a REGISTERED question spends no trial.** Owner ruling
+#: 2026-09-08 - *"no, because we have to do it because of our mistake, not the research itself"* -
+#: and `AGENTS.md` §19.7 carries the reasoning. Re-measuring an already-registered study on a
+#: rolling window evaluates no configuration: the rule, the parameters and the decision rule are
+#: fixed by the original registration and only the window moves. The re-measurement exists because
+#: this project cannot tell a live finding from a stale one, which is a defect in the apparatus,
+#: and charging the hurdle for repairing a blind spot would make the repair cost more the more
+#: honestly it is done.
+#:
+#: **The guard, without which the ruling is a hole**: consecutive rolling windows overlap heavily,
+#: so re-running until an answer flips is searching in TIME rather than in configuration space.
+#: A re-measurement is SCHEDULED and every result is recorded whatever it says. A published series
+#: cannot be a search; an on-demand re-run whose unwelcome results go unwritten is one, and it
+#: spends trials like anything else.
+RE_OBSERVATION_SPENDS_NOTHING = True
+
 NO_SPEND = {
     "PR-008": "measures an effective-spread ESTIMATOR, not a strategy's return - no Sharpe to deflate",
     "PR-010": "same - EDGE against its own zero-spread floor, a cost input rather than an edge",

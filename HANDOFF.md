@@ -122,8 +122,8 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 
 | | |
 |---|---|
-| Merge gates | **51**, one command: `python tools/check_gates.py` |
-| Tests | **1777**, fully offline |
+| Merge gates | **52**, one command: `python tools/check_gates.py` |
+| Tests | **1794**, fully offline |
 | Docs | 160 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 459 registered · 4 `specified` · **2 `active`** |
 | Parameters | 110 - 58 `unset`, 33 `assumed`, 19 `owner`, **0 `validated`** |
