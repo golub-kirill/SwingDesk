@@ -304,3 +304,59 @@ def test_the_instrument_floor_is_still_enforced_where_it_belongs(pr016) -> None:
     from one pool. `DR-003`'s rule carries it."""
     assert pr016.RULE.min_history >= 250
     assert pr016.HISTORY == 252
+
+
+# --- the reduction that makes the bootstrap finish -----------------------------------------------
+#
+# `totals_for` reduces a month to `(numerator, count)` so a resample never touches a trade. The
+# first cut of this file pooled the trades on every resample: ~200,000 trades x 10,000 resamples x
+# 66 runs. Found 2026-09-07 by watching a run reach that phase and stop producing output.
+#
+# A performance refactor of a statistic is the one refactor that can silently change a result, so
+# the test is EQUIVALENCE against the naive form rather than a timing.
+
+def _pooled(clusters: list[list[Decimal]], statistic: str) -> float:
+    """The naive version this replaced, kept here as the oracle."""
+    pool = [v for c in clusters for v in c]
+    if statistic == "mean":
+        return float(sum(pool) / len(pool))
+    return sum(1 for v in pool if v > 0) / len(pool)
+
+
+@pytest.mark.parametrize("statistic", ["mean", "win_rate"])
+def test_the_reduction_gives_the_same_answer_as_pooling_the_trades(pr016, statistic: str) -> None:
+    """Uneven months on purpose: if the reduction averaged the MONTHS instead of summing their
+    parts, equal-sized fixtures would hide it and a month with one trade would count as much as a
+    month with a thousand."""
+    clusters = [
+        [Decimal("1.5")] * 100,
+        [Decimal("-1")],
+        [Decimal("0.25"), Decimal("-2"), Decimal("3")] * 7,
+        [Decimal("-1")] * 40,
+    ]
+    observed, _, _ = pr016.block_bootstrap(clusters, statistic, 2, 1, 50)
+    assert observed == pytest.approx(_pooled(clusters, statistic))
+
+
+def test_the_reduction_weights_a_month_by_how_many_trades_it_holds(pr016) -> None:
+    """One month with 99 losers and one with a single winner is not 50/50."""
+    clusters = [[Decimal("-1")] * 99, [Decimal("1")]]
+    numerator, count = pr016.totals_for(clusters[0], "win_rate")
+    assert (numerator, count) == (0.0, 99)
+    observed, _, _ = pr016.block_bootstrap(clusters, "win_rate", 1, 1, 50)
+    assert observed == pytest.approx(0.01)
+
+
+def test_an_unknown_statistic_is_still_refused_inside_the_reduction(pr016) -> None:
+    with pytest.raises(ValueError, match="unknown statistic"):
+        pr016.totals_for([Decimal("1")], "sharpe")
+
+
+def test_the_qa_sample_is_stratified_so_the_control_cannot_swamp_the_hypothesis(pr016) -> None:
+    """`BACKTEST_PROTOCOL` §7. Drawing at random from the pooled set would return almost nothing
+    but the control, which carries two orders of magnitude more trades - and a QA pass that never
+    re-checks the ranked arm has not re-checked the study."""
+    assert pr016.QA_SAMPLE_PER_ARM > 0
+    assert pr016.QA_SEED == 20260908
+    assert "arm" in pr016.TRADE_COLUMNS
+    assert "net_r" in pr016.TRADE_COLUMNS

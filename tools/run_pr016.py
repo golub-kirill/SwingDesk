@@ -45,6 +45,7 @@ ratified target bought anything.
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import random
 import statistics
@@ -163,6 +164,24 @@ WINDOW_LOG = REPO / "docs" / "prereg" / "results" / "PR-016-windows.jsonl"
 #: thousands, and a result file nobody can read is a result file nobody checks.
 AMBIGUOUS_BARS = REPO / "docs" / "prereg" / "results" / "PR-016-ambiguous-bars.jsonl"
 
+#: The QA stage's sample (`BACKTEST_PROTOCOL` §7), written for a second pass to reconstruct from
+#: the stored evidence alone. §7 asks for "a sample of trades drawn from the run by a seeded,
+#: recorded rule - not chosen by the person checking", and this is that rule.
+#:
+#: A SAMPLE and not the whole log, deliberately. The control arm alone carries on the order of
+#: 10^5 trades and six series are simulated; the full log is tens of megabytes and would be a
+#: committed artefact nobody opens. §7 asks for part of the sample, so this writes part of it -
+#: stratified across arms so the control cannot swamp the arm the hypothesis is about.
+TRADE_SAMPLE = REPO / "docs" / "prereg" / "results" / "PR-016-trades-sample.csv"
+QA_SAMPLE_PER_ARM = 400
+QA_SEED = 20260908
+
+TRADE_COLUMNS = (
+    "arm", "instrument_id", "signal_date", "entry_date", "exit_date", "entry_price", "stop_price",
+    "exit_price", "shares", "initial_risk_per_share", "costs", "mfe", "mae", "exit_reason",
+    "gross_r", "net_r", "holding_days",
+)
+
 #: `DR-042` §4a, owner ruling 2026-09-07 - *"Покажи долю, потом решу"*. The tie-break is UNRULED,
 #: so every figure this tool produces carries an assumption the owner has not accepted. The label
 #: travels in the result file and on the report, because labelling a number afterwards is not the
@@ -219,6 +238,24 @@ def cluster_of(entry: date) -> str:
     return f"{entry.year:04d}-{entry.month:02d}"
 
 
+def totals_for(cluster: list[Decimal], statistic: str) -> tuple[float, int]:
+    """One month reduced to `(numerator, count)`, which is all a resample of it ever needs.
+
+    **This is what makes the bootstrap finish.** Both statistics here are ratios of two sums, so a
+    resample's value is `sum(numerators) / sum(counts)` over the months it drew - it never has to
+    look at a trade. The first cut of this file had no such function and `block_bootstrap` pooled
+    the TRADES on every resample: with roughly 200,000 trades and 10,000 resamples that is 2e9
+    `Decimal` additions per statistic, and 66 of them to run. Found 2026-09-07 by watching a run
+    reach that phase and stop producing output; killed rather than waited out. The arithmetic is
+    identical and the running time is O(months) instead of O(trades).
+    """
+    if statistic == "mean":
+        return float(sum(cluster)), len(cluster)
+    if statistic == "win_rate":
+        return float(sum(1 for v in cluster if v > 0)), len(cluster)
+    raise ValueError(f"unknown statistic {statistic!r}")
+
+
 def block_bootstrap(
     clusters: list[list[Decimal]],
     statistic: str,
@@ -243,32 +280,27 @@ def block_bootstrap(
     block = min(block, n)
     rng = random.Random(seed)
     starts = n - block + 1
+    reduced = [totals_for(c, statistic) for c in clusters]
 
-    def compute(pool: list[Decimal]) -> float | None:
-        if not pool:
-            return None
-        if statistic == "mean":
-            return float(sum(pool) / len(pool))
-        if statistic == "win_rate":
-            return sum(1 for v in pool if v > 0) / len(pool)
-        raise ValueError(f"unknown statistic {statistic!r}")
+    def value_of(drawn: list[tuple[float, int]]) -> float | None:
+        count = sum(c for _, c in drawn)
+        return None if count == 0 else sum(v for v, _ in drawn) / count
 
-    observed = compute([v for c in clusters for v in c])
+    observed = value_of(reduced)
     if observed is None:
         return None
 
     draws: list[float] = []
     for _ in range(resamples):
-        pool: list[Decimal] = []
-        drawn = 0
-        while drawn < n:
+        pool: list[tuple[float, int]] = []
+        taken = 0
+        while taken < n:
             start = rng.randrange(starts)
-            for c in clusters[start:start + block]:
-                pool.extend(c)
-            drawn += block
-        value = compute(pool)
-        if value is not None:
-            draws.append(value)
+            pool.extend(reduced[start:start + block])
+            taken += block
+        got = value_of(pool)
+        if got is not None:
+            draws.append(got)
     if len(draws) < resamples // 2:
         return None
     draws.sort()
@@ -294,29 +326,30 @@ def paired_difference(
     n = len(months)
     block = min(BLOCK, n)
     starts = n - block + 1
+    # The same reduction `block_bootstrap` uses, for the same reason. Indexed by POSITION, so one
+    # drawn block picks the same months out of both arms - which is the whole point of pairing.
+    left_totals = [totals_for(left[m], statistic) for m in months]
+    right_totals = [totals_for(right[m], statistic) for m in months]
 
-    def compute(pool: list[Decimal]) -> float | None:
-        if not pool:
-            return None
-        if statistic == "mean":
-            return float(sum(pool) / len(pool))
-        return sum(1 for v in pool if v > 0) / len(pool)
+    def value_of(drawn: list[tuple[float, int]]) -> float | None:
+        count = sum(c for _, c in drawn)
+        return None if count == 0 else sum(v for v, _ in drawn) / count
 
-    def difference(chosen: list[str]) -> float | None:
-        a = compute([v for m in chosen for v in left[m]])
-        b = compute([v for m in chosen for v in right[m]])
+    def difference(picked: list[int]) -> float | None:
+        a = value_of([left_totals[i] for i in picked])
+        b = value_of([right_totals[i] for i in picked])
         return None if a is None or b is None else a - b
 
-    observed = difference(months)
+    observed = difference(list(range(n)))
     if observed is None:
         return None
     draws: list[float] = []
     for _ in range(BOOTSTRAP_RESAMPLES):
-        chosen: list[str] = []
-        while len(chosen) < n:
+        picked: list[int] = []
+        while len(picked) < n:
             start = rng.randrange(starts)
-            chosen.extend(months[start:start + block])
-        value = difference(chosen)
+            picked.extend(range(start, min(start + block, n)))
+        value = difference(picked)
         if value is not None:
             draws.append(value)
     if len(draws) < BOOTSTRAP_RESAMPLES // 2:
@@ -660,12 +693,61 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             "meets_the_ten_year_instruction": span_days / 365.25 >= 10.0,
         }
     result["verdict"] = verdict_for(result["arms"]["ranked"])
+    result["qa_sample"] = write_qa_sample(trades)
     if ambiguous_bars:
         with AMBIGUOUS_BARS.open("w", encoding="utf-8") as handle:
             for row in ambiguous_bars:
                 handle.write(json.dumps(row, ensure_ascii=False) + "\n")
         print(f"wrote {len(ambiguous_bars)} ambiguous bars to {AMBIGUOUS_BARS.name}")
     return result
+
+
+def write_qa_sample(trades: dict[str, list[Trade]]) -> dict[str, Any]:
+    """`BACKTEST_PROTOCOL` §7's sample, drawn by a seeded rule rather than by whoever checks.
+
+    Stratified: the same number from each arm that has any. Drawing `n` at random from the pooled
+    set would return almost nothing but the control, which carries two orders of magnitude more
+    trades than the arm the hypothesis is about - and a QA pass that never re-checks the ranked arm
+    has not re-checked the study.
+    """
+    rng = random.Random(QA_SEED)
+    rows: list[dict[str, Any]] = []
+    drawn_from: dict[str, int] = {}
+    for arm in sorted(trades):
+        pool = trades[arm]
+        if not pool:
+            continue
+        take = rng.sample(pool, min(QA_SAMPLE_PER_ARM, len(pool)))
+        drawn_from[arm] = len(take)
+        for trade in take:
+            rows.append({
+                "arm": arm, "instrument_id": trade.instrument_id,
+                "signal_date": trade.signal_date, "entry_date": trade.entry_date,
+                "exit_date": trade.exit_date, "entry_price": trade.entry_price,
+                "stop_price": trade.stop_price, "exit_price": trade.exit_price,
+                "shares": trade.shares,
+                "initial_risk_per_share": trade.initial_risk_per_share,
+                "costs": trade.costs, "mfe": trade.mfe, "mae": trade.mae,
+                "exit_reason": str(trade.exit_reason), "gross_r": trade.gross_r,
+                "net_r": trade.net_r, "holding_days": trade.holding_days,
+            })
+    if not rows:
+        return {"drawn": 0}
+    with TRADE_SAMPLE.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(TRADE_COLUMNS))
+        writer.writeheader()
+        writer.writerows(rows)
+    print(f"wrote {len(rows)} trades to {TRADE_SAMPLE.name} for the QA stage")
+    return {
+        "file": TRADE_SAMPLE.name, "seed": QA_SEED, "per_arm": QA_SAMPLE_PER_ARM,
+        "drawn": len(rows), "drawn_from": drawn_from,
+        "rule": (
+            "seeded and stratified across arms. BACKTEST_PROTOCOL §7 asks for an INDEPENDENT "
+            "re-check of part of the sample - reconstructed from the stored evidence, not from "
+            "this run's own output. Writing the sample is what makes that possible; it is not "
+            "the check."
+        ),
+    }
 
 
 def report(result: dict[str, Any]) -> None:
