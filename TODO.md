@@ -1713,10 +1713,13 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **MEASURED 2026-09-13, in sample, with a scratch copy of the correction:** the lag-1 and lag-2
       autocovariances of the monthly values against the noise-corrected between-month variance give
       **3.30**, and the corrected in-sample prediction is **0.1403 against the 0.1306 realised** — 7%
-      wide, `PR-019`'s calibration. The overlap is the whole miss. **What is owed**: the function in
-      `tools/power_pr019.py` (additive — `PR-019-power.json` must still reproduce), its fields in
-      `power_pr019b.py`, tests, and a committed side record of the re-run. Until then, any study
-      whose read contrast carries a multi-month index leg is sized too optimistically.
+      wide, `PR-019`'s calibration. The overlap is the whole miss.
+      **BUILT 2026-09-13.** `power_pr019.overlap_inflation` and `lags_for_hold` (additive —
+      `PR-019-power.json` still reproduces), reported beside the old fields by `power_pr019b.py`, and
+      the re-run committed as `docs/prereg/results/PR-019b-power-overlap.json`: factor **3.300**,
+      corrected half-width **0.1403** in sample and **0.1350** predicted out of sample. Seven tests;
+      6 of 6 mutants die, the last only after a test for a factor below zero was added. **A market-paired study sized from now on reads the `_overlap` fields** —
+      the independent ones are a lower bound that was 1.7× too low here.
 
 - [ ] **`[v]` WHETHER `risk.max_concurrent_positions` MOVES — `PR-015`, 2026-09-07, and this is
       the owner's number, not mine.**

@@ -292,6 +292,10 @@ SIDE_RECORDS = {
                      "sample only, on the same 25% subsample - dispersion of trade minus benchmark, "
                      "trade and benchmark, and no level, under the same guard. Its cell is "
                      "PR-019's selection, fixed before it ran, so nothing could be selected on it",
+    "PR-019b-power-overlap": "no trials: the same variance estimate re-run after PR-019b reported, "
+                             "with the overlap correction its miss made owed. Dispersion only, "
+                             "under the same level guard, in sample only; it re-sizes nothing "
+                             "already run and selects nothing",
 }
 
 

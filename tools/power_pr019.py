@@ -244,6 +244,40 @@ def predicted_oos(in_sample_half_width: float, in_sample_months: int) -> float:
     return in_sample_half_width * math.sqrt(in_sample_months / OOS_MONTHS)
 
 
+def overlap_inflation(values: list[float], var_between: float, lags: int) -> float:
+    """The variance of a mean of OVERLAPPING months, as a multiple of the independent case.
+
+        1 + 2 * sum_{k=1..lags} (1 - k/n) * gamma_k / var_between
+
+    `gamma_k` is the lag-k autocovariance of the month-ordered `values`. **Added 2026-09-13 because
+    `half_width` assumes independent months and `PR-019b` paid for it**: a 60-session hold spans
+    about three entry months, so a market-paired contrast's index legs overlap from month to month
+    by construction, and the estimate ran 1.69x narrow. Measured, this factor read 3.30 and put the
+    corrected prediction 7% wide of the realised one.
+
+    The subsample's noise is independent from month to month, so it inflates lag 0 only - which is
+    why the numerator reads lags >= 1 straight from the observed values while the denominator is the
+    noise-corrected `var_between`. Measured rather than assumed, so where the market cancels - one
+    exit against another - it stays near 1, which is why `PR-019` calibrated without it. NaN when
+    the variance is unusable or there are too few months for the lags.
+    """
+    n = len(values)
+    if var_between <= 0.0 or n <= lags + 1:
+        return float("nan")
+    centre = statistics.fmean(values)
+    deviations = [v - centre for v in values]
+    total = 1.0
+    for k in range(1, lags + 1):
+        gamma = sum(deviations[i] * deviations[i + k] for i in range(n - k)) / n
+        total += 2.0 * (1.0 - k / n) * gamma / var_between
+    return total if total > 0.0 else float("nan")
+
+
+def lags_for_hold(sessions: int, per_month: int = 21) -> int:
+    """A hold of `sessions` spans `ceil(sessions / 21)` entry months: that many, less one, lags."""
+    return max(0, math.ceil(sessions / per_month) - 1)
+
+
 def assert_no_effect_leaked(payload: dict[str, Any]) -> None:
     """Refuse to write anything that reports a LEVEL rather than a dispersion.
 

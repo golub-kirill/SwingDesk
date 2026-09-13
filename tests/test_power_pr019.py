@@ -18,6 +18,8 @@ estimate, and four things carry it. None of them raises when wrong:
 from __future__ import annotations
 
 import importlib.util
+import math
+import random
 import statistics
 import sys
 from datetime import date, timedelta
@@ -38,6 +40,62 @@ def power():
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def _overlapping(n: int, width: int, seed: int) -> list[float]:
+    """Each month the sum of `width` consecutive shocks - an index leg held `width` months."""
+    rng = random.Random(seed)
+    shocks = [rng.gauss(0, 1) for _ in range(n + width - 1)]
+    return [sum(shocks[i:i + width]) for i in range(n)]
+
+
+# --- overlapping holds (added 2026-09-13, after PR-019b's estimate ran 1.69x narrow) --------------
+
+
+def test_independent_months_are_not_inflated(power):
+    rng = random.Random(3)
+    months = [rng.gauss(0, 1) for _ in range(20_000)]
+    assert power.overlap_inflation(months, statistics.variance(months), 2) == pytest.approx(
+        1, abs=0.06)
+
+
+def test_three_overlapping_months_inflate_the_variance_about_threefold(power):
+    """`1 + 2(2/3) + 2(1/3) = 3`: PR-019b's miss, in arithmetic."""
+    months = _overlapping(20_000, 3, 5)
+    assert power.overlap_inflation(months, statistics.variance(months), 2) == pytest.approx(
+        3, abs=0.15)
+
+
+def test_independent_noise_does_not_hide_the_overlap(power):
+    """The subsample's noise is independent month to month, so it lives in lag 0 only - the factor
+    read against the SIGNAL variance still finds the overlap."""
+    rng = random.Random(9)
+    signal = _overlapping(20_000, 3, 11)
+    noisy = [v + rng.gauss(0, 2) for v in signal]
+    assert power.overlap_inflation(noisy, statistics.variance(signal), 2) == pytest.approx(
+        3, abs=0.25)
+
+
+def test_zero_lags_is_the_independent_estimate(power):
+    months = _overlapping(500, 3, 1)
+    assert power.overlap_inflation(months, statistics.variance(months), 0) == 1.0
+
+
+def test_an_unusable_variance_or_too_few_months_is_nan_not_a_number(power):
+    assert math.isnan(power.overlap_inflation([1.0, 2.0, 3.0], 0.0, 1))
+    assert math.isnan(power.overlap_inflation([1.0, 2.0], 1.0, 2))
+
+
+def test_a_factor_that_is_not_a_variance_multiple_is_nan(power):
+    """Months that alternate sign have a lag-1 autocovariance near minus the variance, so one lag
+    gives `1 + 2(-1) = -1` - no variance is negative, and the estimate says so rather than halving
+    a half-width into an imaginary number."""
+    months = [(-1.0) ** i for i in range(1000)]
+    assert math.isnan(power.overlap_inflation(months, statistics.variance(months), 1))
+
+
+def test_a_hold_spans_its_months_minus_one_lags(power):
+    assert [power.lags_for_hold(s) for s in (10, 20, 21, 22, 40, 60)] == [0, 0, 0, 1, 1, 2]
 
 
 def _calendar(n: int) -> tuple[list[date], dict[date, int]]:
