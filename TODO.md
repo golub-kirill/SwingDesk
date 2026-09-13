@@ -1209,6 +1209,24 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       (`RISK_SPEC` §3); and what the value is. `AGENTS.md` §8 — the course names no number here, so
       if it is a threshold it needs a pre-registration rather than a guess, and if it is a
       structural exclusion it needs a decision record.
+      **RULED 2026-09-13 by the owner: `2 × ATR / price ≥ 0.005`** — the round trip no more than
+      1R, derived from `DR-005` rather than read off any outcome. Built as a sizing refusal on the
+      stop actually given (`risk.min_stop_distance_fraction`, `sizing.size_long`), which IS that
+      ratio at the ratified 2 ATR stop, and it restarts the Track A streak (`tools/track_a_streak.py`
+      `STREAK_RESTARTS`). **What made it concrete was `PR-020`**: on 2022-11-04 the screen's top
+      DECILE held eleven T-bill funds, each losing about 5R to its own round trip. §11.3's finding
+      stands for the four-slot book — it ranks by score, and such names never ranked above 52nd —
+      so the floor matters most for every other use of the decile: studies, a larger book, another
+      card. Over 2026-09-01..09-11 it would have turned 27 to 118 cash and short-bond names a day
+      from `Watch` to `Skip`, and changed no order.
+
+- [ ] **`[v]` THE EVENING RUN DIRTIES A TRACKED FILE, SO THE OWNER'S `git pull` FAILS.** Found
+      2026-09-13: `daily_run.cmd` ends with `tools/build_state.py`, which rewrites `HANDOFF.md` §2's
+      generated blocks in the main checkout; the next `git pull --ff-only` then aborts on "local
+      changes would be overwritten". Only generated blocks differ, so `git checkout -- HANDOFF.md`
+      is safe, but a pull that fails every morning is friction the owner should not carry. Either
+      the scheduled pass writes its runtime block somewhere untracked, or the runbook's pull line
+      discards the generated file first.
       **What it does NOT block.** `DR-006` §10.5: at the measured −1.712R a four-position gapping
       session costs 6.85R against the 6.77R §8 accepted, so **the cap stays at 4** either way. This
       changes what the book may hold, not how large it may be.

@@ -263,6 +263,25 @@ parameters:
     named_in: [Appendix C, M49-T0760]
     ui_editable: true
 
+  - id: risk.min_stop_distance_fraction
+    unit: fraction of the entry price
+    value: 0.005
+    status: owner
+    provenance: owner
+    read_by: swingdesk.trade_management.sizing:size_long
+    named_in: [Appendix C]
+    note: >-
+      The stop must sit at least this fraction of the entry price below it. Ratified by the owner
+      2026-09-13 as 2 x ATR / price >= 0.005, which is exactly this at the ratified 2 ATR stop.
+      Derived, not fitted: DR-005 charges 25 bps of price a side, so the round trip costs
+      0.005 / (stop distance / price) R, and below 0.005 it exceeds the whole R before the market
+      does anything (measure_gap_cost, 2026-09-08). PR-020 found eleven T-bill funds in the
+      screen's top decile on 2022-11-04, each losing about 5R to its own round trip; the four-slot
+      book ranks by score and DR-006 11.3 found such names no higher than 52nd, so the floor matters
+      most for every other use of the decile. Over 2026-09-01..09-11 it would have turned 27 to 118
+      cash and short-bond names a day from Watch to Skip, and changed no order.
+    ui_editable: true
+
   - id: risk.max_open_risk
     unit: R
     value: 4

@@ -53,6 +53,10 @@ def _registry(**overrides: object) -> ParameterRegistry:
         # on nothing, so these tests keep measuring what they were written to measure. The
         # tests that bind it deliberately are at the foot of this file.
         "risk.liquidity_cap_order_to_adtv_pct": "1.0",
+        # The owner's minimum stop distance (2026-09-13). Real value; every stop below sits at least
+        # a percent from its entry, so the floor binds on nothing these tests measure.
+        # `test_sizing_floor` binds it deliberately.
+        "risk.min_stop_distance_fraction": "0.005",
     }
     base.update(overrides)
     # A None override means UNSET, not absent. The two are different failures: unset is an expected
