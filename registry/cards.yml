@@ -99,7 +99,7 @@ cards:
         - risk.max_concurrent_positions
         - risk.max_sector_risk
         - risk.correlation_threshold
-        - risk.max_position_value
+        - risk.max_position_pct
         - risk.liquidity_cap_order_to_adtv_pct
 
     exits:

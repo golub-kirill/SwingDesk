@@ -1094,7 +1094,7 @@ is for where no gate can reach.
       are **3.0**. The ratification is unaffected and the error ran conservative — §1's target was
       two and a half sessions and four gives three. Full working in `DR-006` §18.
       **Ratified, provenance `owner`:** `risk.max_open_risk` **4R** · `risk.max_concurrent_positions`
-      **4** · `risk.max_position_value` **2,500** · `risk.liquidity_cap_order_to_adtv_pct` **1.0%**.
+      **4** · risk.max_position_value **2,500** · `risk.liquidity_cap_order_to_adtv_pct` **1.0%**.
       Free consistency: 4 × 2,500 = 10,000 = `account.equity`, so four max-size positions is exactly
       fully invested — §2 wanted that floor and got it only approximately at six.
       **Why a cap and not a forecast, measured:** 89 sessions hold **52%** of all 3,003 gap exits and
@@ -2325,7 +2325,7 @@ is for where no gate can reach.
 
 - [x] **`[v]` CAD is sized against USD with no FX — fixed 2026-08-16 (PR #9).** `size_long` treats CAD as supported, so a `.TO`
       candidate's `risk_per_share` and `position_value` (CAD) are compared against `account.equity`
-      (USD) and `risk.max_position_value` with no conversion and no rate recorded. It does not
+      (USD) and risk.max_position_value with no conversion and no rate recorded. It does not
       refuse — it mis-sizes. **Frozen file.**
 
 - [x] **`[v]` `Position.initial_risk_per_share` excluded costs — fixed 2026-08-16.** Now

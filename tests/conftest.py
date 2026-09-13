@@ -47,7 +47,9 @@ def registry() -> ParameterRegistry:
         "risk.costs_floor_usd": "0.02",
         "risk.costs_bp_cad": "50",
         "risk.costs_floor_cad": "0.02",
-        "risk.max_position_value": 1_000_000,
+        # A percentage of `account.equity` since 2026-09-13; 10,000% of 10,000 is the 1,000,000 this
+        # fixture always carried, so the cap still binds on nothing here.
+        "risk.max_position_pct": 10_000,
         # The run's exit semantics, and the SAME policy the candidate path sizes against
         # (2026-08-16). Both are UNSET in the real registry, where the pipeline therefore refuses;
         # the fixture sets them so the slice can exercise the working path, and

@@ -48,7 +48,9 @@ def _registry(**overrides: object) -> ParameterRegistry:
         "risk.costs_floor_usd": "0.02",
         "risk.costs_bp_cad": "50",
         "risk.costs_floor_cad": "0.02",
-        "risk.max_position_value": 1_000_000,
+        # A percentage of `account.equity` since 2026-09-13; 10,000% of 10,000 is the 1,000,000 this
+        # fixture always carried.
+        "risk.max_position_pct": 10_000,
         # `DR-028`. Real value; the ADTV every call below passes is large enough that it binds
         # on nothing, so these tests keep measuring what they were written to measure. The
         # tests that bind it deliberately are at the foot of this file.
@@ -686,22 +688,23 @@ def test_a_negative_cost_cannot_produce_a_non_positive_risk_per_share() -> None:
 def test_an_unset_position_value_cap_refuses_rather_than_sizing_uncapped() -> None:
     """`unset` is not `no limit`. Sizing without a cap is not permitted."""
     result = size_long(
-        Decimal("100"), Decimal("95"), "USD", _registry(**{"risk.max_position_value": None}),
+        Decimal("100"), Decimal("95"), "USD", _registry(**{"risk.max_position_pct": None}),
             adtv=ADTV_ABUNDANT,
     )
     assert isinstance(result, Refusal)
     assert result.code == "RISK"
-    assert result.parameter_id == "risk.max_position_value"
+    assert result.parameter_id == "risk.max_position_pct"
 
 
 def test_a_cap_too_small_for_one_share_refuses_with_liq_rather_than_rounding_to_zero() -> None:
     """The cap is applied AFTER the raw share count and can take it to zero.
 
-    A cap of 50 at an entry of 100 buys no share at all. Returning a zero-share snapshot would be a
-    trade proposal for nothing; `LIQ` says the instrument is too expensive for the cap.
+    A cap of 50 at an entry of 100 buys no share at all - 0.5% of the fixture's 10,000 equity.
+    Returning a zero-share snapshot would be a trade proposal for nothing; `LIQ` says the instrument
+    is too expensive for the cap.
     """
     result = size_long(
-        Decimal("100"), Decimal("95"), "USD", _registry(**{"risk.max_position_value": 50}),
+        Decimal("100"), Decimal("95"), "USD", _registry(**{"risk.max_position_pct": "0.5"}),
             adtv=ADTV_ABUNDANT,
     )
     assert isinstance(result, Refusal)
