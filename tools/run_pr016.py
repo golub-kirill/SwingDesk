@@ -67,9 +67,10 @@ sys.path.insert(0, str(REPO / "tools"))
 from measure_momentum_horizon import RULE
 from run_pr013 import MIN_NAMES_PER_DATE, _admitted_dates
 from run_pr014 import BENCHMARK, DECILE, Candidate, select
+from stream_selection import score_instrument, select_streamed
 from swingdesk.contracts.market import BarSeries, Interval, Series
 from swingdesk.contracts.trade import Trade
-from swingdesk.decision_logic.ranking import ByMarketPathStrength
+from swingdesk.decision_logic.ranking import ByMarketPathStrength, daily_returns
 from swingdesk.derived_observations import atr as atr_component
 from swingdesk.market_data import BarStore
 from swingdesk.platform.parameters import ParameterRegistry
@@ -486,6 +487,23 @@ def verdict_for(cells: dict[str, dict[str, Any]]) -> str:
     return "inconclusive"
 
 
+def verdict_on(cell: dict[str, Any]) -> str:
+    """§6's rule read on ONE window - a re-observation's (`tools/remeasure.py`).
+
+    The conditions `verdict_for` asks of each registered window, asked of this one: the sample
+    rule, the power floor, and a paired difference that excludes zero, with the both-negative
+    branch. The rolling window lies wholly after `PRIMARY_END`, so the two-window rule would read
+    INCONCLUSIVE for ever and say nothing about whether the answer still holds.
+    """
+    if not qualifies(cell) or underpowered(cell):
+        return "inconclusive"
+    if cell["difference_mean"]["low"] > 0:
+        return "accept"
+    if cell["difference_mean"]["high"] < 0:
+        return "reject"
+    return "inconclusive"
+
+
 def simulate(
     series: BarSeries,
     dates: frozenset[date],
@@ -507,19 +525,41 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
     if as_of is None:
         raise SystemExit("the bar store is empty")
 
+    # `--streamed` - loader phase A, as `run_pr019b` adopted it: one series in memory at a time,
+    # selection scored name by name and ranked from scores alone (`stream_selection`). Added for the
+    # scheduled re-observation (`tools/remeasure.py`), which must not take the machine with it. The
+    # in-memory path is unchanged and stays the reference the test holds the streamed one to.
+    streamed = bool(getattr(args, "streamed", False))
+    rolling = getattr(args, "rolling_months", None)
+    min_bars = HISTORY + HOLD + 1
+    names = sorted(store.instrument_ids(as_of))
     series_by_name: dict[str, BarSeries] = {}
-    for name in sorted(store.instrument_ids(as_of)):
-        series = store.as_of(name, Interval.DAY, Series.RAW, as_of)
-        if series and len(series.bars) >= HISTORY + HOLD + 1:
-            series_by_name[name] = series
-    store.close()
+    if streamed:
+        head = store.as_of(BENCHMARK, Interval.DAY, Series.RAW, as_of)
+        if head and len(head.bars) >= min_bars:
+            series_by_name[BENCHMARK] = head
+    else:
+        for name in names:
+            series = store.as_of(name, Interval.DAY, Series.RAW, as_of)
+            if series and len(series.bars) >= min_bars:
+                series_by_name[name] = series
+        store.close()
     if BENCHMARK not in series_by_name:
+        if streamed:
+            store.close()
         raise SystemExit(f"{BENCHMARK} has too little history to serve as the benchmark")
 
     benchmark = series_by_name[BENCHMARK]
     calendar = [b.session_date for b in benchmark.bars]
     start = date.fromisoformat(args.start) if args.start else WINDOW_START
     end = date.fromisoformat(args.end) if args.end else calendar[-1]
+    if rolling:
+        # A re-observation window (`AGENTS.md` §19.7): the registered construction run on the last
+        # `rolling` months, exactly as `run_pr019b` does it. Imported here because `run_pr019b`
+        # imports this module, so a module-level import would be circular.
+        from run_pr019b import months_before
+
+        start = months_before(end, rolling)
     sessions = window_sessions(calendar, start, end)
     if len(sessions) < MIN_SESSIONS_BETWEEN:
         raise SystemExit(
@@ -528,8 +568,6 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             f"chosen for its answer is not a window this tool will run."
         )
 
-    index_of = {n: {b.session_date: i for i, b in enumerate(s.bars)}
-                for n, s in series_by_name.items()}
     # Formation dates start once the BENCHMARK has its own lookback, and inside the window.
     #
     # `LOOKBACK`, not `HISTORY`, and the difference is a YEAR of sample. `HISTORY` is what an
@@ -545,28 +583,51 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
     earliest = calendar[LOOKBACK] if len(calendar) > LOOKBACK else calendar[-1]
     formations = [d for d in sessions[::STEP] if d >= earliest and d <= sessions[-HOLD - 1]] \
         if len(sessions) > HOLD else []
-    print(f"as_of {as_of.isoformat()}   instruments {len(series_by_name)}   "
-          f"window {start} .. {end} ({len(sessions)} sessions)   "
-          f"formation dates {len(formations)}")
-
-    admitted = {n: _admitted_dates(s, RULE, formations) for n, s in series_by_name.items()}
-
     chosen: dict[str, dict[str, set[date]]] = {a: defaultdict(set) for a in (*ARMS, *DIAGNOSTICS)}
     thin = 0
-    for session in formations:
-        pool = [Candidate(n, index_of[n][session]) for n in sorted(admitted)
-                if session in admitted[n]]
-        if len(pool) < MIN_NAMES_PER_DATE:
-            thin += 1
-            continue
-        for candidate in pool:
-            chosen["unselected"][candidate.instrument_id].add(session)
-        ranker = ByMarketPathStrength(series=series_by_name, benchmark=benchmark, lookback=LOOKBACK)
-        top, _ = select(ranker, pool, DECILE)
-        for name in top:
-            chosen["ranked"][name].add(session)
-        for name in top[:MAX_CONCURRENT]:
-            chosen["ranked_top4"][name].add(session)
+    if streamed:
+        benchmark_daily = daily_returns(benchmark)
+        scores: dict[str, dict[date, Decimal]] = {}
+        instruments = 0
+        for name in names:
+            series = (benchmark if name == BENCHMARK
+                      else store.as_of(name, Interval.DAY, Series.RAW, as_of))
+            if not series or len(series.bars) < min_bars:
+                continue
+            instruments += 1
+            got = score_instrument(series, formations, benchmark_daily, LOOKBACK)
+            if got:
+                scores[name] = got
+        picked = select_streamed(scores, formations, DECILE, top_k=MAX_CONCURRENT)
+        thin = picked.thin
+        for arm, source in (("unselected", picked.everything), ("ranked", picked.selected),
+                            ("ranked_top4", picked.top)):
+            for name, dates in source.items():
+                chosen[arm][name].update(dates)
+    else:
+        instruments = len(series_by_name)
+        index_of = {n: {b.session_date: i for i, b in enumerate(s.bars)}
+                    for n, s in series_by_name.items()}
+        admitted = {n: _admitted_dates(s, RULE, formations) for n, s in series_by_name.items()}
+        for session in formations:
+            pool = [Candidate(n, index_of[n][session]) for n in sorted(admitted)
+                    if session in admitted[n]]
+            if len(pool) < MIN_NAMES_PER_DATE:
+                thin += 1
+                continue
+            for candidate in pool:
+                chosen["unselected"][candidate.instrument_id].add(session)
+            ranker = ByMarketPathStrength(series=series_by_name, benchmark=benchmark,
+                                          lookback=LOOKBACK)
+            top, _ = select(ranker, pool, DECILE)
+            for name in top:
+                chosen["ranked"][name].add(session)
+            for name in top[:MAX_CONCURRENT]:
+                chosen["ranked_top4"][name].add(session)
+    print(f"as_of {as_of.isoformat()}   instruments {instruments}   "
+          f"window {start} .. {end} ({len(sessions)} sessions)   "
+          f"formation dates {len(formations)}   loader {'streamed' if streamed else 'in memory'}",
+          flush=True)
 
     ratified = ExitPolicy(STOP_MULTIPLE, HOLD, TARGET_R)
     two_slot = ExitPolicy(STOP_MULTIPLE, HOLD)
@@ -580,10 +641,13 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
     ambiguous: Counter[str] = Counter()
     ambiguous_bars: list[dict[str, str]] = []
     skipped: Counter[str] = Counter()
-    for count, (name, series) in enumerate(sorted(series_by_name.items()), start=1):
+    # Names in the in-memory run's ORDER in both loaders, so every trade list - and every float sum
+    # and month grouping downstream - comes out identical rather than merely equal in total.
+    wanted = sorted(set().union(*(chosen[a] for a in (*ARMS, *DIAGNOSTICS))))
+    for count, name in enumerate(wanted, start=1):
         needed = {a: chosen[a].get(name) for a in (*ARMS, *DIAGNOSTICS)}
-        if not any(needed.values()):
-            continue
+        series = (series_by_name[name] if name in series_by_name
+                  else store.as_of(name, Interval.DAY, Series.RAW, as_of))
         atr_series = atr_component.compute(series, registry)
         for arm, dates in needed.items():
             if not dates:
@@ -610,23 +674,25 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                                two_slot, costs, atr_series)
             trades["unselected_two_slot"].extend(control.trades)
         if count % 250 == 0:
-            print(f"  simulated {count}/{len(series_by_name)} instruments")
+            print(f"  simulated {count}/{len(wanted)} instruments", flush=True)
 
     # The boundary belongs to ONE window. `PRIMARY_END` is the last in-sample session, so the
     # out-of-sample window opens the next day - without this, an entry dated exactly 2021-12-31
     # lands in both halves and the "untouched" window is not untouched.
+    if streamed:
+        store.close()
     day_after = PRIMARY_END + timedelta(days=1)
-    windows = {
+    windows = ({"rolling": (start, end)} if rolling else {
         "full": (start, end),
         "in_sample": (start, min(PRIMARY_END, end)),
         "out_of_sample": (max(day_after, start), end),
-    }
+    })
     result: dict[str, Any] = {
         "prereg": "PR-016",
         "trials": 2,
         "as_of": as_of.isoformat(),
         "window": {"start": start.isoformat(), "end": end.isoformat(), "sessions": len(sessions)},
-        "default_window": args.start is None and args.end is None,
+        "default_window": args.start is None and args.end is None and not rolling,
         "exit": {"atr_period": ATR_PERIOD, "atr_stop_multiple": str(STOP_MULTIPLE),
                  "target_r_multiple": str(TARGET_R), "max_holding_period": HOLD,
                  "tie_break": "stop before target on an ambiguous bar (DR-042)"},
@@ -664,7 +730,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             ),
         },
         "stress_multiple": STRESS_MULTIPLE,
-        "instruments": len(series_by_name),
+        "instruments": instruments,
         "formation_dates": len(formations),
         "formations_skipped_for_a_thin_cross_section": thin,
         "preliminary": PRELIMINARY,
@@ -717,6 +783,16 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             "requested_window_years": round((end - start).days / 365.25, 2),
             "meets_the_ten_year_instruction": span_days / 365.25 >= 10.0,
         }
+    if streamed:
+        # Only when streamed, so a default run's result stays field for field what it was.
+        result["loader"] = "streamed - one series in memory at a time (loader phase A)"
+    if rolling:
+        result["split"] = {"rolling": f"entries {start}..{end}, the last {rolling} months - a "
+                                      f"re-observation window (AGENTS.md 19.7), not PR-016's split"}
+        result["verdict"] = verdict_on(result["arms"]["ranked"]["rolling"])
+        # And nothing is written beside it: the QA sample and the ambiguous bars are PR-016's
+        # committed evidence, and a weekly pass that rewrote them would rewrite the study's record.
+        return result
     result["verdict"] = verdict_for(result["arms"]["ranked"])
     result["qa_sample"] = write_qa_sample(trades)
     if ambiguous_bars:

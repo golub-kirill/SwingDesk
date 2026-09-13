@@ -59,6 +59,9 @@ class Selection:
     selected: dict[str, list[date]] = field(default_factory=dict)
     everything: dict[str, list[date]] = field(default_factory=dict)
     thin: int = 0
+    #: The first `top_k` of each date's ORDER - `PR-016`'s `ranked_top4` diagnostic, which is
+    #: `top[:MAX_CONCURRENT]` in the in-memory loop. Empty unless a caller asks for it.
+    top: dict[str, list[date]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)
@@ -101,6 +104,7 @@ def select_streamed(
     formations: Iterable[date],
     decile: Decimal,
     min_names: int = MIN_NAMES_PER_DATE,
+    top_k: int = 0,
 ) -> Selection:
     """Pass B: the cross-section at each formation date, from scores alone."""
     pools: dict[date, list[str]] = defaultdict(list)
@@ -118,8 +122,10 @@ def select_streamed(
             out.everything.setdefault(name, []).append(session)
         ordered = _ordered([(scores[name][session], _Named(name, 0, session)) for name in pool])
         size = int(len(ordered) * decile)
-        for candidate in ordered[:size] if size >= 1 else []:
+        for rank, candidate in enumerate(ordered[:size] if size >= 1 else []):
             out.selected.setdefault(candidate.instrument_id, []).append(session)
+            if rank < top_k:
+                out.top.setdefault(candidate.instrument_id, []).append(session)
     return out
 
 

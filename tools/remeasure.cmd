@@ -13,8 +13,9 @@ REM
 REM WHY SUNDAY, AFTER BOTH WIDENING PASSES. The stores are single-writer
 REM (`ADR-0004`): this pass must not overlap the coverage pass (09:00), the
 REM classification pass (13:00) or the evening runs. It only READS - through the
-REM streamed loader, about 0.75 GB and 15 minutes - so the ordering is about the
-REM store's lock, not about what it writes.
+REM streamed loader, PR-019b about 0.75 GB and 15 minutes, PR-016 about 1.7 GB and
+REM 17 (measured 2026-09-13 beside another run, so an upper bound) - so the
+REM ordering is about the store's lock, not about what it writes.
 REM
 REM   tools\remeasure.cmd            the weekly pass
 REM
@@ -41,6 +42,10 @@ echo ===== [%DATE% %TIME%] re-measurement pass starting >> "%LOG%"
 
 "%PY%" -X utf8 "%REPO%\tools\remeasure.py" PR-019b --data "%REPO%\data" >> "%LOG%" 2>&1
 set RC=%ERRORLEVEL%
+REM PR-016 runs whatever PR-019b returned: a point skipped because another failed is a point the
+REM series never gets back. The first failure is the exit code either way.
+"%PY%" -X utf8 "%REPO%\tools\remeasure.py" PR-016 --data "%REPO%\data" >> "%LOG%" 2>&1
+if %RC%==0 set RC=%ERRORLEVEL%
 
 echo ===== [%DATE% %TIME%] re-measurement pass finished, exit %RC% >> "%LOG%"
 
