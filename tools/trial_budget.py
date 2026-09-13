@@ -288,6 +288,10 @@ SIDE_RECORDS = {
                     "sample only, on a 25% instrument subsample. It reports dispersion and no "
                     "level - `power_pr019.assert_no_effect_leaked` refuses to write one - so no "
                     "configuration could have been selected on it. PR-019 counts its twelve",
+    "PR-019b-power": "no trials: a VARIANCE estimate for PR-019b's minimum detectable effect, in "
+                     "sample only, on the same 25% subsample - dispersion of trade minus benchmark, "
+                     "trade and benchmark, and no level, under the same guard. Its cell is "
+                     "PR-019's selection, fixed before it ran, so nothing could be selected on it",
 }
 
 

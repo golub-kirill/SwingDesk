@@ -1686,6 +1686,15 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       unreadable is the market's variance, and pairing with the market is the one construction
       that can cancel it — so this contrast may be far MORE precise than `PR-019`'s, and that is a
       claim to measure, not to assume.
+      **REGISTERED 2026-09-13 as `PR-019b`, after measuring it.** `tools/power_pr019b.py` on the
+      in-sample window: the paired difference's predicted out-of-sample half-width is **0.0743R**
+      where the trade alone reads 0.1813R — the market is most of what moves this candidate month
+      to month, and pairing removes it. Readable at the 0.15R floor by 0.0007, so a precision miss
+      is possible and §3 says so. The SPY leg is charged ZERO in the primary (the strictest null)
+      and `DR-005` as a perturbation. Predicted to fail. Run pending.
+      ```bash
+      PYTHONPATH=$PWD/src python tools/run_pr019b.py --data data --as-of 2026-09-06T22:36:49.635786-05:00
+      ```
 
 - [ ] **`[v]` WHETHER `risk.max_concurrent_positions` MOVES — `PR-015`, 2026-09-07, and this is
       the owner's number, not mine.**
