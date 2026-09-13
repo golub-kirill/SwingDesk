@@ -2872,9 +2872,26 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       the book and never sent (#2), which clears only when the venue is raised to 117.05 — rounded
       UP, and under this fix within a tick of 117.044982. Both are yours to act on; I do not write
       to the book or the venue.
-      **Still open:** book rounding at write time (#1), `align-stops`, the
-      read-side decision view, `status`, and a `pending` flag that hides expired rows — and #2 and
-      #4, which are yours.
+      **BUILT 2026-09-13 — the operator console, level 1** (`docs/08-pm/plans/2026-09-12-operator-console.md`):
+      * **`swingdesk status`** — medium #4. One screen: the switch, both run tasks from the Task
+        Scheduler, the account, every position with its book stop, the venue's stop in force and
+        whether they agree, the newest proposal per position, the queue, a verdict. Exit codes are
+        `broker`'s. It reuses `resting_stops`, `unprotected`, `reconcile`, `platform.schedule` and
+        `pending_view`, so it cannot show a number the checks did not compute.
+      * **`--data` from any folder** — medium #5. `$SWINGDESK_DATA`, then `./data`, then the
+        checkout's `data`. The owner's `swingdesk.cmd` shim is no longer needed.
+      * **`swingdesk record | budget | streak | preflight | gates | schedule`** — the operational
+        scripts, RUN rather than copied.
+      **And running `status` on the live book found a defect the review did not name — FIXED the
+      same night.** An approved stop move was written to the book with no check that it did not
+      LOWER the stop: BTSG's newest unanswered proposal asked for 55.76 under a 57.61 book stop
+      (DR-041 had adopted the venue's tighter stop after the proposal was made), DINO's for 98.72
+      under 100.76. Either would have passed every check. `manage.lowers_stop` now refuses it in
+      `apply_approved`, `respond --approve` refuses it BEFORE recording an answer (`--reject` stays
+      allowed, to clear it), and `pending` and `status` mark such a proposal obsolete. 22 of 22
+      mutants across the console and the fix die.
+      **Still open after this:** book rounding at write time (#1), `align-stops`, the read-side
+      decision view, a `pending` flag that hides expired rows — and #2 and #4, which are yours.
 
 - [ ] **`[v]` ALPACA PAPER TRADING — owner instruction 2026-08-31. Wire it as the broker so
       strategies, guesses and the whole chain can be tested against a real venue.**

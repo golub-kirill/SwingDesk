@@ -67,6 +67,7 @@ submission needs `--submit` **and** a kill-switch file the owner creates outside
 Reading the state of things:
 
 ```bash
+swingdesk status                              # one screen: switch, schedule, account, every stop, queue
 python tools/forward_record.py --data data    # the live paper record: switch, book, what was refused
 python tools/trial_budget.py                  # what the search has cost and what the next trial costs
 ```
