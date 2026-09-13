@@ -1764,6 +1764,19 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       market (by path strength, T-bill funds beat `SPY` through 2022), and each such trade loses
       about 5R to its own round trip; the four-slot book ranks by score and likely would not buy
       them (`DR-006` §11.3). The owner ratified `2 × ATR / price ≥ 0.005` on 2026-09-13.
+      **SIZED 2026-09-13, both ways out (`tools/power_pr020b.py`, `PR-020b-power.json`) — and the
+      sizing is the finding.** In sample, predicted out-of-sample half-widths at 5 sessions: **A**,
+      in R under the floor on both legs, **0.0719**; **B**, per unit invested, 0.00366, which is
+      0.0714R at the trades' own `entry / risk` of 19.5. Readable, both, by about 4%. **But the
+      floor cut ZERO in-sample trades at every hold**: no cash fund reached the decile in 2016–2021,
+      so no in-sample estimate could have seen what broke `PR-020` out of sample — that is why it
+      missed by 3.7×. **And a re-registration on 2022–2026 would not be confirmatory**: `PR-020`'s
+      report already read construction A there, at this floor (−0.0297R [−0.1121, +0.0299],
+      exploratory), and B reweights the same trades through the same events. `PREREG_TEMPLATE`
+      rule 3 makes either a look at seen data. **So the question stands where the exploratory
+      re-read left it — the screen's week against its universe is within about ±0.1R of zero,
+      `NULL`-shaped — and a confirmatory answer needs data nobody has looked at.** The owner's
+      call: accept that as the answer and move the line, or wait for fresh sessions.
 
 - [ ] **`[v]` A POWER ESTIMATE FOR A MARKET-PAIRED CONTRAST MUST MODEL OVERLAPPING HOLDS — owed
       before the next one registers.** `PR-019b`'s estimate predicted a half-width of 0.0743 and the
