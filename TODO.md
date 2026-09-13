@@ -1777,6 +1777,14 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       re-read left it — the screen's week against its universe is within about ±0.1R of zero,
       `NULL`-shaped — and a confirmatory answer needs data nobody has looked at.** The owner's
       call: accept that as the answer and move the line, or wait for fresh sessions.
+      **RULED 2026-09-13: accepted, and the line moved to position sizing.** Measured the same
+      evening, exploratory (`EVIDENCE_SUMMARY` §20.9): on `PR-019b`'s rows, equal notional halves
+      the gap to `SPY` (−0.154R → −0.079R, zero inside) and the 25% cap binds on 2.7% of trades,
+      but every admitted name at equal notional still trails the index, wholly below zero. Sizing
+      explains half and flips nothing; selection, exit and sizing have each been measured and the
+      index beats the combination. **The next candidate is a different strategy class** —
+      short-term reversal or the index with drawdown control were put to the owner — not a
+      tuning of this one.
 
 - [ ] **`[v]` A POWER ESTIMATE FOR A MARKET-PAIRED CONTRAST MUST MODEL OVERLAPPING HOLDS — owed
       before the next one registers.** `PR-019b`'s estimate predicted a half-width of 0.0743 and the

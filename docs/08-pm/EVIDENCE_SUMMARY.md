@@ -1194,3 +1194,29 @@ question about selection pairs per unit invested. And **the screen's top decile 
 funds beat `SPY` through 2022, and a trade in one loses about 5R to its own round trip. The
 four-slot book ranks by score and `DR-006` §11.3 found such names never above 52nd, so the book
 likely would not have bought them. The owner ratified `2 × ATR / price ≥ 0.005` the same day.
+
+### 20.9 Sizing explains half the gap to the index and flips nothing
+
+Measured 2026-09-13, **EXPLORATORY** - the owner chose position sizing over re-asking `PR-020` on a
+seen window. `PR-019b`'s own rows, re-run unchanged, each trade minus `SPY` over its own sessions
+re-weighted three ways: in R (as every study here read it), per unit invested (equal notional,
+shown in R at the trades' median `entry / risk`), and as the live book sizes (notional capped at
+`risk.max_position_pct`, 25R of notional at 1R = 1% of equity).
+
+| out of sample | selected, `h60_stop4.0` | every admitted name |
+|---|---|---|
+| in R | −0.1543R [−0.2930, −0.0501] | −0.2772R [−0.4220, −0.1496] |
+| **equal notional** | **−0.0792R [−0.1905, +0.0322]** | **−0.1426R [−0.2098, −0.0794]** |
+| the live book, 25% cap | −0.1185R [−0.2115, −0.0373] | −0.1881R [−0.2835, −0.0993] |
+
+**Weighting by R is about half the gap, and only half.** Equal notional halves the selected
+candidate's shortfall and puts zero inside its interval, but the point estimate still lags the
+index. **The cap barely matters at this stop**: 2.7% of the candidate's trades reach it. **And per
+dollar the exit itself loses to the index**: every admitted name, held under the same 4 ATR stop and
+60 sessions at equal notional, trails `SPY` by −0.143R with the interval wholly below zero.
+
+**What it changes.** No sizing within the course's constant-risk rule, and no equal-weight
+alternative outside it, makes this screen-and-stop family out-earn holding the index over the same
+days. Together with §20.6-§20.8 the line is closed at its own level: selection, exit and sizing have
+each been measured, and the index beats their combination. The next candidate is a different
+strategy class, not a tuning of this one - the owner's call.
