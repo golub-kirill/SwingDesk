@@ -2159,6 +2159,66 @@ def test_the_wrapper_and_the_parser_agree_on_the_marker_words() -> None:
     assert re.search(r"second pass", wrapper), "the wrapper writes what the parser refuses"
 
 
+def test_track_a_reads_every_rotated_generation(tmp_path: Path) -> None:
+    """Live 2026-09-13: the 09-08 rotation hid four clean sessions and the streak read 2, not 8."""
+    root = _streak_tree(tmp_path, "".join(
+        _log_line(_THU, e) for e in ("starting", "finished, exit 0")))
+    for generation, day in ((2, _TUE), (1, _WED)):
+        (root / "data" / f"daily_run.log.{generation}").write_text(
+            "".join(_log_line(day, e) for e in ("starting", "finished, exit 0")), encoding="utf-8")
+    code, out = _run_streak_gate(root, "2026-08-13T22:00:00")
+    assert code == 0
+    assert "track A streak: 3/20" in out
+    assert "2026-08-11 to 2026-08-13" in out
+
+
+def _september_streak(late_day: int, *late_exits: int | None) -> tuple[int, str, str | None]:
+    """Clean 18:30 runs over 09-01..09-11, except one session whose runs all started from 20:25."""
+    sys.path.insert(0, str(TOOLS))
+    from datetime import date, datetime, time
+
+    import track_a_streak
+
+    attempts = []
+    for d in (1, 2, 3, 4, 8, 9, 10, 11):
+        if d == late_day:
+            attempts += [track_a_streak.Attempt(date(2026, 9, d), time(20, 25 + 10 * i), code)
+                         for i, code in enumerate(late_exits)]
+        else:
+            attempts.append(track_a_streak.Attempt(date(2026, 9, d), time(18, 30), 0))
+    as_of = datetime(2026, 9, 11, 22, 0, tzinfo=track_a_streak.LOCAL_ZONE)
+    count, start, broke_at = track_a_streak.streak(attempts, as_of)
+    return count, str(start), None if broke_at is None else str(broke_at)
+
+
+def test_a_late_run_counts_on_the_date_the_owner_named() -> None:
+    """2026-09-09: asleep at 18:30, the run 20:25-20:41 exit 0, counted by the owner's ruling."""
+    assert _september_streak(9, 0) == (8, "2026-09-01", None)
+
+
+def test_a_late_run_on_any_other_date_still_breaks_the_streak() -> None:
+    assert _september_streak(10, 0)[2] == "2026-09-10"
+
+
+def test_a_named_date_with_no_completed_run_still_breaks_the_streak() -> None:
+    """The ruling accepts a late run, not a missing one."""
+    assert _september_streak(9, None)[2] == "2026-09-09"
+
+
+def test_an_unfinished_attempt_after_the_late_run_does_not_undo_it() -> None:
+    """The last COMPLETED attempt is the session's word; one that never finished is no evidence."""
+    assert _september_streak(9, 0, None) == (8, "2026-09-01", None)
+
+
+def test_the_wrapper_keeps_nine_log_generations_shifted_oldest_first() -> None:
+    """Shifting .1 before .8 would overwrite every generation with the one below it."""
+    wrapper = (TOOLS / "daily_run.cmd").read_text(encoding="utf-8")
+    top = wrapper.index('move /Y "%LOG%.8" "%LOG%.9"')
+    bottom = wrapper.index('move /Y "%LOG%.1" "%LOG%.2"')
+    current = wrapper.index('move /Y "%LOG%" "%LOG%.1"')
+    assert top < bottom < current < wrapper.index("\n:attempt")
+
+
 def test_the_second_pass_does_not_pull_the_directory_again() -> None:
     """`DR-008` c3 attributes a pull to the session date the vendor's own `Last-Modified` reports.
     A second pull an hour later can only add a duplicate row or a refusal, on the one record whose

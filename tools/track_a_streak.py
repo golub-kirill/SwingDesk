@@ -141,6 +141,16 @@ SCHEDULING_STARTED = date(2026, 8, 9)
 #: all - resets it (`HANDOFF.md` §5, quoted above).
 CLEAN_EXIT_CODES = (0, 2)
 
+#: Sessions whose run started OUTSIDE the window and still counts, by the owner's ruling. A date
+#: here is the owner accepting a late run for `a.run_completes`; the tool still demands a logged
+#: clean exit on that session, so a date with no completed run stays a break. Printed whenever it
+#: falls inside the streak, so a counted late run never reads as an on-time one.
+LATE_RUNS_COUNTED: tuple[tuple[date, str], ...] = (
+    (date(2026, 9, 9),
+     "the machine was asleep at 18:30 and woke at 20:08 (System log, Power-Troubleshooter); the "
+     "wrapper ran 20:25-20:41 and exited 0. Counted on the owner's ruling, 2026-09-13"),
+)
+
 #: DELIBERATE restarts: a merge to a frozen file that changed decision output, which the 2026-08-16
 #: amendment (`HANDOFF.md` §5, council-reviewed, unanimous) resets the counter to zero from.
 #:
@@ -256,6 +266,21 @@ def _parse_attempts(text: str) -> list[Attempt]:
     return attempts
 
 
+def log_files() -> list[Path]:
+    """Every generation of the wrapper's log, oldest first: `daily_run.log.N` ... `.1`, then the log.
+
+    Only the current file was read until 2026-09-13, and `daily_run.cmd` rotates at 50MB. Measured
+    that day: the 09-08 rotation moved 09-01..09-04 - four clean scheduled sessions - into
+    `daily_run.log.1`, and the streak read 2/20 where the record held 8.
+    """
+    rotated = sorted(
+        (p for p in LOG.parent.glob(f"{LOG.name}.*") if p.suffix[1:].isdigit()),
+        key=lambda p: int(p.suffix[1:]),
+        reverse=True,
+    )
+    return [*rotated, *([LOG] if LOG.is_file() else [])]
+
+
 def _within_schedule(started_at: time) -> bool:
     """Time-of-day comparison only - the reference date is arbitrary and identical on both sides,
     so it never participates in the result. Tagged with `LOCAL_ZONE` to satisfy `DTZ`, not because
@@ -276,6 +301,11 @@ def _scheduled_outcome(attempts: list[Attempt], session_date: date) -> int | Non
     for attempt in attempts:
         if attempt.session_date == session_date and _within_schedule(attempt.started_at):
             return attempt.exit_code
+    if session_date in {day for day, _ in LATE_RUNS_COUNTED}:
+        # The last COMPLETED attempt that day is its final word; an unfinished one is no evidence.
+        completed = [a.exit_code for a in attempts
+                     if a.session_date == session_date and a.exit_code is not None]
+        return completed[-1] if completed else None
     return None
 
 
@@ -345,7 +375,9 @@ def measure(as_of: datetime | None = None) -> Reading | None:
     """
     if not LOG.is_file():
         return None
-    attempts = _parse_attempts(LOG.read_text(encoding="utf-8", errors="replace"))
+    # Parsed per file: a rotation happens before a pass writes "starting", so no pair spans two.
+    attempts = [attempt for path in log_files()
+                for attempt in _parse_attempts(path.read_text(encoding="utf-8", errors="replace"))]
     now = as_of or clock_now()
     count, start, broke_at = streak(attempts, now)
     sessions = _evaluable_sessions(now)
@@ -465,6 +497,10 @@ def main() -> int:
     restart = restarted_at(clock_now())
     if restart is not None:
         print(f"  counting from a deliberate restart on {restart[0]}: {restart[1]}")
+    if reading.start is not None and reading.end is not None:
+        for day, why in LATE_RUNS_COUNTED:
+            if reading.start <= day <= reading.end:
+                print(f"  {day} counted LATE by the owner's ruling: {why}")
     if reading.count >= TARGET_STREAK:
         print(f"  a.run_completes is MET as of {reading.start}")
 
