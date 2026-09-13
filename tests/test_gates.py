@@ -1584,6 +1584,36 @@ def test_an_absent_store_is_not_reported_as_one_held_by_the_evening_run(
     assert "open in another process" not in printed
 
 
+def test_the_decision_count_says_how_many_instrument_days_the_rows_are(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The owner's review, medium #1: a second pass records every instrument again, so the raw row
+    count is runs x names. The line keeps "recorded" - true of the store - and adds the count a
+    reader means, one per instrument per day, whichever run said it last."""
+    import duckdb
+
+    connection = duckdb.connect(str(tmp_path / "journal.duckdb"))
+    connection.execute("CREATE TABLE runs (run_id VARCHAR, completed_at TIMESTAMP, "
+                       "code_dirty BOOLEAN)")
+    connection.execute("CREATE TABLE decisions (run_id VARCHAR, recorded_at TIMESTAMP, "
+                       "instrument_id VARCHAR, decision VARCHAR, reason_code VARCHAR)")
+    connection.executemany("INSERT INTO decisions VALUES (?, ?, ?, ?, ?)", [
+        ("r1", "2026-09-10 18:40:00", "AAA", "Watch", None),
+        ("r2", "2026-09-10 19:40:00", "AAA", "Watch", None),  # the second pass, same day
+        ("r1", "2026-09-10 18:40:00", "BBB", "Skip", "DATA"),
+        ("r2", "2026-09-10 19:40:00", "BBB", "Skip", "DATA"),
+        ("r3", "2026-09-11 18:40:00", "AAA", "Watch", None),  # a new day is a new decision
+    ])
+    connection.close()
+    monkeypatch.setenv("SWINGDESK_DATA", str(tmp_path))
+    monkeypatch.delenv("SWINGDESK_ROOT", raising=False)
+
+    facts = dict(_build_state()._journal_facts())
+
+    assert facts["Decisions"].startswith("5 recorded, **3 instrument-days**")
+
+
 def test_handoff_still_carries_all_generated_markers() -> None:
     """Delete a marker pair and gate 24 stops checking that section in silence.
 
