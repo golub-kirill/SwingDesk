@@ -16,7 +16,7 @@ if TYPE_CHECKING:  # the broker package is imported lazily inside the functions 
     from swingdesk.broker.alpaca import AlpacaClient
     from swingdesk.broker.policy import BrokerPolicy
     from swingdesk.broker.reconcile import Unprotected
-    from swingdesk.contracts.broker import PlacedOrder
+    from swingdesk.contracts.broker import BrokerPosition, PlacedOrder
 
 from swingdesk.application import universe as universe_builder
 from swingdesk.application.pipeline import InstrumentOutcome, RunResult, run
@@ -315,6 +315,17 @@ def main(argv: list[str] | None = None) -> int:
     broker_cmd.add_argument("--since", default=None,
                             help="ISO instant; with --fills, the earliest execution to ask for")
 
+    status_cmd = sub.add_parser(
+        "status",
+        help="one screen: the switch, the schedule, the account, every stop, what is pending. "
+             "Reads only",
+    )
+    status_cmd.add_argument("--data", type=Path, default=None,
+                            help="data directory: $SWINGDESK_DATA, then ./data, then the "
+                                 "checkout's")
+    status_cmd.add_argument("--as-of", default=None,
+                            help="ISO instant to read the book at; defaults to now")
+
     args = parser.parse_args(argv)
     # Resolved HERE rather than in `default=`: a computed default would be evaluated at import time,
     # and `tools/build_commands.py`, which reads the tree, would render a machine-specific absolute
@@ -325,6 +336,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "record-fill":
         return _record_fill(args)
 
+    if args.command == "status":
+        return _status(args)
     if args.command == "broker":
         return _broker(args)
     if args.command == "sync-fills":
@@ -1620,6 +1633,56 @@ def _broker(args: argparse.Namespace) -> int:
               f"stop the market cannot see is not a stop (DR-027 3.2, DR-036).", file=sys.stderr)
         return 3
     return 0
+
+
+def _status(args: argparse.Namespace) -> int:
+    """One screen, and it reads only. Exit codes are `broker`'s: 0 · 2 unavailable · 3 TECH.
+
+    A venue that cannot be read does not stop the screen: the switch, the schedule, the book and
+    the queue are all local, and an operator at 18:35 needs them most on exactly the evening the
+    venue is down. `presentation/status.py` builds and renders; this function only reads.
+    """
+    from swingdesk import broker as broker_pkg
+    from swingdesk.platform import schedule as schedule_pkg
+    from swingdesk.presentation import status as status_view
+
+    now = (
+        FixedClock(datetime.fromisoformat(args.as_of).replace(tzinfo=UTC)).now()
+        if args.as_of
+        else SystemClock().now()
+    )
+    try:
+        policy = broker_pkg.load_policy()
+    except broker_pkg.PolicyRefused as refused:
+        print(f"status REFUSED  {refused}", file=sys.stderr)
+        return 2
+    switch = broker_pkg.read_arming(args.data, policy.write)
+    readings = tuple(reading for task in schedule_pkg.RUN_TASKS
+                     if (reading := schedule_pkg.read(task)) is not None)
+
+    account = None
+    held: Sequence[BrokerPosition] = ()
+    live: Sequence[PlacedOrder] = ()
+    venue_error: str | None = None
+    try:
+        client = broker_pkg.open_client(policy)
+        account = client.account(now)
+        held = client.positions(now)
+        live = client.open_orders(now)
+    except (broker_pkg.CredentialsMissing, broker_pkg.BrokerUnavailable) as unavailable:
+        venue_error = str(unavailable)
+
+    with PositionStore(args.data / "positions.duckdb") as positions:
+        book = positions.open_as_of(now)
+        split = split_pending(positions, now)
+
+    view = status_view.build(
+        at=now, switch=switch, schedule=readings, account=account, venue_error=venue_error,
+        book=book, held=held, live_orders=live, split=split, market=policy.market,
+        label=policy.label, tick_for=policy.tick_for)
+    for line in status_view.render(view):
+        print(line)
+    return view.exit_code
 
 
 def _record_fill(args: argparse.Namespace) -> int:

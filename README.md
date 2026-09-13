@@ -261,7 +261,7 @@ markers: a hand-kept list of flags is wrong within the week, which is the whole 
 `AGENTS.md` §10.5. An argument whose name or help text is computed rather than written as a
 literal appears with an empty description rather than being dropped.
 
-### The application — 8 command(s)
+### The application — 9 command(s)
 
 #### `swingdesk broker`
 
@@ -359,6 +359,15 @@ run the daily pipeline and produce a report
 | `--report-dir` | where the run's report file is written; defaults to <data>/reports |
 | `--submit` | submit this run's Trade decisions to the paper venue as bracket orders (CHARTER A-002, DR-027). Does nothing unless the kill switch file has been armed - it is stopped by default and the refusal says which guard stopped it |
 | `--no-notify` | skip the local desktop notice (DR-011). The report is written either way; this only suppresses the pop-up |
+
+#### `swingdesk status`
+
+one screen: the switch, the schedule, the account, every stop, what is pending. Reads only
+
+| argument | what it does |
+|---|---|
+| `--data` | data directory: $SWINGDESK_DATA, then ./data, then the checkout's |
+| `--as-of` | ISO instant to read the book at; defaults to now |
 
 #### `swingdesk sync-fills`
 
