@@ -1742,10 +1742,10 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       before the next registration:** bound `entry / risk` at the cost floor derived on 2026-09-08
       (round trip no more than 1R, `entry / risk` ≤ 200) as an entry rule of the study, or pair in
       NOTIONAL — trade return against basket return, both per unit invested — and convert once.
-      **And the live-system half is the owner's:** the ratified screen buys cash in a bear market
-      (by path strength, T-bill funds beat `SPY` through 2022), and each such trade loses about 5R to
-      its own round trip. The minimum `ATR / price` in the universe is already an open owner decision;
-      this is the case that makes it concrete.
+      **The live-system half, ruled the same day:** the screen's top decile takes cash in a bear
+      market (by path strength, T-bill funds beat `SPY` through 2022), and each such trade loses
+      about 5R to its own round trip; the four-slot book ranks by score and likely would not buy
+      them (`DR-006` §11.3). The owner ratified `2 × ATR / price ≥ 0.005` on 2026-09-13.
 
 - [ ] **`[v]` A POWER ESTIMATE FOR A MARKET-PAIRED CONTRAST MUST MODEL OVERLAPPING HOLDS — owed
       before the next one registers.** `PR-019b`'s estimate predicted a half-width of 0.0743 and the

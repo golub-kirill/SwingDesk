@@ -1178,7 +1178,7 @@ read (0.0704 predicted).
 
 **In sample it behaved as sized**: −0.0160R [−0.0782, +0.0334], half-width 0.0558 against 0.0732.
 **Out of sample it did not, and the reason was measured after the run**: the pool leg is expressed in
-the trade's R, and on 2022-11-04 the screen selected T-bill ETFs — SHV, BIL, SGOV and eight more —
+the trade's R, and on 2022-11-04 the screen's top decile held T-bill ETFs — SHV, BIL, SGOV and eight more —
 whose `entry / risk` exceeds 1,000. A 5% week in the pool is +73R in SHV's units. **38 trades carry
 85% of the out-of-sample difference**; the other 7,198 average −0.021R. At the cost floor derived on
 2026-09-08 — `entry / risk` ≤ 200, a round trip of no more than 1R — the 26 cash and short-bond trades
@@ -1190,7 +1190,7 @@ the width was explained, and the null's check still reads −0.0496R [−0.0903,
 its `entry / risk`**: right for a question about a constant-risk book — §20.6 survives the cost floor
 at −0.131R — wrong for a question about what the screen knows, and absurd for a cash fund whose round
 trip exceeds 1R. A paired study bounds `entry / risk` at the cost floor as an entry rule, and a
-question about selection pairs per unit invested. And **the live screen buys
-cash in a bear market**: by the path-strength rule, T-bill funds beat `SPY` through 2022, and a trade
-in one loses about 5R to its own round trip. The minimum `ATR / price` in the universe is the owner's
-open decision; this is what it would have prevented.
+question about selection pairs per unit invested. And **the screen's top decile takes cash in a bear market**: by the path-strength rule, T-bill
+funds beat `SPY` through 2022, and a trade in one loses about 5R to its own round trip. The
+four-slot book ranks by score and `DR-006` §11.3 found such names never above 52nd, so the book
+likely would not have bought them. The owner ratified `2 × ATR / price ≥ 0.005` the same day.

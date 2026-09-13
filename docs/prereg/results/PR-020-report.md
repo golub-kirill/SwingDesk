@@ -28,7 +28,7 @@ say: the interval is 0.518 wide, and the check the registration put in front of 
 selected cash.** §5 multiplies the pool's return over each trade's sessions by that trade's
 `entry / risk`. For an equity whose 2 ATR is 5% of its price the factor is about 20; for a T-bill
 ETF it is over a thousand. On 2022-11-04, in a bear market where cash beat `SPY`'s path, the ratified
-screen selected **SHV, TBLL, BIL, SGOV, GBIL, USFR, FTSM, TFLO, JPST, ICSH and GSY**. The pool rose
+screen's top decile held **SHV, TBLL, BIL, SGOV, GBIL, USFR, FTSM, TFLO, JPST, ICSH and GSY**. The pool rose
 about 5% the following week, which in SHV's R is **+73R**; SHV itself lost 5.7R — its own round trip,
 in the same units. **38 trades with `entry / risk` above 100 carry 85% of the out-of-sample
 difference**; the other 7,198 average −0.021R. The same arithmetic broke the null's check.
@@ -207,10 +207,12 @@ cannot turn a low-volatility name's notional into tens of R — `entry / risk` b
 or both legs paired per unit invested — and a fresh power estimate under that construction. `TODO.md`
 §5 carries both.
 
-**What it does license, about the live system rather than the study:** by the path-strength rule the
-ratified screen bought T-bill funds in the 2022 bear market, and a trade in one loses about 5R to its
-own round trip. The minimum `ATR / price` in the universe is the owner's open decision; this is the
-case that makes it concrete.
+**What it does license, about the live system rather than the study:** by the path-strength
+rule the ratified screen's top decile took T-bill funds in the 2022 bear market, and a trade in
+one loses about 5R to its own round trip. The four-slot book ranks by score, and `DR-006` §11.3
+found such names never above 52nd, so the book itself likely would not have bought them; every
+other use of the decile would. The owner ratified the floor the same day: `2 × ATR / price ≥
+0.005` (`risk.min_stop_distance_fraction`).
 
 ## What the study cost
 
