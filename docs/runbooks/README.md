@@ -672,6 +672,43 @@ saying `PARTIAL UNIVERSE` is the day the rule's answer and the stored answer are
 A held store is not a failure here: an overlapping pass costs a log line rather than a traceback,
 which is `AGENTS.md` §12's rule about `ADR-0004`'s single writer.
 
+### The re-measurement pass — the sequence `AGENTS.md` §19.7 says nothing here produced
+
+**Added 2026-09-13.** A verdict is one draw; *still true* is a property of a SEQUENCE of them, and
+until this pass existed nothing in the repository produced one. `tools/remeasure.py` re-runs a
+registered study's own construction and decision rule on the 48 months ending at the store's latest
+instant and appends one point to `data/remeasure/<study>.jsonl`. The first study is `PR-019b` — the
+candidate against `SPY` over the same days, the question that decides whether it is a strategy.
+
+**It spends no trial** (owner ruling 2026-09-08) because of one guard: **it is scheduled, and every
+point is appended whatever it says.** Re-running on demand until an answer flips would be a search
+in time. The tool also refuses a point earlier than the series' last.
+
+**Check first**, for the same reason as above:
+
+```bash
+.\.venv\Scripts\python.exe -X utf8 tools\verify_schedule.py
+```
+
+Then, once:
+
+```bash
+schtasks /Create /TN "SwingDesk re-measurement pass" /TR "C:\PycharmProjects\SwingDesk\tools\remeasure.cmd" /SC WEEKLY /D SUN /ST 16:00
+```
+
+**Sunday 16:00, after both widening passes.** It only READS — through the streamed loader, about
+0.75 GB and fifteen minutes — but the stores are single-writer (`ADR-0004`), and a reader holding
+`bars.duckdb` is what makes the next writer fail.
+
+**Gate 26 names this task and is therefore RED until the command above is run**, on the coverage
+pass's precedent. To read the series:
+
+```bash
+.\.venv\Scripts\python.exe -X utf8 tools\remeasure.py PR-019b --report
+```
+
+Every point is a RE-OBSERVATION, not a result: it never changes a verdict.
+
 
 ## 9. Standing it up from nothing — the clean-install sequence
 
@@ -693,7 +730,7 @@ stores — `tools/verify_secrets.py` is gate 19 and it fails on a tracked one.
 | `data/.paper-trading-armed` | the kill switch. **Absent means STOPPED**, which is its value | the owner, deliberately |
 | `.swingdesk-local.json` | the directory pull's enable flag | step 4 |
 | `APCA_API_KEY_ID` / `APCA_API_SECRET_KEY` | paper credentials, environment only | Alpaca's dashboard, §6 |
-| three scheduled tasks | the daily pass, the second pass, the coverage pass | step 7 |
+| five scheduled tasks | the daily pass, the second pass, the coverage pass, the classification pass, the re-measurement pass | step 7 |
 | the course PDFs + `pdftotext` | gate 2 re-extracts and diffs them | outside the repo entirely |
 
 ### The sequence
@@ -761,7 +798,7 @@ symbol.
 top-up and wrong for an empty store. `--universe` queues only the names the liquidity rule can
 actually nominate rather than every symbol with bars.
 
-**7. The four scheduled tasks.** Check before creating — `schtasks /Create` on an existing name
+**7. The five scheduled tasks.** Check before creating — `schtasks /Create` on an existing name
 offers to REPLACE it, and a wrong keystroke discards a working registration:
 
 ```bash
@@ -773,16 +810,17 @@ schtasks /Create /TN "SwingDesk daily run" /TR "C:\PycharmProjects\SwingDesk\too
 schtasks /Create /TN "SwingDesk second pass" /TR "\"C:\PycharmProjects\SwingDesk\tools\daily_run.cmd\" second-pass" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 19:30
 schtasks /Create /TN "SwingDesk coverage pass" /TR "C:\PycharmProjects\SwingDesk\tools\widen_universe.cmd" /SC WEEKLY /D SUN /ST 09:00
 schtasks /Create /TN "SwingDesk classification pass" /TR "C:\PycharmProjects\SwingDesk\tools\widen_classifications.cmd" /SC WEEKLY /D SUN /ST 13:00
+schtasks /Create /TN "SwingDesk re-measurement pass" /TR "C:\PycharmProjects\SwingDesk\tools\remeasure.cmd" /SC WEEKLY /D SUN /ST 16:00
 ```
 
-**The first of those three lines was recorded NOWHERE until 2026-09-04.** The runbook carried the
+**The first of those lines was recorded NOWHERE until 2026-09-04.** The runbook carried the
 second pass's command and, after that date, the coverage pass's — and nothing at all for the daily
 run, which is the one that actually places orders. It is reconstructed above by reading the live
 task off the machine (`Get-ScheduledTask`), whose action is that path and whose trigger is 18:30 on
 a `DaysOfWeek` mask of 62 — Monday through Friday. **That is exactly the gap this section exists
 for**: the installation worked, so nobody noticed that it could not be rebuilt.
 
-Gate 26 names all four and reports two hazards it cannot fix: they run only while the user is
+Gate 26 names all five and reports two hazards it cannot fix: they run only while the user is
 logged on, and some do not start on battery. Those are settings on the task, not on this
 repository.
 
@@ -790,6 +828,10 @@ repository.
 and on the coverage pass's own precedent. The two widening passes are a PAIR: coverage decides
 which instruments exist, classification decides which of them the sector cap can see. Running
 only the first is what took candidates admitted UNCHECKED from 110 to 2,396 in one evening.
+
+**The fifth was added 2026-09-13 and the gate is RED until it is registered**, on the same
+precedent. It is the re-measurement pass — §8's last subsection has why it must be scheduled
+rather than run by hand.
 
 **8. Arming, and it is deliberately last.** Submission is stopped until a file exists carrying one
 word. Absent means stopped, unreadable means stopped, present-but-unmarked means stopped — only the

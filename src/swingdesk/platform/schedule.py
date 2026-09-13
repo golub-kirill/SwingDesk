@@ -40,6 +40,11 @@ TASKS = (
     # classification store did not move with it, so candidates admitted UNCHECKED by the sector cap
     # went from 110 to 2,396 in one evening. `docs/runbooks/README.md` carries the one command.
     "SwingDesk classification pass",
+    # Added 2026-09-13, RED until the owner registers it, on the same precedent. `AGENTS.md` §19.7:
+    # a re-observation of a registered question spends no trial only because it is SCHEDULED and
+    # every point is recorded - an unscheduled `tools/remeasure.py` is exactly the on-demand re-run
+    # that ruling's guard forbids. `docs/runbooks/README.md` §8 carries the one command.
+    "SwingDesk re-measurement pass",
 )
 
 #: `schtasks` reports the wrapper's exit code. `daily_run.cmd` exits 0 on a clean run and 2 on a

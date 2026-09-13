@@ -67,7 +67,7 @@ because a rule sits in a 650-line file and a working session acts from memory.
 | 19.4 | What counts as a reason, and that "more data" and "the store goes back that far" do not | 46 |
 | 19.5 | Enforced by a declared field, with pre-2026-09-08 studies exempt BY NAME rather than silently | 46 |
 | 19.6 | At 48 months the NAME split is the default and a time split needs arguing for — measured: the long window bought a second window, not precision | 46 |
-| 19.7 | Currency is a property of a SEQUENCE, and no single measurement produces one. The mechanism does not exist yet | honour |
+| 19.7 | Currency is a property of a SEQUENCE, and no single measurement produces one. The mechanism is `tools/remeasure.py`, and it produces nothing until its weekly pass is registered | honour |
 
 **Gate 37 keeps this table honest**: every numbered section appears here exactly once, every row
 points at a section that exists, and every gate number cited resolves to a registered gate. A rule
@@ -1074,6 +1074,12 @@ which is whether a replay would reproduce, not whether the finding holds. **The 
 exist**, `TODO.md` §6 carries it, and until it does, the honest position is that **nothing here has
 ever been shown to be current** — the ten-year windows least of all, because a decade average is
 less current than a four-year one and reads more authoritative.
+
+*Built 2026-09-13:* `tools/remeasure.py` re-runs a registered study's construction and decision rule
+on the 48 months ending at the store's latest instant and appends one point, append-only and never
+backdated; `PR-019b` is its first study. **It produces a sequence only once its weekly pass is
+registered** (`docs/runbooks/README.md` §8, and gate 26 is red until then), so until the first
+scheduled points exist, the position above still holds.
 
 **Two constraints on that tool, written before it exists rather than after:**
 
