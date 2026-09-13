@@ -1,0 +1,489 @@
+{
+  "prereg": "PR-019b",
+  "trials": 1,
+  "as_of": "2026-09-06T22:36:49.635786-05:00",
+  "country": "USA",
+  "preliminary": {
+    "status": "PRELIMINARY - not a final result",
+    "why": "DR-042's tie-break is unruled and this study runs under it. Measured 2026-09-08: at most 0.0006R a trade, and it binds only on cells with a protective stop.",
+    "settled_by": "docs/decisions/DR-042 §8"
+  },
+  "window": {
+    "start": "2016-01-04",
+    "end": "2026-09-04",
+    "sessions": 2522
+  },
+  "candidate": {
+    "cell": "h60_stop4.0",
+    "atr_stop_multiple": "4.0",
+    "max_holding_period": 60,
+    "target": null,
+    "selected_by": "PR-019 §6, in sample"
+  },
+  "null": {
+    "benchmark": "SPY",
+    "leg": "same notional, benchmark OPEN on the trade's entry session to its CLOSE on the trade's exit session, in the trade's own R",
+    "primary_cost": "zero",
+    "perturbation_cost": "DR-005, symmetric"
+  },
+  "split": {
+    "in_sample": "entries on or before 2021-12-31 - printed, NEVER read",
+    "out_of_sample": "entries after 2021-12-31 - the verdict",
+    "buys": "nothing is selected here; the split is PR-019's, and reading only its out-of-sample window keeps the cell's selection off the verdict"
+  },
+  "perturbations": {
+    "registered": [
+      "benchmark_costed_1x",
+      "cost_stress_3x"
+    ],
+    "run": [
+      "benchmark_costed_1x",
+      "cost_stress_3x"
+    ],
+    "note": "benchmark_costed_1x charges the benchmark leg DR-005's model, symmetric with the trade; cost_stress_3x charges the TRADE three times DR-005 and keeps the benchmark at the primary's zero"
+  },
+  "power_floor": "0.15",
+  "minimum_detectable_effect": "0.0743",
+  "bootstrap": {
+    "unit": "entry month",
+    "block": 3,
+    "seed": 20260908,
+    "resamples": 10000
+  },
+  "instruments": 10330,
+  "formation_dates": 119,
+  "formations_skipped_for_a_thin_cross_section": 6,
+  "entries": {
+    "selected_signals": 29031,
+    "after_spacing": 12189,
+    "realised_before_restriction": {
+      "h60_stop4.0": 12171,
+      "h60_stop4.0_3x": 12171
+    },
+    "dropped_to_common_entries": {
+      "h60_stop4.0": 0,
+      "h60_stop4.0_3x": 0
+    }
+  },
+  "trades_without_a_benchmark_price": {
+    "h60_stop4.0": 0,
+    "h60_stop4.0_3x": 0,
+    "unselected_h60_stop4.0": 0
+  },
+  "survivorship": "ABSENT and material, as PR-016..PR-019",
+  "cells": {
+    "in_sample": {
+      "h60_stop4.0": {
+        "trades": 4935,
+        "instruments": 1858,
+        "win_rate": 0.4681,
+        "mean_net_r": 0.108,
+        "median_net_r": -0.2458,
+        "sd_net_r": 1.3652,
+        "mean_win_r": 1.3131,
+        "mean_loss_r": -0.9524,
+        "payoff_ratio": 1.3787,
+        "break_even_win_rate": 0.4204,
+        "skew": 1.2797,
+        "worst": -3.2083,
+        "best": 13.3241,
+        "mean_mfe_r": 1.21,
+        "mean_mae_r": -0.8045,
+        "gap_loss_share": 0.0756,
+        "exit_reasons": {
+          "time": 2712,
+          "stop": 1850,
+          "stop_gap": 373
+        },
+        "holding_days_median": 85,
+        "percentiles": {
+          "p1": -1.4241,
+          "p5": -1.1017,
+          "p10": -1.05,
+          "p25": -1.0268,
+          "p50": -0.2458,
+          "p75": 1.0105,
+          "p90": 1.9613,
+          "p95": 2.5619,
+          "p99": 3.9972
+        },
+        "months": 51,
+        "mean_interval": {
+          "low": -0.1275,
+          "high": 0.3358
+        },
+        "mae": {
+          "worst_mae": -3.8683,
+          "p01_mae": -1.9523,
+          "p05_mae": -1.4479,
+          "below_counts": {
+            "-1": 2223,
+            "-2": 45,
+            "-3": 7
+          },
+          "share_below_-1R": 0.45046,
+          "share_below_-2R": 0.00912,
+          "share_below_-3R": 0.00142,
+          "trades": 4935
+        },
+        "paired_trades": 4935,
+        "market_mean": {
+          "observed": 0.2138,
+          "low": 0.0189,
+          "high": 0.3791
+        },
+        "market_mean_costed": {
+          "observed": 0.1582,
+          "low": -0.0374,
+          "high": 0.3261
+        },
+        "difference": {
+          "observed": -0.1057,
+          "low": -0.2229,
+          "high": 0.0384
+        },
+        "difference_benchmark_costed": {
+          "observed": -0.0501,
+          "low": -0.1679,
+          "high": 0.0924
+        },
+        "difference_stress_3x": {
+          "observed": -0.2161,
+          "low": -0.3315,
+          "high": -0.0714
+        }
+      }
+    },
+    "out_of_sample": {
+      "h60_stop4.0": {
+        "trades": 7236,
+        "instruments": 2858,
+        "win_rate": 0.4287,
+        "mean_net_r": 0.0528,
+        "median_net_r": -0.3704,
+        "sd_net_r": 1.377,
+        "mean_win_r": 1.3404,
+        "mean_loss_r": -0.9134,
+        "payoff_ratio": 1.4675,
+        "break_even_win_rate": 0.4053,
+        "skew": 1.5929,
+        "worst": -4.2808,
+        "best": 18.0747,
+        "mean_mfe_r": 1.1846,
+        "mean_mae_r": -0.8036,
+        "gap_loss_share": 0.0803,
+        "exit_reasons": {
+          "time": 3632,
+          "stop": 2630,
+          "stop_gap": 581,
+          "end_of_data": 393
+        },
+        "holding_days_median": 85.0,
+        "percentiles": {
+          "p1": -1.599,
+          "p5": -1.0968,
+          "p10": -1.0458,
+          "p25": -1.0243,
+          "p50": -0.3704,
+          "p75": 0.8726,
+          "p90": 1.921,
+          "p95": 2.658,
+          "p99": 4.115
+        },
+        "months": 54,
+        "mean_interval": {
+          "low": -0.1106,
+          "high": 0.2234
+        },
+        "mae": {
+          "worst_mae": -4.6682,
+          "p01_mae": -1.9218,
+          "p05_mae": -1.3827,
+          "below_counts": {
+            "-1": 3211,
+            "-2": 59,
+            "-3": 7
+          },
+          "share_below_-1R": 0.44375,
+          "share_below_-2R": 0.00815,
+          "share_below_-3R": 0.00097,
+          "trades": 7236
+        },
+        "paired_trades": 7236,
+        "market_mean": {
+          "observed": 0.2071,
+          "low": 0.0271,
+          "high": 0.4142
+        },
+        "market_mean_costed": {
+          "observed": 0.1478,
+          "low": -0.028,
+          "high": 0.3469
+        },
+        "difference": {
+          "observed": -0.1543,
+          "low": -0.293,
+          "high": -0.0501
+        },
+        "difference_benchmark_costed": {
+          "observed": -0.095,
+          "low": -0.2211,
+          "high": 0.0028
+        },
+        "difference_stress_3x": {
+          "observed": -0.2512,
+          "low": -0.3608,
+          "high": -0.1616
+        }
+      }
+    }
+  },
+  "unselected": {
+    "in_sample": {
+      "h60_stop4.0": {
+        "trades": 31320,
+        "instruments": 2874,
+        "win_rate": 0.4946,
+        "mean_net_r": 0.102,
+        "median_net_r": -0.0281,
+        "sd_net_r": 1.344,
+        "mean_win_r": 1.1826,
+        "mean_loss_r": -0.9554,
+        "payoff_ratio": 1.2377,
+        "break_even_win_rate": 0.4469,
+        "skew": 1.2333,
+        "worst": -21.8408,
+        "best": 30.827,
+        "mean_mfe_r": 1.1581,
+        "mean_mae_r": -0.7464,
+        "gap_loss_share": 0.0752,
+        "exit_reasons": {
+          "time": 19008,
+          "stop": 9956,
+          "stop_gap": 2356
+        },
+        "holding_days_median": 85.0,
+        "percentiles": {
+          "p1": -1.785,
+          "p5": -1.1715,
+          "p10": -1.0683,
+          "p25": -1.0276,
+          "p50": -0.0281,
+          "p75": 0.9589,
+          "p90": 1.752,
+          "p95": 2.3811,
+          "p99": 3.7485
+        },
+        "months": 51,
+        "mean_interval": {
+          "low": -0.1646,
+          "high": 0.3449
+        },
+        "mae": {
+          "worst_mae": -21.8361,
+          "p01_mae": -1.9419,
+          "p05_mae": -1.4002,
+          "below_counts": {
+            "-1": 12312,
+            "-2": 275,
+            "-3": 61
+          },
+          "share_below_-1R": 0.3931,
+          "share_below_-2R": 0.00878,
+          "share_below_-3R": 0.00195,
+          "trades": 31320
+        },
+        "paired_trades": 31320,
+        "market_mean": {
+          "observed": 0.4169,
+          "low": 0.1905,
+          "high": 0.6078
+        },
+        "market_mean_costed": {
+          "observed": 0.3187,
+          "low": 0.0866,
+          "high": 0.5165
+        },
+        "difference": {
+          "observed": -0.315,
+          "low": -0.4207,
+          "high": -0.2049
+        },
+        "difference_benchmark_costed": {
+          "observed": -0.2168,
+          "low": -0.3183,
+          "high": -0.1126
+        }
+      }
+    },
+    "out_of_sample": {
+      "h60_stop4.0": {
+        "trades": 46687,
+        "instruments": 5013,
+        "win_rate": 0.4415,
+        "mean_net_r": 0.0202,
+        "median_net_r": -0.25,
+        "sd_net_r": 1.3104,
+        "mean_win_r": 1.1983,
+        "mean_loss_r": -0.911,
+        "payoff_ratio": 1.3154,
+        "break_even_win_rate": 0.4319,
+        "skew": 1.2124,
+        "worst": -23.6179,
+        "best": 18.0747,
+        "mean_mfe_r": 1.1254,
+        "mean_mae_r": -0.7634,
+        "gap_loss_share": 0.0856,
+        "exit_reasons": {
+          "time": 24822,
+          "stop": 14866,
+          "stop_gap": 3998,
+          "end_of_data": 3001
+        },
+        "holding_days_median": 86,
+        "percentiles": {
+          "p1": -1.9546,
+          "p5": -1.1979,
+          "p10": -1.065,
+          "p25": -1.0227,
+          "p50": -0.25,
+          "p75": 0.8127,
+          "p90": 1.7215,
+          "p95": 2.347,
+          "p99": 3.9185
+        },
+        "months": 54,
+        "mean_interval": {
+          "low": -0.1069,
+          "high": 0.1766
+        },
+        "mae": {
+          "worst_mae": -23.591,
+          "p01_mae": -1.9346,
+          "p05_mae": -1.3664,
+          "below_counts": {
+            "-1": 18864,
+            "-2": 398,
+            "-3": 65
+          },
+          "share_below_-1R": 0.40405,
+          "share_below_-2R": 0.00852,
+          "share_below_-3R": 0.00139,
+          "trades": 46687
+        },
+        "paired_trades": 46687,
+        "market_mean": {
+          "observed": 0.2973,
+          "low": 0.0792,
+          "high": 0.5641
+        },
+        "market_mean_costed": {
+          "observed": 0.2072,
+          "low": -0.0108,
+          "high": 0.4728
+        },
+        "difference": {
+          "observed": -0.2772,
+          "low": -0.422,
+          "high": -0.1496
+        },
+        "difference_benchmark_costed": {
+          "observed": -0.187,
+          "low": -0.3306,
+          "high": -0.0591
+        }
+      }
+    }
+  },
+  "not_measured": [
+    "beta: the null holds the same NOTIONAL in the index, not a beta-matched position",
+    "the stop-out day: the trade leaves at its stop intraday, the null at that session's close - a few hours' more index exposure on those days, stated not modelled",
+    "the book: one trade at a time, no cap and no capacity"
+  ],
+  "measured_span": {
+    "first_entry": "2017-09-07",
+    "last_entry": "2026-08-07",
+    "years": 8.91,
+    "meets_the_ten_year_instruction": false
+  },
+  "reproduction": {
+    "reference": "PR-019.json",
+    "available": true,
+    "checks": [
+      {
+        "label": "h60_stop4.0",
+        "group": "cells",
+        "window": "in_sample",
+        "match": true,
+        "got": {
+          "trades": 4935,
+          "mean_net_r": 0.108,
+          "mean_interval": {
+            "low": -0.1275,
+            "high": 0.3358
+          }
+        },
+        "committed": {
+          "trades": 4935,
+          "mean_net_r": 0.108,
+          "mean_interval": {
+            "low": -0.1275,
+            "high": 0.3358
+          }
+        }
+      },
+      {
+        "label": "h60_stop4.0",
+        "group": "cells",
+        "window": "out_of_sample",
+        "match": true,
+        "got": {
+          "trades": 7236,
+          "mean_net_r": 0.0528,
+          "mean_interval": {
+            "low": -0.1106,
+            "high": 0.2234
+          }
+        },
+        "committed": {
+          "trades": 7236,
+          "mean_net_r": 0.0528,
+          "mean_interval": {
+            "low": -0.1106,
+            "high": 0.2234
+          }
+        }
+      },
+      {
+        "label": "h60_stop4.0",
+        "group": "unselected",
+        "window": "in_sample",
+        "match": true,
+        "got": {
+          "trades": 31320,
+          "mean_net_r": 0.102
+        },
+        "committed": {
+          "trades": 31320,
+          "mean_net_r": 0.102
+        }
+      },
+      {
+        "label": "h60_stop4.0",
+        "group": "unselected",
+        "window": "out_of_sample",
+        "match": true,
+        "got": {
+          "trades": 46687,
+          "mean_net_r": 0.0202
+        },
+        "committed": {
+          "trades": 46687,
+          "mean_net_r": 0.0202
+        }
+      }
+    ],
+    "every_digit": true
+  },
+  "verdict": "inconclusive"
+}

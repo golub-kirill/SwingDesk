@@ -1082,7 +1082,7 @@ negative (−0.0826R) while its advantage over the incumbent grows (+0.308R), be
 trades half the notional at the same risk. **Every arm is long-only and holds a median 85 days
 through 2022–2026, and no study here has compared such a trade with the index over the same days.**
 Until one does, a positive level on this exit is not evidence of an edge; it is at least partly what
-the market did.
+the market did. *Answered 2026-09-13 by `PR-019b` — §20.6: it is all of what the market did, and less.*
 
 ### 20.5 The candidate the evidence points at, and what it still lacks
 
@@ -1091,3 +1091,30 @@ out of sample, neither distinguishable from zero, with a better tail than anythi
 `STRATEGY_CONTRACT` C-4 wants an interval that excludes zero and C-3 a null it must beat; it has
 neither. **The market null is the next question** (`TODO.md` §5), and `DR-014` still holds: no owner
 capital, paper only.
+
+### 20.6 Against the index over the same days, the candidate loses
+
+Measured 2026-09-13. `PR-019b`, `INCONCLUSIVE` for precision and PRELIMINARY on `DR-042`'s terms.
+Report: `docs/prereg/results/PR-019b-report.md`. Each of `PR-019`'s trades was paired with the same
+notional in `SPY` from its entry session's open to its exit session's close, in its own R — §9
+reproduced `PR-019`'s trades to every digit first.
+
+| out of sample, 60 sessions, 4 ATR, 7,236 trades | mean a trade |
+|---|---|
+| the candidate, net | +0.0528R [−0.1106, +0.2234] |
+| `SPY` over the same sessions, zero cost | +0.2071R [+0.0271, +0.4142] |
+| **candidate − `SPY`** | **−0.1543R [−0.2930, −0.0501]** |
+
+**Wholly below zero, and 0.243 wide against a 0.15R floor, so §6 refuses a verdict** — the power
+estimate promised 0.074 and ignored the autocorrelation of overlapping 60-session holds (`TODO.md`
+§5 owes the fix). Every other reading points the same way: in sample −0.1057R, at 3× trade costs
+−0.2512R, and on every admitted name without the screen **−0.2772R** [−0.4220, −0.1496]; only the
+index charged `DR-005`'s round trip touches zero (−0.0950R [−0.2211, +0.0028]). Survivorship, a beta
+above one and the missing dividend all favoured the candidate throughout.
+
+**What it means for §20.5.** The candidate the evidence pointed at earned less than holding the
+index for the same days, and the exit alone loses to the index by more than the screened book does:
+the screen closes about 0.12R of the gap and no more. **A wide stop holds more notional per R, and in
+a rising market more notional per R earns more R whether or not anything was selected** — which is
+why every long-hold level on this page has to be read against the index before it is read as an edge.
+It is not retired (C-3 retires on `REJECT` or `NULL`), and nothing here supports it.
