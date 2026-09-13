@@ -1,0 +1,67 @@
+{
+  "approximation": "half widths are a normal approximation to the moving-block bootstrap; the block structure widens an interval, so each is a LOWER bound",
+  "as_of": "2026-09-06T22:36:49.635786-05:00",
+  "cell": {
+    "atr_stop_multiple": "4.0",
+    "entry_spacing_sessions": 60,
+    "max_holding_period": 60,
+    "target": null
+  },
+  "dispersion": {
+    "benchmark_alone": {
+      "half_width_corrected": 0.14965791588950467,
+      "half_width_overlap": 0.21821662482745052,
+      "half_width_predicted_oos": 0.1440083967086065,
+      "half_width_predicted_oos_overlap": 0.2099790451429669,
+      "half_width_uncorrected": 0.15229884067722202,
+      "months": 50.0,
+      "overlap_factor": 2.126063748609912,
+      "overlap_lags": 2.0,
+      "var_between": 0.2915125441012867,
+      "var_observed": 0.3018916190080416,
+      "var_subsample_noise": 0.010379074906754946
+    },
+    "trade_alone": {
+      "half_width_corrected": 0.18843197539606046,
+      "half_width_overlap": 0.29142099946821626,
+      "half_width_predicted_oos": 0.1813187528647474,
+      "half_width_predicted_oos_overlap": 0.2804199874841407,
+      "half_width_uncorrected": 0.20177825214117523,
+      "months": 50.0,
+      "overlap_factor": 2.3918419832751496,
+      "overlap_lags": 2.0,
+      "var_between": 0.4621330871467817,
+      "var_observed": 0.5299154393631258,
+      "var_subsample_noise": 0.06778235221634411
+    },
+    "trade_minus_benchmark": {
+      "half_width_corrected": 0.07724089675706165,
+      "half_width_overlap": 0.14032151628540301,
+      "half_width_predicted_oos": 0.07432508755856272,
+      "half_width_predicted_oos_overlap": 0.1350244420007898,
+      "half_width_uncorrected": 0.10252692857967995,
+      "months": 50.0,
+      "overlap_factor": 3.3003038300605754,
+      "overlap_lags": 2.0,
+      "var_between": 0.0776519696459165,
+      "var_observed": 0.13681501306724791,
+      "var_subsample_noise": 0.059163043421331406
+    }
+  },
+  "for": "PR-019b",
+  "formation_dates": 60,
+  "fraction": 0.25,
+  "oos_months": 54,
+  "purpose": "a variance estimate for PREREG_TEMPLATE rule 9. No level is reported.",
+  "readable_half_width": 0.075,
+  "seed": 20260908,
+  "subsample": 2660,
+  "trades": 1220,
+  "trades_without_a_benchmark_price": 0,
+  "universe": 13010,
+  "window": {
+    "end": "2021-12-31",
+    "note": "IN SAMPLE ONLY - the holdout is not touched by a power estimate",
+    "start": "2016-01-04"
+  }
+}

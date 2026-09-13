@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import statistics
 import sys
 from collections import defaultdict
 from datetime import date, datetime
@@ -42,6 +43,8 @@ from power_pr019 import (
     READABLE_HALF_WIDTH,
     assert_no_effect_leaked,
     half_width,
+    lags_for_hold,
+    overlap_inflation,
     predicted_oos,
     spaced,
     subsample,
@@ -96,10 +99,23 @@ def dispersion(per_month: dict[str, list[float]]) -> dict[str, float]:
     components = variance_components(per_month)
     months = int(components["months"])
     corrected = half_width(components["var_between"], months)
+    # The overlap correction, added after the registered run: the first three half-widths are
+    # exactly what PR-019b-power.json holds, and these sit beside them. Same months as
+    # `variance_components` - those with two or more trades - in month order.
+    ordered = [statistics.fmean(per_month[m])
+               for m in sorted(m for m, values in per_month.items() if len(values) >= 2)]
+    lags = lags_for_hold(CANDIDATE.max_holding_bars)
+    factor = overlap_inflation(ordered, components["var_between"], lags)
+    overlapped = (half_width(components["var_between"] * factor, months)
+                  if not math.isnan(factor) else float("nan"))
     return {**components,
             "half_width_uncorrected": half_width(components["var_observed"], months),
             "half_width_corrected": corrected,
-            "half_width_predicted_oos": predicted_oos(corrected, months)}
+            "half_width_predicted_oos": predicted_oos(corrected, months),
+            "overlap_lags": float(lags),
+            "overlap_factor": factor,
+            "half_width_overlap": overlapped,
+            "half_width_predicted_oos_overlap": predicted_oos(overlapped, months)}
 
 
 def build(args: argparse.Namespace) -> dict[str, Any]:
@@ -210,6 +226,10 @@ def report(payload: dict[str, Any]) -> None:
         shown = "   n/a" if math.isnan(hw) else f"{hw:>13.4f}"
         shown_oos = "   n/a" if math.isnan(oos) else f"{oos:>18.4f}"
         print(f"  {name:24} {int(cell['months']):>7} {shown} {shown_oos}")
+        if "overlap_factor" in cell:
+            print(f"  {'':24} overlap: {int(cell['overlap_lags'])} lag(s), factor "
+                  f"{cell['overlap_factor']:.3f}, half-width {cell['half_width_overlap']:.4f}, "
+                  f"OOS predicted {cell['half_width_predicted_oos_overlap']:.4f}")
     print(f"\n  readable at the 0.15R floor: OOS half width <= {payload['readable_half_width']}")
     print(f"  {payload['approximation']}")
 
