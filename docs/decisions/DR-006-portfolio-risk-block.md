@@ -59,7 +59,7 @@ Two consequences worth stating plainly:
 | `risk.max_concurrent_positions` | **6** | positions |
 | `risk.max_sector_risk` | **2R** | multiples of per-trade risk |
 | `risk.correlation_threshold` | **0.70** over 60 sessions of daily returns | correlation |
-| `risk.max_position_value` | **2,500** — 25% of `account.equity` at its current value | currency |
+| risk.max_position_value | **2,500** — 25% of `account.equity` at its current value | currency |
 | `risk.liquidity_cap_order_to_adtv_pct` | **1.0%** of 20-day ADTV | percent |
 
 ## 1. Why 6R, and how it ties to a number already ratified
@@ -94,7 +94,7 @@ defensible. 60 sessions is a quarter — long enough to be stable, short enough 
 change. Both halves of that are authored; the course names the concept in `M49-T761` and quantifies
 nothing.
 
-**`risk.max_position_value` = 2,500, being 25% of equity.** The cap Appendix C requires after the
+**risk.max_position_value = 2,500, being 25% of equity.** The cap Appendix C requires after the
 share count is computed (*`Ограничить max position value/liquidity`*). At four positions of maximum size the account
 is fully invested, which is a floor on diversification independent of the risk calculation — and
 `Не равно риску` in the same table is the reminder that position value and risk are different columns
@@ -114,7 +114,7 @@ The honest half of this record. Setting a value is not the same as being able to
 |---|---|---|
 | `risk.max_open_risk` | **yes** — from the position store | — |
 | `risk.max_concurrent_positions` | **yes** — a count | — |
-| `risk.max_position_value` | **yes** — equity × price | — |
+| risk.max_position_value | **yes** — equity × price | — |
 | `risk.liquidity_cap_order_to_adtv_pct` | **yes** — ADTV is in the store | — |
 | `risk.max_sector_risk` | **no** | `Instrument.sector` is `None`; no free point-in-time sector source |
 | `risk.correlation_threshold` | **no** | nothing computes a correlation matrix over the candidate set |
@@ -166,7 +166,7 @@ was never able to perform, and conflating those two produces a system that canno
 
 ## 7. Open items
 
-- [ ] **`risk.max_position_value` should be a percentage, not a currency amount.** It is stored as
+- [x] **risk.max_position_value should be a percentage, not a currency amount.** **DONE 2026-09-13, the owner's ruling:** `risk.max_position_pct` = 25, read by `size_long` as `account.equity x pct / 100`, so the cap grows with the account. It is stored as
       2,500 because `size_long` reads it as a number and compares it to a position value, so a
       percentage there would not work without changing the sizing code. The consequence is that it
       silently means something different the day `account.equity` changes. A percentage parameter
@@ -227,7 +227,7 @@ system that acts on the failure mode that actually occurs.
 |---|---|---|
 | `risk.max_open_risk` | **4R** (was 6R) | `owner`, 2026-08-22 |
 | `risk.max_concurrent_positions` | **4** (was 6) | `owner`, 2026-08-22 |
-| `risk.max_position_value` | 2,500 | `owner`, 2026-08-22 |
+| risk.max_position_value | 2,500 | `owner`, 2026-08-22 |
 | `risk.liquidity_cap_order_to_adtv_pct` | 1.0% | `owner`, 2026-08-22 |
 
 §5 already provided for this: *"Any value the owner sets directly carries provenance `owner` rather

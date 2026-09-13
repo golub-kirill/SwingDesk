@@ -316,18 +316,24 @@ def size_long(
         )
 
     # Step 5. Caps are applied AFTER the raw share count, never folded into it.
+    #
+    # A PERCENTAGE of `account.equity` since 2026-09-13 - the owner's ruling, closing `DR-006` §7.
+    # Stored as 2,500 it meant 25% only while equity was 10,000 and silently something else the day
+    # equity moved. `equity` is the value `allowed_risk` read above, so the cap and the risk budget
+    # can never be computed from two different accounts.
     try:
-        max_value, value_use = registry.decimal_value("risk.max_position_value")
+        max_pct, value_use = registry.decimal_value("risk.max_position_pct")
     except ParameterUnset as unset:
         return Refusal(
             "RISK",
             "position-value cap has no value; sizing without a cap is not permitted",
             parameter_id=unset.parameter_id,
         )
+    max_value = (equity * max_pct / Decimal(100)).quantize(Decimal("0.01"))
 
-    # The cap is a base-currency figure (`risk.max_position_value` is 25% of `account.equity`), so
-    # the position is converted UP to base to compare. Comparing a CAD position value against a USD
-    # cap is the same error as the sizing division and was present in the same line.
+    # The cap is a base-currency figure (a share of `account.equity`), so the position is converted
+    # UP to base to compare. Comparing a CAD position value against a USD cap is the same error as
+    # the sizing division and was present in the same line.
     max_value_local = (max_value / base_per_local).quantize(Decimal("0.01"))
     position_value = (Decimal(shares) * entry).quantize(Decimal("0.01"))
     if position_value > max_value_local:

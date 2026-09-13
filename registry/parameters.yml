@@ -243,11 +243,16 @@ parameters:
     named_in: [Appendix C]
     ui_editable: true
 
-  - id: risk.max_position_value
-    unit: currency
-    value: 2500
+  - id: risk.max_position_pct
+    unit: percent of account.equity
+    value: 25
     note: >-
-      25% of account.equity, computed at the current value of 10000. Stored as currency because sizing reads it as one; it must be recomputed if equity changes, which is why DR-006 section 7 wants a percentage-based parameter instead.
+      One position's share of the account. Ratified by the owner 2026-09-13 as a percentage,
+      closing DR-006 section 7's open item: it replaces risk.max_position_value, stored as 2,500
+      because sizing compared it to a position value - 25% only while account.equity was 10,000, and
+      silently something else the day equity moved. size_long computes equity x pct / 100 from the
+      same equity the risk budget reads, so the cap grows with the account. At four positions of
+      this size the account is fully invested, DR-006's floor on diversification.
     status: owner
     provenance: owner
     read_by: swingdesk.trade_management.sizing:size_long

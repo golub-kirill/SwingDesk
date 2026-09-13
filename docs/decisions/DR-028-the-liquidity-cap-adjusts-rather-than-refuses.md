@@ -45,7 +45,7 @@ liquidity **adjustment**. Its sibling `M49-T0761` is "Поправка на ко
 already renders that pair as *"correlation threshold **and its size adjustment**"*. The family the
 course names here is size adjustment, not admission.
 
-**And this project already implements exactly that shape one step earlier.** `risk.max_position_value`
+**And this project already implements exactly that shape one step earlier.** risk.max_position_value
 reduces the share count and refuses `LIQ` only at zero — step 5 of `size_long`, since it was
 written. A second cap in the same step behaving differently would be two rules where the course
 names one family, and the difference would be invisible in a report that prints a share count.

@@ -46,7 +46,7 @@
     "risk.costs_bp_usd": "50",
     "risk.costs_floor_cad": "0.02",
     "risk.costs_floor_usd": "0.02",
-    "risk.max_position_value": 1000000,
+    "risk.max_position_pct": 10000,
     "risk.per_trade_pct": "1.0",
     "data.freshness_window": 2,
     "risk.max_open_risk": 4,
@@ -64,13 +64,13 @@
     "screen.relative_strength_rule": "top_decile"
   },
   "manifest": {
-    "run_id": "run-20260115T210000Z-34e53642",
+    "run_id": "run-20260115T210000Z-dc254792",
     "started_at": "2026-01-15T21:00:00Z",
     "mode": "replay",
-    "code_hash": "147551c",
+    "code_hash": "3b7912a",
     "code_dirty": false,
-    "config_hash": "a2fc6aefbe367f2a",
-    "snapshot_id": "snap-20260115T210000Z-34e53642",
+    "config_hash": "f8931265ef913d09",
+    "snapshot_id": "snap-20260115T210000Z-dc254792",
     "component_versions": {
       "M18-T0280-v5.0": 1
     },
@@ -82,5 +82,5 @@
     "output_hash": "39c9d3eda5bf8ac0",
     "completed_at": "2026-01-15T21:00:00Z"
   },
-  "inputs_digest": "d53103e02617fd93"
+  "inputs_digest": "72d4f44429993d12"
 }
