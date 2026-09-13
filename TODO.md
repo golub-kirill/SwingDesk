@@ -1724,6 +1724,28 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       (`PR-020-power.json`, re-run with the fifth hold; the other four reproduce to the digit). The
       pool pays the trade's slippage, so the difference is selection and not the round trip.
       `docs/prereg/PR-020-does-the-screen-know-anything.md`; `tools/run_pr020.py`.
+      **REPORTED 2026-09-13 — `INCONCLUSIVE`, and §9 refused even that** (`PR-020-report.md`,
+      `EVIDENCE_SUMMARY` §20.8). In sample it behaved as sized; out of sample the interval was 3.7×
+      wider and the null's check failed, because the pool leg is in the trade's R and the screen
+      bought T-bill ETFs on 2022-11-04. The question is still unanswered; the next item is what a
+      re-registration needs first.
+
+- [ ] **`[v]` A BASKET LEG IN A TRADE'S R IS NOT A NULL FOR A LOW-VOLATILITY NAME — owed before any
+      paired study registers again.** `PR-019b` (`SPY`), `measure_universe_null` and `PR-020` (the
+      pool) all multiply a basket's return by the trade's `entry / risk`. That is a full-beta position
+      on the trade's whole notional, and for a name whose risk is a small fraction of its price the
+      notional is huge: SHV's `entry / risk` was 1,391, so a 5% pool week read +73R. In `PR-020` 38
+      such trades carried 85% of the out-of-sample difference. In `PR-019b` the same weighting is how
+      a constant-risk book really allocates, so its reading survives the cost floor (−0.131R
+      [−0.232, −0.045], 19 cash trades cut); a question about what the screen KNOWS should weigh
+      trades equally, and `PR-020`'s did not. **Two ways out, to choose
+      before the next registration:** bound `entry / risk` at the cost floor derived on 2026-09-08
+      (round trip no more than 1R, `entry / risk` ≤ 200) as an entry rule of the study, or pair in
+      NOTIONAL — trade return against basket return, both per unit invested — and convert once.
+      **The live-system half, ruled the same day:** the screen's top decile takes cash in a bear
+      market (by path strength, T-bill funds beat `SPY` through 2022), and each such trade loses
+      about 5R to its own round trip; the four-slot book ranks by score and likely would not buy
+      them (`DR-006` §11.3). The owner ratified `2 × ATR / price ≥ 0.005` on 2026-09-13.
 
 - [ ] **`[v]` A POWER ESTIMATE FOR A MARKET-PAIRED CONTRAST MUST MODEL OVERLAPPING HOLDS — owed
       before the next one registers.** `PR-019b`'s estimate predicted a half-width of 0.0743 and the

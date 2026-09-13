@@ -7,7 +7,13 @@ author:        Claude, owed by measure_universe_null (EVIDENCE_SUMMARY 20.7), wh
                exit the largest cost of PR-019b's loss and the screen's own contribution not
                distinguishable from zero. Registered on the owner's ruling of 2026-09-13 that the
                question be answered rather than shelved, with the hold the power estimate can read
-status:        registered
+status:        reported   (2026-09-13 - results/PR-020-report.md)
+verdict:       INCONCLUSIVE, and section 9 refuses even that reading. Out of sample, trade minus
+               the costed pool is -0.1412R [-0.4815, +0.0360], 0.518 wide against the 0.15R floor
+               where section 3 promised 0.0704; and the null's own check read -0.0669R out of
+               sample, beyond the 0.05R section 9 allows, so the pool leg is treated as wrong. In
+               sample the estimator held - 0.0558 against 0.0732 predicted. PR-019 reproduced to
+               every digit
 ```
 
 ---
