@@ -500,11 +500,12 @@ def test_the_flattened_leg_protects_the_position_it_belongs_to(tmp_path: Path) -
     held = held.model_copy(update={
         "initial_stop": Decimal("61.70"), "current_stop": Decimal("61.70")})
 
-    assert unprotected([held], live, "NYSE") == (), (
+    assert unprotected([held], live, "NYSE", tick_for=lambda _: None) == (), (
         "the venue is holding a stop at exactly the book's price and the position still read as "
         "naked - which is the 2026-09-04 defect"
     )
-    assert unprotected([held], [o for o in live if o.order_type != "stop"], "NYSE"), (
+    assert unprotected([held], [o for o in live if o.order_type != "stop"], "NYSE",
+                       tick_for=lambda _: None), (
         "the positive control: drop the leg and it must go back to reading naked, or this test "
         "would pass for a reason that has nothing to do with the leg"
     )

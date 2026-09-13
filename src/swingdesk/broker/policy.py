@@ -118,6 +118,14 @@ class BrokerPolicy:
     activity_type: str
     write: WritePolicy | None
 
+    def tick_for(self, price: Decimal) -> Decimal | None:
+        """The venue's price increment at `price`, or None when this policy has no write block.
+
+        None is not a default tick. A comparison handed None compares EXACTLY, which reports more
+        disagreements and never fewer - the fail-closed side for a check whose job is to find them.
+        """
+        return self.write.tick_for(price) if self.write is not None else None
+
     def url(self, endpoint: str, **path: str) -> str:
         """An absolute URL for a named endpoint, and the only way to build one.
 

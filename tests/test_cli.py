@@ -812,6 +812,31 @@ def test_pending_still_lists_a_live_proposal(tmp_path, capsys) -> None:
     assert "EXPIRED" not in out
 
 
+def test_pending_lists_only_the_latest_stop_move_and_counts_the_ones_it_replaced(
+        tmp_path, capsys) -> None:
+    """The owner's review, 2026-09-12: BTSG carried 15 unanswered stop moves at once, each asking the
+    same question on staler data. Read-time, so nothing is written; SHOWN as a count, not hidden."""
+    from swingdesk.contracts.position import ManagementAction
+    from swingdesk.journal_evidence.positions import PositionStore
+
+    root = _seeded(tmp_path)
+    with PositionStore(root / "positions.duckdb") as store:
+        for day, stop in ((17, 299), (18, 300)):
+            store.propose(ManagementAction(
+                position_id="POS-1", proposed_at=datetime(2026, 8, day, 21, 0, tzinfo=UTC),
+                kind=_ActionKind.MOVE_STOP, reason="2xATR trail cleared the current stop",
+                old_stop=Decimal(290), new_stop=Decimal(stop)))
+    capsys.readouterr()
+
+    assert cli.main(["pending", "--data", str(root), "--as-of", "2026-08-18T22:00:00"]) == 0
+
+    out = capsys.readouterr().out
+    assert "1 proposal(s) awaiting your answer" in out
+    assert "POS-1  #3" in out and "-> 300" in out, "the latest is the one to answer"
+    assert "2 older stop move(s) SUPERSEDED" in out
+    assert "POS-1  #1, #2" in out
+
+
 # ------------------------------------------- the refusals `record-fill` can raise and nobody saw
 #
 # Measured 2026-08-25 by tracing `cli.py` while the suite ran: four of its five `Refusal`
@@ -2837,11 +2862,12 @@ def test_a_resting_target_is_not_mistaken_for_protection() -> None:
         order_type="limit", stop_price=None,
         observed_at=datetime(2026, 9, 1, 21, 0, tzinfo=UTC),
     )
-    findings = unprotected([position], [target], "NYSE")
+    findings = unprotected([position], [target], "NYSE", tick_for=lambda _: None)
     assert len(findings) == 1
     assert findings[0].venue_stop is None, "a target guards nothing"
 
-    guarded = unprotected([position], [target, _venue_stop("T", "45.00")], "NYSE")
+    guarded = unprotected([position], [target, _venue_stop("T", "45.00")], "NYSE",
+                          tick_for=lambda _: None)
     assert guarded == ()
 
 
@@ -2862,7 +2888,7 @@ def test_the_highest_resting_stop_is_the_one_in_force() -> None:
         knowledge_time=datetime(2026, 9, 1, 20, 0, tzinfo=UTC),
     )
     stops = [_venue_stop("T", "40.00"), _venue_stop("T", "45.00")]
-    assert unprotected([position], stops, "NYSE") == ()
+    assert unprotected([position], stops, "NYSE", tick_for=lambda _: None) == ()
 
 
 def _protective_order_at_venue(symbol: str = "GUARDED"):

@@ -366,6 +366,13 @@ class PositionStore:
         "Unanswered" is the absence of a response row, NOT `status = 'proposed'`. The status column
         is what the run proposed and never changes (see the schema), so counting on it would have
         left every answered proposal pending forever the moment responses existed.
+
+        **And a CLOSED position has nothing pending.** Closing does not answer its proposals and
+        must not write rows pretending it did, so the filter is here, at read time. Measured
+        2026-09-12: AIS closed on 2026-09-04 and 13 stop moves proposed before the close were
+        still listed as awaiting an answer - about a position that no longer existed. It matters
+        most for the kinds that never expire (`EXIT_NOW`, `PAUSE`): on a closed position those
+        would have been pending for ever. Any version carrying `closed_on` closes the position.
         """
         rows = self._connection.execute(
             """
@@ -375,6 +382,8 @@ class PositionStore:
             LEFT JOIN management_responses r
                    ON r.position_id = m.position_id AND r.sequence = m.sequence
             WHERE r.sequence IS NULL AND m.kind <> 'hold'
+              AND m.position_id NOT IN (
+                  SELECT position_id FROM positions WHERE closed_on IS NOT NULL)
             ORDER BY m.proposed_at, m.position_id, m.sequence
             """
         ).fetchall()
@@ -591,6 +600,8 @@ class PositionStore:
             LEFT JOIN management_responses r
                    ON r.position_id = m.position_id AND r.sequence = m.sequence
             WHERE r.sequence IS NULL AND m.kind <> 'hold'
+              AND m.position_id NOT IN (
+                  SELECT position_id FROM positions WHERE closed_on IS NOT NULL)
             """
         ).fetchone()
         return int(row[0]) if row is not None else 0

@@ -2763,8 +2763,12 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       3. The venue still holds the OLD stop, and `unprotected` compares `highest != current_stop`
          **exactly** (`reconcile.py`, the `highest` comparison). A finding at the wrong price is
          the half `restorable` deliberately will not touch (`DR-037` §3), so `DR-036` pauses entries.
-      4. Aligning by hand cannot clear it: the venue accepts cents above a dollar (SEC Rule 612,
-         `submit.to_tick`), so 100.761817 can become 100.76 and never 100.761817.
+      4. Aligning by hand clears it only by rounding UP. The venue accepts cents above a dollar
+         (SEC Rule 612, `submit.to_tick`), so 100.761817 can rest as 100.76 or 100.77 and never
+         as itself — and `sync-fills` then applies `DR-041`: a venue stop TIGHTER than the book's
+         is adopted into the book (100.77 clears it), a LOOSER one is refused as an unapproved
+         widening (100.76 stays a finding every evening). *Corrected the same day: the first
+         draft of this line said it could not be cleared at all, and missed `DR-041`.*
       **So rounding alone does NOT end the pauses — the approved move itself creates the mismatch,
       at any precision.** Rounding is what makes it unfixable by hand; the missing venue update is
       what makes it happen.
@@ -2826,6 +2830,33 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **Order, if you agree:** the read-time supersede (#3) and the tick-precision comparison are
       safe and mine to build; the book rounding (#1) and `align-stops` next; #2 and #4 wait on your
       rulings. **Nothing here touches `scan --submit`, which I do not run.**
+      **BUILT 2026-09-12, owner go-ahead the same evening — the three read-time fixes:**
+      * `reconcile.same_trigger` — book and venue stops agree when strictly within one venue tick;
+        `unprotected` takes a required keyword `tick_for` so every caller states its precision, and
+        `BrokerPolicy.tick_for` answers None without a write block, which compares exactly. A move
+        approved in the book and never sent is a whole ATR away and is still reported.
+      * `manage.superseded` + `cli._pending` — only the latest unanswered `move_stop` per position
+        is listed; the rest are counted by number. `EXIT_NOW`, `PAUSE` and `PARTIAL_EXIT` are never
+        superseded.
+      * `PositionStore.pending()` / `pending_approvals()` — nothing is pending on a closed position.
+      `tests/test_operations_review.py` plus additions to `test_cli.py` and `test_positions.py`;
+      11 of 11 mutants die.
+      **Measured on the live paper account the same evening, A/B, read-only `swingdesk broker`:**
+      | | `master` (exact) | this fix (within a tick) |
+      |---|---|---|
+      | DINO — book 100.761817, venue 100.76 | **TECH, unprotected** | agreed |
+      | BTSG — book 55.760208, venue 57.61 | TECH | TECH |
+      | VGT — book 117.044982, venue 115.62 | TECH | TECH |
+      **DINO was the false one**, and it could never have cleared: 100.76 is BELOW the book, so
+      `DR-041` refuses to adopt it as an unapproved widening. **BTSG and VGT are real and stay.**
+      BTSG's venue stop is 1.85 TIGHTER than the book — raised at the venue, never approved in the
+      book — and `DR-041` adopts it at the next `sync-fills`. VGT's is 1.42 LOOSER: a move approved in
+      the book and never sent (#2), which clears only when the venue is raised to 117.05 — rounded
+      UP, and under this fix within a tick of 117.044982. Both are yours to act on; I do not write
+      to the book or the venue.
+      **Still open:** book rounding at write time (#1), `align-stops`, the
+      read-side decision view, `status`, and a `pending` flag that hides expired rows — and #2 and
+      #4, which are yours.
 
 - [ ] **`[v]` ALPACA PAPER TRADING — owner instruction 2026-08-31. Wire it as the broker so
       strategies, guesses and the whole chain can be tested against a real venue.**
