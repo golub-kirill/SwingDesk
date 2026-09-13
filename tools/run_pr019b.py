@@ -68,9 +68,10 @@ from run_pr016 import (
     window_sessions,
 )
 from run_pr019 import common_entries, mae_profile
+from stream_selection import score_instrument, select_streamed
 from swingdesk.contracts.market import BarSeries, Interval, Series
 from swingdesk.contracts.trade import Trade
-from swingdesk.decision_logic.ranking import ByMarketPathStrength
+from swingdesk.decision_logic.ranking import ByMarketPathStrength, daily_returns
 from swingdesk.derived_observations import atr as atr_component
 from swingdesk.market_data import BarStore
 from swingdesk.trade_management.exits import ExitPolicy
@@ -265,13 +266,27 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
     if as_of is None:
         raise SystemExit("the bar store is empty")
 
+    # `--streamed` - loader phase A. One series in memory at a time: selection is scored name by name
+    # and ranked from scores alone (`stream_selection`), and each name is read again to simulate and
+    # then dropped. Added after this study reported, because it peaked at 22.4 GB with 0.9 GB to
+    # spare. The in-memory path is unchanged and stays the reference the test holds it to.
+    streamed = bool(getattr(args, "streamed", False))
+    min_bars = 252 + HOLD + 1
+    names = sorted(store.instrument_ids(as_of))
     series_by_name: dict[str, BarSeries] = {}
-    for name in sorted(store.instrument_ids(as_of)):
-        series = store.as_of(name, Interval.DAY, Series.RAW, as_of)
-        if series and len(series.bars) >= 252 + HOLD + 1:
-            series_by_name[name] = series
-    store.close()
+    if streamed:
+        head = store.as_of(BENCHMARK, Interval.DAY, Series.RAW, as_of)
+        if head and len(head.bars) >= min_bars:
+            series_by_name[BENCHMARK] = head
+    else:
+        for name in names:
+            series = store.as_of(name, Interval.DAY, Series.RAW, as_of)
+            if series and len(series.bars) >= min_bars:
+                series_by_name[name] = series
+        store.close()
     if BENCHMARK not in series_by_name:
+        if streamed:
+            store.close()
         raise SystemExit(f"{BENCHMARK} has too little history to fix the calendar")
 
     benchmark = series_by_name[BENCHMARK]
@@ -285,27 +300,45 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
     # PR-019's formation dates exactly, so §9's reproduction sees PR-019's entries.
     formations = ([d for d in sessions[::STEP] if earliest <= d <= sessions[-HOLD - 1]]
                   if len(sessions) > HOLD else [])
-    index_of = {n: {b.session_date: i for i, b in enumerate(s.bars)}
-                for n, s in series_by_name.items()}
-    print(f"as_of {as_of.isoformat()}   instruments {len(series_by_name)}   "
-          f"formation dates {len(formations)}", flush=True)
-
-    admitted = {n: _admitted_dates(s, RULE, formations) for n, s in series_by_name.items()}
     selected: dict[str, list[date]] = {}
     everything: dict[str, list[date]] = {}
     thin = 0
-    for session in formations:
-        pool = [Candidate(n, index_of[n][session]) for n in sorted(admitted)
-                if session in admitted[n]]
-        if len(pool) < MIN_NAMES_PER_DATE:
-            thin += 1
-            continue
-        for candidate in pool:
-            everything.setdefault(candidate.instrument_id, []).append(session)
-        ranker = ByMarketPathStrength(series=series_by_name, benchmark=benchmark, lookback=LOOKBACK)
-        top, _ = select(ranker, pool, DECILE)
-        for name in top:
-            selected.setdefault(name, []).append(session)
+    if streamed:
+        benchmark_daily = daily_returns(benchmark)
+        scores: dict[str, dict[date, Decimal]] = {}
+        instruments = 0
+        for name in names:
+            series = (benchmark if name == BENCHMARK
+                      else store.as_of(name, Interval.DAY, Series.RAW, as_of))
+            if not series or len(series.bars) < min_bars:
+                continue
+            instruments += 1
+            got = score_instrument(series, formations, benchmark_daily, LOOKBACK)
+            if got:
+                scores[name] = got
+        chosen = select_streamed(scores, formations, DECILE)
+        selected, everything, thin = chosen.selected, chosen.everything, chosen.thin
+    else:
+        instruments = len(series_by_name)
+        index_of = {n: {b.session_date: i for i, b in enumerate(s.bars)}
+                    for n, s in series_by_name.items()}
+        admitted = {n: _admitted_dates(s, RULE, formations) for n, s in series_by_name.items()}
+        for session in formations:
+            pool = [Candidate(n, index_of[n][session]) for n in sorted(admitted)
+                    if session in admitted[n]]
+            if len(pool) < MIN_NAMES_PER_DATE:
+                thin += 1
+                continue
+            for candidate in pool:
+                everything.setdefault(candidate.instrument_id, []).append(session)
+            ranker = ByMarketPathStrength(series=series_by_name, benchmark=benchmark,
+                                          lookback=LOOKBACK)
+            top, _ = select(ranker, pool, DECILE)
+            for name in top:
+                selected.setdefault(name, []).append(session)
+    print(f"as_of {as_of.isoformat()}   instruments {instruments}   "
+          f"formation dates {len(formations)}   loader {'streamed' if streamed else 'in memory'}",
+          flush=True)
 
     spaced_selected = {n: spaced(d, calendar_index, MAX_HOLD) for n, d in selected.items()}
     base_costs = CostModel(COMMISSION_PER_SHARE, SLIPPAGE_BPS)
@@ -313,9 +346,15 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
     registry = atr_registry()
     atr_cache: dict[str, Any] = {}
 
-    def simulate(name: str, policy: ExitPolicy, dates: list[date], costs: CostModel,
+    def load(name: str) -> BarSeries:
+        """The series to simulate: already held in memory, or read now and dropped after."""
+        if name in series_by_name:
+            return series_by_name[name]
+        return store.as_of(name, Interval.DAY, Series.RAW, as_of)
+
+    def simulate(series: BarSeries, policy: ExitPolicy, dates: list[date], costs: CostModel,
                  label: str) -> list[Trade]:
-        series = series_by_name[name]
+        name = series.instrument_id
         if name not in atr_cache:
             atr_cache[name] = atr_component.compute(series, registry)
         config = BacktestConfig(arm=label, exits=policy, costs=costs,
@@ -323,10 +362,13 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         return run_arm(series, [True] * len(series.bars), atr_cache[name], config).trades
 
     # --- phase 1: the candidate at 1x and 3x costs, on the selected decile ----------------------
+    # Names in the in-memory run's ORDER in both loaders, so the trade lists - and every float sum
+    # and month grouping downstream - come out identical rather than merely equal in total.
     books: dict[str, list[Trade]] = {CELL: [], f"{CELL}_3x": []}
     for count, name in enumerate(sorted(selected), start=1):
-        books[CELL].extend(simulate(name, CANDIDATE, spaced_selected[name], base_costs, CELL))
-        books[f"{CELL}_3x"].extend(simulate(name, CANDIDATE, spaced_selected[name], stress_costs,
+        series = load(name)
+        books[CELL].extend(simulate(series, CANDIDATE, spaced_selected[name], base_costs, CELL))
+        books[f"{CELL}_3x"].extend(simulate(series, CANDIDATE, spaced_selected[name], stress_costs,
                                             f"{CELL}_3x"))
         atr_cache.pop(name, None)
         if count % 250 == 0:
@@ -338,10 +380,13 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
     unselected: list[Trade] = []
     for count, name in enumerate(sorted(everything), start=1):
         dates = spaced(everything[name], calendar_index, MAX_HOLD)
-        unselected.extend(simulate(name, CANDIDATE, dates, base_costs, f"unselected_{CELL}"))
+        unselected.extend(simulate(load(name), CANDIDATE, dates, base_costs,
+                                   f"unselected_{CELL}"))
         atr_cache.pop(name, None)
         if count % 1000 == 0:
             print(f"  phase 2: {count}/{len(everything)} admitted instruments", flush=True)
+    if streamed:
+        store.close()
 
     paired, unpriced = pair(books[CELL], opens, closes)
     paired_stressed, unpriced_stressed = pair(books[f"{CELL}_3x"], opens, closes)
@@ -371,7 +416,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         "minimum_detectable_effect": str(MINIMUM_DETECTABLE_EFFECT),
         "bootstrap": {"unit": "entry month", "block": BLOCK, "seed": BOOTSTRAP_SEED,
                       "resamples": BOOTSTRAP_RESAMPLES},
-        "instruments": len(series_by_name), "formation_dates": len(formations),
+        "instruments": instruments, "formation_dates": len(formations),
         "formations_skipped_for_a_thin_cross_section": thin,
         "entries": {"selected_signals": sum(len(v) for v in selected.values()),
                     "after_spacing": sum(len(v) for v in spaced_selected.values()),
@@ -394,6 +439,9 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             "the book: one trade at a time, no cap and no capacity",
         ],
     }
+    if streamed:
+        # Only when streamed, so a default run's result stays field for field what it was.
+        result["loader"] = "streamed - one series in memory at a time (loader phase A)"
     entered = sorted(t.entry_date for t in books[CELL])
     if entered:
         span = (entered[-1] - entered[0]).days
@@ -454,6 +502,9 @@ def main() -> int:
     parser.add_argument("--as-of", help="knowledge instant, ISO-8601; defaults to the latest")
     parser.add_argument("--reference", type=Path, default=REFERENCE,
                         help="PR-019's committed result, which §9 reproduces")
+    parser.add_argument("--streamed", action="store_true",
+                        help="hold one series in memory at a time (loader phase A); the same "
+                             "study, a fraction of the memory")
     parser.add_argument("--out", type=Path, default=RESULT)
     parser.add_argument("--report", action="store_true", help="print an existing result and exit")
     args = parser.parse_args()
