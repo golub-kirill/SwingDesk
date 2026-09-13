@@ -837,6 +837,24 @@ def test_pending_lists_only_the_latest_stop_move_and_counts_the_ones_it_replaced
     assert "POS-1  #1, #2" in out
 
 
+def test_data_is_found_from_any_folder_when_not_given(tmp_path, monkeypatch, capsys) -> None:
+    """The review's medium #5, measured: `pending` typed outside the checkout read an empty `data`."""
+    from swingdesk.presentation import paths
+
+    repo = tmp_path / "repo"
+    (repo / "data").mkdir(parents=True)
+    _seeded(repo / "data")
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    monkeypatch.chdir(elsewhere)
+    monkeypatch.delenv(paths.ENV, raising=False)
+    monkeypatch.setattr(paths, "REPO_ROOT", repo)
+    capsys.readouterr()
+
+    assert cli.main(["pending", "--as-of", "2026-08-18T22:00:00"]) == 0
+    assert "1 proposal(s) awaiting your answer" in capsys.readouterr().out
+
+
 # ------------------------------------------- the refusals `record-fill` can raise and nobody saw
 #
 # Measured 2026-08-25 by tracing `cli.py` while the suite ran: four of its five `Refusal`

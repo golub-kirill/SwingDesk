@@ -32,6 +32,7 @@ from swingdesk.market_data.retry import RetryingFetcher
 from swingdesk.platform.clock import FixedClock, SystemClock
 from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
 from swingdesk.presentation import notify, report
+from swingdesk.presentation.paths import default_data
 from swingdesk.reference_data import calendar as cal
 from swingdesk.reference_data import classification
 from swingdesk.reference_data import universe as reference_universe
@@ -52,8 +53,6 @@ from swingdesk.trade_management.sizing import (
     costs_per_share,
     to_base_currency,
 )
-
-DEFAULT_DATA = Path("data")
 
 #: What `sync-fills` writes into `Position.strategy`. The card that decided the entry
 #: (`DR-030`), not a literal typed twice - a position whose strategy tag says `unspecified`
@@ -167,7 +166,7 @@ def main(argv: list[str] | None = None) -> int:
     scan.add_argument("--limit", type=int, default=None,
                       help="cap the universe by dollar volume. A cap is a RANKING, not the rule, "
                            "and the report says so")
-    scan.add_argument("--data", type=Path, default=DEFAULT_DATA,
+    scan.add_argument("--data", type=Path, default=None,
                         help="the store directory: bars, positions, journal and the "
                              "arming switch all live here")
     scan.add_argument("--lookback", default="1y",
@@ -189,7 +188,7 @@ def main(argv: list[str] | None = None) -> int:
 
     pending = sub.add_parser(
         "pending", help="proposals on open positions awaiting your answer (US-010)")
-    pending.add_argument("--data", type=Path, default=DEFAULT_DATA,
+    pending.add_argument("--data", type=Path, default=None,
                         help="the store directory: bars, positions, journal and the "
                              "arming switch all live here")
     pending.add_argument("--as-of", default=None,
@@ -207,7 +206,7 @@ def main(argv: list[str] | None = None) -> int:
     respond.add_argument("--reason", required=True,
                          help="why. Required - Production Rules 3.8: an approval with no stated "
                               "reason is an unlogged judgment")
-    respond.add_argument("--data", type=Path, default=DEFAULT_DATA,
+    respond.add_argument("--data", type=Path, default=None,
                         help="the store directory: bars, positions, journal and the "
                              "arming switch all live here")
     respond.add_argument("--as-of", default=None,
@@ -225,7 +224,7 @@ def main(argv: list[str] | None = None) -> int:
     fill.add_argument("--commission", type=Decimal, required=True,
                       help="as charged, not the modelled estimate")
     fill.add_argument("--filled-on", default=None, help="ISO date; defaults to today")
-    fill.add_argument("--data", type=Path, default=DEFAULT_DATA,
+    fill.add_argument("--data", type=Path, default=None,
                         help="the store directory: bars, positions, journal and the "
                              "arming switch all live here")
     fill.add_argument("--as-of", default=None,
@@ -252,7 +251,7 @@ def main(argv: list[str] | None = None) -> int:
                              "printed - an override nobody can audit is not an override")
     opened.add_argument("--position-id", default=None,
                         help="override the default POS-<instrument id>-<opened-on> identity")
-    opened.add_argument("--data", type=Path, default=DEFAULT_DATA,
+    opened.add_argument("--data", type=Path, default=None,
                         help="the store directory: bars, positions, journal and the "
                              "arming switch all live here")
     opened.add_argument("--as-of", default=None,
@@ -280,7 +279,7 @@ def main(argv: list[str] | None = None) -> int:
                              "--as-of on purpose: one is the event, the other is when we learned")
     closed.add_argument("--reason-code", default=None,
                         help="the course's code for why, when one applies")
-    closed.add_argument("--data", type=Path, default=DEFAULT_DATA,
+    closed.add_argument("--data", type=Path, default=None,
                         help="the store directory: bars, positions, journal and the "
                              "arming switch all live here")
     closed.add_argument("--as-of", default=None,
@@ -291,7 +290,7 @@ def main(argv: list[str] | None = None) -> int:
         help="record positions for entries THIS system placed that have since filled (DR-031). "
              "Reads the venue, writes the book, places no order",
     )
-    sync.add_argument("--data", type=Path, default=DEFAULT_DATA,
+    sync.add_argument("--data", type=Path, default=None,
                         help="the store directory: bars, positions, journal and the "
                              "arming switch all live here")
     sync.add_argument("--as-of", default=None,
@@ -304,7 +303,7 @@ def main(argv: list[str] | None = None) -> int:
         help="read the paper account and reconcile it against the book. Reads only - it has no "
              "way to place, amend or cancel anything (D1/BR-1, DR-026)",
     )
-    broker_cmd.add_argument("--data", type=Path, default=DEFAULT_DATA,
+    broker_cmd.add_argument("--data", type=Path, default=None,
                         help="the store directory: bars, positions, journal and the "
                              "arming switch all live here")
     broker_cmd.add_argument("--as-of", default=None,
@@ -315,6 +314,11 @@ def main(argv: list[str] | None = None) -> int:
                             help="ISO instant; with --fills, the earliest execution to ask for")
 
     args = parser.parse_args(argv)
+    # Resolved HERE rather than in `default=`: a computed default would be evaluated at import time,
+    # and `tools/build_commands.py`, which reads the tree, would render a machine-specific absolute
+    # path into README.md. `paths.default_data` says where it looks and in what order.
+    if getattr(args, "data", "") is None:
+        args.data = default_data()
 
     if args.command == "record-fill":
         return _record_fill(args)

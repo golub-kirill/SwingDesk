@@ -946,3 +946,13 @@ documents:
   readme_status_text: drafting
   generated: false
   file_expected: true
+- id: DOC-71
+  display_number: '71'
+  tier_ref: TIER-8
+  artifact_class: PRIMARY_DELIVERABLE
+  path: docs/08-pm/plans/2026-09-12-operator-console.md
+  document_status: drafting
+  status_source: document
+  readme_status_text: drafting
+  generated: false
+  file_expected: true
