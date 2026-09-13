@@ -405,9 +405,9 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 76 script(s), of which 17 are things you type
+### The tools — 77 script(s), of which 18 are things you type
 
-#### Operator tools — 17
+#### Operator tools — 18
 
 Run these. Everything else below either runs itself or ran once.
 
@@ -419,6 +419,7 @@ Run these. Everything else below either runs itself or ran once.
 | `python tools/forward_record.py` | What the live paper record actually contains, so watching it costs nobody an afternoon. | `--data` |
 | `python tools/power_pr019.py` | The power estimate `PR-019` needs BEFORE it registers a minimum detectable effect. | `--data` · `--as-of` · `--fraction` · `--seed` · `--report` |
 | `python tools/power_pr019b.py` | The power estimate `PR-019b` needs BEFORE it registers: is PR-019's candidate the market? | `--data` · `--as-of` · `--fraction` · `--seed` · `--out` · `--report` |
+| `python tools/power_pr020.py` | The power estimate `PR-020` needs BEFORE it registers: which hold can see the screen's skill at all? | `--data` · `--as-of` · `--fraction` · `--seed` · `--out` · `--report` |
 | `python tools/refresh_classifications.py` | Fetch sector classifications for instruments the store already holds bars for. | `--data` · `--budget` · `--symbols` · `--universe` |
 | `python tools/refresh_universe.py` | Fetch bars for eligible symbols, oldest-first, up to a budget. | `--data` · `--budget` · `--period` · `--pause` · `--symbols-from` |
 | `python tools/remeasure.py` | Is the answer still true? A scheduled re-observation of a registered question, on a rolling window. | `study` · `--data` · `--as-of` · `--report` |

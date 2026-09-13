@@ -1,0 +1,209 @@
+{
+  "approximation": "the _overlap half-widths carry the measured autocorrelation of overlapping holds; the others assume independent months and are a LOWER bound - PR-019b's was 1.7x too low",
+  "as_of": "2026-09-06T22:36:49.635786-05:00",
+  "cells": {
+    "h10_stopnone": {
+      "dispersion": {
+        "pool_alone": {
+          "half_width_corrected": 0.18130382665784492,
+          "half_width_overlap": 0.18130382665784492,
+          "half_width_predicted_oos": 0.17445968854336003,
+          "half_width_predicted_oos_overlap": 0.17445968854336003,
+          "half_width_uncorrected": 0.18229433091893418,
+          "months": 50.0,
+          "overlap_factor": 1.0,
+          "overlap_lags": 0.0,
+          "var_between": 0.427830559672765,
+          "var_observed": 0.432518001421047,
+          "var_subsample_noise": 0.0046874417482819794
+        },
+        "trade_alone": {
+          "half_width_corrected": 0.1906674061077039,
+          "half_width_overlap": 0.1906674061077039,
+          "half_width_predicted_oos": 0.18346979706995092,
+          "half_width_predicted_oos_overlap": 0.18346979706995092,
+          "half_width_uncorrected": 0.2003103515743847,
+          "months": 50.0,
+          "overlap_factor": 1.0,
+          "overlap_lags": 0.0,
+          "var_between": 0.4731630017680144,
+          "var_observed": 0.52223340467323,
+          "var_subsample_noise": 0.04907040290521558
+        },
+        "trade_minus_pool": {
+          "half_width_corrected": 0.0812115467739047,
+          "half_width_overlap": 0.0812115467739047,
+          "half_width_predicted_oos": 0.0781458473186996,
+          "half_width_predicted_oos_overlap": 0.0781458473186996,
+          "half_width_uncorrected": 0.10173739358771879,
+          "months": 50.0,
+          "overlap_factor": 1.0,
+          "overlap_lags": 0.0,
+          "var_between": 0.08584073471223073,
+          "var_observed": 0.1347159680084132,
+          "var_subsample_noise": 0.04887523329618247
+        }
+      },
+      "max_holding_period": 10,
+      "protective_stop": false,
+      "trades": 1222,
+      "trades_without_a_pool_price": 0
+    },
+    "h20_stopnone": {
+      "dispersion": {
+        "pool_alone": {
+          "half_width_corrected": 0.26589514498326905,
+          "half_width_overlap": 0.26589514498326905,
+          "half_width_predicted_oos": 0.2558577225538416,
+          "half_width_predicted_oos_overlap": 0.2558577225538416,
+          "half_width_uncorrected": 0.2673928532711016,
+          "months": 50.0,
+          "overlap_factor": 1.0,
+          "overlap_lags": 0.0,
+          "var_between": 0.9201924735224081,
+          "var_observed": 0.9305880099497723,
+          "var_subsample_noise": 0.010395536427364198
+        },
+        "trade_alone": {
+          "half_width_corrected": 0.2775024331646059,
+          "half_width_overlap": 0.2775024331646059,
+          "half_width_predicted_oos": 0.2670268408139356,
+          "half_width_predicted_oos_overlap": 0.2670268408139356,
+          "half_width_uncorrected": 0.29053588433177946,
+          "months": 50.0,
+          "overlap_factor": 1.0,
+          "overlap_lags": 0.0,
+          "var_between": 1.0022855114050986,
+          "var_observed": 1.0986450968925596,
+          "var_subsample_noise": 0.09635958548746106
+        },
+        "trade_minus_pool": {
+          "half_width_corrected": 0.10447502459252421,
+          "half_width_overlap": 0.10447502459252421,
+          "half_width_predicted_oos": 0.10053113928681104,
+          "half_width_predicted_oos_overlap": 0.10053113928681104,
+          "half_width_uncorrected": 0.13520709220717578,
+          "months": 50.0,
+          "overlap_factor": 1.0,
+          "overlap_lags": 0.0,
+          "var_between": 0.14206360323313905,
+          "var_observed": 0.23793416523219144,
+          "var_subsample_noise": 0.09587056199905239
+        }
+      },
+      "max_holding_period": 20,
+      "protective_stop": false,
+      "trades": 1222,
+      "trades_without_a_pool_price": 0
+    },
+    "h40_stopnone": {
+      "dispersion": {
+        "pool_alone": {
+          "half_width_corrected": 0.5176600224271509,
+          "half_width_overlap": 0.729710160067136,
+          "half_width_predicted_oos": 0.4981185888283722,
+          "half_width_predicted_oos_overlap": 0.7021639289086098,
+          "half_width_uncorrected": 0.5198491507516898,
+          "months": 50.0,
+          "overlap_factor": 1.9870625242847213,
+          "overlap_lags": 1.0,
+          "var_between": 3.4877641974604128,
+          "var_observed": 3.5173253271716614,
+          "var_subsample_noise": 0.02956112971124857
+        },
+        "trade_alone": {
+          "half_width_corrected": 0.5112619608374285,
+          "half_width_overlap": 0.7073817006775183,
+          "half_width_predicted_oos": 0.4919620511931754,
+          "half_width_predicted_oos_overlap": 0.6806783588433007,
+          "half_width_uncorrected": 0.5278613431779422,
+          "months": 50.0,
+          "overlap_factor": 1.914347074629306,
+          "overlap_lags": 1.0,
+          "var_between": 3.4020823693165902,
+          "var_observed": 3.6265826429303063,
+          "var_subsample_noise": 0.22450027361371586
+        },
+        "trade_minus_pool": {
+          "half_width_corrected": 0.10526890436242163,
+          "half_width_overlap": 0.11350151634267044,
+          "half_width_predicted_oos": 0.1012950504515685,
+          "half_width_predicted_oos_overlap": 0.10921688502311915,
+          "half_width_uncorrected": 0.16722788849686487,
+          "months": 50.0,
+          "overlap_factor": 1.162527196101785,
+          "overlap_lags": 1.0,
+          "var_between": 0.1442308182224161,
+          "var_observed": 0.3639781170751753,
+          "var_subsample_noise": 0.2197472988527592
+        }
+      },
+      "max_holding_period": 40,
+      "protective_stop": false,
+      "trades": 1222,
+      "trades_without_a_pool_price": 0
+    },
+    "h60_stopnone": {
+      "dispersion": {
+        "pool_alone": {
+          "half_width_corrected": 0.6312431126202206,
+          "half_width_overlap": 1.0199981504225282,
+          "half_width_predicted_oos": 0.607413968325636,
+          "half_width_predicted_oos_overlap": 0.9814936778656117,
+          "half_width_uncorrected": 0.6347699800775782,
+          "months": 50.0,
+          "overlap_factor": 2.610991531378958,
+          "overlap_lags": 2.0,
+          "var_between": 5.186222761745947,
+          "var_observed": 5.24433735432748,
+          "var_subsample_noise": 0.058114592581533245
+        },
+        "trade_alone": {
+          "half_width_corrected": 0.6013483388307553,
+          "half_width_overlap": 0.9427857150821634,
+          "half_width_predicted_oos": 0.5786477088344515,
+          "half_width_predicted_oos_overlap": 0.9071959773180347,
+          "half_width_uncorrected": 0.6234826792925823,
+          "months": 50.0,
+          "overlap_factor": 2.4579540281302483,
+          "overlap_lags": 2.0,
+          "var_between": 4.706630370347107,
+          "var_observed": 5.059488902773026,
+          "var_subsample_noise": 0.35285853242591847
+        },
+        "trade_minus_pool": {
+          "half_width_corrected": 0.096037998011172,
+          "half_width_overlap": 0.18993748053041173,
+          "half_width_predicted_oos": 0.09241260667363815,
+          "half_width_predicted_oos_overlap": 0.18276742585572087,
+          "half_width_uncorrected": 0.18867012692361734,
+          "months": 50.0,
+          "overlap_factor": 3.91142627931813,
+          "overlap_lags": 2.0,
+          "var_between": 0.1200449950800952,
+          "var_observed": 0.4633019678437875,
+          "var_subsample_noise": 0.3432569727636923
+        }
+      },
+      "max_holding_period": 60,
+      "protective_stop": false,
+      "trades": 1222,
+      "trades_without_a_pool_price": 0
+    }
+  },
+  "entry_spacing_sessions": 60,
+  "for": "PR-020",
+  "formation_dates": 60,
+  "fraction": 0.25,
+  "oos_months": 54,
+  "purpose": "a variance estimate for PREREG_TEMPLATE rule 9, overlap-aware, across the no-stop holds; the registration takes the hold the floor can read. No level.",
+  "readable_half_width": 0.075,
+  "seed": 20260908,
+  "subsample": 2660,
+  "universe": 13010,
+  "window": {
+    "end": "2021-12-31",
+    "note": "IN SAMPLE ONLY - the holdout is not touched by a power estimate",
+    "start": "2016-01-04"
+  }
+}

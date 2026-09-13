@@ -1712,6 +1712,13 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       days**, with the tail read beside it (`PR-018`: 21.7% below −2R). Does the screen have skill
       once the exit's cost is out of the way? Size it with the overlap-aware power estimate
       (`power_pr019b.py`'s `_overlap` fields) before registering.
+      **SIZED 2026-09-13, and NOT registered — `PR-020` is the owner's call.**
+      `tools/power_pr020.py` (`docs/prereg/results/PR-020-power.json`) sized every no-stop hold of
+      `PR-019`'s grid on the same entries: predicted out-of-sample half-widths of trade − pool
+      **0.0781 at 10 sessions**, 0.1005 at 20, 0.1092 at 40, 0.1828 at 60 — against the 0.075 the
+      0.15R floor needs. None readable; the nearest misses by 4%, and the corrected estimator ran 7%
+      wide at its one calibration point, so 10 sessions is a coin flip on readability. The trial was
+      not spent. **Yours:** register at 10 sessions knowing it may miss, move the floor, or leave it.
 
 - [ ] **`[v]` A POWER ESTIMATE FOR A MARKET-PAIRED CONTRAST MUST MODEL OVERLAPPING HOLDS — owed
       before the next one registers.** `PR-019b`'s estimate predicted a half-width of 0.0743 and the
