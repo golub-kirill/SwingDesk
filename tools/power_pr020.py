@@ -46,6 +46,7 @@ from power_pr019 import (
     DEFAULT_SEED,
     MAX_HOLD,
     OOS_MONTHS,
+    R_DENOMINATOR_MULTIPLE,
     READABLE_HALF_WIDTH,
     assert_no_effect_leaked,
     cells,
@@ -76,12 +77,25 @@ from swingdesk.contracts.market import BarSeries, Interval, Series
 from swingdesk.decision_logic.ranking import ByMarketPathStrength
 from swingdesk.derived_observations import atr as atr_component
 from swingdesk.market_data import BarStore
+from swingdesk.trade_management.exits import ExitPolicy
 from swingdesk.validation.backtest import BacktestConfig, CostModel
 from swingdesk.validation.backtest.engine import run_arm
 
-#: Every no-stop cell `PR-019`'s grid holds: no protective stop, R denominator 2 ATR, the same
-#: entries spaced at 60 sessions. The registration takes the one the floor can read.
-CELLS = ("h10_stopnone", "h20_stopnone", "h40_stopnone", "h60_stopnone")
+#: Every no-stop cell `PR-019`'s grid holds - no protective stop, R denominator 2 ATR, the same
+#: entries spaced at 60 sessions - and FIVE sessions, which the grid does not. Added 2026-09-13
+#: after the first estimate: none of the four is readable, the nearest (10) by 4%, and the
+#: half-width falls with the hold, so the one direction that can reach the floor is shorter. The
+#: owner asked for a result rather than a shelved question. Precision still chooses; no level.
+CELLS = ("h5_stopnone", "h10_stopnone", "h20_stopnone", "h40_stopnone", "h60_stopnone")
+
+
+def policy_for(label: str) -> ExitPolicy:
+    """`PR-019`'s own policy where its grid has the cell; the same construction where it does not."""
+    grid = cells()
+    if label in grid:
+        return grid[label]
+    hold = int(label.removeprefix("h").split("_")[0])
+    return ExitPolicy(R_DENOMINATOR_MULTIPLE, hold, protective=False)
 
 RESULT = REPO / "docs" / "prereg" / "results" / "PR-020-power.json"
 
@@ -164,7 +178,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
 
     costs = CostModel(COMMISSION_PER_SHARE, SLIPPAGE_BPS)
     registry = atr_registry()
-    policies = {label: cells()[label] for label in CELLS}
+    policies = {label: policy_for(label) for label in CELLS}
     per_cell: dict[str, dict[str, Any]] = {}
     buckets = {label: (defaultdict(list), defaultdict(list), defaultdict(list)) for label in CELLS}
     counts = {label: [0, 0] for label in CELLS}  # trades, unpriced

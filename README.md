@@ -405,7 +405,7 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 77 script(s), of which 18 are things you type
+### The tools — 78 script(s), of which 18 are things you type
 
 #### Operator tools — 18
 
@@ -459,7 +459,7 @@ Invoked by `python tools/check_gates.py`, not singly. Listed so a failing gate c
 | `python tools/verify_parameters.py` | Enforce the parameter-registry contract. | `--registry` |
 | `python tools/verify_transcription.py` | Verify that every `verbatim` claim in the documents still matches the course. | `--course-root` · `--docs` |
 
-#### Evidence-bound research runners — 46
+#### Evidence-bound research runners — 47
 
 Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions/measurements/` and reproduces it. They ran once, on a date. Nobody types these; they exist so a number can be re-derived.
 
@@ -511,5 +511,6 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/run_pr018.py` | `PR-018` — on the entries the screen actually selects, does the exit policy beat doing nothing? | `--data` · `--as-of` · `--from` · `--to` · `--out` · `--report` |
 | `python tools/run_pr019.py` | `PR-019` - what holding period and stop width does THIS combination want, on selected entries? | `--data` · `--as-of` · `--from` · `--to` · `--out` · `--report` |
 | `python tools/run_pr019b.py` | `PR-019b` - is `PR-019`'s candidate exit the MARKET, or does it out-earn the index over the same days? | `--data` · `--as-of` · `--reference` · `--streamed` · `--rolling-months` · `--out` · `--report` |
+| `python tools/run_pr020.py` | `PR-020` - does the ratified screen know anything once the exit's cost is out of the way? | `--data` · `--as-of` · `--reference` · `--out` · `--report` |
 
 <!-- END GENERATED COMMANDS -->

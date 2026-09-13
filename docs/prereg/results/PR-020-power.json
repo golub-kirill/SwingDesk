@@ -143,6 +143,53 @@
       "trades": 1222,
       "trades_without_a_pool_price": 0
     },
+    "h5_stopnone": {
+      "dispersion": {
+        "pool_alone": {
+          "half_width_corrected": 0.12728968704301802,
+          "half_width_overlap": 0.12728968704301802,
+          "half_width_predicted_oos": 0.12248455846558279,
+          "half_width_predicted_oos_overlap": 0.12248455846558279,
+          "half_width_uncorrected": 0.127911624696815,
+          "months": 50.0,
+          "overlap_factor": 1.0,
+          "overlap_lags": 0.0,
+          "var_between": 0.2108843245979471,
+          "var_observed": 0.21295012146734243,
+          "var_subsample_noise": 0.0020657968693953434
+        },
+        "trade_alone": {
+          "half_width_corrected": 0.12691206881745395,
+          "half_width_overlap": 0.12691206881745395,
+          "half_width_predicted_oos": 0.12212119515861558,
+          "half_width_predicted_oos_overlap": 0.12212119515861558,
+          "half_width_uncorrected": 0.1352803990666286,
+          "months": 50.0,
+          "overlap_factor": 1.0,
+          "overlap_lags": 0.0,
+          "var_between": 0.20963495954193784,
+          "var_observed": 0.23819224244619797,
+          "var_subsample_noise": 0.028557282904260118
+        },
+        "trade_minus_pool": {
+          "half_width_corrected": 0.07318651874765399,
+          "half_width_overlap": 0.07318651874765399,
+          "half_width_predicted_oos": 0.07042376050001603,
+          "half_width_predicted_oos_overlap": 0.07042376050001603,
+          "half_width_uncorrected": 0.08664152477359734,
+          "months": 50.0,
+          "overlap_factor": 1.0,
+          "overlap_lags": 0.0,
+          "var_between": 0.06971400622658148,
+          "var_observed": 0.09770348051715275,
+          "var_subsample_noise": 0.027989474290571262
+        }
+      },
+      "max_holding_period": 5,
+      "protective_stop": false,
+      "trades": 1222,
+      "trades_without_a_pool_price": 0
+    },
     "h60_stopnone": {
       "dispersion": {
         "pool_alone": {

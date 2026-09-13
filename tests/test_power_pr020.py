@@ -1,7 +1,7 @@
-"""The power estimate that decided `PR-020` should not register at the 0.15R floor.
+"""The power estimate that chose `PR-020`'s hold: the one no-stop hold the 0.15R floor can read.
 
-* **it sizes `PR-019`'s own no-stop cells**, not reinventions of them - the same holds, no
-  protective stop, the same R denominator - or it sizes studies nobody would run.
+* **it sizes `PR-019`'s own no-stop cells, and five sessions built the same way** - no protective
+  stop, the same R denominator - or it sizes studies nobody would run.
 * **each hold is overlap-aware at ITS OWN lags**: a 60-session hold spans three entry months, a
   10-session hold one. `PR-019b` paid 1.7x for assuming independent months.
 * **no level leaks**: the hold is chosen by precision alone, and that is only safe while nothing
@@ -32,14 +32,21 @@ def power():
     return module
 
 
-def test_the_cells_are_pr019s_own_no_stop_cells_at_every_hold(power):
-    from power_pr019 import GRID, cells
+def test_the_cells_are_pr019s_own_no_stop_cells_and_five_sessions_built_the_same_way(power):
+    from power_pr019 import GRID, R_DENOMINATOR_MULTIPLE, cells
 
-    assert power.CELLS == tuple(name for name in GRID if name.endswith("stopnone"))
+    grid = tuple(name for name in GRID if name.endswith("stopnone"))
+    assert power.CELLS == ("h5_stopnone", *grid)
+    for name in grid:
+        assert power.policy_for(name) is cells()[name] or power.policy_for(name) == cells()[name]
     for name in power.CELLS:
-        policy = cells()[name]
+        policy = power.policy_for(name)
         assert policy.target_r_multiple is None
         assert name == f"h{policy.max_holding_bars}_stopnone"
+    five = power.policy_for("h5_stopnone")
+    assert five.max_holding_bars == 5
+    assert (five.atr_stop_multiple, five.protective) == (R_DENOMINATOR_MULTIPLE, False), (
+        "the same R denominator and no protective stop, or it is priced in different units")
 
 
 def _months(n: int = 60, per: int = 6, width: int = 3, seed: int = 3) -> dict[str, list[float]]:
