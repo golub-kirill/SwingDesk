@@ -2711,3 +2711,20 @@ holdouts.
 book size, gross, before any cost, no positive arm separates from zero — so the four-position cap
 is a real constraint on measurement and **not** what stands between this project and a working
 strategy. The report's original framing invited the opposite reading and was corrected.
+
+## The evening run dirtied a tracked file, so the owner's `git pull` failed — closed 2026-09-13
+
+**Opened and closed the same day.** `daily_run.cmd` ends with `tools/build_state.py`, which rewrites
+`HANDOFF.md` §2's generated blocks in the main checkout, and every merged change rewrites the same
+blocks — so the owner's morning `git pull --ff-only` aborted on *"local changes would be
+overwritten"* over a file holding nothing but derived paperwork.
+
+**Fixed as a pull that knows which changes are derived.** `tools/update_checkout.py` discards
+`HANDOFF.md` only when every difference lies between generated markers, pulls `--ff-only`, and runs
+`build_state.py` again. Any other local change — prose, a removed marker, another tracked file,
+something staged — and it refuses and changes nothing. Moving the runtime block to an untracked
+file was the other option and was not taken: gate 24 and every reader expect §2 in `HANDOFF.md`.
+
+**The lesson is promoted, which is why this entry may move.** It is `docs/runbooks/README.md` §10
+and the wrapper's own comment: a scheduled step that writes a tracked file owes its operator the
+command that undoes it safely.

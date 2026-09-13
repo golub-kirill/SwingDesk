@@ -865,3 +865,22 @@ There is no `setup.cmd` and no `bootstrap.py`, and that is a choice rather than 
 these steps are irreversible in the direction that matters — arming the switch, and registering a
 task that will place orders on a schedule — and a script that does both is a script somebody runs
 by accident. The sequence above is short enough to read.
+
+
+## 10. Updating the main checkout
+
+**Found 2026-09-13, when the owner's `git pull --ff-only` failed.** The evening run's last step
+regenerates `HANDOFF.md` §2 from `data/`, so most mornings that file is modified — and every merged
+change rewrites the same blocks, so git refuses the pull to protect a change that is only derived
+paperwork. The pull is one command instead:
+
+```bash
+.\.venv\Scripts\python.exe -X utf8 tools\update_checkout.py
+```
+
+It discards `HANDOFF.md` **only when every difference lies between generated markers**, pulls
+`--ff-only`, and runs `build_state.py` again so the blocks describe `data/` as before. Any other
+local change — a hand edit to the prose, another modified file, something staged — and it refuses,
+names it, and changes nothing. `--dry-run` says what it would do.
+
+**Not while an evening pass is running** (18:30 or 19:30): a pull moves the code that pass is reading.
