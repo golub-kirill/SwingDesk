@@ -815,6 +815,36 @@ def test_pending_shows_an_expired_proposal_rather_than_hiding_it(tmp_path, capsy
     assert "EXPIRED" in out and "POS-1" in out, "but it is still reported"
 
 
+def test_pending_can_hide_expired_rows_and_still_says_how_many(tmp_path, capsys) -> None:
+    """The owner's review, medium #2: a `--cleanup` would delete records. Hiding keeps the record
+    and the count - the owner still learns that something aged out, just not row by row."""
+    from swingdesk.journal_evidence.positions import PositionStore
+
+    root = _seeded(tmp_path)
+    capsys.readouterr()
+
+    assert cli.main(["pending", "--data", str(root), "--as-of", "2026-08-21T22:00:00",
+                     "--hide-expired"]) == 0
+
+    out = capsys.readouterr().out
+    assert "1 EXPIRED hidden by --hide-expired" in out, "the count survives"
+    assert "POS-1  #1" not in out, "the row does not"
+    with PositionStore(root / "positions.duckdb") as store:
+        assert len(store.pending()) == 1, "hiding is a display choice; the record is untouched"
+
+
+def test_hiding_expired_rows_leaves_a_live_proposal_listed(tmp_path, capsys) -> None:
+    root = _seeded(tmp_path)
+    capsys.readouterr()
+
+    assert cli.main(["pending", "--data", str(root), "--as-of", "2026-08-18T22:00:00",
+                     "--hide-expired"]) == 0
+
+    out = capsys.readouterr().out
+    assert "1 proposal(s) awaiting your answer" in out and "POS-1  #1" in out
+    assert "EXPIRED" not in out
+
+
 def test_pending_still_lists_a_live_proposal(tmp_path, capsys) -> None:
     root = _seeded(tmp_path)
     capsys.readouterr()

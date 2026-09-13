@@ -325,6 +325,7 @@ proposals on open positions awaiting your answer (US-010)
 |---|---|
 | `--data` | the store directory: bars, positions, journal and the arming switch all live here |
 | `--as-of` | ISO instant to judge staleness at (DR-013); defaults to now |
+| `--hide-expired` | show expired proposals as a count instead of one by one. Nothing is deleted; leave it off to list them |
 
 #### `swingdesk preflight`
 
