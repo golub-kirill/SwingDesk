@@ -1,0 +1,212 @@
+{
+  "as_of": "2026-09-06T22:36:49.635786-05:00",
+  "b_units": "B's half-widths are a return per unit invested; b_half_width_in_r_at_p50 converts one at the trades' own entry / risk at the 50th percentile, which is the conversion a restated floor would ratify",
+  "cells": {
+    "h10_stopnone": {
+      "b_half_width_in_r_at_p50": 0.08309535965636344,
+      "cut_by_floor": 0,
+      "dispersion": {
+        "A_in_r_under_the_floor": {
+          "half_width_corrected": 0.08309182937649992,
+          "half_width_overlap": 0.08309182937649992,
+          "half_width_predicted_oos": 0.07995515009663447,
+          "half_width_predicted_oos_overlap": 0.07995515009663447,
+          "half_width_uncorrected": 0.10335094969486967,
+          "months": 50.0,
+          "overlap_factor": 1.0,
+          "overlap_lags": 0.0,
+          "var_between": 0.08986167364032403,
+          "var_observed": 0.13902304772531604,
+          "var_subsample_noise": 0.04916137408499201
+        },
+        "B_per_unit_invested": {
+          "half_width_corrected": 0.004420415212860007,
+          "half_width_overlap": 0.004420415212860007,
+          "half_width_predicted_oos": 0.00425354652179107,
+          "half_width_predicted_oos_overlap": 0.00425354652179107,
+          "half_width_uncorrected": 0.005854063713617807,
+          "months": 50.0,
+          "overlap_factor": 1.0,
+          "overlap_lags": 0.0,
+          "var_between": 0.00025432203579347384,
+          "var_observed": 0.00044603891559632326,
+          "var_subsample_noise": 0.0001917168798028494
+        }
+      },
+      "entry_over_risk_p50": 19.535547391021343,
+      "max_holding_period": 10,
+      "protective_stop": false,
+      "trades": 1222,
+      "without_a_floored_pool_price": 0,
+      "without_a_pool_price": 0
+    },
+    "h20_stopnone": {
+      "b_half_width_in_r_at_p50": 0.10269007998413682,
+      "cut_by_floor": 0,
+      "dispersion": {
+        "A_in_r_under_the_floor": {
+          "half_width_corrected": 0.10758300075823483,
+          "half_width_overlap": 0.10758300075823483,
+          "half_width_predicted_oos": 0.10352179074665765,
+          "half_width_predicted_oos_overlap": 0.10352179074665765,
+          "half_width_uncorrected": 0.13777833242593032,
+          "months": 50.0,
+          "overlap_factor": 1.0,
+          "overlap_lags": 0.0,
+          "var_between": 0.15064168643464126,
+          "var_observed": 0.24706982619312473,
+          "var_subsample_noise": 0.09642813975848347
+        },
+        "B_per_unit_invested": {
+          "half_width_corrected": 0.005462793513968829,
+          "half_width_overlap": 0.005462793513968829,
+          "half_width_predicted_oos": 0.005256575509695409,
+          "half_width_predicted_oos_overlap": 0.005256575509695409,
+          "half_width_uncorrected": 0.007533399993512368,
+          "months": 50.0,
+          "overlap_factor": 1.0,
+          "overlap_lags": 0.0,
+          "var_between": 0.00038840734298547364,
+          "var_observed": 0.0007386520650543022,
+          "var_subsample_noise": 0.0003502447220688286
+        }
+      },
+      "entry_over_risk_p50": 19.535547391021343,
+      "max_holding_period": 20,
+      "protective_stop": false,
+      "trades": 1222,
+      "without_a_floored_pool_price": 0,
+      "without_a_pool_price": 0
+    },
+    "h40_stopnone": {
+      "b_half_width_in_r_at_p50": 0.11724937023805383,
+      "cut_by_floor": 0,
+      "dispersion": {
+        "A_in_r_under_the_floor": {
+          "half_width_corrected": 0.11030557422028114,
+          "half_width_overlap": 0.12533030784081053,
+          "half_width_predicted_oos": 0.1061415882819926,
+          "half_width_predicted_oos_overlap": 0.12059914494918438,
+          "half_width_uncorrected": 0.17067028864441067,
+          "months": 50.0,
+          "overlap_factor": 1.290973398046186,
+          "overlap_lags": 1.0,
+          "var_between": 0.158362657539384,
+          "var_observed": 0.37911739152913443,
+          "var_subsample_noise": 0.22075473398975043
+        },
+        "B_per_unit_invested": {
+          "half_width_corrected": 0.005990686360282634,
+          "half_width_overlap": 0.006237302564690901,
+          "half_width_predicted_oos": 0.005764540637899663,
+          "half_width_predicted_oos_overlap": 0.0060018471912357246,
+          "half_width_uncorrected": 0.010306401896275358,
+          "months": 50.0,
+          "overlap_factor": 1.0840278942699608,
+          "overlap_lags": 1.0,
+          "var_between": 0.0004671012477519314,
+          "var_observed": 0.0013825218665080737,
+          "var_subsample_noise": 0.0009154206187561423
+        }
+      },
+      "entry_over_risk_p50": 19.535547391021343,
+      "max_holding_period": 40,
+      "protective_stop": false,
+      "trades": 1222,
+      "without_a_floored_pool_price": 0,
+      "without_a_pool_price": 0
+    },
+    "h5_stopnone": {
+      "b_half_width_in_r_at_p50": 0.07144939838204752,
+      "cut_by_floor": 0,
+      "dispersion": {
+        "A_in_r_under_the_floor": {
+          "half_width_corrected": 0.07474582887566499,
+          "half_width_overlap": 0.07474582887566499,
+          "half_width_predicted_oos": 0.07192420737027813,
+          "half_width_predicted_oos_overlap": 0.07192420737027813,
+          "half_width_uncorrected": 0.08797333085892058,
+          "months": 50.0,
+          "overlap_factor": 1.0,
+          "overlap_lags": 0.0,
+          "var_between": 0.07271630224789401,
+          "var_observed": 0.10073025487314019,
+          "var_subsample_noise": 0.028013952625246186
+        },
+        "B_per_unit_invested": {
+          "half_width_corrected": 0.003800886221129814,
+          "half_width_overlap": 0.003800886221129814,
+          "half_width_predicted_oos": 0.0036574044715473957,
+          "half_width_predicted_oos_overlap": 0.0036574044715473957,
+          "half_width_uncorrected": 0.0047077282950271585,
+          "months": 50.0,
+          "overlap_factor": 1.0,
+          "overlap_lags": 0.0,
+          "var_between": 0.00018803019661045497,
+          "var_observed": 0.00028845670683828764,
+          "var_subsample_noise": 0.00010042651022783268
+        }
+      },
+      "entry_over_risk_p50": 19.535547391021343,
+      "max_holding_period": 5,
+      "protective_stop": false,
+      "trades": 1222,
+      "without_a_floored_pool_price": 0,
+      "without_a_pool_price": 0
+    },
+    "h60_stopnone": {
+      "b_half_width_in_r_at_p50": 0.1913858919927241,
+      "cut_by_floor": 0,
+      "dispersion": {
+        "A_in_r_under_the_floor": {
+          "half_width_corrected": 0.10603068361712273,
+          "half_width_overlap": 0.20793154835135355,
+          "half_width_predicted_oos": 0.10202807288117642,
+          "half_width_predicted_oos_overlap": 0.20008222568944942,
+          "half_width_uncorrected": 0.194238067447871,
+          "months": 50.0,
+          "overlap_factor": 3.8457199227838794,
+          "overlap_lags": 2.0,
+          "var_between": 0.14632582606614924,
+          "var_observed": 0.4910509533252251,
+          "var_subsample_noise": 0.34472512725907584
+        },
+        "B_per_unit_invested": {
+          "half_width_corrected": 0.004612513559734318,
+          "half_width_overlap": 0.01018113540864412,
+          "half_width_predicted_oos": 0.00443839324225568,
+          "half_width_predicted_oos_overlap": 0.009796802114727854,
+          "half_width_uncorrected": 0.01155152990089821,
+          "months": 50.0,
+          "overlap_factor": 4.872110340578005,
+          "overlap_lags": 2.0,
+          "var_between": 0.00027690651471695324,
+          "var_observed": 0.0017367482696187186,
+          "var_subsample_noise": 0.0014598417549017654
+        }
+      },
+      "entry_over_risk_p50": 19.535547391021343,
+      "max_holding_period": 60,
+      "protective_stop": false,
+      "trades": 1222,
+      "without_a_floored_pool_price": 0,
+      "without_a_pool_price": 0
+    }
+  },
+  "entry_spacing_sessions": 60,
+  "floor": "0.005",
+  "for": "PR-020b, a re-registration of PR-020 - not yet written",
+  "formation_dates": 60,
+  "fraction": 0.25,
+  "oos_months": 54,
+  "purpose": "a variance estimate for PREREG_TEMPLATE rule 9 under two constructions that cannot weigh a trade by an absurd entry / risk: A in R under the owner's floor on both legs, B per unit invested. Dispersion only.",
+  "readable_half_width": 0.075,
+  "seed": 20260908,
+  "subsample": 2660,
+  "universe": 13010,
+  "window": {
+    "end": "2021-12-31",
+    "note": "IN SAMPLE ONLY - the holdout is not touched by a power estimate",
+    "start": "2016-01-04"
+  }
+}

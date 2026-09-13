@@ -307,6 +307,11 @@ SIDE_RECORDS = {
                     "sessions and every no-stop hold of PR-019's grid. Dispersion only, under the "
                     "same level guard, in sample only, so the hold it chose - the one readable at "
                     "the floor - could not be chosen on the answer. PR-020 counts its one",
+    "PR-020b-power": "no trials: a VARIANCE estimate for a re-registration of PR-020, after its "
+                     "report showed the pool leg in the trade's R weighted T-bill funds a thousand "
+                     "times an equity. Two constructions - in R under the owner's floor on both "
+                     "legs, and per unit invested - at every no-stop hold, dispersion only, under "
+                     "the same level guard, in sample only. Nothing is registered by it",
 }
 
 
