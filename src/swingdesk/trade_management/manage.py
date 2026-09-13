@@ -91,6 +91,21 @@ def evaluate(
     )
 
 
+def lowers_stop(position: Position, action: ManagementAction) -> bool:
+    """Would this action move a long's stop DOWN from where it stands now?
+
+    A proposal is made against the stop of its day. `evaluate` only ever proposes a HIGHER stop,
+    but the book can move after it - `DR-041` adopts a tighter venue stop, another approval raises
+    it - and an old proposal then asks to put the stop back below where it is. Measured 2026-09-13
+    on the live book: BTSG's newest unanswered proposal asked for 55.76 under a 57.61 stop, and
+    DINO's for 98.72 under 100.76. `Position.current_stop` may only move up for a long; this is
+    that rule checked against the CURRENT version, which the contract's own validator - it sees
+    only the initial stop - cannot do.
+    """
+    return (action.kind is ActionKind.MOVE_STOP and action.new_stop is not None
+            and action.new_stop < position.current_stop)
+
+
 def apply_approved(position: Position, action: ManagementAction, now: datetime) -> Position:
     """The next version of a position after an APPROVED action.
 
@@ -107,6 +122,12 @@ def apply_approved(position: Position, action: ManagementAction, now: datetime) 
         )
     if action.position_id != position.position_id:
         raise ValueError("action does not belong to this position")
+    if lowers_stop(position, action):
+        raise ValueError(
+            f"approving this would move the stop DOWN from {position.current_stop} to "
+            f"{action.new_stop}; a long's stop only moves up. It was proposed "
+            f"{action.proposed_at:%Y-%m-%d}, before the stop reached where it is now"
+        )
 
     update: dict[str, Any] = {"version": position.version + 1, "knowledge_time": now}
     if action.kind is ActionKind.MOVE_STOP and action.new_stop is not None:

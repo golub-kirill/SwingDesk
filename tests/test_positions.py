@@ -160,6 +160,32 @@ def test_an_approved_stop_move_creates_a_new_version() -> None:
     assert updated.initial_stop == position.initial_stop
 
 
+def test_an_approved_move_below_the_current_stop_is_refused() -> None:
+    """A proposal made before the stop rose must not put it back down (found live, 2026-09-13)."""
+    approved = ManagementAction(
+        position_id="POS-1", proposed_at=AS_OF, kind=ActionKind.MOVE_STOP,
+        status=ActionStatus.APPROVED, reason="old", old_stop=Decimal(96), new_stop=Decimal(97),
+    )
+    with pytest.raises(ValueError, match="DOWN from 98 to 97"):
+        manage.apply_approved(_position(current_stop=Decimal(98)), approved, AS_OF)
+
+
+def test_a_move_to_the_stop_already_standing_changes_nothing_and_is_allowed() -> None:
+    approved = ManagementAction(
+        position_id="POS-1", proposed_at=AS_OF, kind=ActionKind.MOVE_STOP,
+        status=ActionStatus.APPROVED, reason="same", old_stop=Decimal(96), new_stop=Decimal(98),
+    )
+    updated = manage.apply_approved(_position(current_stop=Decimal(98)), approved, AS_OF)
+    assert updated.current_stop == Decimal(98)
+
+
+def test_lowers_stop_reads_the_current_stop_not_the_initial_one() -> None:
+    action = ManagementAction(position_id="POS-1", proposed_at=AS_OF, kind=ActionKind.MOVE_STOP,
+                              reason="x", old_stop=Decimal(96), new_stop=Decimal(97))
+    assert manage.lowers_stop(_position(current_stop=Decimal(98)), action)
+    assert not manage.lowers_stop(_position(current_stop=Decimal(96)), action)
+
+
 def test_a_partial_exit_leaving_nothing_is_refused() -> None:
     approved = ManagementAction(
         position_id="POS-1", proposed_at=AS_OF, kind=ActionKind.PARTIAL_EXIT,

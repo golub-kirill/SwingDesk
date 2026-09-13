@@ -1784,6 +1784,14 @@ def _pending(args: argparse.Namespace) -> int:
             print(f"      because    {action.reason}")
             if action.old_stop is not None or action.new_stop is not None:
                 print(f"      stop       {action.old_stop} -> {action.new_stop}")
+            if action.new_stop is not None:
+                # `old -> new` is the stop of the day it was proposed; the book may have moved
+                # since, and then an "up" move on this line is not one (found live, 2026-09-13).
+                standing = positions.history(action.position_id)
+                if standing and action.new_stop <= standing[-1].current_stop:
+                    print(f"      OBSOLETE   the book's stop is already "
+                          f"{standing[-1].current_stop}; approving would not raise it - "
+                          f"answer --reject")
             if action.shares_affected is not None:
                 print(f"      shares     {action.shares_affected}")
             print(
@@ -1853,6 +1861,20 @@ def _respond(args: argparse.Namespace) -> int:
                     f"response REFUSED  RISK: {args.position_id} #{args.sequence} expired - it was "
                     f"proposed {proposed.proposed_at:%Y-%m-%d} on an observation that is now stale "
                     f"(DR-013). A later run re-proposes if the rule still fires",
+                    file=sys.stderr,
+                )
+                return 2
+            # BEFORE the response is recorded, for the reason the expiry check above gives: a
+            # recorded answer cannot be taken back. Rejecting such a proposal stays allowed - it is
+            # how an owner clears it - and only an APPROVAL that would lower the stop is refused.
+            standing = positions.history(args.position_id)
+            if (verdict is ActionStatus.APPROVED and standing
+                    and manage.lowers_stop(standing[-1], proposed)):
+                print(
+                    f"response REFUSED  RISK: approving {args.position_id} #{args.sequence} "
+                    f"would move the stop DOWN from {standing[-1].current_stop} to "
+                    f"{proposed.new_stop}. It was proposed before the stop rose; answer it with "
+                    f"--reject",
                     file=sys.stderr,
                 )
                 return 2

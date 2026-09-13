@@ -111,3 +111,13 @@ def test_a_stopped_switch_is_said_as_stopped():
 def test_no_registered_task_is_said_rather_than_left_blank():
     lines = "\n".join(status.render(_view(schedule=())))
     assert "no task registered on this machine" in lines
+
+
+def test_a_proposal_the_book_has_overtaken_is_marked_obsolete():
+    """Found live 2026-09-13: BTSG's newest proposal asked for 55.76 under a 57.61 book stop."""
+    stale = Pending(sequence=7, action=ManagementAction(
+        position_id="POS-VGT-2026-09-09", proposed_at=AT, kind=ActionKind.MOVE_STOP,
+        reason="x", old_stop=Decimal(115), new_stop=Decimal("116.10")))
+    view = _view(split=PendingSplit(waiting=[stale]))
+    assert view.positions[0].proposal == (
+        "#7 MOVE_STOP -> 116.10 (obsolete - at or below the book stop)")

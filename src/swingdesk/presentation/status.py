@@ -66,9 +66,9 @@ class StatusView:
         return 3 if self.findings else 0
 
 
-def _newest_proposals(split: PendingSplit) -> dict[str, str]:
-    """The newest answerable proposal per position, as one short phrase."""
-    newest: dict[str, tuple[int, str]] = {}
+def _newest_proposals(split: PendingSplit) -> dict[str, tuple[str, Decimal | None]]:
+    """The newest answerable proposal per position: a short phrase, and the stop it asks for."""
+    newest: dict[str, tuple[int, str, Decimal | None]] = {}
     for item in (*split.waiting, *split.expired):
         action = item.action
         phrase = f"#{item.sequence} {action.kind.value.upper()}"
@@ -76,8 +76,9 @@ def _newest_proposals(split: PendingSplit) -> dict[str, str]:
             phrase += f" -> {action.new_stop}"
         seen = newest.get(action.position_id)
         if seen is None or item.sequence > seen[0]:
-            newest[action.position_id] = (item.sequence, phrase)
-    return {position_id: phrase for position_id, (_, phrase) in newest.items()}
+            newest[action.position_id] = (item.sequence, phrase, action.new_stop)
+    return {position_id: (phrase, asked)
+            for position_id, (_, phrase, asked) in newest.items()}
 
 
 def build(
@@ -117,11 +118,20 @@ def build(
             protection = NO_STOP if naked[position.instrument_id] else WRONG_PRICE
         else:
             protection = OK
+        proposal = None
+        found = proposals.get(position.position_id)
+        if found is not None:
+            phrase, asked = found
+            if asked is not None and asked <= position.current_stop:
+                # Asked before the book's stop rose to where it is: approving would not raise it,
+                # and `respond` refuses an approval that would lower it.
+                phrase += " (obsolete - at or below the book stop)"
+            proposal = phrase
         lines.append(PositionLine(
             instrument_id=position.instrument_id, shares=position.shares,
             entry=position.entry_price, book_stop=position.current_stop,
             venue_stop=in_force.get(position.instrument_id), protection=protection,
-            proposal=proposals.get(position.position_id)))
+            proposal=proposal))
 
     return StatusView(
         at=at, switch=switch, schedule=tuple(schedule), account=account,

@@ -898,6 +898,49 @@ def test_status_says_unavailable_and_still_shows_the_book(tmp_path, monkeypatch,
     assert "UNAVAILABLE" in out
 
 
+def _raise_book_stop(root, stop: str) -> None:
+    """The book's stop rises AFTER the proposal was made - DR-041's adoption, or another approval."""
+    from swingdesk.journal_evidence.positions import PositionStore
+
+    with PositionStore(root / "positions.duckdb") as store:
+        current = store.history("POS-1")[-1]
+        store.record(current.model_copy(update={
+            "version": current.version + 1, "current_stop": Decimal(stop),
+            "knowledge_time": datetime(2026, 8, 17, tzinfo=UTC)}))
+
+
+def test_approving_a_proposal_that_would_lower_the_stop_is_refused_before_recording(
+        tmp_path, capsys) -> None:
+    """Found live 2026-09-13: BTSG #15 would have taken the stop from 57.61 down to 55.76."""
+    root = _seeded(tmp_path)            # POS-1 at 290, proposal #1 -> 298
+    _raise_book_stop(root, "300")       # the stop is now ABOVE the proposal
+    capsys.readouterr()
+
+    code = cli.main(["respond", "POS-1", "1", "--approve", "--reason", "x",
+                     "--data", str(root), "--as-of", "2026-08-18T22:00:00"])
+
+    assert code == 2
+    # The store holds stops as DECIMAL(18,6), so the refusal names 300.000000: the SCALE is the
+    # store's, and the claim under test is the direction and the two prices.
+    import re
+
+    assert re.search(r"DOWN from 300(\.0+)? to 298(\.0+)?", capsys.readouterr().err)
+    assert [p.current_stop for p in _history(root)][-1] == Decimal(300)
+    assert cli.main(["respond", "POS-1", "1", "--reject", "--reason", "obsolete",
+                     "--data", str(root), "--as-of", "2026-08-18T22:00:00"]) == 0, (
+        "nothing was recorded by the refusal, so the proposal can still be answered - by a reject"
+    )
+
+
+def test_pending_marks_a_proposal_the_book_has_overtaken(tmp_path, capsys) -> None:
+    root = _seeded(tmp_path)
+    _raise_book_stop(root, "300")
+    capsys.readouterr()
+
+    assert cli.main(["pending", "--data", str(root), "--as-of", "2026-08-18T22:00:00"]) == 0
+    assert "OBSOLETE" in capsys.readouterr().out
+
+
 # ------------------------------------------- the refusals `record-fill` can raise and nobody saw
 #
 # Measured 2026-08-25 by tracing `cli.py` while the suite ran: four of its five `Refusal`
