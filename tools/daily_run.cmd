@@ -230,7 +230,10 @@ REM
 REM THE COST, recorded rather than left to be discovered: this leaves HANDOFF.md modified and
 REM uncommitted in the main checkout most evenings. Gate 21 reports uncommitted governed files and
 REM is ADVISORY, so that is a standing note rather than a red gate - the cheaper of the two, since
-REM gate 24 was blocking and red every morning for a reason nobody needed to investigate.
+REM gate 24 was blocking and red every morning for a reason nobody needed to investigate. It also
+REM made the morning's `git pull --ff-only` abort (2026-09-13), because every merge rewrites the same
+REM blocks. `tools/update_checkout.py` is that pull: it discards the file only when every difference
+REM lies inside generated markers, pulls, and runs this same step again.
 REM
 REM A HELD STORE IS NOT A FAILURE HERE. build_state.py catches duckdb.IOException, reports the
 REM runtime block UNAVAILABLE and leaves it alone (AGENTS.md 12), so an overlapping refresh pass

@@ -405,9 +405,9 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 79 script(s), of which 19 are things you type
+### The tools — 80 script(s), of which 20 are things you type
 
-#### Operator tools — 19
+#### Operator tools — 20
 
 Run these. Everything else below either runs itself or ran once.
 
@@ -428,6 +428,7 @@ Run these. Everything else below either runs itself or ran once.
 | `python tools/retry_needed.py` | Is a later pass worth running tonight? Asked of the journal, not assumed. | `--data` · `--as-of` |
 | `python tools/sample_liquidity.py` | Measure the dollar-volume distribution across a seeded random sample of US listings. | `--sample` · `--seed` · `--window` · `--out` |
 | `python tools/trial_budget.py` | What the programme has spent against `b.deflated_sharpe`, and what the next trial costs. | `--budget` |
+| `python tools/update_checkout.py` | Pull the main checkout when the evening run has left `HANDOFF.md` modified - and nothing else. | `--dry-run` |
 | `python tools/vendor_integrity.py` | Every bar the vendor served that arithmetic forbids, across the whole run log. | `--log` · `--top` |
 | `python tools/verify_pr016_qa.py` | `BACKTEST_PROTOCOL` §7's QA stage for `PR-016`: rebuild sampled trades from the evidence alone. | `--data` · `--sample` · `--result` · `--limit` |
 | `python tools/verify_reproducible.py` | `a.reproducible`, measured against the real universe instead of three synthetic instruments. | `--data` · `--limit` |
