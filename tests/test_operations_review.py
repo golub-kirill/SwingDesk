@@ -139,3 +139,38 @@ def test_a_single_stop_move_supersedes_nothing():
 def test_positions_do_not_supersede_each_other():
     unanswered = [("POS-A", 9, ActionKind.MOVE_STOP), ("POS-B", 1, ActionKind.MOVE_STOP)]
     assert manage.superseded(unanswered) == frozenset()
+
+
+# --- the stop in force ---------------------------------------------------------------------------
+
+
+def _order(symbol: str, kind: str, stop: str | None) -> PlacedOrder:
+    return PlacedOrder(
+        order_id=f"{kind}-{symbol}-{stop}", client_order_id="", symbol=symbol, status="new",
+        submitted_at=datetime(2026, 9, 1, 21, 0, tzinfo=UTC), order_type=kind,
+        stop_price=None if stop is None else Decimal(stop),
+        observed_at=datetime(2026, 9, 1, 21, 0, tzinfo=UTC),
+    )
+
+
+def test_the_highest_protective_trigger_per_symbol_is_the_one_in_force():
+    """The one definition `unprotected` and `swingdesk status` both use, so the screen cannot show
+    a venue stop the check did not compare."""
+    from swingdesk.broker import resting_stops
+
+    orders = [_order("T", "stop", "100.00"), _order("T", "stop", "101.50"),
+              _order("U", "stop_limit", "50.00")]
+    assert resting_stops(orders) == {"T": Decimal("101.50"), "U": Decimal("50.00")}
+
+
+def test_a_take_profit_or_a_triggerless_order_protects_nothing():
+    from swingdesk.broker import resting_stops
+
+    assert resting_stops([_order("T", "limit", None), _order("T", "stop", None)]) == {}
+
+
+def test_a_non_protective_order_with_a_price_protects_nothing_either():
+    """A `limit` carrying a stop price is still not a stop - the order TYPE decides."""
+    from swingdesk.broker import resting_stops
+
+    assert resting_stops([_order("T", "limit", "99.00")]) == {}
