@@ -356,4 +356,41 @@ def test_the_streamed_loader_is_the_same_study(study, tmp_path, monkeypatch):
                 "entries", "trades_without_a_benchmark_price", "cells", "unselected",
                 "measured_span", "verdict"):
         assert streamed[key] == memory[key], key
+    assert list(memory["cells"]) == ["in_sample", "out_of_sample"], "the default split is PR-019's"
     assert streamed["loader"].startswith("streamed") and "loader" not in memory
+
+
+# --- the rolling re-observation window (`tools/remeasure.py`) ------------------------------------
+
+
+@pytest.mark.parametrize("day,months,expected", [
+    (date(2026, 9, 4), 48, date(2022, 9, 4)),
+    (date(2024, 3, 31), 1, date(2024, 2, 29)),
+    (date(2024, 1, 15), 12, date(2023, 1, 15)),
+    (date(2023, 5, 31), 3, date(2023, 2, 28)),
+])
+def test_months_before_steps_back_calendar_months_and_clamps_the_day(study, day, months,
+                                                                     expected):
+    assert study.months_before(day, months) == expected
+
+
+def test_a_rolling_run_reads_one_window_the_last_n_months(study, tmp_path, monkeypatch):
+    """`AGENTS.md` §19.7: a re-observation moves the window and nothing else. One window, starting
+    exactly N months before the store's last session, every entry inside it, the verdict read by the
+    registered function on it - and no §9, which is the full run's check."""
+    monkeypatch.setattr(study, "BOOTSTRAP_RESAMPLES", 200)
+    _synthetic_store(tmp_path)
+
+    result = study.build(argparse.Namespace(
+        data=tmp_path, as_of=None, reference=tmp_path / "absent.json", streamed=True,
+        rolling_months=12))
+
+    end = date.fromisoformat(result["window"]["end"])
+    cutoff = study.months_before(end, 12)
+    assert list(result["cells"]) == ["rolling"] and list(result["unselected"]) == ["rolling"]
+    assert result["window"]["start"] == cutoff.isoformat()
+    assert result["cells"]["rolling"][study.CELL].get("trades", 0) > 0
+    assert date.fromisoformat(result["measured_span"]["first_entry"]) >= cutoff
+    assert result["reproduction"]["available"] is False
+    assert result["verdict"] == study.verdict_for(result["cells"]["rolling"][study.CELL]), (
+        "the rolling verdict is the registered function read on the rolling window")

@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from calendar import monthrange
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
@@ -109,6 +110,14 @@ PRELIMINARY = {
     ),
     "settled_by": "docs/decisions/DR-042 §8",
 }
+
+
+def months_before(day: date, months: int) -> date:
+    """`day` less `months` calendar months, the day clamped to that month's end: 2024-03-31 less one
+    month is 2024-02-29. The rolling window's cutoff (`--rolling-months`)."""
+    year, month = divmod(day.year * 12 + day.month - 1 - months, 12)
+    month += 1
+    return date(year, month, min(day.day, monthrange(year, month)[1]))
 
 
 @dataclass(frozen=True, slots=True)
@@ -271,6 +280,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
     # then dropped. Added after this study reported, because it peaked at 22.4 GB with 0.9 GB to
     # spare. The in-memory path is unchanged and stays the reference the test holds it to.
     streamed = bool(getattr(args, "streamed", False))
+    rolling = getattr(args, "rolling_months", None)
     min_bars = 252 + HOLD + 1
     names = sorted(store.instrument_ids(as_of))
     series_by_name: dict[str, BarSeries] = {}
@@ -295,6 +305,12 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
     opens = {bar.session_date: bar.open for bar in benchmark.bars}
     closes = {bar.session_date: bar.close for bar in benchmark.bars}
     start, end = WINDOW_START, calendar[-1]
+    if rolling:
+        # A re-observation window (`tools/remeasure.py`, `AGENTS.md` §19.7): the registered
+        # construction RUN ON the last `rolling` months. Formations start at the cutoff, so spacing
+        # starts there too - a study of that window, not a slice of the full run - while every
+        # series is still loaded whole and the lookback reads behind the cutoff.
+        start = months_before(end, rolling)
     sessions = window_sessions(calendar, start, end)
     earliest = calendar[LOOKBACK] if len(calendar) > LOOKBACK else calendar[-1]
     # PR-019's formation dates exactly, so §9's reproduction sees PR-019's entries.
@@ -393,8 +409,9 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
     paired_unselected, unpriced_unselected = pair(unselected, opens, closes)
 
     day_after = PRIMARY_END + timedelta(days=1)
-    windows = {"in_sample": (start, min(PRIMARY_END, end)),
-               "out_of_sample": (max(day_after, start), end)}
+    windows = ({"rolling": (start, end)} if rolling else
+               {"in_sample": (start, min(PRIMARY_END, end)),
+                "out_of_sample": (max(day_after, start), end)})
 
     result: dict[str, Any] = {
         "prereg": "PR-019b", "trials": 1, "as_of": as_of.isoformat(), "country": "USA",
@@ -439,6 +456,9 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             "the book: one trade at a time, no cap and no capacity",
         ],
     }
+    if rolling:
+        result["split"] = {"rolling": f"entries {start}..{end}, the last {rolling} months - a "
+                                      "re-observation window, not PR-019's split"}
     if streamed:
         # Only when streamed, so a default run's result stays field for field what it was.
         result["loader"] = "streamed - one series in memory at a time (loader phase A)"
@@ -450,8 +470,14 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
             "years": round(span / 365.25, 2),
             "meets_the_ten_year_instruction": span / 365.25 >= 10.0,
         }
-    result["reproduction"] = reproduction(result, args.reference)
-    result["verdict"] = verdict_for(result["cells"]["out_of_sample"][CELL])
+    if rolling:
+        result["reproduction"] = {"available": False,
+                                  "why": "a rolling window is not PR-019's; section 9 is the full "
+                                         "run's check"}
+        result["verdict"] = verdict_for(result["cells"]["rolling"][CELL])
+    else:
+        result["reproduction"] = reproduction(result, args.reference)
+        result["verdict"] = verdict_for(result["cells"]["out_of_sample"][CELL])
     return result
 
 
@@ -473,8 +499,11 @@ def report(result: dict[str, Any]) -> None:
     print(f"  dropped to the common entry set: {lost or 'none'}\n")
 
     repro = result.get("reproduction", {})
-    print(f"  section 9 first - reproduction of {repro.get('reference')}: "
-          f"every digit {repro.get('every_digit')}")
+    if repro.get("why"):
+        print(f"  section 9: not applicable - {repro['why']}")
+    else:
+        print(f"  section 9 first - reproduction of {repro.get('reference')}: "
+              f"every digit {repro.get('every_digit')}")
     for row in repro.get("checks", []):
         print(f"    {'ok ' if row['match'] else 'NO '} {row['group']:10} {row['window']:14} "
               f"got {row['got']}   committed {row['committed']}")
@@ -482,14 +511,15 @@ def report(result: dict[str, Any]) -> None:
     print(f"\n  {'book':22} {'window':14} {'n':>6} {'trade mean':>10} {'market':>28} "
           f"{'trade - market':>28}")
     for name, group in ((CELL, result["cells"]), (f"unselected {CELL}", result["unselected"])):
-        for window in ("in_sample", "out_of_sample"):
+        for window in group:
             c = group[window].get(CELL) or {}
             if not c.get("trades"):
                 continue
             print(f"  {name:22} {window:14} {c['trades']:>6} {c['mean_net_r']:>+10.4f} "
                   f"{_interval(c.get('market_mean')):>28} {_interval(c.get('difference')):>28}")
-    oos = result["cells"]["out_of_sample"][CELL]
-    print(f"\n  perturbations, out of sample, {CELL}:")
+    read = "rolling" if "rolling" in result["cells"] else "out_of_sample"
+    oos = result["cells"][read][CELL]
+    print(f"\n  perturbations, {read.replace('_', ' ')}, {CELL}:")
     print(f"    benchmark costed 1x : {_interval(oos.get('difference_benchmark_costed'))}")
     print(f"    trade at 3x costs   : {_interval(oos.get('difference_stress_3x'))}")
     own = oos.get("mean_interval") or {}
@@ -505,6 +535,9 @@ def main() -> int:
     parser.add_argument("--streamed", action="store_true",
                         help="hold one series in memory at a time (loader phase A); the same "
                              "study, a fraction of the memory")
+    parser.add_argument("--rolling-months", type=int, default=None,
+                        help="read one window, the last N months, instead of PR-019's split - "
+                             "the re-observation tools/remeasure.py schedules")
     parser.add_argument("--out", type=Path, default=RESULT)
     parser.add_argument("--report", action="store_true", help="print an existing result and exit")
     args = parser.parse_args()

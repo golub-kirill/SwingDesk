@@ -2386,6 +2386,14 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **And it interacts with §19.** A rolling 48-month window is what makes the series meaningful;
       a fixed window from 2016 would re-measure the same old market every quarter and call the
       stability reassuring.
+      **BUILT 2026-09-13 — `tools/remeasure.py`; the schedule is the owner's step.** It re-runs
+      `PR-019b`'s construction and decision rule on the 48 months ending at the store's latest
+      instant (`run_pr019b --rolling-months 48 --streamed`) and appends one point to
+      `data/remeasure/PR-019b.jsonl`: append-only, and a point earlier than the series' last is
+      refused. `tools/remeasure.cmd` is the weekly wrapper; `docs/runbooks/README.md` §8 has the one
+      `schtasks` line, and **gate 26 is RED until it is registered**, on the coverage pass's
+      precedent. **Owed after that:** a second study in `STUDIES` — `PR-016`'s screen effect is the
+      other finding the programme leans on.
 
 - [ ] **`[v]` GATE 28 WAS BLIND TO SEVEN LIVE INSTANCES OF THE EXACT DRIFT IT EXISTS FOR, AND BOTH
       BLIND SPOTS WERE INSIDE THE GATE — found and fixed 2026-09-05.**
