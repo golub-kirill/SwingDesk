@@ -2277,6 +2277,27 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 6. Code & gates
 
+- [ ] **`[v]` A STUDY HOLDS THE WHOLE UNIVERSE IN MEMORY, AND THAT IS THE HOUR IT TAKES.** Measured
+      2026-09-08 on `PR-018`: about fifty minutes at **23.4 GB**, against a query-plus-construction
+      estimate of 3.6 minutes. Re-measured 2026-09-12 on `PR-019`: past **18 GB** while still
+      loading, with system commit at 39.4 of 40.7 GB because a game held another 8 GB. The
+      pagefile is system-managed, so the run slows rather than dies; that is luck, not design.
+      **Three phases, in this order, because reversing it makes things worse:**
+      * **A — stream the selection. BUILT 2026-09-12**, `tools/stream_selection.py`.
+        `ByMarketPathStrength` scores each name from its own series and the benchmark alone, so
+        the cross-section needs scores at once, never series. The score and the order are the
+        live `ranking` functions; `tests/test_stream_selection.py` holds the streamed selection
+        equal to the in-memory loop date by date, and 9 of 9 mutants die. **Not adopted yet.**
+        The next step is a runner that uses it for selection AND simulates one instrument at a
+        time, and it must reproduce a committed study to the digit before anything else — the
+        free-entry arms `PR-019` carries reproduce `PR-016` and `PR-018` and are the natural check.
+      * **B — no pydantic on the study read path.** A `Bar` is validated on write; re-validating
+        25 million stored bars on every study read buys nothing. Needs a raw-array read beside
+        `BarStore.as_of` and a test that the two return identical numbers. The live path keeps
+        `Bar`.
+      * **C — processes, only after A.** Per-instrument simulation shares nothing. While the
+        universe is held whole, more workers means more data in flight and more paging.
+
 - [ ] **`[v]` NOTHING IN THIS REPOSITORY ANSWERS "IS THE ANSWER STILL TRUE".** Raised by the owner
       2026-09-08, asking how a 48-month window (`AGENTS.md` §19) proves the strategy is current.
       **The honest answer is that it does not, and neither did the ten-year one.**
@@ -2717,6 +2738,94 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 - [ ] **Tests cover the safe branch of the risky code, three times over.** See §8.
 
 ## 6b. The operational chain — what a full cycle needs
+
+- [ ] **`[v]` THE OWNER'S OPERATIONS REVIEW, 2026-09-12 — ten issues, each checked against the code
+      and the live book before it was written here.** Raised by the owner while `PR-019` ran. Every
+      verdict below cites the line or the query that settled it; `AGENTS.md` §15 applies to the
+      claims that did NOT hold as much as to the ones that did.
+      **Measured the same evening, read-only, on `data/positions.duckdb` and `data/journal.duckdb`:**
+      | fact | value |
+      |---|---|
+      | open positions whose book stop is finer than a cent | **3** — DINO 100.761817, BTSG 55.760208, VGT 117.044982 |
+      | `move_stop` proposals whose `new_stop` is finer than a cent | **52 of 52** |
+      | initial stops finer than a cent | **0** — the submission path rounds them |
+      | `move_stop` proposals / responses of any kind | **52 / 14** |
+      | unanswered `move_stop` per position | BTSG 15, AIS 13, DINO 10, VGT 5 — **AIS closed 2026-09-04** |
+      | decision rows / runs | 100,021 / 66 |
+      | rows repeating an (instrument, day) another run already recorded | **54,261** |
+
+      **THE CHAIN, and it is one defect seen from four sides — critical #1, #2, #5 and medium #3.**
+      1. `manage.evaluate` proposes `policy.stop_for(bar.close, atr)` = `close − 2 × ATR`, unrounded
+         (`manage.py:70`; `stop_for` is `exits.py:199`, not `:178`, which validates a partial).
+      2. `respond` approves it and `manage.apply_approved` writes a new `Position` version — and
+         **sends nothing to the venue**. `reconcile.unprotected` says so in its own docstring:
+         *"this system has no verb that could"*.
+      3. The venue still holds the OLD stop, and `unprotected` compares `highest != current_stop`
+         **exactly** (`reconcile.py`, the `highest` comparison). A finding at the wrong price is
+         the half `restorable` deliberately will not touch (`DR-037` §3), so `DR-036` pauses entries.
+      4. Aligning by hand cannot clear it: the venue accepts cents above a dollar (SEC Rule 612,
+         `submit.to_tick`), so 100.761817 can become 100.76 and never 100.761817.
+      **So rounding alone does NOT end the pauses — the approved move itself creates the mismatch,
+      at any precision.** Rounding is what makes it unfixable by hand; the missing venue update is
+      what makes it happen.
+      * **Critical #1, sub-penny book stops — CONFIRMED.** Fix: round where the book is WRITTEN, with
+        the venue's tick and the direction `submit.to_tick` already uses for stops
+        (`favouring="safer"`), not `round(x, 2)` — which is wrong below a dollar, where the tick is
+        0.0001, and silently picks a direction. `trade_management` may not import `broker`
+        (import-linter), so the tick has to be passed in from the application layer. And
+        `unprotected` should compare at tick precision as a second line. R is unaffected: it is
+        denominated in `initial_stop` (`RISK_SPEC` 2), which is already cents.
+      * **Critical #2, no venue update on an approved move — CONFIRMED, and it is the root.** A
+        `respond --submit` that moves a venue stop is a D6 decision — who may move a resting
+        protection — and a write under gate 39's boundary, so it needs a ruling and a DR before
+        code. **Yours.**
+      * **Critical #5, "no stop recovery" — REFUTED as stated.** `broker.restorable` + `cli`'s
+        submit path already re-place a stop for a position holding NOTHING (`DR-037`). What it will
+        not do is overwrite a stop at a different price, on purpose: that would be applying a move
+        nobody approved. The pauses observed are that half, i.e. the chain above.
+      * **Medium #3, manual alignment — CONFIRMED, same chain.** A one-shot `align-stops` is
+        consistent with the book only as a new VERSION per position (append-only, `AGENTS.md` §11).
+      * **Critical #3, proposal spam — CONFIRMED mechanism, fix conflicts with a decision.** A new
+        `move_stop` is proposed on every bar where the candidate is above the current stop, whether
+        or not an earlier one is still unanswered. **Superseding by marking rows is refused on
+        purpose** — `positions.py:253`, *"Skipped, never superseded. Marking an older row answered
+        would mutate a record"*. The compatible fix is read-time, like expiry (`DR-013` 6.4):
+        `pending` shows only the latest `move_stop` per position and counts the rest as superseded.
+        **And closing a position does not retire its proposals — CONFIRMED, a defect the review
+        did not name.** AIS closed 2026-09-04 with **13** unanswered `move_stop` proposals, every
+        one made BEFORE the close (none after, so the pipeline stops proposing correctly).
+        `PositionStore.pending()` and `pending_approvals()` both select *unanswered and not
+        `hold`* with no closed-position filter, so those 13 sit in `pending` for ever — and
+        `pending_approvals()`, which every run reports, applies no expiry either, so the number
+        the report prints counts expired proposals and a closed position's proposals alike. The
+        filter is read-time and mutates nothing. It matters most for the kinds that never expire
+        (`EXIT_NOW`, `PAUSE`, `DR-013` 2): on a closed position those would be pending for ever.
+      * **Critical #4, venue-only positions not auto-recorded — PARTLY.** True that `sync-fills` does
+        not record them (exit code 3), deliberately: a broker answer cannot construct a `Position`,
+        because the venue does not know the STOP and every R is denominated in it. **Not a blind
+        spot**: `uncommitted_exposure` makes every submission refuse while such exposure exists, so
+        the cost is blocked entries until `open-position`, which is what happened with XMTR and VGT
+        (both recorded 2026-09-09 at round stops, 80.00 and 115.00). A narrower automatic path is
+        possible — record it only when a stop for exactly that quantity IS resting, and adopt that
+        stop — and it is a ruling, not a fix. **Yours.**
+      * **Medium #1, journal duplication — CONFIRMED in size, not a defect in kind.** 54% of decision
+        rows repeat an (instrument, day) from another run; 2026-09-03 had ten runs. Each run is a
+        record by design and deleting any would break the audit trail. The fix is a read-side view
+        — the latest run per session — used by anything that COUNTS decisions. Backtests do not read
+        these rows.
+      * **Medium #2, `pending --cleanup` — conflicts as proposed.** Expired proposals are shown on
+        purpose (`cli._pending`: *"an owner who cannot tell 'nothing pending' from 'something aged
+        out while I was away' has been told less than the truth"*). Purging would mutate records. A
+        display flag that hides expired rows and prints their count keeps both.
+      * **Medium #4, no `status` command — CONFIRMED missing.** `swingdesk broker` is the nearest,
+        and it is a reconciliation, not a summary.
+      * **Medium #5, CLI defaults — REFUTED for `--data`, confirmed elsewhere.** Every subcommand
+        already defaults `--data` to `DEFAULT_DATA` (`cli.py`, each `add_argument("--data", ...)`).
+        `respond --reason` is required, and deliberately: it is the audit trail of a decision.
+        Aliases are fine.
+      **Order, if you agree:** the read-time supersede (#3) and the tick-precision comparison are
+      safe and mine to build; the book rounding (#1) and `align-stops` next; #2 and #4 wait on your
+      rulings. **Nothing here touches `scan --submit`, which I do not run.**
 
 - [ ] **`[v]` ALPACA PAPER TRADING — owner instruction 2026-08-31. Wire it as the broker so
       strategies, guesses and the whole chain can be tested against a real venue.**
