@@ -222,6 +222,13 @@ STREAK_RESTARTS: tuple[tuple[date, str], ...] = (
      "in the conservative direction. NOT scaled by the equity share - stockPosition is physical "
      "equity, not economic exposure, and AAPU reads 0.074 while being 2x Apple. Taken on the "
      "owner's grant of a restart for this date"),
+    (date(2026, 9, 13),
+     "risk.min_stop_distance_fraction - the owner's floor, ratified 2026-09-13: a stop closer than "
+     "0.5% of the entry refuses, because at DR-005's 25 bps a side its round trip would cost more "
+     "than the whole R. One frozen file changed (sizing.py) and it moves decision output: over "
+     "2026-09-01..09-11 it would have turned 27 to 118 cash and short-bond names a day from Watch "
+     "to Skip, and changed no order. Taken on the owner's ratification of the floor, knowing it "
+     "restarts an 8-session streak"),
 )
 
 

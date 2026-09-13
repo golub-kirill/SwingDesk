@@ -244,6 +244,32 @@ def size_long(
             f"produces when volatility outgrows price",
         )
 
+    # Step 1c. A stop too close to the entry to pay for its own round trip - the owner's floor,
+    # ratified 2026-09-13. `DR-005` charges 25 bps of price a side, so the round trip costs
+    # `0.005 / (stop distance / price)` R, and below 0.005 of the price it exceeds the whole R before
+    # the market has moved. `PR-020` found T-bill funds in the screen's top decile in the 2022 bear
+    # market, where a 2 ATR stop sits a few hundredths of a percent below the price; each such trade
+    # lost about 5R to costs.
+    # Stated on the stop this function is GIVEN, so it holds for any multiple; at the ratified 2 ATR
+    # it is exactly `2 x ATR / price >= 0.005`.
+    try:
+        min_distance, distance_use = registry.decimal_value("risk.min_stop_distance_fraction")
+    except ParameterUnset as unset:
+        return Refusal(
+            "RISK",
+            "the minimum stop distance has no value; a stop closer than its own round trip would be "
+            "sized as though it bounded a loss",
+            parameter_id=unset.parameter_id,
+        )
+    distance = (entry - stop) / entry
+    if distance < min_distance:
+        return Refusal(
+            "RISK",
+            f"the stop is {distance:.4%} of the entry below it, under the {min_distance:.2%} floor: "
+            f"at DR-005's costs the round trip would cost more than the whole R it risks",
+            parameter_id="risk.min_stop_distance_fraction",
+        )
+
     budget = allowed_risk(registry)
     if isinstance(budget, Refusal):
         return budget
@@ -363,7 +389,8 @@ def size_long(
         shares=shares,
         position_value=position_value,
         planned_risk=(Decimal(shares) * risk_per_share).quantize(Decimal("0.01")),
-        parameters=(equity_use, risk_use, bp_use, floor_use, value_use, liquidity_use, *fx_uses),
+        parameters=(equity_use, risk_use, bp_use, floor_use, value_use, liquidity_use, distance_use,
+                    *fx_uses),
     )
 
 

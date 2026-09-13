@@ -94,6 +94,10 @@ def registry() -> ParameterRegistry:
         # session around 100 - one percent of ADTV is far above anything a $10,000 account sizes,
         # so the cap binds on nothing here. `test_sizing`'s own tests bind it deliberately.
         "risk.liquidity_cap_order_to_adtv_pct": "1.0",
+        # The owner's minimum stop distance (2026-09-13). Real value again; the fixture series move
+        # about a percent a session, so a 2 ATR stop sits several percent below entry and the floor
+        # binds on nothing here. `test_sizing_floor` binds it deliberately.
+        "risk.min_stop_distance_fraction": "0.005",
         "universe.adtv_lag_sessions": 3,
         # `CARD-001`'s selection rule (`DR-030`, owner 2026-09-01). Real values again, and here the
         # argument is stronger than for the caps: these four are what turn a `Watch` into a
