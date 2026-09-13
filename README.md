@@ -261,7 +261,7 @@ markers: a hand-kept list of flags is wrong within the week, which is the whole 
 `AGENTS.md` §10.5. An argument whose name or help text is computed rather than written as a
 literal appears with an empty description rather than being dropped.
 
-### The application — 9 command(s)
+### The application — 15 command(s)
 
 #### `swingdesk broker`
 
@@ -273,6 +273,10 @@ read the paper account and reconcile it against the book. Reads only - it has no
 | `--as-of` | ISO instant this observation is recorded as of; defaults to now |
 | `--fills` | also list the venue's executions |
 | `--since` | ISO instant; with --fills, the earliest execution to ask for |
+
+#### `swingdesk budget`
+
+what the search has cost and what the next trial costs
 
 #### `swingdesk close-position`
 
@@ -289,6 +293,10 @@ record an exit that already happened at the broker (D1: this never places the or
 | `--reason-code` | the course's code for why, when one applies |
 | `--data` | the store directory: bars, positions, journal and the arming switch all live here |
 | `--as-of` | ISO instant this is being recorded as of; defaults to now |
+
+#### `swingdesk gates`
+
+the whole gate suite - this is the contract
 
 #### `swingdesk open-position`
 
@@ -316,6 +324,14 @@ proposals on open positions awaiting your answer (US-010)
 |---|---|
 | `--data` | the store directory: bars, positions, journal and the arming switch all live here |
 | `--as-of` | ISO instant to judge staleness at (DR-013); defaults to now |
+
+#### `swingdesk preflight`
+
+is every declared dependency installed
+
+#### `swingdesk record`
+
+the live paper record: switch, book, what was refused
 
 #### `swingdesk record-fill`
 
@@ -360,6 +376,10 @@ run the daily pipeline and produce a report
 | `--submit` | submit this run's Trade decisions to the paper venue as bracket orders (CHARTER A-002, DR-027). Does nothing unless the kill switch file has been armed - it is stopped by default and the refusal says which guard stopped it |
 | `--no-notify` | skip the local desktop notice (DR-011). The report is written either way; this only suppresses the pop-up |
 
+#### `swingdesk schedule`
+
+the scheduled tasks and how each last ended
+
 #### `swingdesk status`
 
 one screen: the switch, the schedule, the account, every stop, what is pending. Reads only
@@ -368,6 +388,10 @@ one screen: the switch, the schedule, the account, every stop, what is pending. 
 |---|---|
 | `--data` | data directory: $SWINGDESK_DATA, then ./data, then the checkout's |
 | `--as-of` | ISO instant to read the book at; defaults to now |
+
+#### `swingdesk streak`
+
+the a.run_completes streak, computed not hand-kept
 
 #### `swingdesk sync-fills`
 

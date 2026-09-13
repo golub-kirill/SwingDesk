@@ -32,6 +32,7 @@ from swingdesk.market_data.retry import RetryingFetcher
 from swingdesk.platform.clock import FixedClock, SystemClock
 from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
 from swingdesk.presentation import notify, report
+from swingdesk.presentation.passthrough import TOOL_COMMANDS, run_tool
 from swingdesk.presentation.paths import default_data
 from swingdesk.presentation.pending_view import expiry as _expiry
 from swingdesk.presentation.pending_view import split_pending
@@ -158,6 +159,11 @@ def _force_utf8_output() -> None:
 
 def main(argv: list[str] | None = None) -> int:
     _force_utf8_output()
+    raw = sys.argv[1:] if argv is None else argv
+    if raw and raw[0] in TOOL_COMMANDS:
+        # BEFORE argparse on purpose: the script owns its arguments, `--help` included, and an
+        # `argparse.REMAINDER` positional refuses a first argument that starts with `-`.
+        return run_tool(raw[0], raw[1:])
     parser = argparse.ArgumentParser(prog="swingdesk", description="Swing-trading decision support")
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -325,6 +331,25 @@ def main(argv: list[str] | None = None) -> int:
                                  "checkout's")
     status_cmd.add_argument("--as-of", default=None,
                             help="ISO instant to read the book at; defaults to now")
+
+    # Operational scripts (`presentation/passthrough.py`), dispatched BEFORE argparse runs. One
+    # literal ASSIGNMENT each, because `tools/build_commands.py` reads the tree and recognises only
+    # `<name> = sub.add_parser("...")` - the first cut used bare calls, and README.md silently
+    # listed none of the six. These parsers exist for `--help` and README.md, never for parsing.
+    record_cmd = sub.add_parser(
+        "record", help="the live paper record: switch, book, what was refused")
+    budget_cmd = sub.add_parser(
+        "budget", help="what the search has cost and what the next trial costs")
+    streak_cmd = sub.add_parser(
+        "streak", help="the a.run_completes streak, computed not hand-kept")
+    preflight_cmd = sub.add_parser(
+        "preflight", help="is every declared dependency installed")
+    gates_cmd = sub.add_parser(
+        "gates", help="the whole gate suite - this is the contract")
+    schedule_cmd = sub.add_parser(
+        "schedule", help="the scheduled tasks and how each last ended")
+    for tool_cmd in (record_cmd, budget_cmd, streak_cmd, preflight_cmd, gates_cmd, schedule_cmd):
+        tool_cmd.set_defaults(passthrough=True)
 
     args = parser.parse_args(argv)
     # Resolved HERE rather than in `default=`: a computed default would be evaluated at import time,
