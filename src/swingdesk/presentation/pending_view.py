@@ -66,7 +66,8 @@ def split_pending(positions: PositionStore, now: datetime) -> PendingSplit:
     """
     everything = positions.pending()
     replaced = manage.superseded(
-        [(item.action.position_id, item.sequence, item.action.kind) for item in everything])
+        [(item.action.position_id, item.sequence, item.action.kind) for item in everything],
+        positions.latest_stop_moves())
     out = PendingSplit()
     for item in everything:
         if (item.action.position_id, item.sequence) in replaced:

@@ -141,6 +141,18 @@ def test_positions_do_not_supersede_each_other():
     assert manage.superseded(unanswered) == frozenset()
 
 
+def test_an_answered_later_stop_move_still_supersedes():
+    """Live 2026-09-13: rejecting VGT #4 brought #3 back as awaiting an answer."""
+    unanswered = [("POS-A", 1, ActionKind.MOVE_STOP), ("POS-A", 3, ActionKind.MOVE_STOP),
+                  ("POS-B", 2, ActionKind.MOVE_STOP)]
+    assert manage.superseded(unanswered, {"POS-A": 4}) == {("POS-A", 1), ("POS-A", 3)}
+
+
+def test_an_older_answered_stop_move_supersedes_nothing_newer():
+    unanswered = [("POS-A", 5, ActionKind.MOVE_STOP)]
+    assert manage.superseded(unanswered, {"POS-A": 2}) == frozenset()
+
+
 # --- the stop in force ---------------------------------------------------------------------------
 
 

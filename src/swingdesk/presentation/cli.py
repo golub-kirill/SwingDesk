@@ -1845,8 +1845,8 @@ def _pending(args: argparse.Namespace) -> int:
             by_position: dict[str, list[int]] = {}
             for item in older:
                 by_position.setdefault(item.action.position_id, []).append(item.sequence)
-            print(f"{len(older)} older stop move(s) SUPERSEDED by a later proposal on the same "
-                  f"position - answer the latest instead:\n")
+            print(f"{len(older)} older stop move(s) SUPERSEDED by a later stop move on the same "
+                  f"position, answered or not - they need no answer:\n")
             for position_id, sequences in sorted(by_position.items()):
                 print(f"  {position_id}  #" + ", #".join(str(s) for s in sorted(sequences)))
             print()

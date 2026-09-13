@@ -401,6 +401,18 @@ class PositionStore:
             for r in rows
         ]
 
+    def latest_stop_moves(self) -> dict[str, int]:
+        """Each position's newest `MOVE_STOP` sequence, answered or not.
+
+        `manage.superseded` judges an unanswered stop move against this, not against the newest
+        UNANSWERED one: rejecting the newest must not make the next-older one "the latest" again.
+        """
+        rows = self._connection.execute(
+            "SELECT position_id, MAX(sequence) FROM management WHERE kind = ? GROUP BY position_id",
+            [ActionKind.MOVE_STOP.value],
+        ).fetchall()
+        return {str(position_id): int(sequence) for position_id, sequence in rows}
+
     def respond(
         self, position_id: str, sequence: int, *, choice: ActionStatus, reason: str, at: datetime
     ) -> None:
