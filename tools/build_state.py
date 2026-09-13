@@ -194,6 +194,15 @@ def _connect(name: str) -> Any:
     return duckdb.connect(str(DATA / name), read_only=True)
 
 
+#: The owner's review, medium #1: every run records every instrument again, so the raw count is
+#: runs x names rather than decisions - 100,021 rows held 45,760 instrument-days on 2026-09-13, 54%
+#: repeats. "Recorded" stays the truth about the store; this is the count a reader means by
+#: "decisions", one per instrument per calendar day. Not "the latest run of the day": the last run
+#: is often a partial one, and 2026-09-09's held two rows.
+INSTRUMENT_DAYS = ("SELECT COUNT(*) FROM (SELECT DISTINCT instrument_id, "
+                   "CAST(recorded_at AS DATE) FROM decisions)")
+
+
 def _journal_facts() -> list[tuple[str, str]]:
     connection = _connect("journal.duckdb")
     try:
@@ -203,6 +212,7 @@ def _journal_facts() -> list[tuple[str, str]]:
             "SELECT COUNT(*) FROM runs WHERE completed_at IS NULL"
         ).fetchone()[0]
         decisions = connection.execute("SELECT COUNT(*) FROM decisions").fetchone()[0]
+        instrument_days = connection.execute(INSTRUMENT_DAYS).fetchone()[0]
         uncoded = connection.execute(
             "SELECT COUNT(*) FROM decisions "
             "WHERE decision = 'Skip' AND (reason_code IS NULL OR reason_code = '')"
@@ -212,7 +222,8 @@ def _journal_facts() -> list[tuple[str, str]]:
     return [
         ("Journal", f"{runs} runs, {open_runs} incomplete · **{dirty} run(s) recorded against a "
                     f"dirty tree** and therefore not replayable from their SHA"),
-        ("Decisions", f"{decisions} recorded · {uncoded} uncoded refusals "
+        ("Decisions", f"{decisions} recorded, **{instrument_days} instrument-days** once a "
+                      f"re-run's repeats count once · {uncoded} uncoded refusals "
                       f"(`a.no_uncoded_failures` requires 0)"),
     ]
 

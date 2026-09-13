@@ -2844,6 +2844,12 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
         record by design and deleting any would break the audit trail. The fix is a read-side view
         — the latest run per session — used by anything that COUNTS decisions. Backtests do not read
         these rows.
+        **Measured and BUILT 2026-09-13.** 100,021 rows, 45,760 instrument-days — 54.2%. "The
+        latest run of the day" turned out to be the wrong population: the last run is often partial
+        (2026-09-09's held two rows), so the count is one per instrument per day. `build_state`
+        prints both. `tools/retry_needed.py` is deliberately unchanged: its printed count is inflated
+        (2026-09-03: 324 against 3), but its yes/no never differed on any of 25 days, and the only
+        change a latest-only reading could make is a retry skipped — the unsafe direction.
       * **Medium #2, `pending --cleanup` — conflicts as proposed.** Expired proposals are shown on
         purpose (`cli._pending`: *"an owner who cannot tell 'nothing pending' from 'something aged
         out while I was away' has been told less than the truth"*). Purging would mutate records. A
