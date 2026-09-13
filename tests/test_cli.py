@@ -53,7 +53,8 @@ def _fake_run(captured: dict):
 
     def run(instruments, clock, registry, store, journal, *, mode, lookback,
             universe=None, positions=None, classifications=None, exits=None, fetcher=None,
-            actions_fetcher=None):
+            actions_fetcher=None, round_stop=None):
+        captured["round_stop"] = round_stop
         captured["positions"] = positions
         captured["classifications"] = classifications
         captured["actions_fetcher"] = actions_fetcher
@@ -88,6 +89,19 @@ def test_scan_opens_a_position_store_and_passes_it_to_run(tmp_path: Path, monkey
     assert code == 0
     assert captured["positions"] is not None, "run() must not be called with positions=None"
     assert (tmp_path / "positions.duckdb").exists()
+
+
+def test_scan_hands_run_the_venue_stop_rounding(tmp_path: Path, monkeypatch) -> None:
+    """The owner's review #1 is only real if the scheduled `scan` passes the rounding on: a
+    rounder that `_stop_rounder` builds and `scan` never hands to `run` rounds nothing."""
+    captured: dict = {}
+    monkeypatch.setattr(cli, "run", _fake_run(captured))
+
+    assert cli.main(["scan", "AAPL", "--data", str(tmp_path)]) == 0
+
+    rounder = captured["round_stop"]
+    assert rounder is not None, "scan must hand run() the venue's stop rounding"
+    assert rounder(Decimal("100.761817")) == Decimal("100.77")
 
     # Same wiring, same argument, `DR-006` §2's sector cap (2026-08-23). A cap that no command
     # opens a store for is the "decided, but wired to nothing" shape `AGENTS.md` §7 counts - and
@@ -939,6 +953,14 @@ def test_pending_marks_a_proposal_the_book_has_overtaken(tmp_path, capsys) -> No
 
     assert cli.main(["pending", "--data", str(root), "--as-of", "2026-08-18T22:00:00"]) == 0
     assert "OBSOLETE" in capsys.readouterr().out
+
+
+def test_the_stop_rounder_rounds_up_to_the_committed_venue_tick() -> None:
+    """The owner's review #1, with `DR-033`'s direction and the committed policy's own tick."""
+    rounder = cli._stop_rounder()
+    assert rounder is not None, "the committed broker policy carries a write block"
+    assert rounder(Decimal("100.761817")) == Decimal("100.77")
+    assert rounder(Decimal("100.76")) == Decimal("100.76"), "a stop already on the tick stays"
 
 
 # ------------------------------------------- the refusals `record-fill` can raise and nobody saw
