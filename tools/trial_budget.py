@@ -284,6 +284,10 @@ SIDE_RECORDS = {
     "PR-014-cost-attribution": "no new trials: PR-014's OWN twelve configurations, re-run at an "
                                "earlier knowledge instant to separate the cost correction from the "
                                "2026-09-06 backfill. A re-price of counted shots is not a new shot",
+    "PR-019-power": "no trials: a VARIANCE estimate for PR-019's minimum detectable effect, in "
+                    "sample only, on a 25% instrument subsample. It reports dispersion and no "
+                    "level - `power_pr019.assert_no_effect_leaked` refuses to write one - so no "
+                    "configuration could have been selected on it. PR-019 counts its twelve",
 }
 
 

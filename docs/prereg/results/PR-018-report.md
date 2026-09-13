@@ -24,13 +24,24 @@ the 0.15R floor §8 registered — 0.451 and 0.268 — so §6 refuses to read ei
 the out-of-sample one whose interval excludes zero. That refusal is the rule working: an interval
 this wide could not have distinguished the effects the study was built to separate.
 
-**§3's minimum detectable effect was wrong, and amendment A-1 said why before the run.** §3 took
-`PR-017`'s 0.05R on the grounds that the arms *"share entries exactly"*. A-1, registered from the
-synthetic store before any real data, recorded that they do not: a position that never stops out
-holds its name through the next formation date. Measured on the real store, **7,305 hold-only
-entries against 11,019 ratified** — a third fewer. The pairing is far weaker than `PR-017`'s and
-the intervals came out five to nine times wider than predicted. **The amendment was right and the
-MDE that survived it was not.**
+**§3's minimum detectable effect was wrong.** §3 took `PR-017`'s 0.05R on the grounds that the
+arms *"share entries exactly"*. A-1, registered from the synthetic store before any real data,
+recorded that they do not: a position that never stops out holds its name through the next
+formation date. Measured on the real store, **7,305 hold-only entries against 11,019 ratified** — a
+third fewer. ~~The pairing is far weaker than `PR-017`'s and the intervals came out five to nine
+times wider than predicted. **The amendment was right and the MDE that survived it was not.**~~
+
+> **CORRECTED 2026-09-12 — the entry gap is real, and it is not why the intervals are wide.** The
+> struck sentence put the width down to the weak pairing. `tools/power_pr019.py` then measured the
+> same kind of contrast — a 2 ATR stop against no stop, both at 20 sessions — with the entries
+> paired **exactly**, and the in-sample half-width is still **0.187R** (corrected for subsampling
+> noise; a normal approximation, so a lower bound) against this study's realised **0.226R**. Exact
+> pairing removes at most about a sixth of the width. **The rest is the difference itself moving
+> month to month** — in some months holding without a stop wins by a lot and in others it loses by
+> a lot, and no pairing cancels that. The MDE was wrong mainly because `PR-017`'s contrast, half a
+> position closed at 1R, is a far smaller change to a trade than removing its stop. Caveat: that
+> estimate takes the decile within a 25% instrument subsample. Evidence:
+> `docs/prereg/results/PR-019-power.json`. `PR-019` is sized from it for exactly this reason.
 
 Derive every figure with `python tools/run_pr018.py --report`, never from these lines.
 

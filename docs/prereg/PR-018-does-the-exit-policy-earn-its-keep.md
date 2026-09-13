@@ -9,9 +9,13 @@ author:        Claude, at the owner's instruction 2026-09-08 — "proceed on 2 a
 status:        reported   (2026-09-08 - results/PR-018-report.md)   PRELIMINARY
 verdict:       INCONCLUSIVE by §6's rule - both difference intervals are WIDER than §8's 0.15R
                floor, 0.451 in sample and 0.268 out, so no branch fires and no parameter moves.
-               §3's minimum detectable effect of 0.05R was WRONG and amendment A-1 said why
-               before the run: the arms do not share entries, 7,305 hold-only against 11,019
-               ratified. What the study MEASURED, and §6 requires in the same paragraph:
+               §3's minimum detectable effect of 0.05R was WRONG. ~~Amendment A-1 said why
+               before the run: the arms do not share entries~~ - CORRECTED 2026-09-12: A-1's
+               entry gap (7,305 hold-only against 11,019 ratified) is real and is NOT the main
+               reason. Paired exactly, the same kind of contrast still reads a half-width near
+               0.19R in sample (PR-019-power.json): the difference between a stop and no stop
+               moves month to month. What the study MEASURED, and §6 requires in the same
+               paragraph:
                hold_only earns +0.0645R and +0.0404R where the ratified exit loses 0.0797R
                and 0.1144R - the first positive mean net R on selected entries this project
                has produced - and pays for it with a tail in which 21.7% of trades run below

@@ -953,6 +953,24 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       read off the outcome table would not. There is no registry entry for it yet; a ruling creates
       one, `assumed`, the shape `DR-012` gave the stop.
 
+- [ ] **`[v]` HOW MUCH LEFT TAIL WILL YOU CARRY FOR RETURN?** Raised 2026-09-12 by
+      `STRATEGY_CONTRACT.md` C-8. `PR-018` put both prices on one trade:
+      ```bash
+      PYTHONPATH=$PWD/src python tools/run_pr018.py --report
+      ```
+      | out of sample | mean net R | below −2R | below −3R | worst |
+      |---|---|---|---|---|
+      | the ratified exit | −0.1144R | 2.3% | 0.4% | −7.74R |
+      | holding to the clock | **+0.0404R** | **21.7%** | **7.9%** | **−23.81R** |
+      The contract makes the answer a FIELD of every strategy — the share of trades it may run
+      below −2R and below −3R, and the worst single excursion — declared before the study that
+      measures it. **Until it is ruled, `PR-019` uses the incumbent's own tail as the ceiling**: a
+      cell is eligible only if its share below −2R does not exceed the ratified exit's. That is a
+      stand-in, not an answer. It assumes you want no more tail than today, and a looser ruling
+      would admit cells `PR-019` excludes. **`PR-019` reports every cell's tail beside its mean**,
+      so the curve you would decide on exists whichever way you rule. `CHARTER` A-001 says whose
+      call it is.
+
 - [ ] **`[v]` THE STORE HOLDS TEN YEARS OF BARS, SO NO STUDY CAN HAVE TEN YEARS OF ENTRIES.**
       Raised 2026-09-07, against the owner's instruction that the backtest cover *"minimum za last
       10y"*.

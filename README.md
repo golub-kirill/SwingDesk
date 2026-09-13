@@ -370,9 +370,9 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 70 script(s), of which 14 are things you type
+### The tools — 72 script(s), of which 15 are things you type
 
-#### Operator tools — 14
+#### Operator tools — 15
 
 Run these. Everything else below either runs itself or ran once.
 
@@ -382,6 +382,7 @@ Run these. Everything else below either runs itself or ran once.
 | `python tools/classify_departures.py` | Classify the symbols that left the directory: delisting, rename, or still listed. | `--data` · `--out` |
 | `python tools/fetch_directory.py` | Download the NASDAQ Trader symbol directory and record it as one dated pull. | `--data` · `--scheduled` · `--emergency-repull` · `--reason` |
 | `python tools/forward_record.py` | What the live paper record actually contains, so watching it costs nobody an afternoon. | `--data` |
+| `python tools/power_pr019.py` | The power estimate `PR-019` needs BEFORE it registers a minimum detectable effect. | `--data` · `--as-of` · `--fraction` · `--seed` · `--report` |
 | `python tools/refresh_classifications.py` | Fetch sector classifications for instruments the store already holds bars for. | `--data` · `--budget` · `--symbols` · `--universe` |
 | `python tools/refresh_universe.py` | Fetch bars for eligible symbols, oldest-first, up to a budget. | `--data` · `--budget` · `--period` · `--pause` · `--symbols-from` |
 | `python tools/remove_unclosed_bars.py` | Remove bars that were captured before their own session closed. Owner-ruled, 2026-08-18. | `--apply` · `--data` |
@@ -420,7 +421,7 @@ Invoked by `python tools/check_gates.py`, not singly. Listed so a failing gate c
 | `python tools/verify_parameters.py` | Enforce the parameter-registry contract. | `--registry` |
 | `python tools/verify_transcription.py` | Verify that every `verbatim` claim in the documents still matches the course. | `--course-root` · `--docs` |
 
-#### Evidence-bound research runners — 43
+#### Evidence-bound research runners — 44
 
 Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions/measurements/` and reproduces it. They ran once, on a date. Nobody types these; they exist so a number can be re-derived.
 
@@ -469,5 +470,6 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/run_pr016.py` | `PR-016` — the outcome distribution of the RATIFIED exit, over a decade, in and out of sample. | `--data` · `--as-of` · `--from` · `--to` · `--out` · `--report` |
 | `python tools/run_pr017.py` | `PR-017` — three exits on ONE entry set: all-out at 1R, half at 1R, and no target at all. | `--data` · `--as-of` · `--from` · `--to` · `--out` · `--report` |
 | `python tools/run_pr018.py` | `PR-018` — on the entries the screen actually selects, does the exit policy beat doing nothing? | `--data` · `--as-of` · `--from` · `--to` · `--out` · `--report` |
+| `python tools/run_pr019.py` | `PR-019` - what holding period and stop width does THIS combination want, on selected entries? | `--data` · `--as-of` · `--from` · `--to` · `--out` · `--report` |
 
 <!-- END GENERATED COMMANDS -->
