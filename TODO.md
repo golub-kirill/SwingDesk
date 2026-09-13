@@ -1691,10 +1691,32 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       where the trade alone reads 0.1813R — the market is most of what moves this candidate month
       to month, and pairing removes it. Readable at the 0.15R floor by 0.0007, so a precision miss
       is possible and §3 says so. The SPY leg is charged ZERO in the primary (the strictest null)
-      and `DR-005` as a perturbation. Predicted to fail. Run pending.
+      and `DR-005` as a perturbation. Predicted to fail.
+      **REPORTED 2026-09-13 — `INCONCLUSIVE`, for precision and not for sign.** Out of sample the
+      candidate earned **−0.1543R [−0.2930, −0.0501] less a trade than `SPY` over the same days** —
+      wholly below zero, 0.243 wide against the 0.15R floor, so §6 refuses it. In sample −0.1057R,
+      at 3× trade costs −0.2512R, unscreened −0.2772R; only the index-charged-costs reading touches
+      zero. `docs/prereg/results/PR-019b-report.md`. The candidate is not retired and nothing
+      supports it; the exit line (`PR-016`..`PR-019b`) has now been searched on one screen and one
+      universe, and the index beats the exit alone by more than it beats the screened book.
       ```bash
-      PYTHONPATH=$PWD/src python tools/run_pr019b.py --data data --as-of 2026-09-06T22:36:49.635786-05:00
+      PYTHONPATH=$PWD/src python tools/run_pr019b.py --report
       ```
+
+- [ ] **`[v]` A POWER ESTIMATE FOR A MARKET-PAIRED CONTRAST MUST MODEL OVERLAPPING HOLDS — owed
+      before the next one registers.** `PR-019b`'s estimate predicted a half-width of 0.0743 and the
+      study realised 0.1214 out of sample and 0.1306 against 0.0772 in sample — 1.6–1.7× narrow,
+      where `PR-019`'s two calibration points ran 6–8% wide. `power_pr019.half_width` is a normal
+      approximation over independent entry months, and a 60-session hold spans about three of them,
+      so the index legs of adjacent months share about two thirds and one third of their days — a
+      variance factor near `1 + 2(0.67) + 2(0.33) ≈ 3`, a half-width ×1.73.
+      **MEASURED 2026-09-13, in sample, with a scratch copy of the correction:** the lag-1 and lag-2
+      autocovariances of the monthly values against the noise-corrected between-month variance give
+      **3.30**, and the corrected in-sample prediction is **0.1403 against the 0.1306 realised** — 7%
+      wide, `PR-019`'s calibration. The overlap is the whole miss. **What is owed**: the function in
+      `tools/power_pr019.py` (additive — `PR-019-power.json` must still reproduce), its fields in
+      `power_pr019b.py`, tests, and a committed side record of the re-run. Until then, any study
+      whose read contrast carries a multi-month index leg is sized too optimistically.
 
 - [ ] **`[v]` WHETHER `risk.max_concurrent_positions` MOVES — `PR-015`, 2026-09-07, and this is
       the owner's number, not mine.**

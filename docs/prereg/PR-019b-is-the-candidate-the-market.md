@@ -8,7 +8,12 @@ author:        Claude, owed by STRATEGY_CONTRACT.md C-3 - §4's row "does the 4 
                which names the missing market null as the reason its +0.0202R no-selection
                reading cannot be interpreted. Written under the owner's standing instruction of
                2026-09-13 to work the open list end to end
-status:        registered
+status:        reported   (2026-09-13 - results/PR-019b-report.md)   PRELIMINARY
+verdict:       INCONCLUSIVE - for precision, not for sign. Out of sample, trade minus SPY over the
+               trade's own sessions is -0.1543R [-0.2930, -0.0501]: wholly below zero and 0.243
+               wide against the 0.15R floor, so §6 may not read it. §3's sign held; its half-width
+               of 0.0743 realised 0.1214 - the power estimate had no term for the autocorrelation
+               of overlapping 60-session holds. §9 reproduced PR-019 to every digit
 ```
 
 ---
