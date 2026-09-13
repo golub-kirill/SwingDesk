@@ -33,6 +33,8 @@ from swingdesk.platform.clock import FixedClock, SystemClock
 from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
 from swingdesk.presentation import notify, report
 from swingdesk.presentation.paths import default_data
+from swingdesk.presentation.pending_view import expiry as _expiry
+from swingdesk.presentation.pending_view import split_pending
 from swingdesk.reference_data import calendar as cal
 from swingdesk.reference_data import classification
 from swingdesk.reference_data import universe as reference_universe
@@ -1682,28 +1684,6 @@ def _record_fill(args: argparse.Namespace) -> int:
     return 0
 
 
-def _expiry(
-    positions: PositionStore, action: ManagementAction, now: datetime
-) -> bool | Refusal:
-    """Is this proposal past `DR-013`'s window? A `Refusal` when the rule cannot be applied.
-
-    The exchange comes from the POSITION, never from parsing `position_id`. That id defaults to
-    `POS-<instrument id>-<opened-on>` but `--position-id` overrides it, so splitting the string
-    would work until the first time somebody used the flag - and then it would pick the wrong
-    calendar silently, which is the worst way for a date rule to be wrong.
-    """
-    try:
-        days, _ = ParameterRegistry.load().int_value("management.proposal_expiry_days")
-    except ParameterUnset as unset:
-        return Refusal("RISK", "no expiry window is set, so staleness cannot be judged",
-                       parameter_id=unset.parameter_id)
-    history = positions.history(action.position_id)
-    if not history:
-        return Refusal("DATA", f"no position {action.position_id} to date this proposal against")
-    exchange = cal.exchange_for(history[-1].instrument_id)
-    return manage.is_expired(action, now, days, exchange)
-
-
 def _pending(args: argparse.Namespace) -> int:
     """List proposals awaiting an answer, with what US-010 requires to answer them.
 
@@ -1719,28 +1699,11 @@ def _pending(args: argparse.Namespace) -> int:
     )
 
     with PositionStore(args.data / "positions.duckdb") as positions:
-        everything = positions.pending()
-
-        # Split at READ time (`DR-013` 6.4). Expired ones are SHOWN, not dropped: an owner who
-        # cannot tell "nothing pending" from "something aged out while I was away" has been told
-        # less than the truth, and the second is the case they most need to know about.
-        # Superseded BEFORE expiry, and at read time too: an older stop move that a newer one on the
-        # same position has replaced is the same question asked on staler data. Shown as a count
-        # per position rather than hidden - `manage.superseded` never touches a critical kind.
-        replaced = manage.superseded(
-            [(i.action.position_id, i.sequence, i.action.kind) for i in everything])
-        waiting, expired, unjudgeable, older = [], [], [], []
-        for item in everything:
-            if (item.action.position_id, item.sequence) in replaced:
-                older.append(item)
-                continue
-            verdict = _expiry(positions, item.action, now)
-            if isinstance(verdict, Refusal):
-                unjudgeable.append((item, verdict))
-            elif verdict:
-                expired.append(item)
-            else:
-                waiting.append(item)
+        # The split lives in `pending_view` so `swingdesk status` counts by the same rules.
+        split = split_pending(positions, now)
+        waiting, expired, unjudgeable, older = (
+            split.waiting, split.expired, split.unjudgeable, split.superseded)
+        everything = split.total
 
         if not everything:
             print("no proposals awaiting your answer.")
