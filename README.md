@@ -405,7 +405,7 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 75 script(s), of which 17 are things you type
+### The tools — 76 script(s), of which 17 are things you type
 
 #### Operator tools — 17
 
@@ -458,7 +458,7 @@ Invoked by `python tools/check_gates.py`, not singly. Listed so a failing gate c
 | `python tools/verify_parameters.py` | Enforce the parameter-registry contract. | `--registry` |
 | `python tools/verify_transcription.py` | Verify that every `verbatim` claim in the documents still matches the course. | `--course-root` · `--docs` |
 
-#### Evidence-bound research runners — 45
+#### Evidence-bound research runners — 46
 
 Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions/measurements/` and reproduces it. They ran once, on a date. Nobody types these; they exist so a number can be re-derived.
 
@@ -488,6 +488,7 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/measure_spread.py` | Measure the effective spread across the stored universe, to inform DR-005. | `--data` · `--limit` · `--min-pairs` · `--out` |
 | `python tools/measure_study_drift.py` | How far has the store moved under each REPORTED study since it ran? | `--data` · `--results` |
 | `python tools/measure_target_reachability.py` | Which R target is REACHABLE inside the holding period this project actually runs? | `--data` · `--out` · `--limit` |
+| `python tools/measure_universe_null.py` | Is it the universe or the selection? A third null for `PR-019b`'s candidate: its own admitted pool. | `--data` · `--as-of` · `--reference` · `--out` · `--report` |
 | `python tools/probe_alpaca_delisted.py` | Does Alpaca serve the PRICE PATH of a delisted equity? Asked because nobody had asked. | `--sample` |
 | `python tools/probe_ambiguous_bar.py` | On a session that reached BOTH the stop and the target, which one printed first? Measured. | `--bars` · `--sample` · `--seed` · `--feed` · `--result` · `--out` |
 | `python tools/probe_canada.py` | Can the Canadian universe be enumerated? Asked of TMX, because the claim had hardened. | `--full` |

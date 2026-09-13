@@ -250,6 +250,12 @@ NO_SPEND_MEASUREMENTS = {
                      "are where its verdict lives",
     "venue-fees-2026-09-05": "the venue's regulatory fee schedule, checked against one observed "
                              "round trip. A cost input, and a deterministic one",
+    "universe-null-2026-09-13": "a new NULL for configurations already counted - PR-019b's "
+                                "candidate and PR-019's no-selection arm, rebuilt and reproduced to "
+                                "the digit - read against their own admitted universe instead of "
+                                "SPY. No configuration is evaluated that was not already, and none "
+                                "is selected on the answer: it says which of two owners the loss "
+                                "belongs to, the universe or the selection",
 }
 
 
