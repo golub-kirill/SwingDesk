@@ -302,11 +302,11 @@ SIDE_RECORDS = {
                              "with the overlap correction its miss made owed. Dispersion only, "
                              "under the same level guard, in sample only; it re-sizes nothing "
                              "already run and selects nothing",
-    "PR-020-power": "no trials: a VARIANCE estimate for a study that was then NOT registered - "
-                    "the selected decile held with no stop against its own universe, sized at "
-                    "every no-stop hold of PR-019's grid. Dispersion only, under the same level "
-                    "guard, in sample only. No hold reached the 0.15R floor, so no trial was "
-                    "spent: this is the record of why",
+    "PR-020-power": "no trials: a VARIANCE estimate for PR-020's minimum detectable effect - the "
+                    "selected decile held with no stop against its own universe, sized at five "
+                    "sessions and every no-stop hold of PR-019's grid. Dispersion only, under the "
+                    "same level guard, in sample only, so the hold it chose - the one readable at "
+                    "the floor - could not be chosen on the answer. PR-020 counts its one",
 }
 
 

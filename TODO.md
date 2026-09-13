@@ -1717,8 +1717,13 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       `PR-019`'s grid on the same entries: predicted out-of-sample half-widths of trade − pool
       **0.0781 at 10 sessions**, 0.1005 at 20, 0.1092 at 40, 0.1828 at 60 — against the 0.075 the
       0.15R floor needs. None readable; the nearest misses by 4%, and the corrected estimator ran 7%
-      wide at its one calibration point, so 10 sessions is a coin flip on readability. The trial was
-      not spent. **Yours:** register at 10 sessions knowing it may miss, move the floor, or leave it.
+      wide at its one calibration point, so 10 sessions is a coin flip on readability.
+      **REGISTERED 2026-09-13 at 5 sessions, on the owner's ruling that the question be answered
+      rather than shelved.** Precision falls with the hold, so the one direction that could reach
+      the floor was shorter: 5 sessions reads **0.0704**, readable by 6%, with no overlap to correct
+      (`PR-020-power.json`, re-run with the fifth hold; the other four reproduce to the digit). The
+      pool pays the trade's slippage, so the difference is selection and not the round trip.
+      `docs/prereg/PR-020-does-the-screen-know-anything.md`; `tools/run_pr020.py`.
 
 - [ ] **`[v]` A POWER ESTIMATE FOR A MARKET-PAIRED CONTRAST MUST MODEL OVERLAPPING HOLDS — owed
       before the next one registers.** `PR-019b`'s estimate predicted a half-width of 0.0743 and the
