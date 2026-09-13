@@ -201,6 +201,9 @@ def main(argv: list[str] | None = None) -> int:
                              "arming switch all live here")
     pending.add_argument("--as-of", default=None,
                          help="ISO instant to judge staleness at (DR-013); defaults to now")
+    pending.add_argument("--hide-expired", action="store_true",
+                         help="show expired proposals as a count instead of one by one. "
+                              "Nothing is deleted; leave it off to list them")
 
     respond = sub.add_parser(
         "respond",
@@ -1824,7 +1827,12 @@ def _pending(args: argparse.Namespace) -> int:
                 f"--approve|--reject --reason \"...\"\n"
             )
 
-        if expired:
+        if expired and getattr(args, "hide_expired", False):
+            # The owner's review, medium #2. Hidden from the list, never from the count and never
+            # from the store: a `--cleanup` that deleted them would rewrite the record.
+            print(f"{len(expired)} EXPIRED hidden by --hide-expired (DR-013) - nothing is "
+                  f"deleted; run `swingdesk pending` without it to list them\n")
+        elif expired:
             print(f"{len(expired)} EXPIRED and can no longer be answered (DR-013):\n")
             for item in expired:
                 a = item.action

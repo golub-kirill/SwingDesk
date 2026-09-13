@@ -2906,8 +2906,9 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       rounding on, a CLI test proves `scan` builds it; 6 of 6 mutants die.
       **Still open after this:** `align-stops` for book stops that already carry sub-penny values
       (DINO 100.761817 and VGT 117.044982 on 2026-09-13 — no longer a false pause, still not a
-      price the venue can hold), the read-side decision view, a `pending` flag that hides expired
-      rows — and #2 and #4, which are yours.
+      price the venue can hold), the read-side decision view — and #2 and #4, which are yours.
+      **`pending --hide-expired` BUILT 2026-09-13** (medium #2): expired rows collapse to one count
+      line, nothing is deleted, and without the flag they list exactly as before.
 
 - [ ] **`[v]` ALPACA PAPER TRADING — owner instruction 2026-08-31. Wire it as the broker so
       strategies, guesses and the whole chain can be tested against a real venue.**
