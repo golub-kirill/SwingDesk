@@ -83,7 +83,24 @@ REM minutes, so this holds about a month. The first estimate here said 650KB,
 REM taken from a --limit 5 test run - a limited run is not a small version of a
 REM full one, it is a different thing. Two passes a day roughly halves the
 REM window this holds, which is still comfortably over a fortnight.
-for %%F in ("%LOG%") do if %%~zF GTR 50000000 move /Y "%LOG%" "%LOG%.1" >nul 2>&1
+REM
+REM NINE generations, shifted oldest first. ONE was kept until 2026-09-13 and `move /Y` overwrote
+REM it: the 09-08 rotation left Track A's streak blind to 09-01..09-04 (tools/track_a_streak.py
+REM reads the log), and the next rotation would have erased them. A 20-session streak needs about a
+REM month of history and the log now grows ~9MB a day, so 9 x 50MB holds ~50 days. Before
+REM `:attempt`, so it moves no decision and no exit code.
+if not exist "%LOG%" goto :rotated
+for %%F in ("%LOG%") do if %%~zF LEQ 50000000 goto :rotated
+if exist "%LOG%.8" move /Y "%LOG%.8" "%LOG%.9" >nul 2>&1
+if exist "%LOG%.7" move /Y "%LOG%.7" "%LOG%.8" >nul 2>&1
+if exist "%LOG%.6" move /Y "%LOG%.6" "%LOG%.7" >nul 2>&1
+if exist "%LOG%.5" move /Y "%LOG%.5" "%LOG%.6" >nul 2>&1
+if exist "%LOG%.4" move /Y "%LOG%.4" "%LOG%.5" >nul 2>&1
+if exist "%LOG%.3" move /Y "%LOG%.3" "%LOG%.4" >nul 2>&1
+if exist "%LOG%.2" move /Y "%LOG%.2" "%LOG%.3" >nul 2>&1
+if exist "%LOG%.1" move /Y "%LOG%.1" "%LOG%.2" >nul 2>&1
+move /Y "%LOG%" "%LOG%.1" >nul 2>&1
+:rotated
 
 REM ---------------------------------------------------------------------------
 REM THE SECOND PASS IS CONDITIONAL - owner instruction, 2026-08-24
