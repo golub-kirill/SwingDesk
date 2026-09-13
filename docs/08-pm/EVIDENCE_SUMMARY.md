@@ -1119,6 +1119,17 @@ a rising market more notional per R earns more R whether or not anything was sel
 why every long-hold level on this page has to be read against the index before it is read as an edge.
 It is not retired (C-3 retires on `REJECT` or `NULL`), and nothing here supports it.
 
+**Exploratory addendum, 2026-09-13, after `PR-020` exposed the construction (§20.8).** The `SPY` leg
+is expressed in each trade's R, so a trade with a large `entry / risk` carries a large index position.
+By that ratio, out of sample: the high-volatility half (below 10, 4,084 trades) matches `SPY` to
+**−0.001R**; the 10–25 bucket (2,960) reads −0.261R and carries 69% of the gap; 38 cash and short-bond
+funds selected on 2022-11-04 (above 50) carry about 26%. **Most of the gap is a full-beta leg on a
+low-volatility name's large notional** — the mechanism the paragraph above names, now sized, and not
+an error: a constant-risk book is weighted exactly that way. At the cost floor derived on 2026-09-08
+(round trip no more than 1R), the 19 cash trades above it removed: **−0.1310R [−0.2319, −0.0453]**
+out of sample, still wholly below zero and 0.187 wide. The reading survives; the cash was worth about
+0.02R of it.
+
 ### 20.7 Whose loss is it — the universe's, or the exit's?
 
 Measured 2026-09-13, **EXPLORATORY**: `tools/measure_universe_null.py`,
@@ -1146,3 +1157,40 @@ the exit, and the only exits this programme has measured that keep more of the p
 all (`PR-018`'s `hold_only`, `PR-019`'s no-stop cells) — pay for it with the tail: 21.7% of trades
 below −2R. Neither null carries any risk budget, so none of this says holding the pool is a
 strategy; it says where the −0.154R goes.
+
+**Read with §20.8's caveat**: the pool here is in each trade's R as well, so each trade weighs by its
+`entry / risk` — as a constant-risk book weighs it, except for cash funds whose round trip exceeds
+1R, which no book should hold. Not re-measured at the cost floor.
+
+### 20.8 Held a week with no stop, against its own universe: unreadable, and the reason is the construction
+
+Measured 2026-09-13. `PR-020`, `INCONCLUSIVE`, and §9 refused even that. Report:
+`docs/prereg/results/PR-020-report.md`. The ratified screen's selected names held **5 sessions with
+no stop**, against their own equal-weighted admitted universe over the same sessions, the pool
+charged the same 25 bps a side — sized first, and 5 sessions was the one hold the 0.15R floor could
+read (0.0704 predicted).
+
+| out of sample, 7,236 trades | mean a trade |
+|---|---|
+| the trade, net | −0.1433R [−0.3054, +0.0114] |
+| **trade − costed pool** | **−0.1412R [−0.4815, +0.0360]** — 0.518 wide |
+| the null's own check, every admitted name | −0.0669R — beyond the 0.05R §9 allows |
+
+**In sample it behaved as sized**: −0.0160R [−0.0782, +0.0334], half-width 0.0558 against 0.0732.
+**Out of sample it did not, and the reason was measured after the run**: the pool leg is expressed in
+the trade's R, and on 2022-11-04 the screen selected T-bill ETFs — SHV, BIL, SGOV and eight more —
+whose `entry / risk` exceeds 1,000. A 5% week in the pool is +73R in SHV's units. **38 trades carry
+85% of the out-of-sample difference**; the other 7,198 average −0.021R. At the cost floor derived on
+2026-09-08 — `entry / risk` ≤ 200, a round trip of no more than 1R — the 26 cash and short-bond trades
+above it removed, exploratory: **−0.0297R [−0.1121, +0.0299]**, 0.142 wide, inside the floor at the
+half-width §3 predicted. The shape of the `NULL` §3 predicted, and not a verdict: the cut came after
+the width was explained, and the null's check still reads −0.0496R [−0.0903, −0.0100].
+
+**What it changes.** Two things, neither a verdict. **A basket leg in a trade's R weighs each trade by
+its `entry / risk`**: right for a question about a constant-risk book — §20.6 survives the cost floor
+at −0.131R — wrong for a question about what the screen knows, and absurd for a cash fund whose round
+trip exceeds 1R. A paired study bounds `entry / risk` at the cost floor as an entry rule, and a
+question about selection pairs per unit invested. And **the live screen buys
+cash in a bear market**: by the path-strength rule, T-bill funds beat `SPY` through 2022, and a trade
+in one loses about 5R to its own round trip. The minimum `ATR / price` in the universe is the owner's
+open decision; this is what it would have prevented.

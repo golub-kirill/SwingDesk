@@ -105,6 +105,15 @@ PERTURBATIONS: dict[str, Any] = {
              "DR-005 and keeps the pool at the primary's 1x"),
 }
 
+#: §4's split and what it buys - gate 25 reads `split.buys`, and PREREG_TEMPLATE rule 7 is why.
+SPLIT: dict[str, str] = {
+    "in_sample": f"entries on or before {PRIMARY_END}, printed and never read",
+    "out_of_sample": f"entries after {PRIMARY_END}, the verdict",
+    "buys": ("the entries are PR-019's, whose cell was selected in its in-sample window, so reading "
+             "only out of sample keeps that selection off the verdict; the boundary is "
+             "PR-014..PR-019b's, not chosen after seeing these data"),
+}
+
 #: One row per trade both nulls can price: (entry date, trade R, pool R, pool R slipped, SPY R).
 Row = tuple[date, float, float, float, float]
 
@@ -295,6 +304,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                             "charged DR-005's slippage on both fills",
                  "diagnostic": "SPY over the same sessions, never read"},
         "perturbations": PERTURBATIONS,
+        "split": SPLIT,
         "minimum_detectable_effect": str(MINIMUM_DETECTABLE_EFFECT),
         "instruments": instruments, "formation_dates": len(formations),
         "formations_skipped_for_a_thin_cross_section": chosen.thin,
