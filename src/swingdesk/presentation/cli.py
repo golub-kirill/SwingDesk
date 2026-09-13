@@ -16,7 +16,7 @@ if TYPE_CHECKING:  # the broker package is imported lazily inside the functions 
     from swingdesk.broker.alpaca import AlpacaClient
     from swingdesk.broker.policy import BrokerPolicy
     from swingdesk.broker.reconcile import Unprotected
-    from swingdesk.contracts.broker import PlacedOrder
+    from swingdesk.contracts.broker import BrokerPosition, PlacedOrder
 
 from swingdesk.application import universe as universe_builder
 from swingdesk.application.pipeline import InstrumentOutcome, RunResult, run
@@ -32,6 +32,10 @@ from swingdesk.market_data.retry import RetryingFetcher
 from swingdesk.platform.clock import FixedClock, SystemClock
 from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
 from swingdesk.presentation import notify, report
+from swingdesk.presentation.passthrough import TOOL_COMMANDS, run_tool
+from swingdesk.presentation.paths import default_data
+from swingdesk.presentation.pending_view import expiry as _expiry
+from swingdesk.presentation.pending_view import split_pending
 from swingdesk.reference_data import calendar as cal
 from swingdesk.reference_data import classification
 from swingdesk.reference_data import universe as reference_universe
@@ -52,8 +56,6 @@ from swingdesk.trade_management.sizing import (
     costs_per_share,
     to_base_currency,
 )
-
-DEFAULT_DATA = Path("data")
 
 #: What `sync-fills` writes into `Position.strategy`. The card that decided the entry
 #: (`DR-030`), not a literal typed twice - a position whose strategy tag says `unspecified`
@@ -157,6 +159,11 @@ def _force_utf8_output() -> None:
 
 def main(argv: list[str] | None = None) -> int:
     _force_utf8_output()
+    raw = sys.argv[1:] if argv is None else argv
+    if raw and raw[0] in TOOL_COMMANDS:
+        # BEFORE argparse on purpose: the script owns its arguments, `--help` included, and an
+        # `argparse.REMAINDER` positional refuses a first argument that starts with `-`.
+        return run_tool(raw[0], raw[1:])
     parser = argparse.ArgumentParser(prog="swingdesk", description="Swing-trading decision support")
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -167,7 +174,7 @@ def main(argv: list[str] | None = None) -> int:
     scan.add_argument("--limit", type=int, default=None,
                       help="cap the universe by dollar volume. A cap is a RANKING, not the rule, "
                            "and the report says so")
-    scan.add_argument("--data", type=Path, default=DEFAULT_DATA,
+    scan.add_argument("--data", type=Path, default=None,
                         help="the store directory: bars, positions, journal and the "
                              "arming switch all live here")
     scan.add_argument("--lookback", default="1y",
@@ -189,7 +196,7 @@ def main(argv: list[str] | None = None) -> int:
 
     pending = sub.add_parser(
         "pending", help="proposals on open positions awaiting your answer (US-010)")
-    pending.add_argument("--data", type=Path, default=DEFAULT_DATA,
+    pending.add_argument("--data", type=Path, default=None,
                         help="the store directory: bars, positions, journal and the "
                              "arming switch all live here")
     pending.add_argument("--as-of", default=None,
@@ -207,7 +214,7 @@ def main(argv: list[str] | None = None) -> int:
     respond.add_argument("--reason", required=True,
                          help="why. Required - Production Rules 3.8: an approval with no stated "
                               "reason is an unlogged judgment")
-    respond.add_argument("--data", type=Path, default=DEFAULT_DATA,
+    respond.add_argument("--data", type=Path, default=None,
                         help="the store directory: bars, positions, journal and the "
                              "arming switch all live here")
     respond.add_argument("--as-of", default=None,
@@ -225,7 +232,7 @@ def main(argv: list[str] | None = None) -> int:
     fill.add_argument("--commission", type=Decimal, required=True,
                       help="as charged, not the modelled estimate")
     fill.add_argument("--filled-on", default=None, help="ISO date; defaults to today")
-    fill.add_argument("--data", type=Path, default=DEFAULT_DATA,
+    fill.add_argument("--data", type=Path, default=None,
                         help="the store directory: bars, positions, journal and the "
                              "arming switch all live here")
     fill.add_argument("--as-of", default=None,
@@ -252,7 +259,7 @@ def main(argv: list[str] | None = None) -> int:
                              "printed - an override nobody can audit is not an override")
     opened.add_argument("--position-id", default=None,
                         help="override the default POS-<instrument id>-<opened-on> identity")
-    opened.add_argument("--data", type=Path, default=DEFAULT_DATA,
+    opened.add_argument("--data", type=Path, default=None,
                         help="the store directory: bars, positions, journal and the "
                              "arming switch all live here")
     opened.add_argument("--as-of", default=None,
@@ -280,7 +287,7 @@ def main(argv: list[str] | None = None) -> int:
                              "--as-of on purpose: one is the event, the other is when we learned")
     closed.add_argument("--reason-code", default=None,
                         help="the course's code for why, when one applies")
-    closed.add_argument("--data", type=Path, default=DEFAULT_DATA,
+    closed.add_argument("--data", type=Path, default=None,
                         help="the store directory: bars, positions, journal and the "
                              "arming switch all live here")
     closed.add_argument("--as-of", default=None,
@@ -291,7 +298,7 @@ def main(argv: list[str] | None = None) -> int:
         help="record positions for entries THIS system placed that have since filled (DR-031). "
              "Reads the venue, writes the book, places no order",
     )
-    sync.add_argument("--data", type=Path, default=DEFAULT_DATA,
+    sync.add_argument("--data", type=Path, default=None,
                         help="the store directory: bars, positions, journal and the "
                              "arming switch all live here")
     sync.add_argument("--as-of", default=None,
@@ -304,7 +311,7 @@ def main(argv: list[str] | None = None) -> int:
         help="read the paper account and reconcile it against the book. Reads only - it has no "
              "way to place, amend or cancel anything (D1/BR-1, DR-026)",
     )
-    broker_cmd.add_argument("--data", type=Path, default=DEFAULT_DATA,
+    broker_cmd.add_argument("--data", type=Path, default=None,
                         help="the store directory: bars, positions, journal and the "
                              "arming switch all live here")
     broker_cmd.add_argument("--as-of", default=None,
@@ -314,11 +321,48 @@ def main(argv: list[str] | None = None) -> int:
     broker_cmd.add_argument("--since", default=None,
                             help="ISO instant; with --fills, the earliest execution to ask for")
 
+    status_cmd = sub.add_parser(
+        "status",
+        help="one screen: the switch, the schedule, the account, every stop, what is pending. "
+             "Reads only",
+    )
+    status_cmd.add_argument("--data", type=Path, default=None,
+                            help="data directory: $SWINGDESK_DATA, then ./data, then the "
+                                 "checkout's")
+    status_cmd.add_argument("--as-of", default=None,
+                            help="ISO instant to read the book at; defaults to now")
+
+    # Operational scripts (`presentation/passthrough.py`), dispatched BEFORE argparse runs. One
+    # literal ASSIGNMENT each, because `tools/build_commands.py` reads the tree and recognises only
+    # `<name> = sub.add_parser("...")` - the first cut used bare calls, and README.md silently
+    # listed none of the six. These parsers exist for `--help` and README.md, never for parsing.
+    record_cmd = sub.add_parser(
+        "record", help="the live paper record: switch, book, what was refused")
+    budget_cmd = sub.add_parser(
+        "budget", help="what the search has cost and what the next trial costs")
+    streak_cmd = sub.add_parser(
+        "streak", help="the a.run_completes streak, computed not hand-kept")
+    preflight_cmd = sub.add_parser(
+        "preflight", help="is every declared dependency installed")
+    gates_cmd = sub.add_parser(
+        "gates", help="the whole gate suite - this is the contract")
+    schedule_cmd = sub.add_parser(
+        "schedule", help="the scheduled tasks and how each last ended")
+    for tool_cmd in (record_cmd, budget_cmd, streak_cmd, preflight_cmd, gates_cmd, schedule_cmd):
+        tool_cmd.set_defaults(passthrough=True)
+
     args = parser.parse_args(argv)
+    # Resolved HERE rather than in `default=`: a computed default would be evaluated at import time,
+    # and `tools/build_commands.py`, which reads the tree, would render a machine-specific absolute
+    # path into README.md. `paths.default_data` says where it looks and in what order.
+    if getattr(args, "data", "") is None:
+        args.data = default_data()
 
     if args.command == "record-fill":
         return _record_fill(args)
 
+    if args.command == "status":
+        return _status(args)
     if args.command == "broker":
         return _broker(args)
     if args.command == "sync-fills":
@@ -1616,6 +1660,56 @@ def _broker(args: argparse.Namespace) -> int:
     return 0
 
 
+def _status(args: argparse.Namespace) -> int:
+    """One screen, and it reads only. Exit codes are `broker`'s: 0 · 2 unavailable · 3 TECH.
+
+    A venue that cannot be read does not stop the screen: the switch, the schedule, the book and
+    the queue are all local, and an operator at 18:35 needs them most on exactly the evening the
+    venue is down. `presentation/status.py` builds and renders; this function only reads.
+    """
+    from swingdesk import broker as broker_pkg
+    from swingdesk.platform import schedule as schedule_pkg
+    from swingdesk.presentation import status as status_view
+
+    now = (
+        FixedClock(datetime.fromisoformat(args.as_of).replace(tzinfo=UTC)).now()
+        if args.as_of
+        else SystemClock().now()
+    )
+    try:
+        policy = broker_pkg.load_policy()
+    except broker_pkg.PolicyRefused as refused:
+        print(f"status REFUSED  {refused}", file=sys.stderr)
+        return 2
+    switch = broker_pkg.read_arming(args.data, policy.write)
+    readings = tuple(reading for task in schedule_pkg.RUN_TASKS
+                     if (reading := schedule_pkg.read(task)) is not None)
+
+    account = None
+    held: Sequence[BrokerPosition] = ()
+    live: Sequence[PlacedOrder] = ()
+    venue_error: str | None = None
+    try:
+        client = broker_pkg.open_client(policy)
+        account = client.account(now)
+        held = client.positions(now)
+        live = client.open_orders(now)
+    except (broker_pkg.CredentialsMissing, broker_pkg.BrokerUnavailable) as unavailable:
+        venue_error = str(unavailable)
+
+    with PositionStore(args.data / "positions.duckdb") as positions:
+        book = positions.open_as_of(now)
+        split = split_pending(positions, now)
+
+    view = status_view.build(
+        at=now, switch=switch, schedule=readings, account=account, venue_error=venue_error,
+        book=book, held=held, live_orders=live, split=split, market=policy.market,
+        label=policy.label, tick_for=policy.tick_for)
+    for line in status_view.render(view):
+        print(line)
+    return view.exit_code
+
+
 def _record_fill(args: argparse.Namespace) -> int:
     """Record what the broker actually did, and report the slippage against what was planned.
 
@@ -1678,28 +1772,6 @@ def _record_fill(args: argparse.Namespace) -> int:
     return 0
 
 
-def _expiry(
-    positions: PositionStore, action: ManagementAction, now: datetime
-) -> bool | Refusal:
-    """Is this proposal past `DR-013`'s window? A `Refusal` when the rule cannot be applied.
-
-    The exchange comes from the POSITION, never from parsing `position_id`. That id defaults to
-    `POS-<instrument id>-<opened-on>` but `--position-id` overrides it, so splitting the string
-    would work until the first time somebody used the flag - and then it would pick the wrong
-    calendar silently, which is the worst way for a date rule to be wrong.
-    """
-    try:
-        days, _ = ParameterRegistry.load().int_value("management.proposal_expiry_days")
-    except ParameterUnset as unset:
-        return Refusal("RISK", "no expiry window is set, so staleness cannot be judged",
-                       parameter_id=unset.parameter_id)
-    history = positions.history(action.position_id)
-    if not history:
-        return Refusal("DATA", f"no position {action.position_id} to date this proposal against")
-    exchange = cal.exchange_for(history[-1].instrument_id)
-    return manage.is_expired(action, now, days, exchange)
-
-
 def _pending(args: argparse.Namespace) -> int:
     """List proposals awaiting an answer, with what US-010 requires to answer them.
 
@@ -1715,28 +1787,11 @@ def _pending(args: argparse.Namespace) -> int:
     )
 
     with PositionStore(args.data / "positions.duckdb") as positions:
-        everything = positions.pending()
-
-        # Split at READ time (`DR-013` 6.4). Expired ones are SHOWN, not dropped: an owner who
-        # cannot tell "nothing pending" from "something aged out while I was away" has been told
-        # less than the truth, and the second is the case they most need to know about.
-        # Superseded BEFORE expiry, and at read time too: an older stop move that a newer one on the
-        # same position has replaced is the same question asked on staler data. Shown as a count
-        # per position rather than hidden - `manage.superseded` never touches a critical kind.
-        replaced = manage.superseded(
-            [(i.action.position_id, i.sequence, i.action.kind) for i in everything])
-        waiting, expired, unjudgeable, older = [], [], [], []
-        for item in everything:
-            if (item.action.position_id, item.sequence) in replaced:
-                older.append(item)
-                continue
-            verdict = _expiry(positions, item.action, now)
-            if isinstance(verdict, Refusal):
-                unjudgeable.append((item, verdict))
-            elif verdict:
-                expired.append(item)
-            else:
-                waiting.append(item)
+        # The split lives in `pending_view` so `swingdesk status` counts by the same rules.
+        split = split_pending(positions, now)
+        waiting, expired, unjudgeable, older = (
+            split.waiting, split.expired, split.unjudgeable, split.superseded)
+        everything = split.total
 
         if not everything:
             print("no proposals awaiting your answer.")
@@ -1754,6 +1809,14 @@ def _pending(args: argparse.Namespace) -> int:
             print(f"      because    {action.reason}")
             if action.old_stop is not None or action.new_stop is not None:
                 print(f"      stop       {action.old_stop} -> {action.new_stop}")
+            if action.new_stop is not None:
+                # `old -> new` is the stop of the day it was proposed; the book may have moved
+                # since, and then an "up" move on this line is not one (found live, 2026-09-13).
+                standing = positions.history(action.position_id)
+                if standing and action.new_stop <= standing[-1].current_stop:
+                    print(f"      OBSOLETE   the book's stop is already "
+                          f"{standing[-1].current_stop}; approving would not raise it - "
+                          f"answer --reject")
             if action.shares_affected is not None:
                 print(f"      shares     {action.shares_affected}")
             print(
@@ -1823,6 +1886,20 @@ def _respond(args: argparse.Namespace) -> int:
                     f"response REFUSED  RISK: {args.position_id} #{args.sequence} expired - it was "
                     f"proposed {proposed.proposed_at:%Y-%m-%d} on an observation that is now stale "
                     f"(DR-013). A later run re-proposes if the rule still fires",
+                    file=sys.stderr,
+                )
+                return 2
+            # BEFORE the response is recorded, for the reason the expiry check above gives: a
+            # recorded answer cannot be taken back. Rejecting such a proposal stays allowed - it is
+            # how an owner clears it - and only an APPROVAL that would lower the stop is refused.
+            standing = positions.history(args.position_id)
+            if (verdict is ActionStatus.APPROVED and standing
+                    and manage.lowers_stop(standing[-1], proposed)):
+                print(
+                    f"response REFUSED  RISK: approving {args.position_id} #{args.sequence} "
+                    f"would move the stop DOWN from {standing[-1].current_stop} to "
+                    f"{proposed.new_stop}. It was proposed before the stop rose; answer it with "
+                    f"--reject",
                     file=sys.stderr,
                 )
                 return 2

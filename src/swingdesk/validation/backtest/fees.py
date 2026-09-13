@@ -66,7 +66,10 @@ __all__ = [
 ]
 
 #: Where the committed schedule lives. Passed to `load_schedule`, never read implicitly.
-DEFAULT_SCHEDULE_PATH = Path("registry/fee_schedule.yml")
+#: Resolved from the package, like `REGISTRY_PATH` and `POLICY_PATH`: a relative path read the
+#: folder the command was typed in (found 2026-09-12 while making `--data` work from anywhere).
+#: `backtest/fees.py` is four levels below the checkout.
+DEFAULT_SCHEDULE_PATH = Path(__file__).resolve().parents[4] / "registry" / "fee_schedule.yml"
 
 
 @dataclass(frozen=True, slots=True)

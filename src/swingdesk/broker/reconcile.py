@@ -285,6 +285,23 @@ def uncommitted_exposure(
 PROTECTIVE_TYPES = frozenset({"stop", "stop_limit"})
 
 
+def resting_stops(live_orders: Sequence[PlacedOrder]) -> dict[str, Decimal]:
+    """The protection actually in force for each symbol: the HIGHEST resting protective trigger.
+
+    The higher trigger fires first, so a lower one behind it changes nothing about the loss. One
+    definition, used by `unprotected` and by `swingdesk status`, so the screen cannot show a venue
+    stop the check did not compare. The order TYPE decides what protects: a `limit` carrying a
+    price is a take-profit, not a stop.
+    """
+    in_force: dict[str, Decimal] = {}
+    for order in live_orders:
+        if order.order_type in PROTECTIVE_TYPES and order.stop_price is not None:
+            current = in_force.get(order.symbol)
+            if current is None or order.stop_price > current:
+                in_force[order.symbol] = order.stop_price
+    return in_force
+
+
 @dataclass(frozen=True, slots=True)
 class Unprotected:
     """One open position whose stop is not standing at the venue. `DR-036`."""
@@ -377,37 +394,27 @@ def unprotected(
     Pure, and out-of-scope book positions are ignored for the reason `reconcile` gives.
     """
     scope = Exchange(market)
-    resting: dict[str, list[PlacedOrder]] = {}
-    for order in live_orders:
-        if order.order_type in PROTECTIVE_TYPES and order.stop_price is not None:
-            resting.setdefault(order.symbol, []).append(order)
+    # The protection in force per symbol - one definition, shared with `swingdesk status`.
+    in_force = resting_stops(live_orders)
 
     findings: list[Unprotected] = []
     for position in sorted(book, key=lambda p: p.instrument_id):
         if cal.exchange_for(position.instrument_id) is not scope:
             continue
-        stops = resting.get(position.instrument_id, [])
-        if not stops:
+        venue = in_force.get(position.instrument_id)
+        if venue is None:
             findings.append(Unprotected(
                 position.instrument_id, position.current_stop, position.shares, None,
-                f"the book records a stop at {position.current_stop} and {venue_word(stops)} is "
-                f"resting at the venue for {position.shares} shares. A stop the market cannot see "
-                f"is not a stop (DR-027 3.2).",
+                f"the book records a stop at {position.current_stop} and nothing is resting at "
+                f"the venue for {position.shares} shares. A stop the market cannot see is not a "
+                f"stop (DR-027 3.2).",
             ))
             continue
-        # The HIGHEST resting trigger, because that is the one that fires first and is therefore
-        # the protection actually in force. A lower one behind it changes nothing about the loss.
-        highest = max(stop.stop_price for stop in stops if stop.stop_price is not None)
-        if not same_trigger(highest, position.current_stop, tick_for(position.current_stop)):
+        if not same_trigger(venue, position.current_stop, tick_for(position.current_stop)):
             findings.append(Unprotected(
-                position.instrument_id, position.current_stop, position.shares, highest,
+                position.instrument_id, position.current_stop, position.shares, venue,
                 f"the book records a stop at {position.current_stop} and the venue is holding one "
-                f"at {highest}. Every R this position reports is denominated in the book's number "
+                f"at {venue}. Every R this position reports is denominated in the book's number "
                 f"(RISK_SPEC 2), and the loss would be taken at the venue's.",
             ))
     return tuple(findings)
-
-
-def venue_word(stops: list[PlacedOrder]) -> str:
-    """`nothing` or `no stop`, so the sentence reads as English in both branches."""
-    return "nothing" if not stops else "no matching stop"
