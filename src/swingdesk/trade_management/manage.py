@@ -189,6 +189,7 @@ def is_expired(
 
 def superseded(
     unanswered: list[tuple[str, int, ActionKind]],
+    latest_stop_move: dict[str, int] | None = None,
 ) -> frozenset[tuple[str, int]]:
     """Which unanswered `MOVE_STOP` proposals a LATER one on the same position has replaced.
 
@@ -205,8 +206,15 @@ def superseded(
     twice.
 
     The latest is the highest SEQUENCE, which the store assigns in proposal order per position.
+
+    **Answered or not.** `latest_stop_move` is the newest stop move on each position whether or not
+    the owner has answered it (`PositionStore.latest_stop_moves`). Measured live 2026-09-13: with
+    only the unanswered in view, rejecting VGT #4 made #3 "the latest" and it came back as awaiting
+    an answer - rejecting the fresher question had revived the staler one, and the owner would
+    have clicked through #3, #2 and #1 one screen at a time. An answer to the newest stop move
+    retires the older ones as surely as a newer proposal does.
     """
-    latest: dict[str, int] = {}
+    latest: dict[str, int] = dict(latest_stop_move or {})
     for position_id, sequence, kind in unanswered:
         if kind is ActionKind.MOVE_STOP:
             latest[position_id] = max(sequence, latest.get(position_id, sequence))
