@@ -212,7 +212,7 @@ rule the ratified screen's top decile took T-bill funds in the 2022 bear market,
 one loses about 5R to its own round trip. The four-slot book ranks by score, and `DR-006` §11.3
 found such names never above 52nd, so the book itself likely would not have bought them; every
 other use of the decile would. The owner ratified the floor the same day: `2 × ATR / price ≥
-0.005` (`risk.min_stop_distance_fraction`).
+0.005`, built in a separate change.
 
 ## What the study cost
 
