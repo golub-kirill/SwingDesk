@@ -1118,3 +1118,31 @@ the screen closes about 0.12R of the gap and no more. **A wide stop holds more n
 a rising market more notional per R earns more R whether or not anything was selected** — which is
 why every long-hold level on this page has to be read against the index before it is read as an edge.
 It is not retired (C-3 retires on `REJECT` or `NULL`), and nothing here supports it.
+
+### 20.7 Whose loss is it — the universe's, or the exit's?
+
+Measured 2026-09-13, **EXPLORATORY**: `tools/measure_universe_null.py`,
+`docs/decisions/measurements/universe-null-2026-09-13.json`. The same two books `PR-019b` read —
+rebuilt through the streamed loader and reproducing it to every digit, trade minus `SPY` included —
+paired with a third null: **their own admitted universe, equal-weighted, over exactly each trade's
+sessions**. `trade − pool` is what the screen and the exit add inside the universe; `pool − SPY` is
+what the universe costs.
+
+| out of sample | trade − pool | pool − `SPY` | trade − `SPY` |
+|---|---|---|---|
+| the candidate, selected | −0.0894 [−0.2681, +0.0290] | −0.0649 [−0.1409, +0.0141] | −0.1543 |
+| the same exit, every admitted name | **−0.1538 [−0.2577, −0.0620]** | **−0.1233 [−0.2238, −0.0331]** | −0.2772 |
+
+**The exit is the larger cost.** On every admitted name, the 4 ATR stop and the 60-session clock
+earn **less than simply holding the same universe** over the same days — −0.154R out of sample and
+−0.236R in sample, both excluding zero. Part of it is the round trip, which the pool is not charged;
+the rest is the stop selling what the pool keeps. **The universe's style gap to `SPY` is real and
+smaller**: −0.123R on those days, excluding zero, and −0.065R on the selected book's days. **The
+screen recovers about 0.06R inside the universe** — −0.089R against the unscreened −0.154R, not
+paired and not distinguishable from zero.
+
+**What it changes.** "Vary the universe" addresses the smaller of the two costs. The larger one is
+the exit, and the only exits this programme has measured that keep more of the pool — no stop at
+all (`PR-018`'s `hold_only`, `PR-019`'s no-stop cells) — pay for it with the tail: 21.7% of trades
+below −2R. Neither null carries any risk budget, so none of this says holding the pool is a
+strategy; it says where the −0.154R goes.

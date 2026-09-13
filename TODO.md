@@ -1702,6 +1702,16 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       ```bash
       PYTHONPATH=$PWD/src python tools/run_pr019b.py --report
       ```
+      **DECOMPOSED 2026-09-13, exploratory (`tools/measure_universe_null.py`,
+      `EVIDENCE_SUMMARY` §20.7).** Against their own equal-weighted admitted universe over the same
+      days: the exit on every admitted name loses to holding that universe by **−0.154R out of
+      sample and −0.236R in sample, both excluding zero**; the universe's style gap to `SPY` is
+      −0.123R; the screen recovers about 0.06R inside it, not distinguishable from zero. **The exit
+      is the larger cost and the universe the smaller.** The question it leaves, and the one worth a
+      registration: **the selected decile HELD — no stop — against its own universe over the same
+      days**, with the tail read beside it (`PR-018`: 21.7% below −2R). Does the screen have skill
+      once the exit's cost is out of the way? Size it with the overlap-aware power estimate
+      (`power_pr019b.py`'s `_overlap` fields) before registering.
 
 - [ ] **`[v]` A POWER ESTIMATE FOR A MARKET-PAIRED CONTRAST MUST MODEL OVERLAPPING HOLDS — owed
       before the next one registers.** `PR-019b`'s estimate predicted a half-width of 0.0743 and the

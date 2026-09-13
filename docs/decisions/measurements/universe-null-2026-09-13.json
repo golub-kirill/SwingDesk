@@ -1,0 +1,263 @@
+{
+  "admitted_names": 5108,
+  "as_of": "2026-09-06T22:36:49.635786-05:00",
+  "books": {
+    "selected": {
+      "in_sample": {
+        "mean_net_r": 0.108,
+        "paired_trades": 4935,
+        "pool_leg": {
+          "high": 0.3826,
+          "low": -0.0733,
+          "observed": 0.1663
+        },
+        "pool_minus_spy": {
+          "high": 0.0695,
+          "low": -0.1484,
+          "observed": -0.0474
+        },
+        "spy_leg": {
+          "high": 0.3791,
+          "low": 0.0189,
+          "observed": 0.2138
+        },
+        "trade": {
+          "high": 0.3358,
+          "low": -0.1275,
+          "observed": 0.108
+        },
+        "trade_minus_pool": {
+          "high": 0.0341,
+          "low": -0.1286,
+          "observed": -0.0583
+        },
+        "trade_minus_spy": {
+          "high": 0.0384,
+          "low": -0.2229,
+          "observed": -0.1057
+        },
+        "trades": 4935
+      },
+      "out_of_sample": {
+        "mean_net_r": 0.0528,
+        "paired_trades": 7236,
+        "pool_leg": {
+          "high": 0.3669,
+          "low": -0.0467,
+          "observed": 0.1422
+        },
+        "pool_minus_spy": {
+          "high": 0.0141,
+          "low": -0.1409,
+          "observed": -0.0649
+        },
+        "spy_leg": {
+          "high": 0.4142,
+          "low": 0.0271,
+          "observed": 0.2071
+        },
+        "trade": {
+          "high": 0.2234,
+          "low": -0.1106,
+          "observed": 0.0528
+        },
+        "trade_minus_pool": {
+          "high": 0.029,
+          "low": -0.2681,
+          "observed": -0.0894
+        },
+        "trade_minus_spy": {
+          "high": -0.0501,
+          "low": -0.293,
+          "observed": -0.1543
+        },
+        "trades": 7236
+      }
+    },
+    "unselected": {
+      "in_sample": {
+        "mean_net_r": 0.102,
+        "paired_trades": 31320,
+        "pool_leg": {
+          "high": 0.6933,
+          "low": -0.0174,
+          "observed": 0.338
+        },
+        "pool_minus_spy": {
+          "high": 0.1507,
+          "low": -0.2639,
+          "observed": -0.0789
+        },
+        "spy_leg": {
+          "high": 0.6078,
+          "low": 0.1905,
+          "observed": 0.4169
+        },
+        "trade": {
+          "high": 0.3449,
+          "low": -0.1646,
+          "observed": 0.102
+        },
+        "trade_minus_pool": {
+          "high": -0.1181,
+          "low": -0.3758,
+          "observed": -0.2361
+        },
+        "trade_minus_spy": {
+          "high": -0.2049,
+          "low": -0.4207,
+          "observed": -0.315
+        },
+        "trades": 31320
+      },
+      "out_of_sample": {
+        "mean_net_r": 0.0202,
+        "paired_trades": 46687,
+        "pool_leg": {
+          "high": 0.4233,
+          "low": -0.0346,
+          "observed": 0.174
+        },
+        "pool_minus_spy": {
+          "high": -0.0331,
+          "low": -0.2238,
+          "observed": -0.1233
+        },
+        "spy_leg": {
+          "high": 0.5641,
+          "low": 0.0792,
+          "observed": 0.2973
+        },
+        "trade": {
+          "high": 0.1766,
+          "low": -0.1069,
+          "observed": 0.0202
+        },
+        "trade_minus_pool": {
+          "high": -0.062,
+          "low": -0.2577,
+          "observed": -0.1538
+        },
+        "trade_minus_spy": {
+          "high": -0.1496,
+          "low": -0.422,
+          "observed": -0.2772
+        },
+        "trades": 46687
+      }
+    }
+  },
+  "candidate": "h60_stop4.0",
+  "exploratory": true,
+  "live_formations": 113,
+  "measures": "each trade against its OWN admitted universe, equal-weighted, over exactly its sessions and in its own R - beside the SPY leg PR-019b read",
+  "not_measured": [
+    "cap weighting within the pool: equal weights are the pool's own definition (measure_benchmark_fit, PR-014's control), not a claim about what an investor holds",
+    "costs on either null: both are charged zero, the strictest reading, as PR-019b's primary",
+    "a halted member's return since its last bar is attributed to the day it resumes"
+  ],
+  "pool": "every name admitted at the latest live formation strictly before the session, equal-weighted, rebalanced daily; bought at the entry session's open, marked at the exit session's close - the SPY leg's own form",
+  "reproduction": {
+    "available": true,
+    "checks": [
+      {
+        "book": "selected",
+        "committed": {
+          "mean_net_r": 0.108,
+          "trade_minus_spy": {
+            "high": 0.0384,
+            "low": -0.2229,
+            "observed": -0.1057
+          },
+          "trades": 4935
+        },
+        "got": {
+          "mean_net_r": 0.108,
+          "trade_minus_spy": {
+            "high": 0.0384,
+            "low": -0.2229,
+            "observed": -0.1057
+          },
+          "trades": 4935
+        },
+        "match": true,
+        "window": "in_sample"
+      },
+      {
+        "book": "selected",
+        "committed": {
+          "mean_net_r": 0.0528,
+          "trade_minus_spy": {
+            "high": -0.0501,
+            "low": -0.293,
+            "observed": -0.1543
+          },
+          "trades": 7236
+        },
+        "got": {
+          "mean_net_r": 0.0528,
+          "trade_minus_spy": {
+            "high": -0.0501,
+            "low": -0.293,
+            "observed": -0.1543
+          },
+          "trades": 7236
+        },
+        "match": true,
+        "window": "out_of_sample"
+      },
+      {
+        "book": "unselected",
+        "committed": {
+          "mean_net_r": 0.102,
+          "trade_minus_spy": {
+            "high": -0.2049,
+            "low": -0.4207,
+            "observed": -0.315
+          },
+          "trades": 31320
+        },
+        "got": {
+          "mean_net_r": 0.102,
+          "trade_minus_spy": {
+            "high": -0.2049,
+            "low": -0.4207,
+            "observed": -0.315
+          },
+          "trades": 31320
+        },
+        "match": true,
+        "window": "in_sample"
+      },
+      {
+        "book": "unselected",
+        "committed": {
+          "mean_net_r": 0.0202,
+          "trade_minus_spy": {
+            "high": -0.1496,
+            "low": -0.422,
+            "observed": -0.2772
+          },
+          "trades": 46687
+        },
+        "got": {
+          "mean_net_r": 0.0202,
+          "trade_minus_spy": {
+            "high": -0.1496,
+            "low": -0.422,
+            "observed": -0.2772
+          },
+          "trades": 46687
+        },
+        "match": true,
+        "window": "out_of_sample"
+      }
+    ],
+    "every_digit": true
+  },
+  "spends_trials": "none - the configurations are PR-019b's and PR-019's, already counted; only the null differs, and no configuration is selected on it",
+  "trades_without_both_legs": {
+    "selected": 0,
+    "unselected": 0
+  }
+}
