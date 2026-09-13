@@ -321,6 +321,29 @@ def test_open_positions_are_evaluated_before_candidates(wired, registry) -> None
     assert len(result.positions) == 1
 
 
+def test_the_run_hands_the_venue_rounding_to_every_stop_it_evaluates(wired, registry) -> None:
+    """The owner's review #1 has ONE rounding point, `manage.evaluate`, and it is only real if
+    `run` reaches it: a rounding that is built and never passed rounds nothing."""
+    bars, journal, positions = wired
+    sessions = _sessions(TEST_US.exchange, date(2025, 1, 1), date(2026, 1, 15))
+    # Opened three sessions ago. The default fixture opened 2025-12-01 has run past the 20-session
+    # clock by AS_OF, so `evaluate` exits on TIME before it ever derives a stop - and a spy would
+    # stay silent for a reason that has nothing to do with the wiring (found 2026-09-13).
+    positions.record(_position(opened_on=date(2026, 1, 12)))
+    seen: list[Decimal] = []
+
+    def spy(price: Decimal) -> Decimal:
+        seen.append(price)
+        return _up_to_cent(price)
+
+    result = run([TEST_US], FixedClock(AS_OF), registry, bars, journal, mode=RunMode.LIVE_AS_OF,
+                 fetcher=fixture_fetcher({TEST_US.id: sessions}), positions=positions,
+                 round_stop=spy)
+
+    assert result.positions[0].action.kind is ActionKind.MOVE_STOP, "the scenario must reach it"
+    assert seen, "run() evaluated the position without handing it the venue's rounding"
+
+
 def test_a_position_with_no_bars_is_paused_not_skipped(wired, registry) -> None:
     """The owner must be told a position could not be evaluated, not left to infer it."""
     bars, journal, positions = wired
@@ -459,6 +482,37 @@ def test_a_stop_is_only_ever_proposed_upward(registry) -> None:
     held = manage.evaluate(_position(), modest, ExitPolicy(Decimal(2), 20), AS_OF,
                            bars_held=3, atr=Decimal(2))
     assert held.kind is ActionKind.HOLD
+
+
+def _up_to_cent(price: Decimal) -> Decimal:
+    from decimal import ROUND_UP
+
+    return (price / Decimal("0.01")).quantize(Decimal(1), rounding=ROUND_UP) * Decimal("0.01")
+
+
+def _rising_bar():
+    from tests.conftest import make_bars
+
+    bar = make_bars(TEST_US, [date(2026, 1, 15)])[0]
+    return bar.model_copy(update={"close": Decimal(140), "high": Decimal(141),
+                                  "low": Decimal(139), "open": Decimal(139)})
+
+
+def test_a_proposed_stop_is_rounded_up_to_the_venues_tick(registry) -> None:
+    """The owner's review #1: a stop the book records to six places can never rest at a venue that
+    holds cents. Rounded UP - `DR-033`'s direction for a stop - so never looser than the rule."""
+    action = manage.evaluate(_position(), _rising_bar(), ExitPolicy(Decimal(2), 20), AS_OF,
+                             bars_held=3, atr=Decimal("2.3457"), round_stop=_up_to_cent)
+    assert action.kind is ActionKind.MOVE_STOP
+    assert action.new_stop == Decimal("135.31")   # 140 - 2 x 2.3457 = 135.3086, rounded UP
+    assert "135.31" in action.reason and "135.3086" not in action.reason
+
+
+def test_without_a_rounder_the_derived_stop_is_kept(registry) -> None:
+    """No write policy, no tick: the proposal is exactly what the rule derived, as before."""
+    action = manage.evaluate(_position(), _rising_bar(), ExitPolicy(Decimal(2), 20), AS_OF,
+                             bars_held=3, atr=Decimal("2.3457"))
+    assert action.new_stop == Decimal("135.3086")
 
 
 # ------------------------------------------------- the owner's answer (US-010, TODO.md 6b 4 + 5)

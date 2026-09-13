@@ -2251,6 +2251,28 @@ def _close_position(args: argparse.Namespace) -> int:
     return 0
 
 
+def _stop_rounder() -> Callable[[Decimal], Decimal] | None:
+    """The venue's tick for a proposed stop, rounded UP (`DR-033`'s direction), or None.
+
+    The owner's operations review #1, 2026-09-12: a stop proposed to six places can never rest at a
+    venue that holds cents, so an approved move left the book and the venue disagreeing by a
+    fraction no order could remove. The tick is the committed policy's and the direction is
+    `submit.to_tick`'s for a stop - nearer the price, never looser than the rule derived. With no
+    write block there is no tick, and the proposal stays exactly what the rule derived.
+    """
+    from swingdesk import broker as broker_pkg
+    from swingdesk.broker.submit import to_tick
+
+    try:
+        policy = broker_pkg.load_policy()
+    except broker_pkg.PolicyRefused:
+        return None
+    write = policy.write
+    if write is None:
+        return None
+    return lambda price: to_tick(price, write, favouring="safer")
+
+
 def _scan(args: argparse.Namespace) -> tuple[int, str | None, notify.Outcome]:
     """One `scan`, returning its exit code and what the owner should be told about it.
 
@@ -2331,7 +2353,7 @@ def _scan(args: argparse.Namespace) -> tuple[int, str | None, notify.Outcome]:
         result = run(instruments, clock, registry, store, journal,
                      mode=mode, lookback=args.lookback, universe=selection,
                      positions=positions, classifications=classifications, fetcher=fetcher,
-                     actions_fetcher=vendor_yahoo.fetch_actions)
+                     actions_fetcher=vendor_yahoo.fetch_actions, round_stop=_stop_rounder())
 
         # Only when something failed. DR-015 §6 asks for a measured distribution of fetch failures
         # and observes that nobody has counted one; this is the line that starts counting, into

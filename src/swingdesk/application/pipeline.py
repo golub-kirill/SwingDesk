@@ -16,6 +16,7 @@ import json
 import platform as platform_info
 import subprocess
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from datetime import date, datetime
 from decimal import Decimal
@@ -742,6 +743,7 @@ def run(
     classifications: ClassificationStore | None = None,
     exits: ExitPolicy | None = None,
     universe: UniverseSelection | None = None,
+    round_stop: Callable[[Decimal], Decimal] | None = None,
 ) -> RunResult:
     """One pass of the daily pipeline.
 
@@ -1015,7 +1017,8 @@ def run(
                     )
                 else:
                     managed.action = manage.evaluate(
-                        position, bar, policy, started, bars_held=max(bars_held, 0), atr=latest_atr
+                        position, bar, policy, started, bars_held=max(bars_held, 0), atr=latest_atr,
+                        round_stop=round_stop,
                     )
             positions.propose(managed.action, run_id=run_id)
 

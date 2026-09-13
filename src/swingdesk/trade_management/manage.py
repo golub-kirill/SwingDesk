@@ -14,7 +14,7 @@ this before it looks at a single candidate.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
@@ -36,6 +36,7 @@ def evaluate(
     *,
     bars_held: int,
     atr: Decimal | None = None,
+    round_stop: Callable[[Decimal], Decimal] | None = None,
 ) -> ManagementAction:
     """One position, one bar, one proposal.
 
@@ -66,6 +67,13 @@ def evaluate(
         # proposes a move only when the rule-derived stop is HIGHER than the current one, never
         # lower. A stop that can move down is not a stop.
         candidate = policy.stop_for(bar.close, atr)
+        if round_stop is not None:
+            # The venue holds cents (SEC Rule 612), so a stop proposed to six places can never rest
+            # there as the book records it - the owner's review #1, 2026-09-12. The rounding is
+            # injected rather than imported because this layer may not see `broker`; the caller
+            # passes the venue's tick with `DR-033`'s direction for a stop, UP, which can only move
+            # the candidate higher and so can never turn a move up into a move down.
+            candidate = round_stop(candidate)
         if candidate > position.current_stop:
             return ManagementAction(
                 position_id=position.position_id,

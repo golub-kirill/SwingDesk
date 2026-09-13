@@ -2890,8 +2890,15 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       `apply_approved`, `respond --approve` refuses it BEFORE recording an answer (`--reject` stays
       allowed, to clear it), and `pending` and `status` mark such a proposal obsolete. 22 of 22
       mutants across the console and the fix die.
-      **Still open after this:** book rounding at write time (#1), `align-stops`, the read-side
-      decision view, a `pending` flag that hides expired rows — and #2 and #4, which are yours.
+      **BUILT 2026-09-13 — #1, book stops rounded at the source.** `manage.evaluate` takes the
+      venue's tick from `cli._stop_rounder` — the committed policy's tick, `DR-033`'s direction for a
+      stop, UP — and rounds every proposed stop before it is compared or written, so an approved
+      move puts on the book a price the venue can hold. A pipeline test proves `run` passes the
+      rounding on, a CLI test proves `scan` builds it; 6 of 6 mutants die.
+      **Still open after this:** `align-stops` for book stops that already carry sub-penny values
+      (DINO 100.761817 and VGT 117.044982 on 2026-09-13 — no longer a false pause, still not a
+      price the venue can hold), the read-side decision view, a `pending` flag that hides expired
+      rows — and #2 and #4, which are yours.
 
 - [ ] **`[v]` ALPACA PAPER TRADING — owner instruction 2026-08-31. Wire it as the broker so
       strategies, guesses and the whole chain can be tested against a real venue.**
