@@ -14,11 +14,13 @@ Three things carry it, and each fails silently:
 
 from __future__ import annotations
 
+import argparse
 import importlib.util
 import json
+import random
 import statistics
 import sys
-from datetime import date
+from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from pathlib import Path
 from types import SimpleNamespace
@@ -300,3 +302,58 @@ def test_the_reproduction_flags_any_difference(study, tmp_path, group, field, va
 def test_a_missing_reference_is_said_not_passed(study, tmp_path):
     assert study.reproduction({}, tmp_path / "absent.json") == {
         "reference": str(tmp_path / "absent.json"), "available": False}
+
+
+# --- loader phase A: the streamed path must be the same study ------------------------------------
+
+
+def _synthetic_store(root: Path, names: int = 105) -> None:
+    """Random walks, liquid enough to admit and long enough for the lookback. Noise, not an answer:
+    the test compares two ways of computing one study, never what the study says."""
+    from swingdesk.contracts.market import Bar, Interval, Series
+    from swingdesk.market_data import BarStore
+
+    known = datetime(2022, 7, 1, 12, 0, tzinfo=UTC)
+    days = [d for d in (date(2020, 6, 1) + timedelta(days=i) for i in range(760))
+            if d.weekday() < 5]
+    rng = random.Random(20260913)
+    cents = Decimal("0.01")
+    with BarStore(root / "bars.duckdb") as store:
+        for name in ["SPY"] + [f"SYN{i:03d}" for i in range(names)]:
+            price = rng.uniform(40, 200)
+            vol = 0.011 if name == "SPY" else rng.uniform(0.008, 0.03)
+            drift = rng.gauss(0.0003, 0.0004)
+            bars = []
+            for day in days:
+                open_ = price * (1 + rng.gauss(0, vol / 3))
+                close = open_ * (1 + rng.gauss(drift, vol))
+                high = max(open_, close) * (1 + abs(rng.gauss(0, vol / 2)))
+                low = min(open_, close) * (1 - abs(rng.gauss(0, vol / 2)))
+                bars.append(Bar(
+                    instrument_id=name, interval=Interval.DAY, series=Series.RAW,
+                    event_time=datetime.combine(day, time(14, 30), tzinfo=UTC), session_date=day,
+                    open=Decimal(str(open_)).quantize(cents), high=Decimal(str(high)).quantize(cents),
+                    low=Decimal(str(low)).quantize(cents), close=Decimal(str(close)).quantize(cents),
+                    volume=rng.randint(800_000, 5_000_000), knowledge_time=known))
+                price = close
+            store.write(bars, known)
+
+
+def test_the_streamed_loader_is_the_same_study(study, tmp_path, monkeypatch):
+    """Loader phase A. `PR-019b` peaked at 22.4 GB holding every series at once; `--streamed` holds
+    one. That is worth nothing unless it computes the same study, so every field a verdict or a
+    reproduction reads must come out identical - not close - to the in-memory run's."""
+    monkeypatch.setattr(study, "BOOTSTRAP_RESAMPLES", 200)
+    _synthetic_store(tmp_path)
+    runs = {streamed: study.build(argparse.Namespace(
+        data=tmp_path, as_of=None, reference=tmp_path / "absent.json", streamed=streamed))
+        for streamed in (False, True)}
+    memory, streamed = runs[False], runs[True]
+
+    assert memory["cells"]["in_sample"][study.CELL].get("trades", 0) > 0, "the fixture must trade"
+    assert memory["entries"]["selected_signals"] > 0
+    for key in ("instruments", "formation_dates", "formations_skipped_for_a_thin_cross_section",
+                "entries", "trades_without_a_benchmark_price", "cells", "unselected",
+                "measured_span", "verdict"):
+        assert streamed[key] == memory[key], key
+    assert streamed["loader"].startswith("streamed") and "loader" not in memory

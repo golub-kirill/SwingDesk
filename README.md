@@ -507,6 +507,6 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/run_pr017.py` | `PR-017` — three exits on ONE entry set: all-out at 1R, half at 1R, and no target at all. | `--data` · `--as-of` · `--from` · `--to` · `--out` · `--report` |
 | `python tools/run_pr018.py` | `PR-018` — on the entries the screen actually selects, does the exit policy beat doing nothing? | `--data` · `--as-of` · `--from` · `--to` · `--out` · `--report` |
 | `python tools/run_pr019.py` | `PR-019` - what holding period and stop width does THIS combination want, on selected entries? | `--data` · `--as-of` · `--from` · `--to` · `--out` · `--report` |
-| `python tools/run_pr019b.py` | `PR-019b` - is `PR-019`'s candidate exit the MARKET, or does it out-earn the index over the same days? | `--data` · `--as-of` · `--reference` · `--out` · `--report` |
+| `python tools/run_pr019b.py` | `PR-019b` - is `PR-019`'s candidate exit the MARKET, or does it out-earn the index over the same days? | `--data` · `--as-of` · `--reference` · `--streamed` · `--out` · `--report` |
 
 <!-- END GENERATED COMMANDS -->

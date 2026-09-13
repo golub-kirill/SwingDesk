@@ -2339,14 +2339,23 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
         `ByMarketPathStrength` scores each name from its own series and the benchmark alone, so
         the cross-section needs scores at once, never series. The score and the order are the
         live `ranking` functions; `tests/test_stream_selection.py` holds the streamed selection
-        equal to the in-memory loop date by date, and 9 of 9 mutants die. **Not adopted yet.**
-        The next step is a runner that uses it for selection AND simulates one instrument at a
-        time, and it must reproduce a committed study to the digit before anything else — the
-        free-entry arms `PR-019` carries reproduce `PR-016` and `PR-018` and are the natural check.
-      * **B — no pydantic on the study read path.** A `Bar` is validated on write; re-validating
+        equal to the in-memory loop date by date, and 9 of 9 mutants die.
+        **ADOPTED 2026-09-13 in `tools/run_pr019b.py --streamed`**, which scores one series at a
+        time, ranks from scores, then re-reads each name to simulate and drops it — in the
+        in-memory run's order, so the trade lists come out identical. **On the real store at
+        `PR-019b`'s instant it reproduces `PR-019b.json` on all 25 fields in 13.7 minutes against
+        41, at a 0.75 GB peak against 22.4.** `tests/test_run_pr019b.py` holds the two loaders
+        equal on a synthetic store. The other runners stay as they reported; the next study that
+        loads the universe starts from this path.
+      * ~~**B — no pydantic on the study read path.** A `Bar` is validated on write; re-validating
         25 million stored bars on every study read buys nothing. Needs a raw-array read beside
         `BarStore.as_of` and a test that the two return identical numbers. The live path keeps
-        `Bar`.
+        `Bar`.~~ **WITHDRAWN 2026-09-13 — measured first, and the premise is false.** 300
+        instruments, 285,206 bars: the query 6.47 s, validated `Bar(...)` 1.12 s (3.9 µs a bar),
+        unvalidated `Bar.model_construct` **1.54 s** — skipping validation is not even faster here,
+        and the values are identical. Scaled to 10,330 instruments validation is ~0.6 of
+        `PR-019b`'s 41 minutes. The hour is simulation; the 22.4 GB is ~25 million `Bar`s held at
+        once, which `model_construct` builds just the same. **Phase A is the lever for both.**
       * **C — processes, only after A.** Per-instrument simulation shares nothing. While the
         universe is held whole, more workers means more data in flight and more paging.
 
