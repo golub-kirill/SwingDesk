@@ -316,7 +316,8 @@ than to somebody's judgement about what to do next.
 
 | owed by | question | status |
 |---|---|---|
-| **C-7** | what holding period does this combination want, measured on selected entries, with the stop width varied beside it | **`PR-019`**, sized by `tools/power_pr019.py` before it was registered |
+| **C-7** | what holding period does this combination want, measured on selected entries, with the stop width varied beside it | **`PR-019` reported 2026-09-12 — `INCONCLUSIVE`**, as predicted. The hold cannot be chosen alone: at 2 ATR a longer hold fattens the tail, at 4 ATR it raises the level. Candidate: 4 ATR, no target, 40–60 sessions, +0.015R to +0.053R a trade out of sample, neither distinguishable from zero |
+| **C-3** | does the 4 ATR long-hold exit beat the MARKET over the same days, or is it drift | **not registered** — `PR-019`'s no-selection null reads +0.0202R out of sample, which is what drift would look like |
 | C-5 | what does each candidate cost-in-R floor cost in universe and buy in net R | tool exists (`measure_gap_cost.py`, its floor table); needs the owner's fraction |
 | C-6 | does the gross survive a later entry — the question `DR-040` §6 registers | blocked on intraday bars |
 | C-4 | a cost model whose error cannot align with the axis under study | `PR-014`'s lesson, unimplemented |

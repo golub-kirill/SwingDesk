@@ -1669,6 +1669,24 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 5. Studies
 
+- [ ] **`[v]` IS THE 4 ATR LONG-HOLD EXIT AN EDGE, OR THE MARKET'S DRIFT?** Raised 2026-09-12 by
+      `PR-019`, and it is the question that decides whether its candidate is a strategy at all.
+      ```bash
+      PYTHONPATH=$PWD/src python tools/run_pr019.py --report
+      ```
+      Out of sample, 60 sessions at 4 ATR with no target reads **+0.0528R** on the ratified decile and
+      **+0.0202R on every admitted name**, holding a median 85 days, long-only, through 2022–2026. No
+      arm in `PR-016`..`PR-019` was ever compared with the index over the same days; `PR-014` and
+      `PR-015` were, and neither found anything. **The null to register**: for each trade, the same
+      notional in `SPY` over the same entry and exit sessions, charged the same cost model and
+      expressed in THAT TRADE's own R — paired per trade, so the difference is what the exit and
+      the selection add beyond the market. If it contains zero at a powered width, the exit is
+      buying beta and the candidate in `STRATEGY_CONTRACT` §4 is retired. **Size it with a power
+      estimate first**, as `PR-019` was: the between-month variance that made the long holds
+      unreadable is the market's variance, and pairing with the market is the one construction
+      that can cancel it — so this contrast may be far MORE precise than `PR-019`'s, and that is a
+      claim to measure, not to assume.
+
 - [ ] **`[v]` WHETHER `risk.max_concurrent_positions` MOVES — `PR-015`, 2026-09-07, and this is
       the owner's number, not mine.**
       **The measurement is done.** The four-position book's 5-session excess has a standard

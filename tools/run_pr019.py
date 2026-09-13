@@ -119,6 +119,17 @@ REPRODUCE: dict[str, dict[str, tuple[int | None, float]]] = {
                                         "out_of_sample": (None, -0.0650)},
 }
 
+#: §5's perturbations, declared in the result because gate 25 reads the declaration and not the
+#: prose. The first run of this file wrote no such block and the gate refused it - the block was
+#: then added from this constant to the committed result, which changes no measured number.
+PERTURBATIONS: dict[str, Any] = {
+    "registered": ["cost_stress_3x", "cheap_execution_5.75bps"],
+    "run": ["cost_stress_3x", "cheap_execution_5.75bps"],
+    "note": ("the 3x stress is run for every cell and differenced against the incumbent at 3x; "
+             "cheap execution is run for the selected cell and the incumbent only (phase 2) and "
+             "re-prices an entry struck at the OPEN - not a claim it can be executed at 11:00"),
+}
+
 RESULT = REPO / "docs" / "prereg" / "results" / "PR-019.json"
 
 PRELIMINARY = {
@@ -404,6 +415,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         "split": {"in_sample": f"entries on or before {PRIMARY_END}",
                   "out_of_sample": f"entries after {PRIMARY_END}",
                   "buys": "SELECTION: §6 picks one of twelve cells in sample and reads it out"},
+        "perturbations": PERTURBATIONS,
         "power_floor": str(POWER_FLOOR),
         "minimum_detectable_effect": str(MINIMUM_DETECTABLE_EFFECT),
         "bootstrap": {"unit": "entry month", "block": BLOCK, "seed": BOOTSTRAP_SEED,

@@ -247,6 +247,20 @@ def test_the_power_estimate_sizes_every_contrast_section_six_can_read(study):
     assert all((name, study.INCUMBENT) in sized for name in study.GRID)
 
 
+def test_every_registered_perturbation_is_declared_run(study):
+    """Gate 25 reads the declaration. The first run wrote none and was refused for it."""
+    block = study.PERTURBATIONS
+    assert block["registered"], "§5 registers two perturbations"
+    assert set(block["run"]) >= set(block["registered"])
+
+
+def test_the_committed_result_carries_the_same_declaration(study):
+    import json
+
+    committed = json.loads(study.RESULT.read_text(encoding="utf-8"))
+    assert committed["perturbations"] == study.PERTURBATIONS
+
+
 # --- the tail profile ---------------------------------------------------------------------------
 
 

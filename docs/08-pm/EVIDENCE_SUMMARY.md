@@ -1032,3 +1032,62 @@ of each.
 * **Anything without the survivorship caveat**, and the QA stage has NOT been run for this study —
   `verify_pr016_qa.py` is specific to `PR-016`'s sample and constants, and a partial's three fills
   need their own reconstruction.
+
+## 20. The exit is where the return was going, and the hold cannot be chosen apart from the stop
+
+Measured 2026-09-08 and 2026-09-12. `PR-018` and `PR-019`, both `INCONCLUSIVE`, both PRELIMINARY on
+`DR-042`'s terms. Reports: `docs/prereg/results/PR-018-report.md`, `PR-019-report.md`.
+
+### 20.1 On selected entries, holding to the clock beats the ratified exit — and buys a tail that would end the account
+
+`PR-018`, 20 sessions, the ratified decile. Holding with no stop and no target earns **+0.0645R and
++0.0404R**; the ratified exit loses 0.0797R and 0.1144R. **The price is written beside it**: 21.7% of
+trades below −2R against 2.3%, worst −23.81R against −7.74R. The stop does that work and the target
+does not — stop and clock with no target reads −0.0261R and −0.0650R at 3.0% below −2R. And the
+screen is worth **+0.158R** under holding against +0.088R under the ratified exit: **selection and
+exit are not separable**, which is why `STRATEGY_CONTRACT.md` exists.
+
+*Corrected 2026-09-12:* its intervals were wide mostly because the difference between a stop and no
+stop moves month to month, not because the arms' entry sets differed, as first reported.
+
+### 20.2 A 4 ATR stop with no target beats the ratified exit at every hold, with a thinner tail
+
+`PR-019`, holds 10/20/40/60 × stops 2.0 ATR/4.0 ATR/none on one exactly-paired entry set, sized by
+its own variance estimate before it registered. §6 selected **60 sessions at 4 ATR** in sample. Out
+of sample:
+
+| | mean net R | vs the ratified exit | below −2R | worst |
+|---|---|---|---|---|
+| **60 sessions, 4 ATR** | **+0.0528** [−0.1106, +0.2234] | **+0.1888** [+0.0551, +0.3128] | **0.81%** | −4.67R |
+| the ratified exit | −0.1360 [−0.2368, −0.0170] | — | 2.56% | −7.25R |
+
+**Inconclusive for precision, as §3 predicted before the data:** the difference interval is 0.258 wide
+against a 0.15R floor, and the cell's own interval contains zero. **Not read by §6, and consistent:**
+all four 4 ATR cells beat the ratified exit out of sample, each interval excluding zero, each with the
+thinnest tail in its row.
+
+### 20.3 The hold and the stop are one decision
+
+At **4 ATR**, level rises with the hold: −0.0235, −0.0250, +0.0151, +0.0528R. At **2 ATR**, a longer
+hold FATTENS the tail — 3.5% to 4.7% below −2R against the incumbent's 2.6% — because the ratified
+target takes a winner off early and with it the days a gap can go through a tight stop. **A hold
+chosen without its stop is a number chosen for the wrong instrument.** And no stop at all earns most
+(+0.3994R at 60 sessions) with 44% of trades below −2R: the drift, bought with an unbounded tail.
+
+### 20.4 What moved was the exit, not the selection — and maybe not an edge at all
+
+Without the screen, the same 60-session 4 ATR exit reads **+0.0202R** out of sample against the
+selected +0.0528R: the screen is worth +0.033R under it. Under triple costs the cell's level turns
+negative (−0.0826R) while its advantage over the incumbent grows (+0.308R), because a 4 ATR stop
+trades half the notional at the same risk. **Every arm is long-only and holds a median 85 days
+through 2022–2026, and no study here has compared such a trade with the index over the same days.**
+Until one does, a positive level on this exit is not evidence of an edge; it is at least partly what
+the market did.
+
+### 20.5 The candidate the evidence points at, and what it still lacks
+
+The ratified decile, a 4 × ATR(14) stop, no target, 40 to 60 sessions — **+0.015R to +0.053R a trade
+out of sample, neither distinguishable from zero, with a better tail than anything ratified.**
+`STRATEGY_CONTRACT` C-4 wants an interval that excludes zero and C-3 a null it must beat; it has
+neither. **The market null is the next question** (`TODO.md` §5), and `DR-014` still holds: no owner
+capital, paper only.

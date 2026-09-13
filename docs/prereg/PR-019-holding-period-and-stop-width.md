@@ -8,8 +8,16 @@ author:        Claude, at the owner's instruction 2026-09-08 - "Seems to me that
                Design ruled by the owner 2026-09-12: the full twelve-cell grid, the precision
                standard unchanged, and the long holds' predicted inconclusiveness written down
                before the run rather than discovered after it
-status:        registered
-verdict:       (not yet run)
+status:        reported   (2026-09-12 - results/PR-019-report.md)   PRELIMINARY
+verdict:       INCONCLUSIVE - as §3 predicted before the data, and for the reason it gave.
+               §6 selected h60_stop4.0 in sample; out of sample it beats the ratified exit by
+               +0.1888R [+0.0551, +0.3128] with a THINNER tail (0.81% of trades below -2R
+               against 2.56%, worst -4.67R against -7.25R), but the interval is 0.258 wide
+               against the 0.15R floor and its own mean, +0.0528R [-0.1106, +0.2234], contains
+               zero. Predicted half-width 0.137, realised 0.129. Not read by §6 and consistent
+               across the grid: a 4 ATR stop beats the ratified exit at EVERY hold. And without
+               the screen the same exit still reads +0.0202R out of sample - the improvement is
+               the exit, and with no market null it may partly be the market's drift
 ```
 
 ---
