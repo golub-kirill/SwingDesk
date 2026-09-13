@@ -395,3 +395,105 @@ def test_each_control_is_its_own_control_so_no_arm_is_differenced_against_itself
     if the mapping sends a control to itself."""
     assert pr016.control_arm_for("unselected") == "unselected"
     assert pr016.control_arm_for("unselected_3x") == "unselected_3x"
+
+
+# --- loader phase A, and the rolling re-observation (`tools/remeasure.py`) -----------------------
+
+
+def _synthetic_store(root: Path, names: int = 105) -> None:
+    """`test_run_pr019b`'s fixture: random walks, liquid enough to admit, long enough for the
+    lookback. Noise, not an answer - these tests compare two ways of computing one study."""
+    import random
+    from datetime import UTC, datetime, time, timedelta
+
+    from swingdesk.contracts.market import Bar, Interval, Series
+    from swingdesk.market_data import BarStore
+
+    known = datetime(2022, 7, 1, 12, 0, tzinfo=UTC)
+    days = [d for d in (date(2020, 6, 1) + timedelta(days=i) for i in range(760))
+            if d.weekday() < 5]
+    rng = random.Random(20260913)
+    cents = Decimal("0.01")
+    with BarStore(root / "bars.duckdb") as store:
+        for name in ["SPY"] + [f"SYN{i:03d}" for i in range(names)]:
+            price = rng.uniform(40, 200)
+            vol = 0.011 if name == "SPY" else rng.uniform(0.008, 0.03)
+            drift = rng.gauss(0.0003, 0.0004)
+            bars = []
+            for day in days:
+                open_ = price * (1 + rng.gauss(0, vol / 3))
+                close = open_ * (1 + rng.gauss(drift, vol))
+                high = max(open_, close) * (1 + abs(rng.gauss(0, vol / 2)))
+                low = min(open_, close) * (1 - abs(rng.gauss(0, vol / 2)))
+                bars.append(Bar(
+                    instrument_id=name, interval=Interval.DAY, series=Series.RAW,
+                    event_time=datetime.combine(day, time(14, 30), tzinfo=UTC), session_date=day,
+                    open=Decimal(str(open_)).quantize(cents), high=Decimal(str(high)).quantize(cents),
+                    low=Decimal(str(low)).quantize(cents), close=Decimal(str(close)).quantize(cents),
+                    volume=rng.randint(800_000, 5_000_000), knowledge_time=known))
+                price = close
+            store.write(bars, known)
+
+
+@pytest.fixture
+def store_root(pr016, tmp_path, monkeypatch):
+    """Fewer resamples, and the evidence files pointed away from the committed ones."""
+    monkeypatch.setattr(pr016, "BOOTSTRAP_RESAMPLES", 200)
+    monkeypatch.setattr(pr016, "TRADE_SAMPLE", tmp_path / "sample.csv")
+    monkeypatch.setattr(pr016, "AMBIGUOUS_BARS", tmp_path / "ambiguous.jsonl")
+    _synthetic_store(tmp_path)
+    return tmp_path
+
+
+def _args(root: Path, **extra):
+    import argparse
+
+    return argparse.Namespace(data=root, as_of=None, start=None, end=None, **extra)
+
+
+def test_the_streamed_loader_is_the_same_study(pr016, store_root):
+    """One series in memory instead of every one - worth nothing unless every field a verdict,
+    a diagnostic or the QA stage reads comes out identical, not close."""
+    memory = pr016.build(_args(store_root, streamed=False))
+    streamed = pr016.build(_args(store_root, streamed=True))
+
+    assert memory["arms"]["ranked"]["in_sample"].get("trades", 0) > 0, "the fixture must trade"
+    assert memory["diagnostics"]["ranked_top4"]["full"].get("trades", 0) > 0
+    for key in ("instruments", "formation_dates", "formations_skipped_for_a_thin_cross_section",
+                "arms", "diagnostics", "ambiguous_exits", "skipped_signals", "measured_span",
+                "verdict", "qa_sample"):
+        assert streamed[key] == memory[key], key
+    assert streamed["loader"].startswith("streamed") and "loader" not in memory
+
+
+def test_a_rolling_run_reads_one_window_and_writes_no_evidence(pr016, store_root):
+    """`AGENTS.md` §19.7: the window moves and nothing else - and a weekly pass must never
+    rewrite the QA sample or the ambiguous bars committed beside `PR-016.json`."""
+    from run_pr019b import months_before
+
+    result = pr016.build(_args(store_root, streamed=True, rolling_months=12))
+
+    cutoff = months_before(date.fromisoformat(result["window"]["end"]), 12)
+    assert result["window"]["start"] == cutoff.isoformat()
+    for group in ("arms", "diagnostics"):
+        for arm, cells in result[group].items():
+            assert list(cells) == ["rolling"], arm
+    assert result["arms"]["ranked"]["rolling"].get("trades", 0) > 0
+    assert date.fromisoformat(result["measured_span"]["first_entry"]) >= cutoff
+    assert result["verdict"] == pr016.verdict_on(result["arms"]["ranked"]["rolling"])
+    assert result["default_window"] is False
+    assert not pr016.TRADE_SAMPLE.exists() and not pr016.AMBIGUOUS_BARS.exists()
+
+
+def _one(low: float, high: float, trades: int = 300, months: int = 30) -> dict:
+    return {"trades": trades, "months": months,
+            "difference_mean": {"observed": (low + high) / 2, "low": low, "high": high}}
+
+
+def test_one_window_is_read_by_the_same_conditions_as_each_registered_one(pr016):
+    assert pr016.verdict_on(_one(0.01, 0.15)) == "accept"
+    assert pr016.verdict_on(_one(-0.15, -0.01)) == "reject"
+    assert pr016.verdict_on(_one(-0.05, 0.10)) == "inconclusive"
+    assert pr016.verdict_on(_one(0.01, 0.30)) == "inconclusive", "wider than the power floor"
+    assert pr016.verdict_on(_one(0.01, 0.15, trades=150)) == "inconclusive", "the sample rule"
+    assert pr016.verdict_on(_one(0.01, 0.15, months=20)) == "inconclusive", "the sample rule"

@@ -241,6 +241,40 @@ def test_the_decile_size_truncates_and_never_rounds(stream):
     assert set(got.selected) == {"N6", "N5", "N4"}
 
 
+def test_top_k_is_the_head_of_each_dates_order_and_off_by_default(stream):
+    session = date(2021, 1, 4)
+    scores = {f"N{i}": {session: Decimal(i)} for i in range(10)}
+    got = stream.select_streamed(scores, [session], Decimal("0.5"), min_names=1, top_k=2)
+    assert set(got.selected) == {"N9", "N8", "N7", "N6", "N5"}
+    assert got.top == {"N9": [session], "N8": [session]}
+    assert stream.select_streamed(scores, [session], Decimal("0.5"), min_names=1).top == {}
+
+
+def test_the_streamed_top_four_equals_the_in_memory_prefix(stream, universe):
+    """`PR-016`'s `ranked_top4` diagnostic is `top[:MAX_CONCURRENT]` of the live ranker's order."""
+    from measure_momentum_horizon import RULE
+    from run_pr013 import MIN_NAMES_PER_DATE, _admitted_dates
+    from run_pr014 import DECILE, Candidate, select
+    from swingdesk.decision_logic.ranking import ByMarketPathStrength
+
+    series, formations = universe
+    index_of = {n: {b.session_date: i for i, b in enumerate(s.bars)} for n, s in series.items()}
+    admitted = {n: _admitted_dates(s, RULE, formations) for n, s in series.items()}
+    reference: dict[str, list[date]] = {}
+    for session in formations:
+        pool = [Candidate(n, index_of[n][session]) for n in sorted(admitted)
+                if session in admitted[n]]
+        if len(pool) < MIN_NAMES_PER_DATE:
+            continue
+        ranker = ByMarketPathStrength(series=series, benchmark=series["SPY"], lookback=LOOKBACK)
+        top, _ = select(ranker, pool, DECILE)
+        for name in top[:4]:
+            reference.setdefault(name, []).append(session)
+    _, scores = _streamed(stream, series, formations)
+    assert reference, "the fixture must select something or the equality proves nothing"
+    assert stream.select_streamed(scores, formations, DECILE, top_k=4).top == reference
+
+
 def test_a_decile_below_one_name_selects_nobody(stream):
     session = date(2021, 1, 4)
     scores = {f"N{i}": {session: Decimal(i)} for i in range(5)}

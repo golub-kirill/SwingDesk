@@ -61,8 +61,39 @@ def _pr019b(data: Path, as_of: str | None) -> dict[str, Any]:
     }
 
 
+def _pr016(data: Path, as_of: str | None) -> dict[str, Any]:
+    """`PR-016` on the rolling window: the ratified screen against every liquid name, same months.
+
+    The finding the programme leans on besides `PR-019b`'s: the screen loses less than no screen.
+    Streamed for the same reason, and it writes nothing beside `PR-016`'s committed evidence.
+    """
+    import run_pr016
+
+    result = run_pr016.build(argparse.Namespace(
+        data=data, as_of=as_of, start=None, end=None, streamed=True,
+        rolling_months=WINDOW_MONTHS))
+    ranked = result["arms"]["ranked"]["rolling"]
+    return {
+        "as_of": result["as_of"],
+        "window": result["window"],
+        "trades": ranked.get("trades", 0),
+        "months": ranked.get("months", 0),
+        "ranked_level": ranked.get("mean_net_r"),
+        "unselected_level": result["arms"]["unselected"]["rolling"].get("mean_net_r"),
+        "ranked_minus_unselected": ranked.get("difference_mean"),
+        "branch": result["verdict"],
+    }
+
+
 #: The registered questions this tool re-observes, each with the function that re-runs it.
-STUDIES: dict[str, Callable[[Path, str | None], dict[str, Any]]] = {"PR-019b": _pr019b}
+STUDIES: dict[str, Callable[[Path, str | None], dict[str, Any]]] = {
+    "PR-019b": _pr019b, "PR-016": _pr016}
+
+#: The one quantity each study's decision rule reads, as the report prints it: label, record key.
+READS: dict[str, tuple[str, str]] = {
+    "PR-019b": ("candidate - index", "candidate_minus_index"),
+    "PR-016": ("ranked - unselected", "ranked_minus_unselected"),
+}
 
 
 def series_path(data: Path, study: str) -> Path:
@@ -102,11 +133,12 @@ def report(series: list[dict[str, Any]]) -> None:
         return
     print(f"{series[0]['study']}: {len(series)} re-observation(s), a {WINDOW_MONTHS}-month window "
           f"each - RE-OBSERVATIONS, not results\n")
-    print(f"  {'recorded':20} {'as_of':12} {'trades':>7} {'candidate - index':>30}  branch")
+    label, key = READS[series[0]["study"]]
+    print(f"  {'recorded':20} {'as_of':12} {'trades':>7} {label:>30}  branch")
     for point in series:
         print(f"  {point['recorded_at'][:19]:20} {point['as_of'][:10]:12} {point['trades']:>7} "
-              f"{_span(point.get('candidate_minus_index')):>30}  {point['branch']}")
-    first, last = series[0].get("candidate_minus_index"), series[-1].get("candidate_minus_index")
+              f"{_span(point.get(key)):>30}  {point['branch']}")
+    first, last = series[0].get(key), series[-1].get(key)
     if first and last and len(series) > 1:
         print(f"\n  moved {last['observed'] - first['observed']:+.4f}R since the first point")
 

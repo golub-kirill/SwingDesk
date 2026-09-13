@@ -112,6 +112,24 @@ def test_no_series_is_said_rather_than_printed_as_an_empty_table(tool, capsys):
     assert "has not run" in capsys.readouterr().out
 
 
+def test_pr016_is_re_observed_and_reported_on_its_own_quantity(tool, capsys):
+    """`PR-016` reads ranked minus unselected, not `PR-019b`'s candidate minus index."""
+    assert set(tool.STUDIES) == {"PR-019b", "PR-016"} == set(tool.READS)
+    point = {"as_of": LAST, "window": {}, "trades": 300, "months": 48, "branch": "inconclusive",
+             "ranked_minus_unselected": {"observed": 0.09, "low": 0.02, "high": 0.16}}
+    tool.report([{"study": "PR-016", "recorded_at": "2026-09-13T21:00:00", **point}])
+    out = capsys.readouterr().out
+    assert "ranked - unselected" in out and "+0.0900 [+0.0200, +0.1600]" in out
+
+
+def test_the_weekly_pass_runs_every_study_and_keeps_the_first_failure():
+    wrapper = (REPO / "tools" / "remeasure.cmd").read_text(encoding="utf-8")
+    runs = [line for line in wrapper.splitlines() if "remeasure.py" in line
+            and not line.startswith("REM")]
+    assert [line.split("remeasure.py\" ")[1].split()[0] for line in runs] == ["PR-019b", "PR-016"]
+    assert "if %RC%==0 set RC=%ERRORLEVEL%" in wrapper
+
+
 def test_the_report_says_how_far_the_read_quantity_has_moved(tool, capsys):
     later = {**_point("2026-09-13T22:00:00-05:00"),
              "candidate_minus_index": {"observed": -0.05, "low": -0.15, "high": 0.05}}
