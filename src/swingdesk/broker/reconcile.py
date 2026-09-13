@@ -18,7 +18,7 @@ divergences. The venue's market comes from the committed policy, so this module 
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 
@@ -325,10 +325,30 @@ def restorable(
     return tuple(keep), tuple(leave)
 
 
+def same_trigger(venue: Decimal, book: Decimal, tick: Decimal | None) -> bool:
+    """Is the venue holding the book's stop, to the precision the venue can hold a price at?
+
+    **Within one tick, strictly.** The venue accepts whole cents above a dollar (SEC Rule 612), so a
+    book stop of 100.761817 can rest as 100.76 or 100.77 and never as itself. Exact equality read
+    every such position as a stop somebody moved, `restorable` rightly refused to touch it, and
+    `DR-036` paused entries on a difference of 0.0018 that no order could remove - measured
+    2026-09-12, when 52 of 52 proposed stop moves and 3 open book stops carried sub-penny prices.
+
+    A stop a full tick or more away is still a disagreement, so a move approved in the book and
+    never sent to the venue is still reported: that gap is real, and it is `D6`'s. And `tick=None`
+    compares exactly - more findings, never fewer.
+    """
+    if tick is None:
+        return venue == book
+    return abs(venue - book) < tick
+
+
 def unprotected(
     book: Sequence[Position],
     live_orders: Sequence[PlacedOrder],
     market: str,
+    *,
+    tick_for: Callable[[Decimal], Decimal | None],
 ) -> tuple[Unprotected, ...]:
     """Open positions the venue is not holding a stop for. `DR-036`.
 
@@ -349,6 +369,10 @@ def unprotected(
     new `Position` version when the owner approves a stop move and sends nothing anywhere - this
     system has no verb that could - so the book and the venue can disagree about the trigger while
     both hold one. That is a different fact from having none, and a person acts on it differently.
+
+    **"The wrong price" means a tick or more away** (`same_trigger`). `tick_for` is required and
+    keyword-only so that every caller states the precision it compares at; `BrokerPolicy.tick_for`
+    is the one the live paths pass.
 
     Pure, and out-of-scope book positions are ignored for the reason `reconcile` gives.
     """
@@ -374,7 +398,7 @@ def unprotected(
         # The HIGHEST resting trigger, because that is the one that fires first and is therefore
         # the protection actually in force. A lower one behind it changes nothing about the loss.
         highest = max(stop.stop_price for stop in stops if stop.stop_price is not None)
-        if highest != position.current_stop:
+        if not same_trigger(highest, position.current_stop, tick_for(position.current_stop)):
             findings.append(Unprotected(
                 position.instrument_id, position.current_stop, position.shares, highest,
                 f"the book records a stop at {position.current_stop} and the venue is holding one "

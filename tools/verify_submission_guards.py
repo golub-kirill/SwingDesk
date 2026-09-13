@@ -152,7 +152,7 @@ def main(argv: list[str] | None = None) -> int:
                       f"{divergence.detail[:100]}")
 
         print("\nprotection - every open position's stop is standing at the venue (DR-036/DR-037)")
-        naked = broker_pkg.unprotected(book, live, policy.market)
+        naked = broker_pkg.unprotected(book, live, policy.market, tick_for=policy.tick_for)
         if naked:
             # **The same split `_submit` makes**, and reporting it as one thing was wrong the day
             # `DR-037` landed: a position holding NOTHING gets its protection placed and the run

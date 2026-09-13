@@ -1,0 +1,160 @@
+{
+  "approximation": "half widths are a normal approximation to the moving-block bootstrap PR-016 runs. The block structure widens an interval relative to this, so each figure is a LOWER bound on the half width the study will realise.",
+  "as_of": "2026-09-06T22:36:49.635786-05:00",
+  "contrasts": {
+    "h10_stop2.0 vs h60_stopnone": {
+      "half_width_corrected": 0.5959744207387863,
+      "half_width_uncorrected": 0.6184969510975649,
+      "months": 48.0,
+      "var_between": 4.437969723135341,
+      "var_observed": 4.779739423369224,
+      "var_subsample_noise": 0.341769700233884
+    },
+    "h10_stop2.0 vs ratified": {
+      "half_width_corrected": 0.0543511350678937,
+      "half_width_uncorrected": 0.0666739929853112,
+      "months": 48.0,
+      "var_between": 0.03691019429198365,
+      "var_observed": 0.05554462316458135,
+      "var_subsample_noise": 0.018634428872597697
+    },
+    "h10_stop4.0 vs ratified": {
+      "half_width_corrected": 0.06303962616871644,
+      "half_width_uncorrected": 0.07559047619592846,
+      "months": 48.0,
+      "var_between": 0.04965424157632052,
+      "var_observed": 0.07139425353844932,
+      "var_subsample_noise": 0.021740011962128797
+    },
+    "h10_stopnone vs ratified": {
+      "half_width_corrected": 0.12802069891770712,
+      "half_width_uncorrected": 0.13856111710330185,
+      "months": 48.0,
+      "var_between": 0.2047809165103484,
+      "var_observed": 0.23988983556328522,
+      "var_subsample_noise": 0.03510891905293681
+    },
+    "h20_stop2.0 vs h20_stopnone": {
+      "half_width_corrected": 0.18704255591159763,
+      "half_width_uncorrected": 0.1964578975914984,
+      "months": 48.0,
+      "var_between": 0.43712933430166334,
+      "var_observed": 0.4822453834994379,
+      "var_subsample_noise": 0.045116049197774594
+    },
+    "h20_stop2.0 vs h40_stop2.0": {
+      "half_width_corrected": 0.11087132288672756,
+      "half_width_uncorrected": 0.131971443051254,
+      "months": 48.0,
+      "var_between": 0.15359163147004995,
+      "var_observed": 0.21761509930483605,
+      "var_subsample_noise": 0.06402346783478609
+    },
+    "h20_stop2.0 vs ratified": {
+      "half_width_corrected": 0.08391702853213297,
+      "half_width_uncorrected": 0.09889115700126642,
+      "months": 48.0,
+      "var_between": 0.08798918381086404,
+      "var_observed": 0.12219234818470377,
+      "var_subsample_noise": 0.034203164373839724
+    },
+    "h20_stop4.0 vs ratified": {
+      "half_width_corrected": 0.07694036140428774,
+      "half_width_uncorrected": 0.08984635455984076,
+      "months": 48.0,
+      "var_between": 0.07396692061252491,
+      "var_observed": 0.10086256677666743,
+      "var_subsample_noise": 0.026895646164142518
+    },
+    "h20_stopnone vs ratified": {
+      "half_width_corrected": 0.22766258177510032,
+      "half_width_uncorrected": 0.24040122460260355,
+      "months": 48.0,
+      "var_between": 0.6476083024636098,
+      "var_observed": 0.7221084813464985,
+      "var_subsample_noise": 0.0745001788828887
+    },
+    "h40_stop2.0 vs ratified": {
+      "half_width_corrected": 0.1487817042604031,
+      "half_width_uncorrected": 0.17172253393684545,
+      "months": 48.0,
+      "var_between": 0.2765847004077058,
+      "var_observed": 0.3684543356312916,
+      "var_subsample_noise": 0.09186963522358582
+    },
+    "h40_stop4.0 vs ratified": {
+      "half_width_corrected": 0.1239311743929151,
+      "half_width_uncorrected": 0.1395060207350864,
+      "months": 48.0,
+      "var_between": 0.19190673868896876,
+      "var_observed": 0.24317280076641012,
+      "var_subsample_noise": 0.05126606207744136
+    },
+    "h40_stopnone vs ratified": {
+      "half_width_corrected": 0.49528257617291077,
+      "half_width_uncorrected": 0.5115754557569888,
+      "months": 48.0,
+      "var_between": 3.0650332810555003,
+      "var_observed": 3.270005584335329,
+      "var_subsample_noise": 0.2049723032798285
+    },
+    "h60_stop2.0 vs ratified": {
+      "half_width_corrected": 0.20814239400604828,
+      "half_width_uncorrected": 0.23674982394027366,
+      "months": 48.0,
+      "var_between": 0.5413151543011542,
+      "var_observed": 0.7003391812047136,
+      "var_subsample_noise": 0.15902402690355946
+    },
+    "h60_stop4.0 vs ratified": {
+      "half_width_corrected": 0.14506779348240104,
+      "half_width_uncorrected": 0.16397566950070763,
+      "months": 48.0,
+      "var_between": 0.26294874684530467,
+      "var_observed": 0.3359602689071882,
+      "var_subsample_noise": 0.07301152206188356
+    },
+    "h60_stopnone vs ratified": {
+      "half_width_corrected": 0.587586004129155,
+      "half_width_uncorrected": 0.610137038043902,
+      "months": 48.0,
+      "var_between": 4.31391893688214,
+      "var_observed": 4.6514019807536755,
+      "var_subsample_noise": 0.3374830438715351
+    }
+  },
+  "entries": {
+    "entries_after_spacing": 1169,
+    "every_cell_realised_the_same_entries": false,
+    "instruments": 459,
+    "signals_before_spacing": 2762,
+    "trades_shared_by_every_cell": 1166
+  },
+  "for": "PR-019",
+  "formation_dates": 58,
+  "formations_skipped_for_a_thin_cross_section": 6,
+  "fraction": 0.25,
+  "grid": {
+    "entry_spacing_sessions": 60,
+    "holds": [
+      10,
+      20,
+      40,
+      60
+    ],
+    "stops": [
+      "2.0",
+      "4.0",
+      "none"
+    ]
+  },
+  "purpose": "a variance estimate for PREREG_TEMPLATE rule 9. No level is reported.",
+  "seed": 20260908,
+  "subsample": 2589,
+  "universe": 13010,
+  "window": {
+    "end": "2021-12-31",
+    "note": "IN SAMPLE ONLY - the holdout is not touched by a power estimate",
+    "start": "2016-01-04"
+  }
+}

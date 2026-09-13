@@ -158,6 +158,36 @@ def is_expired(
     return max(len(elapsed) - 1, 0) > expiry_days
 
 
+def superseded(
+    unanswered: list[tuple[str, int, ActionKind]],
+) -> frozenset[tuple[str, int]]:
+    """Which unanswered `MOVE_STOP` proposals a LATER one on the same position has replaced.
+
+    Read-time only, like `is_expired`, and for the same reason: marking an older row answered
+    would mutate a record (`PositionStore.pending`: *"Skipped, never superseded"*). Measured
+    2026-09-12: BTSG carried 15 unanswered stop moves, each made on a later bar than the one before,
+    and only the newest describes the stop the rule wants now - the rest are the same question
+    asked on staler data.
+
+    **Only `MOVE_STOP`.** A later stop move replaces an earlier one because both answer *where
+    should the stop be*. Nothing replaces an `EXIT_NOW` or a `PAUSE`: hiding one behind a newer
+    proposal would turn the loudest statement into silence, which is `DR-013` 2.1's objection to
+    expiring them. `PARTIAL_EXIT` is left alone too - two partials are two actions, not one asked
+    twice.
+
+    The latest is the highest SEQUENCE, which the store assigns in proposal order per position.
+    """
+    latest: dict[str, int] = {}
+    for position_id, sequence, kind in unanswered:
+        if kind is ActionKind.MOVE_STOP:
+            latest[position_id] = max(sequence, latest.get(position_id, sequence))
+    return frozenset(
+        (position_id, sequence)
+        for position_id, sequence, kind in unanswered
+        if kind is ActionKind.MOVE_STOP and sequence < latest[position_id]
+    )
+
+
 # ------------------------------------------------------------------ the split guard
 
 

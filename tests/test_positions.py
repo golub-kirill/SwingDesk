@@ -222,6 +222,41 @@ def test_pending_approvals_counts_only_what_needs_an_answer(store) -> None:
     assert store.pending_approvals() == 1
 
 
+def test_a_closed_position_has_nothing_pending(store) -> None:
+    """AIS closed 2026-09-04 and 13 stop moves proposed before the close were still listed as
+    awaiting an answer. Closing does not answer a proposal, and must not write rows claiming it did,
+    so the filter is at read time - and it covers the kinds that never expire."""
+    store.record(_position())
+    store.propose(ManagementAction(position_id="POS-1", proposed_at=AS_OF,
+                                   kind=ActionKind.MOVE_STOP, reason="raise",
+                                   old_stop=Decimal(96), new_stop=Decimal(98)))
+    store.propose(ManagementAction(position_id="POS-1", proposed_at=AS_OF,
+                                   kind=ActionKind.EXIT_NOW, reason_code="STOP",
+                                   reason="stop touched", old_stop=Decimal(96)))
+    assert len(store.pending()) == 2
+    assert store.pending_approvals() == 2
+
+    store.record(_position(version=2, closed_on=date(2026, 1, 16),
+                           knowledge_time=datetime(2026, 1, 16, tzinfo=UTC)))
+
+    assert store.pending() == []
+    assert store.pending_approvals() == 0
+
+
+def test_closing_one_position_leaves_another_pending(store) -> None:
+    """The positive control: the filter is per position, not a switch on the whole queue."""
+    for pid in ("POS-1", "POS-2"):
+        store.record(_position(position_id=pid))
+        store.propose(ManagementAction(position_id=pid, proposed_at=AS_OF,
+                                       kind=ActionKind.MOVE_STOP, reason="raise",
+                                       old_stop=Decimal(96), new_stop=Decimal(98)))
+    store.record(_position(position_id="POS-1", version=2, closed_on=date(2026, 1, 16),
+                           knowledge_time=datetime(2026, 1, 16, tzinfo=UTC)))
+
+    assert [p.action.position_id for p in store.pending()] == ["POS-2"]
+    assert store.pending_approvals() == 1
+
+
 def test_positions_are_returned_sorted(store) -> None:
     """Unordered iteration feeding the first step of the run is the named determinism hazard."""
     for pid in ("POS-9", "POS-1", "POS-5"):

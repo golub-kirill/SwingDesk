@@ -60,6 +60,14 @@ because a rule sits in a 650-line file and a working session acts from memory.
 | 16 | The course is a requirements source, not an evidence source | honour |
 | 17 | Verify at the right granularity — run the check whose subject you touched | honour |
 | **18** | **Plan, validate the plan against the tree, build, SCRUTINISE, review, commit, gates, merge — in that order, on every change that earns a branch** | **honour** · 21, 33 catch instances of the last step |
+| **19** | **A study measures the last 48 months. Reaching further is a claim about the OLD market and has to be argued in the pre-registration** | **46** |
+| 19.1 | What it overturns: every study on this branch used nine to eleven years and none argued for it | 46 |
+| 19.2 | Why: the universe grew from 38 admissible names to 3,999, survivorship worsens with the lookback, spreads roughly doubled, and a regime can own a decade | 46 |
+| 19.3 | What it costs: 48 months split in two is 24 monthly clusters a window, exactly §8's minimum. Restate the minimum detectable effect or the cost is hidden rather than paid | 46 |
+| 19.4 | What counts as a reason, and that "more data" and "the store goes back that far" do not | 46 |
+| 19.5 | Enforced by a declared field, with pre-2026-09-08 studies exempt BY NAME rather than silently | 46 |
+| 19.6 | At 48 months the NAME split is the default and a time split needs arguing for — measured: the long window bought a second window, not precision | 46 |
+| 19.7 | Currency is a property of a SEQUENCE, and no single measurement produces one. The mechanism does not exist yet | honour |
 
 **Gate 37 keeps this table honest**: every numbered section appears here exactly once, every row
 points at a section that exists, and every gate number cited resolves to a registered gate. A rule
@@ -925,3 +933,163 @@ The same day, a guard written to respect `DR-006` §3 reproduced that record's o
 `unavailable`-admits-unchecked inversion, and its own test caught it on the first run; and a claim
 in this repository's contradictions section described a defect the owner had ruled on three days
 earlier, found only by re-running the command the entry itself carried.
+
+## 19. Forty-eight months, and a reason to go further — owner instruction, 2026-09-08
+
+> *"I want you to make a rule to not measure back more than 48 month from now if its no real reason
+> to measure old market instead of current."*
+
+**A study's window is forty-eight months back from its own `as_of`, and reaching further is a claim
+that has to be made out loud.** Not a default anyone inherits, not a number that grows because the
+store grew, and never *"we had the data"*.
+
+### 19.1 What this overturns
+
+Every study on this branch used nine to eleven years. `PR-014`, `PR-015`, `PR-016`, `PR-017` and
+`PR-018` all open at 2016-01-04 and run to the last stored session. **All of them are longer than
+this rule allows and none of them argued for it** — the window was the store's extent, which is not
+a reason, it is an inventory.
+
+The rule does not retract them. It stops the next one inheriting a window nobody chose.
+
+### 19.2 Why, and every reason here is measured rather than argued
+
+**1. The universe is not the same universe.** `DR-040` sampled the admitted names on dates across
+the decade and found it **growing from 38 admissible names to 3,999**. A study averaging 2016 with
+2026 is averaging a thirty-eight-name market with a four-thousand-name market and reporting one
+number. The early years contribute almost nothing to a cross-section and everything to a claim
+about "a decade".
+
+**2. Survivorship gets worse the further back you look, and it is measurable here.** The store is
+built from today's directory backwards: of the 2,598 instruments carrying a decade of history,
+**2,598 are still trading**. Not one dead name. At forty-eight months fewer names have died, so the
+same construction distorts less — the bias is a function of the lookback, and shortening the window
+shrinks it without any new data.
+
+**3. The cost model is not stationary.** `DR-040` measured the median per-side spread at 09:30
+going **21.9 → 26.5 bps** from 2016 to 2026, and at the close **1.9 → 4.0 bps**. A single charged
+constant across the whole span is wrong at both ends and right in the middle, which is the worst
+place for it to be right.
+
+**4. A regime can own a decade.** `EVIDENCE_SUMMARY` §16 records `LOWVOL_126` losing 13.92% gross
+over *"2017–2026, a decade that was extraordinary for mega-cap growth and poor for low volatility"*,
+and says in as many words that the caveat is not decoration. A long window does not average a regime
+out; it can consist of one.
+
+### 19.3 What it costs, stated because a rule that hides its cost is a slogan
+
+**Power.** The bootstrap here resamples entry MONTHS, so forty-eight months is forty-eight
+observations, and `PR-016`'s registered split halves that to twenty-four a window — **exactly
+§8's registered minimum**. A shorter window is not free and it is not obviously right; it puts a
+study at the edge of measurable, and `PR-012` already refused a verdict for want of sample once.
+
+**So the trade is explicit: a shorter window measures the market you would trade, and measures it
+less precisely.** The rule takes that trade by default because a precise measurement of a market
+that no longer exists is not the more useful of the two.
+
+**And it does not lower the bar.** `PREREG_TEMPLATE` rule 9 still requires the minimum detectable
+effect, computed at the window actually used. A study that shortens its window and does not restate
+its MDE has hidden the cost rather than paid it.
+
+### 19.4 What counts as a real reason, and what does not
+
+**Reasons that hold**, each of which makes the OLD market the subject rather than the sample:
+
+* the question is explicitly about a regime the last forty-eight months do not contain — a
+  drawdown, a rate cycle, a volatility shock;
+* the statistic needs a longer base by construction — a 252-session formation window inside a
+  126-session lookback cannot be measured on four years of entries;
+* the study is a REPLICATION of a published result whose window is fixed by the original;
+* the event being counted is rare enough that four years hold too few of them, and the study says
+  how many it found.
+
+**Reasons that do not hold:**
+
+* *"more data"*. More data of a different market is not more data, it is a second sample reported
+  as one.
+* *"the store goes back that far"*. The store's extent is an inventory, and `--period 10y` is a
+  fetch decision from 2026-09-06, not a statement about what is relevant.
+* *"the intervals are too wide otherwise"*. That is `PREREG_TEMPLATE` rule 9's problem and rule 9's
+  answer is to say so, not to widen the window until the answer appears.
+* *"the earlier studies did"*. §19.1 is why that is not an argument.
+
+### 19.5 How it is enforced
+
+The window is a **declared** field, and gate 46 reads it. A result whose measured span exceeds
+forty-eight months must have its pre-registration carry a `window rationale:` line, and the gate
+fails on a span that has none. **Studies registered before 2026-09-08 are listed as exempt by
+name** — the same shape gate 44 uses for the twelve pre-registrations that predate the
+minimum-effect rule, and for the same reason: an exemption that is listed is one a reader can
+argue with, and an exemption that is silent is a rule nobody applies.
+
+**The gate cannot check whether a reason is a GOOD one.** It checks that one was given, dated, and
+attached to the study that spent the trials. §19.4 is what a reviewer reads it against.
+
+### 19.6 The owner's objection, and the measurement that answers it
+
+> *"48 месяцев — может быть мало для исследования? Тогда как же нам убедиться, что мы не считаем
+> просто старые цифры и наша стратегия актуальна?"* — 2026-09-08.
+
+**Two questions, and a long window answers neither.** *Is there enough to measure with* and *is the
+answer still true* are different problems, and averaging in markets that no longer exist is a bad
+answer to the first and no answer at all to the second.
+
+**On power — the studies already ran the experiment and nobody read it that way.** `PR-016`'s and
+`PR-017`'s windows ARE forty-eight-month-scale windows; the decade was only ever split into two of
+them. Their realised half-widths, against their own registered floors:
+
+| study | window | months | half-width | floor |
+|---|---|---|---|---|
+| `PR-016` | in-sample | 51 | 0.0402 | 0.20 |
+| `PR-016` | out-of-sample | 54 | 0.0698 | 0.20 |
+| `PR-017` | in-sample | 57 | 0.0332 | 0.15 |
+| `PR-017` | out-of-sample | 54 | 0.0471 | 0.15 |
+
+**All four clear their floor with room.** The long window bought no precision; it bought a second
+window.
+
+**Which is why the split, not the window, is what has to change.** Half-width scales as
+`1 / sqrt(months)`, so at forty-eight months:
+
+| split | months per half | half-width | |
+|---|---|---|---|
+| by TIME, as `PR-016` and `PR-017` did | 24 | 0.051 – 0.105 | passes, and `PR-016`'s second window is close to its floor |
+| **by NAMES, as `PR-015` did** | **48** | **0.036 – 0.074** | unchanged from today |
+
+`sha256(instrument_id) % 2` keeps the full window in BOTH halves and leaves the holdout untouched.
+**So at a forty-eight-month window the name split is the default and a time split is the thing that
+needs arguing for** — the reverse of the habit, and it costs nothing.
+
+What a name split does NOT buy is stability over TIME. That is the second question, and it does not
+belong to any single study.
+
+### 19.7 Currency is a property of a SEQUENCE, and this repository cannot yet produce one
+
+A verdict is one draw. *Still true* is a statement about how the answer moves, and **no measurement
+of any length can produce it** — a ten-year backtest re-read in a year is the same ten-year
+backtest.
+
+`measure_study_drift.py` is not it: it measures how far the STORE has moved under a reported study,
+which is whether a replay would reproduce, not whether the finding holds. **The mechanism does not
+exist**, `TODO.md` §6 carries it, and until it does, the honest position is that **nothing here has
+ever been shown to be current** — the ten-year windows least of all, because a decade average is
+less current than a four-year one and reads more authoritative.
+
+**Two constraints on that tool, written before it exists rather than after:**
+
+* **A rolling window, not a fixed one.** Re-measuring 2016-onwards every quarter re-measures the
+  same old market and calls the stability reassuring.
+* **A scheduled re-observation of a REGISTERED question spends NO trial** — owner ruling,
+  2026-09-08: *"no, because we have to do it because of our mistake, not the research itself."*
+  The re-measurement exists because this project cannot currently tell a live finding from a stale
+  one. That is a defect in the apparatus, not a search for a better answer, and charging the
+  programme's hurdle for repairing its own blind spot would make the repair cost more the more
+  honestly it is done. No configuration is evaluated: the rule, the parameters and the decision
+  rule are all fixed by the original registration, and only the window moves.
+
+**And the ruling needs one guard, or it is a hole.** Consecutive rolling windows overlap heavily —
+quarterly on forty-eight months shares forty-five of them — so re-running until an answer flips is
+searching in TIME rather than in configuration space, and it would be free under the ruling as
+stated. **The guard: a re-measurement is SCHEDULED and every result is recorded, whatever it says.**
+A series where each point is published cannot be a search. An on-demand re-run whose unwelcome
+results are not written down is one, and it spends trials like any other.

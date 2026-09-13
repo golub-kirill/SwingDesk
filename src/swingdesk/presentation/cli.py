@@ -917,7 +917,8 @@ def _submit(
     # RE-PLACING the stop is deliberately NOT done here: `DR-027` §2 lists management actions on
     # open positions as not submittable and leaves them to `D6`, and this system has no verb that
     # could amend one anyway. Saying so loudly is what a guard may do.
-    naked = broker_pkg.unprotected(positions.open_as_of(now), live_orders, policy.market)
+    naked = broker_pkg.unprotected(
+            positions.open_as_of(now), live_orders, policy.market, tick_for=policy.tick_for)
     if naked:
         # RESTORE IT, then re-ask. `DR-037`.
         #
@@ -964,7 +965,8 @@ def _submit(
                 f"denominated in a stop"
             )
             return
-        naked = broker_pkg.unprotected(positions.open_as_of(now), live_orders, policy.market)
+        naked = broker_pkg.unprotected(
+            positions.open_as_of(now), live_orders, policy.market, tick_for=policy.tick_for)
 
     if naked:
         # NOT split on a full stop, which was the first draft: every price in the reason carries
@@ -1338,7 +1340,8 @@ def _sync_fills(args: argparse.Namespace) -> int:
         still_open = [p for p in store.open_as_of(now) if p.position_id not in just_closed]
         by_id = {p.instrument_id: p for p in still_open}
         _, moved = broker_pkg.restorable(
-            broker_pkg.unprotected(still_open, live_orders, policy.market)
+            broker_pkg.unprotected(still_open, live_orders, policy.market,
+                                   tick_for=policy.tick_for)
         )
         for finding in moved:
             # NOT `position`: that name is already bound in this function to a `Position | Refusal`
@@ -1576,7 +1579,7 @@ def _broker(args: argparse.Namespace) -> int:
         print(f"\nprotection  UNAVAILABLE  the venue's resting orders could not be read: "
               f"{unavailable}", file=sys.stderr)
         return 2
-    naked = broker_pkg.unprotected(book, live_orders, policy.market)
+    naked = broker_pkg.unprotected(book, live_orders, policy.market, tick_for=policy.tick_for)
     print(f"\nprotection at the venue ({len(book)} open)")
     if not book:
         print("  nothing held")
@@ -1717,8 +1720,16 @@ def _pending(args: argparse.Namespace) -> int:
         # Split at READ time (`DR-013` 6.4). Expired ones are SHOWN, not dropped: an owner who
         # cannot tell "nothing pending" from "something aged out while I was away" has been told
         # less than the truth, and the second is the case they most need to know about.
-        waiting, expired, unjudgeable = [], [], []
+        # Superseded BEFORE expiry, and at read time too: an older stop move that a newer one on the
+        # same position has replaced is the same question asked on staler data. Shown as a count
+        # per position rather than hidden - `manage.superseded` never touches a critical kind.
+        replaced = manage.superseded(
+            [(i.action.position_id, i.sequence, i.action.kind) for i in everything])
+        waiting, expired, unjudgeable, older = [], [], [], []
         for item in everything:
+            if (item.action.position_id, item.sequence) in replaced:
+                older.append(item)
+                continue
             verdict = _expiry(positions, item.action, now)
             if isinstance(verdict, Refusal):
                 unjudgeable.append((item, verdict))
@@ -1758,6 +1769,16 @@ def _pending(args: argparse.Namespace) -> int:
                       f"   proposed {a.proposed_at:%Y-%m-%d}")
                 print("      the observation it acted on is stale; a later run will re-propose "
                       "if the rule still fires\n")
+
+        if older:
+            by_position: dict[str, list[int]] = {}
+            for item in older:
+                by_position.setdefault(item.action.position_id, []).append(item.sequence)
+            print(f"{len(older)} older stop move(s) SUPERSEDED by a later proposal on the same "
+                  f"position - answer the latest instead:\n")
+            for position_id, sequences in sorted(by_position.items()):
+                print(f"  {position_id}  #" + ", #".join(str(s) for s in sorted(sequences)))
+            print()
 
         # Never silently. A proposal whose age cannot be judged is not a proposal that is fine.
         for item, refusal in unjudgeable:

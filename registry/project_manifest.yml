@@ -936,3 +936,13 @@ documents:
   readme_status_text: drafting
   generated: false
   file_expected: true
+- id: DOC-70
+  display_number: '70'
+  tier_ref: TIER-2
+  artifact_class: PRIMARY_DELIVERABLE
+  path: docs/02-domain/STRATEGY_CONTRACT.md
+  document_status: drafting
+  status_source: document
+  readme_status_text: drafting
+  generated: false
+  file_expected: true
