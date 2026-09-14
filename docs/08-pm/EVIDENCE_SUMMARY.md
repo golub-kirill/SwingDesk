@@ -1248,3 +1248,31 @@ construction this project has measured: the relative-strength family at selectio
 (§20.6–§20.9), and short-term reversal. The store's survivorship flatters a loser book more than any
 other, so the true figure is lower still. What comes next — the index with drawdown control, another
 class, or a pause in research — is the owner's call.
+
+## 22. A trend exit halves the index's worst fall and gives up a third of its return — per unit of risk, a wash
+
+Measured 2026-09-14. `PR-022`, **`INCONCLUSIVE`**, as its §3 predicted — the owner's pick after §21.
+Report: `docs/prereg/results/PR-022-report.md`. Faber's (2007) rule as published: `SPY` while its
+month-end close is above its ten-month average, `BIL` otherwise, switched at the next open, both on
+total return, `DR-005` at 25 bps a fill; 2007-06-01 to 2026-09-11. The first study here without
+survivorship bias.
+
+| | the rule | holding `SPY` |
+|---|---|---|
+| Sharpe | 0.625 | 0.615 — difference **+0.011 [−0.370, +0.389]** |
+| compound return a year | 7.34% | 10.70% |
+| worst drawdown | **−26.9%** | **−55.2%** |
+| last 48 months, compound a year | 9.67% | 19.81% |
+
+**It is a risk dial, not an edge.** The rule held less of the index's risk and earned
+correspondingly less; per unit of risk the two are the same. Its case is one year: in 2008 it lost
+4.7% through the index's −55.2% fall. In every sharp fall since — 2018, 2020, 2022, 2025 — it either
+stepped out after the damage or re-entered the recovery late, and in every one of the other
+nineteen years it trails the index or ties it — thirteen behind, six level, none ahead. **Exploratory, chosen after the run**: a fixed 64% `SPY` / 36% `BIL` at the
+same volatility earned 7.73% at Sharpe 0.655 and, over the last 48 months, 14.37% — worse than the
+rule only in 2008's worst fall, −38.1% against −26.9%.
+
+**What it changes.** Three classes measured, and none has beaten holding the index per unit of risk:
+the relative-strength family (§20), short-term reversal (§21), and this. The trend exit is the first
+that did not lose outright, and the first whose value is a choice about how much risk to carry —
+which is the owner's question about their own capital, not one a study answers.
