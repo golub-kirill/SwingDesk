@@ -6,7 +6,7 @@ venue could not be read (NOT agreement), 3 a TECH finding."""
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
-from decimal import Decimal
+from decimal import ROUND_UP, Decimal
 
 from swingdesk.broker.armed import Arming
 from swingdesk.contracts.broker import BrokerPosition, PlacedOrder, PositionSide
@@ -121,3 +121,72 @@ def test_a_proposal_the_book_has_overtaken_is_marked_obsolete():
     view = _view(split=PendingSplit(waiting=[stale]))
     assert view.positions[0].proposal == (
         "#7 MOVE_STOP -> 116.10 (obsolete - at or below the book stop)")
+
+
+# ------------------------------------------------------- what to type at the venue, 2026-09-14
+
+
+HANDOVER = status.Handover(
+    orders_url="https://paper-api.alpaca.markets/v2/orders", key_env="APCA_API_KEY_ID",
+    secret_env="APCA_API_SECRET_KEY",
+    stop_at_tick=lambda p: (p / Decimal("0.01")).quantize(Decimal(1), rounding=ROUND_UP)
+    * Decimal("0.01"))
+
+
+def test_no_stop_prints_the_book_stop_rounded_up_for_the_books_shares():
+    """The 2026-09-14 case: VGT's book stop 117.044982, nothing resting."""
+    view = _view(live_orders=[], handover=HANDOVER)
+    [command] = view.commands
+    assert command.startswith("curl -s -X POST https://paper-api.alpaca.markets/v2/orders ")
+    assert '\\"stop_price\\":\\"117.05\\"' in command
+    assert '\\"qty\\":\\"20\\"' in command and '\\"side\\":\\"sell\\"' in command
+    assert '\\"type\\":\\"stop\\"' in command and '\\"time_in_force\\":\\"gtc\\"' in command
+
+
+def test_a_command_carries_the_names_of_the_keys_and_never_a_value():
+    [command] = _view(live_orders=[], handover=HANDOVER).commands
+    assert '-H "APCA-API-KEY-ID: %APCA_API_KEY_ID%"' in command
+    assert '-H "APCA-API-SECRET-KEY: %APCA_API_SECRET_KEY%"' in command
+
+
+def test_a_looser_venue_stop_is_cancelled_before_the_books_is_placed():
+    """A move approved in the book and never sent: VGT's 115.62 under a 117.044982 book."""
+    view = _view(live_orders=[_stop("115.62")], handover=HANDOVER)
+    cancel, place = view.commands
+    assert cancel.startswith("curl -s -X DELETE https://paper-api.alpaca.markets/v2/orders/leg-VGT ")
+    assert '\\"stop_price\\":\\"117.05\\"' in place
+    lines = "\n".join(status.render(view))
+    assert lines.index("-X DELETE") < lines.index("-X POST")
+    assert "before its stop is placed" in lines
+
+
+def test_a_tighter_venue_stop_is_left_for_dr041_to_adopt():
+    view = _view(live_orders=[_stop("118.00")], handover=HANDOVER)
+    assert view.commands == ()
+    [note] = view.venue_notes
+    assert "tighter" in note and "DR-041" in note
+    assert view.exit_code == 3, "still a finding until sync-fills adopts it"
+
+
+def test_a_take_profit_is_named_as_holding_the_shares_and_never_cancelled():
+    """A resting sell limit reserves the shares, so the stop would be refused - said, not decided."""
+    target = PlacedOrder(order_id="tp-VGT", client_order_id="", symbol="VGT", status="new",
+                         submitted_at=AT, order_type="limit", stop_price=None, side="sell",
+                         observed_at=AT)
+    view = _view(live_orders=[_stop("115.62"), target], handover=HANDOVER)
+    assert not any("tp-VGT" in command for command in view.commands)
+    assert [c for c in view.commands if "-X DELETE" in c] == [view.commands[0]]
+    [note] = view.venue_notes
+    assert "tp-VGT" in note and "insufficient qty" in note
+
+
+def test_a_position_in_order_prints_nothing_to_type():
+    view = _view(handover=HANDOVER)
+    assert view.commands == () and view.venue_notes == ()
+    assert "at the venue" not in "\n".join(status.render(view))
+
+
+def test_nothing_is_printed_without_a_handover_or_with_an_unread_venue():
+    assert _view(live_orders=[]).commands == ()
+    unread = _view(venue_error="down", held=[], live_orders=[], handover=HANDOVER)
+    assert unread.commands == ()

@@ -2728,3 +2728,14 @@ file was the other option and was not taken: gate 24 and every reader expect §2
 **The lesson is promoted, which is why this entry may move.** It is `docs/runbooks/README.md` §10
 and the wrapper's own comment: a scheduled step that writes a tracked file owes its operator the
 command that undoes it safely.
+
+## `refresh_universe.py`'s own default was still `2y` — closed 2026-09-14
+
+**Opened 2026-09-06, the day the trap was found.** The scheduled pass was fixed at once —
+`tools/widen_universe.cmd` passes `--period 10y` (owner ruling) — and the tool's default was left at
+`2y` because other callers might share it. Checked 2026-09-14: no committed caller relies on the
+default; the one scheduled caller passes `10y`, and `PR-007`'s reproduction passes it explicitly.
+
+**The default is `10y` now.** It bought nothing to keep: the vendor charges per request, not per bar
+— 0.40s a symbol at `10y` against 0.45s at `2y`. The lesson was promoted to `AGENTS.md` §12 when the
+trap was found, which is why this entry may move.

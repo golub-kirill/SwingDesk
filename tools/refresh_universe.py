@@ -77,7 +77,10 @@ def main() -> int:
     parser.add_argument("--data", type=Path, default=Path("data"))
     parser.add_argument("--budget", type=int, default=500,
                         help="how many symbols to fetch this pass (ignored with --symbols-from)")
-    parser.add_argument("--period", default="2y",
+    # `10y`, the window `widen_universe.cmd` passes (owner ruling 2026-09-06). The old `2y` default
+    # was a trap for a hand-run, and it saved nothing: the vendor charges per request, not per bar -
+    # 0.40s a symbol at 10y against 0.45s at 2y.
+    parser.add_argument("--period", default="10y",
                         help="fetch window; must exceed universe.min_bar_history (250 bars)")
     # DEFAULTS FROM THE COMMITTED POLICY, not from a literal here. This is the bulk pass - the one
     # that would notice a throttle first and the one whose politeness is a decision about somebody

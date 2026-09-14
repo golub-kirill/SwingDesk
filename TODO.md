@@ -1076,18 +1076,6 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       changes the gross as well as the cost, and the gross was measured at the open. `DR-040` §6
       names the study; it needs intraday bars, which the venue serves free and `data/` does not hold.
 
-- [ ] **`[v]` `refresh_universe.py`'s OWN DEFAULT IS STILL `2y`, so a hand-run repeats the trap —
-      2026-09-06.**
-      The scheduled pass was fixed the day the trap was found: `tools/widen_universe.cmd` now
-      passes **`--period 10y`** (owner ruling, 2026-09-06), and the admitted universe was
-      backfilled. The tool's default did not move with it, because other callers share it —
-      `run_pr005`, `PR-007`'s reproduction and any future `--symbols-from` caller read it — and a
-      default is not one caller's choice to make.
-      **The number it would replace bought nothing**: 0.40s a symbol at `10y` against 0.45s at
-      `2y`, because the vendor charges per REQUEST rather than per bar. There was never a saving to
-      weigh against the history.
-      The lesson is promoted to `AGENTS.md` §12; what is open is the one-line default.
-
 - [ ] **`[v]` WHETHER THE REMAINING PRIOR STUDIES ARE RE-RUN ON THE WIDENED SAMPLE — 2026-09-06,
       updated 2026-09-07, and my recommendation is still NO.**
       **`PR-014` is settled and is no longer the example**: its cost model was wrong, correcting it
@@ -3051,6 +3039,17 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       price the venue can hold), the read-side decision view — and #2 and #4, which are yours.
       **`pending --hide-expired` BUILT 2026-09-13** (medium #2): expired rows collapse to one count
       line, nothing is deleted, and without the flag they list exactly as before.
+      **2026-09-14 — #2 MEASURED AND PUT TO THE OWNER AS `DR-043` (proposed), with the interim
+      BUILT.** That morning all four open positions stood with no stop for the first 55 minutes of
+      the session: every resting stop's queued cancel landed at 08:00 CDT and the replacements went
+      in by hand at 09:25. The venue's own history shows 13 stops placed by hand in five sessions
+      for four positions. **Built, needing no ruling:** `swingdesk status` now prints the exact
+      commands for the operator's shell — a place for a position holding nothing, a cancel then a
+      place for a stop looser than the book's, and a note instead of a command for a stop tighter
+      than the book's (`DR-041` adopts it) or for a resting take-profit that would hold the shares.
+      The keys appear by NAME only. **Proposed:** `DR-043` — on an approved move, the system
+      REPLACES its own protective stop to the approved, higher price (`PATCH`, one request, no gap);
+      never a stop a person placed, never lower, only armed. **Yours to rule.**
 
 - [ ] **`[v]` ALPACA PAPER TRADING — owner instruction 2026-08-31. Wire it as the broker so
       strategies, guesses and the whole chain can be tested against a real venue.**

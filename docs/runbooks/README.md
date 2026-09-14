@@ -504,6 +504,15 @@ That is the book saying one thing and the market able to see nothing. **The syst
 it** — it has no verb that amends or cancels an order — so a stop that has to go back on has to be
 placed in the venue's own dashboard, and new entries stay paused until it is.
 
+**`swingdesk status` prints what to type** (since 2026-09-14): for a position holding nothing, the
+`gtc` stop at the book's price rounded UP to the venue's tick; for a stop looser than the book's, the
+cancel and then the stop; for a stop TIGHTER than the book's, a note that the next `sync-fills`
+adopts it (`DR-041`) and nothing to send. The commands are for `cmd.exe` and carry the key variables
+by NAME. **Run a cancel first and wait until `status` no longer shows it**: the venue holds the shares
+for the old order until the cancel lands, and a stop placed before that is refused for
+`insufficient qty` — measured on a Saturday, when the cancel waited for Monday's open. Whether the
+system should send an approved move itself is `DR-043`, proposed and waiting on the owner.
+
 ```
 .\.venv\Scripts\python.exe -X utf8 -m swingdesk.presentation.cli sync-fills --data data --dry-run
 ```
