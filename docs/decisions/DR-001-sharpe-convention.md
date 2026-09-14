@@ -2,9 +2,11 @@
 
 ```
 date:       2026-08-02
-status:     proposed
+status:     accepted — ratified by the owner 2026-09-14, as applied (the batch ruling on the
+            long-proposed records)
 parameters: stats.sharpe_convention
-components: none yet - no Sharpe implementation exists
+components: none in src - the study tools apply it (PR-022 and PR-023 read a Sharpe by it)
+implemented_by: tools/run_pr022.py :: def sharpe
 ```
 
 The course lists `Sharpe ratio` among the fifteen M69 metrics and supplies **no formula, no

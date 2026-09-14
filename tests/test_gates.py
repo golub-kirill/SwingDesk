@@ -3097,8 +3097,18 @@ def test_the_errorlevel_tests_descend_and_that_is_the_whole_safety() -> None:
 def test_an_unmeasurable_condition_runs_the_pass() -> None:
     """`unavailable` is not `pass` and it is not `fail` - here it must not mean "skip"."""
     wrapper = _wrapper()
-    line = next(row for row in wrapper.splitlines() if row.startswith("if errorlevel 4"))
+    rows = wrapper.splitlines()
+    # The condition's own answer, read right after it is asked - since 2026-09-14 the wait for the
+    # first pass sits above it with an `if errorlevel 4` of its own.
+    # Invocation lines only: both tools are also named in the REM comments above them.
+    asked = next(i for i, row in enumerate(rows)
+                 if row.startswith('"%PY%"') and "retry_needed.py" in row)
+    line = next(row for row in rows[asked:] if row.startswith("if errorlevel 4"))
     assert line.strip().endswith("goto :attempt")
+    # And the wait's unavailable runs the pass too: it continues to the condition, never skips.
+    waited = next(i for i, row in enumerate(rows)
+                  if row.startswith('"%PY%"') and "wait_for_first_pass.py" in row)
+    assert rows[waited + 1].strip() == "if errorlevel 4 goto :retry_check"
 
 
 def test_the_skip_path_reports_itself_and_exits_clean() -> None:

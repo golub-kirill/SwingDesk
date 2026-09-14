@@ -126,10 +126,26 @@ REM TRACK A IS UNAFFECTED. Its parser counts only the attempt starting within
 REM +-30 minutes of 18:30, and this branch is reachable only when the wrapper was
 REM invoked with `second-pass`.
 if not "%SECOND%"=="1" goto :attempt
+
+REM THE SECOND PASS WAITS FOR THE FIRST - owner ruling 2026-09-14. Both passes write the same
+REM stores and DuckDB refuses a second writer, so a 19:30 pass that starts under a slow 18:30 run
+REM fails on a lock and loses the evening it exists to save. `wait_for_first_pass.py` asks the Task
+REM Scheduler whether the daily run is still running and waits up to an hour. It sits BEFORE
+REM `retry_needed.py`, which reads the journal the first pass may still hold. Exit 1 skips the pass
+REM and says so; exit 4 - the scheduler unreadable - runs it, the same unavailable-runs-the-pass rule
+REM as below.
+"%PY%" -X utf8 "%REPO%\tools\wait_for_first_pass.py" >> "%LOG%" 2>&1
+if errorlevel 4 goto :retry_check
+if errorlevel 1 goto :first_still_running
+:retry_check
 "%PY%" -X utf8 "%REPO%\tools\retry_needed.py" --data "%REPO%\data" >> "%LOG%" 2>&1
 if errorlevel 4 goto :attempt
 if errorlevel 1 goto :nothing_to_retry
 goto :attempt
+
+:first_still_running
+echo ===== [%DATE% %TIME%] second pass skipped, the daily run was still running >> "%LOG%"
+exit /b 0
 
 :nothing_to_retry
 echo ===== [%DATE% %TIME%] second pass skipped, nothing to retry >> "%LOG%"

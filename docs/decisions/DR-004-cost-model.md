@@ -2,9 +2,11 @@
 
 ```
 date:       2026-08-02
-status:     proposed - slippage component superseded by DR-005 on 2026-08-05
+status:     accepted — ratified by the owner 2026-09-14, as applied; its slippage component was
+            superseded by DR-005 on 2026-08-05
 parameters: costs.commission_model, costs.slippage_model
 components: none - swingdesk.validation.backtest.costs implements it; this sets its inputs
+implemented_by: src/swingdesk/validation/backtest/costs.py :: class CostModel
 ```
 
 > **The 5bps slippage figure below is no longer current.** `DR-005` measured it from daily OHLC and

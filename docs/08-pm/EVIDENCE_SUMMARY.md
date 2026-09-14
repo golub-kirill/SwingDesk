@@ -1300,6 +1300,29 @@ against −13.1%).
 with a trend exit, five asset classes — and none beats holding `SPY` per unit of risk. What they
 differ in is how much risk they hold. Where on that line to sit is the owner's question.
 
+## 24. Where the research line stops — owner ruling 2026-09-14
+
+**Research pauses; `CARD-001` goes on running on the paper account as a test of the machinery**,
+not as a claim that it earns. That is the owner's answer to §20–§23, and this section is the
+account's last line until something reopens it.
+
+**What the programme established, in one paragraph.** Over the markets this store holds, holding
+`SPY` has not been beaten per unit of risk by anything measured here: selecting stocks by relative
+strength, exiting them by stops and targets, sizing them, buying last week's losers, stepping out of
+the index on a broken trend, or spreading across five asset classes with and without that rule. The
+closest any came was matching it (§22). **None of that says the index will go on winning**; it says
+no rule tested here earned its costs against it, on 123 configurations whose count is itself part of
+the evidence (`tools/trial_budget.py`: at that count the null's expected best sits 2.6 sd(SR) above
+zero, so a single striking result is expected by chance).
+
+**What stays true of the machinery.** Every study is registered before it ran and reported whatever
+it said; the paper account places, protects and reconciles orders under the owner's switch; and
+`tools/remeasure.py` re-reads the registered questions every week, so a result that stops being true
+shows up without anybody re-opening it.
+
+**What would reopen the line**: a new idea with a measured chance, sized by its own variance before it
+registers — or fresh sessions after 2026-09 changing a re-measured answer.
+
 **What it changes.** Three classes measured, and none has beaten holding the index per unit of risk:
 the relative-strength family (§20), short-term reversal (§21), and this. The trend exit is the first
 that did not lose outright, and the first whose value is a choice about how much risk to carry —

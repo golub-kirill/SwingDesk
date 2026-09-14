@@ -1019,40 +1019,6 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **Recorded before the number exists so it cannot be adjusted afterwards: above ~15% the
       conservative rule stops being a small conservatism and becomes a systematic distortion.**
 
-- [ ] **`[v]` THE EVENING RUN TOOK 41 MINUTES AGAINST 17.7 THREE SESSIONS EARLIER, AND THE SECOND
-      PASS IS 60 MINUTES BEHIND IT — measured 2026-09-07, and the schedule is the owner's.**
-      ```bash
-      grep -E "daily run (starting|finished)" data/daily_run.log | tail -6
-      ```
-      | date | pass | duration |
-      |---|---|---|
-      | 2026-09-03 | 18:30 | 7.4 min |
-      | 2026-09-04 | 18:30 | 17.7 min |
-      | 2026-09-04 | 19:30 | 18.1 min |
-      | **2026-09-07** | **18:30** | **41.4 min** |
-      | **2026-09-07** | **19:30** | **50.0 min** |
-      **The second pass took FIFTY minutes on a day with no session to collect.** That locates the
-      cost: it is the candidate evaluation, not the arrival of new bars. 3,935 names are ranked,
-      correlated against the open book and sized whether or not the market traded.
-      **The cause is the backfill and it is not a defect.** The run evaluated **3,935 candidates**
-      tonight; before the 10y coverage pass most of the universe could not clear
-      `universe.min_bar_history` (250) and was never admitted. More names now carry real history,
-      which is what the backfill was for, and the run costs what that costs.
-      **It is NOT the fetch period.** The nightly pull is `period="1y"` per instrument — 253 rows —
-      and that is the shortest span the pipeline's own indicators need. It also carries a second
-      job: refetching a year is how a restated close is detected at all (`DR-016` §10.4). Shrinking
-      it would trade a slow run for a blind one.
-      **The margin tonight was 19 minutes**, and it is the FIRST pass that has to fit: `DR-015` §3
-      puts the retry at 19:30, one hour behind, and provides for a RETRY rather than a concurrent
-      run. Both write the same stores, and DuckDB refuses the second writer — so an overlap does not
-      corrupt anything, it makes the retry fail on a lock and lose the evening it exists to save.
-      At 41 minutes and growing, one more session's worth of admitted names closes that gap.
-      **The ruling is yours** and the options are: move the second pass later, accept the overlap
-      and make the pass refuse to start while one is running, or cap the candidate set. The last one
-      is a strategy change wearing an operations costume and I do not recommend it.
-      **Measure before deciding**: 2026-09-07 was a holiday with no session to collect, so tomorrow
-      is the first honest reading of a full run on the widened universe.
-
 - [ ] **`[v]` THE COST CONSTANT DESCRIBES THE OPENING MINUTE AND IS APPLIED TO EVERY MOMENT —
       measured 2026-09-06, `DR-040` is `proposed` and the ruling is the owner's.**
       ```bash
@@ -1075,25 +1041,10 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **What must NOT happen without the study**: adopting the late-session number. A later entry
       changes the gross as well as the cost, and the gross was measured at the open. `DR-040` §6
       names the study; it needs intraday bars, which the venue serves free and `data/` does not hold.
-
-- [ ] **`[v]` WHETHER THE REMAINING PRIOR STUDIES ARE RE-RUN ON THE WIDENED SAMPLE — 2026-09-06,
-      updated 2026-09-07, and my recommendation is still NO.**
-      **`PR-014` is settled and is no longer the example**: its cost model was wrong, correcting it
-      forced a re-run regardless of the backfill, and the earlier sample was recovered from the
-      store's own bitemporal history rather than re-fetched — so both changes were separated after
-      the fact. See `docs/prereg/results/PR-014-report.md` §CORRECTION. **It spent no new trials**:
-      the same twelve configurations, re-priced, declared as zero in `tools/trial_budget.py`.
-      **For everything else the case against re-running is the trial budget.** 90 spent, hurdle
-      **2.49 sd(SR)** — the figure moved from 81 on 2026-09-07 when fourteen committed
-      measurements turned out to carry no counting rule and two of them were searches. Derive it
-      with `tools/trial_budget.py`; do not quote this line. Re-running a study against changed data is its full trial count again, to
-      re-answer a question `CARD-002`'s own study will ask better, on a clean sample, with a
-      holdout that has not been spent.
-      **The exception is the COST INPUTS**: `measure_quoted_spread.py` and
-      `measure_benchmark_fit.py` spend no trials at all — there is no Sharpe in a spread to deflate
-      — and they are inputs to everything else, so re-running them after the backfill is free and
-      worth doing. Not yet done.
-      **The ruling is yours**; this is a recommendation with its reasoning, not a decision taken.
+      **RULED 2026-09-14 — `DR-040` accepted.** Question 1 is done: `costs.slippage_model`'s note now
+      says the value describes the opening minute. Question 2 is ratified and is built with the next
+      study that charges a moment other than the open — none runs while research is paused. Question
+      3, `CARD-001`'s `entry.method`, was not put and stays closed.
 
 - [ ] **`[v]` THE SECTOR RANKER CANNOT BE BACKTESTED, AND THIS ONE IS A REAL BLOCKER — tested
       2026-09-06 rather than assumed.**
@@ -1242,6 +1193,8 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       that PDF is the first thing to close.
       **Accepting it is not a value swap.** `CostModel.commission()` charges symmetrically on share
       count; Section 31 is a rate on SELL PROCEEDS. §6 of the record names the signature change.
+      **RULED 2026-09-14 (the owner's answer 9B): not wired now.** The fees are 0.9% of the slippage
+      term and change no verdict, and research is paused; the wiring waits for a study that needs it.
 
 
 - [ ] **`[v]` `DR-006` §3 ADMITS AN UNAVAILABLE CANDIDATE UNCHECKED, AND A CAP THAT FAILS OPEN IS
@@ -1598,7 +1551,10 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       net-of-costs figure this project has published is denominated in two records nobody ratified —
       including `HANDOFF.md` §2's *"slippage **measured** — 25bps per side (`DR-005`)"*, where
       *measured* is true of the number and not of the record's standing.
-- [ ] **`[v]` Records still `proposed` whose values the system is already using.** ~~DR-009 ·
+- [ ] **`[v]` Records still `proposed` whose values the system is already using.** **RULED
+      2026-09-14: the owner ratified `DR-001`, `DR-002`, `DR-004`, `DR-005`, `DR-009` and `DR-020`
+      as applied** (and `DR-040`, `DR-043` the same day), so `verify_parameters.py`'s list is what
+      is left, if anything. ~~DR-009 ·
       DR-001 / DR-002 / DR-005~~ — **that hand-typed list was checked 2026-08-30 and was wrong in
       both directions**, so it is replaced by the command that derives it. Gate 1 has printed this
       subset on every run since 2026-08-25 and no reader had compared the two:
@@ -1784,6 +1740,11 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       against 0.543, −0.163 [−0.566, +0.190]; held, `NULL` at −0.169 [−0.345, +0.007]. Four
       classes now measured and none beats holding `SPY` per unit of risk on 2007–2026. **What is
       left is the owner's**: how much of the index's risk to carry, or a pause in research.
+      **RULED 2026-09-14 (the owner's answer 4A): research pauses, and `CARD-001` goes on running on
+      the paper account as a test of the MACHINERY** — orders, fills, stops, reconciliation — not
+      as a claim that it earns. What would reopen the line is a new idea with a measured chance, or
+      fresh sessions after 2026-09 to re-read the registered questions on (`tools/remeasure.py`
+      appends that sequence weekly). `EVIDENCE_SUMMARY` §24 closes the account.
 
 - [ ] **`[v]` A POWER ESTIMATE FOR A MARKET-PAIRED CONTRAST MUST MODEL OVERLAPPING HOLDS — owed
       before the next one registers.** `PR-019b`'s estimate predicted a half-width of 0.0743 and the
@@ -2962,7 +2923,9 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
         the cost is blocked entries until `open-position`, which is what happened with XMTR and VGT
         (both recorded 2026-09-09 at round stops, 80.00 and 115.00). A narrower automatic path is
         possible — record it only when a stop for exactly that quantity IS resting, and adopt that
-        stop — and it is a ruling, not a fix. **Yours.**
+        stop — and it is a ruling, not a fix. **Yours.** **RULED 2026-09-14: not now** — the paper
+        account holds no hand purchases, so a venue-only position is rare; one is still recorded
+        with `open-position`.
       * **Medium #1, journal duplication — CONFIRMED in size, not a defect in kind.** 54% of decision
         rows repeat an (instrument, day) from another run; 2026-09-03 had ten runs. Each run is a
         record by design and deleting any would break the audit trail. The fix is a read-side view
