@@ -1270,7 +1270,9 @@ correspondingly less; per unit of risk the two are the same. Its case is one yea
 stepped out after the damage or re-entered the recovery late, and in every one of the other
 nineteen years it trails the index or ties it — thirteen behind, six level, none ahead. **Exploratory, chosen after the run**: a fixed 64% `SPY` / 36% `BIL` at the
 same volatility earned 7.73% at Sharpe 0.655 and, over the last 48 months, 14.37% — worse than the
-rule only in 2008's worst fall, −38.1% against −26.9%.
+rule only in 2008's worst fall, −38.1% against −26.9%. **And the registered convention flatters it**:
+with `BIL` as the risk-free leg instead of rf = 0, the difference turns from +0.011 to **−0.027
+[−0.401, +0.343]** (the report's addendum) — the small edge was the T-bill yield counted as reward.
 
 **What it changes.** Three classes measured, and none has beaten holding the index per unit of risk:
 the relative-strength family (§20), short-term reversal (§21), and this. The trend exit is the first

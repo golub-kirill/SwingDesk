@@ -167,6 +167,24 @@ outright — it matched it per unit of risk — and the first whose value is a C
 than a claim about return. **How much of the index's risk to carry is a question about the owner's
 capital and tolerance for loss, not one this study can answer**, and it is not investment advice.
 
+## Addendum, 2026-09-14, after the run — the convention flatters any book that holds cash
+
+*Exploratory; read by nothing; the verdict stands.* `stats.sharpe_convention` sets rf = 0, so a book
+paid the T-bill yield for the fifth of the time it sits in `BIL` has that yield counted as reward for
+risk. Measured on the same series, with `BIL`'s own daily total return as the risk-free leg (1.38% a
+year on average over the window):
+
+| | rf = 0, as registered | excess over `BIL` |
+|---|---|---|
+| Sharpe, the rule | 0.625 | **0.516** |
+| Sharpe, holding `SPY` | 0.615 | **0.543** |
+| difference | +0.011 [−0.370, +0.389] | **−0.027 [−0.401, +0.343]** |
+
+**The sign of the point estimate turns.** Neither interval excludes zero, so the verdict is
+`INCONCLUSIVE` either way; but the small edge the registered reading showed was the convention, not
+the rule. `PR-023` registers the excess-over-`BIL` Sharpe as its primary for this reason and reports
+the convention beside it.
+
 ## What the study cost
 
 **One trial.** The programme's count moves from **120 to 121** and the hurdle from **2.594 to 2.597**

@@ -322,6 +322,11 @@ SIDE_RECORDS = {
                     "fixed before it ran, with how often the rule is invested and switches. Only "
                     "widths leave it, under the same level guard, and there is nothing to select. "
                     "PR-022 counts its one",
+    "PR-023-power": "no trials: a VARIANCE estimate for PR-023 - the widths of the excess-Sharpe "
+                    "and return differences against SPY that the verdict's own bootstrap produces "
+                    "for its two arms, fixed before it ran, with how much of each book sat in risk "
+                    "assets and what it traded. Only widths leave it, under the same level guard. "
+                    "PR-023 counts its two",
 }
 
 
