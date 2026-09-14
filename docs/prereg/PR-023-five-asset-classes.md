@@ -7,7 +7,12 @@ author:        Claude, choosing what to measure next under the owner's "прод
                2026-09-14 (AGENTS.md 14: what to measure is the agent's, a ratification is the
                owner's). Owed by PR-022, whose one index could not read +/-0.38 of Sharpe and
                whose own not-run list named Faber's five asset classes as where the evidence is
-status:        registered
+status:        reported   (2026-09-14 - results/PR-023-report.md)
+verdict:       INCONCLUSIVE, as section 3 predicted - TIMED_5's excess Sharpe 0.380 against SPY's
+               0.543, a difference of -0.163 [-0.566, +0.190]. Beside it and never read: its worst
+               drawdown in nineteen years -13.1% against SPY's -55.2%, and 4.01% a year against
+               10.70%. HOLD_5 reads NULL, -0.169 [-0.345, +0.007]: the five held did not beat SPY
+               per unit of risk. Section 9 reproduced both power widths to the digit
 ```
 
 ---

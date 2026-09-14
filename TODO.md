@@ -1790,6 +1790,12 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       year; exploratory, a fixed 64% `SPY` / 36% `BIL` did as well except in 2008. **The owner's
       call again**: carry the index's risk as it is, dial it down (a fixed mix or this rule), try
       another class, or pause research. Nothing registers until they pick.
+      **Under the owner's "продолжай" (2026-09-14) the agent measured next: `PR-023`, Faber's five
+      asset classes, `INCONCLUSIVE`** (`EVIDENCE_SUMMARY` §23). Timed, the five never fell more than
+      13.1% in nineteen years and earned 4.01% a year against `SPY`'s 10.70% — excess Sharpe 0.380
+      against 0.543, −0.163 [−0.566, +0.190]; held, `NULL` at −0.169 [−0.345, +0.007]. Four
+      classes now measured and none beats holding `SPY` per unit of risk on 2007–2026. **What is
+      left is the owner's**: how much of the index's risk to carry, or a pause in research.
 
 - [ ] **`[v]` A POWER ESTIMATE FOR A MARKET-PAIRED CONTRAST MUST MODEL OVERLAPPING HOLDS — owed
       before the next one registers.** `PR-019b`'s estimate predicted a half-width of 0.0743 and the
