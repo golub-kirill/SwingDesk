@@ -317,6 +317,11 @@ SIDE_RECORDS = {
                     "each of the five holds, on the SELECTION half of the names only; the holdout "
                     "half is never loaded. Only widths leave it, under the same level guard, so "
                     "nothing could be selected on it. PR-021 counts its five",
+    "PR-022-power": "no trials: a VARIANCE estimate for PR-022 - the widths of the Sharpe and "
+                    "return differences the verdict's own bootstrap produces for one published rule "
+                    "fixed before it ran, with how often the rule is invested and switches. Only "
+                    "widths leave it, under the same level guard, and there is nothing to select. "
+                    "PR-022 counts its one",
 }
 
 
