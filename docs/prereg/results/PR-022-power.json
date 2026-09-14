@@ -1,0 +1,36 @@
+{
+  "as_of": "2026-09-14T11:31:09.113665+00:00",
+  "block": 63,
+  "construction": {
+    "cost_points_a_year_at_dr005": 0.8311688311688311,
+    "share_of_sessions_invested": 0.779839208410637,
+    "switches": 32,
+    "switches_a_year": 1.6623376623376624
+  },
+  "for": "PR-022",
+  "last_48_months": {
+    "readable_at_floor": false,
+    "return_difference_width_points": 16.79818245449585,
+    "sessions": 1002,
+    "sharpe_difference_width": 1.1911303433491292,
+    "sharpe_held_width": 1.6741383291671612,
+    "sharpe_timed_width": 1.8695147863332742
+  },
+  "power_floor_sharpe": 0.4,
+  "purpose": "a variance estimate for PREREG_TEMPLATE rule 9: the interval widths the verdict estimator produces on the registered window and on the last 48 months. No level.",
+  "registered_window": {
+    "readable_at_floor": false,
+    "return_difference_width_points": 10.947506432669163,
+    "sessions": 4851,
+    "sharpe_difference_width": 0.7594355416679246,
+    "sharpe_held_width": 0.8352826283730951,
+    "sharpe_timed_width": 0.8636175523790997
+  },
+  "resamples": 10000,
+  "seed": 20260914,
+  "window": {
+    "end": "2026-09-11",
+    "note": "the verdict's own window - PR-022 selects nothing and holds nothing out",
+    "start": "2007-06-01"
+  }
+}
