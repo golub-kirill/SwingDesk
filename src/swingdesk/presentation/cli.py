@@ -1704,10 +1704,23 @@ def _status(args: argparse.Namespace) -> int:
         book = positions.open_as_of(now)
         split = split_pending(positions, now)
 
+    # The commands the screen prints for a stop the venue is not holding. Built only when the policy
+    # has a write block, because the tick and DR-033's direction come from it; without one the
+    # screen reports the finding and prints nothing to type.
+    write = policy.write
+    handover = None
+    if write is not None:
+        from functools import partial
+
+        from swingdesk.broker.submit import to_tick
+
+        handover = status_view.Handover(
+            orders_url=policy.url("orders"), key_env=policy.key_env, secret_env=policy.secret_env,
+            stop_at_tick=partial(to_tick, write=write, favouring="safer"))
     view = status_view.build(
         at=now, switch=switch, schedule=readings, account=account, venue_error=venue_error,
         book=book, held=held, live_orders=live, split=split, market=policy.market,
-        label=policy.label, tick_for=policy.tick_for)
+        label=policy.label, tick_for=policy.tick_for, handover=handover)
     for line in status_view.render(view):
         print(line)
     return view.exit_code

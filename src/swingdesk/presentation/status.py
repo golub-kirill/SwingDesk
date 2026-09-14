@@ -4,10 +4,18 @@ The owner's operations review of 2026-09-12, medium #4: the state of the system 
 `broker`, `pending` and the Task Scheduler, and nothing answered the one question - *is anything
 wrong tonight?* - on one screen. This module turns values the command has already read into that
 screen. It performs no I/O, so every branch is testable without a venue or a scheduler.
+
+**And when something is wrong at the venue, the screen says what to type.** On 2026-09-14 four open
+positions stood with no stop at the venue and the fix was four commands a person worked out by
+hand: the book's stop, rounded UP to the venue's tick (`DR-033`), for the book's share count, `gtc`.
+The system still sends none of them - it has no verb that cancels or amends an order, and a stop
+move is `D6`'s - but it can print exactly what the operator would otherwise compute, from numbers
+it has already read, in the shell the operator actually uses.
 """
 
 from __future__ import annotations
 
+import json
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -15,6 +23,7 @@ from decimal import Decimal
 
 from swingdesk.broker import MISMATCH_CODE, reconcile, resting_stops, unprotected
 from swingdesk.broker.armed import Arming
+from swingdesk.broker.reconcile import PROTECTIVE_TYPES
 from swingdesk.contracts.broker import BrokerAccount, BrokerPosition, PlacedOrder
 from swingdesk.contracts.position import Position
 from swingdesk.platform.schedule import TaskReading
@@ -25,6 +34,22 @@ NO_STOP = "NO STOP"
 WRONG_PRICE = "WRONG PRICE"
 UNKNOWN = "UNKNOWN"
 OUT_OF_SCOPE = "OUT OF SCOPE"
+
+
+@dataclass(frozen=True)
+class Handover:
+    """What a printed command needs, and nothing more.
+
+    **The NAMES of the key variables, never their values** - the operator's shell expands them
+    (`cmd.exe`: `%NAME%`), so nothing secret is ever on the screen or in a scrollback. The stop is
+    rounded by `stop_at_tick`, which the command builds from the committed policy's tick and
+    `DR-033`'s direction for a stop, UP: a stop nearer the entry risks less than the book, never more.
+    """
+
+    orders_url: str
+    key_env: str
+    secret_env: str
+    stop_at_tick: Callable[[Decimal], Decimal]
 
 
 @dataclass(frozen=True)
@@ -51,6 +76,10 @@ class StatusView:
     superseded: int
     expired: int
     unjudgeable: int
+    #: What to type at the venue, in order. Empty when nothing is wrong or no handover was given.
+    commands: tuple[str, ...] = ()
+    #: Findings that need no command, each saying why.
+    venue_notes: tuple[str, ...] = ()
 
     @property
     def findings(self) -> int:
@@ -81,6 +110,66 @@ def _newest_proposals(split: PendingSplit) -> dict[str, tuple[str, Decimal | Non
             for position_id, (_, phrase, asked) in newest.items()}
 
 
+def _headers(handover: Handover) -> str:
+    return (f'-H "APCA-API-KEY-ID: %{handover.key_env}%" '
+            f'-H "APCA-API-SECRET-KEY: %{handover.secret_env}%"')
+
+
+def _place(line: PositionLine, handover: Handover) -> str:
+    """A `gtc` sell stop for the book's shares at the book's stop, rounded to the venue's tick."""
+    body = json.dumps({"symbol": line.instrument_id, "qty": str(line.shares), "side": "sell",
+                       "type": "stop", "stop_price": str(handover.stop_at_tick(line.book_stop)),
+                       "time_in_force": "gtc"}, separators=(",", ":"))
+    quoted = body.replace('"', '\\"')
+    return (f"curl -s -X POST {handover.orders_url} {_headers(handover)} "
+            f'-H "Content-Type: application/json" -d "{quoted}"')
+
+
+def _cancel(order_id: str, handover: Handover) -> str:
+    return f"curl -s -X DELETE {handover.orders_url}/{order_id} {_headers(handover)}"
+
+
+def _handover(lines: Sequence[PositionLine], live_orders: Sequence[PlacedOrder],
+              handover: Handover) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """The commands that would make the venue hold the book's stop, and the findings that need none.
+
+    * **No stop at all** - place one. That is `DR-037`'s restoration, which the evening pass also
+      does when it runs armed; the command is for the operator who cannot wait for it.
+    * **A stop LOOSER than the book's** - a move approved in the book and never sent. Cancel what is
+      resting for the symbol, then place the book's. Cancel first: the venue reserves the shares for
+      the old order until the cancel lands, and a stop placed before it is refused for
+      `insufficient qty` (measured 2026-09-12, over a weekend when the cancel waited for Monday).
+    * **A stop TIGHTER than the book's** - nothing to send. `sync-fills` adopts the venue's number
+      into the book (`DR-041`), and replacing it would widen a protection somebody raised.
+    """
+    commands: list[str] = []
+    notes: list[str] = []
+    for line in lines:
+        if line.protection == NO_STOP:
+            pass
+        elif line.protection == WRONG_PRICE and line.venue_stop is not None:
+            if line.venue_stop > line.book_stop:
+                notes.append(f"{line.instrument_id}: the venue's stop {line.venue_stop} is tighter than "
+                             f"the book's {line.book_stop}; the next sync-fills adopts it (DR-041) - "
+                             f"nothing to send")
+                continue
+            commands.extend(_cancel(order.order_id, handover) for order in live_orders
+                            if order.symbol == line.instrument_id
+                            and order.order_type in PROTECTIVE_TYPES and order.stop_price is not None)
+        else:
+            continue
+        # A resting SELL that is not a stop - a take-profit - holds the same shares, and the venue
+        # refuses the stop while it rests. It may be the one the operator wants, so it is named and
+        # left alone rather than cancelled on the screen's say-so.
+        commands.append(_place(line, handover))
+        notes.extend(f"{line.instrument_id}: order {order.order_id} ({order.order_type}) holds the "
+                     f"shares - the stop above is refused for insufficient qty until it is cancelled"
+                     for order in live_orders
+                     if order.symbol == line.instrument_id and order.side == "sell"
+                     and order.order_type not in PROTECTIVE_TYPES)
+    return tuple(commands), tuple(notes)
+
+
 def build(
     *,
     at: datetime,
@@ -95,6 +184,7 @@ def build(
     market: str,
     label: str,
     tick_for: Callable[[Decimal], Decimal | None],
+    handover: Handover | None = None,
 ) -> StatusView:
     proposals = _newest_proposals(split)
     in_force = resting_stops(live_orders)
@@ -133,11 +223,18 @@ def build(
             venue_stop=in_force.get(position.instrument_id), protection=protection,
             proposal=proposal))
 
+    # An unread venue leaves every line UNKNOWN, so there is nothing to print for it.
+    commands: tuple[str, ...] = ()
+    notes: tuple[str, ...] = ()
+    if handover is not None:
+        commands, notes = _handover(lines, live_orders, handover)
+
     return StatusView(
         at=at, switch=switch, schedule=tuple(schedule), account=account,
         venue_error=venue_error, positions=tuple(lines), divergences=divergences,
         waiting=len(split.waiting), superseded=len(split.superseded),
-        expired=len(split.expired), unjudgeable=len(split.unjudgeable))
+        expired=len(split.expired), unjudgeable=len(split.unjudgeable),
+        commands=commands, venue_notes=notes)
 
 
 def render(view: StatusView) -> list[str]:
@@ -168,6 +265,14 @@ def render(view: StatusView) -> list[str]:
         out.append(row)
     for divergence in view.divergences:
         out.append(f"  {MISMATCH_CODE}  {divergence}")
+
+    if view.commands or view.venue_notes:
+        out += ["", "at the venue - the system sends none of these; run them in cmd.exe, in order"]
+        if any(" -X DELETE " in command for command in view.commands):
+            out.append("  a cancel must show as gone in `swingdesk status` before its stop is placed:")
+            out.append("  the venue holds the shares for the old order until the cancel lands")
+        out += [f"  {command}" for command in view.commands]
+        out += [f"  {note}" for note in view.venue_notes]
 
     unknown = f" · {view.unjudgeable} AGE UNKNOWN" if view.unjudgeable else ""
     out += ["", f"pending    {view.waiting} awaiting · {view.superseded} superseded · "
