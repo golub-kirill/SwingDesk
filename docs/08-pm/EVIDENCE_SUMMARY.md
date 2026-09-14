@@ -1274,6 +1274,32 @@ rule only in 2008's worst fall, −38.1% against −26.9%. **And the registered 
 with `BIL` as the risk-free leg instead of rf = 0, the difference turns from +0.011 to **−0.027
 [−0.401, +0.343]** (the report's addendum) — the small edge was the T-bill yield counted as reward.
 
+## 23. Five asset classes timed barely fell and barely grew; held, they did not beat SPY per unit of risk
+
+Measured 2026-09-14. `PR-023`, **`INCONCLUSIVE`** for its primary arm, as §3 predicted — chosen by the
+agent under the owner's "продолжай". Report: `docs/prereg/results/PR-023-report.md`. Faber's (2007)
+headline strategy: a fifth each in `SPY`, `EFA`, `IEF`, `VNQ`, `DBC`, each fifth in `BIL` while its own
+ten-month trend is broken (`TIMED_5`), and the same five never timed (`HOLD_5`), 2007-06-01 to
+2026-09-11, **Sharpe read on the excess over `BIL`** — on that yardstick every fixed `SPY`-and-T-bill mix
+has exactly `SPY`'s Sharpe, so beating `SPY` per unit of risk means beating every such mix.
+
+| | `TIMED_5` | `HOLD_5` | `SPY` |
+|---|---|---|---|
+| excess Sharpe | 0.380 | 0.373 | 0.543 |
+| difference to `SPY` | −0.163 [−0.566, +0.190] | **−0.169 [−0.345, +0.007], `NULL`** | |
+| compound return a year | 4.01% | 5.91% | 10.70% |
+| worst drawdown | **−13.1%** | −47.1% | −55.2% |
+
+**The timed book lost less than half of every `SPY` fall — and gained 2.5% through 2008 — and
+recovered between a twentieth and a quarter as much.** Held, the five did not help: the other four compounded at 2.5%
+to 5.2% a year while `SPY` did 10.7%. **Exploratory, after the run**: a fixed 38% `SPY` at the timed
+book's volatility earned 5.29% a year to its 4.01%, worse only in the depth of 2008's fall (−23.0%
+against −13.1%).
+
+**What it changes.** Four classes measured on 2007–2026 — relative strength, reversal, the index
+with a trend exit, five asset classes — and none beats holding `SPY` per unit of risk. What they
+differ in is how much risk they hold. Where on that line to sit is the owner's question.
+
 **What it changes.** Three classes measured, and none has beaten holding the index per unit of risk:
 the relative-strength family (§20), short-term reversal (§21), and this. The trend exit is the first
 that did not lose outright, and the first whose value is a choice about how much risk to carry —
