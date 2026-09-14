@@ -405,9 +405,9 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 80 script(s), of which 20 are things you type
+### The tools — 82 script(s), of which 21 are things you type
 
-#### Operator tools — 20
+#### Operator tools — 21
 
 Run these. Everything else below either runs itself or ran once.
 
@@ -421,6 +421,7 @@ Run these. Everything else below either runs itself or ran once.
 | `python tools/power_pr019b.py` | The power estimate `PR-019b` needs BEFORE it registers: is PR-019's candidate the market? | `--data` · `--as-of` · `--fraction` · `--seed` · `--out` · `--report` |
 | `python tools/power_pr020.py` | The power estimate `PR-020` needs BEFORE it registers: which hold can see the screen's skill at all? | `--data` · `--as-of` · `--fraction` · `--seed` · `--out` · `--report` |
 | `python tools/power_pr020b.py` | The power estimate a re-registration of `PR-020` needs, under a construction that cannot turn a low-volatility name's notional into tens of R. | `--data` · `--as-of` · `--fraction` · `--seed` · `--out` · `--report` |
+| `python tools/power_pr021.py` | The power estimate `PR-021` needs BEFORE it registers: can 48 months read the loser book at all? | `--data` · `--as-of` · `--out` · `--report` · `--window-months` · `--resamples` · `--min-names` |
 | `python tools/refresh_classifications.py` | Fetch sector classifications for instruments the store already holds bars for. | `--data` · `--budget` · `--symbols` · `--universe` |
 | `python tools/refresh_universe.py` | Fetch bars for eligible symbols, oldest-first, up to a budget. | `--data` · `--budget` · `--period` · `--pause` · `--symbols-from` |
 | `python tools/remeasure.py` | Is the answer still true? A scheduled re-observation of a registered question, on a rolling window. | `study` · `--data` · `--as-of` · `--report` |
@@ -461,7 +462,7 @@ Invoked by `python tools/check_gates.py`, not singly. Listed so a failing gate c
 | `python tools/verify_parameters.py` | Enforce the parameter-registry contract. | `--registry` |
 | `python tools/verify_transcription.py` | Verify that every `verbatim` claim in the documents still matches the course. | `--course-root` · `--docs` |
 
-#### Evidence-bound research runners — 47
+#### Evidence-bound research runners — 48
 
 Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions/measurements/` and reproduces it. They ran once, on a date. Nobody types these; they exist so a number can be re-derived.
 
@@ -514,5 +515,6 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/run_pr019.py` | `PR-019` - what holding period and stop width does THIS combination want, on selected entries? | `--data` · `--as-of` · `--from` · `--to` · `--out` · `--report` |
 | `python tools/run_pr019b.py` | `PR-019b` - is `PR-019`'s candidate exit the MARKET, or does it out-earn the index over the same days? | `--data` · `--as-of` · `--reference` · `--streamed` · `--rolling-months` · `--out` · `--report` |
 | `python tools/run_pr020.py` | `PR-020` - does the ratified screen know anything once the exit's cost is out of the way? | `--data` · `--as-of` · `--reference` · `--out` · `--report` |
+| `python tools/run_pr021.py` | `PR-021`: bought as last week's biggest losers and held one to five sessions, do stocks beat SPY? | `--data` · `--as-of` · `--out` · `--report` · `--window-months` · `--resamples` · `--min-names` |
 
 <!-- END GENERATED COMMANDS -->
