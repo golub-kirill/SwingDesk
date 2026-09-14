@@ -2,9 +2,11 @@
 
 ```
 date:       2026-08-05
-status:     proposed
+status:     accepted — ratified by the owner 2026-09-14, as applied. DR-040 (accepted the same day)
+            records that the value describes the opening minute
 parameters: costs.slippage_model
 components: none - swingdesk.validation.backtest.costs charges it; this sets its input
+implemented_by: src/swingdesk/validation/backtest/costs.py :: class CostModel
 supersedes: DR-004, slippage component only. Its commission model stands.
 ```
 

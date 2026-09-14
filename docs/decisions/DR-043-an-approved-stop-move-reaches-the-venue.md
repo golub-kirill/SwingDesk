@@ -2,12 +2,13 @@
 
 ```
 date:            2026-09-14
-status:          proposed — owner ratification required. D6 governs who may move a resting
-                 protection, and CHARTER A-002 §4 leaves management actions to a separate ruling
+status:          accepted — ratified by the owner 2026-09-14, option A. This is the separate
+                 ruling CHARTER A-002 §4 left D6's stop moves waiting for
 parameters:      none
 components:      none new
-implemented_by:  nothing yet. The interim - `swingdesk status` printing the exact commands - needed
-                 no ruling and is built (2026-09-14)
+implemented_by:  src/swingdesk/presentation/status.py :: class Handover
+                 the interim - the printed commands, built 2026-09-14. The replace itself is being
+                 built next, and this line moves to it when it lands
 ```
 
 ## 1. What happens today, measured

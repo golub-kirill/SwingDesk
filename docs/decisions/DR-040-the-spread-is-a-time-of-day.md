@@ -2,9 +2,12 @@
 
 ```
 date:            2026-09-06
-status:          proposed
+status:          accepted — ratified by the owner 2026-09-14. §5.1 is done the same day (the
+                 registry note names the moment); §5.2, the execution-time dimension, is built
+                 with the next study that charges a moment other than the open
 parameters:      costs.slippage_model (its SHAPE and its note; this record proposes no new number)
 components:      none - swingdesk.validation.backtest.costs charges it; this is about its input
+implemented_by:  registry/parameters.yml :: It describes the OPENING minute
 supersedes:      nothing. DR-005's 25.44 bps per side stands, and this record shows it is RIGHT
                  about the moment CARD-001 trades. What it supersedes is DR-004's PREMISE, which
                  said the quantity could not be measured at all

@@ -1414,6 +1414,9 @@ parameters:
       the same shape as the measurement. Raised from DR-004's assumed 5bps to a figure measured
       from daily OHLC across 1,131 A-tier instruments (DR-005). Still `assumed`: a decision record
       is not a pre-registered study, however the number was arrived at.
+      It describes the OPENING minute. DR-040 (ratified 2026-09-14) measured the median per-side
+      spread at 21.9-30.2 bps at 09:30 across five years and 1.9-4.0 bps by 15:55, so a study that
+      charges a later moment says so rather than inheriting this.
     ui_editable: true
 
   - id: costs.regulatory_fee_schedule

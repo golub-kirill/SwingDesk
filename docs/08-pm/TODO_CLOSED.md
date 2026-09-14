@@ -2739,3 +2739,27 @@ default; the one scheduled caller passes `10y`, and `PR-007`'s reproduction pass
 **The default is `10y` now.** It bought nothing to keep: the vendor charges per request, not per bar
 — 0.40s a symbol at `10y` against 0.45s at `2y`. The lesson was promoted to `AGENTS.md` §12 when the
 trap was found, which is why this entry may move.
+
+## The second pass could start under a slow first one — closed 2026-09-14
+
+**Measured 2026-09-07**: the 18:30 run took 41.4 minutes and the 19:30 second pass 50.0 on a
+holiday, against 7.4 and 18.1 days earlier — the backfill tripled the candidates, not a defect.
+Both passes write the same stores and DuckDB refuses a second writer, so an overlap would make the
+retry fail on a lock and lose the evening it exists to save.
+
+**Ruled by the owner 2026-09-14: the second pass waits.** `tools/wait_for_first_pass.py` asks the
+Task Scheduler whether the daily run is still `Running` before the second pass reads the journal,
+waits up to an hour, and skips the pass with a log line if the first is still going. An unreadable
+scheduler runs the pass, the unavailable-runs-the-pass rule `retry_needed.py` already follows.
+Capping the candidate set was the third option and was not taken: it is a strategy change wearing
+an operations costume.
+
+**The lesson is promoted**: the wrapper's comment and the tool's docstring carry it.
+
+## Whether the remaining prior studies are re-run on the widened sample — closed 2026-09-14
+
+**Ruled by the owner 2026-09-14: no.** Re-running a study on changed data spends its full trial
+count again to re-answer a question with a spent holdout, and the research line is paused (the
+strategy-class item in `TODO.md`). `PR-014`'s re-run stands as the one exception, forced by its own
+cost correction and spending no new trials. The two cost inputs — `measure_quoted_spread.py` and
+`measure_benchmark_fit.py` — spend no trials and remain free to re-run whenever a study needs them.

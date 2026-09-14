@@ -405,9 +405,9 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 87 script(s), of which 24 are things you type
+### The tools — 88 script(s), of which 25 are things you type
 
-#### Operator tools — 24
+#### Operator tools — 25
 
 Run these. Everything else below either runs itself or ran once.
 
@@ -437,6 +437,7 @@ Run these. Everything else below either runs itself or ran once.
 | `python tools/verify_pr016_qa.py` | `BACKTEST_PROTOCOL` §7's QA stage for `PR-016`: rebuild sampled trades from the evidence alone. | `--data` · `--sample` · `--result` · `--limit` |
 | `python tools/verify_reproducible.py` | `a.reproducible`, measured against the real universe instead of three synthetic instruments. | `--data` · `--limit` |
 | `python tools/verify_submission_guards.py` | Run every guard a submission runs, in its order, against the LIVE state. Sends nothing. | `--data` · `--as-of` |
+| `python tools/wait_for_first_pass.py` | Hold the 19:30 second pass until the 18:30 daily run has finished - owner ruling 2026-09-14. | `--task` · `--limit-minutes` · `--poll-seconds` |
 
 #### Generators — 8
 

@@ -140,6 +140,12 @@ log, deliberately different words from the 18:30 run's, so `tools/track_a_streak
 it as the scheduled attempt. **Track A measures the 18:30 run and only that**; a clean second pass
 does not rescue a broken evening, and it is not supposed to.
 
+**It waits for the first pass** (owner ruling 2026-09-14). Both passes write the same stores and a
+second writer is refused, so before it reads anything the second pass asks the Task Scheduler
+whether the daily run is still running and waits up to an hour. The log says which happened:
+`second pass: ... is still running; waiting`, then `has finished`, or `second pass skipped, the
+daily run was still running`. A scheduler it cannot read does not stop it.
+
 **DONE — registered 2026-08-18.** Confirmed against the machine on 2026-08-23: the task exists, is
 `Enabled`, and has been running. **Check before creating it**, because `schtasks /Create` on an
 existing name offers to REPLACE it and a wrong keystroke there discards a working registration:

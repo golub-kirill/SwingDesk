@@ -2,13 +2,15 @@
 
 ```
 date:            2026-08-24
-status:          proposed — owner ratification required
+status:          accepted — ratified by the owner 2026-09-14, as applied (the batch ruling on the
+                 long-proposed records)
 parameters:      entry.maximum_entry_atr (NEW, unset) · screen.breakout_definition ·
                  screen.pullback_definition · screen.contraction_definition ·
                  watchlist.max_size · watchlist.eviction_rule (all already unset)
-components:      none yet. Section 6 names what each edge would consume
+components:      none yet. Section 6 names what each edge would consume. This record authors the
+                 GRAPH; no code changes with it
 supersedes:      nothing. Closes DECISION_STATE_MACHINE section 6 open item 1, open since 2026-08-01
-implemented_by:  none — this record authors the GRAPH; no code changes with it
+implementation:  none
 ```
 
 ## 1. Why this record exists

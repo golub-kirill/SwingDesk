@@ -2,9 +2,12 @@
 
 ```
 date:       2026-08-11
-status:     proposed
+status:     accepted — ratified by the owner 2026-09-14, as applied (the batch ruling on the
+            long-proposed records)
 parameters: risk.costs_allowance
-components: none - swingdesk.trade_management.sizing reads it; this sets its input
+components: none - its parameter moved to DR-010 (§5, correction 2026-08-13) and sizing.py now
+            records `risk.costs_allowance` as retired; this record fixes the account structure only
+implementation: none
 supersedes: nothing. DR-004's commission model stands as a MODEL; this records that it does not
             describe the account this system is actually preparing decisions for.
 ```

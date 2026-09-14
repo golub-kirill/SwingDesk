@@ -2,9 +2,11 @@
 
 ```
 date:       2026-08-02
-status:     proposed
+status:     accepted — ratified by the owner 2026-09-14, as applied (the batch ruling on the
+            long-proposed records)
 parameters: stats.process_score_scale, stats.quality_grade_scale
-components: none yet
+components: none yet - nothing scores a process until journalled trades exist to score
+implementation: none
 ```
 
 `process score` appears in the journal `Review` record, in the checklist close-out
