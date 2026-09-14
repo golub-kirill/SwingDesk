@@ -7,7 +7,13 @@ author:        Claude, on the owner's ruling of 2026-09-13 choosing the next str
                "принимаю рекомендацию, делай краткосрочный откат 1-5 дней" - after the
                relative-strength family was measured out at selection, exit and sizing
                (EVIDENCE_SUMMARY 20.9)
-status:        registered
+status:        reported   (2026-09-13 - results/PR-021-report.md)
+verdict:       REJECT. Half A selected the five-session hold; on half B the book trails SPY by
+               -24.95 points a year [-38.82, -10.09] net of DR-005, wholly below zero, and every
+               other hold is further below. Before costs it is -3.67 against SPY and +1.59
+               [-8.29, +11.89] against its own universe - no reversal edge to pay for. Break-even
+               against SPY is negative at every hold on both halves, so no execution time
+               rescues it. Section 9's four checks held; width 28.73 against 32.78 predicted
 ```
 
 ---

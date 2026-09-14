@@ -1777,6 +1777,12 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       index beats the combination. **The next candidate is a different strategy class** —
       short-term reversal or the index with drawdown control were put to the owner — not a
       tuning of this one.
+      **RULED 2026-09-13: short-term reversal — registered as `PR-021` and REPORTED `REJECT` the
+      same evening** (`EVIDENCE_SUMMARY` §21). Net of the open's cost the loser book trails `SPY`
+      by −24.95 points a year [−38.82, −10.09] at its best hold, and before costs it does not beat
+      its own universe (+1.59 [−8.29, +11.89]); break-even against `SPY` is negative at every hold,
+      so no execution time rescues it. **The owner's call again**: the index with drawdown control,
+      another class, or a pause in research. Nothing registers until they pick.
 
 - [ ] **`[v]` A POWER ESTIMATE FOR A MARKET-PAIRED CONTRAST MUST MODEL OVERLAPPING HOLDS — owed
       before the next one registers.** `PR-019b`'s estimate predicted a half-width of 0.0743 and the
