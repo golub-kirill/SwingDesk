@@ -1220,3 +1220,31 @@ alternative outside it, makes this screen-and-stop family out-earn holding the i
 days. Together with §20.6-§20.8 the line is closed at its own level: selection, exit and sizing have
 each been measured, and the index beats their combination. The next candidate is a different
 strategy class, not a tuning of this one - the owner's call.
+
+## 21. Last week's losers do not bounce enough to pay for the trade — and before costs they do not bounce at all
+
+Measured 2026-09-13. `PR-021`, **`REJECT`** — the first study in a new class, on the owner's ruling
+of that day choosing short-term reversal. Report: `docs/prereg/results/PR-021-report.md`. The bottom
+decile of US common stocks by five-session return, bought at the next open and held one to five
+sessions as an overlapping book, charged `DR-005` on measured net turnover and read **per dollar**
+against `SPY` over the same open-to-open sessions, 48 months to 2026-09-10. The names were split:
+half A selected the hold, half B — never loaded by the selection — was judged.
+
+| half B, points a year | book net − `SPY` | gross − `SPY` | gross − own universe |
+|---|---|---|---|
+| 1 session | −49.75 [−63.92, −34.46] | −1.37 [−15.63, +13.94] | +3.90 [−7.47, +15.54] |
+| **5 sessions, selected** | **−24.95 [−38.82, −10.09]** | −3.67 [−17.62, +11.21] | +1.59 [−8.29, +11.89] |
+
+**The verdict is the cost; the finding is the gross.** The book buys 17% of itself a session at a
+five-session hold and 38% at one, which the opening minute's spread turns into 21 to 48 points a
+year — so it loses to the index at every hold, on both halves. **But before any cost it does not beat
+the stocks it came from either**: every hold, both halves, every interval containing zero, point
+estimates from −3.2 to +4.9. The break-even cost against `SPY` is negative everywhere, so the
+execution-time lever `DR-040` found — a spread six times narrower at the close — cannot rescue a
+book with no gross edge. At beta 1.45 it fell 41% peak to trough while `SPY` fell 20%.
+
+**What it changes.** Over the same 48 months, holding the index has now beaten every active
+construction this project has measured: the relative-strength family at selection, exit and sizing
+(§20.6–§20.9), and short-term reversal. The store's survivorship flatters a loser book more than any
+other, so the true figure is lower still. What comes next — the index with drawdown control, another
+class, or a pause in research — is the owner's call.
