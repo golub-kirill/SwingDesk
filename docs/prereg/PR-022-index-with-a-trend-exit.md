@@ -6,7 +6,12 @@ date:          2026-09-14
 author:        Claude, on the owner's ruling of 2026-09-14 - "lets try this one" - choosing the
                index with drawdown control, after PR-021 closed short-term reversal and holding
                SPY had beaten every active construction this project measured
-status:        registered
+status:        reported   (2026-09-14 - results/PR-022-report.md)
+verdict:       INCONCLUSIVE, as section 3 predicted. Sharpe 0.625 against the index's 0.615 - a
+               difference of +0.011 [-0.370, +0.389], 0.759 wide. Beside it and never read: the
+               worst drawdown -26.9% against -55.2%, volatility 12.6% against 19.7%, compound
+               return 7.34% against 10.70% a year; in the last 48 months 9.67% against 19.81%.
+               Section 9 reproduced the power estimate to the digit
 ```
 
 ---

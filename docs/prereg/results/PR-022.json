@@ -1,0 +1,292 @@
+{
+  "as_of": "2026-09-14T11:31:09.113665+00:00",
+  "branch": "INCONCLUSIVE",
+  "country": "USA",
+  "episodes": [
+    {
+      "held_fall": -0.5520142817078638,
+      "held_recovery": 1.2417200158249622,
+      "peak": "2007-10-09",
+      "recovered": "2012-08-16",
+      "timed_over_the_fall": -0.046979982108130924,
+      "timed_over_the_recovery": 0.2796475242910601,
+      "timed_worst_inside": -0.17822464385130998,
+      "trough": "2009-03-09"
+    },
+    {
+      "held_fall": -0.19338780260482957,
+      "held_recovery": 0.24362805806033916,
+      "peak": "2018-09-20",
+      "recovered": "2019-04-12",
+      "timed_over_the_fall": -0.2249110870104476,
+      "timed_over_the_recovery": 0.08383403377898357,
+      "timed_worst_inside": -0.2249110870104476,
+      "trough": "2018-12-24"
+    },
+    {
+      "held_fall": -0.3369981357451919,
+      "held_recovery": 0.5117972645355429,
+      "peak": "2020-02-19",
+      "recovered": "2020-08-10",
+      "timed_over_the_fall": -0.12128398438216836,
+      "timed_over_the_recovery": 0.10404766575362157,
+      "timed_worst_inside": -0.13475571035459333,
+      "trough": "2020-03-23"
+    },
+    {
+      "held_fall": -0.24497244033930998,
+      "held_recovery": 0.34053410915251203,
+      "peak": "2022-01-03",
+      "recovered": "2023-12-13",
+      "timed_over_the_fall": -0.17990702187446772,
+      "timed_over_the_recovery": 0.007232150553926342,
+      "timed_worst_inside": -0.26868866618639764,
+      "trough": "2022-10-12"
+    },
+    {
+      "held_fall": -0.18755317760320778,
+      "held_recovery": 0.23606812935312838,
+      "peak": "2025-02-19",
+      "recovered": "2025-06-26",
+      "timed_over_the_fall": -0.09154219709855382,
+      "timed_over_the_recovery": 0.04535224807928495,
+      "timed_worst_inside": -0.10035405462692049,
+      "trough": "2025-04-08"
+    }
+  ],
+  "inference": {
+    "block": 63,
+    "min_months": 120,
+    "power_floor_sharpe": 0.4,
+    "resamples": 10000,
+    "seed": 20260914
+  },
+  "measured_span": {
+    "first_session": "2007-06-01",
+    "last_session": "2026-09-11",
+    "years": 19.28
+  },
+  "per_year": {
+    "2007": {
+      "held": -0.036241334310398776,
+      "timed": -0.036241334310398776
+    },
+    "2008": {
+      "held": -0.36807166405572356,
+      "timed": 0.012331611683339183
+    },
+    "2009": {
+      "held": 0.26364499927811624,
+      "timed": 0.21598622464896855
+    },
+    "2010": {
+      "held": 0.1505708120889273,
+      "timed": 0.0023535228672249
+    },
+    "2011": {
+      "held": 0.0188785811856651,
+      "timed": -0.023762640776629373
+    },
+    "2012": {
+      "held": 0.15991319989974007,
+      "timed": 0.09464484388506955
+    },
+    "2013": {
+      "held": 0.3230669636563681,
+      "timed": 0.3230669636563681
+    },
+    "2014": {
+      "held": 0.1346247590322358,
+      "timed": 0.1346247590322358
+    },
+    "2015": {
+      "held": 0.01252100705716308,
+      "timed": -0.07620096919801211
+    },
+    "2016": {
+      "held": 0.12001283846626154,
+      "timed": 0.08234874759666044
+    },
+    "2017": {
+      "held": 0.21700271975894259,
+      "timed": 0.21700271975894259
+    },
+    "2018": {
+      "held": -0.04556876930015974,
+      "timed": -0.08286898274612098
+    },
+    "2019": {
+      "held": 0.3122202111901793,
+      "timed": 0.047573434066458864
+    },
+    "2020": {
+      "held": 0.1837326755839852,
+      "timed": 0.145728449289384
+    },
+    "2021": {
+      "held": 0.287441687635936,
+      "timed": 0.287441687635936
+    },
+    "2022": {
+      "held": -0.18171826584219786,
+      "timed": -0.2250642683641465
+    },
+    "2023": {
+      "held": 0.2618931423188722,
+      "timed": 0.0874561427800773
+    },
+    "2024": {
+      "held": 0.24885361683454055,
+      "timed": 0.24885361683454055
+    },
+    "2025": {
+      "held": 0.17715038555065354,
+      "timed": 0.11317133156197778
+    },
+    "2026": {
+      "held": 0.12676233463573583,
+      "timed": 0.014466905689841214
+    }
+  },
+  "perturbations": {
+    "registered": [
+      "cost_stress_3x"
+    ],
+    "run": [
+      "cost_stress_3x"
+    ]
+  },
+  "prereg": "PR-022",
+  "primary": {
+    "break_even_bps_a_fill": -102.25070063643376,
+    "cagr": {
+      "held": 0.1070089072117737,
+      "timed": 0.07339910746049272
+    },
+    "cash_unpriced_sessions": 0,
+    "gross_difference_point": 0.07736432928124815,
+    "invested_share": 0.779839208410637,
+    "max_drawdown": {
+      "held": {
+        "depth": -0.5520142817078638,
+        "peak": "2007-10-09",
+        "trough": "2009-03-09"
+      },
+      "timed": {
+        "depth": -0.26868866618639764,
+        "peak": "2022-01-03",
+        "trough": "2023-03-13"
+      }
+    },
+    "mean_difference_points": {
+      "hi": 1.320263968708454,
+      "lo": -9.627242463960709,
+      "point": -4.2301702379872825
+    },
+    "months": 232,
+    "sessions": 4851,
+    "sharpe": {
+      "difference": {
+        "hi": 0.3889956288886937,
+        "lo": -0.37043991277923094,
+        "point": 0.010694936948265732,
+        "width": 0.7594355416679246
+      },
+      "held": {
+        "hi": 1.075751905042153,
+        "lo": 0.2404692766690578,
+        "point": 0.6145646378855983,
+        "width": 0.8352826283730951
+      },
+      "timed": {
+        "hi": 1.0765382227584845,
+        "lo": 0.21292067037938492,
+        "point": 0.6252595748338641,
+        "width": 0.8636175523790997
+      }
+    },
+    "stress_difference_point": -0.12545756047703643,
+    "switches": 32,
+    "switches_a_year": 1.6623376623376624,
+    "volatility": {
+      "held": 0.19706684491057588,
+      "timed": 0.12604143138918364
+    }
+  },
+  "recent_48_months": {
+    "cagr": {
+      "held": 0.19806624161886965,
+      "timed": 0.09667287492907728
+    },
+    "cash_unpriced_sessions": 0,
+    "from": "2022-09-14",
+    "invested_share": 0.8413173652694611,
+    "max_drawdown": {
+      "held": {
+        "depth": -0.18755317760320744,
+        "peak": "2025-02-19",
+        "trough": "2025-04-08"
+      },
+      "timed": {
+        "depth": -0.11212700848087287,
+        "peak": "2022-11-29",
+        "trough": "2023-03-13"
+      }
+    },
+    "mean_difference_points": {
+      "hi": -2.7214982976858817,
+      "lo": -19.519680752181735,
+      "point": -9.396042072511568
+    },
+    "months": 49,
+    "sessions": 1002,
+    "sharpe": {
+      "difference": {
+        "hi": 0.060860456137804775,
+        "lo": -1.1302698872113244,
+        "point": -0.38021471300695286,
+        "width": 1.1911303433491292
+      },
+      "held": {
+        "hi": 2.2626835093077893,
+        "lo": 0.588545180140628,
+        "point": 1.217059995168946,
+        "width": 1.6741383291671612
+      },
+      "timed": {
+        "hi": 1.800516961451219,
+        "lo": -0.068997824882055,
+        "point": 0.8368452821619932,
+        "width": 1.8695147863332742
+      }
+    },
+    "switches": 9,
+    "switches_a_year": 2.2634730538922154,
+    "volatility": {
+      "held": 0.15883139256641063,
+      "timed": 0.1187159864100253
+    }
+  },
+  "registered_settings": true,
+  "rule": {
+    "benchmark": "SPY",
+    "cash": "BIL",
+    "evaluated": "each month's last session close; equality is cash",
+    "executed": "the next session's open",
+    "fills_a_switch": 2,
+    "returns": "total - dividends on their ex-date, both legs",
+    "slippage_bps_a_fill": 25.0,
+    "sma_months": 10
+  },
+  "split": {
+    "buys": "nothing is selected - one published rule, fixed before the run - so a split would halve nineteen years and their handful of drawdowns for a protection there is nothing to protect (PREREG_TEMPLATE 7)",
+    "registered": "none"
+  },
+  "trials": 1,
+  "verdict": "inconclusive",
+  "window": {
+    "end": "2026-09-11",
+    "first_decision": "2007-05-31",
+    "start": "2007-06-01"
+  }
+}

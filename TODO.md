@@ -1783,6 +1783,13 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       its own universe (+1.59 [−8.29, +11.89]); break-even against `SPY` is negative at every hold,
       so no execution time rescues it. **The owner's call again**: the index with drawdown control,
       another class, or a pause in research. Nothing registers until they pick.
+      **RULED 2026-09-14: the index with drawdown control — registered as `PR-022` and REPORTED
+      `INCONCLUSIVE` the same morning** (`EVIDENCE_SUMMARY` §22). Faber's ten-month rule on `SPY`
+      matched the index per unit of risk (Sharpe 0.625 against 0.615, +0.011 [−0.370, +0.389]),
+      halved the worst drawdown (−26.9% against −55.2%) and gave up 3.4 points of compound return a
+      year; exploratory, a fixed 64% `SPY` / 36% `BIL` did as well except in 2008. **The owner's
+      call again**: carry the index's risk as it is, dial it down (a fixed mix or this rule), try
+      another class, or pause research. Nothing registers until they pick.
 
 - [ ] **`[v]` A POWER ESTIMATE FOR A MARKET-PAIRED CONTRAST MUST MODEL OVERLAPPING HOLDS — owed
       before the next one registers.** `PR-019b`'s estimate predicted a half-width of 0.0743 and the
