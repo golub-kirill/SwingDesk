@@ -312,6 +312,11 @@ SIDE_RECORDS = {
                      "times an equity. Two constructions - in R under the owner's floor on both "
                      "legs, and per unit invested - at every no-stop hold, dispersion only, under "
                      "the same level guard, in sample only. Nothing is registered by it",
+    "PR-021-power": "no trials: a VARIANCE estimate for PR-021 - the interval width the verdict's "
+                    "own bootstrap produces on the loser book against SPY and against its pool, at "
+                    "each of the five holds, on the SELECTION half of the names only; the holdout "
+                    "half is never loaded. Only widths leave it, under the same level guard, so "
+                    "nothing could be selected on it. PR-021 counts its five",
 }
 
 

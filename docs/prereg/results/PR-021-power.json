@@ -1,0 +1,134 @@
+{
+  "approximation": "half B's width is predicted equal to half A's: same sessions, a cohort of the same size, the same market. The report prints the realised width",
+  "as_of": "2026-09-13T11:00:01.727280-05:00",
+  "block": 10,
+  "cells": {
+    "1": {
+      "book_net_minus_pool": {
+        "full_width_points": 24.703711199469396,
+        "half_width_points": 12.351855599734698,
+        "readable_at_floor": false,
+        "sd_per_session_points": 1.0426013405372327,
+        "sessions": 1002
+      },
+      "book_net_minus_spy": {
+        "full_width_points": 33.424313717770936,
+        "half_width_points": 16.712156858885468,
+        "readable_at_floor": false,
+        "sd_per_session_points": 1.3431772391241883,
+        "sessions": 1002
+      },
+      "cohort_size_typical": 110.0,
+      "cost_points_a_year": 47.88179507536389,
+      "sessions": 1002,
+      "turnover_per_session": 0.3800142466298722
+    },
+    "2": {
+      "book_net_minus_pool": {
+        "full_width_points": 24.44334370517748,
+        "half_width_points": 12.22167185258874,
+        "readable_at_floor": false,
+        "sd_per_session_points": 0.9976914201542305,
+        "sessions": 1002
+      },
+      "book_net_minus_spy": {
+        "full_width_points": 33.724841166595425,
+        "half_width_points": 16.862420583297713,
+        "readable_at_floor": false,
+        "sd_per_session_points": 1.311621709412173,
+        "sessions": 1002
+      },
+      "cohort_size_typical": 110.0,
+      "cost_points_a_year": 34.02661840596903,
+      "sessions": 1002,
+      "turnover_per_session": 0.2700525270315003
+    },
+    "3": {
+      "book_net_minus_pool": {
+        "full_width_points": 23.835288598700473,
+        "half_width_points": 11.917644299350236,
+        "readable_at_floor": false,
+        "sd_per_session_points": 0.9625411248056897,
+        "sessions": 1002
+      },
+      "book_net_minus_spy": {
+        "full_width_points": 33.705071914462984,
+        "half_width_points": 16.852535957231492,
+        "readable_at_floor": false,
+        "sd_per_session_points": 1.283954362759593,
+        "sessions": 1002
+      },
+      "cohort_size_typical": 110.0,
+      "cost_points_a_year": 27.703737838030317,
+      "sessions": 1002,
+      "turnover_per_session": 0.21987093522246282
+    },
+    "4": {
+      "book_net_minus_pool": {
+        "full_width_points": 23.096124404463723,
+        "half_width_points": 11.548062202231861,
+        "readable_at_floor": false,
+        "sd_per_session_points": 0.9265671206253961,
+        "sessions": 1002
+      },
+      "book_net_minus_spy": {
+        "full_width_points": 33.202083037204815,
+        "half_width_points": 16.601041518602408,
+        "readable_at_floor": false,
+        "sd_per_session_points": 1.2565624429196696,
+        "sessions": 1002
+      },
+      "cohort_size_typical": 110.0,
+      "cost_points_a_year": 23.876564382751045,
+      "sessions": 1002,
+      "turnover_per_session": 0.18949654272024638
+    },
+    "5": {
+      "book_net_minus_pool": {
+        "full_width_points": 22.40098191333641,
+        "half_width_points": 11.200490956668204,
+        "readable_at_floor": false,
+        "sd_per_session_points": 0.8942946827517994,
+        "sessions": 1002
+      },
+      "book_net_minus_spy": {
+        "full_width_points": 32.78278929819614,
+        "half_width_points": 16.39139464909807,
+        "readable_at_floor": false,
+        "sd_per_session_points": 1.2292296577251878,
+        "sessions": 1002
+      },
+      "cohort_size_typical": 110.0,
+      "cost_points_a_year": 21.162788820002515,
+      "sessions": 1002,
+      "turnover_per_session": 0.16795864142859138
+    }
+  },
+  "for": "PR-021",
+  "half": "A",
+  "power_floor_points": 20.0,
+  "purpose": "a variance estimate for PREREG_TEMPLATE rule 9: the interval width the verdict estimator produces on each hold and contrast, on the selection half only, from centred series. No level.",
+  "resamples": 10000,
+  "seed": 20260913,
+  "thin_formations": 0,
+  "universe": {
+    "funds_excluded": 2832,
+    "never_admitted": 1773,
+    "rule": {
+      "adtv_lag": "3",
+      "adtv_window": "20",
+      "min_adtv": "5000000",
+      "min_history": "250",
+      "min_price": "5.0"
+    },
+    "stocks_admitted": 1907,
+    "stocks_only": true,
+    "type_unknown_excluded": 31
+  },
+  "window": {
+    "asked_months": 48,
+    "end": "2026-09-10",
+    "note": "half A only - half B, the holdout, is never loaded here",
+    "start": "2022-09-13"
+  }
+}
