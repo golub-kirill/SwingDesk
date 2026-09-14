@@ -1,0 +1,56 @@
+{
+  "arms": {
+    "HOLD_5": {
+      "construction": {
+        "asset_switches_a_year": 0.0,
+        "cost_points_a_year": 0.07593426765191727,
+        "share_of_the_book_in_risk_assets": 1.0,
+        "traded_a_year": 0.3037370706076691
+      },
+      "last_48_months": {
+        "excess_sharpe_difference_width": 1.2124042783840967,
+        "readable_at_floor": false,
+        "return_difference_width_points": 16.32544888530511,
+        "sessions": 1002
+      },
+      "registered_window": {
+        "excess_sharpe_difference_width": 0.35254985261953203,
+        "readable_at_floor": true,
+        "return_difference_width_points": 6.2843597120585235,
+        "sessions": 4851
+      }
+    },
+    "TIMED_5": {
+      "construction": {
+        "asset_switches_a_year": 9.87012987012987,
+        "cost_points_a_year": 0.9320222058522102,
+        "share_of_the_book_in_risk_assets": 0.6017413509658681,
+        "traded_a_year": 3.7280888234088407
+      },
+      "last_48_months": {
+        "excess_sharpe_difference_width": 1.4295577424947117,
+        "readable_at_floor": false,
+        "return_difference_width_points": 18.468398760138946,
+        "sessions": 1002
+      },
+      "registered_window": {
+        "excess_sharpe_difference_width": 0.7553826808507162,
+        "readable_at_floor": false,
+        "return_difference_width_points": 11.508815827048357,
+        "sessions": 4851
+      }
+    }
+  },
+  "as_of": "2026-09-14T13:10:56.533619+00:00",
+  "block": 63,
+  "for": "PR-023",
+  "power_floor_sharpe": 0.4,
+  "purpose": "a variance estimate for PREREG_TEMPLATE rule 9: the widths the verdict estimator produces for each arm against SPY on excess returns over BIL. No level.",
+  "resamples": 10000,
+  "seed": 20260915,
+  "window": {
+    "end": "2026-09-11",
+    "note": "the verdict's own window - PR-023 selects nothing and holds nothing out",
+    "start": "2007-06-01"
+  }
+}
