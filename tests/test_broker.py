@@ -32,6 +32,7 @@ from swingdesk.broker.policy import PolicyRefused
 # called `reconcile`, which shadows the module of the same name on an `import ... as`.
 from swingdesk.broker.reconcile import (
     Unprotected,
+    own_stop,
     reconcile,
     restorable,
     unprotected,
@@ -201,15 +202,16 @@ def test_policy_refuses_a_zero_limit(tmp_path: Path) -> None:
 
 
 def test_check_method_refuses_every_verb_the_policy_does_not_name() -> None:
-    """Reading and the one submission verb are permitted; amending and cancelling are not.
+    """Reading, submitting and `DR-043`'s replace are permitted; cancelling and overwriting are not.
 
-    `DR-027` 3.3 is why: every order carries `time_in_force: day`, so nothing this system placed
-    outlives the session that decided it and there is nothing to cancel.
+    A cancel always leaves a moment with no stop, which is why `DR-043` chose the replace and
+    nothing has ruled on a cancel.
     """
     loaded = policy_module.load()
     loaded.check_method("GET")
     loaded.check_method(loaded.write_method)
-    for verb in ("PUT", "PATCH", "DELETE"):
+    loaded.check_method(loaded.replace_method)
+    for verb in ("PUT", "DELETE"):
         with pytest.raises(PolicyRefused, match="D1/BR-1"):
             loaded.check_method(verb)
 
@@ -480,6 +482,95 @@ def test_open_orders_asks_for_the_legs(tmp_path: Path) -> None:
         f"open_orders asked {urls}; an OCO's stop leg rests as `held`, which `status=open` "
         f"excludes, so without `nested=true` a protected position reads as naked"
     )
+
+
+def test_a_leg_keeps_its_parents_id(tmp_path: Path) -> None:
+    """`DR-043`: an `oco`'s stop carries an id the venue generated, so only the parent says whose.
+
+    Flattened without it, this system's own stop reads exactly like one a person typed, and the
+    replace would leave every stop it placed alone.
+    """
+    client = _client(tmp_path, {"/orders": OCO_WITH_LEG})
+    by_type = {order.order_type: order for order in client.open_orders(OBSERVED_AT)}
+    assert by_type["stop"].parent_client_order_id == OCO_WITH_LEG[0]["client_order_id"]
+    assert by_type["limit"].parent_client_order_id == "", "a parent has no parent"
+
+
+# --- own_stop: which resting stop is this system's to raise (DR-043) --------------------------
+
+OUR_PARENT = "swingdesk-protect-2026-09-01-TEST.1"
+SENT = frozenset({OUR_PARENT})
+
+
+def _stop(symbol: str = "TEST.1", **overrides: object):
+    from swingdesk.contracts.broker import PlacedOrder
+
+    fields: dict[str, object] = dict(
+        order_id="leg-1", client_order_id="venue-generated-leg-id", symbol=symbol, status="held",
+        submitted_at=OBSERVED_AT, order_type="stop", stop_price=Decimal("45.00"), side="sell",
+        parent_client_order_id=OUR_PARENT, observed_at=OBSERVED_AT,
+    )
+    fields.update(overrides)
+    return PlacedOrder(**fields)  # type: ignore[arg-type]
+
+
+def test_own_stop_is_found_through_its_parent() -> None:
+    leg = _stop()
+    assert own_stop("TEST.1", [leg], SENT) is leg
+
+
+def test_a_stop_this_system_already_replaced_is_still_its_own() -> None:
+    """The venue answers a replace with a new order; the journal records it under that id."""
+    replacement = _stop(client_order_id="venue-generated-replacement", parent_client_order_id="")
+    assert own_stop("TEST.1", [replacement], SENT | {"venue-generated-replacement"}) is replacement
+
+
+def test_a_stop_a_person_placed_is_left_alone() -> None:
+    """`DR-043` 3.3. Its owner is a person, and the book cannot know what they meant by it."""
+    by_hand = _stop(client_order_id="dashboard-uuid", parent_client_order_id="")
+    found = own_stop("TEST.1", [by_hand], SENT)
+    assert isinstance(found, str) and "not placed by this system" in found
+    assert "45.00" in found and "leg-1" in found, "the operator is told which stop, and where"
+
+
+def test_an_id_that_looks_ours_is_not_ours() -> None:
+    """`ours`' rule: the journal decides, never the first word of an id."""
+    lookalike = _stop(client_order_id=OUR_PARENT + "-typed", parent_client_order_id="")
+    assert isinstance(own_stop("TEST.1", [lookalike], SENT), str)
+
+
+def test_an_empty_parent_id_matches_nothing() -> None:
+    lone = _stop(client_order_id="dashboard-uuid", parent_client_order_id="")
+    assert isinstance(own_stop("TEST.1", [lone], frozenset({""})), str)
+
+
+def test_nothing_resting_is_said_plainly() -> None:
+    found = own_stop("TEST.1", [], SENT)
+    assert isinstance(found, str) and "no stop is resting" in found
+
+
+def test_other_symbols_targets_and_buy_stops_are_not_the_stop() -> None:
+    orders = [
+        _stop(symbol="OTHER"),
+        _stop(order_id="tp-1", order_type="limit", stop_price=None),
+        _stop(order_id="buy-1", side="buy"),
+        _stop(order_id="untriggered", stop_price=None),
+    ]
+    found = own_stop("TEST.1", orders, SENT)
+    assert isinstance(found, str) and "no stop is resting" in found
+
+
+def test_a_stop_limit_counts_and_an_unsided_stop_counts() -> None:
+    assert own_stop("TEST.1", [_stop(order_type="stop_limit")], SENT) is not None
+    assert not isinstance(own_stop("TEST.1", [_stop(order_type="stop_limit")], SENT), str)
+    assert not isinstance(own_stop("TEST.1", [_stop(side="")], SENT), str)
+
+
+def test_two_resting_stops_are_refused_rather_than_resolved() -> None:
+    """Raising one would leave the other standing, and the higher is the one in force."""
+    found = own_stop("TEST.1", [_stop(), _stop(order_id="leg-2", stop_price=Decimal("44.00"))],
+                     SENT)
+    assert isinstance(found, str) and "2 stops" in found and "44.00" in found
 
 
 def test_open_orders_returns_the_stop_leg_as_a_resting_order(tmp_path: Path) -> None:

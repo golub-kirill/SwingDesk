@@ -506,9 +506,28 @@ protection at the venue (3 open)
              the book records a stop at 61.700000 and nothing is resting at the venue for 17 shares.
 ```
 
-That is the book saying one thing and the market able to see nothing. **The system cannot restore
-it** — it has no verb that amends or cancels an order — so a stop that has to go back on has to be
-placed in the venue's own dashboard, and new entries stay paused until it is.
+That is the book saying one thing and the market able to see nothing. When the position holds
+nothing at all, the next armed run places this system's own `oco` at the book's stop (`DR-037`).
+**The system never cancels an order** — `DELETE` is refused — so a stop at the wrong price that is
+not this system's has to be moved in the venue's own dashboard, and new entries stay paused until
+it is.
+
+**An approved move goes to the venue itself** (`DR-043`, built 2026-09-14). When the switch is
+armed, `respond --approve` of a `MOVE_STOP` raises this system's own resting stop to the approved
+price in one request, and prints the line starting `venue` with what happened:
+
+```
+  applied: POS-1 is now version 2
+           stop 290 -> 298
+  venue    stop 290.00 -> 298.00 at Alpaca paper trading  accepted  (order ... replaces ...)
+```
+
+It touches only a stop this system's journal says it placed, only upward, only `stop_price`. It
+leaves alone — and says so on the `venue` line — a stop a person placed, two stops on one name, a
+stop already at or above the approval, and everything when the switch is off. For those the
+commands below still apply. **To hand a hand-placed stop back to the system**, cancel it after the
+close and before the 18:30 run; that run places the system's own at the book's stop, and the next
+approved move is sent by `respond`.
 
 **`swingdesk status` prints what to type** (since 2026-09-14): for a position holding nothing, the
 `gtc` stop at the book's price rounded UP to the venue's tick; for a stop looser than the book's, the
@@ -516,8 +535,7 @@ cancel and then the stop; for a stop TIGHTER than the book's, a note that the ne
 adopts it (`DR-041`) and nothing to send. The commands are for `cmd.exe` and carry the key variables
 by NAME. **Run a cancel first and wait until `status` no longer shows it**: the venue holds the shares
 for the old order until the cancel lands, and a stop placed before that is refused for
-`insufficient qty` — measured on a Saturday, when the cancel waited for Monday's open. Whether the
-system should send an approved move itself is `DR-043`, proposed and waiting on the owner.
+`insufficient qty` — measured on a Saturday, when the cancel waited for Monday's open.
 
 ```
 .\.venv\Scripts\python.exe -X utf8 -m swingdesk.presentation.cli sync-fills --data data --dry-run

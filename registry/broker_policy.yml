@@ -64,6 +64,11 @@ access:
     # it and there is nothing to cancel. Adding cancellation is a policy change and a decision
     # record, not an argument to a function.
     - POST
+    # Replacing the trigger of this system's OWN resting stop, on an approved move and only upward
+    # (`DR-043`, ratified by the owner 2026-09-14). One request and no moment without a stop, which
+    # is why it is this verb and not a cancel followed by a new order. `write.replace_method` below
+    # names it as the replace verb, so the adapter never chooses between two write verbs.
+    - PATCH
 
   # NAMES of the environment variables, never values (`SECURITY.md` 2.1: environment variables or
   # an OS keyring, never a file in the repo). This repository is public and `tools/verify_secrets.py`
@@ -101,6 +106,9 @@ endpoints:
   account: /v2/account
   positions: /v2/positions
   orders: /v2/orders
+  # One order, by the venue's id. Only `DR-043`'s replace uses it, and the id is checked before it
+  # goes into the path because it came from the venue.
+  order: /v2/orders/{order_id}
   activities: /v2/account/activities/{activity_type}
 
   # The one activity type this reads. `FILL` covers both full and partial fills - the `type` field
@@ -200,3 +208,12 @@ write:
   # property is unchanged: one protective order per instrument per session, refused by the venue if
   # a second is attempted.
   protect_client_order_id_prefix: swingdesk-protect
+
+  # Which permitted write verb does which job. Named here rather than inferred, because with two
+  # write verbs in `access.allowed_methods` the adapter would otherwise be choosing between them -
+  # and the code under `swingdesk/broker/` spells no verb at all (gate 39). `policy.load` refuses a
+  # write verb in `allowed_methods` that has no job here, and a job whose verb is not permitted.
+  submit_method: POST
+  # `DR-043`. Delete this line and `PATCH` above together to take the replace away in one commit;
+  # an approved move then goes back to being printed by `swingdesk status` for a person to send.
+  replace_method: PATCH

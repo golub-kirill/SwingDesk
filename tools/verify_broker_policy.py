@@ -30,9 +30,12 @@ Five checks:
    the single chokepoint where the host, the kill switch and `write_enabled` are all consulted; a
    second write path that skipped it would consult none of them. This is the check that replaced
    "there is no write verb at all", and it is the one with teeth now.
-5. **A policy that permits writing carries a kill switch.** `write_enabled: true` with no `write`
-   section is a standing permission with nothing behind it, and `DELETE`/`PATCH`/`PUT` are refused
-   outright - `DR-027` covers submission only.
+5. **A policy that permits writing carries a kill switch, and every write verb has one job.**
+   `write_enabled: true` with no `write` section is a standing permission with nothing behind it.
+   `write.submit_method` must be `POST` (`DR-027`), `write.replace_method`, when present, `PATCH`
+   (`DR-043`, 2026-09-14: raising this system's own stop's trigger), and `allowed_methods` may
+   permit no write verb without such a job. `DELETE` and `PUT` are refused outright: a cancel
+   always leaves a moment with no stop, and nothing has ruled on one.
 
 Read from the syntax tree, so the gate never imports or runs the adapter and stays inside
 `CI_POLICY.md` 4's no-network rule. It is a structural check and not a proof: a verb assembled at
@@ -100,7 +103,15 @@ REQUIRED_WRITE: dict[str, tuple[type, bool]] = {
     "time_in_force": (str, False),
     "order_class": (str, False),
     "side": (str, False),
+    # Which permitted verb places an order. `replace_method` (`DR-043`) is optional: a policy
+    # without it grants no replace, and an approved move is printed for a person to send.
+    "submit_method": (str, False),
 }
+
+#: The one job each write verb may be given, and the only place outside the policy that says which
+#: verb goes with which. `DR-027` places orders; `DR-043` replaces a resting stop's trigger. A job
+#: missing here has no decision record behind it.
+WRITE_ROLES = {"submit_method": "POST", "replace_method": "PATCH"}
 
 #: The two functions permitted to reach the network. `DR-027` 4.4.
 TRANSPORT_CALLERS = frozenset({"_get", "_write"})
@@ -278,21 +289,46 @@ def _policy_failures() -> tuple[list[str], dict[str, object]]:
                 f"so `BrokerPolicy.write_method` has nothing to return and every submission "
                 f"refuses. A permission that cannot be used is a claim, not a capability."
             )
-        if enabled and len(writes) != 1:
-            failures.append(
-                f"{POLICY.name}: `access.allowed_methods` names {len(writes)} write verbs. "
-                f"Exactly one, so the adapter never chooses between them."
-            )
-        # DR-027 covers submission. Amending or cancelling an order is a different decision record
-        # and every order carries `time_in_force: day`, so nothing outlives its own session.
-        beyond = sorted(named & {"DELETE", "PATCH", "PUT"})
+        # DR-027 covers submission and DR-043 replacing a stop's trigger. Cancelling or overwriting
+        # an order is a different decision record: a cancel always leaves a moment with no stop.
+        beyond = sorted(named & {"DELETE", "PUT"})
         if beyond:
             failures.append(
                 f"{POLICY.name}: `access.allowed_methods` permits {', '.join(beyond)}. DR-027 "
-                f"covers submission only; amending or cancelling needs its own decision record."
+                f"covers submission and DR-043 replacing a stop; cancelling needs its own record."
             )
 
         write_block = loaded.get("write")
+        if enabled and isinstance(write_block, dict):
+            # Every permitted write verb has exactly one job named in the write section, and each
+            # job has the one verb its decision record granted. Two verbs with no jobs would leave
+            # the adapter choosing between them.
+            jobs: dict[str, str] = {}
+            for role, verb in WRITE_ROLES.items():
+                given = write_block.get(role)
+                if given is None:
+                    continue
+                if str(given).upper() != verb:
+                    failures.append(
+                        f"{POLICY.name}: `write.{role}` is {given!r}. That job is {verb} and no "
+                        f"other verb: a different one is a change no decision record made."
+                    )
+                jobs[role] = str(given).upper()
+            if set(jobs.values()) != set(writes):
+                failures.append(
+                    f"{POLICY.name}: `access.allowed_methods` permits {', '.join(writes) or 'no'} "
+                    f"write verb(s) and the write section gives a job to "
+                    f"{', '.join(sorted(jobs.values())) or 'none'}. Each permitted write verb has "
+                    f"exactly one job, so the adapter never chooses between them."
+                )
+            if "replace_method" in jobs:
+                endpoints = loaded.get("endpoints")
+                order = endpoints.get("order") if isinstance(endpoints, dict) else None
+                if not isinstance(order, str) or "{order_id}" not in order:
+                    failures.append(
+                        f"{POLICY.name}: `write.replace_method` is set and `endpoints.order` does "
+                        f"not name one order by {{order_id}}."
+                    )
         if enabled and not isinstance(write_block, dict):
             failures.append(
                 f"{POLICY.name}: `access.write_enabled` is true and there is no `write` section, "

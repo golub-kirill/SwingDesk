@@ -1,11 +1,14 @@
-"""Alpaca paper-trading adapter. READ ONLY, and the read-only part is structural.
+"""Alpaca paper-trading adapter. It reads, places, and replaces a stop's trigger - nothing else.
 
 `ADR-0005` chose the venue; `DR-026` records where the owner put the order-placing boundary on
-2026-08-31 and what is still closed. What matters in this file is what it does NOT contain:
+2026-08-31, `DR-027` what may be submitted, and `DR-043` the one amendment permitted: raising the
+trigger of this system's own resting stop on an approved move. What matters in this file is what it
+does NOT contain:
 
-  - **No write verb.** There is no POST, no DELETE, no PATCH and no PUT anywhere in this package,
-    and gate 39 reads the syntax tree to keep it that way. `policy.check_method` refuses anything
-    the committed policy does not list, which today is everything but `GET`.
+  - **No write verb.** No verb literal appears anywhere in this package, and gate 39 reads the
+    syntax tree to keep it that way. The verbs come from `registry/broker_policy.yml`, each named
+    for its one job, and `policy.check_method` refuses anything the committed policy does not list
+    - cancelling among them.
   - **No host.** Every URL comes from `registry/broker_policy.yml`, whose allowlist carries exactly
     one entry. `APCA_API_BASE_URL` - Alpaca's own environment override - is deliberately not read.
 
@@ -29,6 +32,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -41,6 +45,7 @@ from typing import Any, Protocol
 
 from swingdesk.broker.armed import STOPPED, Arming
 from swingdesk.broker.policy import BrokerPolicy
+from swingdesk.broker.reconcile import PROTECTIVE_TYPES
 from swingdesk.contracts.broker import (
     BrokerAccount,
     BrokerFill,
@@ -56,6 +61,11 @@ from swingdesk.contracts.broker import (
 #: How many characters of the account-number digest identify the account. Twelve hex characters is
 #: 48 bits - far beyond collision for one owner's handful of accounts, and not reversible.
 FINGERPRINT_LENGTH = 12
+
+#: What a venue order id may look like before it goes into a URL path. The venue's ids are UUIDs;
+#: this is looser than that on purpose and strict where it matters - no `/`, `?`, `#` or `.`, so an
+#: id the venue sent cannot turn a request for one order into a request for a different path.
+SAFE_ORDER_ID = re.compile(r"^[A-Za-z0-9\-]+$")
 
 
 class BrokerUnavailable(Exception):
@@ -267,22 +277,23 @@ class AlpacaClient:
                 "section and nothing may be submitted"
             )
 
-    def _write(self, endpoint: str, payload: dict[str, Any]) -> Any:
+    def _write(self, endpoint: str, payload: dict[str, Any], method: str, **path: str) -> Any:
         """The ONLY place in this package that sends anything but a GET.
 
         `DR-027` 4 lists four guards and three of them are consulted here, in order, before a socket
         is opened. The fourth is this function's own existence: gate 39 asserts that
         `self.transport` is called from exactly two places, so a second write path cannot be added
-        without the build noticing.
+        without the build noticing. `DR-043`'s replace comes through here too, so it is guarded
+        exactly as a submission is.
 
-        **No verb is spelled here.** `policy.write_method` reads it from the committed file, so a
-        policy narrowed back to `GET` leaves this function with nothing to send rather than with a
-        literal it ignores - and gate 39's rule about write verbs stays absolute.
+        **No verb is spelled here, or by any caller.** They pass `policy.write_method` or
+        `policy.replace_method`, both read from the committed file, and `check_method` refuses the
+        verb again at this chokepoint - so a policy narrowed back leaves nothing to send rather than
+        a literal to ignore, and gate 39's rule about write verbs stays absolute.
         """
         self.guards()
-        method = self.policy.write_method
         self.policy.check_method(method)
-        url = self.policy.url(endpoint)
+        url = self.policy.url(endpoint, **path)
 
         limits = self.policy.limits
         headers = self.credentials.headers(self.policy.user_agent)
@@ -320,7 +331,7 @@ class AlpacaClient:
             "take_profit": {"limit_price": str(order.target_price)},
             "client_order_id": order.client_order_id,
         }
-        answered = self._write("orders", payload)
+        answered = self._write("orders", payload, self.policy.write_method)
         if not isinstance(answered, dict):
             raise BrokerUnavailable("orders: expected an object")
 
@@ -375,7 +386,7 @@ class AlpacaClient:
             "take_profit": {"limit_price": str(order.target_price)},
             "client_order_id": order.client_order_id,
         }
-        answered = self._write("orders", payload)
+        answered = self._write("orders", payload, self.policy.write_method)
         if not isinstance(answered, dict):
             raise BrokerUnavailable("orders: expected an object")
 
@@ -388,6 +399,68 @@ class AlpacaClient:
             filled_shares=_optional_decimal(answered, "filled_qty", "orders") or Decimal(0),
             order_type=str(answered.get("order_type") or answered.get("type") or ""),
             stop_price=_optional_decimal(answered, "stop_price", "orders"),
+            observed_at=observed_at,
+        )
+
+    def replace_stop(
+        self, resting: PlacedOrder, stop_price: Decimal, observed_at: datetime
+    ) -> PlacedOrder:
+        """Raise the trigger of one resting stop, and return the order the venue replaced it with.
+
+        `DR-043`, ratified by the owner 2026-09-14. **One request and nothing else in it**: the body
+        carries `stop_price` alone, so quantity, side, lifetime and the take-profit leg are the
+        venue's to keep. The venue retires the old order as `replaced` and answers with a new one
+        under a new id - that id is what a later fill will name, so the caller journals it.
+
+        **The upward rule is checked here, a second time, at the boundary.** `respond` refuses an
+        approval that would lower the book's stop (`manage.lowers_stop`); this refuses a price at or
+        below the trigger the venue is actually holding, so no caller - present or future - can use
+        this to loosen a stop. Which stop is this system's own is the caller's question
+        (`reconcile.own_stop`); this method only refuses what could never be right.
+
+        **The wire format is READ, not MEASURED** (`DR-043` §5). Alpaca documents `stop_price` for
+        a resting stop; the first armed approval settles it, and a `422` arrives as
+        `BrokerUnavailable` carrying the venue's reason with the old stop still standing.
+        """
+        self.guards()
+        if resting.order_type not in PROTECTIVE_TYPES or resting.stop_price is None:
+            raise SubmissionStopped(
+                f"{resting.symbol}: order {resting.order_id} is a {resting.order_type or 'untyped'} "
+                f"order with no trigger, and only a stop's trigger may be replaced (DR-043)"
+            )
+        if resting.side and resting.side != "sell":
+            raise SubmissionStopped(
+                f"{resting.symbol}: order {resting.order_id} is a {resting.side} stop. A stop "
+                f"protecting a long position sells, and nothing else is this system's to move"
+            )
+        if stop_price <= resting.stop_price:
+            raise SubmissionStopped(
+                f"{resting.symbol}: the venue holds the stop at {resting.stop_price} and the "
+                f"replacement is {stop_price}. A replace only ever RAISES a stop (DR-043 3.2)"
+            )
+        if not SAFE_ORDER_ID.match(resting.order_id):
+            raise BrokerUnavailable(
+                f"{resting.symbol}: the venue's order id {resting.order_id!r} cannot go into a "
+                f"URL path, so it is not sent anywhere"
+            )
+
+        answered = self._write(
+            "order", {"stop_price": str(stop_price)}, self.policy.replace_method,
+            order_id=resting.order_id,
+        )
+        if not isinstance(answered, dict):
+            raise BrokerUnavailable("order: expected an object")
+
+        return PlacedOrder(
+            order_id=_text(answered, "id", "order"),
+            client_order_id=str(answered.get("client_order_id") or ""),
+            symbol=_text(answered, "symbol", "order"),
+            status=str(answered.get("status", "")),
+            submitted_at=_instant(answered, "submitted_at", "order"),
+            filled_shares=_optional_decimal(answered, "filled_qty", "order") or Decimal(0),
+            order_type=str(answered.get("order_type") or answered.get("type") or ""),
+            stop_price=_optional_decimal(answered, "stop_price", "order"),
+            side=str(answered.get("side") or ""),
             observed_at=observed_at,
         )
 
@@ -454,13 +527,17 @@ class AlpacaClient:
         for row in payload:
             live.append(self._order(row, observed_at))
             if isinstance(row, dict):
+                # Each leg keeps its parent's id. The stop leg of an `oco` carries an id the venue
+                # generated, so the parent is the only thing that says this system placed it
+                # (`DR-043`); flattened without it, our own stop reads as one a person typed.
+                parent = str(row.get("client_order_id") or "")
                 for leg in row.get("legs") or []:
-                    live.append(self._order(leg, observed_at))
+                    live.append(self._order(leg, observed_at, parent=parent))
         # Sorted here rather than trusted from the wire, exactly as `positions` is: a vendor is
         # free to change its ordering between calls and `DETERMINISM_SPEC` is not.
         return tuple(sorted(live, key=lambda order: (order.symbol, order.order_id)))
 
-    def _order(self, row: Any, observed_at: datetime) -> PlacedOrder:
+    def _order(self, row: Any, observed_at: datetime, parent: str = "") -> PlacedOrder:
         if not isinstance(row, dict):
             raise BrokerUnavailable("orders: expected an array of objects")
         return PlacedOrder(
@@ -480,6 +557,7 @@ class AlpacaClient:
             order_type=str(row.get("order_type") or row.get("type") or ""),
             stop_price=_optional_decimal(row, "stop_price", "orders"),
             side=str(row.get("side") or ""),
+            parent_client_order_id=parent,
             observed_at=observed_at,
         )
 

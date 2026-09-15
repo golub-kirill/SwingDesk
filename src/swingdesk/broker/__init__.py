@@ -1,12 +1,12 @@
-"""Reading a brokerage account. Never writing to one.
+"""Reading a paper brokerage account, placing orders on it, and raising this system's own stops.
 
 `ADR-0005` places this package and names the venue; `DR-026` records the owner's 2026-08-31 ruling
-on the order-placing boundary and what remains closed. The package exists so that the fill record
-this system reasons over is the venue's own rather than one the owner retyped.
+on the order-placing boundary, `DR-027` what may be submitted, `DR-037` the protection placed
+against a held position, and `DR-043` the one amendment: raising the trigger of a stop this system
+placed, on an approved move. Nothing here cancels.
 
-**Nothing here executes**, and gate 39 makes that structural rather than a promise: the committed
-policy lists `GET` as the only permitted method, and the gate reads this package's syntax tree for
-any HTTP write verb.
+**Every write verb comes from the committed policy**, each named for its one job, and gate 39 reads
+this package's syntax tree for any verb literal and for a third path to the transport.
 """
 
 from swingdesk.broker.alpaca import (
@@ -27,6 +27,7 @@ from swingdesk.broker.reconcile import (
     Reconciliation,
     Unprotected,
     ours,
+    own_stop,
     reconcile,
     resting_stops,
     restorable,
@@ -63,6 +64,7 @@ __all__ = [
     "load_policy",
     "open_client",
     "ours",
+    "own_stop",
     "protective_order",
     "protective_order_id",
     "read_arming",

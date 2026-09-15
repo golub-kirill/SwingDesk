@@ -22,7 +22,13 @@ from swingdesk.application import universe as universe_builder
 from swingdesk.application.pipeline import InstrumentOutcome, RunResult, run
 from swingdesk.contracts.market import Interval, Series
 from swingdesk.contracts.observation import ParameterUse
-from swingdesk.contracts.position import ActionStatus, Fill, ManagementAction, Position
+from swingdesk.contracts.position import (
+    ActionKind,
+    ActionStatus,
+    Fill,
+    ManagementAction,
+    Position,
+)
 from swingdesk.contracts.reference import Exchange, Instrument
 from swingdesk.contracts.run import RunMode
 from swingdesk.journal_evidence.journal import Journal, Submission
@@ -1967,7 +1973,140 @@ def _respond(args: argparse.Namespace) -> int:
             print(f"           shares {current.shares} -> {applied.shares}")
         if applied.closed_on is not None and current.closed_on is None:
             print(f"           closed {applied.closed_on}")
+
+    # AFTER the store is closed: the book's answer is recorded and applied whatever the venue then
+    # says, and a slow venue must not hold the position store open while it says it.
+    if proposal.kind is ActionKind.MOVE_STOP and applied.current_stop > current.current_stop:
+        _send_stop_move(args.data, applied, args.sequence, now)
     return 0
+
+
+def _send_stop_move(data: Path, position: Position, sequence: int, now: datetime) -> None:
+    """Raise this system's own resting stop to the stop the owner just approved. `DR-043`.
+
+    Ratified 2026-09-14, option A. Until then the approved stop went into the book and nowhere
+    else: the venue kept the old trigger, `DR-036` paused entries, and a person cancelled and
+    re-placed by hand - 13 stops in five sessions, and 55 minutes one morning with none at all.
+
+    **Narrow on purpose, and every limit is `DR-043` §3:** only after an approval of a `MOVE_STOP`
+    that raised the book's stop (the caller); only a stop this system placed, by its journal
+    (`reconcile.own_stop`), never one a person typed; only upward, checked again at the boundary
+    (`AlpacaClient.replace_stop`); only `stop_price`; only armed. Every attempt is journalled under
+    `Submission`, whatever became of it, keyed by this response.
+
+    **Nothing here can undo the book.** The response is recorded and applied before this runs, so a
+    venue that refuses leaves the book right and the venue behind - `DR-036`'s finding, which the
+    next run reports and `swingdesk status` prints the commands for.
+    """
+    from swingdesk import broker as broker_pkg
+    from swingdesk.broker.submit import to_tick
+
+    try:
+        policy = broker_pkg.load_policy()
+    except broker_pkg.PolicyRefused as refused:
+        print(f"  venue    NOT sent - {refused}", file=sys.stderr)
+        return
+    if cal.exchange_for(position.instrument_id) is not Exchange(policy.market):
+        print(f"  venue    {position.instrument_id} is not a {policy.market} name; "
+              f"{policy.label} holds no stop for it")
+        return
+    write = policy.write
+    if write is None or write.replace_method is None:
+        print(f"  venue    not sent - the committed policy grants no replace (DR-043). The old "
+              f"stop stands at {policy.label}; `swingdesk status` prints what to send")
+        return
+    try:
+        session = broker_pkg.trading_session(policy.market, now)
+    except LookupError as no_session:
+        print(f"  venue    NOT sent - no completed session to journal it under: {no_session}",
+              file=sys.stderr)
+        return
+
+    # The approved stop at the venue's tick, rounded UP - `DR-033`'s direction for a stop.
+    price = to_tick(position.current_stop, write, favouring="safer")
+    run_id = f"respond-{position.position_id}-{sequence}"
+
+    def _record(outcome: str, detail: str | None = None, order_id: str | None = None,
+                venue_order_id: str | None = None, venue_status: str | None = None) -> None:
+        """One row per attempt, and a journal that cannot be written is loud and never fatal."""
+        try:
+            with Journal(data / "journal.duckdb") as journal:
+                journal.record_submission(Submission(
+                    run_id=run_id,
+                    client_order_id=order_id or f"replace-{position.position_id}-{sequence}",
+                    attempted_at=now, session_date=session, instrument_id=position.instrument_id,
+                    shares=position.shares,
+                    # A replace has no limit. The stop in both columns makes `limit - stop` zero,
+                    # so no reader that prices a journalled order can find risk in this row.
+                    limit_price=price, stop_price=price, outcome=outcome, detail=detail,
+                    venue_order_id=venue_order_id, venue_status=venue_status,
+                ))
+        except Exception as unwritable:  # noqa: BLE001 - loud, never fatal
+            print(f"  NOT JOURNALLED {position.instrument_id}  {unwritable}", file=sys.stderr)
+
+    arming = broker_pkg.read_arming(data, write)
+    if arming.stopped:
+        print(f"  venue    not sent - {arming.reason}. The old stop stands at {policy.label}; "
+              f"`swingdesk status` prints what to send")
+        _record("stopped", arming.reason)
+        return
+
+    try:
+        client = broker_pkg.open_client(policy, arming=arming)
+        live = client.open_orders(now)
+    except (broker_pkg.CredentialsMissing, broker_pkg.BrokerUnavailable) as unreadable:
+        reason = f"the venue could not be read to find the stop: {unreadable}"
+        print(f"  venue    NOT sent - {reason}", file=sys.stderr)
+        _record("stopped", reason)
+        return
+
+    try:
+        with Journal(data / "journal.duckdb") as journal:
+            sent_ids = journal.sent_client_order_ids()
+    except Exception as unreadable:  # noqa: BLE001 - which stop is ours is then unknown
+        print(f"  venue    NOT sent - the journal could not be read, so which stop this system "
+              f"placed is unknown: {unreadable}", file=sys.stderr)
+        return
+
+    resting = broker_pkg.own_stop(position.instrument_id, live, sent_ids)
+    if isinstance(resting, str):
+        print(f"  venue    not sent - {resting}")
+        _record("refused", resting)
+        return
+    assert resting.stop_price is not None  # `own_stop` selects only orders carrying a trigger
+    if resting.stop_price == price:
+        print(f"  venue    already holds the stop at {price}; nothing to send")
+        return
+    if resting.stop_price > price:
+        # Tighter at the venue than the book - somebody raised it by hand. `DR-041` adopts the
+        # venue's trigger on the next `sync-fills`, and a replace would LOWER it.
+        print(f"  venue    holds the stop at {resting.stop_price}, above the approved {price}; left "
+              f"alone - a replace only raises, and the next sync-fills adopts it (DR-041)")
+        return
+
+    try:
+        answered = client.replace_stop(resting, price, now)
+    except broker_pkg.SubmissionStopped as stopped:
+        print(f"  venue    NOT sent - {stopped}", file=sys.stderr)
+        _record("stopped", str(stopped), order_id=resting.client_order_id or None)
+        return
+    except broker_pkg.PolicyRefused as refused:
+        print(f"  venue    NOT sent - {refused}", file=sys.stderr)
+        _record("refused", str(refused), order_id=resting.client_order_id or None)
+        return
+    except broker_pkg.BrokerUnavailable as rejected:
+        print(f"  venue    NOT updated - {rejected}. The stop at {resting.stop_price} still stands; "
+              f"`swingdesk status` prints what to send", file=sys.stderr)
+        _record("rejected", str(rejected), order_id=resting.client_order_id or None)
+        return
+
+    # Journalled under the id the venue answered with, so the NEXT move finds this stop as ours
+    # even if the venue hands the replacement back without its `oco` parent - and a fill of it
+    # traces to an order this system sent (`DR-038`).
+    _record("sent", order_id=answered.client_order_id or None, venue_order_id=answered.order_id,
+            venue_status=answered.status)
+    print(f"  venue    stop {resting.stop_price} -> {price} at {policy.label}  "
+          f"{answered.status}  (order {answered.order_id} replaces {resting.order_id})")
 
 
 def _capacity_for(

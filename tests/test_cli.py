@@ -679,6 +679,248 @@ def test_answering_twice_is_refused_at_the_cli(tmp_path, capsys) -> None:
     assert [p.version for p in _history(root)] == [1, 2], "the second answer applied nothing"
 
 
+# ------------------------------------ DR-043: an approved move reaches the venue, narrowly
+
+
+#: The `oco` this system placed for `_seeded`'s AAPL position, as the journal records sending it.
+AAPL_PARENT = "swingdesk-protect-2026-08-11-AAPL"
+
+
+def _arm(root) -> None:
+    from swingdesk import broker as broker_pkg
+
+    write = broker_pkg.load_policy().write
+    (root / write.kill_switch_file).write_text(write.armed_marker, encoding="utf-8")
+
+
+def _journal_our_protection(root) -> None:
+    from datetime import UTC, date, datetime
+
+    from swingdesk.journal_evidence.journal import Submission
+
+    with Journal(root / "journal.duckdb") as journal:
+        journal.record_submission(Submission(
+            run_id="RUN-PROTECT", client_order_id=AAPL_PARENT,
+            attempted_at=datetime(2026, 8, 11, 22, 31, tzinfo=UTC), session_date=date(2026, 8, 11),
+            instrument_id="AAPL", shares=8, limit_price=Decimal(320), stop_price=Decimal(290),
+            outcome="sent", venue_order_id="oco-AAPL", venue_status="accepted",
+        ))
+
+
+def _resting_leg(stop: str = "290.00", **overrides):
+    """The stop leg of that `oco`, as `open_orders` hands it on: an id the venue generated."""
+    from datetime import UTC, datetime
+
+    from swingdesk.contracts.broker import PlacedOrder
+
+    fields: dict[str, object] = dict(
+        order_id="leg-AAPL", client_order_id="venue-generated-leg-id", symbol="AAPL",
+        status="held", order_type="stop", stop_price=Decimal(stop), side="sell",
+        parent_client_order_id=AAPL_PARENT,
+        submitted_at=datetime(2026, 8, 11, 22, 31, tzinfo=UTC),
+        observed_at=datetime(2026, 8, 18, 22, 0, tzinfo=UTC),
+    )
+    fields.update(overrides)
+    return PlacedOrder(**fields)  # type: ignore[arg-type]
+
+
+def _venue(monkeypatch, resting=(), *, refuse=None, unreadable=None) -> list:
+    """A venue holding `resting`, recording every replace it is asked for. No socket."""
+    from swingdesk import broker as broker_pkg
+    from swingdesk.contracts.broker import PlacedOrder
+
+    asked: list = []
+
+    class _Client:
+        def open_orders(self, at):
+            if unreadable is not None:
+                raise unreadable
+            return tuple(resting)
+
+        def replace_stop(self, order, price, at):
+            asked.append((order.order_id, price))
+            if refuse is not None:
+                raise refuse
+            return PlacedOrder(
+                order_id="new-leg-AAPL", client_order_id="venue-generated-replacement",
+                symbol=order.symbol, status="accepted", order_type="stop", stop_price=price,
+                side="sell", submitted_at=at, observed_at=at,
+            )
+
+    monkeypatch.setattr(
+        broker_pkg, "open_client",
+        lambda policy=None, transport=None, arming=broker_pkg.STOPPED: _Client(),
+    )
+    return asked
+
+
+def _no_venue(monkeypatch) -> None:
+    """A venue that must not be asked anything at all."""
+    from swingdesk import broker as broker_pkg
+
+    def _refuse(*args, **kwargs):
+        raise AssertionError("the venue was contacted")
+
+    monkeypatch.setattr(broker_pkg, "open_client", _refuse)
+
+
+def _replace_rows(root):
+    with Journal(root / "journal.duckdb") as journal:
+        return journal.submissions_for("respond-POS-1-1")
+
+
+def _approve(root) -> int:
+    return cli.main(["respond", "POS-1", "1", "--approve", "--reason", "trail cleared",
+                     "--data", str(root), "--as-of", LIVE])
+
+
+def test_an_approved_move_raises_the_systems_own_stop_at_the_venue(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    """THE CHANGE. One replace, of our own stop, to the approved price at the venue's tick."""
+    root = _seeded(tmp_path)
+    _arm(root)
+    _journal_our_protection(root)
+    asked = _venue(monkeypatch, [_resting_leg()])
+
+    assert _approve(root) == 0
+
+    assert asked == [("leg-AAPL", Decimal("298.00"))]
+    assert [p.current_stop for p in _history(root)] == [Decimal(290), Decimal(298)]
+    [row] = _replace_rows(root)
+    assert row.outcome == "sent"
+    assert row.venue_order_id == "new-leg-AAPL", "a fill of the replacement names this id"
+    assert row.client_order_id == "venue-generated-replacement", "so the NEXT move finds it ours"
+    assert row.stop_price == Decimal("298.00") == row.limit_price
+    assert "290.00 -> 298.00" in capsys.readouterr().out
+
+
+def test_an_unarmed_approval_contacts_no_venue_and_says_so(tmp_path, monkeypatch, capsys) -> None:
+    root = _seeded(tmp_path)
+    _no_venue(monkeypatch)
+
+    assert _approve(root) == 0
+
+    assert [p.version for p in _history(root)] == [1, 2], "the book moves regardless"
+    assert "not sent" in capsys.readouterr().out
+    [row] = _replace_rows(root)
+    assert row.outcome == "stopped" and row.detail
+
+
+def test_a_stop_a_person_placed_is_not_touched(tmp_path, monkeypatch, capsys) -> None:
+    """`DR-043` 3.3 - the four positions on 2026-09-14 all carried stops placed by hand."""
+    root = _seeded(tmp_path)
+    _arm(root)
+    _journal_our_protection(root)
+    asked = _venue(monkeypatch, [_resting_leg(client_order_id="dashboard-uuid",
+                                              parent_client_order_id="")])
+
+    assert _approve(root) == 0
+
+    assert asked == []
+    assert "not placed by this system" in capsys.readouterr().out
+    [row] = _replace_rows(root)
+    assert row.outcome == "refused"
+
+
+def test_a_venue_refusal_leaves_the_book_moved_and_is_journalled(
+    tmp_path, monkeypatch, capsys
+) -> None:
+    """`DR-043` 5: the first armed approval settles the wire format, and a 422 must be legible."""
+    from swingdesk import broker as broker_pkg
+
+    root = _seeded(tmp_path)
+    _arm(root)
+    _journal_our_protection(root)
+    _venue(monkeypatch, [_resting_leg()],
+           refuse=broker_pkg.BrokerUnavailable("order: HTTP 422 from Alpaca: invalid stop_price"))
+
+    assert _approve(root) == 0
+
+    assert [p.current_stop for p in _history(root)][-1] == Decimal(298)
+    assert "NOT updated" in capsys.readouterr().err
+    [row] = _replace_rows(root)
+    assert row.outcome == "rejected" and "invalid stop_price" in (row.detail or "")
+    assert row.client_order_id == "venue-generated-leg-id", "the order that was NOT replaced"
+
+
+def test_an_unreadable_venue_replaces_nothing(tmp_path, monkeypatch, capsys) -> None:
+    from swingdesk import broker as broker_pkg
+
+    root = _seeded(tmp_path)
+    _arm(root)
+    asked = _venue(monkeypatch, unreadable=broker_pkg.BrokerUnavailable("timed out"))
+
+    assert _approve(root) == 0
+
+    assert asked == []
+    assert "timed out" in capsys.readouterr().err
+    [row] = _replace_rows(root)
+    assert row.outcome == "stopped"
+
+
+def test_the_venue_already_holding_the_stop_is_sent_nothing(tmp_path, monkeypatch, capsys) -> None:
+    root = _seeded(tmp_path)
+    _arm(root)
+    _journal_our_protection(root)
+    asked = _venue(monkeypatch, [_resting_leg("298.00")])
+
+    assert _approve(root) == 0
+
+    assert asked == []
+    assert "already holds" in capsys.readouterr().out
+    assert _replace_rows(root) == [], "nothing was attempted, so nothing is journalled"
+
+
+def test_a_tighter_stop_at_the_venue_is_not_lowered(tmp_path, monkeypatch, capsys) -> None:
+    """Someone raised it by hand past the approval. `DR-041` adopts it; a replace would lower it."""
+    root = _seeded(tmp_path)
+    _arm(root)
+    _journal_our_protection(root)
+    asked = _venue(monkeypatch, [_resting_leg("299.00")])
+
+    assert _approve(root) == 0
+
+    assert asked == []
+    assert "left alone" in capsys.readouterr().out
+
+
+def test_a_move_approved_off_the_tick_is_sent_rounded_up(tmp_path, monkeypatch) -> None:
+    """`DR-033`: the venue holds cents, and a stop rounds toward the price, never away."""
+    root = _seeded(tmp_path, new_stop=Decimal("298.001"))
+    _arm(root)
+    _journal_our_protection(root)
+    asked = _venue(monkeypatch, [_resting_leg()])
+
+    assert _approve(root) == 0
+
+    assert asked == [("leg-AAPL", Decimal("298.01"))]
+
+
+def test_only_an_approved_raise_reaches_the_venue(tmp_path, monkeypatch) -> None:
+    """A rejection, and an approval that moves no stop, never contact the venue."""
+    _no_venue(monkeypatch)
+    (tmp_path / "rejected").mkdir()
+    (tmp_path / "exit").mkdir()
+    (tmp_path / "same").mkdir()
+
+    # A stop move the validator allows and that raises nothing: the book's stop does not change,
+    # so there is nothing at the venue to raise.
+    same = _seeded(tmp_path / "same", old_stop=Decimal(290), new_stop=Decimal(290))
+    _arm(same)
+    assert _approve(same) == 0
+
+    rejected = _seeded(tmp_path / "rejected")
+    _arm(rejected)
+    assert cli.main(["respond", "POS-1", "1", "--reject", "--reason", "no",
+                     "--data", str(rejected), "--as-of", LIVE]) == 0
+
+    exit_now = _seeded(tmp_path / "exit", kind=_ActionKind.EXIT_NOW, reason_code="STOP",
+                       reason="stop 290 touched", old_stop=Decimal(290), new_stop=None)
+    _arm(exit_now)
+    assert _approve(exit_now) == 0
+
+
 # ---------------------------------------------------- record-fill (US-011, TODO.md 6b item 6)
 
 

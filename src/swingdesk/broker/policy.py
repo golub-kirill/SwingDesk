@@ -28,10 +28,11 @@ POLICY_PATH = Path(__file__).resolve().parents[3] / "registry" / "broker_policy.
 #: name because a denylist is not a capability: nothing sends these, `load` refuses a policy that
 #: names one, and the verb that IS used comes from `BrokerPolicy.write_method`, read from the file.
 #:
-#: `DR-027` 3.3 is why cancellation is on the list rather than merely unused: every order carries
-#: `time_in_force: day`, so nothing this system placed outlives the session that decided it and
-#: there is nothing to cancel.
-REFUSED_METHODS = frozenset({"DELETE", "PATCH", "PUT"})
+#: `DR-027` 3.3 is why cancellation is on the list rather than merely unused: an entry carries
+#: `time_in_force: day`, so it expires with the session that decided it and there is nothing to
+#: cancel. `PATCH` left the list on 2026-09-14 with `DR-043`: replacing a resting stop's trigger is
+#: one request with no moment unprotected, where a cancel always leaves one.
+REFUSED_METHODS = frozenset({"DELETE", "PUT"})
 
 
 class PolicyRefused(Exception):
@@ -94,6 +95,13 @@ class WritePolicy:
     protect_side: str
     protect_client_order_id_prefix: str
 
+    submit_method: str
+    """The verb that places an order, read from the file. Nothing in this package spells it."""
+
+    replace_method: str | None
+    """The verb that replaces a resting stop's trigger (`DR-043`), or `None` when the policy grants
+    no replace - then an approved move is printed for a person to send, as it was before."""
+
     def tick_for(self, price: Decimal) -> Decimal:
         """The increment this price must be a multiple of."""
         return self.tick_size if price >= self.sub_dollar_threshold else self.sub_dollar_tick
@@ -151,13 +159,27 @@ class BrokerPolicy:
         `registry/broker_policy.yml`, which is `DR-027` 4.3's guard; a policy narrowed back to
         `GET` leaves the code with no verb to use rather than with a literal to ignore.
         """
-        verbs = sorted(self.allowed_methods - {"GET"})
-        if len(verbs) != 1:
+        if self.write is None:
             raise PolicyRefused(
-                f"{POLICY_PATH.name} permits {sorted(self.allowed_methods)}; a submission needs "
-                f"exactly one non-GET verb and this policy names {len(verbs)}."
+                f"{POLICY_PATH.name} permits {sorted(self.allowed_methods)} and carries no write "
+                f"section, so there is no verb to submit with."
             )
-        return verbs[0]
+        return self.write.submit_method
+
+    @property
+    def replace_method(self) -> str:
+        """The verb that replaces a resting stop's trigger, read from the committed file. `DR-043`.
+
+        Refuses rather than falling back to anything. A policy without `write.replace_method`
+        grants no replace, and the one verb it does grant is for placing orders, not for this.
+        """
+        if self.write is None or self.write.replace_method is None:
+            raise PolicyRefused(
+                f"{POLICY_PATH.name} names no write.replace_method, so replacing a resting stop is "
+                f"not permitted (DR-043). The move stands in the book; `swingdesk status` prints "
+                f"what to send."
+            )
+        return self.write.replace_method
 
     def check_method(self, method: str) -> None:
         """Refuse anything the policy does not list. Today that is everything but `GET`."""
@@ -286,7 +308,8 @@ def load(path: Path | None = None) -> BrokerPolicy:
     if refused:
         raise PolicyRefused(
             f"{source.name}: access.allowed_methods permits {', '.join(refused)}. DR-027 covers "
-            f"submission only; amending or cancelling an order is a decision record of its own."
+            f"submission and DR-043 replacing a stop's trigger; cancelling or overwriting an order "
+            f"is a decision record of its own."
         )
 
     write_block = raw.get("write")
@@ -323,7 +346,36 @@ def load(path: Path | None = None) -> BrokerPolicy:
             protect_client_order_id_prefix=str(
                 _require(write_block, "protect_client_order_id_prefix", str, "write")
             ),
+            submit_method=str(_require(write_block, "submit_method", str, "write")).upper(),
+            replace_method=(
+                str(_require(write_block, "replace_method", str, "write")).upper()
+                if write_block.get("replace_method") is not None else None
+            ),
         )
+        # Every write verb has exactly one job, and the job is named in the write section. Two
+        # verbs with no roles would leave the adapter choosing between them; a role whose verb is
+        # not permitted is a capability that exists in one half of the file and not the other.
+        roles = {write.submit_method}
+        if write.replace_method is not None:
+            if write.replace_method == write.submit_method:
+                raise PolicyRefused(
+                    f"{source.name}: write.submit_method and write.replace_method are both "
+                    f"{write.submit_method}. Placing an order and replacing a trigger are different "
+                    f"requests, and one verb cannot say which it is."
+                )
+            roles.add(write.replace_method)
+            if "{order_id}" not in str(endpoints.get("order", "")):
+                raise PolicyRefused(
+                    f"{source.name}: write.replace_method is set and endpoints.order does not name "
+                    f"one order by {{order_id}}, so there is nothing to replace."
+                )
+        verbs = allowed - {"GET"}
+        if verbs != roles:
+            raise PolicyRefused(
+                f"{source.name}: access.allowed_methods permits {sorted(verbs)} and the write "
+                f"section gives a job to {sorted(roles)}. Each permitted write verb has exactly "
+                f"one job, named in the write section."
+            )
         if not write.armed_marker.strip():
             # An empty marker arms on any file at all, including one created by a stray redirect.
             raise PolicyRefused(f"{source.name}: write.armed_marker is blank, so anything arms it")

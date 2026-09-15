@@ -300,13 +300,194 @@ def test_a_policy_permitting_cancellation_will_not_load(tmp_path: Path) -> None:
     raw["access"]["allowed_methods"] = ["GET", "POST", "DELETE"]
     written = tmp_path / "broker_policy.yml"
     written.write_text(yaml.safe_dump(raw), encoding="utf-8")
-    with pytest.raises(PolicyRefused, match="DR-027 covers submission only"):
+    with pytest.raises(PolicyRefused, match="cancelling or overwriting an order is a decision"):
         policy_module.load(written)
 
 
 def test_the_write_verb_comes_from_the_policy_and_not_from_the_code() -> None:
     """Which is why gate 39 can keep an absolute rule about verb literals in the package."""
-    assert policy_module.load().write_method == "POST"
+    loaded = policy_module.load()
+    assert loaded.write_method == "POST"
+    assert loaded.replace_method == "PATCH"
+
+
+# --- DR-043: raising the trigger of this system's own resting stop ----------------------------
+
+LEG_ID = "1e5b565a-0000-0000-0000-000000000002"
+
+REPLACED = {
+    "id": "7c2d0000-0000-0000-0000-00000000000b",
+    "client_order_id": "venue-generated-replacement",
+    "symbol": "TEST.1",
+    "status": "accepted",
+    "submitted_at": "2026-09-14T22:40:00.000000Z",
+    "filled_qty": "0",
+    "type": "stop",
+    "side": "sell",
+    "stop_price": "47.00",
+    "replaces": LEG_ID,
+}
+
+
+def _resting(**overrides: object):
+    """The stop leg of this system's `oco`, as `open_orders` hands it on."""
+    from swingdesk.contracts.broker import PlacedOrder
+
+    fields: dict[str, object] = dict(
+        order_id=LEG_ID, client_order_id="venue-generated-leg-id", symbol="TEST.1",
+        status="held", submitted_at=OBSERVED_AT, order_type="stop", stop_price=Decimal("45.00"),
+        side="sell", parent_client_order_id="swingdesk-protect-2026-09-01-TEST.1",
+        observed_at=OBSERVED_AT,
+    )
+    fields.update(overrides)
+    return PlacedOrder(**fields)  # type: ignore[arg-type]
+
+
+def _policy_with(tmp_path: Path, edit) -> policy_module.BrokerPolicy:
+    import yaml
+
+    raw = yaml.safe_load(policy_module.POLICY_PATH.read_text(encoding="utf-8"))
+    edit(raw)
+    written = tmp_path / "broker_policy.yml"
+    written.write_text(yaml.safe_dump(raw), encoding="utf-8")
+    return policy_module.load(written)
+
+
+def test_a_replace_is_one_request_carrying_the_trigger_alone() -> None:
+    """`DR-043` 3.4: only `stop_price`. Quantity, side, lifetime and the target are the venue's."""
+    client = _client(Arming(True, "armed in a test"), payload=REPLACED)
+
+    answered = client.replace_stop(_resting(), Decimal("47.00"), OBSERVED_AT)
+
+    [sent] = client.transport.sent  # type: ignore[attr-defined]
+    assert sent["method"] == policy_module.load().replace_method
+    assert sent["url"] == policy_module.load().base_url + f"/v2/orders/{LEG_ID}"
+    assert json.loads(sent["body"]) == {"stop_price": "47.00"}
+    assert answered.order_id == REPLACED["id"], "the NEW order's id - a later fill names it"
+    assert answered.client_order_id == "venue-generated-replacement"
+    assert answered.stop_price == Decimal("47.00")
+    assert answered.side == "sell"
+
+
+def test_an_unarmed_client_replaces_nothing() -> None:
+    client = _client(STOPPED, payload=REPLACED)
+    with pytest.raises(SubmissionStopped):
+        client.replace_stop(_resting(), Decimal("47.00"), OBSERVED_AT)
+    assert client.transport.sent == []  # type: ignore[attr-defined]
+
+
+@pytest.mark.parametrize("price", ["45.00", "44.99"])
+def test_a_replace_never_lowers_or_repeats_the_trigger(price: str) -> None:
+    """The second upward check, at the boundary. `respond` already refuses a lowering approval."""
+    client = _client(Arming(True, "armed in a test"), payload=REPLACED)
+    with pytest.raises(SubmissionStopped, match="only ever RAISES"):
+        client.replace_stop(_resting(), Decimal(price), OBSERVED_AT)
+    assert client.transport.sent == []  # type: ignore[attr-defined]
+
+
+def test_a_replace_one_tick_up_is_sent() -> None:
+    """The boundary from the other side: a cent above the venue's trigger is a raise."""
+    client = _client(Arming(True, "armed in a test"), payload=REPLACED)
+    client.replace_stop(_resting(), Decimal("45.01"), OBSERVED_AT)
+    assert len(client.transport.sent) == 1  # type: ignore[attr-defined]
+
+
+@pytest.mark.parametrize("overrides", [
+    {"order_type": "limit", "stop_price": None},
+    {"order_type": "limit"},
+    {"stop_price": None},
+    {"side": "buy"},
+])
+def test_only_a_sell_stop_may_be_replaced(overrides: dict[str, object]) -> None:
+    """A take-profit carries a price and no trigger; a buy stop protects nothing this system holds."""
+    client = _client(Arming(True, "armed in a test"), payload=REPLACED)
+    with pytest.raises(SubmissionStopped):
+        client.replace_stop(_resting(**overrides), Decimal("47.00"), OBSERVED_AT)
+    assert client.transport.sent == []  # type: ignore[attr-defined]
+
+
+def test_a_stop_limit_is_a_stop() -> None:
+    client = _client(Arming(True, "armed in a test"), payload=REPLACED)
+    client.replace_stop(_resting(order_type="stop_limit"), Decimal("47.00"), OBSERVED_AT)
+    assert len(client.transport.sent) == 1  # type: ignore[attr-defined]
+
+
+@pytest.mark.parametrize("order_id", ["../account", "abc/def", "abc?x=1", "abc#x", "a.b", ""])
+def test_a_venue_order_id_never_becomes_a_different_path(order_id: str) -> None:
+    """The id came from the venue - untrusted input (`SECURITY.md` 6) - and goes into a URL."""
+    client = _client(Arming(True, "armed in a test"), payload=REPLACED)
+    with pytest.raises(BrokerUnavailable, match="cannot go into a URL path"):
+        client.replace_stop(_resting(order_id=order_id), Decimal("47.00"), OBSERVED_AT)
+    assert client.transport.sent == []  # type: ignore[attr-defined]
+
+
+def test_a_refused_replace_carries_the_venues_reason() -> None:
+    """`DR-043` 5: the wire format is read, not measured. A 422 says which field was wrong."""
+    client = _client(
+        Arming(True, "armed in a test"),
+        payload={"code": 42210000, "message": "stop price must not be greater than base price"},
+        status=422,
+    )
+    with pytest.raises(BrokerUnavailable, match="stop price must not be greater"):
+        client.replace_stop(_resting(), Decimal("47.00"), OBSERVED_AT)
+
+
+def test_a_policy_without_a_replace_verb_replaces_nothing(tmp_path: Path) -> None:
+    """Taking the replace away is two deleted lines, and the adapter then has nothing to send."""
+    def edit(raw):
+        raw["access"]["allowed_methods"] = ["GET", "POST"]
+        del raw["write"]["replace_method"]
+
+    client = AlpacaClient(
+        policy=_policy_with(tmp_path, edit), credentials=Credentials(key_id="k", secret="s"),
+        transport=_transport(REPLACED), arming=Arming(True, "armed in a test"),
+    )
+    assert client.policy.write_method == "POST", "submission is untouched"
+    with pytest.raises(PolicyRefused, match=r"no write\.replace_method"):
+        client.replace_stop(_resting(), Decimal("47.00"), OBSERVED_AT)
+    assert client.transport.sent == []  # type: ignore[attr-defined]
+
+
+def test_a_write_verb_with_no_job_will_not_load(tmp_path: Path) -> None:
+    def edit(raw):
+        del raw["write"]["replace_method"]
+
+    with pytest.raises(PolicyRefused, match="exactly one job"):
+        _policy_with(tmp_path, edit)
+
+
+def test_a_job_whose_verb_is_not_permitted_will_not_load(tmp_path: Path) -> None:
+    def edit(raw):
+        raw["access"]["allowed_methods"] = ["GET", "POST"]
+
+    with pytest.raises(PolicyRefused, match="exactly one job"):
+        _policy_with(tmp_path, edit)
+
+
+def test_one_verb_cannot_hold_both_jobs(tmp_path: Path) -> None:
+    def edit(raw):
+        raw["access"]["allowed_methods"] = ["GET", "POST"]
+        raw["write"]["replace_method"] = "POST"
+
+    with pytest.raises(PolicyRefused, match="both"):
+        _policy_with(tmp_path, edit)
+
+
+def test_a_replace_needs_an_endpoint_naming_one_order(tmp_path: Path) -> None:
+    def edit(raw):
+        del raw["endpoints"]["order"]
+
+    with pytest.raises(PolicyRefused, match=r"endpoints\.order"):
+        _policy_with(tmp_path, edit)
+
+
+def test_a_submission_still_uses_the_submission_verb() -> None:
+    """Two write verbs now, and the entry must not pick up the wrong one."""
+    client = _client(Arming(True, "armed in a test"))
+    client.submit(_order(), OBSERVED_AT)
+    [sent] = client.transport.sent  # type: ignore[attr-defined]
+    assert sent["method"] == policy_module.load().write_method
+    assert sent["url"] == policy_module.load().base_url + "/v2/orders"
 
 
 # --- the target, which is mandatory and unset -------------------------------------------------
