@@ -6,9 +6,9 @@ status:          accepted — ratified by the owner 2026-09-14, option A. This i
                  ruling CHARTER A-002 §4 left D6's stop moves waiting for
 parameters:      none
 components:      none new
-implemented_by:  src/swingdesk/presentation/status.py :: class Handover
-                 the interim - the printed commands, built 2026-09-14. The replace itself is being
-                 built next, and this line moves to it when it lands
+implemented_by:  src/swingdesk/broker/alpaca.py :: def replace_stop
+                 the replace, built 2026-09-14 (section 9). `presentation/status.py`'s `Handover`
+                 still prints the commands for every case the replace leaves alone
 ```
 
 ## 1. What happens today, measured
@@ -91,3 +91,49 @@ effect with a gap in the middle.
   `gtc` stop rather than an `oco`, which is its own amendment to `DR-037`.
 * A replace that the venue executes as cancel-then-new with a window between — measured, not
   assumed, on the first armed approval.
+
+## 9. Built, 2026-09-14 — and two places the build is stricter than §3
+
+**Where it lives.** `respond --approve` records and applies the answer first, closes the book, and
+only then calls `cli._send_stop_move`, and only for a `MOVE_STOP` that raised the book's stop. That
+reads the arming switch, asks the venue what is resting, picks the stop with
+`reconcile.own_stop`, and sends `AlpacaClient.replace_stop`: one request to
+`endpoints.order` (`/v2/orders/{order_id}`) whose body is `{"stop_price": ...}` and nothing else.
+The price is the approved stop rounded UP to the venue's tick (`DR-033`). Every attempt is a
+`Submission` row under run id `respond-<position>-<sequence>`: `stopped` when unarmed or the venue
+could not be read, `refused` when the stop is not ours, `rejected` with the venue's reason, `sent`
+under the id the venue answered with.
+
+**The policy names each verb's job.** `access.allowed_methods` is `GET`, `POST`, `PATCH`;
+`write.submit_method: POST` and `write.replace_method: PATCH` say which does what, and
+`policy.load` refuses a permitted write verb with no job, a job whose verb is not permitted, and one
+verb holding both. `REFUSED_METHODS` is `DELETE` and `PUT`. Taking the replace away is two deleted
+lines, and gate 39 passes the narrower policy (`tests/test_verify_broker_policy.py`).
+
+**Stricter than §3, in two places.**
+
+1. **"Ours" is decided by the journal, not by the prefix §3.3 names.** A stop is this system's when
+   its own id or its `oco` parent's is in `Journal.sent_client_order_ids` — `DR-032`'s `ours` rule,
+   for `DR-032`'s reason: a prefix test adopts a stop a person typed with the right first word. The
+   parent is how the stop leg is found at all, since its own id is one the venue generated;
+   `open_orders` now keeps it on each leg (`PlacedOrder.parent_client_order_id`). A stop this
+   system already replaced is found by the id the replace was journalled under, so the chain holds
+   even if the venue hands the replacement back without its parent.
+2. **Transport call sites stay at two, not three.** The replace goes through `_write`, which now
+   takes the verb as an argument — the callers pass `policy.write_method` or
+   `policy.replace_method` — so the arming switch, `write_enabled` and `check_method` are consulted
+   exactly as for a submission, and gate 39's count did not have to move.
+
+**What it leaves alone, and says so:** two stops resting for one name (raising one leaves the
+other), a stop at the venue already above the approval (`DR-041` adopts it; a replace would lower
+it), a stop already at the price, and every stop a person placed — which on 2026-09-14 is all four
+open positions. For those the move stays printed by `swingdesk status`. To hand a position back,
+cancel the hand-placed stop **after the close** and before the 18:30 run: `DR-037` then places this
+system's own `oco` at the book's stop with no session in between.
+
+**Not yet measured:** the wire format (§5). The first armed approval that meets a stop of ours
+settles whether the venue replaces an `oco` leg — `sent` in the journal and a `replaced` order in
+the venue's history — or refuses it, which §7's first bullet already answers. **The likeliest
+refusal is named in advance:** an `oco`'s stop rests with status `held` (measured 2026-09-04,
+`AlpacaClient.open_orders`), and Alpaca's replace reference speaks of orders, not of held legs. A
+refusal there costs nothing but the attempt — the old stop stands and the row says why.

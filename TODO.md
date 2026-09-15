@@ -2913,6 +2913,14 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       The keys appear by NAME only. **Proposed:** `DR-043` — on an approved move, the system
       REPLACES its own protective stop to the approved, higher price (`PATCH`, one request, no gap);
       never a stop a person placed, never lower, only armed. **Yours to rule.**
+      **RULED 2026-09-14 (2A) AND BUILT THE SAME DAY** (`DR-043` §9). `respond --approve` of a
+      `MOVE_STOP` now raises this system's own resting stop at the venue in one `PATCH`, when the
+      switch is armed, and says on a `venue` line what happened; every attempt is a `Submission`
+      row. "Ours" is decided by the journal (`DR-032`'s rule), not by the id prefix. **It leaves
+      alone every stop a person placed — all four open positions today** — so those moves stay
+      printed by `swingdesk status` until the hand-placed stops are cancelled after a close and
+      `DR-037` replaces them with the system's own. **Still unmeasured:** whether the venue replaces
+      an `oco` leg; the first armed approval on a stop of ours settles it (`DR-043` §5, §7).
 
 - [ ] **`[v]` ALPACA PAPER TRADING — owner instruction 2026-08-31. Wire it as the broker so
       strategies, guesses and the whole chain can be tested against a real venue.**

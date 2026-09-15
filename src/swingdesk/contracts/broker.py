@@ -278,6 +278,14 @@ class PlacedOrder(BaseModel):
                     "4R cap on 2026-09-04 and refused a legitimate candidate (`DR-032`).",
     )
 
+    parent_client_order_id: str = Field(
+        default="",
+        description="For a LEG of an advanced order, the parent's `client_order_id`; empty for "
+                    "an order that stands alone. An `oco`'s stop carries an id the venue "
+                    "generated, so whether this system placed it is only answerable through the "
+                    "parent - which is how `DR-043` tells its own stop from one a person placed.",
+    )
+
     observed_at: datetime
 
 

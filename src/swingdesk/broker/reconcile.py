@@ -302,6 +302,44 @@ def resting_stops(live_orders: Sequence[PlacedOrder]) -> dict[str, Decimal]:
     return in_force
 
 
+def own_stop(
+    symbol: str, live_orders: Sequence[PlacedOrder], sent_order_ids: frozenset[str]
+) -> PlacedOrder | str:
+    """The one resting stop for `symbol` that THIS system placed, or why there is none. `DR-043`.
+
+    **Ours by the journal, never by the look of an id** - `ours`' rule, for `ours`' reason. A stop
+    is this system's when its own id or its parent's is in the record of what we put on the wire:
+    the parent for an `oco`'s stop leg, whose id the venue generated; its own for a stop we already
+    replaced, which the journal records under the id the venue answered with. A prefix test would
+    adopt a stop a person typed with the right first word, and `DR-043` §3.3 leaves every stop a
+    person placed alone - its owner is a person, and the book cannot know what they meant by it.
+
+    **More than one resting stop is refused, not resolved.** Raising one would leave the other
+    standing, and `resting_stops` reads the higher as the one in force - so which is "the" stop
+    is a question for the person who put two there.
+    """
+    stops = [
+        order for order in live_orders
+        if order.symbol == symbol and order.order_type in PROTECTIVE_TYPES
+        and order.stop_price is not None and order.side in ("sell", "")
+    ]
+    if not stops:
+        return (f"no stop is resting for {symbol} at the venue. DR-037's next armed pass places "
+                f"one at the book's stop")
+    if len(stops) > 1:
+        triggers = ", ".join(str(order.stop_price) for order in stops)
+        return (f"{len(stops)} stops are resting for {symbol} ({triggers}). Raising one leaves the "
+                f"other standing, so none is touched; cancel the one that should not be there")
+    stop = stops[0]
+    if (stop.client_order_id in sent_order_ids
+            or (stop.parent_client_order_id and stop.parent_client_order_id in sent_order_ids)):
+        return stop
+    return (f"the stop resting for {symbol} at {stop.stop_price} (order {stop.order_id}) was not "
+            f"placed by this system, so it is left alone (DR-043 3.3). Move it by hand, or cancel "
+            f"it after the close and the next armed pass places this system's own at the book's "
+            f"stop (DR-037)")
+
+
 @dataclass(frozen=True, slots=True)
 class Unprotected:
     """One open position whose stop is not standing at the venue. `DR-036`."""
