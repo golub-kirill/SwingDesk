@@ -2763,3 +2763,32 @@ count again to re-answer a question with a spent holdout, and the research line 
 strategy-class item in `TODO.md`). `PR-014`'s re-run stands as the one exception, forced by its own
 cost correction and spending no new trials. The two cost inputs — `measure_quoted_spread.py` and
 `measure_benchmark_fit.py` — spend no trials and remain free to re-run whenever a study needs them.
+
+## `DR-042`: which leg fired first on a bar that reached both — closed 2026-09-14
+
+**Ruled by the owner 2026-09-14: build the minute-bar resolution now.** `DR-042` §9 records the
+ruling, what was built and the proof — the harness's resolver run on all 132 ambiguous bars
+`PR-016` recorded, each read four ways so every difference from the 2026-09-08 probe has one cause.
+Evidence: `docs/decisions/measurements/first-touch-2026-09-14.json`. `exit.slot_resolution_order`
+is set, and every study reported PRELIMINARY on `DR-042`'s terms — `PR-016` to `PR-019b` — carries a
+dated amendment.
+
+**The lesson is promoted, which is why this entry may move.** It is `DR-042` §9 and the docstring of
+`validation/backtest/intraday.py`: the probe behind the 2026-09-08 numbers reproduces exactly and
+still answered nine bars on the wrong basis — two in the wrong price units, seven on a print outside
+the session — and on four more the minutes were not the bar at all. Its totals showed none of it. A
+measurement is checked by reproducing the object it measures, not by re-reading its totals.
+
+## §10.5 gives every count an owner and nothing did that for a status — closed 2026-09-14
+
+**Ruled by the owner 2026-09-14: a status claim names the artefact that owns it.** It is
+`AGENTS.md` §10.9, with its row in the rules index, and gate 30 makes `AGENTS.md` its only home. A
+naming rule and not a gate: the probes for a prose-status gate were rejected on their false
+positives, and gate 28 remains the one shape exact enough to compare — a parameter's status.
+
+## The trial budget — closed 2026-09-14
+
+**Ruled by the owner 2026-09-14: no cap; every trial declared before it runs and counted after it
+does.** `docs/08-pm/TRIAL_BUDGET.md` §6 records it and the document is `frozen`. The proposed 25 and
+its allocation were not adopted; §2's three counting rules were. `tools/trial_budget.py` derives the
+count, and no gate runs it — `tools/check_gates.py` registers none.

@@ -52,6 +52,7 @@ because a rule sits in a 650-line file and a working session acts from memory.
 | 10.6 | And that one place is generated, not typed | 24 |
 | 10.7 | Open work lives in `TODO.md`, state in `HANDOFF.md`, rules here | 15, 30 |
 | 10.8 | A claim that something is CHECKED is itself a claim — run the check before writing it | 34, 35 |
+| 10.9 | A claim about STATE names the artefact that owns it, the way a count names its command | honour · 28 catches parameter statuses |
 | 11 | Never delete a protected record. Correct forward by superseding or amending | 20, 21 |
 | 12 | The traps — instances, not rules. Read once, then again when something feels familiar | — |
 | **13** | **Talk to the owner in Russian: short, direct, answer first. Profanity at situations, never at people, never inside code** | **honour** |
@@ -449,8 +450,40 @@ under a minute and is the whole rule.
 measured count one owner, and restating it in an owner-facing document is the next thing to rot. The
 line names the source instead, and what is left gated is the *specific* claim — `regime.classifier_rule`
 is `assumed` — which gate 28 checks every run. **A claim you cannot get under a gate is not thereby
-excused from being true; it is a claim you now know nobody will catch.** `TODO.md` §4 carries the
-open question that follows: §10.5 gives every COUNT an owner and nothing does that for a STATUS.
+excused from being true; it is a claim you now know nobody will catch.** The open question that
+followed — §10.5 gives every COUNT an owner and nothing did that for a STATUS — is §10.9, ruled by
+the owner 2026-09-14.
+
+## 10.9 A claim about STATE names the artefact that owns it
+
+Ruled by the owner 2026-09-14, closing the question §10.8 ended on. §10.5 makes a COUNT name the
+command that derives it; **this makes a STATUS name the artefact that decides it.** A sentence
+saying what something IS — built, wired, ratified, open, blocked, refuted, *"nothing does X"* —
+names, in the same sentence or the next, where a reader checks it:
+
+| a claim about | is owned by |
+|---|---|
+| a decision's status | the record's own header in `docs/decisions/` |
+| a parameter's value or status | `registry/parameters.yml` — gate 28 already compares the backticked ones |
+| a gate existing, or passing | `tools/check_gates.py`, and a run of it |
+| a study's verdict | its result file in `docs/prereg/results/` |
+| open work | `TODO.md` |
+| a position, an order, a stop | the book and the venue — never a document |
+
+*"The trial count is checked"* becomes *"`tools/trial_budget.py` prints the count; no gate runs
+it"*. A claim whose owner cannot be named is not a status: write it as a conjecture (§10.4), or not
+at all.
+
+**Why a naming rule and not a gate.** Most prose statuses are not exact enough to compare
+mechanically. The gate probes that tried were rejected on their false positives, and the one that
+shipped works only where the subject is a registry key. A named owner is what lets the next reader
+check the claim in one step, and it is what `git grep` finds when the owner changes — §12's trap
+about a citation that was correct when written.
+
+**What paid for it:** one session on 2026-08-25 found stale statuses across fifteen governed
+documents — a refuted risk still accepted, a check said not to exist that had existed for weeks,
+`HANDOFF.md`'s first sentence denying the branches beside it. None was wrong when written. Each
+rotted when the fact it cited moved, and none said where that fact lived.
 
 ## 11. Before removing or retiring anything
 
@@ -506,8 +539,8 @@ open question that follows: §10.5 gives every COUNT an owner and nothing does t
 - **Answering from a PROXY instead of from the artifact that owns the claim** — *"v1 is close"* read
   off open project gates while `ROADMAP.md` §2 lists the charter's capabilities as done, and *"the
   engine only needs a parameterised front end"* read off a signature whose body hardcodes one
-  strategy family. §10.5 gave every measured COUNT one owner; **nothing does that for a STATUS, so
-  read a claim about state from the artifact that owns it and name the owner before making it.**
+  strategy family. §10.5 gave every measured COUNT one owner and §10.9 gives every STATUS one:
+  **read a claim about state from the artifact that owns it and name the owner before making it.**
 - **A citation that was CORRECT when written, still standing after the fact it cites moved.** Nothing
   rots by being wrong the day it is written; it rots when a *cited* fact changes — a verdict
   withdrawn, a charter amended, a parameter given a value. Gates 15, 28 and 29 catch the mechanical

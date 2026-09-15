@@ -405,9 +405,9 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 88 script(s), of which 25 are things you type
+### The tools — 90 script(s), of which 26 are things you type
 
-#### Operator tools — 25
+#### Operator tools — 26
 
 Run these. Everything else below either runs itself or ran once.
 
@@ -417,6 +417,7 @@ Run these. Everything else below either runs itself or ran once.
 | `python tools/classify_departures.py` | Classify the symbols that left the directory: delisting, rename, or still listed. | `--data` · `--out` |
 | `python tools/fetch_directory.py` | Download the NASDAQ Trader symbol directory and record it as one dated pull. | `--data` · `--scheduled` · `--emergency-repull` · `--reason` |
 | `python tools/fetch_history.py --data` | Fetch named instruments' whole daily history, and their splits and dividends, into a store. | `symbols` · `--data` **(required)** · `--directory` · `--period` · `--pause` |
+| `python tools/fetch_minutes.py --store` | Fetch the one-minute bars of named sessions into a `MinuteStore`. GET only. `DR-042` §9. | `--store` **(required)** · `--sessions` · `--feed` · `--adjustment` · `--refetch` |
 | `python tools/forward_record.py` | What the live paper record actually contains, so watching it costs nobody an afternoon. | `--data` |
 | `python tools/power_pr019.py` | The power estimate `PR-019` needs BEFORE it registers a minimum detectable effect. | `--data` · `--as-of` · `--fraction` · `--seed` · `--report` |
 | `python tools/power_pr019b.py` | The power estimate `PR-019b` needs BEFORE it registers: is PR-019's candidate the market? | `--data` · `--as-of` · `--fraction` · `--seed` · `--out` · `--report` |
@@ -466,7 +467,7 @@ Invoked by `python tools/check_gates.py`, not singly. Listed so a failing gate c
 | `python tools/verify_parameters.py` | Enforce the parameter-registry contract. | `--registry` |
 | `python tools/verify_transcription.py` | Verify that every `verbatim` claim in the documents still matches the course. | `--course-root` · `--docs` |
 
-#### Evidence-bound research runners — 50
+#### Evidence-bound research runners — 51
 
 Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions/measurements/` and reproduces it. They ran once, on a date. Nobody types these; they exist so a number can be re-derived.
 
@@ -482,6 +483,7 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/measure_execution_time.py` | Does moving the trade off the open survive the gross it gives up? `DR-040` §6, run. | `--data` · `--sample` · `--seed` · `--hold` · `--out` |
 | `python tools/measure_exit_surface.py` | Expectancy over the stop x target grid, NET of costs. `DR-029` §5's lever 1, priced. | `--data` · `--out` · `--limit` |
 | `python tools/measure_fill_convention.py` | The backtest fills at the next open. The live path rests a limit at the prior close. Same trade? | `--data` · `--hold` · `--out` |
+| `python tools/measure_first_touch.py --store` | On every ambiguous bar PR-016 recorded, which leg printed first - read the way a backtest now reads it. | `--store` **(required)** · `--raw-store` · `--daily` · `--bars` · `--study` · `--as-of` · `--out` |
 | `python tools/measure_gap_cost.py` | What a stop-out actually costs, in R, on the universe this system now trades. | `--data` · `--out` · `--limit` |
 | `python tools/measure_latency.py` | `NFR.md` §3's latency budgets, measured — because until 2026-08-24 nothing measured any of them. | `--data` · `--limit` |
 | `python tools/measure_liquidity_floor.py` | Recompute DR-003's liquidity plateau over the stored population instead of a 115-name sample. | `--data` · `--min-price` · `--min-history` · `--out` |

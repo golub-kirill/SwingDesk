@@ -832,7 +832,8 @@ python tools/measure_exit_surface.py --data data
 ## 18. The first affirmative verdict, and both arms lose money
 
 `PR-016`, run 2026-09-08. **`ACCEPT` by §6's registered rule, and `PRELIMINARY`** until `DR-042` §8
-closes. 2 trials, declared before the run; cumulative 97, hurdle 2.52 sd(SR).
+closed — ruled 2026-09-14, and `DR-042` §9 measures the effect at +0.00066R a trade at most. 2
+trials, declared before the run; cumulative 97, hurdle 2.52 sd(SR).
 
 Derive every figure with `python tools/run_pr016.py --report`, never from these lines.
 
@@ -939,7 +940,7 @@ still the owner's.
 
 `PR-017`, run 2026-09-08. **A POWERED null**, filed as `INCONCLUSIVE` because §6 had no branch for
 one — see `PREREG_TEMPLATE` §9, which this study and `PR-016` paid for together. `PRELIMINARY` on
-`DR-042`'s terms. 2 trials; cumulative 99.
+`DR-042`'s terms until they were ruled, 2026-09-14 (`DR-042` §9). 2 trials; cumulative 99.
 
 Derive every figure with `python tools/run_pr017.py --report`, never from these lines.
 
@@ -1036,7 +1037,7 @@ of each.
 ## 20. The exit is where the return was going, and the hold cannot be chosen apart from the stop
 
 Measured 2026-09-08 and 2026-09-12. `PR-018` and `PR-019`, both `INCONCLUSIVE`, both PRELIMINARY on
-`DR-042`'s terms. Reports: `docs/prereg/results/PR-018-report.md`, `PR-019-report.md`.
+`DR-042`'s terms until they were ruled, 2026-09-14 (`DR-042` §9). Reports: `docs/prereg/results/PR-018-report.md`, `PR-019-report.md`.
 
 ### 20.1 On selected entries, holding to the clock beats the ratified exit — and buys a tail that would end the account
 
@@ -1094,7 +1095,8 @@ capital, paper only.
 
 ### 20.6 Against the index over the same days, the candidate loses
 
-Measured 2026-09-13. `PR-019b`, `INCONCLUSIVE` for precision and PRELIMINARY on `DR-042`'s terms.
+Measured 2026-09-13. `PR-019b`, `INCONCLUSIVE` for precision and PRELIMINARY on `DR-042`'s terms
+until they were ruled, 2026-09-14 (`DR-042` §9).
 Report: `docs/prereg/results/PR-019b-report.md`. Each of `PR-019`'s trades was paired with the same
 notional in `SPY` from its entry session's open to its exit session's close, in its own R — §9
 reproduced `PR-019`'s trades to every digit first.

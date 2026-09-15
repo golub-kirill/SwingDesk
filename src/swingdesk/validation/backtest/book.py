@@ -52,6 +52,7 @@ from swingdesk.contracts.market import Bar, BarSeries
 from swingdesk.contracts.observation import ObservationSeries
 from swingdesk.contracts.trade import ExitReason, Trade
 from swingdesk.validation.backtest.engine import BacktestConfig, Skipped, close_position
+from swingdesk.validation.backtest.intraday import break_tie
 
 
 @dataclass(frozen=True, slots=True)
@@ -127,6 +128,8 @@ class BookResult:
     max_concurrent: int = 0
     ambiguous_exits: int = 0
     ambiguous_trades: list[Trade] = field(default_factory=list)
+    #: `ArmResult.tie_breaks`, for the book: how each ambiguous exit was answered.
+    tie_breaks: Counter[str] = field(default_factory=Counter)
 
     @property
     def net_r_values(self) -> list[Decimal]:
@@ -190,6 +193,8 @@ def run_book(
             bar = series_by_instrument[instrument_id].bars[index]
             held = index - position["entry_index"]
             decision = config.exits.evaluate(bar, position["stop"], held, position["target"])
+            decision = break_tie(decision, config.tie_break, instrument_id, bar,
+                                 position["stop"], position["target"], result.tie_breaks)
             if decision.ambiguous:
                 result.ambiguous_exits += 1
 

@@ -42,6 +42,7 @@ from swingdesk.contracts.trade import ExitReason, Trade
 from swingdesk.decision_logic.triggers import EntryTrigger
 from swingdesk.trade_management.exits import ExitPolicy
 from swingdesk.validation.backtest.costs import CostModel
+from swingdesk.validation.backtest.intraday import TieBreak, break_tie
 
 
 class Skipped(StrEnum):
@@ -79,6 +80,10 @@ class BacktestConfig:
     costs: CostModel
     trigger: EntryTrigger
     risk_per_trade: Decimal = Decimal(1000)
+    #: `DR-042` §9: an ambiguous bar is resolved by its stored minutes when this is given
+    #: (`intraday.MinuteTieBreak`), and by the stop-first convention when it is not - which is every
+    #: study before 2026-09-14, so none of their results moves.
+    tie_break: TieBreak | None = None
 
 
 @dataclass
@@ -113,6 +118,10 @@ class ArmResult:
     #: half-closed position look like a whole one.
     partials: int = 0
 
+    #: How each ambiguous exit was answered when a tie-break was given - `stop`, `target`,
+    #: `within_a_minute`, `neither`, `unavailable` (`intraday.Touch`). Empty without one.
+    tie_breaks: Counter[str] = field(default_factory=Counter)
+
     @property
     def net_r_values(self) -> list[Decimal]:
         return [trade.net_r for trade in self.trades]
@@ -125,6 +134,7 @@ class ArmResult:
         self.ambiguous_exits += other.ambiguous_exits
         self.ambiguous_trades.extend(other.ambiguous_trades)
         self.partials += other.partials
+        self.tie_breaks.update(other.tie_breaks)
 
 
 def run_arm(
@@ -165,6 +175,8 @@ def run_arm(
             held = index - position["entry_index"]
             decision = config.exits.evaluate(bar, position["working_stop"], held,
                                              position["target"], position["partial"])
+            decision = break_tie(decision, config.tie_break, series.instrument_id, bar,
+                                 position["working_stop"], position["target"], result.tie_breaks)
             if decision.partial and decision.price is not None:
                 # The profit slot's PARTIAL. The position is reduced and keeps walking, the stop
                 # moves where `M54-T0827` says, and `position["partial"]` goes to None so the slot

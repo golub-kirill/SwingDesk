@@ -1,0 +1,3578 @@
+{
+  "changed_by_the_adjustment": [
+    "MLI 2018-07-24 unselected: target -> stop",
+    "VOR 2025-06-26 unselected: stop -> target"
+  ],
+  "changed_by_the_check": [
+    "BDX 2017-11-02 unselected: target -> mismatch",
+    "EFSC 2018-01-16 unselected: target -> mismatch",
+    "FTV 2017-10-27 unselected: target -> mismatch",
+    "NZF 2023-01-24 unselected: target -> mismatch"
+  ],
+  "changed_by_the_window": [
+    "BOXL 2025-09-22 unselected: stop -> target",
+    "CPRT 2018-09-19 unselected: target -> stop",
+    "CPRT 2018-09-19 ranked: target -> stop",
+    "IMXI 2023-03-08 unselected: stop -> target",
+    "IMXI 2023-03-08 ranked: stop -> target",
+    "SNX 2025-09-25 unselected: target -> stop",
+    "VSAT 2018-05-25 unselected: stop -> target"
+  ],
+  "daily_bars_as_of": "2026-09-06T22:36:49.635786-05:00",
+  "exploratory": true,
+  "impact": {
+    "ranked": {
+      "ambiguous_rows": 14,
+      "gross_r_moved": 18.0,
+      "harness_counted": 14,
+      "mean_r_per_trade_moves_by": 0.0006584000877866784,
+      "resolved_to_target": 9,
+      "trades": 27339
+    },
+    "unselected": {
+      "ambiguous_rows": 118,
+      "gross_r_moved": 122.0,
+      "harness_counted": 118,
+      "mean_r_per_trade_moves_by": 0.0004714848293959197,
+      "resolved_to_target": 61,
+      "trades": 258757
+    }
+  },
+  "measured_on": "2026-09-14",
+  "minutes_as_of": "2026-09-14T22:30:00+00:00",
+  "not_measured": [
+    "which leg a real OCO would have filled: the venue's matching is not observable, and a minute bar is still a bar - the `within_a_minute` count is that floor",
+    "the exit's own slippage: `gross_r_moved` is target minus stop in R, before costs",
+    "which tape is right on a `mismatch`: only that the two disagree"
+  ],
+  "per_row": [
+    {
+      "arm": "unselected",
+      "daily_high": "14.330000",
+      "daily_low": "11.870000",
+      "entry_price": "13.5337500000",
+      "flip_r": 2.0,
+      "instrument_id": "ABR",
+      "probe": "target",
+      "regular_minutes": 390,
+      "resolver": "target",
+      "session_date": "2025-02-21",
+      "split": "target",
+      "stop": "12.89806292973189544796885044",
+      "target": "14.16943707026810455203114956",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9997697138869505,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9997697138869505,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "44.230000",
+      "daily_low": "38.220001",
+      "entry_price": "41.2929739975",
+      "flip_r": 2.0,
+      "instrument_id": "ACA",
+      "probe": "stop",
+      "regular_minutes": 340,
+      "resolver": "stop",
+      "session_date": "2020-02-27",
+      "split": "stop",
+      "stop": "38.64435858698778725989259026",
+      "target": "43.94158940801221274010740974",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.9999999738356888
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.9999999738356888
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "28.000000",
+      "daily_low": "25.570000",
+      "entry_price": "26.6865510025",
+      "flip_r": 2.0,
+      "instrument_id": "ACIW",
+      "probe": "target",
+      "regular_minutes": 285,
+      "resolver": "target",
+      "session_date": "2018-07-30",
+      "split": "target",
+      "stop": "25.75737747555943468498150192",
+      "target": "27.61572452944056531501849808",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "39.070000",
+      "daily_low": "30.740000",
+      "entry_price": "35.2479000000",
+      "flip_r": 2.0,
+      "instrument_id": "AMPH",
+      "probe": "target",
+      "regular_minutes": 357,
+      "resolver": "target",
+      "session_date": "2022-08-09",
+      "split": "target",
+      "stop": "31.84619786652482605711086041",
+      "target": "38.64960213347517394288913959",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "99.809998",
+      "daily_low": "87.320000",
+      "entry_price": "94.2149530075",
+      "flip_r": 2.0,
+      "instrument_id": "AVAV",
+      "probe": "target",
+      "regular_minutes": 262,
+      "resolver": "target",
+      "session_date": "2020-12-09",
+      "split": "target",
+      "stop": "89.21208209450582118692361742",
+      "target": "99.21782392049417881307638258",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.000034084761729,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.000034084761729,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "232.000000",
+      "daily_low": "203.210007",
+      "entry_price": "217.6728300125",
+      "flip_r": 2.0,
+      "instrument_id": "AVAV",
+      "probe": "target",
+      "regular_minutes": 321,
+      "resolver": "target",
+      "session_date": "2024-11-06",
+      "split": "target",
+      "stop": "204.5172770415905769366628426",
+      "target": "230.8283829834094230633371574",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.9999999655528775
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.9999999655528775
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "114.809998",
+      "daily_low": "106.089996",
+      "entry_price": "109.6835290100",
+      "flip_r": 2.0,
+      "instrument_id": "AVY",
+      "probe": "stop",
+      "regular_minutes": 372,
+      "resolver": "stop",
+      "session_date": "2018-07-24",
+      "split": "stop",
+      "stop": "106.7297159309517937909489574",
+      "target": "112.6373420890482062090510426",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000174200856,
+        "low_ratio": 1.0000000377038378
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000174200856,
+        "low_ratio": 1.0000000377038378
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "62.139999",
+      "daily_low": "54.189999",
+      "entry_price": "58.3254500000",
+      "flip_r": 2.0,
+      "instrument_id": "BALL",
+      "probe": "stop",
+      "regular_minutes": 389,
+      "resolver": "stop",
+      "session_date": "2023-02-02",
+      "split": "stop",
+      "stop": "55.52008971857885980592659865",
+      "target": "61.13081028142114019407340135",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.000000016092694,
+        "low_ratio": 1.0000000184535895
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.000000016092694,
+        "low_ratio": 1.0000000184535895
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "172.365387",
+      "daily_low": "161.067642",
+      "entry_price": "165.2687084175",
+      "flip_r": 2.0,
+      "instrument_id": "BDX",
+      "probe": "target",
+      "regular_minutes": 386,
+      "resolver": "mismatch",
+      "session_date": "2017-11-02",
+      "split": "target",
+      "stop": "161.1178842997251638975240258",
+      "target": "169.4195325352748361024759742",
+      "units_raw": {
+        "agrees": false,
+        "high_ratio": 1.30380004890425,
+        "low_ratio": 1.3038000519061426
+      },
+      "units_split": {
+        "agrees": false,
+        "high_ratio": 1.30380004890425,
+        "low_ratio": 1.3038000519061426
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "22.590000",
+      "daily_low": "19.580000",
+      "entry_price": "20.8519989975",
+      "flip_r": 2.0,
+      "instrument_id": "BEN",
+      "probe": "stop",
+      "regular_minutes": 390,
+      "resolver": "stop",
+      "session_date": "2025-01-31",
+      "split": "stop",
+      "stop": "19.84176055625876799691591112",
+      "target": "21.86223743874123200308408888",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0000510725229825
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0000510725229825
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "18.240000",
+      "daily_low": "13.000000",
+      "entry_price": "14.8069250000",
+      "flip_r": 2.0,
+      "instrument_id": "BHVN",
+      "probe": "stop",
+      "regular_minutes": 390,
+      "resolver": "stop",
+      "session_date": "2026-08-26",
+      "split": "stop",
+      "stop": "13.09808630092664113162863578",
+      "target": "16.51576369907335886837136422",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "50.279999",
+      "daily_low": "40.558998",
+      "entry_price": "45.1125000000",
+      "flip_r": 2.0,
+      "instrument_id": "BIRK",
+      "probe": "stop",
+      "regular_minutes": 390,
+      "resolver": "stop",
+      "session_date": "2025-04-09",
+      "split": "stop",
+      "stop": "40.88069596766184048287102150",
+      "target": "49.34430403233815951712897850",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.000000019888624,
+        "low_ratio": 1.0000049803991706
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.000000019888624,
+        "low_ratio": 1.0000049803991706
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "56.840000",
+      "daily_low": "50.669998",
+      "entry_price": "53.1726010025",
+      "flip_r": 2.0,
+      "instrument_id": "BMI",
+      "probe": "stop",
+      "regular_minutes": 367,
+      "resolver": "stop",
+      "session_date": "2019-10-17",
+      "split": "stop",
+      "stop": "50.70176421901966828617794829",
+      "target": "55.64343778598033171382205171",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000439831104855,
+        "low_ratio": 0.9999013617486229
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000439831104855,
+        "low_ratio": 0.9999013617486229
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "96.250000",
+      "daily_low": "88.199997",
+      "entry_price": "92.4004229950",
+      "flip_r": 2.0,
+      "instrument_id": "BMRN",
+      "probe": "target",
+      "regular_minutes": 381,
+      "resolver": "target",
+      "session_date": "2023-06-29",
+      "split": "target",
+      "stop": "88.69842322802444646780390271",
+      "target": "96.10242276197555353219609729",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999480519480519,
+        "low_ratio": 1.0000000340136066
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999480519480519,
+        "low_ratio": 1.0000000340136066
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "365.399994",
+      "daily_low": "164.160004",
+      "entry_price": "218.7054040100",
+      "flip_r": 2.0,
+      "instrument_id": "BOXL",
+      "probe": "stop",
+      "regular_minutes": 390,
+      "resolver": "target",
+      "session_date": "2025-09-22",
+      "split": "stop",
+      "stop": "200.3506964598955826030202502",
+      "target": "237.0601115601044173969797498",
+      "units_raw": {
+        "agrees": false,
+        "high_ratio": 0.02777777823389893,
+        "low_ratio": 0.027777777100931357
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000164203615,
+        "low_ratio": 0.9999999756335288
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "32.500000",
+      "daily_low": "28.820000",
+      "entry_price": "30.6464250000",
+      "flip_r": 2.0,
+      "instrument_id": "CCL",
+      "probe": "target",
+      "regular_minutes": 390,
+      "resolver": "target",
+      "session_date": "2025-09-29",
+      "split": "target",
+      "stop": "28.82164920239333064348424669",
+      "target": "32.47120079760666935651575331",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "70.410004",
+      "daily_low": "61.400002",
+      "entry_price": "64.9720229950",
+      "flip_r": 2.0,
+      "instrument_id": "CCOI",
+      "probe": "stop",
+      "regular_minutes": 283,
+      "resolver": "stop",
+      "session_date": "2023-11-09",
+      "split": "stop",
+      "stop": "61.42373982673391041456793804",
+      "target": "68.52030616326608958543206196",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.999999943189891,
+        "low_ratio": 0.9999999674267112
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.999999943189891,
+        "low_ratio": 0.9999999674267112
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "25.832001",
+      "daily_low": "22.896000",
+      "entry_price": "24.5732789975",
+      "flip_r": 2.0,
+      "instrument_id": "CENTA",
+      "probe": "target",
+      "regular_minutes": 296,
+      "resolver": "target",
+      "session_date": "2020-02-06",
+      "split": "target",
+      "stop": "23.42419253894081803222254876",
+      "target": "25.72236545605918196777745124",
+      "units_raw": {
+        "agrees": false,
+        "high_ratio": 1.2499999516104077,
+        "low_ratio": 1.25
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999225379404406,
+        "low_ratio": 1.0001747030048918
+      },
+      "window": "target"
+    },
+    {
+      "arm": "ranked",
+      "daily_high": "25.832001",
+      "daily_low": "22.896000",
+      "entry_price": "24.5732789975",
+      "flip_r": 2.0,
+      "instrument_id": "CENTA",
+      "probe": "target",
+      "regular_minutes": 296,
+      "resolver": "target",
+      "session_date": "2020-02-06",
+      "split": "target",
+      "stop": "23.42419253894081803222254876",
+      "target": "25.72236545605918196777745124",
+      "units_raw": {
+        "agrees": false,
+        "high_ratio": 1.2499999516104077,
+        "low_ratio": 1.25
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999225379404406,
+        "low_ratio": 1.0001747030048918
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "273.420013",
+      "daily_low": "254.190002",
+      "entry_price": "263.3667659775",
+      "flip_r": 2.0,
+      "instrument_id": "CME",
+      "probe": "target",
+      "regular_minutes": 390,
+      "resolver": "target",
+      "session_date": "2025-04-04",
+      "split": "target",
+      "stop": "254.9842479319000985221786442",
+      "target": "271.7492840230999014778213558",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999524541022,
+        "low_ratio": 0.99999999213187
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999524541022,
+        "low_ratio": 0.99999999213187
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "121.059998",
+      "daily_low": "109.639999",
+      "entry_price": "115.2875000000",
+      "flip_r": 2.0,
+      "instrument_id": "CMPR",
+      "probe": "stop",
+      "regular_minutes": 325,
+      "resolver": "stop",
+      "session_date": "2017-11-02",
+      "split": "stop",
+      "stop": "110.0538758780495040789470669",
+      "target": "120.5211241219504959210529331",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.000000016520734,
+        "low_ratio": 1.000000009120759
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.000000016520734,
+        "low_ratio": 1.000000009120759
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "ranked",
+      "daily_high": "121.059998",
+      "daily_low": "109.639999",
+      "entry_price": "115.2875000000",
+      "flip_r": 2.0,
+      "instrument_id": "CMPR",
+      "probe": "stop",
+      "regular_minutes": 325,
+      "resolver": "stop",
+      "session_date": "2017-11-02",
+      "split": "stop",
+      "stop": "110.0538758780495040789470669",
+      "target": "120.5211241219504959210529331",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.000000016520734,
+        "low_ratio": 1.000000009120759
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.000000016520734,
+        "low_ratio": 1.000000009120759
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "112.000000",
+      "daily_low": "103.449997",
+      "entry_price": "108.0695030075",
+      "flip_r": 2.0,
+      "instrument_id": "CNMD",
+      "probe": "stop",
+      "regular_minutes": 350,
+      "resolver": "stop",
+      "session_date": "2020-01-30",
+      "split": "stop",
+      "stop": "104.3145072354653564555981989",
+      "target": "111.8244987795346435444018011",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0000000289995175
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0000000289995175
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "84.930000",
+      "daily_low": "72.760002",
+      "entry_price": "78.3954969925",
+      "flip_r": 2.0,
+      "instrument_id": "CNS",
+      "probe": "stop",
+      "regular_minutes": 254,
+      "resolver": "stop",
+      "session_date": "2026-07-17",
+      "split": "stop",
+      "stop": "74.09777787407051718198303018",
+      "target": "82.69321611092948281801696982",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.9999999725123702
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.9999999725123702
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "107.000000",
+      "daily_low": "99.040001",
+      "entry_price": "103.2073719925",
+      "flip_r": 2.0,
+      "instrument_id": "COLM",
+      "probe": "target",
+      "regular_minutes": 347,
+      "resolver": "target",
+      "session_date": "2019-04-26",
+      "split": "target",
+      "stop": "99.45873776935707158693656176",
+      "target": "106.9560062156429284130634382",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.9999999899030696
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.9999999899030696
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "98.900002",
+      "daily_low": "87.629997",
+      "entry_price": "93.7036760025",
+      "flip_r": 2.0,
+      "instrument_id": "COLM",
+      "probe": "stop",
+      "regular_minutes": 370,
+      "resolver": "stop",
+      "session_date": "2020-10-22",
+      "split": "stop",
+      "stop": "89.17775177700723720810304608",
+      "target": "98.22960022799276279189695392",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999797775535,
+        "low_ratio": 1.0000000342348523
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999797775535,
+        "low_ratio": 1.0000000342348523
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "117.330002",
+      "daily_low": "87.580002",
+      "entry_price": "95.1673250000",
+      "flip_r": 2.0,
+      "instrument_id": "CORT",
+      "probe": "stop",
+      "regular_minutes": 390,
+      "resolver": "stop",
+      "session_date": "2025-03-31",
+      "split": "stop",
+      "stop": "89.50358194931385768564439616",
+      "target": "100.8310680506861423143556038",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999829540615,
+        "low_ratio": 1.0000239552403756
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999829540615,
+        "low_ratio": 1.0000239552403756
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "12.490000",
+      "daily_low": "11.000000",
+      "entry_price": "11.5788750000",
+      "flip_r": 2.0,
+      "instrument_id": "COUR",
+      "probe": "stop",
+      "regular_minutes": 390,
+      "resolver": "stop",
+      "session_date": "2025-07-25",
+      "split": "stop",
+      "stop": "11.00058675144596958712534342",
+      "target": "12.15716324855403041287465658",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "14.225000",
+      "daily_low": "12.517500",
+      "entry_price": "13.6665812500",
+      "flip_r": 2.0,
+      "instrument_id": "CPRT",
+      "probe": "target",
+      "regular_minutes": 390,
+      "resolver": "stop",
+      "session_date": "2018-09-19",
+      "split": "target",
+      "stop": "13.13794685065985520027326868",
+      "target": "14.19521564934014479972673132",
+      "units_raw": {
+        "agrees": false,
+        "high_ratio": 4.0,
+        "low_ratio": 4.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0003514938488576,
+        "low_ratio": 1.0001997203914519
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "ranked",
+      "daily_high": "14.225000",
+      "daily_low": "12.517500",
+      "entry_price": "13.6665812500",
+      "flip_r": 2.0,
+      "instrument_id": "CPRT",
+      "probe": "target",
+      "regular_minutes": 390,
+      "resolver": "stop",
+      "session_date": "2018-09-19",
+      "split": "target",
+      "stop": "13.13794685065985520027326868",
+      "target": "14.19521564934014479972673132",
+      "units_raw": {
+        "agrees": false,
+        "high_ratio": 4.0,
+        "low_ratio": 4.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0003514938488576,
+        "low_ratio": 1.0001997203914519
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "87.949997",
+      "daily_low": "78.000000",
+      "entry_price": "82.1648989975",
+      "flip_r": 2.0,
+      "instrument_id": "CRI",
+      "probe": "target",
+      "regular_minutes": 388,
+      "resolver": "target",
+      "session_date": "2024-02-27",
+      "split": "target",
+      "stop": "78.51709412296451760894274331",
+      "target": "85.81270387203548239105725669",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.000000034110291,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.000000034110291,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "65.000000",
+      "daily_low": "58.869999",
+      "entry_price": "62.1449770050",
+      "flip_r": 2.0,
+      "instrument_id": "CRVL",
+      "probe": "target",
+      "regular_minutes": 93,
+      "resolver": "target",
+      "session_date": "2021-10-05",
+      "split": "target",
+      "stop": "59.41141525721147107825326798",
+      "target": "64.87853875278852892174673202",
+      "units_raw": {
+        "agrees": false,
+        "high_ratio": 3.0,
+        "low_ratio": 3.0000000509597426
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0000000169865808
+      },
+      "window": "target"
+    },
+    {
+      "arm": "ranked",
+      "daily_high": "65.000000",
+      "daily_low": "58.869999",
+      "entry_price": "62.1449770050",
+      "flip_r": 2.0,
+      "instrument_id": "CRVL",
+      "probe": "target",
+      "regular_minutes": 93,
+      "resolver": "target",
+      "session_date": "2021-10-05",
+      "split": "target",
+      "stop": "59.41141525721147107825326798",
+      "target": "64.87853875278852892174673202",
+      "units_raw": {
+        "agrees": false,
+        "high_ratio": 3.0,
+        "low_ratio": 3.0000000509597426
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0000000169865808
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "185.514999",
+      "daily_low": "167.210007",
+      "entry_price": "176.9512699875",
+      "flip_r": 2.0,
+      "instrument_id": "CSW",
+      "probe": "stop",
+      "regular_minutes": 102,
+      "resolver": "stop",
+      "session_date": "2023-08-03",
+      "split": "stop",
+      "stop": "168.9060866094058471431751605",
+      "target": "184.9964533655941528568248395",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000053903997,
+        "low_ratio": 0.9999999581364768
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000053903997,
+        "low_ratio": 0.9999999581364768
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "ranked",
+      "daily_high": "185.514999",
+      "daily_low": "167.210007",
+      "entry_price": "176.9512699875",
+      "flip_r": 2.0,
+      "instrument_id": "CSW",
+      "probe": "stop",
+      "regular_minutes": 102,
+      "resolver": "stop",
+      "session_date": "2023-08-03",
+      "split": "stop",
+      "stop": "168.9060866094058471431751605",
+      "target": "184.9964533655941528568248395",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000053903997,
+        "low_ratio": 0.9999999581364768
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000053903997,
+        "low_ratio": 0.9999999581364768
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "197.550003",
+      "daily_low": "179.860001",
+      "entry_price": "191.1667270050",
+      "flip_r": 2.0,
+      "instrument_id": "DGX",
+      "probe": "target",
+      "regular_minutes": 380,
+      "resolver": "target",
+      "session_date": "2025-10-21",
+      "split": "target",
+      "stop": "184.8779463769073572634755023",
+      "target": "197.4555076330926427365244977",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999848139713,
+        "low_ratio": 0.9999999944401201
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999848139713,
+        "low_ratio": 0.9999999944401201
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "94.000000",
+      "daily_low": "80.610001",
+      "entry_price": "88.1899260025",
+      "flip_r": 2.0,
+      "instrument_id": "DORM",
+      "probe": "target",
+      "regular_minutes": 304,
+      "resolver": "target",
+      "session_date": "2019-02-25",
+      "split": "target",
+      "stop": "82.49489986431748416248430837",
+      "target": "93.88495214068251583751569163",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999989361702127,
+        "low_ratio": 1.0000620146376131
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999989361702127,
+        "low_ratio": 1.0000620146376131
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "124.000000",
+      "daily_low": "114.900002",
+      "entry_price": "120.0594020050",
+      "flip_r": 2.0,
+      "instrument_id": "DRI",
+      "probe": "target",
+      "regular_minutes": 389,
+      "resolver": "target",
+      "session_date": "2018-09-20",
+      "split": "target",
+      "stop": "116.6111252050209424294963006",
+      "target": "123.5076788049790575705036994",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.000000852915564
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.000000852915564
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "61.770000",
+      "daily_low": "52.270000",
+      "entry_price": "57.1224500000",
+      "flip_r": 2.0,
+      "instrument_id": "EBS",
+      "probe": "target",
+      "regular_minutes": 331,
+      "resolver": "target",
+      "session_date": "2019-11-07",
+      "split": "target",
+      "stop": "53.55151367217567209525647922",
+      "target": "60.69338632782432790474352078",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "47.900002",
+      "daily_low": "43.599998",
+      "entry_price": "45.6638739975",
+      "flip_r": 2.0,
+      "instrument_id": "EFSC",
+      "probe": "target",
+      "regular_minutes": 157,
+      "resolver": "mismatch",
+      "session_date": "2018-01-16",
+      "split": "target",
+      "stop": "43.66374685519867364915832081",
+      "target": "47.66400113980132635084167919",
+      "units_raw": {
+        "agrees": false,
+        "high_ratio": 0.9999999582463484,
+        "low_ratio": 1.0745413336945566
+      },
+      "units_split": {
+        "agrees": false,
+        "high_ratio": 0.9999999582463484,
+        "low_ratio": 1.0745413336945566
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "396.839996",
+      "daily_low": "345.790009",
+      "entry_price": "375.0151869675",
+      "flip_r": 2.0,
+      "instrument_id": "EME",
+      "probe": "target",
+      "regular_minutes": 349,
+      "resolver": "target",
+      "session_date": "2024-07-25",
+      "split": "target",
+      "stop": "354.0215302126279502783376554",
+      "target": "396.0088437223720497216623446",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000100796291,
+        "low_ratio": 0.9999855143298834
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000100796291,
+        "low_ratio": 0.9999855143298834
+      },
+      "window": "target"
+    },
+    {
+      "arm": "ranked",
+      "daily_high": "396.839996",
+      "daily_low": "345.790009",
+      "entry_price": "375.0151869675",
+      "flip_r": 2.0,
+      "instrument_id": "EME",
+      "probe": "target",
+      "regular_minutes": 349,
+      "resolver": "target",
+      "session_date": "2024-07-25",
+      "split": "target",
+      "stop": "354.0215302126279502783376554",
+      "target": "396.0088437223720497216623446",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000100796291,
+        "low_ratio": 0.9999855143298834
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000100796291,
+        "low_ratio": 0.9999855143298834
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "122.900002",
+      "daily_low": "110.709999",
+      "entry_price": "115.8188239975",
+      "flip_r": 2.0,
+      "instrument_id": "ENSG",
+      "probe": "stop",
+      "regular_minutes": 291,
+      "resolver": "stop",
+      "session_date": "2024-02-02",
+      "split": "stop",
+      "stop": "111.6168450623167666228754110",
+      "target": "120.0208029326832333771245890",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999837266073,
+        "low_ratio": 1.0000000090326078
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999837266073,
+        "low_ratio": 1.0000000090326078
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "147.419998",
+      "daily_low": "142.759995",
+      "entry_price": "145.1720229950",
+      "flip_r": 2.0,
+      "instrument_id": "ESGU",
+      "probe": "target",
+      "regular_minutes": 347,
+      "resolver": "target",
+      "session_date": "2025-10-10",
+      "split": "target",
+      "stop": "142.9483165787175815143440337",
+      "target": "147.3957294112824184856559663",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000135666804,
+        "low_ratio": 1.0000000350238174
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000135666804,
+        "low_ratio": 1.0000000350238174
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "37.990002",
+      "daily_low": "32.259998",
+      "entry_price": "35.6088000000",
+      "flip_r": 2.0,
+      "instrument_id": "EVTC",
+      "probe": "target",
+      "regular_minutes": 252,
+      "resolver": "target",
+      "session_date": "2023-10-27",
+      "split": "target",
+      "stop": "34.05099937218737432211310287",
+      "target": "37.16660062781262567788689713",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999473545698,
+        "low_ratio": 1.000000061996284
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999473545698,
+        "low_ratio": 1.000000061996284
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "57.689999",
+      "daily_low": "49.509998",
+      "entry_price": "53.5866234775",
+      "flip_r": 2.0,
+      "instrument_id": "FBIN",
+      "probe": "stop",
+      "regular_minutes": 375,
+      "resolver": "stop",
+      "session_date": "2022-12-15",
+      "split": "stop",
+      "stop": "49.63162359358532175842951260",
+      "target": "57.54162336141467824157048740",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.000000017334027,
+        "low_ratio": 1.0000000403958813
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.000000017334027,
+        "low_ratio": 1.0000000403958813
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "46.904804",
+      "daily_low": "44.149036",
+      "entry_price": "45.5237846475",
+      "flip_r": 2.0,
+      "instrument_id": "FTV",
+      "probe": "target",
+      "regular_minutes": 378,
+      "resolver": "mismatch",
+      "session_date": "2017-10-27",
+      "split": "target",
+      "stop": "44.52246047660031430351571963",
+      "target": "46.52510881839968569648428037",
+      "units_raw": {
+        "agrees": false,
+        "high_ratio": 1.5857650742981466,
+        "low_ratio": 1.5857650889591337
+      },
+      "units_split": {
+        "agrees": false,
+        "high_ratio": 1.3269429715557495,
+        "low_ratio": 1.327095794345317
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "28.680000",
+      "daily_low": "26.080000",
+      "entry_price": "27.3181250000",
+      "flip_r": 2.0,
+      "instrument_id": "GEN",
+      "probe": "target",
+      "regular_minutes": 387,
+      "resolver": "target",
+      "session_date": "2021-07-14",
+      "split": "target",
+      "stop": "26.22051313735275910112605683",
+      "target": "28.41573686264724089887394317",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "81.500000",
+      "daily_low": "73.279999",
+      "entry_price": "78.3554040100",
+      "flip_r": 2.0,
+      "instrument_id": "GGG",
+      "probe": "stop",
+      "regular_minutes": 382,
+      "resolver": "stop",
+      "session_date": "2023-07-27",
+      "split": "stop",
+      "stop": "75.74037410917423144082968774",
+      "target": "80.97043391082576855917031226",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0000000136462883
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0000000136462883
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "51.320000",
+      "daily_low": "49.285000",
+      "entry_price": "50.2653489975",
+      "flip_r": 2.0,
+      "instrument_id": "GGOV",
+      "probe": "target",
+      "regular_minutes": 291,
+      "resolver": "target",
+      "session_date": "2026-07-13",
+      "split": "target",
+      "stop": "49.70638391186295211132214861",
+      "target": "50.82431408313704788867785139",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "242.470001",
+      "daily_low": "219.910004",
+      "entry_price": "234.7854969925",
+      "flip_r": 2.0,
+      "instrument_id": "GRMN",
+      "probe": "target",
+      "regular_minutes": 373,
+      "resolver": "target",
+      "session_date": "2025-07-30",
+      "split": "target",
+      "stop": "227.4587483597176062524937029",
+      "target": "242.1122456252823937475062971",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999793747680976,
+        "low_ratio": 0.9999999818107411
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999793747680976,
+        "low_ratio": 0.9999999818107411
+      },
+      "window": "target"
+    },
+    {
+      "arm": "ranked",
+      "daily_high": "242.470001",
+      "daily_low": "219.910004",
+      "entry_price": "234.7854969925",
+      "flip_r": 2.0,
+      "instrument_id": "GRMN",
+      "probe": "target",
+      "regular_minutes": 373,
+      "resolver": "target",
+      "session_date": "2025-07-30",
+      "split": "target",
+      "stop": "227.4587483597176062524937029",
+      "target": "242.1122456252823937475062971",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999793747680976,
+        "low_ratio": 0.9999999818107411
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999793747680976,
+        "low_ratio": 0.9999999818107411
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "41.660000",
+      "daily_low": "30.250000",
+      "entry_price": "37.4734510025",
+      "flip_r": 2.0,
+      "instrument_id": "GRPN",
+      "probe": "target",
+      "regular_minutes": 389,
+      "resolver": "target",
+      "session_date": "2021-08-06",
+      "split": "target",
+      "stop": "33.80584508610687150855959992",
+      "target": "41.14105691889312849144040008",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "60.200001",
+      "daily_low": "44.000000",
+      "entry_price": "53.1325000000",
+      "flip_r": 2.0,
+      "instrument_id": "GSHD",
+      "probe": "stop",
+      "regular_minutes": 348,
+      "resolver": "stop",
+      "session_date": "2022-07-28",
+      "split": "stop",
+      "stop": "46.41013633841529705734144049",
+      "target": "59.85486366158470294265855951",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999983222591641,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999983222591641,
+        "low_ratio": 1.0
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "85.709999",
+      "daily_low": "75.760002",
+      "entry_price": "81.1423520050",
+      "flip_r": 2.0,
+      "instrument_id": "GVA",
+      "probe": "stop",
+      "regular_minutes": 339,
+      "resolver": "stop",
+      "session_date": "2024-10-31",
+      "split": "stop",
+      "stop": "77.44662110840150926802860916",
+      "target": "84.83808290159849073197139084",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.00000001166725,
+        "low_ratio": 0.9999999736008455
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.00000001166725,
+        "low_ratio": 0.9999999736008455
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "57.990002",
+      "daily_low": "50.160000",
+      "entry_price": "53.6036760025",
+      "flip_r": 2.0,
+      "instrument_id": "HLNE",
+      "probe": "stop",
+      "regular_minutes": 207,
+      "resolver": "stop",
+      "session_date": "2019-08-06",
+      "split": "stop",
+      "stop": "50.58748792332752498232348601",
+      "target": "56.61986408167247501767651399",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999655112962,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999655112962,
+        "low_ratio": 1.0
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "ranked",
+      "daily_high": "57.990002",
+      "daily_low": "50.160000",
+      "entry_price": "53.6036760025",
+      "flip_r": 2.0,
+      "instrument_id": "HLNE",
+      "probe": "stop",
+      "regular_minutes": 207,
+      "resolver": "stop",
+      "session_date": "2019-08-06",
+      "split": "stop",
+      "stop": "50.58748792332752498232348601",
+      "target": "56.61986408167247501767651399",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999655112962,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999655112962,
+        "low_ratio": 1.0
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "155.000000",
+      "daily_low": "141.899994",
+      "entry_price": "146.4452020050",
+      "flip_r": 2.0,
+      "instrument_id": "HUBB",
+      "probe": "target",
+      "regular_minutes": 344,
+      "resolver": "target",
+      "session_date": "2020-02-04",
+      "split": "target",
+      "stop": "142.1165086187665950521052630",
+      "target": "150.7738953912334049478947370",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0000000422833
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0000000422833
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "25.700001",
+      "daily_low": "25.400000",
+      "entry_price": "25.5437000000",
+      "flip_r": 2.0,
+      "instrument_id": "IBDT",
+      "probe": "within_a_minute",
+      "regular_minutes": 256,
+      "resolver": "within_a_minute",
+      "session_date": "2026-01-20",
+      "split": "within_a_minute",
+      "stop": "25.42415864280951815261834685",
+      "target": "25.66324135719048184738165315",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999610894956,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999610894956,
+        "low_ratio": 1.0
+      },
+      "window": "within_a_minute"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "101.930000",
+      "daily_low": "91.050003",
+      "entry_price": "98.3853489975",
+      "flip_r": 2.0,
+      "instrument_id": "ICE",
+      "probe": "target",
+      "regular_minutes": 389,
+      "resolver": "target",
+      "session_date": "2020-02-04",
+      "split": "target",
+      "stop": "95.59800425321188268771039225",
+      "target": "101.1726937417881173122896078",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.999999967051072
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.999999967051072
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "301.720001",
+      "daily_low": "269.000000",
+      "entry_price": "286.7250350250",
+      "flip_r": 2.0,
+      "instrument_id": "ICLR",
+      "probe": "target",
+      "regular_minutes": 317,
+      "resolver": "target",
+      "session_date": "2021-09-27",
+      "split": "target",
+      "stop": "273.8330508351313768764833457",
+      "target": "299.6170192148686231235166543",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.999994362322702,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.999994362322702,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "28.240000",
+      "daily_low": "24.690001",
+      "entry_price": "26.3657489975",
+      "flip_r": 2.0,
+      "instrument_id": "IMXI",
+      "probe": "stop",
+      "regular_minutes": 310,
+      "resolver": "target",
+      "session_date": "2023-03-08",
+      "split": "stop",
+      "stop": "25.01423099720049574777751749",
+      "target": "27.71726699779950425222248251",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.999999959497774
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.999999959497774
+      },
+      "window": "target"
+    },
+    {
+      "arm": "ranked",
+      "daily_high": "28.240000",
+      "daily_low": "24.690001",
+      "entry_price": "26.3657489975",
+      "flip_r": 2.0,
+      "instrument_id": "IMXI",
+      "probe": "stop",
+      "regular_minutes": 310,
+      "resolver": "target",
+      "session_date": "2023-03-08",
+      "split": "stop",
+      "stop": "25.01423099720049574777751749",
+      "target": "27.71726699779950425222248251",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.999999959497774
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.999999959497774
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "20.540001",
+      "daily_low": "17.049999",
+      "entry_price": "19.2179250000",
+      "flip_r": 2.0,
+      "instrument_id": "INVA",
+      "probe": "target",
+      "regular_minutes": 345,
+      "resolver": "target",
+      "session_date": "2019-01-30",
+      "split": "target",
+      "stop": "17.95830641707505762256076413",
+      "target": "20.47754358292494237743923587",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999513145107,
+        "low_ratio": 1.0000000586510298
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999513145107,
+        "low_ratio": 1.0000000586510298
+      },
+      "window": "target"
+    },
+    {
+      "arm": "ranked",
+      "daily_high": "20.540001",
+      "daily_low": "17.049999",
+      "entry_price": "19.2179250000",
+      "flip_r": 2.0,
+      "instrument_id": "INVA",
+      "probe": "target",
+      "regular_minutes": 345,
+      "resolver": "target",
+      "session_date": "2019-01-30",
+      "split": "target",
+      "stop": "17.95830641707505762256076413",
+      "target": "20.47754358292494237743923587",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999513145107,
+        "low_ratio": 1.0000000586510298
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999513145107,
+        "low_ratio": 1.0000000586510298
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "76.849998",
+      "daily_low": "69.599998",
+      "entry_price": "73.0321229950",
+      "flip_r": 2.0,
+      "instrument_id": "ITGR",
+      "probe": "stop",
+      "regular_minutes": 240,
+      "resolver": "stop",
+      "session_date": "2018-08-02",
+      "split": "stop",
+      "stop": "69.73058150801399932234445641",
+      "target": "76.33366448198600067765554359",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000260247242,
+        "low_ratio": 1.000000028735633
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000260247242,
+        "low_ratio": 1.000000028735633
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "142.000000",
+      "daily_low": "107.290001",
+      "entry_price": "132.8212300125",
+      "flip_r": 2.0,
+      "instrument_id": "ITRI",
+      "probe": "target",
+      "regular_minutes": 388,
+      "resolver": "target",
+      "session_date": "2025-10-30",
+      "split": "target",
+      "stop": "126.2714135132289075648232737",
+      "target": "139.3710465117710924351767263",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.999999990679467
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.999999990679467
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "89.099998",
+      "daily_low": "79.519997",
+      "entry_price": "83.7889520050",
+      "flip_r": 2.0,
+      "instrument_id": "JACK",
+      "probe": "target",
+      "regular_minutes": 390,
+      "resolver": "target",
+      "session_date": "2019-11-21",
+      "split": "target",
+      "stop": "80.45528799000619932243616114",
+      "target": "87.12261601999380067756383886",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000224466896,
+        "low_ratio": 0.9999371604604059
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000224466896,
+        "low_ratio": 0.9999371604604059
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "144.970001",
+      "daily_low": "130.789993",
+      "entry_price": "137.5229429825",
+      "flip_r": 2.0,
+      "instrument_id": "JAZZ",
+      "probe": "target",
+      "regular_minutes": 322,
+      "resolver": "target",
+      "session_date": "2025-11-06",
+      "split": "target",
+      "stop": "131.0616879906647407330113584",
+      "target": "143.9841979743352592669886416",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999931020211,
+        "low_ratio": 1.0000122868727426
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999931020211,
+        "low_ratio": 1.0000122868727426
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "231.139999",
+      "daily_low": "201.710007",
+      "entry_price": "218.3946310150",
+      "flip_r": 2.0,
+      "instrument_id": "KAI",
+      "probe": "stop",
+      "regular_minutes": 94,
+      "resolver": "stop",
+      "session_date": "2021-11-03",
+      "split": "stop",
+      "stop": "208.8108014473727131429580992",
+      "target": "227.9784605826272868570419008",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000043263824,
+        "low_ratio": 0.9999915373559032
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000043263824,
+        "low_ratio": 0.9999915373559032
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "14.160000",
+      "daily_low": "12.120000",
+      "entry_price": "12.9422750000",
+      "flip_r": 2.0,
+      "instrument_id": "KTOS",
+      "probe": "stop",
+      "regular_minutes": 369,
+      "resolver": "stop",
+      "session_date": "2023-05-04",
+      "split": "stop",
+      "stop": "12.28497332500732061825126390",
+      "target": "13.59957667499267938174873610",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "16.750000",
+      "daily_low": "14.980000",
+      "entry_price": "15.7994000000",
+      "flip_r": 2.0,
+      "instrument_id": "LAUR",
+      "probe": "stop",
+      "regular_minutes": 369,
+      "resolver": "stop",
+      "session_date": "2019-05-09",
+      "split": "stop",
+      "stop": "15.12364772077207823472355318",
+      "target": "16.47515227922792176527644682",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "57.349998",
+      "daily_low": "50.299999",
+      "entry_price": "54.0147010025",
+      "flip_r": 2.0,
+      "instrument_id": "LIVN",
+      "probe": "target",
+      "regular_minutes": 359,
+      "resolver": "target",
+      "session_date": "2024-10-30",
+      "split": "target",
+      "stop": "51.18852606210378053878439464",
+      "target": "56.84087594289621946121560536",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999965475151368,
+        "low_ratio": 1.0000000198807162
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999965475151368,
+        "low_ratio": 1.0000000198807162
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "74.019997",
+      "daily_low": "63.740002",
+      "entry_price": "69.9745030075",
+      "flip_r": 2.0,
+      "instrument_id": "LYV",
+      "probe": "target",
+      "regular_minutes": 362,
+      "resolver": "target",
+      "session_date": "2019-12-13",
+      "split": "target",
+      "stop": "66.57628097704352075206329183",
+      "target": "73.37272503795647924793670817",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000405295881,
+        "low_ratio": 0.99999996862253
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000405295881,
+        "low_ratio": 0.99999996862253
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "187.259995",
+      "daily_low": "161.570007",
+      "entry_price": "172.8610679825",
+      "flip_r": 2.0,
+      "instrument_id": "MATX",
+      "probe": "stop",
+      "regular_minutes": 224,
+      "resolver": "stop",
+      "session_date": "2026-05-05",
+      "split": "stop",
+      "stop": "162.6732588728534644986428850",
+      "target": "183.0488770921465355013571150",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000267008444,
+        "low_ratio": 0.9999999566751272
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000267008444,
+        "low_ratio": 0.9999999566751272
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "15.420000",
+      "daily_low": "12.960000",
+      "entry_price": "13.8345000000",
+      "flip_r": 2.0,
+      "instrument_id": "MD",
+      "probe": "stop",
+      "regular_minutes": 359,
+      "resolver": "stop",
+      "session_date": "2024-11-01",
+      "split": "stop",
+      "stop": "13.05560059774712500401935691",
+      "target": "14.61339940225287499598064309",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "8.102500",
+      "daily_low": "7.187500",
+      "entry_price": "7.5062187500",
+      "flip_r": 2.0,
+      "instrument_id": "MLI",
+      "probe": "target",
+      "regular_minutes": 317,
+      "resolver": "stop",
+      "session_date": "2018-07-24",
+      "split": "stop",
+      "stop": "7.222646861770547401071126264",
+      "target": "7.789790638229452598928873736",
+      "units_raw": {
+        "agrees": false,
+        "high_ratio": 4.0,
+        "low_ratio": 4.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999382906510337,
+        "low_ratio": 1.0000695652173912
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "141.339996",
+      "daily_low": "130.820007",
+      "entry_price": "136.1795959900",
+      "flip_r": 2.0,
+      "instrument_id": "MMM",
+      "probe": "target",
+      "regular_minutes": 390,
+      "resolver": "target",
+      "session_date": "2024-10-22",
+      "split": "target",
+      "stop": "131.3951144063713872055932763",
+      "target": "140.9640775736286127944067237",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000283005526,
+        "low_ratio": 0.999999946491365
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000283005526,
+        "low_ratio": 0.999999946491365
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "298.970001",
+      "daily_low": "265.559998",
+      "entry_price": "284.9405860275",
+      "flip_r": 2.0,
+      "instrument_id": "MSGS",
+      "probe": "target",
+      "regular_minutes": 255,
+      "resolver": "target",
+      "session_date": "2026-02-05",
+      "split": "target",
+      "stop": "271.7007653957622763894721676",
+      "target": "298.1804066592377236105278324",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999966551828,
+        "low_ratio": 1.0000000075312547
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999966551828,
+        "low_ratio": 1.0000000075312547
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "155.479996",
+      "daily_low": "139.029999",
+      "entry_price": "146.9665060150",
+      "flip_r": 2.0,
+      "instrument_id": "MTB",
+      "probe": "stop",
+      "regular_minutes": 388,
+      "resolver": "stop",
+      "session_date": "2023-01-19",
+      "split": "stop",
+      "stop": "139.8967497311855308246013016",
+      "target": "154.0362622988144691753986984",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000257267823,
+        "low_ratio": 1.0000000071926922
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000257267823,
+        "low_ratio": 1.0000000071926922
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "29.209999",
+      "daily_low": "26.510000",
+      "entry_price": "27.7291500000",
+      "flip_r": 2.0,
+      "instrument_id": "NI",
+      "probe": "stop",
+      "regular_minutes": 390,
+      "resolver": "stop",
+      "session_date": "2020-02-26",
+      "split": "stop",
+      "stop": "26.88721080934363372944698239",
+      "target": "28.57108919065636627055301761",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000342348523,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000342348523,
+        "low_ratio": 1.0
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "23.190001",
+      "daily_low": "19.700001",
+      "entry_price": "21.6740510025",
+      "flip_r": 2.0,
+      "instrument_id": "NOV",
+      "probe": "stop",
+      "regular_minutes": 390,
+      "resolver": "stop",
+      "session_date": "2019-07-30",
+      "split": "stop",
+      "stop": "20.30612774872856763429535124",
+      "target": "23.04197425627143236570464876",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999568779665,
+        "low_ratio": 0.9999999492385813
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999568779665,
+        "low_ratio": 0.9999999492385813
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "73.500000",
+      "daily_low": "67.010002",
+      "entry_price": "70.5058270050",
+      "flip_r": 2.0,
+      "instrument_id": "NTR",
+      "probe": "target",
+      "regular_minutes": 390,
+      "resolver": "target",
+      "session_date": "2021-11-02",
+      "split": "target",
+      "stop": "67.59671768002987084301717833",
+      "target": "73.41493632997012915698282167",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.9999999701537093
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.9999999701537093
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "31.570000",
+      "daily_low": "25.000000",
+      "entry_price": "28.3206250000",
+      "flip_r": 2.0,
+      "instrument_id": "NVCR",
+      "probe": "stop",
+      "regular_minutes": 390,
+      "resolver": "stop",
+      "session_date": "2024-12-02",
+      "split": "stop",
+      "stop": "26.10497891970851054164107079",
+      "target": "30.53627108029148945835892921",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "44.500000",
+      "daily_low": "40.160000",
+      "entry_price": "42.4157760025",
+      "flip_r": 2.0,
+      "instrument_id": "NVST",
+      "probe": "target",
+      "regular_minutes": 388,
+      "resolver": "target",
+      "session_date": "2021-08-04",
+      "split": "target",
+      "stop": "40.38332051785300453116087987",
+      "target": "44.44823148714699546883912013",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "12.630000",
+      "daily_low": "9.900000",
+      "entry_price": "12.2505500000",
+      "flip_r": 2.0,
+      "instrument_id": "NZF",
+      "probe": "target",
+      "regular_minutes": 208,
+      "resolver": "mismatch",
+      "session_date": "2023-01-24",
+      "split": "target",
+      "stop": "11.93192633067407180728157855",
+      "target": "12.56917366932592819271842145",
+      "units_raw": {
+        "agrees": false,
+        "high_ratio": 1.0,
+        "low_ratio": 1.2484848484848485
+      },
+      "units_split": {
+        "agrees": false,
+        "high_ratio": 1.0,
+        "low_ratio": 1.2484848484848485
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "164.750000",
+      "daily_low": "128.210007",
+      "entry_price": "145.8136219925",
+      "flip_r": 2.0,
+      "instrument_id": "OLED",
+      "probe": "stop",
+      "regular_minutes": 375,
+      "resolver": "stop",
+      "session_date": "2022-02-24",
+      "split": "stop",
+      "stop": "131.8938425663536857263236811",
+      "target": "159.7334014186463142736763189",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.9999999454020777
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.9999999454020777
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "82.269997",
+      "daily_low": "74.150002",
+      "entry_price": "78.1147979950",
+      "flip_r": 2.0,
+      "instrument_id": "OTTR",
+      "probe": "stop",
+      "regular_minutes": 210,
+      "resolver": "stop",
+      "session_date": "2025-11-04",
+      "split": "stop",
+      "stop": "75.07639318731269828514731071",
+      "target": "81.15320280268730171485268929",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999392609677621,
+        "low_ratio": 0.9999999730276474
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999392609677621,
+        "low_ratio": 0.9999999730276474
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "41.641998",
+      "daily_low": "37.200001",
+      "entry_price": "39.3481250000",
+      "flip_r": 2.0,
+      "instrument_id": "PLAY",
+      "probe": "target",
+      "regular_minutes": 390,
+      "resolver": "target",
+      "session_date": "2019-12-11",
+      "split": "target",
+      "stop": "37.24482805456640569759968077",
+      "target": "41.45142194543359430240031923",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999976466066782,
+        "low_ratio": 0.9999999731182803
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999976466066782,
+        "low_ratio": 0.9999999731182803
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "61.910000",
+      "daily_low": "56.360001",
+      "entry_price": "58.7164250000",
+      "flip_r": 2.0,
+      "instrument_id": "PLXS",
+      "probe": "stop",
+      "regular_minutes": 196,
+      "resolver": "stop",
+      "session_date": "2017-10-26",
+      "split": "stop",
+      "stop": "56.51916156660576869294225717",
+      "target": "60.91368843339423130705774283",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.9999999822569201
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.9999999822569201
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "125.839996",
+      "daily_low": "114.000000",
+      "entry_price": "120.6609010025",
+      "flip_r": 2.0,
+      "instrument_id": "POST",
+      "probe": "target",
+      "regular_minutes": 330,
+      "resolver": "target",
+      "session_date": "2024-12-13",
+      "split": "target",
+      "stop": "116.2176348631520896509572367",
+      "target": "125.1041671418479103490427633",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000317863964,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000317863964,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "19.620001",
+      "daily_low": "16.570000",
+      "entry_price": "17.8745750000",
+      "flip_r": 2.0,
+      "instrument_id": "PRDO",
+      "probe": "target",
+      "regular_minutes": 331,
+      "resolver": "target",
+      "session_date": "2023-11-03",
+      "split": "target",
+      "stop": "17.01959445281730615400709732",
+      "target": "18.72955554718269384599290268",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.999999949031603,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.999999949031603,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "38.299999",
+      "daily_low": "32.439999",
+      "entry_price": "35.8093010025",
+      "flip_r": 2.0,
+      "instrument_id": "PRSU",
+      "probe": "target",
+      "regular_minutes": 243,
+      "resolver": "target",
+      "session_date": "2025-11-06",
+      "split": "target",
+      "stop": "33.77197452485536652927672347",
+      "target": "37.84662748014463347072327653",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9998694778033806,
+        "low_ratio": 1.0000031134402934
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9998694778033806,
+        "low_ratio": 1.0000031134402934
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "18.500000",
+      "daily_low": "17.350000",
+      "entry_price": "17.9648000000",
+      "flip_r": 2.0,
+      "instrument_id": "PTY",
+      "probe": "stop",
+      "regular_minutes": 336,
+      "resolver": "stop",
+      "session_date": "2020-02-26",
+      "split": "stop",
+      "stop": "17.51268004225629800149560301",
+      "target": "18.41691995774370199850439699",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "102.000000",
+      "daily_low": "78.500000",
+      "entry_price": "93.9242270050",
+      "flip_r": 2.0,
+      "instrument_id": "QDEL",
+      "probe": "target",
+      "regular_minutes": 303,
+      "resolver": "target",
+      "session_date": "2022-12-13",
+      "split": "target",
+      "stop": "86.21941412424521235847490260",
+      "target": "101.6290398857547876415250974",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "43.650002",
+      "daily_low": "39.000000",
+      "entry_price": "41.3531250000",
+      "flip_r": 2.0,
+      "instrument_id": "QTWO",
+      "probe": "stop",
+      "regular_minutes": 320,
+      "resolver": "stop",
+      "session_date": "2017-11-02",
+      "split": "stop",
+      "stop": "39.20921423599110035267782401",
+      "target": "43.49703576400889964732217599",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999541809872,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999541809872,
+        "low_ratio": 1.0
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "14.450000",
+      "daily_low": "11.290000",
+      "entry_price": "12.7317500000",
+      "flip_r": 2.0,
+      "instrument_id": "QUBT",
+      "probe": "target",
+      "regular_minutes": 390,
+      "resolver": "target",
+      "session_date": "2026-05-12",
+      "split": "target",
+      "stop": "11.30048841908780006758839589",
+      "target": "14.16301158091219993241160411",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "42.970001",
+      "daily_low": "39.419998",
+      "entry_price": "40.7215489975",
+      "flip_r": 2.0,
+      "instrument_id": "RBA",
+      "probe": "stop",
+      "regular_minutes": 361,
+      "resolver": "stop",
+      "session_date": "2019-11-08",
+      "split": "stop",
+      "stop": "39.49552061837376394737240792",
+      "target": "41.94757737662623605262759208",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999767279503,
+        "low_ratio": 1.0000000507356697
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999767279503,
+        "low_ratio": 1.0000000507356697
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "116.620003",
+      "daily_low": "104.239998",
+      "entry_price": "110.2850270050",
+      "flip_r": 2.0,
+      "instrument_id": "RCL",
+      "probe": "stop",
+      "regular_minutes": 390,
+      "resolver": "stop",
+      "session_date": "2018-08-02",
+      "split": "stop",
+      "stop": "105.4898441029824424812800988",
+      "target": "115.0802099070175575187199012",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000214114211607,
+        "low_ratio": 1.000000019186493
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000214114211607,
+        "low_ratio": 1.000000019186493
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "41.049999",
+      "daily_low": "35.889999",
+      "entry_price": "37.8143010025",
+      "flip_r": 2.0,
+      "instrument_id": "RDN",
+      "probe": "target",
+      "regular_minutes": 280,
+      "resolver": "target",
+      "session_date": "2026-07-14",
+      "split": "target",
+      "stop": "36.25055965608990629194138574",
+      "target": "39.37804234891009370805861426",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000243605365,
+        "low_ratio": 1.0000000278629153
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000243605365,
+        "low_ratio": 1.0000000278629153
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "104.500000",
+      "daily_low": "90.019997",
+      "entry_price": "98.7662969925",
+      "flip_r": 2.0,
+      "instrument_id": "SAIA",
+      "probe": "target",
+      "regular_minutes": 371,
+      "resolver": "target",
+      "session_date": "2019-10-30",
+      "split": "target",
+      "stop": "93.29069719286492468774723874",
+      "target": "104.2418967921350753122527613",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.9999444901114583
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.9999444901114583
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "96.199997",
+      "daily_low": "81.010002",
+      "entry_price": "90.1548250000",
+      "flip_r": 2.0,
+      "instrument_id": "SAIA",
+      "probe": "stop",
+      "regular_minutes": 366,
+      "resolver": "stop",
+      "session_date": "2020-02-03",
+      "split": "stop",
+      "stop": "84.48075593550305976068966279",
+      "target": "95.82889406449694023931033721",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000311850321,
+        "low_ratio": 1.0000555240080107
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000311850321,
+        "low_ratio": 1.0000555240080107
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "ranked",
+      "daily_high": "104.500000",
+      "daily_low": "90.019997",
+      "entry_price": "98.7662969925",
+      "flip_r": 2.0,
+      "instrument_id": "SAIA",
+      "probe": "target",
+      "regular_minutes": 371,
+      "resolver": "target",
+      "session_date": "2019-10-30",
+      "split": "target",
+      "stop": "93.29069719286492468774723874",
+      "target": "104.2418967921350753122527613",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.9999444901114583
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.9999444901114583
+      },
+      "window": "target"
+    },
+    {
+      "arm": "ranked",
+      "daily_high": "96.199997",
+      "daily_low": "81.010002",
+      "entry_price": "90.1548250000",
+      "flip_r": 2.0,
+      "instrument_id": "SAIA",
+      "probe": "stop",
+      "regular_minutes": 366,
+      "resolver": "stop",
+      "session_date": "2020-02-03",
+      "split": "stop",
+      "stop": "84.48075593550305976068966279",
+      "target": "95.82889406449694023931033721",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000311850321,
+        "low_ratio": 1.0000555240080107
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000311850321,
+        "low_ratio": 1.0000555240080107
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "43.389999",
+      "daily_low": "37.740002",
+      "entry_price": "39.6388510025",
+      "flip_r": 2.0,
+      "instrument_id": "SCHL",
+      "probe": "target",
+      "regular_minutes": 361,
+      "resolver": "target",
+      "session_date": "2026-04-21",
+      "split": "target",
+      "stop": "37.74258652104553582623633421",
+      "target": "41.53511548395446417376366579",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000230467856,
+        "low_ratio": 0.9999999470058322
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000230467856,
+        "low_ratio": 0.9999999470058322
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "49.220001",
+      "daily_low": "46.509998",
+      "entry_price": "47.8593520050",
+      "flip_r": 2.0,
+      "instrument_id": "SCI",
+      "probe": "target",
+      "regular_minutes": 307,
+      "resolver": "target",
+      "session_date": "2020-02-04",
+      "split": "target",
+      "stop": "46.56866070522677608810077094",
+      "target": "49.15004330477322391189922906",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9998983949634621,
+        "low_ratio": 1.0000000430015068
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9998983949634621,
+        "low_ratio": 1.0000000430015068
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "159.919998",
+      "daily_low": "144.389999",
+      "entry_price": "149.9439320175",
+      "flip_r": 2.0,
+      "instrument_id": "SNX",
+      "probe": "target",
+      "regular_minutes": 378,
+      "resolver": "stop",
+      "session_date": "2025-09-25",
+      "split": "target",
+      "stop": "144.5162217068219372218526546",
+      "target": "155.3716423281780627781473454",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000125062534,
+        "low_ratio": 1.0000000069256874
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000125062534,
+        "low_ratio": 1.0000000069256874
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "25.870001",
+      "daily_low": "25.320000",
+      "entry_price": "25.5737750000",
+      "flip_r": 2.0,
+      "instrument_id": "SPAB",
+      "probe": "within_a_minute",
+      "regular_minutes": 338,
+      "resolver": "within_a_minute",
+      "session_date": "2024-12-02",
+      "split": "within_a_minute",
+      "stop": "25.32333580560253380307853432",
+      "target": "25.82421419439746619692146568",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.999999961345189,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.999999961345189,
+        "low_ratio": 1.0
+      },
+      "window": "within_a_minute"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "133.000000",
+      "daily_low": "117.519997",
+      "entry_price": "126.2247790100",
+      "flip_r": 2.0,
+      "instrument_id": "SRPT",
+      "probe": "target",
+      "regular_minutes": 385,
+      "resolver": "target",
+      "session_date": "2024-11-07",
+      "split": "target",
+      "stop": "119.6587561547875877911172247",
+      "target": "132.7908018652124122088827753",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999992481203007,
+        "low_ratio": 1.0000000255275705
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999992481203007,
+        "low_ratio": 1.0000000255275705
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "11.480000",
+      "daily_low": "6.880000",
+      "entry_price": "8.7518250000",
+      "flip_r": 2.0,
+      "instrument_id": "TGTX",
+      "probe": "stop",
+      "regular_minutes": 301,
+      "resolver": "stop",
+      "session_date": "2022-12-28",
+      "split": "stop",
+      "stop": "7.294125829174378607250393989",
+      "target": "10.20952417082562139274960601",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "25.700001",
+      "daily_low": "22.490000",
+      "entry_price": "23.9196510025",
+      "flip_r": 2.0,
+      "instrument_id": "TPB",
+      "probe": "target",
+      "regular_minutes": 193,
+      "resolver": "target",
+      "session_date": "2023-05-03",
+      "split": "target",
+      "stop": "22.73123750223600976047636763",
+      "target": "25.10806450276399023952363237",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999610894956,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999610894956,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "24.260000",
+      "daily_low": "20.719999",
+      "entry_price": "22.0550000000",
+      "flip_r": 2.0,
+      "instrument_id": "TSEM",
+      "probe": "stop",
+      "regular_minutes": 384,
+      "resolver": "stop",
+      "session_date": "2019-11-13",
+      "split": "stop",
+      "stop": "20.85719371158489470214214576",
+      "target": "23.25280628841510529785785424",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999629018961254,
+        "low_ratio": 1.0000000482625506
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999629018961254,
+        "low_ratio": 1.0000000482625506
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "44.180000",
+      "daily_low": "37.889999",
+      "entry_price": "41.0222979950",
+      "flip_r": 2.0,
+      "instrument_id": "TSEM",
+      "probe": "stop",
+      "regular_minutes": 389,
+      "resolver": "stop",
+      "session_date": "2024-07-24",
+      "split": "stop",
+      "stop": "39.23078118886258288701822415",
+      "target": "42.81381480113741711298177585",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0000000263921887
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0000000263921887
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "51.200001",
+      "daily_low": "46.279999",
+      "entry_price": "49.0322750000",
+      "flip_r": 2.0,
+      "instrument_id": "TTEK",
+      "probe": "target",
+      "regular_minutes": 390,
+      "resolver": "target",
+      "session_date": "2024-11-06",
+      "split": "target",
+      "stop": "47.03386049480183531258359798",
+      "target": "51.03068950519816468741640202",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999804687504,
+        "low_ratio": 1.0000000216076064
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999804687504,
+        "low_ratio": 1.0000000216076064
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "181.190002",
+      "daily_low": "152.500000",
+      "entry_price": "160.6305709900",
+      "flip_r": 2.0,
+      "instrument_id": "UI",
+      "probe": "stop",
+      "regular_minutes": 308,
+      "resolver": "stop",
+      "session_date": "2023-08-25",
+      "split": "stop",
+      "stop": "152.5130489027256864790966055",
+      "target": "168.7480930772743135209033945",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999889618634,
+        "low_ratio": 1.000000655737705
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999889618634,
+        "low_ratio": 1.000000655737705
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "136.199997",
+      "daily_low": "116.879997",
+      "entry_price": "127.0368010025",
+      "flip_r": 2.0,
+      "instrument_id": "UI",
+      "probe": "target",
+      "regular_minutes": 155,
+      "resolver": "target",
+      "session_date": "2024-02-09",
+      "split": "target",
+      "stop": "118.8244113860870453239603682",
+      "target": "135.2491906189129546760396318",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000220264322,
+        "low_ratio": 0.9999572467477048
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000220264322,
+        "low_ratio": 0.9999572467477048
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "160.630005",
+      "daily_low": "149.149994",
+      "entry_price": "155.3875000000",
+      "flip_r": 2.0,
+      "instrument_id": "UNF",
+      "probe": "stop",
+      "regular_minutes": 116,
+      "resolver": "stop",
+      "session_date": "2017-10-18",
+      "split": "stop",
+      "stop": "150.7024928779531714734737383",
+      "target": "160.0725071220468285265262617",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999688414378123,
+        "low_ratio": 1.00000004022796
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999688414378123,
+        "low_ratio": 1.00000004022796
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "52.500000",
+      "daily_low": "44.910000",
+      "entry_price": "48.2703770050",
+      "flip_r": 2.0,
+      "instrument_id": "URBN",
+      "probe": "target",
+      "regular_minutes": 390,
+      "resolver": "target",
+      "session_date": "2018-08-22",
+      "split": "target",
+      "stop": "45.13675689627622888171015571",
+      "target": "51.40399711372377111828984429",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "ranked",
+      "daily_high": "52.500000",
+      "daily_low": "44.910000",
+      "entry_price": "48.2703770050",
+      "flip_r": 2.0,
+      "instrument_id": "URBN",
+      "probe": "target",
+      "regular_minutes": 390,
+      "resolver": "target",
+      "session_date": "2018-08-22",
+      "split": "target",
+      "stop": "45.13675689627622888171015571",
+      "target": "51.40399711372377111828984429",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "15.450000",
+      "daily_low": "12.850000",
+      "entry_price": "14.2956500000",
+      "flip_r": 2.0,
+      "instrument_id": "VALE",
+      "probe": "target",
+      "regular_minutes": 390,
+      "resolver": "target",
+      "session_date": "2019-01-25",
+      "split": "target",
+      "stop": "13.31423513256390279319639823",
+      "target": "15.27706486743609720680360177",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "ranked",
+      "daily_high": "15.450000",
+      "daily_low": "12.850000",
+      "entry_price": "14.2956500000",
+      "flip_r": 2.0,
+      "instrument_id": "VALE",
+      "probe": "target",
+      "regular_minutes": 390,
+      "resolver": "target",
+      "session_date": "2019-01-25",
+      "split": "target",
+      "stop": "13.31423513256390279319639823",
+      "target": "15.27706486743609720680360177",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "68.500000",
+      "daily_low": "63.950001",
+      "entry_price": "66.4256520050",
+      "flip_r": 2.0,
+      "instrument_id": "VNO",
+      "probe": "target",
+      "regular_minutes": 389,
+      "resolver": "target",
+      "session_date": "2020-02-19",
+      "split": "target",
+      "stop": "64.40570608600812206594960663",
+      "target": "68.44559792399187793405039337",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.999970273651755
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 0.999970273651755
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "25.200001",
+      "daily_low": "14.240000",
+      "entry_price": "20.0500000000",
+      "flip_r": 2.0,
+      "instrument_id": "VOR",
+      "probe": "stop",
+      "regular_minutes": 386,
+      "resolver": "target",
+      "session_date": "2025-06-26",
+      "split": "target",
+      "stop": "17.04523421247072156271944329",
+      "target": "23.05476578752927843728055671",
+      "units_raw": {
+        "agrees": false,
+        "high_ratio": 0.04999999801587309,
+        "low_ratio": 0.05
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999603174619,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "68.059998",
+      "daily_low": "62.160000",
+      "entry_price": "65.0321780075",
+      "flip_r": 2.0,
+      "instrument_id": "VSAT",
+      "probe": "stop",
+      "regular_minutes": 354,
+      "resolver": "target",
+      "session_date": "2018-05-25",
+      "split": "stop",
+      "stop": "62.55036190131863654676778842",
+      "target": "67.51399411368136345323221158",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000293858369,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000293858369,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "27.959999",
+      "daily_low": "26.325001",
+      "entry_price": "27.1477000000",
+      "flip_r": 2.0,
+      "instrument_id": "VST",
+      "probe": "target",
+      "regular_minutes": 390,
+      "resolver": "target",
+      "session_date": "2019-11-05",
+      "split": "target",
+      "stop": "26.39910411408963167459980339",
+      "target": "27.89629588591036832540019661",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000357653804,
+        "low_ratio": 0.9999999620132968
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000357653804,
+        "low_ratio": 0.9999999620132968
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "74.709999",
+      "daily_low": "68.150002",
+      "entry_price": "71.0772520050",
+      "flip_r": 2.0,
+      "instrument_id": "VTR",
+      "probe": "stop",
+      "regular_minutes": 390,
+      "resolver": "stop",
+      "session_date": "2025-10-30",
+      "split": "stop",
+      "stop": "69.02153276713469413357112660",
+      "target": "73.13297124286530586642887340",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000133850893,
+        "low_ratio": 0.9999999706529723
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000133850893,
+        "low_ratio": 0.9999999706529723
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "41.639999",
+      "daily_low": "38.560001",
+      "entry_price": "40.2102760025",
+      "flip_r": 2.0,
+      "instrument_id": "VZ",
+      "probe": "target",
+      "regular_minutes": 390,
+      "resolver": "target",
+      "session_date": "2024-04-22",
+      "split": "target",
+      "stop": "38.86760898592783347468407417",
+      "target": "41.55294301907216652531592583",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000240153704,
+        "low_ratio": 0.9999999740663907
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000240153704,
+        "low_ratio": 0.9999999740663907
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "44.360001",
+      "daily_low": "40.459999",
+      "entry_price": "42.3656479950",
+      "flip_r": 2.0,
+      "instrument_id": "WFC",
+      "probe": "stop",
+      "regular_minutes": 390,
+      "resolver": "stop",
+      "session_date": "2023-01-13",
+      "split": "stop",
+      "stop": "40.54718408571710964762799263",
+      "target": "44.18411190428289035237200737",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999774571692,
+        "low_ratio": 1.0000000247157692
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999774571692,
+        "low_ratio": 1.0000000247157692
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "38.049999",
+      "daily_low": "34.590000",
+      "entry_price": "36.1100500000",
+      "flip_r": 2.0,
+      "instrument_id": "WMG",
+      "probe": "target",
+      "regular_minutes": 389,
+      "resolver": "target",
+      "session_date": "2024-02-08",
+      "split": "target",
+      "stop": "34.65930518394862696054430922",
+      "target": "37.56079481605137303945569078",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0000000262812097,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0000000262812097,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "35.290001",
+      "daily_low": "29.010000",
+      "entry_price": "32.6213510025",
+      "flip_r": 2.0,
+      "instrument_id": "WMS",
+      "probe": "stop",
+      "regular_minutes": 333,
+      "resolver": "stop",
+      "session_date": "2019-08-01",
+      "split": "stop",
+      "stop": "31.29687805712524958987325536",
+      "target": "33.94582394787475041012674464",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999716633615,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999716633615,
+        "low_ratio": 1.0
+      },
+      "window": "stop"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "20.670000",
+      "daily_low": "19.430000",
+      "entry_price": "19.9798250000",
+      "flip_r": 2.0,
+      "instrument_id": "WU",
+      "probe": "target",
+      "regular_minutes": 390,
+      "resolver": "target",
+      "session_date": "2017-11-03",
+      "split": "target",
+      "stop": "19.43624736305903036971983464",
+      "target": "20.52340263694096963028016536",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 1.0,
+        "low_ratio": 1.0
+      },
+      "window": "target"
+    },
+    {
+      "arm": "unselected",
+      "daily_high": "82.940002",
+      "daily_low": "74.830002",
+      "entry_price": "78.0045229950",
+      "flip_r": 2.0,
+      "instrument_id": "WWD",
+      "probe": "stop",
+      "regular_minutes": 383,
+      "resolver": "stop",
+      "session_date": "2017-11-09",
+      "split": "stop",
+      "stop": "74.95082706560060707680709564",
+      "target": "81.05821892439939292319290436",
+      "units_raw": {
+        "agrees": true,
+        "high_ratio": 0.9999999758861834,
+        "low_ratio": 0.9999852732865088
+      },
+      "units_split": {
+        "agrees": true,
+        "high_ratio": 0.9999999758861834,
+        "low_ratio": 0.9999852732865088
+      },
+      "window": "stop"
+    }
+  ],
+  "probe_recorded_2026_09_08": {
+    "neither": 0,
+    "stop": 57,
+    "target": 73,
+    "within_a_minute": 2
+  },
+  "probe_reproduced": true,
+  "question": "DR-042 \u00a79 - on a session reaching both the stop and the target, which printed first, read by the resolver a backtest now uses",
+  "readings": {
+    "probe": {
+      "mismatch": 0,
+      "neither": 0,
+      "stop": 57,
+      "target": 73,
+      "unavailable": 0,
+      "within_a_minute": 2
+    },
+    "resolver": {
+      "mismatch": 4,
+      "neither": 0,
+      "stop": 56,
+      "target": 70,
+      "unavailable": 0,
+      "within_a_minute": 2
+    },
+    "split": {
+      "mismatch": 0,
+      "neither": 0,
+      "stop": 57,
+      "target": 73,
+      "unavailable": 0,
+      "within_a_minute": 2
+    },
+    "window": {
+      "mismatch": 0,
+      "neither": 0,
+      "stop": 56,
+      "target": 74,
+      "unavailable": 0,
+      "within_a_minute": 2
+    }
+  },
+  "resolver_by_arm": {
+    "ranked": {
+      "mismatch": 0,
+      "neither": 0,
+      "stop": 5,
+      "target": 9,
+      "unavailable": 0,
+      "within_a_minute": 0
+    },
+    "unselected": {
+      "mismatch": 4,
+      "neither": 0,
+      "stop": 51,
+      "target": 61,
+      "unavailable": 0,
+      "within_a_minute": 2
+    }
+  },
+  "rows": 132,
+  "ruled_by": "the owner, 2026-09-14: build the minute resolution now",
+  "sessions": 118,
+  "sources": {
+    "daily": "bars.duckdb, series raw, interval 1d, as the study read it",
+    "minutes": "https://data.alpaca.markets v2 bars, 1Min, feed=sip, whole UTC day stored (tools/fetch_minutes.py)",
+    "raw": "adjustment=raw",
+    "split": "adjustment=split"
+  },
+  "units": {
+    "raw_agrees": 119,
+    "raw_disagrees": [
+      "BDX 2017-11-02: high x1.3038 low x1.3038",
+      "BOXL 2025-09-22: high x0.0278 low x0.0278",
+      "CENTA 2020-02-06: high x1.2500 low x1.2500",
+      "CENTA 2020-02-06: high x1.2500 low x1.2500",
+      "CPRT 2018-09-19: high x4.0000 low x4.0000",
+      "CPRT 2018-09-19: high x4.0000 low x4.0000",
+      "CRVL 2021-10-05: high x3.0000 low x3.0000",
+      "CRVL 2021-10-05: high x3.0000 low x3.0000",
+      "EFSC 2018-01-16: high x1.0000 low x1.0745",
+      "FTV 2017-10-27: high x1.5858 low x1.5858",
+      "MLI 2018-07-24: high x4.0000 low x4.0000",
+      "NZF 2023-01-24: high x1.0000 low x1.2485",
+      "VOR 2025-06-26: high x0.0500 low x0.0500"
+    ],
+    "split_agrees": 128,
+    "split_disagrees": [
+      "BDX 2017-11-02: high x1.3038 low x1.3038",
+      "EFSC 2018-01-16: high x1.0000 low x1.0745",
+      "FTV 2017-10-27: high x1.3269 low x1.3271",
+      "NZF 2023-01-24: high x1.0000 low x1.2485"
+    ],
+    "split_unchecked": 0,
+    "tolerance": "0.005"
+  }
+}

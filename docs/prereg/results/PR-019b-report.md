@@ -9,6 +9,9 @@ verdict:       INCONCLUSIVE - for PRECISION, and not for sign. Out of sample, tr
                (at or below zero) and got it; it predicted a half-width of 0.0743 and the study
                realised 0.1214. The power estimate was wrong, and §"The precision miss" says how
 status:        PRELIMINARY on DR-042's terms
+               AMENDED 2026-09-14: ruled - DR-042 §9. Stop-first with no minutes stored, as
+               the ruling prescribes. Its result records no ambiguous count; its own note
+               bounds the effect at 0.0006R a trade. No longer PRELIMINARY on DR-042's terms
 tool:          tools/run_pr019b.py, sized by tools/power_pr019b.py
 evidence:      PR-019b.json, PR-019b-power.json
 trials:        1, declared before the run

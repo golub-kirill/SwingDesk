@@ -9,6 +9,10 @@ verdict:       ACCEPT by the registered rule — AND THE ARM IS UNPROFITABLE. §
 status:        PRELIMINARY. DR-042's tie-break is unruled and the owner ruled on 2026-09-07
                that the measured share comes first. The share is 0.05% — see §7 — but the
                ruling is theirs and this file may not close it
+               AMENDED 2026-09-14: ruled - DR-042 §9. This run is stop-first with no minutes
+               stored, which is what the ruling prescribes where minutes are absent. Resolved
+               from minutes, all 132 bars move the arms +0.00066R and +0.00047R a trade.
+               No longer PRELIMINARY on DR-042's terms
 tool:          tools/run_pr016.py
 evidence:      PR-016.json · PR-016-trades-sample.csv · PR-016-ambiguous-bars.jsonl
 trials:        2, declared before the run
@@ -190,6 +194,11 @@ The rule can go either way and move nothing this study reports. **The ruling is 
 will fetch these 132 sessions at one-minute resolution and report which leg printed first. Until
 `DR-042` §8 is closed this file stays `PRELIMINARY`, and 0.05% is a reason to close it quickly, not
 a reason for an agent to close it.
+
+**Closed 2026-09-14 by the owner's ruling — `DR-042` §9.** The 132 sessions were fetched at one-minute
+resolution and resolved by the harness's own resolver: 56 stop first, 70 target first, 2 inside a
+single minute, and 4 whose minutes do not reproduce the daily bar. The ranked arm moves +0.00066R a
+trade and the control +0.00047R, so the paired difference moves by about +0.0002R.
 
 ## What it costs the programme
 

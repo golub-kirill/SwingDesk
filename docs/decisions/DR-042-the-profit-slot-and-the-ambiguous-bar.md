@@ -2,13 +2,17 @@
 
 ```
 date:            2026-09-07
-status:          proposed — the tie-break in §4 is the owner's to ratify
-parameters:      exit.slot_resolution_order - UNSET, and this record is what would set it.
+status:          accepted — ruled by the owner 2026-09-14 (§9): an intraday tie goes to the leg the
+                 session's one-minute bars show printed first, where they are stored and reproduce
+                 the bar, and to the stop where they are not
+parameters:      exit.slot_resolution_order - SET by §9, status owner.
                  exit.target_r_multiple is already ratified at 1.0 (DR-029); this record does not
                  choose that value, it makes the ratified one simulable
 components:      none - swingdesk.trade_management.exits:ExitPolicy decides
 supersedes:      nothing. DR-012 and DR-029 stand; this implements the second one
-implemented_by:  src/swingdesk/trade_management/exits.py :: ExitPolicy.evaluate, target_for
+implemented_by:  src/swingdesk/validation/backtest/intraday.py :: class MinuteTieBreak
+                 §9's resolver. The profit slot and the stop-first order live in
+                 src/swingdesk/trade_management/exits.py, ExitPolicy.evaluate and target_for
 ```
 
 ## 1. What made this necessary: the harness could not run the exit the system places
@@ -230,9 +234,9 @@ share is 0.05%, so §4a's own test says the choice barely matters.
 ## 6. What it does not do
 
 * It does not touch `exit.target_r_multiple`'s value, status or provenance. `DR-029` owns those.
-* It does not WRITE `exit.slot_resolution_order` into the registry. §4b says what the ruling would
+* ~~It does not WRITE `exit.slot_resolution_order` into the registry. §4b says what the ruling would
   set; setting a parameter is the owner's act and the registry entry moves in the ratifying commit,
-  not before it.
+  not before it.~~ **The ratifying commit is §9's, 2026-09-14, and the entry moved with it.**
 * It does not add the **contextual** slot. Three of four, and the fourth is still absent.
 * It does not re-run any published study. `PR-005`, `PR-011` and `PR-012` keep their policies and
   their logs, which is what the optional default protects.
@@ -258,5 +262,99 @@ Seven of seven. A green suite is not evidence (`AGENTS.md` §12); this is.
 
 ## 8. The ruling
 
-**Open.** §4a records the owner's ruling on the FORM of the question — measure first — and
-§4's tie-break itself is unruled. Nothing here may be reported as final until it is.
+~~**Open.** §4a records the owner's ruling on the FORM of the question — measure first — and
+§4's tie-break itself is unruled. Nothing here may be reported as final until it is.~~
+**Ruled 2026-09-14 — §9.** §4a records the ruling on the FORM of the question, measure first; §9
+records the ruling on the tie-break itself.
+
+## 9. The ruling, 2026-09-14 — and what was built for it
+
+**The owner ruled by asking for the answer rather than a convention**: build the minute-bar
+resolution now, *"because it can make it worth in a future and nobody really can proof, that the
+code has no mistakes now"*. So `exit.slot_resolution_order` is set, with the owner's status:
+
+> protective, profit, time — and an intraday tie goes to the leg the session's regular-hours
+> one-minute bars show printed first, where those are stored and reproduce the daily bar; to the
+> protective slot where they are not.
+
+**What was built:**
+
+| piece | what it does |
+|---|---|
+| `market_data/minutes.py` · `MinuteStore` | one-minute bars, bitemporal, every fetch recorded — never fetched, fetched empty and fetched read as three different answers |
+| `tools/fetch_minutes.py` | the only way minutes arrive: Alpaca `feed=sip`, `adjustment=split`, the whole UTC day stored, GET only; a failed request writes nothing |
+| `validation/backtest/intraday.py` · `MinuteTieBreak`, `break_tie` | regular hours from the exchange calendar, the minutes must reproduce the bar, time order, every answer counted |
+| `BacktestConfig.tie_break` | the engine and the book both consult it; `None` — every study before this date — changes nothing |
+| `tools/measure_first_touch.py` | the proof below, re-runnable from the stores |
+
+**The proof, on every ambiguous bar the harness has recorded** — `PR-016`'s, the population the
+probe measured on 2026-09-08. Evidence: `docs/decisions/measurements/first-touch-2026-09-14.json`.
+Each bar is read four ways, so that every difference from the probe has exactly one cause:
+
+| reading | stop | target | within a minute | mismatch |
+|---|---|---|---|---|
+| the probe, recorded 2026-09-08 | 57 | 73 | 2 | — |
+| 1 · the probe's method, re-run on fresh minutes | 57 | 73 | 2 | 0 |
+| 2 · split-adjusted prices instead of raw | 57 | 73 | 2 | 0 |
+| 3 · regular hours instead of the whole day | 56 | 74 | 2 | 0 |
+| 4 · the resolver: 3, refused where the minutes are not the bar | 56 | 70 | 2 | 4 |
+
+**Four findings. The first is reassurance; the other three are defects the probe carried that no
+one could have seen from its totals:**
+
+1. **The probe reproduces exactly.** The vendor's history has not moved, and the 2026-09-08 numbers
+   were read correctly.
+2. **Its prices were in the wrong units on 9 of 132 bars, and that flipped the answer on two.** The
+   probe asked for Alpaca's default, `adjustment=raw`, while the stop and the target come from
+   split-adjusted daily bars — so on a session before a later split the minutes were ×4, ×3, ×1.25,
+   ×0.05 of the levels they were compared with. `MLI` and `VOR` read the opposite leg; the totals
+   happened to cancel.
+3. **Its window decided 7 bars (5 sessions) on a print outside the session.** The probe took the
+   whole UTC day on purpose, so a pre-market print could take the stop. But the bar being resolved
+   is the regular session's, and Alpaca documents a stop order as not executing outside regular
+   hours — read, not measured, like `DR-043` §5.
+4. **On four bars the minutes are not the bar at all.** A session's regular-hours high and low
+   should be its daily bar's: on 128 bars they are, to within 0.035%; on these four they are 7.5%
+   to 33% out. `BDX` and `FTV` — history the two vendors adjusted by different factors, ×1.30 and
+   ×1.33. `EFSC` and `NZF` — a daily low that no consolidated minute contains. **All four read
+   `target`, and each of those answers was unfounded.** The resolver refuses them (`MISMATCH`) and
+   keeps the convention. `intraday.RANGE_TOLERANCE`, half a percent, sits more than ten times from
+   both groups.
+
+**What it moves.** Each bar the resolver answers `target` is a trade the harness closed at the stop
+and the minutes close at the target — 2R gross on every one here. In `PR-016`, per arm:
+
+| arm | ambiguous | to target | mean R a trade moves by, gross |
+|---|---|---|---|
+| ranked | 14 | 9 | +0.00066R |
+| unselected | 118 | 61 | +0.00047R |
+
+The paired difference `PR-016` reported moves by about +0.0002R.
+
+**The studies reported PRELIMINARY on this record's terms — `PR-016` to `PR-019b`.** Each ran stop-first with no
+minutes stored — what this ruling itself prescribes where minutes are absent — so none is re-run
+(§6), and each report's status names this section. The most any of them could move, if every
+ambiguous exit had printed its target first (2R × ambiguous exits ÷ trades, on the arm where that is
+largest):
+
+| study | arm | ambiguous exits | trades | at most |
+|---|---|---|---|---|
+| `PR-016` | ranked | 14 | 27,339 | +0.0010R, and measured above: +0.00066R |
+| `PR-017` | all_out_1r_3x | 129 | 259,722 | +0.0010R |
+| `PR-018` | ratified_cheap | 17 | 27,394 | +0.0012R |
+| `PR-019` | ratified | 8 | 12,171 | +0.0013R |
+| `PR-019b` | — | its result records no count | — | its own note bounds it at 0.0006R |
+
+**Evidence that it bites** (`AGENTS.md` §12). Forty mutations of the resolver, the store, the engine
+and book hooks, the fetch tool and the measurement, each run against their tests on a copy of the
+tree, 2026-09-14. **Thirty-nine died.** One of them died only after a test was added for it: the
+engine asking with the stop placed at entry rather than the one resting after a partial — reachable,
+because a target and a partial can coexist. The survivor swaps the stop and target checks inside
+one minute, which is unobservable once a both-legs minute has already returned: the same equivalent
+mutant the probe recorded on 2026-09-07.
+
+**What this does not settle.** Which leg a real OCO would have filled — the venue's matching is not
+observable, and two bars reached both legs inside a single minute, the floor any bar-based method
+has. Which tape is right on a `MISMATCH` — only that the two disagree. And whether a future study
+fetches minutes: the resolver is wired and costs one fetch per ambiguous session, but a study
+declares it through `BacktestConfig.tie_break`, or runs stop-first as every study so far has.

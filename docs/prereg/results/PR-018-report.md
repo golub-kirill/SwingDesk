@@ -10,6 +10,9 @@ verdict:       INCONCLUSIVE by §6's rule — both windows exceed §8's power fl
                0.080R and 0.114R, and the exit removes a tail in which one trade in five
                goes below −2R
 status:        PRELIMINARY on `DR-042`'s terms
+               AMENDED 2026-09-14: ruled - DR-042 §9. Stop-first with no minutes stored, as
+               the ruling prescribes; resolving every tie to the target would move an arm by
+               at most +0.0012R a trade. No longer PRELIMINARY on DR-042's terms
 tool:          tools/run_pr018.py
 evidence:      PR-018.json
 trials:        2, declared before the run

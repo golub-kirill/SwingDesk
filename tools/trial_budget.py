@@ -256,6 +256,12 @@ NO_SPEND_MEASUREMENTS = {
                                 "SPY. No configuration is evaluated that was not already, and none "
                                 "is selected on the answer: it says which of two owners the loss "
                                 "belongs to, the universe or the selection",
+    "first-touch-2026-09-14": "the minute-bar resolver DR-042 §9 built, run on the same 132 "
+                              "ambiguous bars `ambiguous-bar` measured - which leg printed first, "
+                              "read three ways so each change from the probe has one cause. A "
+                              "property of the price path and a check of the code, not a "
+                              "configuration: nothing is selected on it, and the resolver is the "
+                              "owner's ruling, not a candidate",
 }
 
 
