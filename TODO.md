@@ -988,37 +988,6 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       already 41 minutes (§4's other open item). Nothing is blocked meanwhile — a nine-year study
       is a nine-year study and says so.
 
-- [ ] **`[v]` `DR-042`: ON A BAR THAT REACHED BOTH THE STOP AND THE TARGET, WHICH FIRED FIRST?**
-      Raised 2026-09-07. A daily bar records four prices and no times, so the sequence has to be
-      assumed. The rule implemented is **the stop, always** — the pessimistic reading, and the one
-      `backtesting.py` uses for the same stated reason. **`PR-016` is not blocked by this**: the
-      conservative rule stands until ruled, and understating is the direction `FAIL_CLOSED_POLICY`
-      points.
-      ```bash
-      PYTHONPATH=$PWD/src python tools/run_pr016.py --report
-      ```
-      **This is a parameter the course REQUIRES and nobody set** — `exit.slot_resolution_order`,
-      `value: null`, `read_by: none`, `named_in: [M58 standard - "указать количество и порядок
-      исполнения"]`. Found 2026-09-08. `PR-016` is the first study here that needs it, because it
-      is the first to run more than one exit slot at once. Ruling it sets that entry to
-      `protective, profit, time`, `provenance: assumed:DR-042` — the shape `DR-012` gave the stop.
-      **The owner ruled on the FORM of the question 2026-09-07 — *"(b) Покажи долю, потом решу"*.**
-      So the number is owed BEFORE the ruling, and two things bind until it lands: the conservative
-      rule is temporary, and **every `PR-016` figure is PRELIMINARY and must say so where it is
-      published**. `DR-042` §4a carries this.
-      **MEASURED 2026-09-08, and it splits in two.** 132 ambiguous bars, all sampled, 130
-      resolved: the stop printed first **43.8%** [35.6%, 52.4%] of the time, so as a CONVENTION
-      the rule is wrong more often than right. But it is consulted on **0.05% of exits**, so as an
-      EFFECT it is worth **at most 0.0006R a trade** against a `PR-016` finding of +0.096R.
-      `DR-042` §4c carries both, §4d carries the three readings and their costs. The agent's
-      recommendation changed on the evidence: **keep stop-first**, because §4a's own threshold was
-      about the share of exits and that share is 0.05%.
-      The measurement was `tools/probe_ambiguous_bar.py` — the store holds daily bars only
-      (`interval` is `1d` and nothing else, measured 2026-09-07), so the intraday sequence comes
-      from Alpaca `feed=sip`, the route `probe_alpaca_delisted.py` established on 2026-09-05.
-      **Recorded before the number exists so it cannot be adjusted afterwards: above ~15% the
-      conservative rule stops being a small conservatism and becomes a systematic distortion.**
-
 - [ ] **`[v]` THE COST CONSTANT DESCRIBES THE OPENING MINUTE AND IS APPLIED TO EVERY MOMENT —
       measured 2026-09-06, `DR-040` is `proposed` and the ruling is the owner's.**
       ```bash
@@ -1449,75 +1418,6 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       Recorded here rather than in `DR-017`, which is accepted and corrected forward only
       (`AGENTS.md` section 11 rule 2). Expect the first evening after the merge to show a membership
       step of roughly this size, and do not read it as instability.
-
-- [ ] **`[v]` §10.5 GIVES EVERY COUNT AN OWNER. NOTHING DOES THAT FOR A STATUS, AND ONE SESSION
-      FOUND TWENTY-ODD STALE ONES — the owner's call, because the fix is a rule.**
-      `AGENTS.md` §12 already names the shape: *"§10.5 gave every measured COUNT one owner; nothing
-      does that for a STATUS, so read a claim about state from the artifact that owns it."* That is
-      a **habit**, and habits are what §10.6 rule 1 says do not survive contact with a busy session.
-      **The evidence is one day's work rather than an argument.** 2026-08-25, across **15 governed
-      documents**: a risk register accepting a risk that had been refuted; a requirement register
-      saying a check *"does not exist"* when it had existed since 08-08; an invariants document
-      asserting seven tests would fail when one of them could not; a chaos table opening *"must be
-      tested, not assumed"* with nothing saying which test covered which row; a ratified, WIRED risk
-      cap whose arithmetic ran on a threshold superseded thirteen days earlier; two open items
-      blocked on things that had stopped blocking; and `HANDOFF.md`'s own first sentence — *"nothing
-      is held in a branch waiting for a decision"* — while two branches held work.
-      **None of them was wrong when written.** Every one rotted because a cited fact moved, which is
-      exactly what §10.5 exists to stop for numbers and nothing stops for states.
-      **What a rule would have to decide, and none of it is an agent's:** whether a status claim must
-      name the artefact that owns it the way a count names its command; whether "nothing does X" is
-      allowed in prose at all, or must be a derivation; and what the mechanism is, given that four
-      gate ideas were probed this session and **three were rejected as too noisy to ship** — a
-      backticked parameter near a numeric claim (21 pairings, 1 live hit, a false positive), one near
-      a cited `DR-NNN` (15 pairings, 2 live hits, both legitimate), and a reachability gate over
-      controlled vocabularies (withdrawn 2026-08-25 in the trade-flow plan). **The one that did ship
-      is the shape that works**: gate 35 checks a citation whose subject is EXACT — a named test
-      either exists or does not. A status claim in prose is not exact, which is the whole difficulty.
-      **Recorded rather than proposed.** `AGENTS.md` §14 makes the rule the owner's, and gate 30
-      makes `AGENTS.md` its only home.
-      **NEW EVIDENCE 2026-09-05, AND IT NARROWS THE PROBLEM RATHER THAN SOLVING IT.** This entry
-      ends *"a status claim in prose is not exact, which is the whole difficulty"*. **For one
-      subclass that is now measured false.** Gate 28 matches a backticked parameter id against a
-      backticked status word and compares to the registry; widened the same day from 88 files to
-      **315** — docstrings included — it caught **seven** live stale statuses and returned **zero**
-      false positives. A PARAMETER status in prose is exact enough to gate.
-      **What stays open is everything else**, and it is most of it: *"gate 10 is unbuilt"*, *"the
-      check does not exist"*, *"nothing counts this"* name no registry key and have no artefact
-      to compare against. Gate 28 is a fourth shape that shipped, not a general answer.
-      **The three rejected probes are not re-opened by this** — they were rejected on false-positive
-      rates, and this one's rate was measured, not assumed.
-      **Still the owner's call** (`AGENTS.md` §14): whether a status claim must name the artefact
-      that owns it, the way §10.5 makes a count name its command.
-- [ ] **`[v]` THE TRIAL BUDGET — `docs/08-pm/TRIAL_BUDGET.md`, written 2026-08-24, `owner-pending`.**
-      The number is the owner's. Derive every figure with `python tools/trial_budget.py`, never from
-      this line.
-      **Three things it measured first, and two were not what the plan assumed:**
-      `b.deflated_sharpe` is **ratified and nothing counted its only input** — no parameter, no
-      registry field, no code — so a criterion ratified 2026-08-08 could not have fired on any day
-      since. The `AGENTS.md` §7 shape again - named, not numbered, because a tally in prose is the
-      thing §12 says to stop keeping.
-      **13 trials are already spent, against a census that reads 5.** A trial is a CONFIGURATION
-      EVALUATED, not a pre-registration filed: `PR-001` tried 4 definitions, `PR-002` fitted 4
-      variants and kept 1, `PR-005` ran 5 gate arms. `PR-008` and `PR-010` spend none — a spread
-      estimator has no Sharpe to deflate. Counting filings understates the search by about 3×, in
-      the flattering direction.
-      **The hurdle grows logarithmically, which inverts the plan's §2c.** 1 → 5 trials costs 1.19
-      sd(SR); 5 → 50 costs only 1.08 more. The expensive trials are the first ones and they are
-      already spent, so rationing late buys almost nothing — **what buys the control is declaring
-      and counting trials, not having few of them.** An undeclared trial inflates the true N while
-      the reported N stays flat, which is the direction that manufactures significance.
-      **Proposed: 25 total, 12 remaining** (+0.29 sd(SR) for the whole remainder), split 4
-      cross-sectional / 4 mean-reversion / 2 liquidity corner / 2 reserve.
-      **Named, not glossed:** trials are NOT independent, so the table is a conservative upper bound
-      rather than a measurement; `sd(SR)` is unknown so the hurdle is in units of it, and converting
-      needs journalled trades, ~~of which there are none~~ — **OF WHICH THERE IS NOW ONE.**
-      `POS-AIS-2026-09-03` closed **2026-09-04**, entry 65.70 → fill 70.03, the first completed
-      trade this system has ever journalled. **The conclusion survives and its reason has
-      changed**: the hurdle is still not convertible, not because no trade exists but because
-      one is not a sample. Read the count from `positions.duckdb`, never from this line.
-      **Deliberately NOT built: the deflated Sharpe itself.** It cannot be evaluated and building it
-      would suggest it can. What was missing was the count, and that now exists.
 
 - [ ] **`[v]` `account.fx_rate_cad` is unset, and that now costs more than it used to.** The book cap
       is denominated in R and R is base currency, so a CAD position's risk has no expression at all:

@@ -855,12 +855,17 @@ parameters:
 
   - id: exit.slot_resolution_order
     unit: ordering
-    value: null
-    status: unset
-    provenance: null
-    read_by: none
+    value: "protective, profit, time; an intraday tie to the leg stored one-minute bars show first, else protective"
+    status: owner
+    provenance: owner
+    read_by: swingdesk.validation.backtest.intraday:break_tie
     named_in: [M58 standard - "указать количество и порядок исполнения"]
-    note: Course requires an order be stated; it does not state one.
+    note: >-
+      Course requires an order be stated; it does not state one. DR-042 §9, ruled by the owner
+      2026-09-14. On a bar the slots act in the order protective, profit, time. On a bar where the
+      stop and the target are both reachable, the leg that printed first in the session's
+      regular-hours one-minute bars wins, when those are stored and reproduce the daily bar
+      (intraday.RANGE_TOLERANCE); otherwise the protective slot, as every study before the ruling ran.
     ui_editable: false
 
   # ---- regime and relative strength (docs/02-domain/REGIME_SPEC.md, not yet written) ----

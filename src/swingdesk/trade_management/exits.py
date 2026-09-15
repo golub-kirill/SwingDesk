@@ -53,8 +53,10 @@ class ExitDecision:
 
     `ambiguous` marks a bar on which BOTH legs were reachable intraday - the low took out the stop
     and the high reached the target - and a daily bar cannot say which came first. The flag exists
-    so the size of the tie-break assumption is a counted number rather than an implied one. It is
-    never a reason to change the answer; `evaluate` resolves it the same way every time.
+    so the size of the tie-break assumption is a counted number rather than an implied one.
+    `evaluate` resolves it the same way every time; a backtest holding the session's one-minute
+    bars replaces that answer with the observed one (`validation.backtest.intraday.break_tie`,
+    `DR-042` §9), and the flag stays set so the count is unchanged.
     """
 
     exited: bool

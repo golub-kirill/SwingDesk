@@ -8,6 +8,9 @@ verdict:       INCONCLUSIVE by §6's rule — and that word understates it. Both
                +0.0247 [-0.0162, +0.0780] out. This is not "the instrument could not tell".
                It is "the instrument could have seen 0.05R and there is no 0.05R"
 status:        PRELIMINARY on `DR-042`'s terms, exactly as PR-016 is
+               AMENDED 2026-09-14: ruled - DR-042 §9. Stop-first with no minutes stored, as
+               the ruling prescribes; resolving every tie to the target would move an arm by
+               at most +0.0010R a trade. No longer PRELIMINARY on DR-042's terms
 tool:          tools/run_pr017.py
 evidence:      PR-017.json
 trials:        2, declared before the run

@@ -1,6 +1,6 @@
 # TRIAL BUDGET — what the programme may spend against `b.deflated_sharpe`
 
-**Status:** owner-pending · **Tier:** 8 (PM) · **Written:** 2026-08-24
+**Status:** frozen — ruled by the owner 2026-09-14: no cap, every trial declared and counted (§6) · **Tier:** 8 (PM) · **Written:** 2026-08-24
 
 Step 3 of [`plans/2026-08-24-from-machinery-to-evidence.md`](plans/2026-08-24-from-machinery-to-evidence.md).
 That plan's §2c says the conflict between rigour and search is *"unpriced"*. This prices it, and
@@ -115,7 +115,7 @@ Three consequences, and each contradicts something a reasonable person would ass
 that this project has simply never operated. The trap was never the arithmetic — it was that nobody
 could say what `N` was.
 
-## 2. What is proposed
+## 2. What was proposed — the number was NOT adopted; the three rules were (§6)
 
 **A budget of 25 configurations across the whole programme**, of which 13 are spent and **12
 remain**. At 25 the hurdle is 2.00 sd(SR), against 1.70 today — the entire remaining budget costs
@@ -186,3 +186,27 @@ its tool supply. The statistic lands when there is something to deflate.
 - **A counting rule above is judged wrong** — most likely `PR-005`'s, where a reader could argue the
   `1x`/`3x` cost stress is a second shot. It is printed per study so that argument can be had
   against the rule instead of against the total.
+
+## 6. The owner's ruling, 2026-09-14
+
+**No cap. Every trial is declared before it runs and counted after it does** — option A of the
+question put to the owner that day. §2's number and its allocation are not adopted. §2's three
+counting rules are, because they are what "counted" means; and §1's arithmetic is why the choice was
+cheap to make — the hurdle grows with the logarithm of the count, so what protects the programme is
+that no shot goes unrecorded, not that few are taken.
+
+**What that binds, and who owns each part** (`AGENTS.md` §10.9):
+
+- **Declared before it runs** — a pre-registration names its trials before its run
+  (`PREREG_TEMPLATE.md`), and the registration commit precedes the result.
+- **Counted after it does** — `tools/trial_budget.py` reads every study result and every committed
+  measurement and prints the cumulative count and the hurdle at it; a measurement with no declared
+  counting rule prints as `UNDECLARED`. **No gate runs the tool** — `tools/check_gates.py` registers
+  none — so the count is honest because it is derived, and nothing fails the build when a
+  declaration is missing.
+- **A measurement that spends nothing says why**, in the tool's `NO_SPEND_MEASUREMENTS`, in the
+  commit that adds it.
+
+**Not settled by this ruling:** §3's question whether a backtest arm and a journalled strategy count
+against the same N — this document's reading, that they do, stands until ruled otherwise; and the
+deflated Sharpe itself (§4), which still has nothing to deflate.

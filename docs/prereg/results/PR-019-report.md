@@ -9,6 +9,10 @@ verdict:       INCONCLUSIVE - as §3 predicted before the data, and for the reas
                against the 0.15R floor, and its own mean, +0.0528R [-0.1106, +0.2234], contains
                zero. Predicted half-width 0.137, realised 0.129
 status:        PRELIMINARY on DR-042's terms
+               AMENDED 2026-09-14: ruled - DR-042 §9. Stop-first with no minutes stored, as
+               the ruling prescribes; its 8 ambiguous exits, all resolved to the target, would
+               move the ratified arm by at most +0.0013R a trade. No longer PRELIMINARY on
+               DR-042's terms
 tool:          tools/run_pr019.py, sized by tools/power_pr019.py
 evidence:      PR-019.json, PR-019-power.json
 trials:        12, declared before the run
