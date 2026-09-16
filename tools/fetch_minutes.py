@@ -20,8 +20,15 @@ bars `run_pr016.py` recorded - and stores each session's minutes with the instan
 fetched (`None`) and a later run tries again. A session the feed served empty IS written, as a fetch
 of zero minutes - that is an answer.
 
+**Two ways to name what to fetch.** A file of (instrument, session) pairs, which is what `DR-042`
+needed; or an instrument and a date range, which is what a study of the intraday ladder needs
+(`DR-045`). The range comes from the exchange calendar, so a date the exchange was shut is never
+requested - a fact no amount of bar data could establish.
+
     PYTHONPATH=$PWD/src python tools/fetch_minutes.py --store <path>
     PYTHONPATH=$PWD/src python tools/fetch_minutes.py --store <path> --adjustment raw
+    PYTHONPATH=$PWD/src python tools/fetch_minutes.py --store <path> --instrument SPY \
+        --from 2016-01-04 --to 2026-09-15
 
 Needs `APCA_API_KEY_ID` and `APCA_API_SECRET_KEY`; reports UNAVAILABLE and exits 2 without them.
 Network tool, never run in CI (`CI_POLICY` §4).
@@ -42,6 +49,7 @@ from pathlib import Path
 from typing import Any
 
 from swingdesk.market_data.minutes import Minute, MinuteStore
+from swingdesk.reference_data import calendar as cal
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -120,12 +128,34 @@ def sessions_from(path: Path) -> list[tuple[str, date]]:
     return sorted(pairs)
 
 
+def range_sessions(instruments: list[str], start: date, end: date) -> list[tuple[str, date]]:
+    """Every (instrument, session) pair in `[start, end]`, from each instrument's own calendar.
+
+    **The calendar decides, never the date arithmetic.** A weekend is obvious; a holiday, a
+    half day and an exchange that keeps a different one are not, and requesting a session that
+    never happened would store an empty fetch as though the market had printed nothing.
+    """
+    pairs: list[tuple[str, date]] = []
+    for instrument in instruments:
+        exchange = cal.exchange_for(instrument)
+        pairs += [(instrument, session.session_date)
+                  for session in cal.sessions(exchange, start, end)]
+    return sorted(set(pairs))
+
+
 def main(argv: list[str] | None = None, getter: Getter = get,
          now: Callable[[], datetime] = lambda: datetime.now(UTC)) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--store", type=Path, required=True, help="the minute store to write")
     parser.add_argument("--sessions", type=Path, default=AMBIGUOUS_BARS,
                         help="JSON lines naming instrument_id and session_date")
+    parser.add_argument("--instrument", action="append", default=[],
+                        help="fetch a DATE RANGE for this instrument instead of --sessions; "
+                             "repeatable")
+    parser.add_argument("--from", dest="start", type=date.fromisoformat,
+                        help="first session of the range, inclusive (with --instrument)")
+    parser.add_argument("--to", dest="end", type=date.fromisoformat,
+                        help="last session of the range, inclusive (with --instrument)")
     parser.add_argument("--feed", default=FEED)
     parser.add_argument("--adjustment", default=ADJUSTMENT, choices=["raw", "split"])
     parser.add_argument("--refetch", action="store_true",
@@ -136,11 +166,19 @@ def main(argv: list[str] | None = None, getter: Getter = get,
                               and os.environ.get("APCA_API_SECRET_KEY")):
         print("fetch minutes: UNAVAILABLE - APCA_API_KEY_ID/SECRET are not in the environment")
         return 2
-    if not args.sessions.exists():
+    if args.instrument:
+        if not (args.start and args.end):
+            print("fetch minutes: REFUSED - --instrument needs --from and --to")
+            return 2
+        if args.start > args.end:
+            print(f"fetch minutes: REFUSED - --from {args.start} is after --to {args.end}")
+            return 2
+        pairs = range_sessions(args.instrument, args.start, args.end)
+    elif not args.sessions.exists():
         print(f"fetch minutes: UNAVAILABLE - {args.sessions} does not exist")
         return 2
-
-    pairs = sessions_from(args.sessions)
+    else:
+        pairs = sessions_from(args.sessions)
     source = f"alpaca:{args.feed}:{args.adjustment}"
     fetched = held = empty = 0
     failures: list[str] = []
