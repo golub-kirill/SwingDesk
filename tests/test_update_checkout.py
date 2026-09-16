@@ -87,6 +87,9 @@ def regenerated(monkeypatch: pytest.MonkeyPatch) -> tuple[ModuleType, list[Path]
     tool = _tool()
     calls: list[Path] = []
     monkeypatch.setattr(tool, "regenerate", calls.append)
+    # And an idle schedule. These cases are about the pull; the guard has its own below, and CI has
+    # no Task Scheduler at all - left real, every one of them would refuse instead of pulling.
+    monkeypatch.setattr(tool, "running_pass", lambda *args, **kwargs: "")
     return tool, calls
 
 
@@ -216,3 +219,152 @@ def test_the_skeleton_keeps_the_markers_and_drops_only_the_bodies() -> None:
     assert "| Track A |" not in tool.skeleton(EVENING)
     assert tool.skeleton(EVENING).count("GENERATED: state:runtime") == 2
     assert "Prose between the blocks." in tool.skeleton(EVENING)
+
+
+# ------------------------------------------- the schedule guard, measured the hard way 2026-09-15
+
+
+@pytest.fixture
+def with_schedule(monkeypatch: pytest.MonkeyPatch) -> tuple[ModuleType, list[Path]]:
+    """The tool with its REAL guard - these cases ARE the guard, so nothing stands in for it."""
+    tool = _tool()
+    calls: list[Path] = []
+    monkeypatch.setattr(tool, "regenerate", calls.append)
+    return tool, calls
+
+
+def _scheduler(running: str | None = None, unreadable: tuple[str, ...] = ()):
+    """A Task Scheduler that reports `running` as running, and cannot read `unreadable`."""
+    def _probe(task: str) -> dict[str, str] | None:
+        if task in unreadable:
+            return None
+        return {"Status": "Running" if task == running else "Ready"}
+    return _probe
+
+
+def test_a_running_pass_stops_the_pull(
+    repos: tuple[Path, Path], with_schedule: tuple[ModuleType, list[Path]], capsys
+) -> None:
+    """THE REGRESSION, measured 2026-09-15 on the owner's machine.
+
+    The pull landed while the 18:30 pass was running. `cmd.exe` reads a batch file AS IT RUNS, by
+    byte offset, so the pass resumed inside a comment of the sixteen-lines-longer `daily_run.cmd`
+    and died on `'approval' is not recognized` - before restoring protection, on an evening a stop
+    had just been cancelled. Nothing in the tool stopped it; a line in a docstring asked.
+    """
+    _, local = repos
+    tool, calls = with_schedule
+    before = _head(local)
+    (local / "HANDOFF.md").write_text(EVENING, encoding="utf-8")
+
+    assert tool.update(local, probe=_scheduler(running="SwingDesk daily run")) == tool.REFUSED
+
+    assert _head(local) == before, "the code a running pass is reading did not move"
+    assert (local / "HANDOFF.md").read_text(encoding="utf-8") == EVENING
+    assert calls == []
+    assert "SwingDesk daily run" in capsys.readouterr().out
+
+
+def test_the_second_pass_counts_too(
+    repos: tuple[Path, Path], with_schedule: tuple[ModuleType, list[Path]]
+) -> None:
+    """Both passes run the same wrapper, so both are broken by the same pull."""
+    _, local = repos
+    tool, _ = with_schedule
+    before = _head(local)
+
+    assert tool.update(local, probe=_scheduler(running="SwingDesk second pass")) == tool.REFUSED
+    assert _head(local) == before
+
+
+def test_an_idle_schedule_lets_the_pull_through(
+    repos: tuple[Path, Path], with_schedule: tuple[ModuleType, list[Path]]
+) -> None:
+    """The guard costs nothing on every other evening of the week."""
+    upstream, local = repos
+    tool, calls = with_schedule
+
+    assert tool.update(local, probe=_scheduler()) == 0
+    assert _head(local) == _head(upstream)
+    assert calls == [local]
+
+
+def test_an_unreadable_scheduler_refuses_and_names_the_way_past(
+    repos: tuple[Path, Path], with_schedule: tuple[ModuleType, list[Path]], capsys
+) -> None:
+    """Not knowing is not knowing it is idle, and the permissive reading is what cost an evening.
+    The refusal names `--anyway`, so an operator is never stuck behind it."""
+    _, local = repos
+    tool, calls = with_schedule
+    before = _head(local)
+
+    assert tool.update(local, probe=_scheduler(unreadable=("SwingDesk daily run",))) == tool.REFUSED
+
+    assert _head(local) == before
+    assert calls == []
+    printed = capsys.readouterr().out
+    assert "could not be read" in printed and "--anyway" in printed
+
+
+def test_anyway_skips_the_check_entirely(
+    repos: tuple[Path, Path], with_schedule: tuple[ModuleType, list[Path]]
+) -> None:
+    """The escape hatch asks the scheduler nothing - a probe that would fail proves it."""
+    upstream, local = repos
+    tool, calls = with_schedule
+
+    def _explode(task: str):
+        raise AssertionError(f"the scheduler was asked about {task}")
+
+    assert tool.update(local, anyway=True, probe=_explode) == 0
+    assert _head(local) == _head(upstream)
+    assert calls == [local]
+
+
+def test_a_dry_run_is_refused_while_a_pass_runs(
+    repos: tuple[Path, Path], with_schedule: tuple[ModuleType, list[Path]]
+) -> None:
+    """`--dry-run` says what would happen, and what would happen is this refusal."""
+    _, local = repos
+    tool, _ = with_schedule
+
+    assert tool.update(
+        local, dry_run=True, probe=_scheduler(running="SwingDesk daily run")) == tool.REFUSED
+
+
+def test_running_pass_separates_idle_from_unreadable() -> None:
+    tool = _tool()
+    tasks = ("SwingDesk daily run", "SwingDesk second pass")
+
+    assert tool.running_pass(tasks, _scheduler()) == "", "idle is an empty name, never None"
+    assert tool.running_pass(tasks, _scheduler(running=tasks[1])) == tasks[1]
+    assert tool.running_pass(tasks, _scheduler(unreadable=tasks)) is None
+    assert tool.running_pass(
+        tasks, _scheduler(running=tasks[1], unreadable=(tasks[0],))) == tasks[1], (
+        "a pass the scheduler CAN see running outranks one it could not read"
+    )
+
+
+def test_running_pass_reads_status_and_not_the_enabled_state() -> None:
+    """`Scheduled Task State` says whether a task is enabled, which is true all day. The field that
+    moves is `Status` - the distinction `wait_for_first_pass.py` was written around."""
+    tool = _tool()
+
+    def _enabled_only(task: str) -> dict[str, str]:
+        return {"Scheduled Task State": "Enabled", "Status": "Ready"}
+
+    assert tool.running_pass(("SwingDesk daily run",), _enabled_only) == ""
+
+
+def test_the_defaults_ask_the_real_scheduler_about_both_passes() -> None:
+    """Every case above injects a probe, so the WIRING is what nothing else would catch: a default
+    that named one task, or a probe that asked nothing, would pass all of them and protect neither
+    pass on the owner's machine."""
+    import inspect
+
+    tool = _tool()
+    for function in (tool.update, tool.running_pass):
+        defaults = inspect.signature(function).parameters
+        assert tuple(defaults["tasks"].default) == tuple(tool.schedule.RUN_TASKS)
+        assert defaults["probe"].default is tool.schedule.query_task
+    assert tool.schedule.RUN_TASKS == ("SwingDesk daily run", "SwingDesk second pass")
