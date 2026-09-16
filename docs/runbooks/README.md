@@ -916,4 +916,16 @@ It discards `HANDOFF.md` **only when every difference lies between generated mar
 local change — a hand edit to the prose, another modified file, something staged — and it refuses,
 names it, and changes nothing. `--dry-run` says what it would do.
 
-**Not while an evening pass is running** (18:30 or 19:30): a pull moves the code that pass is reading.
+**It refuses while an evening pass is running, and since 2026-09-15 that is enforced rather than
+asked.** It reads the Task Scheduler's `Status` for both run tasks; a pass running means it changes
+nothing, and a scheduler it cannot read means the same, because not knowing is not the same as
+knowing the machine is idle. `--anyway` skips the check for an operator who knows better.
+
+**What paid for it, 2026-09-15.** The pull landed a few minutes into the 18:30 pass. `cmd.exe` reads
+a batch file AS IT RUNS, by byte offset, so when the pull made `daily_run.cmd` sixteen lines longer
+the running pass resumed in the middle of a comment and died on `'approval' is not recognized`. It
+died before the step that restores protection, on an evening when a stop had just been cancelled by
+hand, and that position stood with nothing at the venue. The Python half broke the same way from the
+other side: the already-running process held the old `broker.policy` module and read the new
+`broker_policy.yml`, which it refused — `submit REFUSED ... permits PATCH`. One command, two kinds of
+mixed version, and a warning in prose was all that stood between them and the operator.

@@ -10,10 +10,18 @@ are derived: the tool that wrote them writes them again after the pull, so nothi
 else - a hand edit to the prose, a removed marker, another modified tracked file, a staged change - is
 somebody's work, and this tool refuses and changes nothing rather than guess which.
 
-Not during the evening passes (18:30 and 19:30): a pull moves the code a running pass is reading.
+**It refuses while a pass is running, and that is not a courtesy.** Measured 2026-09-15: a pull
+during the 18:30 pass killed it. `cmd.exe` reads a batch file AS IT RUNS, by byte offset, so a pull
+that grew `daily_run.cmd` by sixteen lines made the running pass resume in the middle of a comment
+and die on `'approval' is not recognized`. It died before restoring protection, and a position whose
+stop had just been cancelled stood naked. The Python half failed the same way from the other side:
+the process had the old policy module in memory and read the new `broker_policy.yml`, which it
+refused. One instruction, two kinds of mixed version, and the warning that used to live in this
+docstring was the only thing between them and the owner.
 
     python tools/update_checkout.py            # discard generated-only edits, pull, regenerate
     python tools/update_checkout.py --dry-run  # say what it would do, change nothing
+    python tools/update_checkout.py --anyway   # skip the schedule check, when you know it is idle
 
 Exit codes: 0 up to date · 1 git refused the pull, and its own message is printed · 2 refused here,
 nothing changed.
@@ -26,9 +34,15 @@ import os
 import re
 import subprocess
 import sys
+from collections.abc import Callable, Sequence
 from pathlib import Path
+from typing import Any
 
 REPO = Path(os.environ.get("SWINGDESK_ROOT") or Path(__file__).resolve().parents[1])
+sys.path.insert(0, str(REPO / "src"))
+
+# Imported after REPO, which is what puts `src` on the path above.
+from swingdesk.platform import schedule
 
 #: The one tracked file the evening run leaves modified.
 GENERATED_FILE = "HANDOFF.md"
@@ -41,6 +55,32 @@ _BLOCK = re.compile(
 
 PULL_FAILED = 1
 REFUSED = 2
+
+#: What the Task Scheduler calls a task that is running right now. `schedule.RUN_TASKS` names the
+#: two passes; the coverage, classification and re-measurement passes are deliberately not here -
+#: they read and write stores, but no pass of theirs is reading `daily_run.cmd` line by line.
+RUNNING = "running"
+
+
+def running_pass(
+    tasks: Sequence[str] = schedule.RUN_TASKS,
+    probe: Callable[[str], dict[str, Any] | None] = schedule.query_task,
+) -> str | None:
+    """The pass the scheduler reports running, `""` when none is, `None` when it cannot be read.
+
+    Three answers rather than two, because "no pass is running" and "nobody could tell me" must not
+    arrive as one value here: this tool refuses on both, and an operator needs to know which refusal
+    they are reading. `--anyway` is the escape hatch for the second.
+    """
+    unreadable = False
+    for task in tasks:
+        record = probe(task)
+        if record is None:
+            unreadable = True
+            continue
+        if (record.get("Status") or "").strip().lower() == RUNNING:
+            return task
+    return None if unreadable else ""
 
 
 def skeleton(text: str) -> str:
@@ -76,7 +116,28 @@ def regenerate(root: Path) -> None:
     subprocess.run([sys.executable, "-X", "utf8", str(root / "tools" / "build_state.py")], cwd=root)
 
 
-def update(root: Path, *, dry_run: bool = False) -> int:
+def update(
+    root: Path, *, dry_run: bool = False, anyway: bool = False,
+    tasks: Sequence[str] = schedule.RUN_TASKS,
+    probe: Callable[[str], dict[str, Any] | None] = schedule.query_task,
+) -> int:
+    # BEFORE `git status`, because the reason to stop has nothing to do with the tree. A pull during
+    # a pass breaks the pass whether or not this checkout is clean (2026-09-15, in the docstring).
+    # `--dry-run` is checked too: it prints what WOULD happen, and what would happen is a refusal.
+    if not anyway:
+        busy = running_pass(tasks, probe)
+        if busy is None:
+            print("update: REFUSED, nothing changed - the Task Scheduler could not be read, so "
+                  "whether an evening pass is running is unknown")
+            print("  a pull during a pass kills it: cmd.exe reads daily_run.cmd as it runs. Run "
+                  "this again when you know both passes are idle, or pass --anyway")
+            return REFUSED
+        if busy:
+            print(f"update: REFUSED, nothing changed - {busy!r} is running now")
+            print("  cmd.exe reads daily_run.cmd as it runs, by byte offset, so a pull that changes "
+                  "that file makes the running pass resume mid-line and die. Wait for it to finish")
+            return REFUSED
+
     status = _git(root, "status", "--porcelain", "--untracked-files=no")
     if status.returncode != 0:
         print(f"update: REFUSED - git status failed: {status.stderr.strip()}")
@@ -112,8 +173,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(prog="update_checkout")
     parser.add_argument("--dry-run", action="store_true",
                         help="say what would be discarded and pulled, and change nothing")
+    parser.add_argument("--anyway", action="store_true",
+                        help="skip the schedule check. Only when you know no pass is running: a "
+                             "pull during one kills it (2026-09-15)")
     args = parser.parse_args()
-    return update(REPO, dry_run=args.dry_run)
+    return update(REPO, dry_run=args.dry_run, anyway=args.anyway)
 
 
 if __name__ == "__main__":
