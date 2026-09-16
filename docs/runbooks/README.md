@@ -95,6 +95,26 @@ would refuse the whole universe on the day the store was created, which stops th
 looking like risk discipline. What it does mean is that the cap is not protecting anything yet, and
 `unchecked` is a coverage number to close rather than a verdict to read past.
 
+### 1b. One-minute bars, and the intraday ladder built from them — `DR-042`, `DR-045`
+
+Minutes come from Alpaca and live in their own store, bitemporal like every bar here. Two ways to
+name what to fetch: the ambiguous-bar list `DR-042` needs, or an instrument and a date range, which
+is what a study of the intraday ladder needs. The range comes from the exchange calendar, so a
+holiday or a weekend is never requested.
+
+```bash
+.\.venv\Scripts\python.exe -X utf8 tools\fetch_minutes.py --store data\minutes.duckdb --instrument SPY --from 2016-01-04 --to 2026-09-15
+```
+
+It needs `APCA_API_KEY_ID` and `APCA_API_SECRET_KEY` in the environment and says UNAVAILABLE without
+them. A session already held is skipped unless `--refetch` is passed; a request that failed writes
+nothing, so a later run tries it again, while a session the feed served EMPTY is written as a fetch
+of zero minutes — that is an answer, not a gap.
+
+**Every rung above a minute is rolled up from those minutes** (`market_data.intraday.roll_up`: 3, 5,
+15, 30 and 60 minutes). Nothing above a minute is fetched or stored, and `DR-045` §3 says why that
+is safe here and still wrong for the daily bar.
+
 **A candidate can also be unchecked because the vendor lied and was caught.** `DR-006` §8.7: a fund
 whose look-through comes back as one sector at exactly 100% with every other at exactly 0% is a
 bond fund being described in the only vocabulary the vendor has, and it is refused rather than

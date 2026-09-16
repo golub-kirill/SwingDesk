@@ -417,7 +417,7 @@ Run these. Everything else below either runs itself or ran once.
 | `python tools/classify_departures.py` | Classify the symbols that left the directory: delisting, rename, or still listed. | `--data` · `--out` |
 | `python tools/fetch_directory.py` | Download the NASDAQ Trader symbol directory and record it as one dated pull. | `--data` · `--scheduled` · `--emergency-repull` · `--reason` |
 | `python tools/fetch_history.py --data` | Fetch named instruments' whole daily history, and their splits and dividends, into a store. | `symbols` · `--data` **(required)** · `--directory` · `--period` · `--pause` |
-| `python tools/fetch_minutes.py --store` | Fetch the one-minute bars of named sessions into a `MinuteStore`. GET only. `DR-042` §9. | `--store` **(required)** · `--sessions` · `--feed` · `--adjustment` · `--refetch` |
+| `python tools/fetch_minutes.py --store` | Fetch the one-minute bars of named sessions into a `MinuteStore`. GET only. `DR-042` §9. | `--store` **(required)** · `--sessions` · `--instrument` · `--from` · `--to` · `--feed` · `--adjustment` · `--refetch` |
 | `python tools/forward_record.py` | What the live paper record actually contains, so watching it costs nobody an afternoon. | `--data` |
 | `python tools/power_pr019.py` | The power estimate `PR-019` needs BEFORE it registers a minimum detectable effect. | `--data` · `--as-of` · `--fraction` · `--seed` · `--report` |
 | `python tools/power_pr019b.py` | The power estimate `PR-019b` needs BEFORE it registers: is PR-019's candidate the market? | `--data` · `--as-of` · `--fraction` · `--seed` · `--out` · `--report` |

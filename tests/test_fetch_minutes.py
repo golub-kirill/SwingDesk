@@ -166,3 +166,44 @@ def test_refetch_asks_again_and_the_newer_version_wins(tool, tmp_path: Path) -> 
     with MinuteStore(store) as read:
         assert [m.low for m in read.session("ABR", date(2025, 2, 21), later)] == [Decimal("13.7")]
         assert [m.low for m in read.session("ABR", date(2025, 2, 21), NOW)] == [Decimal("13.9")]
+
+
+# --- the date range, DR-045 ----------------------------------------------------------------------
+
+
+def test_a_range_names_the_exchange_s_sessions_and_no_other_day(tool) -> None:
+    """The calendar decides. 2026-09-05 is a Saturday and 2026-09-07 is Labor Day: a request for
+    either would store an empty fetch as though the market had printed nothing."""
+    pairs = tool.range_sessions(["SPY"], date(2026, 9, 3), date(2026, 9, 9))
+
+    assert [session for _, session in pairs] == [
+        date(2026, 9, 3), date(2026, 9, 4), date(2026, 9, 8), date(2026, 9, 9)]
+    assert {instrument for instrument, _ in pairs} == {"SPY"}
+
+
+def test_a_range_covers_every_named_instrument_once_and_in_order(tool) -> None:
+    pairs = tool.range_sessions(["QQQ", "SPY", "SPY"], date(2026, 9, 3), date(2026, 9, 4))
+
+    assert pairs == sorted(set(pairs)), "sorted and distinct, so a re-run asks the same questions"
+    assert len(pairs) == 4, "two instruments, two sessions, no duplicate for the repeated name"
+
+
+def test_a_range_without_both_ends_is_refused(tool, tmp_path, capsys) -> None:
+    code = tool.main(["--store", str(tmp_path / "m.duckdb"), "--instrument", "SPY",
+                      "--from", "2026-09-03"], getter=_no_vendor, now=lambda: NOW)
+
+    assert code == 2
+    assert "--from and --to" in capsys.readouterr().out
+
+
+def test_a_backwards_range_is_refused_rather_than_fetched_empty(tool, tmp_path, capsys) -> None:
+    code = tool.main(["--store", str(tmp_path / "m.duckdb"), "--instrument", "SPY",
+                      "--from", "2026-09-09", "--to", "2026-09-03"], getter=_no_vendor,
+                     now=lambda: NOW)
+
+    assert code == 2
+    assert "is after" in capsys.readouterr().out
+
+
+def _no_vendor(url: str):
+    raise AssertionError(f"the vendor was called for {url}")
