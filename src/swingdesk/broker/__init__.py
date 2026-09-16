@@ -34,6 +34,7 @@ from swingdesk.broker.reconcile import (
     uncommitted_exposure,
     unprotected,
     unrecorded_fills,
+    withdrawn_stops,
 )
 from swingdesk.broker.submit import (
     client_order_id,
@@ -76,4 +77,5 @@ __all__ = [
     "uncommitted_exposure",
     "unprotected",
     "unrecorded_fills",
+    "withdrawn_stops",
 ]

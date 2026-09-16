@@ -284,6 +284,18 @@ def uncommitted_exposure(
 #: that might not fill is a different problem from no protection at all.
 PROTECTIVE_TYPES = frozenset({"stop", "stop_limit"})
 
+#: The venue's word for an order whose cancellation it has accepted and not yet carried out.
+#: `DR-044`, ratified by the owner 2026-09-15: a stop in this state is NOT protection. It is still
+#: listed, it still holds the shares, and it is going away - so counting it protected the book
+#: against an order that was already being withdrawn.
+WITHDRAWN = "pending_cancel"
+
+
+def _protective(order: PlacedOrder) -> bool:
+    """Is this order a trigger standing in the market right now?"""
+    return (order.order_type in PROTECTIVE_TYPES and order.stop_price is not None
+            and order.status != WITHDRAWN)
+
 
 def resting_stops(live_orders: Sequence[PlacedOrder]) -> dict[str, Decimal]:
     """The protection actually in force for each symbol: the HIGHEST resting protective trigger.
@@ -292,14 +304,41 @@ def resting_stops(live_orders: Sequence[PlacedOrder]) -> dict[str, Decimal]:
     definition, used by `unprotected` and by `swingdesk status`, so the screen cannot show a venue
     stop the check did not compare. The order TYPE decides what protects: a `limit` carrying a
     price is a take-profit, not a stop.
+
+    **A stop whose cancel is queued does not count** (`DR-044`). Measured 2026-09-15: three stops
+    were cancelled after the close, the venue queued all three as `pending_cancel`, and the evening
+    pass read them as protection and restored nothing. The cancels would have landed at the next
+    open and left three positions naked through a whole session, with the next armed pass twelve
+    hours away.
     """
     in_force: dict[str, Decimal] = {}
     for order in live_orders:
-        if order.order_type in PROTECTIVE_TYPES and order.stop_price is not None:
-            current = in_force.get(order.symbol)
-            if current is None or order.stop_price > current:
-                in_force[order.symbol] = order.stop_price
+        if not _protective(order):
+            continue
+        trigger = order.stop_price
+        assert trigger is not None  # `_protective` requires one; mypy cannot see through the call
+        current = in_force.get(order.symbol)
+        if current is None or trigger > current:
+            in_force[order.symbol] = trigger
     return in_force
+
+
+def withdrawn_stops(live_orders: Sequence[PlacedOrder]) -> dict[str, Decimal]:
+    """Per symbol, the highest stop the venue is still listing with its cancel queued. `DR-044`.
+
+    Reported apart from "nothing is resting" because the operator's next move differs: the shares
+    are still held by the order being withdrawn, so a replacement placed now is refused for
+    `insufficient qty` (`DR-043` §1, measured 2026-09-12). The answer is to wait for the cancel and
+    let the next armed pass restore the protection, not to send a second order.
+    """
+    queued: dict[str, Decimal] = {}
+    for order in live_orders:
+        if (order.order_type in PROTECTIVE_TYPES and order.stop_price is not None
+                and order.status == WITHDRAWN):
+            current = queued.get(order.symbol)
+            if current is None or order.stop_price > current:
+                queued[order.symbol] = order.stop_price
+    return queued
 
 
 def own_stop(
@@ -320,10 +359,15 @@ def own_stop(
     """
     stops = [
         order for order in live_orders
-        if order.symbol == symbol and order.order_type in PROTECTIVE_TYPES
-        and order.stop_price is not None and order.side in ("sell", "")
+        if order.symbol == symbol and _protective(order) and order.side in ("sell", "")
     ]
     if not stops:
+        if symbol in withdrawn_stops(live_orders):
+            # `DR-044`. Replacing a trigger the venue is already retiring would amend an order on
+            # its way out, and the venue holds the shares until the cancel lands either way.
+            return (f"the stop resting for {symbol} has its cancel queued, so there is nothing to "
+                    f"raise. When the cancel lands, DR-037's next armed pass places this system's "
+                    f"own at the book's stop")
         return (f"no stop is resting for {symbol} at the venue. DR-037's next armed pass places "
                 f"one at the book's stop")
     if len(stops) > 1:
@@ -434,6 +478,7 @@ def unprotected(
     scope = Exchange(market)
     # The protection in force per symbol - one definition, shared with `swingdesk status`.
     in_force = resting_stops(live_orders)
+    queued = withdrawn_stops(live_orders)
 
     findings: list[Unprotected] = []
     for position in sorted(book, key=lambda p: p.instrument_id):
@@ -441,8 +486,15 @@ def unprotected(
             continue
         venue = in_force.get(position.instrument_id)
         if venue is None:
+            # `DR-044`: named apart, because the operator's next move differs. The withdrawn order
+            # still holds the shares, so a replacement sent now is refused for `insufficient qty`.
+            going = queued.get(position.instrument_id)
             findings.append(Unprotected(
                 position.instrument_id, position.current_stop, position.shares, None,
+                f"the book records a stop at {position.current_stop} and the stop at {going} is "
+                f"being withdrawn - its cancel is queued at the venue, so it protects nothing and "
+                f"still holds the {position.shares} shares until it lands (DR-044)."
+                if going is not None else
                 f"the book records a stop at {position.current_stop} and nothing is resting at "
                 f"the venue for {position.shares} shares. A stop the market cannot see is not a "
                 f"stop (DR-027 3.2).",

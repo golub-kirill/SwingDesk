@@ -123,8 +123,8 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | | |
 |---|---|
 | Merge gates | **52**, one command: `python tools/check_gates.py` |
-| Tests | **2293**, fully offline |
-| Docs | 176 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
+| Tests | **2300**, fully offline |
+| Docs | 177 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 459 registered · 4 `specified` · **2 `active`** |
 | Parameters | 111 - 57 `unset`, 33 `assumed`, 21 `owner`, **0 `validated`** |
 | Golden vectors | 25 vectors across 6 components |
@@ -188,7 +188,7 @@ once did).
 
 - `claude/upbeat-matsumoto-01ead1`
 - `claude/intraday-first-touch`
-- `claude/index-status-gate`
+- `claude/withdrawn-stop`
 
 *Tip and merge state deliberately absent - both move under this document's own feet. `python tools/verify_branches.py` prints them.*
 
