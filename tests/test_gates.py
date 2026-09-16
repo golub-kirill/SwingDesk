@@ -91,11 +91,31 @@ def test_worktree_gate_ignores_ungoverned_paths(tmp_path: Path) -> None:
 
 
 def _decisions_tree(tmp_path: Path, header: str, *, marker_file: str = "",
-                    marker_body: str = "") -> Path:
+                    marker_body: str = "", index_status: str | None = "match") -> Path:
+    """A tree with one record AND the index row that must agree with it (2026-09-15).
+
+    `index_status` is the word the row claims: `"match"` derives it from the header, a word states
+    a disagreement, and `None` writes no index at all - which is itself a failure, because a record
+    the table does not carry is one nobody finds.
+    """
     (tmp_path / "docs" / "decisions").mkdir(parents=True)
     (tmp_path / "docs" / "decisions" / "DR-001-fixture.md").write_text(
         f"# DR-001: fixture\n\n```\n{header}\n```\n\nBody.\n", encoding="utf-8"
     )
+    if index_status is not None:
+        claimed = index_status
+        if claimed == "match":
+            claimed = next(
+                (word for word in ("accepted", "superseded", "proposed")
+                 if f"status: {word}" in header),
+                "accepted",
+            )
+        (tmp_path / "docs" / "decisions" / "README.md").write_text(
+            "## 5. Index\n\n| ID | The question | Decision | Sets | Status |\n"
+            "|---|---|---|---|---|\n"
+            f"| `DR-001` | a question | a decision | none | **{claimed}** |\n",
+            encoding="utf-8",
+        )
     if marker_file:
         target = tmp_path / marker_file
         target.parent.mkdir(parents=True, exist_ok=True)

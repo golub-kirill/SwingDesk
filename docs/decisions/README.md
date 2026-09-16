@@ -85,10 +85,10 @@ is expected to be superseded when a study says so. Different lifetimes, differen
 |---|---|---|---|---|
 | `DR-001` | **Which Sharpe do we mean?** | Sharpe ratio convention | `stats.sharpe_convention` | **accepted — ratified 2026-09-14** |
 | `DR-002` | **How is process quality scored?** | Process score scale | `stats.process_score_scale`, `stats.quality_grade_scale` | **accepted — ratified 2026-09-14** |
-| `DR-003` | **Which instruments may we even look at?** | A-tier liquidity rule | `universe.min_price`, `universe.min_adtv_20d`, `universe.min_bar_history` | proposed |
+| `DR-003` | **Which instruments may we even look at?** | A-tier liquidity rule | `universe.min_price`, `universe.min_adtv_20d`, `universe.min_bar_history` | **accepted — ratified 2026-08-23** |
 | `DR-004` | **What does a trade cost?** | Cost model | `costs.commission_model`, `costs.slippage_model` | **accepted — ratified 2026-09-14**; slippage superseded by `DR-005` |
 | `DR-005` | **How much of that cost is slippage?** | Slippage measured from daily OHLC | `costs.slippage_model` | **accepted — ratified 2026-09-14** |
-| `DR-006` | **How many positions may be open at once?** | Portfolio risk block | six `risk.*` constraints | **proposed — binds a real account** |
+| `DR-006` | **How many positions may be open at once?** | Portfolio risk block | six `risk.*` constraints | **accepted — ratified 2026-08-22 (four of six) and 2026-08-23 (the other two); binds a real account** |
 | `DR-007` | **What counts as a study that passed?** | Validation programme thresholds | fourteen of fifteen `validation.*` | **accepted — ratified 2026-08-08** |
 | `DR-008` | **Where does the list of tradeable symbols come from?** | Daily US directory collection under local control | operational policy; no trading parameter | **accepted — ratified 2026-08-10** |
 | `DR-009` | **Does the broker charge commission?** | The owner's broker charges no commission, and the cost model never knew | account-structure choice only — its parameter moved to `DR-010` (§5, correction 2026-08-13) | **accepted — ratified 2026-09-14** |
