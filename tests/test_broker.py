@@ -34,9 +34,11 @@ from swingdesk.broker.reconcile import (
     Unprotected,
     own_stop,
     reconcile,
+    resting_stops,
     restorable,
     unprotected,
     unrecorded_fills,
+    withdrawn_stops,
 )
 from swingdesk.contracts.broker import BrokerPosition, FillKind, PositionSide, Side
 from swingdesk.contracts.position import Position
@@ -606,3 +608,59 @@ def test_a_placed_order_carries_its_side(tmp_path: Path) -> None:
     """`side` is what says an order can commit exposure at all. A buy opens; a sell closes."""
     live = _client(tmp_path, {"/orders": OCO_WITH_LEG}).open_orders(OBSERVED_AT)
     assert {o.side for o in live} == {"sell"}
+
+
+# --- DR-044: a stop whose cancel is queued is not protection -----------------------------------
+
+
+def test_a_queued_cancel_is_not_protection_in_force() -> None:
+    """THE REGRESSION, measured 2026-09-15. Three cancels sent after the close were queued, the
+    evening pass read the doomed stops as protection, and restored nothing."""
+    going = _stop(status="pending_cancel")
+
+    assert resting_stops([going]) == {}, "it is on its way out"
+    assert withdrawn_stops([going]) == {"TEST.1": Decimal("45.00")}
+
+
+def test_a_standing_stop_is_in_force_even_when_a_higher_one_is_being_withdrawn() -> None:
+    """The withdrawn one must not win the `highest` comparison it is no longer part of."""
+    orders = [_stop(order_id="going", stop_price=Decimal("46.00"), status="pending_cancel"),
+              _stop(order_id="standing", stop_price=Decimal("44.00"))]
+    assert resting_stops(orders) == {"TEST.1": Decimal("44.00")}
+
+
+def test_withdrawn_stops_reports_the_highest_of_them() -> None:
+    orders = [_stop(order_id="a", stop_price=Decimal("44.00"), status="pending_cancel"),
+              _stop(order_id="b", stop_price=Decimal("46.00"), status="pending_cancel")]
+    assert withdrawn_stops(orders) == {"TEST.1": Decimal("46.00")}
+
+
+def test_unprotected_names_a_stop_being_withdrawn_apart_from_nothing_at_all() -> None:
+    """Two different facts and two different next moves: one waits for a cancel, one places."""
+    position = _position("TEST.1")
+    [finding] = unprotected([position], [_stop(status="pending_cancel")], "NYSE",
+                            tick_for=lambda _: None)
+
+    assert finding.venue_stop is None, "nothing is protecting it, which is the point"
+    assert "being withdrawn" in finding.reason and "cancel is queued" in finding.reason
+    assert "100 shares" in finding.reason, "the shares it still holds"
+
+    [bare] = unprotected([position], [], "NYSE", tick_for=lambda _: None)
+    assert "nothing is resting" in bare.reason and "withdrawn" not in bare.reason
+
+
+def test_own_stop_will_not_raise_a_stop_that_is_going_away() -> None:
+    """`DR-043` amends an order; an order the venue is already retiring is not one to amend."""
+    found = own_stop("TEST.1", [_stop(status="pending_cancel")], SENT)
+    assert isinstance(found, str)
+    assert "cancel queued" in found and "DR-037" in found
+
+
+def test_the_highest_standing_trigger_is_the_one_in_force() -> None:
+    """The higher stop fires first, so a lower one behind it changes nothing about the loss - and
+    the answer must not depend on which order the venue happened to list first."""
+    orders = [_stop(order_id="low", stop_price=Decimal("44.00")),
+              _stop(order_id="high", stop_price=Decimal("46.00"))]
+
+    assert resting_stops(orders) == {"TEST.1": Decimal("46.00")}
+    assert resting_stops(list(reversed(orders))) == {"TEST.1": Decimal("46.00")}

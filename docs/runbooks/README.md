@@ -525,9 +525,17 @@ price in one request, and prints the line starting `venue` with what happened:
 It touches only a stop this system's journal says it placed, only upward, only `stop_price`. It
 leaves alone — and says so on the `venue` line — a stop a person placed, two stops on one name, a
 stop already at or above the approval, and everything when the switch is off. For those the
-commands below still apply. **To hand a hand-placed stop back to the system**, cancel it after the
-close and before the 18:30 run; that run places the system's own at the book's stop, and the next
-approved move is sent by `respond`.
+commands below still apply.
+
+**To hand a hand-placed stop back to the system, cancel it DURING the session — near the close, not
+after it.** Measured 2026-09-15, and this paragraph said the opposite until that evening: three
+cancels sent after the close were accepted and not executed. The venue queued all three as
+`pending_cancel`, where the order still holds the shares and protects nothing, and the cancels
+would have landed at the next open — putting the gap inside a trading session with the next armed
+pass twelve hours away. A cancel sent while the market is open executes at once, and the 18:30 pass
+places this system's own `oco` at the book's stop the same evening. `DR-044` is the record; while a
+cancel is queued, `swingdesk status` says so and prints no command, because the venue would refuse
+one for `insufficient qty`.
 
 **`swingdesk status` prints what to type** (since 2026-09-14): for a position holding nothing, the
 `gtc` stop at the book's price rounded UP to the venue's tick; for a stop looser than the book's, the

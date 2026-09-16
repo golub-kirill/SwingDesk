@@ -37,8 +37,8 @@ def _held() -> BrokerPosition:
                           average_entry_price=Decimal("119.658"), observed_at=AT)
 
 
-def _stop(price: str) -> PlacedOrder:
-    return PlacedOrder(order_id="leg-VGT", client_order_id="", symbol="VGT", status="new",
+def _stop(price: str, status: str = "new") -> PlacedOrder:
+    return PlacedOrder(order_id="leg-VGT", client_order_id="", symbol="VGT", status=status,
                        submitted_at=AT, order_type="stop", stop_price=Decimal(price),
                        observed_at=AT)
 
@@ -178,6 +178,18 @@ def test_a_take_profit_is_named_as_holding_the_shares_and_never_cancelled():
     assert [c for c in view.commands if "-X DELETE" in c] == [view.commands[0]]
     [note] = view.venue_notes
     assert "tp-VGT" in note and "insufficient qty" in note
+
+
+def test_a_stop_being_withdrawn_gets_a_note_and_no_command():
+    """`DR-044`, measured 2026-09-15: three cancels sent after the close were queued, and the
+    shares stay held until they land - so a place command printed now is refused."""
+    view = _view(live_orders=[_stop("117.05", status="pending_cancel")], handover=HANDOVER)
+
+    assert view.commands == (), "the venue would refuse it for insufficient qty"
+    [note] = view.venue_notes
+    assert "withdrawn" in note and "insufficient qty" in note and "DR-044" in note
+    assert "117.05" in note and "20 shares" in note
+    assert view.exit_code == 3, "the position reads unprotected, and it is"
 
 
 def test_a_position_in_order_prints_nothing_to_type():

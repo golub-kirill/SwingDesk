@@ -23,7 +23,7 @@ from decimal import Decimal
 
 from swingdesk.broker import MISMATCH_CODE, reconcile, resting_stops, unprotected
 from swingdesk.broker.armed import Arming
-from swingdesk.broker.reconcile import PROTECTIVE_TYPES
+from swingdesk.broker.reconcile import PROTECTIVE_TYPES, withdrawn_stops
 from swingdesk.contracts.broker import BrokerAccount, BrokerPosition, PlacedOrder
 from swingdesk.contracts.position import Position
 from swingdesk.platform.schedule import TaskReading
@@ -144,9 +144,19 @@ def _handover(lines: Sequence[PositionLine], live_orders: Sequence[PlacedOrder],
     """
     commands: list[str] = []
     notes: list[str] = []
+    # `DR-044`: a stop whose cancel is queued protects nothing AND still holds the shares, so the
+    # screen must not print a place command that the venue would refuse for `insufficient qty`.
+    queued = withdrawn_stops(live_orders)
     for line in lines:
         if line.protection == NO_STOP:
-            pass
+            going = queued.get(line.instrument_id)
+            if going is not None:
+                notes.append(
+                    f"{line.instrument_id}: the stop at {going} is being withdrawn - its cancel is "
+                    f"queued at the venue and it holds the {line.shares} shares until that lands. A "
+                    f"stop placed now is refused for insufficient qty; the next armed pass restores "
+                    f"this system's own (DR-044)")
+                continue
         elif line.protection == WRONG_PRICE and line.venue_stop is not None:
             if line.venue_stop > line.book_stop:
                 notes.append(f"{line.instrument_id}: the venue's stop {line.venue_stop} is tighter than "
