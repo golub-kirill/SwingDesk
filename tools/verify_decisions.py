@@ -128,6 +128,56 @@ def code_of(source: str) -> str:
     return "".join("".join(line) for line in lines)
 
 
+#: The index `docs/decisions/README.md` section 5 carries, one row per record.
+INDEX = DECISIONS / "README.md"
+INDEX_ROW = re.compile(r"^\| `(DR-\d+)` \|")
+
+#: The words a status may begin with. A row states its verdict in prose, so this looks for the word
+#: rather than for an exact string - the prose beside it is the point of the row.
+STATUSES = ("accepted", "superseded", "proposed")
+
+
+def index_statuses(text: str) -> dict[str, str]:
+    """The status word each index row claims, by record id."""
+    rows: dict[str, str] = {}
+    for line in text.splitlines():
+        match = INDEX_ROW.match(line)
+        if not match:
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        claimed = cells[-1].lower() if cells else ""
+        rows[match.group(1)] = next((word for word in STATUSES if word in claimed), claimed[:40])
+    return rows
+
+
+def disagreements(records: dict[str, str], rows: dict[str, str]) -> list[str]:
+    """Where the index and the records would tell an owner different things.
+
+    **Measured 2026-09-15, and it cost a wrong answer to the owner.** `DR-003` and `DR-006` had read
+    `accepted` in their own headers since August; the index still said `proposed`, one of them
+    `proposed - binds a real account`. Asked what was waiting on them, this project answered from
+    the index and named two decisions they had already made. Gate 20 read every record header and
+    never the table a person actually reads.
+    """
+    failures: list[str] = []
+    for record, status in sorted(records.items()):
+        word = next((candidate for candidate in STATUSES if status.startswith(candidate)), status)
+        claimed = rows.get(record)
+        if claimed is None:
+            failures.append(
+                f"{record} has no row in {INDEX.name} section 5. A record the index does not carry "
+                f"is a record nobody finds."
+            )
+        elif claimed != word:
+            failures.append(
+                f"{record}: the record says {word!r} and {INDEX.name} says {claimed!r}. The table "
+                f"is what an owner is shown when they ask what is still waiting on them."
+            )
+    for record in sorted(set(rows) - set(records)):
+        failures.append(f"{INDEX.name} carries a row for {record}, which has no record file")
+    return failures
+
+
 def parse_header(text: str) -> dict[str, str]:
     """Return the fenced `key: value` block at the top of a decision record."""
     match = HEADER.search(text)
@@ -150,9 +200,11 @@ def main() -> int:
     failures: list[str] = []
     checked = 0
     awaiting: list[tuple[str, str]] = []
+    statuses: dict[str, str] = {}
     for record in sorted(DECISIONS.glob("DR-*.md")):
         fields = parse_header(record.read_text(encoding="utf-8"))
         status = fields.get("status", "")
+        statuses[record.name[:6]] = status
         if status.startswith("proposed"):
             # A standing measurement, never a failure: ratifying is the owner's act and this gate
             # has no opinion about when. It is printed because nothing derived it, and `HANDOFF.md`
@@ -198,9 +250,15 @@ def main() -> int:
                     f"Point the marker at code, or declare `implementation: none`"
                 )
 
-    for failure in failures:
+    # The index last, and counted apart: it is a claim ABOUT the records rather than one of them,
+    # and the two failures ask for different repairs.
+    stale = disagreements(
+        statuses, index_statuses(INDEX.read_text(encoding="utf-8")) if INDEX.is_file() else {})
+
+    for failure in failures + stale:
         print(f"  {failure}")
-    print(f"\ndecisions: {checked} accepted, {len(failures)} unverifiable")
+    print(f"\ndecisions: {checked} accepted, {len(failures)} unverifiable, "
+          f"{len(stale)} index row(s) disagreeing")
     if awaiting:
         print(f"\n{len(awaiting)} record(s) still `proposed` - awaiting the owner, and not a "
               f"failure. Ratifying is the owner's act:")
@@ -209,6 +267,10 @@ def main() -> int:
     if failures:
         print("\nAn accepted decision promises something. Name the file and token that prove it, "
               "or declare `implementation: none`.")
+    if stale:
+        print("\nThe index is the answer an owner gets when they ask what is waiting on them. "
+              "Correct the row; the record itself is immutable once accepted.")
+    failures += stale
     return 1 if failures else 0
 
 
