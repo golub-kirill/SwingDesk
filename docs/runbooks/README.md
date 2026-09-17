@@ -120,6 +120,22 @@ whose look-through comes back as one sector at exactly 100% with every other at 
 bond fund being described in the only vocabulary the vendor has, and it is refused rather than
 consumed. The refresh pass counts these on the way past.
 
+### 1c. Quoted spreads at a moment of the session — `PR-024`
+
+A study that charges each entry its own spread needs that name's quotes at the moment it traded.
+`fetch_entry_quotes.py` reads the same kind of JSON-lines file `fetch_minutes.py` does and stores the
+first 25 SIP quotes at three moments of each named session: five seconds after the open, 11:00, and
+five minutes before the close (12:55 on a half day). The moments come from the exchange calendar.
+
+```bash
+.\.venv\Scripts\python.exe -X utf8 tools\fetch_entry_quotes.py --store data\quotes.duckdb --sessions docs\prereg\results\PR-024-sample.jsonl
+```
+
+Same credentials, same rule as the minutes: a failed request writes nothing and is tried again on
+the next run, a window served empty is written as an answer, and `--refetch` stores a new version
+rather than replacing the old one. `--moment open` (repeatable) fetches only the named moments. Run
+it outside 18:30–20:00, when the evening passes need the rate limit.
+
 ### 1a. The staleness gate, and the 19:30 second pass — `DR-015`
 
 **What refuses, and why it is not the same as a fetch failure.** A series behind the calendar's last

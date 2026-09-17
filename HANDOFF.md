@@ -123,12 +123,12 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | | |
 |---|---|
 | Merge gates | **52**, one command: `python tools/check_gates.py` |
-| Tests | **2306**, fully offline |
-| Docs | 179 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
+| Tests | **2411**, fully offline |
+| Docs | 180 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 459 registered · 4 `specified` · **2 `active`** |
 | Parameters | 111 - 57 `unset`, 33 `assumed`, 21 `owner`, **0 `validated`** |
 | Golden vectors | 25 vectors across 6 components |
-| Studies | 21 registered · 19 reported |
+| Studies | 22 registered · 19 reported |
 | Criteria | `registry/criteria.yml` **v1.1.2** |
 
 <!-- END GENERATED: state:repo -->
@@ -195,7 +195,7 @@ once did).
 - `claude/upbeat-matsumoto-01ead1`
 - `claude/swingdesk-session-handoff-cfd0c4`
 - `claude/intraday-first-touch`
-- `claude/research-reopened`
+- `claude/pr024-registration`
 - `claude/swingdesk-review-verify-b8707c`
 
 *Tip and merge state deliberately absent - both move under this document's own feet. `python tools/verify_branches.py` prints them.*

@@ -405,9 +405,9 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 90 script(s), of which 26 are things you type
+### The tools — 93 script(s), of which 28 are things you type
 
-#### Operator tools — 26
+#### Operator tools — 28
 
 Run these. Everything else below either runs itself or ran once.
 
@@ -416,6 +416,7 @@ Run these. Everything else below either runs itself or ran once.
 | `python tools/blocked_claims.py` | The open items in `TODO.md` that assert something is blocked, and therefore need testing. | `--list` · `--todo` |
 | `python tools/classify_departures.py` | Classify the symbols that left the directory: delisting, rename, or still listed. | `--data` · `--out` |
 | `python tools/fetch_directory.py` | Download the NASDAQ Trader symbol directory and record it as one dated pull. | `--data` · `--scheduled` · `--emergency-repull` · `--reason` |
+| `python tools/fetch_entry_quotes.py --store --sessions` | Fetch quoted bid/ask windows at named moments of named sessions into a `QuoteStore`. GET only. | `--store` **(required)** · `--sessions` **(required)** · `--moment` · `--refetch` |
 | `python tools/fetch_history.py --data` | Fetch named instruments' whole daily history, and their splits and dividends, into a store. | `symbols` · `--data` **(required)** · `--directory` · `--period` · `--pause` |
 | `python tools/fetch_minutes.py --store` | Fetch the one-minute bars of named sessions into a `MinuteStore`. GET only. `DR-042` §9. | `--store` **(required)** · `--sessions` · `--instrument` · `--from` · `--to` · `--feed` · `--adjustment` · `--refetch` |
 | `python tools/forward_record.py` | What the live paper record actually contains, so watching it costs nobody an afternoon. | `--data` |
@@ -426,6 +427,7 @@ Run these. Everything else below either runs itself or ran once.
 | `python tools/power_pr021.py` | The power estimate `PR-021` needs BEFORE it registers: can 48 months read the loser book at all? | `--data` · `--as-of` · `--out` · `--report` · `--window-months` · `--resamples` · `--min-names` |
 | `python tools/power_pr022.py` | The power estimate `PR-022` needs BEFORE it registers: can nineteen years read a Sharpe difference? | `--data` · `--as-of` · `--out` · `--report` · `--resamples` |
 | `python tools/power_pr023.py` | The power estimate `PR-023` needs BEFORE it registers: what excess-Sharpe difference can it read? | `--data` · `--as-of` · `--out` · `--report` · `--resamples` |
+| `python tools/power_pr024.py` | `PR-024`'s power estimate - how wide the interval on close-minus-open can be, before any minute. | `--data` · `--as-of` · `--pilot-dates` · `--pilot-per-date` · `--resamples` · `--report` |
 | `python tools/refresh_classifications.py` | Fetch sector classifications for instruments the store already holds bars for. | `--data` · `--budget` · `--symbols` · `--universe` |
 | `python tools/refresh_universe.py` | Fetch bars for eligible symbols, oldest-first, up to a budget. | `--data` · `--budget` · `--period` · `--pause` · `--symbols-from` |
 | `python tools/remeasure.py` | Is the answer still true? A scheduled re-observation of a registered question, on a rolling window. | `study` · `--data` · `--as-of` · `--report` |
@@ -467,7 +469,7 @@ Invoked by `python tools/check_gates.py`, not singly. Listed so a failing gate c
 | `python tools/verify_parameters.py` | Enforce the parameter-registry contract. | `--registry` |
 | `python tools/verify_transcription.py` | Verify that every `verbatim` claim in the documents still matches the course. | `--course-root` · `--docs` |
 
-#### Evidence-bound research runners — 51
+#### Evidence-bound research runners — 52
 
 Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions/measurements/` and reproduces it. They ran once, on a date. Nobody types these; they exist so a number can be re-derived.
 
@@ -524,5 +526,6 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/run_pr021.py` | `PR-021`: bought as last week's biggest losers and held one to five sessions, do stocks beat SPY? | `--data` · `--as-of` · `--out` · `--report` · `--window-months` · `--resamples` · `--min-names` |
 | `python tools/run_pr022.py` | `PR-022`: held while above its ten-month average and in T-bills otherwise, does SPY beat holding SPY? | `--data` · `--as-of` · `--out` · `--report` · `--resamples` |
 | `python tools/run_pr023.py` | `PR-023`: five asset classes, each held above its ten-month average and in T-bills below, against SPY. | `--data` · `--as-of` · `--out` · `--report` · `--resamples` |
+| `python tools/run_pr024.py` | `PR-024` - does `CARD-001` earn more entering near the close than at the open? | `--data` · `--minutes` · `--quotes` · `--sample` · `--as-of` · `--minutes-as-of` · `--quotes-as-of` · `--resamples` · `--dates` · `--per-date` · `--parity-limit` |
 
 <!-- END GENERATED COMMANDS -->
