@@ -47,6 +47,7 @@ Measured consequence: over a ~2.9-year window, NYSE and TSX differed by 16 tradi
 | D8 | Market data: free tier (see `ADR-0001`, status Proposed) | 2026-08-01 |
 | D10 | **Free tier reaffirmed after seeing what it costs.** No paid vendor. | 2026-08-02 |
 | D9 | Timeframes: `1Y`/`3M` context → `1D` decision → `1H` confirmation → `30m` execution | 2026-08-01 |
+| D11 | **Intraday trading decisions are in scope** (`CHARTER` A-003). The course's `30m`-execution-only line stays `CARD-001`'s rule, not the project's limit | 2026-09-16 |
 
 **D10 was taken with the price known, which is what makes it a decision rather than a default.**
 PR-002 produced this project's first non-refuted result on a **single market** — breadth separates
@@ -90,6 +91,8 @@ Three consequences that constrain what the system may ever claim:
 - **One daily run**, post-close, with open positions processed before new candidates
   (`CHECKLIST_SPEC.md` §4).
 - **No live intraday loop** in v1 — `30m` is fetched for execution refinement, not streamed.
+  Since `CHARTER` A-003 (2026-09-16) an intraday strategy may originate a decision; the loop that
+  would run one live is still not built, and building it is specification-first work of its own.
 - **Firebase for push only**; no market data, no journal, no decisions leave the machine.
 
 ## 5. Capacity and account (owner, 2026-08-01)

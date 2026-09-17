@@ -167,3 +167,51 @@ before the authority model was written and gated. The same applies here, and one
 > the owner creates, not a code change and not a flag inside a command; a switch that cannot be
 > read stops submission rather than permitting it; and a switch that defaults to ON is not a kill
 > switch. `DR-027` specifies it.
+
+---
+
+### A-003 — intraday decisions are in scope, and research reopens · 2026-09-16 · owner
+
+**What changed.** Two rulings, taken together on one screen.
+
+The §3 non-goal *An intraday strategy engine* is **lifted**. Asked *"Разрешаем в уставе
+внутридневные торговые решения?"*, the owner answered **"Разрешить"**. The course's own line —
+`30m — только исполнение валидного дневного setup` — stays what the course says and stays the rule
+for `CARD-001`; it no longer bounds what this project may study or run.
+
+The research pause of 2026-09-14 (`EVIDENCE_SUMMARY` §24, the owner's answer 4A) is **lifted**, and
+the first study is chosen: **moving execution to the end of the session**, which needs no part of
+this amendment at all.
+
+**The decision, in the order it binds:**
+
+1. **An intraday strategy may originate a trade decision.** Its setup can be read on a rung below
+   the daily bar - the rungs `DR-045` rolls up from stored minutes.
+2. **Everything that makes a strategy earn its place is unchanged.** A pre-registration committed
+   before any run, a power estimate first, the trial budget, per-dollar units, and costs measured at
+   the time of day the strategy trades - `DR-040` already shows the spread falling from 21.9-30.2
+   bps at 09:30 to 1.9-4.0 bps by 15:55, so a cost carried over from the open would be wrong for
+   almost any intraday rule.
+3. **A-002 still decides WHERE.** Paper only, one allowlisted host, the owner's kill switch. This
+   amendment widens what may be decided, not where it may be sent.
+4. **Nothing is built by this amendment.** There is no intraday decision loop, no intraday
+   scheduler and no streaming: `CONSTRAINTS` §4's *no live intraday loop in v1* is now a build gap
+   rather than a scope rule. Running an intraday strategy live is specification-first work under
+   A-001's standing condition, and it comes after a study says there is something worth running.
+5. **The v1 finish line (§4) is unchanged**, as A-001 §5 and A-002 §5 left it.
+
+**Why.** Four daily strategy classes have been measured against holding `SPY` and none beats it per
+unit of risk (`EVIDENCE_SUMMARY` §20-§23). The one published family where this project's cost model
+stops being fatal is intraday trading of the most liquid ETFs, where the spread is about one basis
+point rather than the twenty-five the daily universe pays: Zarattini, Aziz and Barbon report an
+intraday momentum rule on `SPY` at a Sharpe ratio of 1.33 net over 2007-2024, and an independent
+replication on `ES`/`NQ` futures with realistic slippage found it weaker but alive. The data to test
+that now exists (`DR-045`, `DR-046`).
+
+**Standing cautions, recorded with the permission rather than after it:**
+
+* **The rule is published.** Anything registered on it tests the period since publication
+  separately; a result carried by 2007-2023 is a result about a market that has read the paper.
+* **The course warns against this in its own words** - `M29-T0437`, *Слишком большое количество
+  таймфреймов*. A study that uses more rungs than its question needs is spending trials, not
+  finding edges.
