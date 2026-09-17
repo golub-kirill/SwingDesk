@@ -195,7 +195,7 @@ once did).
 - `claude/upbeat-matsumoto-01ead1`
 - `claude/swingdesk-session-handoff-cfd0c4`
 - `claude/intraday-first-touch`
-- `claude/context-windows`
+- `claude/research-reopened`
 - `claude/swingdesk-review-verify-b8707c`
 
 *Tip and merge state deliberately absent - both move under this document's own feet. `python tools/verify_branches.py` prints them.*

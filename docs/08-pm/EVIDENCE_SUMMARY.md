@@ -1329,3 +1329,12 @@ registers — or fresh sessions after 2026-09 changing a re-measured answer.
 the relative-strength family (§20), short-term reversal (§21), and this. The trend exit is the first
 that did not lose outright, and the first whose value is a choice about how much risk to carry —
 which is the owner's question about their own capital, not one a study answers.
+
+**Reopened 2026-09-16.** The owner lifted the pause after the intraday ladder (`DR-045`) and the
+monthly and quarterly bars (`DR-046`) were built, and amended the charter to allow intraday trading
+decisions (`CHARTER` A-003). **The first study is not a new strategy class.** It asks whether the
+decisions already measured were priced at the worst minute of the day: every study in §17-§23
+entered at the open, where `DR-040` measured the spread at 21.9-30.2 bps, against 1.9-4.0 bps by
+15:55. If moving execution closes a meaningful part of that gap, it moves every result above at
+once - including the ones that were refused - and that is worth knowing before a fifth class is
+drawn.

@@ -1645,6 +1645,12 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       as a claim that it earns. What would reopen the line is a new idea with a measured chance, or
       fresh sessions after 2026-09 to re-read the registered questions on (`tools/remeasure.py`
       appends that sequence weekly). `EVIDENCE_SUMMARY` §24 closes the account.
+      **RULED 2026-09-16 — RESEARCH REOPENS** (`CHARTER` A-003). Asked after `DR-045` and `DR-046`
+      merged, the owner lifted the pause, **allowed intraday trading decisions** in the charter, and
+      chose the first study: **moving execution to the end of the session** (`DR-040`: 21.9-30.2 bps
+      at 09:30 against 1.9-4.0 bps by 15:55). Next: a dispersion-only power estimate, then a
+      pre-registration committed before any run, on minutes fetched with
+      `fetch_minutes.py --instrument --from --to`.
 
 - [ ] **`[v]` A POWER ESTIMATE FOR A MARKET-PAIRED CONTRAST MUST MODEL OVERLAPPING HOLDS — owed
       before the next one registers.** `PR-019b`'s estimate predicted a half-width of 0.0743 and the
