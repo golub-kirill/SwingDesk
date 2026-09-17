@@ -676,11 +676,33 @@ def test_the_date_weighted_reading_matches_when_every_date_carries_the_same_coun
                         rel_tol=1e-9)
 
 
+def test_the_diagnostics_count_every_arm_s_exits_and_spreads(run, tmp_path) -> None:
+    """Section 5a promises them: each arm's exit reasons and the spread it paid to enter."""
+    args, entries = _world(tmp_path, run, spread_bps=(20.0, 5.0, 2.0))
+    payload = run.build(args)
+    seen = payload["diagnostics"]
+    assert set(seen) == set(run.ARMS)
+    for arm, paid in (("O", 20.0), ("T", 5.0), ("C", 2.0)):
+        assert sum(seen[arm]["exit_reasons"].values()) == len(entries)
+        spread = seen[arm]["entry_half_spread_bps"]
+        assert spread["entries"] == len(entries)
+        assert spread["p10"] == pytest.approx(paid, abs=1e-3)
+        assert spread["p90"] == pytest.approx(paid, abs=1e-3)
+    assert 0 <= seen["C"]["exited_on_the_entry_session"] <= len(entries)
+    json.dumps(payload, default=run._default)
+
+
+def test_the_spread_summary_reads_its_percentiles(run) -> None:
+    got = run._spread_summary([float(v) for v in range(20, 0, -1)])
+    assert (got["p10"], got["p50"], got["p90"], got["average"]) == (3.0, 11.0, 19.0, 10.5)
+    assert run._spread_summary([]) == {"entries": 0}
+
+
 def test_the_report_prints_every_reading(run, tmp_path, capsys) -> None:
     args, _ = _world(tmp_path, run)
     run.report(run.build(args))
     printed = capsys.readouterr().out
     for label in ("net per dollar", "gross part", "cost-adverse", "exits at registry",
                   "stops from the decision", "date-weighted", "instrument-clustered",
-                  "arm's own level"):
+                  "arm's own level", "entry half-spread bps", "same day"):
         assert label in printed

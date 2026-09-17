@@ -644,6 +644,34 @@ def _instrument_interval(by_instrument: Mapping[str, list[Decimal]], resamples: 
     return {"estimate": estimate, "lo": lo, "hi": hi, "width": hi - lo}
 
 
+def _spread_summary(values: Sequence[float]) -> dict[str, float | int]:
+    if not values:
+        return {"entries": 0}
+    ordered = sorted(values)
+
+    def at(share: float) -> float:
+        return ordered[min(int(share * len(ordered)), len(ordered) - 1)]
+
+    return {"entries": len(ordered), "p10": at(0.10), "p50": at(0.50), "p90": at(0.90),
+            "average": statistics.fmean(ordered)}
+
+
+def diagnostics(priced: Sequence[Priced]) -> dict[str, Any]:
+    """Section 5a's printed-never-read readings: each arm's exits and the spread it paid to enter."""
+    out: dict[str, Any] = {}
+    for arm in ARMS:
+        reasons = Counter(p.trades["net"][arm].exit_reason.value for p in priced)
+        entry_day = sum(1 for p in priced
+                        if p.trades["net"][arm].exit_date == p.entry.session_date)
+        out[arm] = {
+            "exit_reasons": dict(reasons.most_common()),
+            "exited_on_the_entry_session": entry_day,
+            "entry_half_spread_bps": _spread_summary([float(p.spreads[MOMENT[arm]])
+                                                      for p in priced]),
+        }
+    return out
+
+
 def branch_for(cell: Mapping[str, Any]) -> str:
     """Section 6, in its order. The report's `verdict` is `TOKEN[branch]`.
 
@@ -803,6 +831,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         "sample": {"drawn": len(entries), "complete": len(priced),
                    "excluded": dict(excluded.most_common())},
         "tie_breaks": dict(counts.most_common()),
+        "diagnostics": diagnostics(priced),
         "cells": cells,
     }
     if registered:
@@ -915,6 +944,12 @@ def report(payload: Mapping[str, Any]) -> None:
         print(f"    date-weighted (%)         {_fmt(cell['date_weighted'])}")
         print(f"    instrument-clustered (%)  {_fmt(cell['instrument_clustered'])}")
         print(f"    arm's own level (%)       {_fmt(cell['level'])}")
+    for arm, seen in payload.get("diagnostics", {}).items():
+        spread = seen["entry_half_spread_bps"]
+        typical = (f"p10 {spread['p10']:.2f}  p50 {spread['p50']:.2f}  p90 {spread['p90']:.2f}"
+                   if spread.get("entries") else "none priced")
+        print(f"  {arm} exits {seen['exit_reasons']}   same day {seen['exited_on_the_entry_session']}"
+              f"   entry half-spread bps {typical}")
 
 
 def _default(value: Any) -> Any:
