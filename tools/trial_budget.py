@@ -333,6 +333,12 @@ SIDE_RECORDS = {
                     "for its two arms, fixed before it ran, with how much of each book sat in risk "
                     "assets and what it traded. Only widths leave it, under the same level guard. "
                     "PR-023 counts its two",
+    "PR-024-power": "no trials: a VARIANCE estimate for PR-024 - the between-date and within-date "
+                    "dispersion of close-minus-open per dollar, walked on daily-bar proxies for 60 "
+                    "pilot dates before any minute or quote was fetched, and the half-width each "
+                    "registered sample size would give. Only widths leave it, under the same level "
+                    "guard, and the size it chose is the cheapest one readable at the floor. "
+                    "PR-024 counts its two",
 }
 
 

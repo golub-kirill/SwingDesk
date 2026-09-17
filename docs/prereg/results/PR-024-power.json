@@ -1,0 +1,378 @@
+{
+  "for": "PR-024",
+  "purpose": "the half-width of close-minus-open per dollar, from daily-bar proxies, before any minute or quote is fetched - widths only",
+  "as_of": "2026-09-16T19:30:10.930516-05:00",
+  "window": {
+    "start": "2022-09-16",
+    "end": "2026-09-16",
+    "months": 48,
+    "formation_sessions": 982
+  },
+  "pilot": {
+    "dates": 60,
+    "entries": 1199,
+    "skipped": 1,
+    "names_per_date": 19.98,
+    "seed": 20260917,
+    "instruments_scored": 10356
+  },
+  "components": {
+    "between_date_sd": 0.016336,
+    "within_date_sd": 0.046862
+  },
+  "cost_sd": 0.004331,
+  "cost_sd_source": "quoted-spread-2026-09-06.json: widest opening-window p10-to-p90 range / 2.563",
+  "formula_check": {
+    "formula_half_width": 0.004911,
+    "bootstrap_half_width": 0.004314,
+    "reproduces": 0.878,
+    "block": 3,
+    "resamples": 2000
+  },
+  "power_floor_width": 0.003,
+  "grid": {
+    "cells": {
+      "D250_k4": {
+        "dates": 250,
+        "half_width": 0.003551,
+        "half_width_at_min_share": 0.003743,
+        "detectable_at_80_power": 0.00535,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": false,
+        "requests": 4000,
+        "fetch_hours": 0.67
+      },
+      "D250_k6": {
+        "dates": 250,
+        "half_width": 0.003126,
+        "half_width_at_min_share": 0.003295,
+        "detectable_at_80_power": 0.00471,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 6000,
+        "fetch_hours": 1.0
+      },
+      "D250_k8": {
+        "dates": 250,
+        "half_width": 0.002891,
+        "half_width_at_min_share": 0.003047,
+        "detectable_at_80_power": 0.004355,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 8000,
+        "fetch_hours": 1.33
+      },
+      "D250_k10": {
+        "dates": 250,
+        "half_width": 0.002739,
+        "half_width_at_min_share": 0.002888,
+        "detectable_at_80_power": 0.004127,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 10000,
+        "fetch_hours": 1.67
+      },
+      "D250_k12": {
+        "dates": 250,
+        "half_width": 0.002634,
+        "half_width_at_min_share": 0.002776,
+        "detectable_at_80_power": 0.003968,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 12000,
+        "fetch_hours": 2.0
+      },
+      "D400_k4": {
+        "dates": 400,
+        "half_width": 0.002807,
+        "half_width_at_min_share": 0.002959,
+        "detectable_at_80_power": 0.00423,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 6400,
+        "fetch_hours": 1.07
+      },
+      "D400_k6": {
+        "dates": 400,
+        "half_width": 0.002471,
+        "half_width_at_min_share": 0.002605,
+        "detectable_at_80_power": 0.003724,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 9600,
+        "fetch_hours": 1.6
+      },
+      "D400_k8": {
+        "dates": 400,
+        "half_width": 0.002285,
+        "half_width_at_min_share": 0.002409,
+        "detectable_at_80_power": 0.003443,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 12800,
+        "fetch_hours": 2.13
+      },
+      "D400_k10": {
+        "dates": 400,
+        "half_width": 0.002166,
+        "half_width_at_min_share": 0.002283,
+        "detectable_at_80_power": 0.003263,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 16000,
+        "fetch_hours": 2.67
+      },
+      "D400_k12": {
+        "dates": 400,
+        "half_width": 0.002082,
+        "half_width_at_min_share": 0.002195,
+        "detectable_at_80_power": 0.003137,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 19200,
+        "fetch_hours": 3.2
+      },
+      "D500_k4": {
+        "dates": 500,
+        "half_width": 0.002511,
+        "half_width_at_min_share": 0.002647,
+        "detectable_at_80_power": 0.003783,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 8000,
+        "fetch_hours": 1.33
+      },
+      "D500_k6": {
+        "dates": 500,
+        "half_width": 0.002211,
+        "half_width_at_min_share": 0.00233,
+        "detectable_at_80_power": 0.003331,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 12000,
+        "fetch_hours": 2.0
+      },
+      "D500_k8": {
+        "dates": 500,
+        "half_width": 0.002044,
+        "half_width_at_min_share": 0.002154,
+        "detectable_at_80_power": 0.00308,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 16000,
+        "fetch_hours": 2.67
+      },
+      "D500_k10": {
+        "dates": 500,
+        "half_width": 0.001937,
+        "half_width_at_min_share": 0.002042,
+        "detectable_at_80_power": 0.002919,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 20000,
+        "fetch_hours": 3.33
+      },
+      "D500_k12": {
+        "dates": 500,
+        "half_width": 0.001862,
+        "half_width_at_min_share": 0.001963,
+        "detectable_at_80_power": 0.002806,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 24000,
+        "fetch_hours": 4.0
+      },
+      "D750_k4": {
+        "dates": 750,
+        "half_width": 0.00205,
+        "half_width_at_min_share": 0.002161,
+        "detectable_at_80_power": 0.003089,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 12000,
+        "fetch_hours": 2.0
+      },
+      "D750_k6": {
+        "dates": 750,
+        "half_width": 0.001805,
+        "half_width_at_min_share": 0.001903,
+        "detectable_at_80_power": 0.002719,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 18000,
+        "fetch_hours": 3.0
+      },
+      "D750_k8": {
+        "dates": 750,
+        "half_width": 0.001669,
+        "half_width_at_min_share": 0.001759,
+        "detectable_at_80_power": 0.002514,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 24000,
+        "fetch_hours": 4.0
+      },
+      "D750_k10": {
+        "dates": 750,
+        "half_width": 0.001582,
+        "half_width_at_min_share": 0.001667,
+        "detectable_at_80_power": 0.002383,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 30000,
+        "fetch_hours": 5.0
+      },
+      "D750_k12": {
+        "dates": 750,
+        "half_width": 0.001521,
+        "half_width_at_min_share": 0.001603,
+        "detectable_at_80_power": 0.002291,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 36000,
+        "fetch_hours": 6.0
+      },
+      "D1000_k4": {
+        "dates": 1000,
+        "half_width": 0.001775,
+        "half_width_at_min_share": 0.001872,
+        "detectable_at_80_power": 0.002675,
+        "readable_at_floor": false,
+        "within_the_calendar": false,
+        "enough_pairs": true,
+        "requests": 16000,
+        "fetch_hours": 2.67
+      },
+      "D1000_k6": {
+        "dates": 1000,
+        "half_width": 0.001563,
+        "half_width_at_min_share": 0.001648,
+        "detectable_at_80_power": 0.002355,
+        "readable_at_floor": false,
+        "within_the_calendar": false,
+        "enough_pairs": true,
+        "requests": 24000,
+        "fetch_hours": 4.0
+      },
+      "D1000_k8": {
+        "dates": 1000,
+        "half_width": 0.001445,
+        "half_width_at_min_share": 0.001523,
+        "detectable_at_80_power": 0.002178,
+        "readable_at_floor": false,
+        "within_the_calendar": false,
+        "enough_pairs": true,
+        "requests": 32000,
+        "fetch_hours": 5.33
+      },
+      "D1000_k10": {
+        "dates": 1000,
+        "half_width": 0.00137,
+        "half_width_at_min_share": 0.001444,
+        "detectable_at_80_power": 0.002064,
+        "readable_at_floor": true,
+        "within_the_calendar": false,
+        "enough_pairs": true,
+        "requests": 40000,
+        "fetch_hours": 6.67
+      },
+      "D1000_k12": {
+        "dates": 1000,
+        "half_width": 0.001317,
+        "half_width_at_min_share": 0.001388,
+        "detectable_at_80_power": 0.001984,
+        "readable_at_floor": true,
+        "within_the_calendar": false,
+        "enough_pairs": true,
+        "requests": 48000,
+        "fetch_hours": 8.0
+      },
+      "Dall_k4": {
+        "dates": 982,
+        "half_width": 0.001792,
+        "half_width_at_min_share": 0.001889,
+        "detectable_at_80_power": 0.0027,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 15712,
+        "fetch_hours": 2.62
+      },
+      "Dall_k6": {
+        "dates": 982,
+        "half_width": 0.001577,
+        "half_width_at_min_share": 0.001663,
+        "detectable_at_80_power": 0.002377,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 23568,
+        "fetch_hours": 3.93
+      },
+      "Dall_k8": {
+        "dates": 982,
+        "half_width": 0.001458,
+        "half_width_at_min_share": 0.001537,
+        "detectable_at_80_power": 0.002197,
+        "readable_at_floor": false,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 31424,
+        "fetch_hours": 5.24
+      },
+      "Dall_k10": {
+        "dates": 982,
+        "half_width": 0.001382,
+        "half_width_at_min_share": 0.001457,
+        "detectable_at_80_power": 0.002083,
+        "readable_at_floor": true,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 39280,
+        "fetch_hours": 6.55
+      },
+      "Dall_k12": {
+        "dates": 982,
+        "half_width": 0.001329,
+        "half_width_at_min_share": 0.001401,
+        "detectable_at_80_power": 0.002002,
+        "readable_at_floor": true,
+        "within_the_calendar": true,
+        "enough_pairs": true,
+        "requests": 47136,
+        "fetch_hours": 7.86
+      }
+    },
+    "chosen": {
+      "cell": "Dall_k10",
+      "every_session": true,
+      "dates": 982,
+      "per_date": 10,
+      "half_width": 0.001382,
+      "half_width_at_min_share": 0.001457,
+      "detectable_at_80_power": 0.002083,
+      "requests": 39280,
+      "fetch_hours": 6.55
+    }
+  }
+}
