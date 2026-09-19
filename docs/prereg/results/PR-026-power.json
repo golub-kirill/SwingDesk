@@ -1,0 +1,57 @@
+{
+  "for": [
+    "PR-026",
+    "PR-027",
+    "PR-028",
+    "PR-029"
+  ],
+  "purpose": "the end-to-end width of each study's interval at each names-per-date, scaled to the window's dates and the lowest admitted complete share - widths only",
+  "as_of": {
+    "bars": "2026-09-16T19:30:10.930516-05:00",
+    "directory": "latest pull"
+  },
+  "window": {
+    "start": "2018-09-01",
+    "end": "2022-08-31",
+    "formation_sessions": 1006
+  },
+  "pilot": {
+    "dates": 252,
+    "every": 4,
+    "entries": 59972,
+    "seed": 20260920,
+    "repeats": 3,
+    "resamples": 2000,
+    "instruments_scored": 10356
+  },
+  "power_floor_width": 0.003,
+  "widths_at_min_share": {
+    "10": {
+      "PR-026": 0.000788,
+      "PR-027": 0.005626,
+      "PR-028": 0.021019,
+      "PR-029": 0.010923
+    },
+    "20": {
+      "PR-026": 0.00048,
+      "PR-027": 0.005328,
+      "PR-028": 0.020271,
+      "PR-029": 0.00932
+    },
+    "40": {
+      "PR-026": 0.00044,
+      "PR-027": 0.005222,
+      "PR-028": 0.02048,
+      "PR-029": 0.009518
+    }
+  },
+  "chosen": {
+    "per_date": 40,
+    "all_readable": false,
+    "unreadable": [
+      "PR-027",
+      "PR-028",
+      "PR-029"
+    ]
+  }
+}

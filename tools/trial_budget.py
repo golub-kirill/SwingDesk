@@ -169,6 +169,10 @@ EXPLORATORY = {
         2, "the ADMITTED and REFUSED books, each evaluated on mean net R over PR-005's trades "
            "(`cost`). The `premise` block compares event RATES rather than returns and is not a "
            "third shot; the 0.70 threshold was fixed by DR before this ran rather than swept"),
+    "entry-features-2026-09-19": (
+        9, "PR-024's entries sliced by nine features known at the signal close - seven in "
+           "quintiles, the market regime, the kind of instrument. Each slice is a filter somebody "
+           "would have kept, and four of them became PR-026..PR-029, which count their own"),
     "short-leg-2026-09-06": (
         8, "4 arms x 2 horizons. The unrestricted spread and the long-only excess are REPRODUCTIONS "
            "of already-counted results rather than new shots - but they are re-evaluated here on a "
@@ -339,6 +343,10 @@ SIDE_RECORDS = {
                     "registered sample size would give. Only widths leave it, under the same level "
                     "guard, and the size it chose is the cheapest one readable at the floor. "
                     "PR-024 counts its two",
+    "PR-026-power": "no trials: a VARIANCE estimate for PR-026..PR-029 - each study's interval "
+                    "width at 10, 20 and 40 names a date on every fourth date of the window, the "
+                    "verdict estimator's own, scaled to the window. Only widths leave it, under the "
+                    "same level guard; the four count one each",
     "PR-024-attribution": "no trials: an EXPLORATORY re-reading of PR-024's own three arms after "
                           "the run - what excluded each entry, the same C - O on populations "
                           "that drop an entry only for what the primary needs, and the shape of "
