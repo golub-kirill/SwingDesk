@@ -1,0 +1,420 @@
+{
+  "prereg": "PR-025",
+  "trials": 2,
+  "amendment": "A-1, 2026-09-19, after the registered run: crosses brought onto the bars' split- and spin-off-adjusted basis (adjustment_factor). The registered run's REJECT was that unit error; this reading is EXPLORATORY by PREREG_TEMPLATE rule 3",
+  "verdict": "inconclusive",
+  "exploratory": true,
+  "branch": "NULL",
+  "country": "USA",
+  "as_of": {
+    "bars": "2026-09-16T19:30:10.930516-05:00",
+    "minutes": "2026-09-19T18:13:43.335554+00:00",
+    "quotes": "2026-09-17T08:16:22.839207+00:00",
+    "auctions": "2026-09-19T18:13:43.335554+00:00"
+  },
+  "measured_span": {
+    "first_session": "2022-09-19",
+    "last_session": "2026-08-18",
+    "years": 3.91
+  },
+  "split": {
+    "registered": "none - PR-024's draw, the arms paired within each entry",
+    "buys": "nothing a split could buy: two routings of one decision on one session, nothing tuned. Pairing removes the market's level, and PR-016's own split already tested the rule the entries come from"
+  },
+  "perturbations": {
+    "registered": [
+      "cost_adverse",
+      "exits_at_registry",
+      "anchored_stop",
+      "instrument_clustered",
+      "date_weighted"
+    ],
+    "run": [
+      "cost_adverse",
+      "exits_at_registry",
+      "anchored_stop",
+      "instrument_clustered",
+      "date_weighted"
+    ]
+  },
+  "registered_settings": {
+    "sample": "PR-024-sample.jsonl",
+    "primary": "A-C",
+    "bootstrap": {
+      "unit": "entry month",
+      "block": 3,
+      "seed": 20260919,
+      "resamples": 10000
+    },
+    "power_floor": 0.003,
+    "min_complete_share": 0.9,
+    "min_pairs": 1000,
+    "min_months": 24,
+    "cross": {
+      "opening": "the largest print flagged O",
+      "closing": "the largest flagged 6"
+    },
+    "cost_adverse": "auction arms at the 15:55 half-spread; exits at the opening spread",
+    "registry_exit_bps": "25"
+  },
+  "sample": {
+    "drawn": 9820,
+    "priced_by_arm": {
+      "O": 9465,
+      "A": 9462,
+      "C": 9518,
+      "X": 9384
+    }
+  },
+  "excluded_by_arm": {
+    "O": {
+      "exit_quote_missing": 135,
+      "minutes_mismatch": 116,
+      "no_fresh_two_sided_quote": 62,
+      "no_print_at_the_moment": 29,
+      "zero_shares": 8,
+      "stop_not_positive": 4,
+      "minutes_unavailable": 1
+    },
+    "A": {
+      "exit_quote_missing": 146,
+      "minutes_mismatch": 116,
+      "no_opening_cross": 67,
+      "cross_outside_the_minutes": 16,
+      "zero_shares": 7,
+      "stop_not_positive": 5,
+      "minutes_unavailable": 1
+    },
+    "C": {
+      "exit_quote_missing": 132,
+      "minutes_mismatch": 116,
+      "no_print_at_the_moment": 22,
+      "no_fresh_two_sided_quote": 19,
+      "zero_shares": 8,
+      "stop_not_positive": 4,
+      "minutes_unavailable": 1
+    },
+    "X": {
+      "no_closing_cross": 172,
+      "exit_quote_missing": 134,
+      "minutes_mismatch": 116,
+      "zero_shares": 8,
+      "stop_not_positive": 5,
+      "minutes_unavailable": 1
+    }
+  },
+  "tie_breaks": {
+    "target": 9,
+    "stop": 6,
+    "entry_day_stop": 5,
+    "entry_day_target": 2
+  },
+  "crosses": {
+    "adjusted_sessions": 620,
+    "adjustment_factors": {
+      "2.00": 161,
+      "4.00": 86,
+      "10.00": 70,
+      "5.00": 59,
+      "3.00": 48,
+      "1.50": 30,
+      "6.00": 30,
+      "0.05": 16,
+      "25.00": 16,
+      "8.00": 16,
+      "0.00": 13,
+      "0.10": 11
+    },
+    "opening_crosses": 9620,
+    "opening_equals_bar_open": 7813,
+    "opening_equals_first_minute_open": 7397,
+    "opening_gap_to_bar_open": {
+      "entries": 9620,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0029505613810251394,
+      "average": 0.2710671939907753
+    },
+    "opening_delay": {
+      "within 5 s": 9320,
+      "later than a minute": 177,
+      "within a minute": 123
+    },
+    "closing_crosses": 9531,
+    "closing_equals_bar_close": 8880,
+    "closing_gap_to_bar_close": {
+      "entries": 9531,
+      "p10": 0.0,
+      "p50": 0.0,
+      "p90": 0.0,
+      "average": 0.2713401932653146
+    }
+  },
+  "reproduces_pr024": {
+    "checked": 800,
+    "differ": 0,
+    "not_priced": 0
+  },
+  "diagnostics": {
+    "O": {
+      "priced": 9465,
+      "exit_reasons": {
+        "target": 4233,
+        "stop": 3716,
+        "time": 756,
+        "stop_gap": 754,
+        "end_of_data": 6
+      },
+      "exited_on_the_entry_session": 218,
+      "entry_half_spread_bps": {
+        "entries": 9465,
+        "p10": 3.8473645552796336,
+        "p50": 24.860161591050343,
+        "p90": 90.16072128577028,
+        "average": 39.8741607948334
+      }
+    },
+    "A": {
+      "priced": 9462,
+      "exit_reasons": {
+        "target": 4518,
+        "stop": 3435,
+        "time": 798,
+        "stop_gap": 705,
+        "end_of_data": 6
+      },
+      "exited_on_the_entry_session": 197,
+      "entry_half_spread_bps": {
+        "entries": 9462,
+        "p10": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "average": 0.0
+      }
+    },
+    "C": {
+      "priced": 9518,
+      "exit_reasons": {
+        "target": 4525,
+        "stop": 3402,
+        "time": 870,
+        "stop_gap": 717,
+        "end_of_data": 4
+      },
+      "exited_on_the_entry_session": 2,
+      "entry_half_spread_bps": {
+        "entries": 9518,
+        "p10": 0.8948545861297539,
+        "p50": 3.26619488296135,
+        "p90": 11.473018959649975,
+        "average": 5.425956890993793
+      }
+    },
+    "X": {
+      "priced": 9384,
+      "exit_reasons": {
+        "target": 4491,
+        "stop": 3318,
+        "time": 861,
+        "stop_gap": 708,
+        "end_of_data": 6
+      },
+      "exited_on_the_entry_session": 0,
+      "entry_half_spread_bps": {
+        "entries": 9384,
+        "p10": 0.0,
+        "p50": 0.0,
+        "p90": 0.0,
+        "average": 0.0
+      }
+    }
+  },
+  "cells": {
+    "A-C": {
+      "first": "A",
+      "second": "C",
+      "pairs": 9429,
+      "drawn": 9820,
+      "complete_share": 0.960183299389002,
+      "months": 48,
+      "difference": {
+        "estimate": 6.572946560774455e-05,
+        "lo": -0.0008899340110965502,
+        "hi": 0.0008354666310201844,
+        "width": 0.0017254006421167345
+      },
+      "difference_r": {
+        "estimate": -0.008787254143060821,
+        "lo": -0.021562991370333906,
+        "hi": 0.002383555915100576,
+        "width": 0.02394654728543448
+      },
+      "gross_part": {
+        "estimate": -0.0004619970618447088,
+        "lo": -0.0013821616957021426,
+        "hi": 0.0003236619676544206,
+        "width": 0.0017058236633565632
+      },
+      "cost_adverse": {
+        "estimate": -0.0003895574106471973,
+        "lo": -0.0013472636751652588,
+        "hi": 0.0003917594010671403,
+        "width": 0.001739023076232399
+      },
+      "exits_at_registry": {
+        "estimate": 6.955511501836058e-05,
+        "lo": -0.000884310911236508,
+        "hi": 0.0008904997656354811,
+        "width": 0.0017748106768719892
+      },
+      "anchored_stop": {
+        "estimate": 0.0005243684506684296,
+        "lo": -6.348441309895952e-05,
+        "hi": 0.0011241700524781783,
+        "width": 0.0011876544655771378
+      },
+      "date_weighted": {
+        "estimate": 9.541503973114831e-05,
+        "lo": -0.0008536865603317857,
+        "hi": 0.0008607875581898906,
+        "width": 0.0017144741185216763
+      },
+      "instrument_clustered": {
+        "estimate": 6.572946560774455e-05,
+        "lo": -0.0009515771993475945,
+        "hi": 0.0011008661191409938,
+        "width": 0.002052443318488588
+      },
+      "level": {
+        "estimate": 7.178794347059662e-05,
+        "lo": -0.004038105588443874,
+        "hi": 0.004200587409810299,
+        "width": 0.008238692998254173
+      }
+    },
+    "X-C": {
+      "first": "X",
+      "second": "C",
+      "pairs": 9362,
+      "drawn": 9820,
+      "complete_share": 0.9533604887983707,
+      "months": 48,
+      "difference": {
+        "estimate": 0.00019140417488588903,
+        "lo": -0.0003127693690890901,
+        "hi": 0.0006450998500227509,
+        "width": 0.000957869219111841
+      },
+      "difference_r": {
+        "estimate": -0.001839433387681584,
+        "lo": -0.015198202809173427,
+        "hi": 0.00878442196215715,
+        "width": 0.023982624771330577
+      },
+      "gross_part": {
+        "estimate": -0.00034573044632002877,
+        "lo": -0.0008248697297841699,
+        "hi": 8.091691620421662e-05,
+        "width": 0.0009057866459883866
+      },
+      "cost_adverse": {
+        "estimate": -0.0004121081826257443,
+        "lo": -0.0008875520739950638,
+        "hi": -1.2018954971347718e-05,
+        "width": 0.0008755331190237161
+      },
+      "exits_at_registry": {
+        "estimate": 0.0001897920831749041,
+        "lo": -0.00029003472463930656,
+        "hi": 0.0006318334470945993,
+        "width": 0.0009218681717339059
+      },
+      "anchored_stop": {
+        "estimate": 0.00019670763321206312,
+        "lo": -0.0001336701964833489,
+        "hi": 0.00044603663263787494,
+        "width": 0.0005797068291212239
+      },
+      "date_weighted": {
+        "estimate": 0.00020737477916352482,
+        "lo": -0.0003008772811765326,
+        "hi": 0.0006779917814311087,
+        "width": 0.0009788690626076413
+      },
+      "instrument_clustered": {
+        "estimate": 0.00019140417488588903,
+        "lo": -0.0002486679407489964,
+        "hi": 0.0005897007554367683,
+        "width": 0.0008383686961857648
+      },
+      "level": {
+        "estimate": 0.00017057228812542732,
+        "lo": -0.004064180700000118,
+        "hi": 0.004475067018691299,
+        "width": 0.008539247718691417
+      }
+    },
+    "A-O": {
+      "first": "A",
+      "second": "O",
+      "pairs": 9403,
+      "drawn": 9820,
+      "complete_share": 0.9575356415478615,
+      "months": 48,
+      "difference": {
+        "estimate": 0.003750729991098837,
+        "lo": 0.0031638262337601412,
+        "hi": 0.004352497392876819,
+        "width": 0.0011886711591166778
+      },
+      "difference_r": {
+        "estimate": 0.05845434730450278,
+        "lo": 0.045483598413108915,
+        "hi": 0.07038037374615431,
+        "width": 0.0248967753330454
+      },
+      "gross_part": {
+        "estimate": -0.00016982394100110865,
+        "lo": -0.0004998594761688798,
+        "hi": 8.858428086741952e-05,
+        "width": 0.0005884437570362993
+      },
+      "cost_adverse": {
+        "estimate": 0.00338463403628688,
+        "lo": 0.0028473650018089706,
+        "hi": 0.00394060151956594,
+        "width": 0.0010932365177569693
+      },
+      "exits_at_registry": {
+        "estimate": 0.003883023461346283,
+        "lo": 0.0032766885342030106,
+        "hi": 0.004521647220834027,
+        "width": 0.001244958686631016
+      },
+      "anchored_stop": {
+        "estimate": 0.0037200565274358222,
+        "lo": 0.0033320530087696454,
+        "hi": 0.0040399992352020435,
+        "width": 0.0007079462264323981
+      },
+      "date_weighted": {
+        "estimate": 0.0037820898702376937,
+        "lo": 0.003202079074001748,
+        "hi": 0.004377546583426117,
+        "width": 0.001175467509424369
+      },
+      "instrument_clustered": {
+        "estimate": 0.003750729991098837,
+        "lo": 0.003199249327355666,
+        "hi": 0.0043053018104848165,
+        "width": 0.0011060524831291506
+      },
+      "level": {
+        "estimate": 2.8190867734006922e-05,
+        "lo": -0.0041108526196331355,
+        "hi": 0.004171560446406458,
+        "width": 0.008282413066039593
+      }
+    }
+  }
+}

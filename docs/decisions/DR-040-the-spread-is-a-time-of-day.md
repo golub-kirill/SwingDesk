@@ -264,3 +264,12 @@ after 09:30. An order in the opening auction pays the auction's single price and
 and so does one in the closing auction. §2's table therefore prices the open for an order that
 arrives after the cross; whether the card's orders do, `PR-024`'s report says the vendor does not
 document. That is the next measurement, and it is a routing question as much as a clock one.
+
+## 11. The auctions, measured — `PR-025`, 2026-09-19, exploratory
+
+Appended, never edited above. §10 named the opening auction as what this record had not priced. On
+`PR-024`'s entries, an order at the opening cross — no quoted spread — earned what the 15:55 order
+earned (+0.007% a trade [−0.089, +0.084]) and 0.375% more than the continuous open §2 prices. **§2's
+09:30 row is the price of arriving after the cross, not the price of the open**: an order in the
+cross does not pay it. The reading is exploratory — its registered run mixed the tape's traded prices
+with split-adjusted bars, and the fix came after the data (`PR-025` §10).

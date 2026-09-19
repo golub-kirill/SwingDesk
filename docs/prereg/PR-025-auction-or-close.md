@@ -6,7 +6,10 @@ date:          2026-09-19
 author:        Claude, on the owner's choice of 2026-09-19. Asked what to do with CARD-001's
                entry after PR-024, the owner answered "Сначала аукцион" - measure the opening
                auction before deciding. PR-024's report named it as the question left open
-status:        registered
+status:        reported   (2026-09-19 - results/PR-025-report.md), EXPLORATORY after amendment A-1
+verdict:       INCONCLUSIVE - the registered REJECT was a unit error (§10). Corrected: the
+               opening auction less 15:55, +0.007% a trade [-0.089, +0.084], the NULL branch
+               section 3 predicted; against the continuous open, +0.375% [+0.316, +0.435]
 ```
 
 ---
