@@ -1,0 +1,28 @@
+{
+  "for": "PR-031",
+  "as_of": {
+    "minutes": "2026-09-19T20:57:13.362351+00:00"
+  },
+  "resamples": 2000,
+  "widths": {
+    "SPY-long": {
+      "whole": 0.00036,
+      "after_publication": 0.000517,
+      "days": 2678,
+      "days_after_publication": 590
+    },
+    "QQQ-long": {
+      "whole": 0.000386,
+      "after_publication": 0.000655,
+      "days": 2675,
+      "days_after_publication": 590
+    },
+    "SPY-both": {
+      "whole": 0.000642,
+      "after_publication": 0.001269,
+      "days": 2678,
+      "days_after_publication": 590
+    }
+  },
+  "power_floor_width": 0.0008
+}

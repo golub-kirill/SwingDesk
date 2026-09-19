@@ -351,6 +351,10 @@ SIDE_RECORDS = {
                     "the verdict estimator's own, on the registered sample and stores before "
                     "registration. Only widths leave it, under the same level guard; PR-030 counts "
                     "its three",
+    "PR-031-power": "no trials: a VARIANCE estimate for PR-031 - each reading's interval width, "
+                    "whole and after publication, the verdict estimator's own on the registered "
+                    "window and store before registration. Only widths leave it, under the same "
+                    "level guard; PR-031 counts its three",
     "PR-024-attribution": "no trials: an EXPLORATORY re-reading of PR-024's own three arms after "
                           "the run - what excluded each entry, the same C - O on populations "
                           "that drop an entry only for what the primary needs, and the shape of "

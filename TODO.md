@@ -1745,6 +1745,10 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       (Zarattini, Aziz & Barbon on `SPY`, published as long and short) is to be registered
       LONG-ONLY; a short leg, if measured at all, is an unread secondary. Its minutes need volume
       for the VWAP stop, which `MinuteStore` now keeps (#199).
+      **REGISTERED 2026-09-19 as `PR-031`:** `SPY-long` the verdict, `QQQ-long` and `SPY-both`
+      counted and never read; 2016-01-04..2026-09-18 (a replication's window), the period since
+      publication (2024-05-10) gating `ACCEPT`; no look-ahead at the half hour. Minutes fetched
+      into a scratchpad store, 2,693 sessions of each fund.
 
 - [ ] **`[v]` A STUDY'S EXCLUSIONS MUST BE PER READING — `PR-024`'s runner dropped an entry from the
       verdict when an UNREAD arm or a perturbation failed.** `run_pr024.price_entry` returns the
