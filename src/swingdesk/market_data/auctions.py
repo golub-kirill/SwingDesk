@@ -12,6 +12,11 @@ flagged as an opening or closing trade or an official open or close - from the l
 from every other market center that stamps its own. Which one is THE cross is a rule, and it can
 only be revisited if the store did not apply it first.
 
+**A print's price is what TRADED, never adjusted.** The bars and minutes in this project carry every
+later split and spin-off; the tape does not. A reader pricing a cross against them must bring the
+two onto one basis first - `PR-025`'s registered run did not, and read a 2-for-1 split as a 50%
+loss (`run_pr025.adjustment_factor`, its amendment A-1).
+
 **Never fetched, fetched with nothing flagged, and prints are three answers**, kept apart as
 `MinuteStore` and `QuoteStore` keep them.
 """
