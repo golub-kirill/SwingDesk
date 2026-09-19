@@ -127,6 +127,54 @@ def test_the_minute_holding_an_instant(run, world) -> None:
     assert run.minute_holding(minutes, minutes[0].at - timedelta(seconds=1)) is None
 
 
+# --- amendment A-1: the tape's prices against the adjusted bars ----------------------------------------
+
+
+def _cross(price: str, flag: str = "O") -> Print:
+    return Print(at=datetime(2026, 3, 2, 14, 30, tzinfo=UTC), price=Decimal(price), size=9000,
+                 exchange="Q", conditions=("@", flag))
+
+
+@pytest.mark.parametrize(("opening", "bar_open", "closing", "bar_close", "factor"), [
+    ("200", "100", "210", "105", "2"),                 # a later 2-for-1 split: both crosses doubled
+    ("10.117", "10", "20.234", "20", "1.0117"),        # a spin-off's factor, the same on both
+    ("46.54", "46.54", "46.46", "46.54", "1"),         # the close's print differs from the bar alone
+    ("38.797", "38.17", "38.90", "38.797", "1"),       # both differ, by factors that do not agree
+    ("100.3", "100", "100.3", "100", "1"),             # a shared factor inside half a percent
+    ("100", "100", "102", "100", "1"),                 # the close alone 2% off: a print, not a split
+    ("200.6", "100", "210", "105", "2"),               # agreeing to 0.3%: the CLOSE's factor is taken
+])
+def test_an_adjustment_is_both_crosses_off_their_bars_by_one_factor(run, opening, bar_open,
+                                                                     closing, bar_close, factor):
+    got = run.adjustment_factor(_cross(opening), Decimal(bar_open), _cross(closing, "6"),
+                                Decimal(bar_close))
+    assert got == pytest.approx(Decimal(factor), rel=Decimal("0.001"))
+
+
+def test_one_cross_is_read_as_an_adjustment_only_beyond_five_percent(run) -> None:
+    assert run.adjustment_factor(None, Decimal(100), _cross("50", "6"), Decimal(100)) == Decimal("0.5")
+    assert run.adjustment_factor(None, Decimal(100), _cross("103", "6"), Decimal(100)) == 1
+    assert run.adjustment_factor(_cross("300"), Decimal(100), None, Decimal(100)) == 3
+    assert run.adjustment_factor(None, Decimal(100), None, Decimal(100)) == 1
+
+
+def test_a_split_after_the_entry_does_not_move_the_trade(run, world) -> None:
+    """THE AMENDMENT'S PROPERTY. The same session printed at twice the bar's prices - a 2-for-1
+    split since - prices the auction arms exactly as the unsplit tape does."""
+    entry, bars, minutes, entered = world._day_and_after(run.base, lambda i: 100.0)
+    plain = _auctions(entered, 100.0, float(minutes[-1].close))
+    doubled = {side: tuple(Print(at=p.at, price=p.price * 2, size=p.size, exchange=p.exchange,
+                                 conditions=p.conditions) for p in prints)
+               for side, prints in plain.items()}
+    one = run.price_entry(entry, _series(bars), Decimal(2), tuple(minutes), _windows(world, entered),
+                          plain, entered, None, Counter())
+    two = run.price_entry(entry, _series(bars), Decimal(2), tuple(minutes), _windows(world, entered),
+                          doubled, entered, None, Counter())
+    assert two.factor == 2 and one.factor == 1
+    for arm in (run.AUCTION, run.CLOSING_ARM):
+        assert two.trade(arm) == one.trade(arm)
+
+
 # --- the arms -------------------------------------------------------------------------------------
 
 
@@ -317,7 +365,9 @@ def test_the_registered_verdict_is_read_from_a_c(run, world, tmp_path, monkeypat
     monkeypatch.setattr(run.base, "BOOTSTRAP_RESAMPLES", 20)
     args.resamples = 20
     payload = run.build(args)
-    assert payload["branch"] == "A-C" and payload["verdict"] == "read A-C"
+    assert payload["branch"] == "A-C", "the branch is still read from A - C"
+    assert payload["verdict"] == "inconclusive" and payload["exploratory"] is True, (
+        "amendment A-1 came after the data: nothing here is confirmatory")
 
 
 def test_a_bar_s_float_tail_is_the_same_print(run, world) -> None:

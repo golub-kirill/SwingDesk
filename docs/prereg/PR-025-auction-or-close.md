@@ -33,8 +33,9 @@ every number in `PR-024`. And a probe of twelve `PR-024` entries on 2026-09-19 r
 tape at each bell (a scratch probe, not committed; the run's `crosses` diagnostic measures the
 same on every entry): the stored daily close equalled the listing market's closing cross, to half a
 cent, in 12 of 12; the stored daily open equalled the opening cross in 10 of 12; **the 09:30
-minute's open — `PR-024`'s price for `O` — equalled it in 9 of 12**, missing by up to 0.31%. So the auction arm is, to a first
-approximation, `PR-024`'s open without its spread, and arithmetic on `PR-024` puts `A − C` near
+minute's open — `PR-024`'s price for `O` — equalled it in 9 of 12**, missing by up to 0.31%. So
+the auction arm is, to a first approximation, `PR-024`'s open without its spread, and arithmetic
+on `PR-024` puts `A − C` near
 +0.05% to +0.10%. **What the arithmetic cannot say is what this measures**: the cross per entry, and
 whether where it differs from the minute's first print it differs against the buyer. No file here
 holds any entry's cross price; the probe read twelve and they are not in the sample's scoring.
@@ -206,4 +207,26 @@ found it breaks even at 15:55; this asks only which route gets there.
 
 ## 10. Amendments
 
-None.
+### A-1 — 2026-09-19, AFTER the registered run: the tape's prices were never on the bars' basis
+
+**What happened.** The registered run returned `REJECT` — the opening auction 3.9 points a trade worse
+than 15:55, and the closing auction the same. Its own diagnostics showed why before anything was
+read: the opening cross stood 27% off the stored open on average while its median gap was zero. The
+SIP trade tape prints what traded; the bars and minutes carry every LATER split and spin-off. On 681
+of 9,637 sessions the cross was the bar times a factor — 2, 4, 10, 5, 3, 1.5, 0.1 for splits and
+reverse splits, 1.385 for Aramark's spin-off, 2.63 for MDU's — so an auction entry on a name that
+split 2-for-1 later was priced at twice its bar, and fell through its stop the next morning. **§9's
+check was meant to catch this and did not**: it counted sessions whose closing cross missed the bar
+by more than half a cent (6.8%, under its tenth) and never read by how much.
+
+**The amendment.** A cross is brought onto the bar's basis when both crosses stand off their own bar
+by one factor — only an adjustment moves the open and the close together — of more than half a
+percent, agreeing to half a percent; with one cross, only a gap beyond 5% is read as an adjustment
+(`run_pr025.adjustment_factor`, seven tests, every mutant killed). A real difference between a print
+and its bar is left alone.
+
+**What it costs the study.** It was made after the data was seen, so by `PREREG_TEMPLATE` rule 3
+**`PR-025` is EXPLORATORY**: the registered `REJECT` is withdrawn as a unit error, the corrected
+reading is reported as exploratory, and the result file's `verdict` is `inconclusive` whatever branch
+the corrected reading takes. `PR-024` is untouched: it priced from split-adjusted minutes and used its
+quotes only as ratios.

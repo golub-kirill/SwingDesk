@@ -119,6 +119,31 @@ def cross_price(prints: Sequence[Print] | None, side: str) -> Print | None:
     return min(flagged, key=lambda p: (-p.size, p.at))
 
 
+#: AMENDMENT A-1, 2026-09-19, after the registered run. The tape prints what traded; the bars and
+#: minutes are adjusted for every later split and spin-off. A cross is brought onto the bar's basis
+#: when BOTH crosses stand off their own bar by one factor - only an adjustment moves the open and
+#: the close together - of more than half a percent, agreeing to half a percent. With one cross, only
+#: a gap of more than 5% is read as an adjustment; a smaller one is a real difference between the
+#: print and the bar, and it stays.
+ADJUSTED_BEYOND = Decimal("0.005")
+FACTORS_AGREE = Decimal("0.005")
+ONE_CROSS_BEYOND = Decimal("0.05")
+
+
+def adjustment_factor(opening: Print | None, bar_open: Decimal, closing: Print | None,
+                      bar_close: Decimal) -> Decimal:
+    """The factor the tape's prices carry against the adjusted bar, or 1 when they carry none."""
+    ratios = [cross.price / level for cross, level in ((closing, bar_close), (opening, bar_open))
+              if cross is not None and level > 0]
+    if not ratios:
+        return Decimal(1)
+    first = ratios[0]
+    if len(ratios) == 2:
+        agree = abs(first / ratios[1] - 1) <= FACTORS_AGREE
+        return first if agree and abs(first - 1) > ADJUSTED_BEYOND else Decimal(1)
+    return first if abs(first - 1) > ONE_CROSS_BEYOND else Decimal(1)
+
+
 def minute_holding(regular: Sequence[Minute], at: datetime) -> Minute | None:
     """The regular-hours minute an instant falls in - the auction arm's entry session starts there."""
     for minute in regular:
@@ -139,6 +164,7 @@ class Priced:
     crosses: dict[str, Print] = field(default_factory=dict)
     bar: Bar | None = None
     first_minute_open: Decimal | None = None
+    factor: Decimal = Decimal(1)
 
     def priced(self, arm: str, costing: str) -> bool:
         return isinstance(self.trades.get(arm, {}).get(costing), Trade)
@@ -217,6 +243,9 @@ def price_entry(entry: base.Entry, series: BarSeries, atr_value: Decimal,
     opening = auctions.get(OPENING)
     closing = auctions.get(CLOSING)
     cross = cross_price(opening, OPENING)
+    close_cross = cross_price(closing, CLOSING)
+    factor = adjustment_factor(cross, bar.open, close_cross, bar.close)
+    got.factor = factor
     if opening is None:
         got.missing[AUCTION] = "auction_not_fetched"
     elif cross is None:
@@ -227,15 +256,14 @@ def price_entry(entry: base.Entry, series: BarSeries, atr_value: Decimal,
             got.missing[AUCTION] = "cross_outside_the_minutes"
         else:
             got.crosses[AUCTION] = cross
-            fills[AUCTION] = (cross.price, Decimal(0), base.after_fill(regular, holding))
-    close_cross = cross_price(closing, CLOSING)
+            fills[AUCTION] = (cross.price / factor, Decimal(0), base.after_fill(regular, holding))
     if closing is None:
         got.missing[CLOSING_ARM] = "auction_not_fetched"
     elif close_cross is None:
         got.missing[CLOSING_ARM] = "no_closing_cross"
     else:
         got.crosses[CLOSING_ARM] = close_cross
-        price = close_cross.price
+        price = close_cross.price / factor
         fills[CLOSING_ARM] = (price, Decimal(0), [Minute(at=session.close_time, open=price,
                                                          high=price, low=price, close=price)])
 
@@ -360,7 +388,10 @@ def crosses_against_the_bar(priced: Sequence[Priced]) -> dict[str, Any]:
         delay = (p.crosses[AUCTION].at - session.open_time).total_seconds()
         late["within 5 s" if delay < 5 else "within a minute" if delay < 60
              else "later than a minute"] += 1
+    adjusted = [p for p in priced if p.factor != 1]
     return {
+        "adjusted_sessions": len(adjusted),
+        "adjustment_factors": dict(Counter(str(round(p.factor, 2)) for p in adjusted).most_common(12)),
         "opening_crosses": len(opens),
         "opening_equals_bar_open": sum(g == 0 for g in open_gaps),
         "opening_equals_first_minute_open": sum(g == 0 for g in minute_gaps),
@@ -497,7 +528,14 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "prereg": "PR-025",
         "trials": 2,
-        "verdict": base.TOKEN[branch] if registered else "smoke",
+        "amendment": ("A-1, 2026-09-19, after the registered run: crosses brought onto the bars' "
+                      "split- and spin-off-adjusted basis (adjustment_factor). The registered run's "
+                      "REJECT was that unit error; this reading is EXPLORATORY by PREREG_TEMPLATE "
+                      "rule 3"),
+        # Amendment A-1 came after the registered run, so no reading here is confirmatory: the
+        # verdict is `inconclusive` whatever the branch, and the branch is kept beside it.
+        "verdict": "inconclusive" if registered else "smoke",
+        "exploratory": True,
         "branch": branch,
         "country": "USA",
         "as_of": instants,
