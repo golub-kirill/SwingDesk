@@ -1681,6 +1681,40 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       minute's first print in 9 of 12 (off by up to 0.31%) — so the cross is read from the SIP
       trade tape, not the bar.
 
+- [ ] **`[v]` `PR-026` — FOUR SINGLE CHANGES TO `CARD-001`, EACH AGAINST ONE BASELINE — the owner's
+      pick, 2026-09-19.** Asked after `PR-024` how the card picks entries, manages positions and how
+      often it wins, and told it breaks even at 15:55, the owner said break-even is weak and asked
+      for ideas from the research so far. Five were offered; the numbers behind them are an
+      EXPLORATORY slicing of `PR-024`'s own entries (to be committed as
+      `docs/decisions/measurements/entry-features-2026-09-19.json` by a tool, counted in
+      `trial_budget.py`) and are hypotheses, never evidence. **The owner picked four:**
+      1. **garbage filter** — no leveraged or inverse funds (by the directory's ETF flag and name);
+      2. **the leader on a pullback** — enter only when the signal close is below its 20-day mean;
+      3. **a new exit** — no 1R target, a wider stop, a longer hold: `PR-019`'s selected cell
+         re-priced at the new entry moment;
+      4. **market regime** — trades taken with `SPY` above against below its 200-day mean.
+      **The owner asked that they not be mixed**, so the agreed design is ONE common baseline —
+      the card as it is, entered at the T+1 close (≈ 15:55), ratified exit — and one arm per idea
+      changing exactly one thing, each with its own verdict; the regime arm is a two-sided contrast.
+      **Every arm is read as the trade's return per dollar in EXCESS of `SPY` over the same days**,
+      so `BOTH_NEGATIVE` catches "better than the baseline and still behind the index". Window
+      2018-09..2022-08, which the exploration never read; `PR-019` did read it, so arm 3 is a
+      re-price and says so. Four trials. **"All four together" is a separate, later study**, built
+      only from what survives. Register before any run; power estimate first.
+
+- [ ] **`[v]` AN IDEA OFFERED AND NOT PICKED: avoid entries prone to gapping through the stop.**
+      2026-09-19. Gap stops are the largest single source of loss damage (`EVIDENCE_SUMMARY` §17.2)
+      and the exploration above sees them again at the 15:55 entry. Avoiding entries before an
+      earnings report is the standard remedy and needs earnings dates this project does not store;
+      a name's own past gap frequency is a proxy that needs nothing new. Parked until the owner
+      asks for it.
+
+- [ ] **`[v]` THE OWNER PREFERS LONG-ONLY STRATEGIES — 2026-09-19.** *"davay tolko longovie
+      strategii, esli eto proshe sdelat pribylnym."* The queued intraday momentum study
+      (Zarattini, Aziz & Barbon on `SPY`, published as long and short) is to be registered
+      LONG-ONLY; a short leg, if measured at all, is an unread secondary. Its minutes need volume
+      for the VWAP stop, which `MinuteStore` now keeps (#199).
+
 - [ ] **`[v]` A STUDY'S EXCLUSIONS MUST BE PER READING — `PR-024`'s runner dropped an entry from the
       verdict when an UNREAD arm or a perturbation failed.** `run_pr024.price_entry` returns the
       first failure of any arm or costing, so the 11:00 arm's missing print and the anchored-stop
