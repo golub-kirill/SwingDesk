@@ -273,3 +273,17 @@ earned (+0.007% a trade [−0.089, +0.084]) and 0.375% more than the continuous 
 09:30 row is the price of arriving after the cross, not the price of the open**: an order in the
 cross does not pay it. The reading is exploratory — its registered run mixed the tape's traded prices
 with split-adjusted bars, and the fix came after the data (`PR-025` §10).
+
+## 12. The live order, priced — `PR-030`, 2026-09-19
+
+Appended, never edited above. §4 counted how the live limit at the prior close fills: 50.6%
+marketable at the open, 32.8% passive, 16.6% never, on the admitted universe, by the first PRINT.
+Classed by the ASK, the card's own entries split 31.0 / 50.5 / 18.5, because their half-spread at
+the open, 37.8 bps, moves a sixth of entries from marketable to resting. Classed by §4's own test,
+they split 47.2 / 34.3 / 18.4.
+
+**Priced, per drawn entry:** a limit-on-open less today's order, +0.123% [−0.075, +0.305], not
+established. A day limit that also joins the cross, +0.145% [+0.119, +0.174], counted and never
+read. **§2's 09:30 cost is paid only on the 31% of entries where the order is marketable.** Those
+are where every route that joins the cross saves it.
+

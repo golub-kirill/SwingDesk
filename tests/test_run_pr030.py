@@ -240,3 +240,30 @@ def test_the_difference_is_taken_apart_by_how_the_day_limit_fared(run, world, he
                 for o in (marketable, rested, rested)) / 3
     assert sum(g["contribution"] for g in parts.values()) == pytest.approx(whole)
     assert parts[run.RESTED]["mean"] == pytest.approx(-rested.value[(run.DAY, "net")])
+
+
+def test_the_registered_sources_name_each_order_s_own_fill(run) -> None:
+    """Amendment A-1: `M` fills `CROSSED`; asked for anything else, its check reads no row."""
+    assert dict((arm, how) for arm, how, _, _ in run.REPRODUCES) == {
+        run.MOO: run.CROSSED, run.DAY: run.MARKETABLE}
+
+
+def test_a_crossed_market_on_open_is_checked_against_its_row(run, world, helpers,
+                                                             tmp_path) -> None:
+    got, _ = _priced(run, world, helpers, lambda i: 101.0)
+    trade = got.trades[run.MOO]
+    path = tmp_path / "qa.csv"
+    header = "instrument_id,session_date,arm,exit_date,exit_reason,per_dollar"
+    row = (f"{got.entry.instrument_id},{got.entry.session_date},A,{trade.exit_date},"
+           f"{trade.exit_reason.value},{got.value[(run.MOO, 'net')]}")
+    path.write_text("\n".join((header, row, "")), encoding="utf-8")
+    assert run.repeats_prior_studies([got], [(run.MOO, run.CROSSED, path, "A")])[run.MOO][
+        "checked"] == 1
+
+
+def test_the_print_test_is_dr040_s_not_the_ask(run, world, helpers) -> None:
+    """Opens at 99.9 under a 100 limit: marketable by the print, resting by the ask."""
+    got, _ = _priced(run, world, helpers, lambda i: 99.9)
+    assert got.by_print == run.MARKETABLE and got.how[run.DAY] == run.RESTED
+    never, _ = _priced(run, world, helpers, lambda i: 101.0)
+    assert never.by_print == run.MISSED

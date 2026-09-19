@@ -925,6 +925,14 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       market-on-open (the cross, always). Fill rate and return per DRAWN entry, a missed entry
       counting as cash. The owner also chose the next research line: **intraday momentum on
       `SPY`/`QQQ`, long only** (the item below).
+      **MEASURED 2026-09-19 (`PR-030`, `INCONCLUSIVE`):** the limit-on-open less today's day
+      limit, +0.123% a drawn entry [−0.075, +0.305] — not established, and all of it cost. Counted
+      and never read: a day limit that ALSO joins the cross (`J`) +0.145% [+0.119, +0.174]. Every
+      order's own net is break-even. **The owner's call is unchanged and better informed**: keep
+      `day`; or send `opg` (not established; no bracket on `opg`); or build `J` (an `opg` limit in
+      the evening plus a day limit after the open when the cross misses — a pass that does not
+      exist, and a stop placed after the fill). Unknown and decisive: whether a queued `day` order
+      already joins the cross at Alpaca — if it does, today's order already is `J`.
 
 - [ ] **`[v]` THE RATIFIED EXIT COSTS 0.098R OF GROSS AND THE COMPARISON HAS NEVER BEEN MADE ON
       SELECTED ENTRIES.** Raised 2026-09-08 from `EVIDENCE_SUMMARY` §10 and the exit surface.
