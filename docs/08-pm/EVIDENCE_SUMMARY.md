@@ -1432,3 +1432,19 @@ close costs more than any route saves.** §9's check of the fill split against `
 registered. §4 classed marketability by the print and this study by the ask; by §4's own test the
 split agrees within 3.4 points (`PR-030` §10, A-1).
 
+## 29. The first rule to beat holding SPY per unit of risk — and it went quiet on SPY when it was published
+
+**`PR-031`, 2026-09-19, `ACCEPT`** (`docs/prereg/results/PR-031-report.md`). Zarattini, Aziz and
+Barbon's intraday momentum rule, traded long only on `SPY` over 2016-2026, with no look-ahead at the
+half hour and half a cent a share a side, earned **8.5% a year at a Sharpe ratio of 1.01**. Its
+worst drawdown was −9.9% and its correlation with `SPY` 0.27. Holding `SPY`, price only, earned 14.8%
+at 0.83 with a −34.2% drawdown. Its interval clears zero at a cent a share. The paper's own
+long-short version earned 17.3% a year on the years before publication, against the paper's 19.6%
+over 2007-2024, so the implementation replicates.
+
+**The verdict passed its publication gate by a seventh of a standard error.** Since 2024-05-10, 590
+sessions: +0.0018% a day [−0.0228, +0.0263], 0.45% a year, a Sharpe ratio of 0.06. On `QQQ`, counted
+and never read, the rule earned 8.6% a year since publication at 1.06. **What it licenses is a
+specification for a live paper trial**, which is the only way to learn whether it still works; the
+owner decides whether to build one.
+

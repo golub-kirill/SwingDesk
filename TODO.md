@@ -1749,6 +1749,16 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       counted and never read; 2016-01-04..2026-09-18 (a replication's window), the period since
       publication (2024-05-10) gating `ACCEPT`; no look-ahead at the half hour. Minutes fetched
       into a scratchpad store, 2,693 sessions of each fund.
+      **REPORTED 2026-09-19, `ACCEPT` by the thinnest margin:** 8.5% a year at a Sharpe ratio of
+      1.01 against holding `SPY`'s 0.83, drawdown −9.9%; since publication 0.45% a year, Sharpe
+      0.06. `QQQ-long` (never read) 8.6% a year since publication, Sharpe 1.06.
+- [ ] **`[v]` OWNER'S CALL: A LIVE PAPER TRIAL OF THE INTRADAY MOMENTUM RULE?** Raised 2026-09-19
+      by `PR-031`'s `ACCEPT`, which licenses *a specification for a live paper trial* and nothing
+      more. It would need what `CHARTER` A-003 §4 records as absent: a decision every half hour,
+      orders a minute later, an intraday loop, and leverage up to 4×. A margin account under
+      $25,000 may make three day trades in five sessions (the paper account is 100k; real capital
+      10k). Open with it: which fund (`SPY` registered, `QQQ` stronger since publication but read
+      after the fact), and whether a forward paper trial is the next step at all.
 
 - [ ] **`[v]` A STUDY'S EXCLUSIONS MUST BE PER READING — `PR-024`'s runner dropped an entry from the
       verdict when an UNREAD arm or a perturbation failed.** `run_pr024.price_entry` returns the
