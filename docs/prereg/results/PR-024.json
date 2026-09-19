@@ -1,0 +1,264 @@
+{
+  "prereg": "PR-024",
+  "trials": 2,
+  "verdict": "accept",
+  "branch": "ACCEPT",
+  "country": "USA",
+  "as_of": {
+    "bars": "2026-09-16T19:30:10.930516-05:00",
+    "minutes": "2026-09-17T08:16:22.839207+00:00",
+    "quotes": "2026-09-17T08:16:22.839207+00:00"
+  },
+  "measured_span": {
+    "first_session": "2022-09-19",
+    "last_session": "2026-08-18",
+    "years": 3.91
+  },
+  "split": {
+    "registered": "none - the sample is one draw, and the arms are paired within it",
+    "buys": "nothing a split could buy here: the question is a price moved within one session, not a rule tuned on one half. Pairing removes the market level; the month-clustered interval and the date-equal reading are the protections a split would have given, and PR-016's own split already tested the rule the entries come from."
+  },
+  "perturbations": {
+    "registered": [
+      "cost_adverse",
+      "exits_at_registry",
+      "anchored_stop",
+      "instrument_clustered",
+      "date_weighted"
+    ],
+    "run": [
+      "cost_adverse",
+      "exits_at_registry",
+      "anchored_stop",
+      "instrument_clustered",
+      "date_weighted"
+    ]
+  },
+  "registered_settings": {
+    "dates": "every formation session",
+    "per_date": 10,
+    "sample_seed": 20260916,
+    "bootstrap": {
+      "unit": "entry month",
+      "block": 3,
+      "seed": 20260916,
+      "resamples": 10000
+    },
+    "power_floor": 0.003,
+    "min_complete_share": 0.9,
+    "min_pairs": 1000,
+    "min_months": 24,
+    "fill_within_seconds": 300.0,
+    "quote_max_age_seconds": 60.0,
+    "stress_multiple": "3",
+    "registry_exit_bps": "25",
+    "exit": {
+      "atr_period": 14,
+      "atr_stop_multiple": "2.0",
+      "target_r_multiple": "1.0",
+      "max_holding_period": 20
+    },
+    "decile": "0.10",
+    "lookback": 126,
+    "benchmark": "SPY",
+    "window_months": 48
+  },
+  "sample": {
+    "drawn": 9820,
+    "complete": 8878,
+    "excluded": {
+      "no_print_at_the_moment": 447,
+      "no_fresh_two_sided_quote": 239,
+      "stop_not_below_entry": 129,
+      "minutes_mismatch": 116,
+      "zero_shares": 8,
+      "stop_not_positive": 2,
+      "minutes_unavailable": 1
+    }
+  },
+  "tie_breaks": {
+    "target": 7,
+    "stop": 4,
+    "entry_day_stop": 2,
+    "entry_day_target": 1
+  },
+  "diagnostics": {
+    "O": {
+      "exit_reasons": {
+        "target": 4034,
+        "stop": 3437,
+        "time": 708,
+        "stop_gap": 695,
+        "end_of_data": 4
+      },
+      "exited_on_the_entry_session": 142,
+      "entry_half_spread_bps": {
+        "entries": 8878,
+        "p10": 3.7835792659856224,
+        "p50": 24.547686153286662,
+        "p90": 85.1384847505119,
+        "average": 37.76152380736809
+      }
+    },
+    "T": {
+      "exit_reasons": {
+        "target": 4254,
+        "stop": 3168,
+        "time": 770,
+        "stop_gap": 681,
+        "end_of_data": 5
+      },
+      "exited_on_the_entry_session": 24,
+      "entry_half_spread_bps": {
+        "entries": 8878,
+        "p10": 1.1339154099104207,
+        "p50": 5.205622071837585,
+        "p90": 18.954779312212292,
+        "average": 8.364880568978192
+      }
+    },
+    "C": {
+      "exit_reasons": {
+        "target": 4238,
+        "stop": 3182,
+        "time": 796,
+        "stop_gap": 659,
+        "end_of_data": 3
+      },
+      "exited_on_the_entry_session": 0,
+      "entry_half_spread_bps": {
+        "entries": 8878,
+        "p10": 0.8728288382648163,
+        "p50": 3.1328320802005014,
+        "p90": 10.56444310292786,
+        "average": 4.96712948420004
+      }
+    }
+  },
+  "cells": {
+    "C": {
+      "arm": "C",
+      "pairs": 8878,
+      "drawn": 9820,
+      "complete_share": 0.9040733197556008,
+      "months": 48,
+      "difference": {
+        "estimate": 0.003113605081126508,
+        "lo": 0.0022778657895620663,
+        "hi": 0.004179140275038424,
+        "width": 0.0019012744854763576
+      },
+      "difference_r": {
+        "estimate": 0.055677425988265083,
+        "lo": 0.04118307977324402,
+        "hi": 0.07297665639211877,
+        "width": 0.03179357661887475
+      },
+      "gross_part": {
+        "estimate": -0.0001587551175451409,
+        "lo": -0.001048270666005809,
+        "hi": 0.0008971645392017518,
+        "width": 0.0019454352052075607
+      },
+      "cost_part": 0.0032723601986716488,
+      "cost_adverse": {
+        "estimate": 0.001995487957002015,
+        "lo": 0.0009930581344571084,
+        "hi": 0.0031929405095302904,
+        "width": 0.002199882375073182
+      },
+      "exits_at_registry": {
+        "estimate": 0.003097736532257677,
+        "lo": 0.0022711219196761313,
+        "hi": 0.004151238637869989,
+        "width": 0.001880116718193858
+      },
+      "anchored_stop": {
+        "estimate": 0.002964482922147217,
+        "lo": 0.002280998729187698,
+        "hi": 0.003547501334689785,
+        "width": 0.0012665026055020874
+      },
+      "date_weighted": {
+        "estimate": 0.0032499954314725715,
+        "lo": 0.0024337634311771953,
+        "hi": 0.004299513899953088,
+        "width": 0.0018657504687758929
+      },
+      "instrument_clustered": {
+        "estimate": 0.003113605081126508,
+        "lo": 0.0020515508453497733,
+        "hi": 0.004200462126860574,
+        "width": 0.002148911281510801
+      },
+      "level": {
+        "estimate": 0.0002419310591480766,
+        "lo": -0.003964316919964451,
+        "hi": 0.004557182378264804,
+        "width": 0.008521499298229256
+      }
+    },
+    "T": {
+      "arm": "T",
+      "pairs": 8878,
+      "drawn": 9820,
+      "complete_share": 0.9040733197556008,
+      "months": 48,
+      "difference": {
+        "estimate": 0.003125518635605319,
+        "lo": 0.0021167676798758933,
+        "hi": 0.004152486010975229,
+        "width": 0.0020357183310993356
+      },
+      "difference_r": {
+        "estimate": 0.0569544324514362,
+        "lo": 0.040838395001601135,
+        "hi": 0.073914150463331,
+        "width": 0.03307575546172986
+      },
+      "gross_part": {
+        "estimate": 3.126345000197226e-05,
+        "lo": -0.0008775791596970691,
+        "hi": 0.0009535855413483332,
+        "width": 0.0018311647010454024
+      },
+      "cost_part": 0.0030942551856033467,
+      "cost_adverse": {
+        "estimate": 0.0030932033025955546,
+        "lo": 0.0020851174894677325,
+        "hi": 0.004109765947485228,
+        "width": 0.0020246484580174954
+      },
+      "exits_at_registry": {
+        "estimate": 0.003116374274605722,
+        "lo": 0.0021095046260710014,
+        "hi": 0.004135759218020394,
+        "width": 0.002026254591949393
+      },
+      "anchored_stop": {
+        "estimate": 0.0028986528628875624,
+        "lo": 0.002465779880337387,
+        "hi": 0.003274054064401432,
+        "width": 0.0008082741840640447
+      },
+      "date_weighted": {
+        "estimate": 0.00325087550428828,
+        "lo": 0.002230705210221441,
+        "hi": 0.004294163852201281,
+        "width": 0.00206345864197984
+      },
+      "instrument_clustered": {
+        "estimate": 0.003125518635605319,
+        "lo": 0.002247844404257127,
+        "hi": 0.004004820654529473,
+        "width": 0.0017569762502723462
+      },
+      "level": {
+        "estimate": 0.0002538446136268879,
+        "lo": -0.004245723295582683,
+        "hi": 0.004977459791694139,
+        "width": 0.009223183087276822
+      }
+    }
+  }
+}

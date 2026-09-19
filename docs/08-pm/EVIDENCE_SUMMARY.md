@@ -1338,3 +1338,40 @@ entered at the open, where `DR-040` measured the spread at 21.9-30.2 bps, agains
 15:55. If moving execution closes a meaningful part of that gap, it moves every result above at
 once - including the ones that were refused - and that is worth knowing before a fifth class is
 drawn.
+
+## 25. The card has been buying at the worst minute of the day — at 15:55 the same entries earn 0.31% more, and break even
+
+**`PR-024`, `ACCEPT`, 2026-09-17** (`docs/prereg/results/PR-024-report.md`). Every entry
+`CARD-001`'s screen chose over the last 48 months — 982 sessions, ten names each — bought three ways
+on its entry session, each paying its own name's SIP quoted spread at that moment and exiting under
+the ratified stop, target and clock.
+
+| entering at, against the 09:30 open | per dollar a trade | 95% interval |
+|---|---|---|
+| **15:55** — the verdict's arm | **+0.311%** | **[+0.228, +0.418]** |
+| 15:55, cost-adverse (3× its spread, exits at the open's) | +0.200% | [+0.099, +0.319] |
+| 15:55, price only (no costs) | −0.016% | [−0.105, +0.090] |
+| 11:00 — counted, never read | +0.313% | [+0.212, +0.415] |
+
+**The whole difference is the spread.** The card picks names that move, and they are wide at the
+open: **37.8 bps a side on average** (median 24.5, p90 85.1) against **5.0 at 15:55**. The saving
+climbs with the open's spread from +0.10% on the tightest fifth of entries to +0.84% on the widest.
+The price does not drift against a late entry on these names — `DR-040` §9's −0.138% on the
+universe is zero here within about ±0.10%.
+
+**It does not make the card profitable.** At 15:55 the card earns **+0.024% a trade** [−0.40%,
++0.46%]; at the open it loses about 0.29%. Moving the clock turns a losing rule into one that
+breaks even, and nothing here compares it with `SPY`.
+
+**Not measured, and it may be most of it: the opening auction.** The open arm is priced as an order
+meeting the continuous book seconds after 09:30. An order in the opening auction pays one price
+and no quoted spread; Alpaca's `opg` guarantees that, and whether the `day` orders the card sends
+today take part in it the vendor does not document. If they do, the saving against the real open is
+smaller than this. **The next question is an `opg` order at the open against 15:55 and a `cls`
+order at the close** — a routing choice, if the auctions are as cheap as the close.
+
+**What it changes.** `DR-040` §9's question is answered on the right population: +0.311% where §9
+read +0.310%, now with an interval that does not flip with the weighting (date-weighted +0.325%).
+Every single-stock level this account reports at the open paid that moment's spread. **Changing
+`entry.method` is the owner's call** — a new card version, and a pass shortly before the close that
+does not exist yet (`CONSTRAINTS` §4, a build gap since `CHARTER` A-003).

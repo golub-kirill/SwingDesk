@@ -6,7 +6,11 @@ date:          2026-09-16
 author:        Claude, on the owner's choice of 2026-09-16. Asked "Начинаем с переноса исполнения
                на конец сессии?", the owner answered "Да, начать с этого" - the first study after
                CHARTER A-003 reopened research (EVIDENCE_SUMMARY §24). Owed by DR-040 §9.4
-status:        registered
+status:        reported   (2026-09-17 - results/PR-024-report.md)
+verdict:       ACCEPT, against section 3's prediction - entering at 15:55 instead of the open
+               earned +0.311% per dollar a trade [+0.228, +0.418] on 8,878 entries, net of each
+               name's own spread; cost-adverse +0.200%. All of it the spread: the gross part is
+               -0.016% [-0.105, +0.090]. At 15:55 the card itself earns +0.024% [-0.396, +0.456]
 ```
 
 ---
