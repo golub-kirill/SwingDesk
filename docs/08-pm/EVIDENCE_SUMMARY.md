@@ -1375,3 +1375,26 @@ read +0.310%, now with an interval that does not flip with the weighting (date-w
 Every single-stock level this account reports at the open paid that moment's spread. **Changing
 `entry.method` is the owner's call** — a new card version, and a pass shortly before the close that
 does not exist yet (`CONSTRAINTS` §4, a build gap since `CHARTER` A-003).
+
+## 26. Four ideas read off the card's own trades — none survived four years they had not seen
+
+**`PR-026`..`PR-029`, 2026-09-19** (`docs/prereg/results/PR-026-report.md`). Shown that the card
+breaks even at 15:55 (§25), the owner asked for ideas and picked four, each tested as ONE change to
+one baseline — `CARD-001` entered at the next session's close, every trade read in excess of `SPY`
+over its own days — on 2018-09..2022-08, 40,240 entries. The ideas came from slicing `PR-024`'s
+trades on 2022-09..2026-08 (`entry-features-2026-09-19`, exploratory, counted).
+
+| change | the slicing saw | this window | branch |
+|---|---|---|---|
+| leave leveraged and inverse funds out | those funds −0.68% a trade | **−0.007%** [−0.039, +0.018] | `NULL` |
+| buy the leader only on a pullback | +0.57% a trade | **−0.094%** [−0.392, +0.176] | `INCONCLUSIVE` |
+| `PR-019`'s wide exit, re-priced | — | **+0.699%** [−0.992, +2.615] | `INCONCLUSIVE` |
+| `SPY` below its 200-day mean | +0.77% against −0.14% | **+0.477%** [−0.312, +1.317] | `INCONCLUSIVE` |
+
+**The pullback is the finding.** The strongest pattern in the card's own trades reversed sign on a
+window chosen before the run. That is what registering first is for, and the next idea mined from
+the card's trades is registered the same way or not used.
+
+**The card still trails `SPY`**: −0.27% a trade [−0.65, +0.14] at the close, at measured spreads,
+2018–2022. The exit and the regime point up and are too noisy on 48 months to read; neither licenses
+a change.

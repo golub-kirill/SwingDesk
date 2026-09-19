@@ -1705,6 +1705,12 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       regime**, one runner (`tools/run_pr026.py`) and one draw. The power estimate
       (`tools/power_pr026.py`) reads `PR-026` at the floor and the other three only for a large
       effect's sign, and each registration says so.
+      **REPORTED 2026-09-19 — none of the four confirmed** (`EVIDENCE_SUMMARY` §26): garbage `NULL`
+      (−0.007%), pullback `INCONCLUSIVE` and on the wrong side (−0.094% where the slicing saw
+      +0.57%), exit `INCONCLUSIVE` (+0.70%, 3.6 wide), regime `INCONCLUSIVE` (+0.48%). The card
+      trails `SPY` by −0.27% a trade at the close on 2018–2022. **What is left is the owner's:**
+      the leveraged-fund filter as risk hygiene (it costs nothing measured), and whether to spend
+      more on this card or on a different class.
 
 - [ ] **`[v]` AN IDEA OFFERED AND NOT PICKED: avoid entries prone to gapping through the stop.**
       2026-09-19. Gap stops are the largest single source of loss damage (`EVIDENCE_SUMMARY` §17.2)

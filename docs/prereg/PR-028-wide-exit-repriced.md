@@ -5,7 +5,9 @@ id:            PR-028
 date:          2026-09-19
 author:        Claude, on the owner's choice of 2026-09-19 - the third of four single changes
                registered together (PR-026 carries the shared design, sections 4 and 5)
-status:        registered
+status:        reported   (2026-09-19 - results/PR-028-report.md)
+verdict:       INCONCLUSIVE, as predicted - the wide exit less the ratified exit, each against
+               SPY, +0.699% a trade [-0.992, +2.615]
 ```
 
 ---

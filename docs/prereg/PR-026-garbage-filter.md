@@ -7,7 +7,9 @@ author:        Claude, on the owner's choice of 2026-09-19. Shown that CARD-001 
                at 15:55 (PR-024) and asked for ideas, the owner picked four and asked that they not
                be mixed: this is the first, and PR-027..PR-029 are the others. All four share the
                design in sections 4 and 5 here, one baseline, one draw and one pass
-status:        registered
+status:        reported   (2026-09-19 - results/PR-026-report.md)
+verdict:       INCONCLUSIVE, branch NULL, as section 3 predicted - leaving leveraged and inverse
+               funds out moves the card's excess over SPY by -0.007% a trade [-0.039, +0.018]
 ```
 
 ---

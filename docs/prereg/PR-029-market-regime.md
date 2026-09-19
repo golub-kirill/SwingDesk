@@ -5,7 +5,9 @@ id:            PR-029
 date:          2026-09-19
 author:        Claude, on the owner's choice of 2026-09-19 - the fourth of four single changes
                registered together (PR-026 carries the shared design, sections 4 and 5)
-status:        registered
+status:        reported   (2026-09-19 - results/PR-029-report.md)
+verdict:       INCONCLUSIVE, as predicted - dates below SPY's 200-day mean less dates above,
+               +0.477% a trade [-0.312, +1.317]
 ```
 
 ---
