@@ -377,6 +377,7 @@ def walk_entry(
     counts: Counter[str],
     arm: str,
     anchor: Decimal | None = None,
+    policy: ExitPolicy = POLICY,
 ) -> Trade | str:
     """One position, walked exactly as `engine.run_arm` walks it, from one arm's entry.
 
@@ -390,13 +391,16 @@ def walk_entry(
     the evening, from the decision's own price (`DR-027` §3). With `anchor` the stop is
     `anchor - 2xATR` and the target one R above the anchor; R and the share count are still the
     position's own, `entry - stop`.
+
+    **`policy` is the exit, and the ratified one unless a caller names another** - `PR-026` walks
+    `PR-019`'s selected cell through the same code, so a difference between the two is the exit.
     """
     index = next((i for i, bar in enumerate(bars) if bar.session_date == entry.session_date), None)
     if index is None:
         return "entry_session_not_stored"
     entry_price = entry_cost.buy_fill(quoted_entry)
     placed_from = entry_price if anchor is None else anchor
-    stop = POLICY.stop_for(placed_from, atr_value)
+    stop = policy.stop_for(placed_from, atr_value)
     if stop >= entry_price:
         return "stop_not_below_entry"
     if stop <= 0:
@@ -405,7 +409,7 @@ def walk_entry(
     shares = int(RISK_PER_TRADE / risk)
     if shares < 1:
         return "zero_shares"
-    target = POLICY.target_for(placed_from, placed_from - stop)
+    target = policy.target_for(placed_from, placed_from - stop)
     mfe = mae = Decimal(0)
 
     for i in range(index, len(bars) - 1):
@@ -414,11 +418,11 @@ def walk_entry(
             if not day_minutes:
                 return "no_minutes_after_fill"
             seen = _day_bar(bar, day_minutes)
-            decision = POLICY.evaluate(seen, stop, 0, target)
+            decision = policy.evaluate(seen, stop, 0, target)
             decision = _resolve_on_minutes(decision, day_minutes, stop, target, counts)
         else:
             seen = bar
-            decision = POLICY.evaluate(bar, stop, i - index, target)
+            decision = policy.evaluate(bar, stop, i - index, target)
             decision = break_tie(decision, tie_break, entry.instrument_id, bar, stop, target, counts)
         mfe = max(mfe, (seen.high - entry_price) / risk)
         mae = min(mae, (seen.low - entry_price) / risk)

@@ -1701,6 +1701,10 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       2018-09..2022-08, which the exploration never read; `PR-019` did read it, so arm 3 is a
       re-price and says so. Four trials. **"All four together" is a separate, later study**, built
       only from what survives. Register before any run; power estimate first.
+      **REGISTERED 2026-09-19 as `PR-026` garbage, `PR-027` pullback, `PR-028` exit, `PR-029`
+      regime**, one runner (`tools/run_pr026.py`) and one draw. The power estimate
+      (`tools/power_pr026.py`) reads `PR-026` at the floor and the other three only for a large
+      effect's sign, and each registration says so.
 
 - [ ] **`[v]` AN IDEA OFFERED AND NOT PICKED: avoid entries prone to gapping through the stop.**
       2026-09-19. Gap stops are the largest single source of loss damage (`EVIDENCE_SUMMARY` §17.2)

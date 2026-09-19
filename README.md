@@ -405,9 +405,9 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 96 script(s), of which 29 are things you type
+### The tools — 99 script(s), of which 30 are things you type
 
-#### Operator tools — 29
+#### Operator tools — 30
 
 Run these. Everything else below either runs itself or ran once.
 
@@ -429,6 +429,7 @@ Run these. Everything else below either runs itself or ran once.
 | `python tools/power_pr022.py` | The power estimate `PR-022` needs BEFORE it registers: can nineteen years read a Sharpe difference? | `--data` · `--as-of` · `--out` · `--report` · `--resamples` |
 | `python tools/power_pr023.py` | The power estimate `PR-023` needs BEFORE it registers: what excess-Sharpe difference can it read? | `--data` · `--as-of` · `--out` · `--report` · `--resamples` |
 | `python tools/power_pr024.py` | `PR-024`'s power estimate - how wide the interval on close-minus-open can be, before any minute. | `--data` · `--as-of` · `--pilot-dates` · `--pilot-per-date` · `--resamples` · `--report` |
+| `python tools/power_pr026.py` | `PR-026`..`PR-029`'s power estimate - how wide each of the four intervals can be. Widths only. | `--data` · `--directory` · `--directory-as-of` · `--as-of` · `--resamples` · `--out` · `--report` |
 | `python tools/refresh_classifications.py` | Fetch sector classifications for instruments the store already holds bars for. | `--data` · `--budget` · `--symbols` · `--universe` |
 | `python tools/refresh_universe.py` | Fetch bars for eligible symbols, oldest-first, up to a budget. | `--data` · `--budget` · `--period` · `--pause` · `--symbols-from` |
 | `python tools/remeasure.py` | Is the answer still true? A scheduled re-observation of a registered question, on a rolling window. | `study` · `--data` · `--as-of` · `--report` |
@@ -470,7 +471,7 @@ Invoked by `python tools/check_gates.py`, not singly. Listed so a failing gate c
 | `python tools/verify_parameters.py` | Enforce the parameter-registry contract. | `--registry` |
 | `python tools/verify_transcription.py` | Verify that every `verbatim` claim in the documents still matches the course. | `--course-root` · `--docs` |
 
-#### Evidence-bound research runners — 54
+#### Evidence-bound research runners — 56
 
 Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions/measurements/` and reproduces it. They ran once, on a date. Nobody types these; they exist so a number can be re-derived.
 
@@ -484,6 +485,7 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/measure_correlation_cap.py` | Calibrate the correlation cap: what it would have refused, and what that would have cost. | `--data` · `--out` |
 | `python tools/measure_decile_persistence.py` | How much of the selected book survives to the next rebalance, and what that does to its cost. | `--data` · `--as-of` · `--out` |
 | `python tools/measure_drawdown.py` | Report the drawdown `k.drawdown_pause` triggers on, so the criterion can be evaluated at all. | `--data` |
+| `python tools/measure_entry_features.py --data --minutes --quotes --directory` | Which of `PR-024`'s entries were garbage? EXPLORATORY - where `PR-026`..`PR-029` came from. | `--data` **(required)** · `--minutes` **(required)** · `--quotes` **(required)** · `--directory` **(required)** · `--sample` · `--as-of` · `--minutes-as-of` · `--quotes-as-of` · `--out` |
 | `python tools/measure_execution_time.py` | Does moving the trade off the open survive the gross it gives up? `DR-040` §6, run. | `--data` · `--sample` · `--seed` · `--hold` · `--out` |
 | `python tools/measure_exit_surface.py` | Expectancy over the stop x target grid, NET of costs. `DR-029` §5's lever 1, priced. | `--data` · `--out` · `--limit` |
 | `python tools/measure_fill_convention.py` | The backtest fills at the next open. The live path rests a limit at the prior close. Same trade? | `--data` · `--hold` · `--out` |
@@ -530,5 +532,6 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/run_pr023.py` | `PR-023`: five asset classes, each held above its ten-month average and in T-bills below, against SPY. | `--data` · `--as-of` · `--out` · `--report` · `--resamples` |
 | `python tools/run_pr024.py` | `PR-024` - does `CARD-001` earn more entering near the close than at the open? | `--data` · `--minutes` · `--quotes` · `--sample` · `--as-of` · `--minutes-as-of` · `--quotes-as-of` · `--resamples` · `--dates` · `--per-date` · `--parity-limit` |
 | `python tools/run_pr025.py` | `PR-025` - does an entry that joins the opening auction earn what the 15:55 entry earns? | `--data` · `--minutes` · `--quotes` · `--auctions` · `--sample` · `--as-of` · `--minutes-as-of` · `--quotes-as-of` · `--auctions-as-of` · `--resamples` |
+| `python tools/run_pr026.py` | `PR-026`..`PR-029` - four single changes to `CARD-001`, each against one baseline, read against SPY. | `--data` · `--directory` · `--directory-as-of` · `--sample` · `--as-of` · `--per-date` · `--resamples` |
 
 <!-- END GENERATED COMMANDS -->
