@@ -1398,3 +1398,19 @@ the card's trades is registered the same way or not used.
 **The card still trails `SPY`**: −0.27% a trade [−0.65, +0.14] at the close, at measured spreads,
 2018–2022. The exit and the regime point up and are too noisy on 48 months to read; neither licenses
 a change.
+
+## 27. The saving at 15:55 is available at the open — in the auction — and the first reading of it was a unit error
+
+**`PR-025`, 2026-09-19, EXPLORATORY** (`docs/prereg/results/PR-025-report.md`). On `PR-024`'s own
+entries, an order filled at the listing market's opening cross, paying no spread, earned **+0.007%**
+a trade against the 15:55 order [−0.089, +0.084] and **+0.375%** against the continuous open the
+card buys at today [+0.316, +0.435]. So §25's saving is a ROUTING choice — Alpaca's `opg`, sent in
+the evening pass the card already has — and needs no order during the session. The card still
+breaks even at either moment.
+
+**It is exploratory because the registered run was wrong in its units.** It returned `REJECT`, −3.9
+points a trade, because the SIP tape prints what traded while every bar and minute carries later
+splits and spin-offs; 620 sessions were off by a factor of 2, 4, 10 or a spin-off's. The fix was
+made after that result was seen (`PR-025` §10, amendment A-1), so nothing here is confirmatory.
+**Not measured:** whether the card's live limit order fills in the cross, and whether a queued
+`day` order already joins it.

@@ -912,6 +912,12 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       cheaper to adopt; the owner may prefer to wait for it. Nothing changes until they rule.
       **RULED 2026-09-19: "Сначала аукцион"** — the card stays as it is until the auction is
       measured. `PR-025` registers it.
+      **MEASURED 2026-09-19 (`PR-025`, exploratory after amendment A-1):** the opening auction
+      earns what 15:55 earns (+0.007% [−0.089, +0.084]) and +0.375% over the continuous open. **So
+      the question is now a routing one, and it is the owner's:** send the card's entries as `opg`
+      (limit-on-open at the sizing price) in the existing evening pass — a change to `DR-027` §3.3's
+      `time_in_force: day` — or keep `day`. Unmeasured either way: how often a limit-on-open at the
+      sizing price fails to fill, and whether a queued `day` order already joins the cross.
 
 - [ ] **`[v]` THE RATIFIED EXIT COSTS 0.098R OF GROSS AND THE COMPARISON HAS NEVER BEEN MADE ON
       SELECTED ENTRIES.** Raised 2026-09-08 from `EVIDENCE_SUMMARY` §10 and the exit surface.
