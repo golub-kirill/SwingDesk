@@ -1,0 +1,282 @@
+{
+  "prereg": "PR-031",
+  "trials": 3,
+  "verdict": "accept",
+  "branch": "ACCEPT",
+  "country": "USA",
+  "as_of": {
+    "minutes": "2026-09-19T20:57:13.362351+00:00"
+  },
+  "measured_span": {
+    "first_session": "2016-01-04",
+    "last_session": "2026-09-18",
+    "years": 10.7
+  },
+  "split": {
+    "registered": "none - a published rule with every constant fixed by the paper",
+    "buys": "nothing a split could buy: nothing is selected; the period since publication is read apart and gates ACCEPT"
+  },
+  "perturbations": {
+    "registered": [
+      "paper",
+      "cost_adverse",
+      "gross"
+    ],
+    "run": [
+      "paper",
+      "cost_adverse",
+      "gross"
+    ]
+  },
+  "registered_settings": {
+    "lookback": 14,
+    "first_decision_minute": 30,
+    "every": 30,
+    "vol_target": 0.02,
+    "max_leverage": 4.0,
+    "costs_per_share": {
+      "net": 0.005,
+      "paper": 0.0045,
+      "cost_adverse": 0.01,
+      "gross": 0.0
+    },
+    "published": "2024-05-10",
+    "primary": "SPY-long",
+    "bootstrap": {
+      "unit": "month",
+      "block": 3,
+      "seed": 20260921,
+      "resamples": 10000
+    },
+    "power_floor": 0.0008,
+    "min_days": 1000,
+    "min_months": 24,
+    "min_complete_share": 0.9,
+    "min_coverage": 0.9
+  },
+  "cells": {
+    "SPY-long": {
+      "days": 2678,
+      "sessions": 2678,
+      "complete_share": 1.0,
+      "months": 129,
+      "mean": {
+        "estimate": 0.0003363470411023014,
+        "lo": 0.00016863961384429196,
+        "hi": 0.0005208668744884038,
+        "width": 0.00035222726064411186
+      },
+      "paper": {
+        "estimate": 0.0003400542020002015,
+        "lo": 0.00017266707516418772,
+        "hi": 0.0005243286414319588,
+        "width": 0.00035166156626777103
+      },
+      "cost_adverse": {
+        "estimate": 0.0002992754321233001,
+        "lo": 0.00013046056004730407,
+        "hi": 0.00048531271793459475,
+        "width": 0.0003548521578872907
+      },
+      "gross": {
+        "estimate": 0.00037341865008130257,
+        "lo": 0.00020697224866641107,
+        "hi": 0.0005558622867603565,
+        "width": 0.00034889003809394545
+      },
+      "after_publication": {
+        "days": 590,
+        "estimate": 1.780548773418363e-05,
+        "lo": -0.0002280248163730706,
+        "hi": 0.00026284504430680654,
+        "width": 0.0004908698606798771
+      },
+      "before_publication": {
+        "days": 2088,
+        "estimate": 0.0004263563880789247,
+        "lo": 0.0002332227545308133,
+        "hi": 0.0006437528214290012,
+        "width": 0.00041053006689818793
+      },
+      "described": {
+        "days": 2678,
+        "annual_mean": 0.08475945435777994,
+        "annual_volatility": 0.08405820204854407,
+        "sharpe": 1.0083424614391694,
+        "cagr": 0.08462559235373313,
+        "max_drawdown": -0.09859459287785988
+      },
+      "described_after_publication": {
+        "days": 590,
+        "annual_mean": 0.004486982909014272,
+        "annual_volatility": 0.07612740631597283,
+        "sharpe": 0.05894044111250415,
+        "cagr": 0.0015967654074604543,
+        "max_drawdown": -0.09859459287785965
+      },
+      "days_traded": 887,
+      "mean_leverage": 2.6609513760440064,
+      "excluded": {
+        "warm_up": 15
+      },
+      "holding": {
+        "hold_days": 2678,
+        "hold_annual_mean": 0.1476521275306975,
+        "hold_annual_volatility": 0.17749096960052624,
+        "hold_sharpe": 0.8318852945759093,
+        "hold_cagr": 0.14090220183890123,
+        "hold_max_drawdown": -0.3422896160326324,
+        "correlation": 0.2705328276676729
+      }
+    },
+    "QQQ-long": {
+      "days": 2675,
+      "sessions": 2678,
+      "complete_share": 0.9988797610156833,
+      "months": 129,
+      "mean": {
+        "estimate": 0.00040529911694134986,
+        "lo": 0.000205534775124565,
+        "hi": 0.0005990009478458021,
+        "width": 0.0003934661727212371
+      },
+      "paper": {
+        "estimate": 0.00040965056190120564,
+        "lo": 0.00021001762731577683,
+        "hi": 0.0006027389528721423,
+        "width": 0.00039272132555636546
+      },
+      "cost_adverse": {
+        "estimate": 0.0003617846673427917,
+        "lo": 0.0001574805986550577,
+        "hi": 0.0005592644843825352,
+        "width": 0.00040178388572747754
+      },
+      "gross": {
+        "estimate": 0.0004488135665399079,
+        "lo": 0.00025309126249857815,
+        "hi": 0.0006404995191555874,
+        "width": 0.0003874082566570093
+      },
+      "after_publication": {
+        "days": 590,
+        "estimate": 0.0003405708937921822,
+        "lo": -1.755724253192135e-05,
+        "hi": 0.0006462175341016189,
+        "width": 0.0006637747766335403
+      },
+      "before_publication": {
+        "days": 2085,
+        "estimate": 0.0004236154966334404,
+        "lo": 0.00018933115017012345,
+        "hi": 0.0006584488836761831,
+        "width": 0.0004691177335060596
+      },
+      "described": {
+        "days": 2675,
+        "annual_mean": 0.10213537746922013,
+        "annual_volatility": 0.08531003330952641,
+        "sharpe": 1.1972258538294918,
+        "cagr": 0.1035282382818925,
+        "max_drawdown": -0.146699776464699
+      },
+      "described_after_publication": {
+        "days": 590,
+        "annual_mean": 0.08582386523562992,
+        "annual_volatility": 0.08121840061318727,
+        "sharpe": 1.056704694843435,
+        "cagr": 0.08608253632218421,
+        "max_drawdown": -0.06297874765715783
+      },
+      "days_traded": 843,
+      "mean_leverage": 2.058856141295107,
+      "excluded": {
+        "thin": 3,
+        "warm_up": 15
+      },
+      "holding": {
+        "hold_days": 2675,
+        "hold_annual_mean": 0.20883801353219378,
+        "hold_annual_volatility": 0.2222026572720099,
+        "hold_sharpe": 0.9398538077631728,
+        "hold_cagr": 0.20206308906019532,
+        "hold_max_drawdown": -0.35633834195608616,
+        "correlation": 0.30125921423451435
+      }
+    },
+    "SPY-both": {
+      "days": 2678,
+      "sessions": 2678,
+      "complete_share": 1.0,
+      "months": 129,
+      "mean": {
+        "estimate": 0.0005649384214200514,
+        "lo": 0.00025911008208725464,
+        "hi": 0.0009024543087497981,
+        "width": 0.0006433442266625435
+      },
+      "paper": {
+        "estimate": 0.0005719633135117736,
+        "lo": 0.00026679607948613406,
+        "hi": 0.000908855578703888,
+        "width": 0.0006420594992177539
+      },
+      "cost_adverse": {
+        "estimate": 0.0004946895005028297,
+        "lo": 0.00018195097613246534,
+        "hi": 0.0008371255883640816,
+        "width": 0.0006551746122316162
+      },
+      "gross": {
+        "estimate": 0.0006351873423372731,
+        "lo": 0.00033366076122927796,
+        "hi": 0.0009695185121342188,
+        "width": 0.0006358577509049407
+      },
+      "after_publication": {
+        "days": 590,
+        "estimate": 0.00013365543742693996,
+        "lo": -0.0004336118428975838,
+        "hi": 0.0008401788695186571,
+        "width": 0.001273790712416241
+      },
+      "before_publication": {
+        "days": 2088,
+        "estimate": 0.0006868047818395609,
+        "lo": 0.00033537444906393766,
+        "hi": 0.0010594659776846874,
+        "width": 0.0007240915286207498
+      },
+      "described": {
+        "days": 2678,
+        "annual_mean": 0.14236448219785294,
+        "annual_volatility": 0.14399687542450693,
+        "sharpe": 0.9886636899457601,
+        "cagr": 0.14122789675198932,
+        "max_drawdown": -0.2576106155956316
+      },
+      "described_after_publication": {
+        "days": 590,
+        "annual_mean": 0.03368117023158886,
+        "annual_volatility": 0.14467421851070938,
+        "sharpe": 0.23280699614835412,
+        "cagr": 0.023699328987653923,
+        "max_drawdown": -0.21754593747617723
+      },
+      "days_traded": 1612,
+      "mean_leverage": 2.6609513760440064,
+      "excluded": {
+        "warm_up": 15
+      },
+      "holding": {
+        "hold_days": 2678,
+        "hold_annual_mean": 0.1476521275306975,
+        "hold_annual_volatility": 0.17749096960052624,
+        "hold_sharpe": 0.8318852945759093,
+        "hold_cagr": 0.14090220183890123,
+        "hold_max_drawdown": -0.3422896160326324,
+        "correlation": -0.07814409067484923
+      }
+    }
+  }
+}

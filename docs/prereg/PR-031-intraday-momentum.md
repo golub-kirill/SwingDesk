@@ -6,8 +6,11 @@ date:          2026-09-19
 author:        Claude, on the owner's choice of 2026-09-19 - asked what to research after the
                order types, the owner picked "Внутридневной моментум" (the published intraday
                momentum rule on SPY/QQQ), long only (their standing preference, same day)
-status:        registered, not run
-verdict:       -
+status:        reported   (2026-09-19 - results/PR-031-report.md)
+verdict:       ACCEPT, by the thinnest margin - SPY-long +0.0336% a day [+0.0169, +0.0521],
+               8.5% a year at a Sharpe ratio of 1.01 against holding SPY's 0.83; after
+               publication +0.0018% a day [-0.0228, +0.0263], Sharpe 0.06 - the gate cleared by
+               a seventh of a standard error
 ```
 
 ---
