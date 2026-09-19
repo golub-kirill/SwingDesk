@@ -240,3 +240,27 @@ Measure the spread of the names a card would ACTUALLY buy — the top decile on 
 each execution time, rather than the median of the admitted universe. That replaces the one term the
 result rests on with a measurement of the right population. It needs no new data: `probe_quotes.py`
 already reaches the quotes and `measure_quoted_spread.py` already rebuilds a per-date universe.
+
+## 10. §9.4's measurement, registered and run — `PR-024`, 2026-09-17
+
+Appended, never edited above. §9.4 said what would settle §9: the spreads of the names a card
+actually buys, at each moment. `PR-024` registered that before any quote was fetched and reports
+`ACCEPT` (`docs/prereg/results/PR-024-report.md`).
+
+**§9's three weaknesses, and what each became:**
+
+| §9 | `PR-024` |
+|---|---|
+| the cost term was the difference of two universe MEDIANS | each entry paid its own name's quoted half-spread at its own moment — 37.8 bps on average at 09:30, 5.0 at 15:55 |
+| the sample was the admitted universe | `CARD-001`'s own selection, every session of 48 months, ten names a date |
+| the answer flipped with the weighting, +0.310% to +0.049% | +0.311% [+0.228, +0.418] by entry, +0.325% [+0.243, +0.430] by date |
+
+**§6's overturning condition is not met**: the gross does not decay by more than the cost saved. On
+these names it does not decay at all — −0.016% [−0.105, +0.090] — and the net difference is the
+spread. **This record stands**, and it now carries a number for the card rather than the universe.
+
+**What §10 adds to §4's limits.** The open this record measured is the continuous book five seconds
+after 09:30. An order in the opening auction pays the auction's single price and no quoted spread,
+and so does one in the closing auction. §2's table therefore prices the open for an order that
+arrives after the cross; whether the card's orders do, `PR-024`'s report says the vendor does not
+document. That is the next measurement, and it is a routing question as much as a clock one.

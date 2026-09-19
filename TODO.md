@@ -903,6 +903,14 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 4. Pending decisions
 
+- [ ] **`[v]` OWNER'S CALL: MOVE `CARD-001`'S ENTRY FROM THE OPEN TO 15:55?** Raised 2026-09-17 by
+      `PR-024`'s `ACCEPT` (`EVIDENCE_SUMMARY` §25): +0.311% a trade [+0.228, +0.418], all of it the
+      spread, and the card breaks even at 15:55 rather than losing about 0.29% at the open. It is a
+      new card version (`STRATEGY_CARD_SPEC` §5 rule 2) and it needs a pass that does not exist — an
+      order placed shortly before the close, which `CONSTRAINTS` §4 records as a build gap since
+      `CHARTER` A-003. **The auction study above may make it a routing change instead**, which is
+      cheaper to adopt; the owner may prefer to wait for it. Nothing changes until they rule.
+
 - [ ] **`[v]` THE RATIFIED EXIT COSTS 0.098R OF GROSS AND THE COMPARISON HAS NEVER BEEN MADE ON
       SELECTED ENTRIES.** Raised 2026-09-08 from `EVIDENCE_SUMMARY` §10 and the exit surface.
       ```bash
@@ -1651,6 +1659,30 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       at 09:30 against 1.9-4.0 bps by 15:55). Next: a dispersion-only power estimate, then a
       pre-registration committed before any run, on minutes fetched with
       `fetch_minutes.py --instrument --from --to`.
+      **`PR-024` REPORTED 2026-09-17 — `ACCEPT`** (`EVIDENCE_SUMMARY` §25). Entering at 15:55
+      instead of the open earns **+0.311% per dollar a trade [+0.228, +0.418]** on the card's own
+      entries, net of each name's own spread — all of it the spread (37.8 bps a side at the open,
+      5.0 at 15:55); at 15:55 the card breaks even, +0.024% [−0.396, +0.456]. The owner's call and
+      the auction question are in §4 and below.
+
+- [ ] **`[v]` THE OPENING AUCTION IS UNMEASURED, AND IT MAY BE MOST OF `PR-024`'S SAVING — the next
+      study.** `PR-024` priced the open as an order meeting the continuous book at 09:30:05. An order
+      in the opening auction (Alpaca `opg`) pays the cross's single price and no quoted spread, and
+      so does a `cls` order at the close. Whether the `day` orders the card sends today join the
+      auction, Alpaca's order documentation does not say. **Next: an `opg` order at the open against
+      15:55 and against a `cls` order at the close**, on `PR-024`'s own sample and stores. The
+      auction prices may already be stored — the daily bar's open and close are the official cross
+      prints on most listings — which is the first thing to check. Register first, sized by the
+      same power tool.
+
+- [ ] **`[v]` A STUDY'S EXCLUSIONS MUST BE PER READING — `PR-024`'s runner dropped an entry from the
+      verdict when an UNREAD arm or a perturbation failed.** `run_pr024.price_entry` returns the
+      first failure of any arm or costing, so the 11:00 arm's missing print and the anchored-stop
+      perturbation's invalid stop removed 553 entries from `C − O`. Measured after the run
+      (`tools/attribute_pr024.py`): without that, +0.370% instead of +0.311% — the fault leaned
+      against the verdict's arm and changed nothing, but it cut the complete share to 90.4% against
+      a 90% refusal line. **The next runner prices each reading on the entries IT needs**, and a
+      test plants a secondary arm's failure and checks the primary keeps the entry.
 
 - [ ] **`[v]` A POWER ESTIMATE FOR A MARKET-PAIRED CONTRAST MUST MODEL OVERLAPPING HOLDS — owed
       before the next one registers.** `PR-019b`'s estimate predicted a half-width of 0.0743 and the

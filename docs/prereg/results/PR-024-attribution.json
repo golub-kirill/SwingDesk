@@ -1,0 +1,398 @@
+{
+  "for": "PR-024",
+  "exploratory": true,
+  "purpose": "after the registered run: what excluded each entry, and whether C - O is the whole book or a few names. Section 6 read PR-024.json; nothing here changes it",
+  "as_of": {
+    "bars": "2026-09-16T19:30:10.930516-05:00",
+    "minutes": "2026-09-17T08:16:22.839207+00:00",
+    "quotes": "2026-09-17T08:16:22.839207+00:00"
+  },
+  "drawn": 9820,
+  "excluded_first_reason": {
+    "no_print_at_the_moment": 447,
+    "no_fresh_two_sided_quote": 239,
+    "stop_not_below_entry": 129,
+    "minutes_mismatch": 116,
+    "zero_shares": 8,
+    "stop_not_positive": 2,
+    "minutes_unavailable": 1
+  },
+  "failures_by_arm_and_costing": {
+    "no_print_at_the_moment:T": 481,
+    "no_fresh_two_sided_quote:eleven": 181,
+    "exit_quote_missing:C:anchored_stop": 139,
+    "exit_quote_missing:O:net": 135,
+    "exit_quote_missing:O:anchored_stop": 133,
+    "exit_quote_missing:C:net": 132,
+    "minutes_mismatch": 116,
+    "stop_not_below_entry:C:anchored_stop": 116,
+    "stop_not_below_entry:T:anchored_stop": 88,
+    "no_fresh_two_sided_quote:open": 63,
+    "exit_quote_missing:C:cost_adverse": 57,
+    "exit_quote_missing:T:cost_adverse": 49,
+    "stop_not_below_entry:O:anchored_stop": 45,
+    "no_print_at_the_moment:O": 29,
+    "no_print_at_the_moment:C": 22,
+    "no_fresh_two_sided_quote:close": 20,
+    "zero_shares:O:net": 8,
+    "zero_shares:O:gross": 8,
+    "zero_shares:O:cost_adverse": 8,
+    "zero_shares:O:exits_at_registry": 8,
+    "zero_shares:T:net": 8,
+    "zero_shares:T:gross": 8,
+    "zero_shares:T:cost_adverse": 8,
+    "zero_shares:T:exits_at_registry": 8,
+    "zero_shares:C:net": 8,
+    "zero_shares:C:gross": 8,
+    "zero_shares:C:cost_adverse": 8,
+    "zero_shares:C:exits_at_registry": 8,
+    "zero_shares:O:anchored_stop": 7,
+    "zero_shares:T:anchored_stop": 7,
+    "zero_shares:C:anchored_stop": 6,
+    "stop_not_positive:O:net": 4,
+    "stop_not_positive:O:gross": 4,
+    "stop_not_positive:O:cost_adverse": 4,
+    "stop_not_positive:O:exits_at_registry": 4,
+    "stop_not_positive:O:anchored_stop": 4,
+    "stop_not_positive:C:net": 4,
+    "stop_not_positive:C:gross": 4,
+    "stop_not_positive:C:cost_adverse": 4,
+    "stop_not_positive:C:exits_at_registry": 4,
+    "stop_not_positive:C:anchored_stop": 4,
+    "exit_quote_missing:T:net": 3,
+    "exit_quote_missing:T:anchored_stop": 2,
+    "stop_not_positive:T:net": 2,
+    "stop_not_positive:T:gross": 2,
+    "stop_not_positive:T:cost_adverse": 2,
+    "stop_not_positive:T:exits_at_registry": 2,
+    "stop_not_positive:T:anchored_stop": 2,
+    "minutes_unavailable": 1
+  },
+  "populations": {
+    "registered": {
+      "entries": 8878,
+      "difference": {
+        "estimate": 0.003113605081126508,
+        "lo": 0.0022778657895620663,
+        "hi": 0.004179140275038424,
+        "width": 0.0019012744854763576
+      },
+      "gross_part": {
+        "estimate": -0.0001587551175451409,
+        "lo": -0.001048270666005809,
+        "hi": 0.0008971645392017518,
+        "width": 0.0019454352052075607
+      },
+      "timed_difference": {
+        "estimate": 0.003125518635605319,
+        "lo": 0.0021167676798758933,
+        "hi": 0.004152486010975229,
+        "width": 0.0020357183310993356
+      },
+      "median": -1.5188020421625509e-05,
+      "trimmed_mean": 0.002986831210661813,
+      "trim_each_side": 0.01,
+      "share_close_ahead": 0.48648344221671547,
+      "largest": [
+        {
+          "instrument_id": "BNKK",
+          "session_date": "2024-01-09",
+          "difference": 0.7888148344462155,
+          "open_exit": "stop",
+          "close_exit": "target"
+        },
+        {
+          "instrument_id": "CONI",
+          "session_date": "2026-04-08",
+          "difference": -0.5611782164522635,
+          "open_exit": "target",
+          "close_exit": "stop"
+        },
+        {
+          "instrument_id": "CDLX",
+          "session_date": "2023-10-16",
+          "difference": -0.5434578288074038,
+          "open_exit": "target",
+          "close_exit": "stop_gap"
+        },
+        {
+          "instrument_id": "GDXU",
+          "session_date": "2026-02-24",
+          "difference": -0.5152123887629185,
+          "open_exit": "target",
+          "close_exit": "stop"
+        },
+        {
+          "instrument_id": "APP",
+          "session_date": "2025-03-06",
+          "difference": 0.5052202415119976,
+          "open_exit": "stop",
+          "close_exit": "target"
+        },
+        {
+          "instrument_id": "UCTT",
+          "session_date": "2026-07-08",
+          "difference": -0.48112069228803045,
+          "open_exit": "target",
+          "close_exit": "stop"
+        },
+        {
+          "instrument_id": "CATX",
+          "session_date": "2024-06-20",
+          "difference": 0.45653772263643105,
+          "open_exit": "stop",
+          "close_exit": "time"
+        },
+        {
+          "instrument_id": "IPX",
+          "session_date": "2026-03-17",
+          "difference": 0.4485573188186377,
+          "open_exit": "stop",
+          "close_exit": "time"
+        }
+      ],
+      "largest_share_of_absolute_total": 0.028275716288025828,
+      "mean_without_largest": 0.0031053466650663446
+    },
+    "three_arms": {
+      "entries": 9007,
+      "difference": {
+        "estimate": 0.0035636355711440777,
+        "lo": 0.0028324900772535955,
+        "hi": 0.004559835166925978,
+        "width": 0.0017273450896723827
+      },
+      "gross_part": {
+        "estimate": 0.00033534559450880457,
+        "lo": -0.0004462523770740442,
+        "hi": 0.0013551492868621607,
+        "width": 0.0018014016639362048
+      },
+      "timed_difference": {
+        "estimate": 0.0034128214524813834,
+        "lo": 0.002480654782557971,
+        "hi": 0.00438980138171099,
+        "width": 0.0019091465991530189
+      },
+      "median": -1.4321829279878573e-05,
+      "trimmed_mean": 0.0034043076174622936,
+      "trim_each_side": 0.01,
+      "share_close_ahead": 0.487065615632286,
+      "largest": [
+        {
+          "instrument_id": "BNKK",
+          "session_date": "2024-01-09",
+          "difference": 0.7888148344462155,
+          "open_exit": "stop",
+          "close_exit": "target"
+        },
+        {
+          "instrument_id": "CONI",
+          "session_date": "2026-04-08",
+          "difference": -0.5611782164522635,
+          "open_exit": "target",
+          "close_exit": "stop"
+        },
+        {
+          "instrument_id": "CDLX",
+          "session_date": "2023-10-16",
+          "difference": -0.5434578288074038,
+          "open_exit": "target",
+          "close_exit": "stop_gap"
+        },
+        {
+          "instrument_id": "GDXU",
+          "session_date": "2026-02-24",
+          "difference": -0.5152123887629185,
+          "open_exit": "target",
+          "close_exit": "stop"
+        },
+        {
+          "instrument_id": "APP",
+          "session_date": "2025-03-06",
+          "difference": 0.5052202415119976,
+          "open_exit": "stop",
+          "close_exit": "target"
+        },
+        {
+          "instrument_id": "UCTT",
+          "session_date": "2026-07-08",
+          "difference": -0.48112069228803045,
+          "open_exit": "target",
+          "close_exit": "stop"
+        },
+        {
+          "instrument_id": "CATX",
+          "session_date": "2024-06-20",
+          "difference": 0.45653772263643105,
+          "open_exit": "stop",
+          "close_exit": "time"
+        },
+        {
+          "instrument_id": "IPX",
+          "session_date": "2026-03-17",
+          "difference": 0.4485573188186377,
+          "open_exit": "stop",
+          "close_exit": "time"
+        }
+      ],
+      "largest_share_of_absolute_total": 0.02733602569005847,
+      "mean_without_largest": 0.0035558956104224963
+    },
+    "two_arms": {
+      "entries": 9431,
+      "difference": {
+        "estimate": 0.003700502537879735,
+        "lo": 0.0029520020386067415,
+        "hi": 0.004687041037480421,
+        "width": 0.0017350389988736795
+      },
+      "gross_part": {
+        "estimate": 0.00031745403712686446,
+        "lo": -0.00044105855700456425,
+        "hi": 0.0012680372944680344,
+        "width": 0.0017090958514725987
+      },
+      "timed_difference": null,
+      "median": -1.1600228635465226e-05,
+      "trimmed_mean": 0.00356118002177762,
+      "trim_each_side": 0.01,
+      "share_close_ahead": 0.489131587318418,
+      "largest": [
+        {
+          "instrument_id": "BNKK",
+          "session_date": "2024-01-09",
+          "difference": 0.7888148344462155,
+          "open_exit": "stop",
+          "close_exit": "target"
+        },
+        {
+          "instrument_id": "CONI",
+          "session_date": "2026-04-08",
+          "difference": -0.5611782164522635,
+          "open_exit": "target",
+          "close_exit": "stop"
+        },
+        {
+          "instrument_id": "CDLX",
+          "session_date": "2023-10-16",
+          "difference": -0.5434578288074038,
+          "open_exit": "target",
+          "close_exit": "stop_gap"
+        },
+        {
+          "instrument_id": "GDXU",
+          "session_date": "2026-02-24",
+          "difference": -0.5152123887629185,
+          "open_exit": "target",
+          "close_exit": "stop"
+        },
+        {
+          "instrument_id": "APP",
+          "session_date": "2025-03-06",
+          "difference": 0.5052202415119976,
+          "open_exit": "stop",
+          "close_exit": "target"
+        },
+        {
+          "instrument_id": "UCTT",
+          "session_date": "2026-07-08",
+          "difference": -0.48112069228803045,
+          "open_exit": "target",
+          "close_exit": "stop"
+        },
+        {
+          "instrument_id": "CATX",
+          "session_date": "2024-06-20",
+          "difference": 0.45653772263643105,
+          "open_exit": "stop",
+          "close_exit": "time"
+        },
+        {
+          "instrument_id": "IPX",
+          "session_date": "2026-03-17",
+          "difference": 0.4485573188186377,
+          "open_exit": "stop",
+          "close_exit": "time"
+        }
+      ],
+      "largest_share_of_absolute_total": 0.026201984348928117,
+      "mean_without_largest": 0.0036932270448520764
+    }
+  },
+  "by_open_spread": [
+    {
+      "quintile": 1,
+      "entries": 1886,
+      "open_half_spread_bps": 3.8898749572874167,
+      "close_half_spread_bps": 1.8753956694867213,
+      "difference": 0.0009505772614718582,
+      "gross_part": 0.0007549779695579037,
+      "median": -3.4951051317871906e-05
+    },
+    {
+      "quintile": 2,
+      "entries": 1886,
+      "open_half_spread_bps": 12.286856395343417,
+      "close_half_spread_bps": 3.347934690161684,
+      "difference": 0.0018831897219155431,
+      "gross_part": 0.0010903786060256773,
+      "median": -2.8264637566508335e-05
+    },
+    {
+      "quintile": 3,
+      "entries": 1886,
+      "open_half_spread_bps": 25.25166922265806,
+      "close_half_spread_bps": 4.773311665297539,
+      "difference": 0.00328117016954288,
+      "gross_part": 0.000985744321341758,
+      "median": 1.1951234278762685e-06
+    },
+    {
+      "quintile": 4,
+      "entries": 1886,
+      "open_half_spread_bps": 45.7218437853163,
+      "close_half_spread_bps": 5.852329501323519,
+      "difference": 0.004005667837942753,
+      "gross_part": -0.00022143593006634935,
+      "median": 1.1621529476608244e-05
+    },
+    {
+      "quintile": 5,
+      "entries": 1887,
+      "open_half_spread_bps": 111.67315492584945,
+      "close_half_spread_bps": 10.603690459350279,
+      "difference": 0.0083794268266864,
+      "gross_part": -0.0010216847394555356,
+      "median": 7.650893024847838e-05
+    }
+  ],
+  "by_open_exit": {
+    "target": {
+      "entries": 4224,
+      "difference": -0.011035014309072505,
+      "median": -5.2538757129518346e-05
+    },
+    "stop": {
+      "entries": 3706,
+      "difference": 0.017857346676479476,
+      "median": -5.789537889919552e-05
+    },
+    "time": {
+      "entries": 751,
+      "difference": 0.0038042106574651237,
+      "median": 0.0023409043893617507
+    },
+    "stop_gap": {
+      "entries": 745,
+      "difference": 0.016537080980384238,
+      "median": 0.005148755427845354
+    },
+    "end_of_data": {
+      "entries": 5,
+      "difference": 0.030985111818108795,
+      "median": 0.0039707727447895955
+    }
+  },
+  "resamples": 10000
+}

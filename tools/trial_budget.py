@@ -339,6 +339,11 @@ SIDE_RECORDS = {
                     "registered sample size would give. Only widths leave it, under the same level "
                     "guard, and the size it chose is the cheapest one readable at the floor. "
                     "PR-024 counts its two",
+    "PR-024-attribution": "no trials: an EXPLORATORY re-reading of PR-024's own three arms after "
+                          "the run - what excluded each entry, the same C - O on populations "
+                          "that drop an entry only for what the primary needs, and the shape of "
+                          "the difference. No moment, exit, cost or sample is added; its "
+                          "registered population reproduces PR-024.json to the digit",
 }
 
 
