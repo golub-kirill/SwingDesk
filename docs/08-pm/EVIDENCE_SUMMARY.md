@@ -1414,3 +1414,21 @@ splits and spin-offs; 620 sessions were off by a factor of 2, 4, 10 or a spin-of
 made after that result was seen (`PR-025` §10, amendment A-1), so nothing here is confirmatory.
 **Not measured:** whether the card's live limit order fills in the cross, and whether a queued
 `day` order already joins it.
+
+## 28. Which order carries the card's entries barely matters — the limit at the signal close is what costs
+
+**`PR-030`, 2026-09-19, `INCONCLUSIVE`** (`docs/prereg/results/PR-030-report.md`). On `PR-024`'s
+9,820 entries, every drawn entry counted and a missed order earning 0. A limit-on-open at the
+signal close earned **+0.123%** a signal more than today's day limit [−0.075, +0.305], 0.38 wide,
+and before costs the two are equal (−0.023%). Counted and never read: a day limit that also joins the
+opening cross earned **+0.145%** more [+0.119, +0.174]. Each order's own net is break-even
+(+0.07% to +0.10%, today's about −0.05%).
+
+**What the table under it says, as description.** Today's order is marketable at the open on 31% of
+entries, and there every auction order saves the spread, about 0.31% an entry. It rests and fills
+later on 50%, cheaply: a market-on-open did 0.40% an entry worse there. It never fills on 18.5%, and
+those are the best trades: a market-on-open made 0.84% an entry on them. **The limit at the signal
+close costs more than any route saves.** §9's check of the fill split against `DR-040` §4 failed as
+registered. §4 classed marketability by the print and this study by the ask; by §4's own test the
+split agrees within 3.4 points (`PR-030` §10, A-1).
+

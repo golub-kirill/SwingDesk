@@ -1,0 +1,279 @@
+{
+  "prereg": "PR-030",
+  "trials": 3,
+  "verdict": "inconclusive",
+  "branch": "INCONCLUSIVE",
+  "country": "USA",
+  "as_of": {
+    "bars": "2026-09-16T19:30:10.930516-05:00",
+    "minutes": "2026-09-19T18:13:43.335554+00:00",
+    "quotes": "2026-09-17T08:16:22.839207+00:00",
+    "auctions": "2026-09-19T18:13:43.335554+00:00"
+  },
+  "measured_span": {
+    "first_session": "2022-09-19",
+    "last_session": "2026-08-18",
+    "years": 3.91
+  },
+  "split": {
+    "registered": "none - PR-024's draw, four orders paired within each entry",
+    "buys": "nothing a split could buy: four routings of one decision, none tuned"
+  },
+  "perturbations": {
+    "registered": [
+      "cost_adverse",
+      "gross"
+    ],
+    "run": [
+      "cost_adverse",
+      "gross"
+    ]
+  },
+  "registered_settings": {
+    "sample": "PR-024-sample.jsonl",
+    "primary": "G-D",
+    "limit": "the signal session's close",
+    "bootstrap": {
+      "unit": "entry month",
+      "block": 3,
+      "seed": 20260920,
+      "resamples": 10000
+    },
+    "unit": "net per dollar per DRAWN entry; a missed order is 0",
+    "power_floor": 0.003,
+    "min_complete_share": 0.9,
+    "min_pairs": 1000,
+    "min_months": 24
+  },
+  "sample": {
+    "drawn": 9820,
+    "excluded_before_any_order": {
+      "minutes_mismatch": 116,
+      "minutes_unavailable": 1
+    }
+  },
+  "fills": {
+    "D": {
+      "rested": 4869,
+      "marketable": 2991,
+      "missed": 1780
+    },
+    "G": {
+      "missed": 5089,
+      "crossed": 4531
+    },
+    "M": {
+      "crossed": 9620
+    },
+    "J": {
+      "crossed": 4531,
+      "rested": 3319,
+      "missed": 1770
+    }
+  },
+  "fills_by_print": {
+    "marketable": 4581,
+    "rested": 3332,
+    "missed": 1790
+  },
+  "missing_by_arm": {
+    "D": {
+      "exit_quote_missing": 120,
+      "no_fresh_two_sided_quote": 63,
+      "zero_shares": 5,
+      "stop_not_positive": 4
+    },
+    "G": {
+      "exit_quote_missing": 89,
+      "no_opening_cross": 67,
+      "cross_outside_the_minutes": 16,
+      "zero_shares": 4,
+      "stop_not_positive": 2
+    },
+    "M": {
+      "exit_quote_missing": 204,
+      "no_opening_cross": 67,
+      "cross_outside_the_minutes": 16,
+      "zero_shares": 7,
+      "stop_not_positive": 5
+    },
+    "J": {
+      "exit_quote_missing": 171,
+      "no_opening_cross": 67,
+      "cross_outside_the_minutes": 16,
+      "zero_shares": 5,
+      "stop_not_positive": 5
+    }
+  },
+  "tie_breaks": {
+    "entry_day_stop": 11,
+    "target": 7,
+    "stop": 5,
+    "entry_day_target": 1
+  },
+  "reproduces": {
+    "M": {
+      "checked": 400,
+      "differ": 0,
+      "not_priced": 0,
+      "other_fill": 0
+    },
+    "D": {
+      "checked": 126,
+      "differ": 0,
+      "not_priced": 69,
+      "other_fill": 205
+    }
+  },
+  "by_day_fill": {
+    "G-D": {
+      "marketable": {
+        "entries": 2939,
+        "mean": 0.0031266325792481484,
+        "contribution": 0.0009743583024504622
+      },
+      "missed": {
+        "entries": 1759,
+        "mean": 0.0,
+        "contribution": 0.0
+      },
+      "rested": {
+        "entries": 4733,
+        "mean": 0.0005174675323711597,
+        "contribution": 0.0002596939699621142
+      }
+    },
+    "M-D": {
+      "marketable": {
+        "entries": 2939,
+        "mean": 0.0030381853834310305,
+        "contribution": 0.0009491099959506588
+      },
+      "missed": {
+        "entries": 1738,
+        "mean": 0.008401653675907509,
+        "contribution": 0.0015520912084106347
+      },
+      "rested": {
+        "entries": 4731,
+        "mean": -0.004006450047904624,
+        "contribution": -0.002014723126768365
+      }
+    },
+    "J-D": {
+      "marketable": {
+        "entries": 2939,
+        "mean": 0.003113284747342575,
+        "contribution": 0.0009701986928681823
+      },
+      "missed": {
+        "entries": 1759,
+        "mean": 0.0,
+        "contribution": 0.0
+      },
+      "rested": {
+        "entries": 4733,
+        "mean": 0.0009477405427673377,
+        "contribution": 0.0004756288822943282
+      }
+    }
+  },
+  "cells": {
+    "G-D": {
+      "first": "G",
+      "second": "D",
+      "pairs": 9431,
+      "drawn": 9820,
+      "complete_share": 0.960386965376782,
+      "months": 48,
+      "difference": {
+        "estimate": 0.0012340522724125762,
+        "lo": -0.000754709850728903,
+        "hi": 0.0030505858977127,
+        "width": 0.003805295748441603
+      },
+      "gross": {
+        "estimate": -0.00023479729493656358,
+        "lo": -0.0021465378490336563,
+        "hi": 0.0014003507010984277,
+        "width": 0.0035468885501320838
+      },
+      "cost_adverse": {
+        "estimate": 0.002006662954549327,
+        "lo": 6.856229210232837e-05,
+        "hi": 0.0037221347781907486,
+        "width": 0.0036535724860884203
+      },
+      "level": {
+        "estimate": 0.0007350391433424069,
+        "lo": -0.0013686766973343997,
+        "hi": 0.0027299105230990123,
+        "width": 0.004098587220433412
+      }
+    },
+    "M-D": {
+      "first": "M",
+      "second": "D",
+      "pairs": 9408,
+      "drawn": 9820,
+      "complete_share": 0.9580448065173116,
+      "months": 48,
+      "difference": {
+        "estimate": 0.0004864780775929288,
+        "lo": -0.00030527263196389407,
+        "hi": 0.0013758016090157801,
+        "width": 0.0016810742409796742
+      },
+      "gross": {
+        "estimate": -0.0003592051713311813,
+        "lo": -0.0013154014020128751,
+        "hi": 0.0006019048676294454,
+        "width": 0.0019173062696423205
+      },
+      "cost_adverse": {
+        "estimate": -0.00045002211026123646,
+        "lo": -0.0012648159929233534,
+        "hi": 0.0004302417802334397,
+        "width": 0.0016950577731567932
+      },
+      "level": {
+        "estimate": 9.658024764840174e-06,
+        "lo": -0.004128401207060005,
+        "hi": 0.004237329279369598,
+        "width": 0.008365730486429603
+      }
+    },
+    "J-D": {
+      "first": "J",
+      "second": "D",
+      "pairs": 9431,
+      "drawn": 9820,
+      "complete_share": 0.960386965376782,
+      "months": 48,
+      "difference": {
+        "estimate": 0.0014458275751625103,
+        "lo": 0.0011930605664530435,
+        "hi": 0.0017429281729010046,
+        "width": 0.0005498676064479612
+      },
+      "gross": {
+        "estimate": 0.00044323254908794644,
+        "lo": 0.000251603345976753,
+        "hi": 0.0006187598878987048,
+        "width": 0.00036715654192195186
+      },
+      "cost_adverse": {
+        "estimate": 0.001168460185593015,
+        "lo": 0.0009678331205354366,
+        "hi": 0.0013945286902614954,
+        "width": 0.0004266955697260588
+      },
+      "level": {
+        "estimate": 0.0009468144460923409,
+        "lo": -0.0026032942518402933,
+        "hi": 0.004572923849962256,
+        "width": 0.00717621810180255
+      }
+    }
+  }
+}

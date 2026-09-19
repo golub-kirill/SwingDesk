@@ -94,7 +94,9 @@ QA_ROWS = 400
 
 #: Whose QA rows an order must come back to, to the digit: `M` is `PR-025`'s auction arm on the same
 #: stores; `D`, where marketable at the open, is `PR-024`'s `O` - the same fill, spread and walk.
-REPRODUCES = ((MOO, MOO, p24.RESULTS / "PR-025-qa-sample.csv", p25.AUCTION),
+#: Amendment A-1: the registered tuple asked `M` for the fill "M" where its fills are `CROSSED`,
+#: so it checked none of `PR-025`'s rows.
+REPRODUCES = ((MOO, CROSSED, p24.RESULTS / "PR-025-qa-sample.csv", p25.AUCTION),
               (DAY, MARKETABLE, p24.RESULTS / "PR-024-qa-sample.csv", p24.BASE))
 
 
@@ -104,6 +106,9 @@ class Ordered:
 
     entry: p24.Entry
     early: str | None = None
+    #: Amendment A-1, a diagnostic: how `DR-040` §4's own test - the first PRINT at or under the
+    #: limit, not the ask - classes the entry.
+    by_print: str | None = None
     how: dict[str, str] = field(default_factory=dict)
     value: dict[tuple[str, str], float] = field(default_factory=dict)
     trades: dict[str, Trade] = field(default_factory=dict)
@@ -179,6 +184,8 @@ def price_entry(entry: p24.Entry, series: BarSeries, atr_value: Decimal,
             fills[arm] = (limit, Decimal(0), p24.after_fill(regular, touched))
 
     first = regular[0]
+    got.by_print = (MARKETABLE if first.open <= limit
+                    else RESTED if first_touch_at(regular, limit) is not None else MISSED)
     if spreads[OPEN] is None:
         got.missing[DAY] = "no_fresh_two_sided_quote"
     else:
@@ -422,6 +429,7 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
         },
         "sample": {"drawn": len(entries), "excluded_before_any_order": dict(excluded.most_common())},
         "fills": fill_rates(ordered),
+        "fills_by_print": dict(Counter(o.by_print for o in ordered if o.by_print).most_common()),
         "missing_by_arm": {arm: dict(Counter(o.missing[arm] for o in ordered
                                              if arm in o.missing).most_common())
                            for arm in ARMS},
@@ -487,6 +495,7 @@ def report(payload: Mapping[str, Any]) -> None:
     print(f"  drawn {payload['sample']['drawn']}   excluded {payload['sample']['excluded_before_any_order']}")
     for arm, how in payload["fills"].items():
         print(f"  {arm} fills {how}")
+    print(f"  D by DR-040's print test {payload.get('fills_by_print')}")
     print(f"  reproduces {payload['reproduces']}")
     for name, cell in payload["cells"].items():
         print(f"  {name}   pairs {cell['pairs']}   months {cell['months']}   "

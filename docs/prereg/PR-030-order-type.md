@@ -6,8 +6,10 @@ date:          2026-09-19
 author:        Claude, on the owner's choice of 2026-09-19. Asked whether to change CARD-001's
                entry after PR-025, the owner answered "Сначала измерить" - measure the order
                types on the card's own entries before deciding
-status:        registered, not run
-verdict:       -
+status:        reported   (2026-09-19 - results/PR-030-report.md)
+verdict:       INCONCLUSIVE - G - D +0.123% per drawn entry [-0.075, +0.305], 0.38 wide. J - D,
+               counted and never read, +0.145% [+0.119, +0.174]. §9's split check FAILED as
+               registered; amendment A-1 shows why
 ```
 
 ---
@@ -220,4 +222,22 @@ if not met:    report the measurement and REFUSE to read it as evidence
 
 ## 10. Amendments
 
-None.
+### A-1 — 2026-09-19, AFTER the run: one §9 check that checked nothing, and why another failed
+
+**What happened.** The run returned `INCONCLUSIVE`. Two of §9's checks did not do what they
+were registered to do:
+
+* **`M` against `PR-025`'s QA rows checked no row.** `run_pr030.REPRODUCES` asked `M` for the fill
+  `"M"`, which is its arm's name. Its fills are `crossed`, so every one of the 400 rows fell under
+  `other_fill`. The test covered only `D`. **Corrected:** the tuple now names `CROSSED`, with a
+  test that fails if either order's fill is misnamed. Result: 400 of 400 rows checked, none differ.
+* **`D`'s split against `DR-040` §4 failed**, at 31.0 / 50.5 / 18.5 against 50.6 / 32.8 / 16.6.
+  §5 defines marketable as the ASK at or under the limit, while `DR-040` counted the first PRINT;
+  the registered tolerance of 15 points did not allow for that difference. **Added, as a
+  diagnostic:** each entry classed by `DR-040`'s own test (`Ordered.by_print`). Result: 47.2 /
+  34.3 / 18.4, within 3.4 points on every part.
+
+**What it costs the study.** Nothing in the verdict. Neither change touches a price, a fill, a
+walk or a reading. The second run, with both corrections, reproduced the first run's cells,
+fills, exclusions, branch and QA file to the digit. The split check stays reported as FAILED;
+what explains it was found after the data was seen, and it is marked that way.
