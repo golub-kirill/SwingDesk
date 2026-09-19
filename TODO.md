@@ -910,6 +910,8 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       order placed shortly before the close, which `CONSTRAINTS` §4 records as a build gap since
       `CHARTER` A-003. **The auction study above may make it a routing change instead**, which is
       cheaper to adopt; the owner may prefer to wait for it. Nothing changes until they rule.
+      **RULED 2026-09-19: "Сначала аукцион"** — the card stays as it is until the auction is
+      measured. `PR-025` registers it.
 
 - [ ] **`[v]` THE RATIFIED EXIT COSTS 0.098R OF GROSS AND THE COMPARISON HAS NEVER BEEN MADE ON
       SELECTED ENTRIES.** Raised 2026-09-08 from `EVIDENCE_SUMMARY` §10 and the exit surface.
@@ -1674,6 +1676,10 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       auction prices may already be stored — the daily bar's open and close are the official cross
       prints on most listings — which is the first thing to check. Register first, sized by the
       same power tool.
+      **CHECKED 2026-09-19 and REGISTERED as `PR-025`.** A probe of twelve entries: the stored close
+      is the closing cross in 12 of 12, the stored open the opening cross in 10 of 12, the 09:30
+      minute's first print in 9 of 12 (off by up to 0.31%) — so the cross is read from the SIP
+      trade tape, not the bar.
 
 - [ ] **`[v]` A STUDY'S EXCLUSIONS MUST BE PER READING — `PR-024`'s runner dropped an entry from the
       verdict when an UNREAD arm or a perturbation failed.** `run_pr024.price_entry` returns the
