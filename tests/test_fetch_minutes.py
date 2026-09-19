@@ -103,6 +103,13 @@ def test_prices_go_through_str_and_the_minute_is_utc(tool) -> None:
     assert minute.high == Decimal("0.3")
     assert minute.close == Decimal("0.2")
     assert minute.at == datetime(2025, 2, 21, 14, 30, tzinfo=UTC)
+    assert minute.volume is None and minute.vwap is None, "not served, so not invented"
+
+
+def test_volume_and_the_vendor_s_vwap_are_kept_when_served(tool) -> None:
+    minute = tool.parse({"t": "2025-02-21T14:30:00Z", "o": 0.1, "h": 0.3, "l": 0.1, "c": 0.2,
+                         "v": 12345, "vw": 0.2112})
+    assert minute.volume == 12345 and minute.vwap == Decimal("0.2112")
 
 
 # --- the record ----------------------------------------------------------------------------------

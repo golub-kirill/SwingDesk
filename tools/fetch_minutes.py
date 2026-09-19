@@ -94,6 +94,8 @@ def parse(bar: dict[str, Any]) -> Minute:
         at=datetime.fromisoformat(str(bar["t"]).replace("Z", "+00:00")),
         open=Decimal(str(bar["o"])), high=Decimal(str(bar["h"])),
         low=Decimal(str(bar["l"])), close=Decimal(str(bar["c"])),
+        volume=int(bar["v"]) if bar.get("v") is not None else None,
+        vwap=Decimal(str(bar["vw"])) if bar.get("vw") is not None else None,
     )
 
 

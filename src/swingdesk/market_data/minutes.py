@@ -10,6 +10,11 @@ read back as-of like every bar in `store.py`.
 fetch, served or empty, so `session` can answer three different things: never fetched (`None`),
 fetched and empty (`()`), and the minutes themselves. Collapsing the first two is how a gap in the
 data gets read as a fact about the market.
+
+**Volume and the vendor's VWAP ride along when served**, as nullable columns: a rule that trails a
+stop at the session's VWAP (the intraday momentum family `CHARTER` A-003 names) cannot be priced
+from four prices, and the minutes fetched before 2026-09-19 read back without them - `None`, never
+an invented zero.
 """
 
 from __future__ import annotations
@@ -35,6 +40,8 @@ CREATE TABLE IF NOT EXISTS minute_bars (
     high            DECIMAL(18,6) NOT NULL,
     low             DECIMAL(18,6) NOT NULL,
     close           DECIMAL(18,6) NOT NULL,
+    volume          BIGINT,
+    vwap            DECIMAL(18,6),
     PRIMARY KEY (instrument_id, minute, knowledge_time)
 );
 
@@ -51,13 +58,16 @@ CREATE TABLE IF NOT EXISTS minute_fetches (
 
 @dataclass(frozen=True, slots=True)
 class Minute:
-    """One one-minute bar: the instant it STARTED, and its four prices."""
+    """One one-minute bar: the instant it STARTED, its four prices, and - when the vendor served
+    them - the shares traded and their volume-weighted price."""
 
     at: datetime
     open: Decimal
     high: Decimal
     low: Decimal
     close: Decimal
+    volume: int | None = None
+    vwap: Decimal | None = None
 
 
 class MinuteStore:
@@ -82,10 +92,13 @@ class MinuteStore:
     def write(self, instrument_id: str, session_date: date, minutes: Iterable[Minute],
               knowledge_time: datetime, source: str) -> int:
         """Record one fetch of one session - its minutes, and the fact that it was fetched."""
-        rows = [(instrument_id, session_date, m.at, knowledge_time, m.open, m.high, m.low, m.close)
+        rows = [(instrument_id, session_date, m.at, knowledge_time, m.open, m.high, m.low, m.close,
+                 m.volume, m.vwap)
                 for m in minutes]
         insert_many(self._connection,
-                    "INSERT OR REPLACE INTO minute_bars VALUES (?, ?, ?, ?, ?, ?, ?, ?)", rows)
+                    "INSERT OR REPLACE INTO minute_bars (instrument_id, session_date, minute, "
+                    "knowledge_time, open, high, low, close, volume, vwap) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
         self._connection.execute(
             "INSERT OR REPLACE INTO minute_fetches VALUES (?, ?, ?, ?, ?)",
             [instrument_id, session_date, knowledge_time, source, len(rows)])
@@ -106,11 +119,12 @@ class MinuteStore:
             return None
         rows = self._connection.execute(
             """
-            SELECT minute, open, high, low, close FROM minute_bars
+            SELECT minute, open, high, low, close, volume, vwap FROM minute_bars
             WHERE instrument_id = ? AND session_date = ? AND knowledge_time <= ?
             QUALIFY ROW_NUMBER() OVER (PARTITION BY minute ORDER BY knowledge_time DESC) = 1
             ORDER BY minute
             """,
             [instrument_id, session_date, knowledge_time]).fetchall()
-        return tuple(Minute(at=row[0], open=row[1], high=row[2], low=row[3], close=row[4])
+        return tuple(Minute(at=row[0], open=row[1], high=row[2], low=row[3], close=row[4],
+                            volume=None if row[5] is None else int(row[5]), vwap=row[6])
                      for row in rows)
