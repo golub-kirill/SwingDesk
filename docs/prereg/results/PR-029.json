@@ -1,0 +1,126 @@
+{
+  "prereg": "PR-029",
+  "trials": 1,
+  "verdict": "inconclusive",
+  "branch": "INCONCLUSIVE",
+  "country": "USA",
+  "as_of": {
+    "bars": "2026-09-16T19:30:10.930516-05:00",
+    "directory": "2026-09-18T18:40:52.183557-05:00"
+  },
+  "measured_span": {
+    "first_session": "2018-09-04",
+    "last_session": "2022-08-31",
+    "years": 3.99
+  },
+  "split": {
+    "registered": "none - one draw, the change read against the baseline within it",
+    "buys": "nothing a split could buy: one rule fixed before the run, nothing tuned, and the window is one the idea was not found on"
+  },
+  "perturbations": {
+    "registered": [
+      "cost_adverse",
+      "gross"
+    ],
+    "run": [
+      "cost_adverse",
+      "gross"
+    ]
+  },
+  "registered_settings": {
+    "window": [
+      "2018-09-01",
+      "2022-08-31"
+    ],
+    "per_date": 40,
+    "sample_seed": 20260919,
+    "entry": "the close of the session after the signal",
+    "costs_bps": {
+      "open": "37.8",
+      "eleven": "8.4",
+      "close": "5.0"
+    },
+    "base_exit": "2.0 x ATR(14) stop, 1R target, 20 sessions",
+    "wide_exit": "4.0 x ATR(14) stop, no target, 60 sessions",
+    "pullback": "signal close below its 20-session mean",
+    "regime": "SPY close above its 200-session mean at the signal",
+    "bootstrap": {
+      "unit": "signal month",
+      "block": 3,
+      "seed": 20260919,
+      "resamples": 10000
+    },
+    "min_complete_share": 0.9,
+    "min_dates": 500,
+    "min_months": 24,
+    "power_floor": 0.003
+  },
+  "sample": {
+    "drawn": 40240,
+    "priced": 40199
+  },
+  "diagnostics": {
+    "levered_entries": 1508,
+    "pullback_entries": 13087,
+    "regime": {
+      "spy_above": 29280,
+      "spy_below": 10960
+    },
+    "base_exits": {
+      "target": 18670,
+      "stop": 14662,
+      "time": 4001,
+      "stop_gap": 2866
+    },
+    "wide_exits": {
+      "time": 21901,
+      "stop": 15171,
+      "stop_gap": 3108
+    },
+    "base_sessions_held": 12.783278190999775,
+    "wide_sessions_held": 63.03389746142359,
+    "excluded": {
+      "base:zero_shares": 39,
+      "wide:stop_not_positive": 12,
+      "wide:zero_shares": 7,
+      "base:entry_session_not_stored": 2
+    }
+  },
+  "cell": {
+    "study": "PR-029",
+    "name": "regime",
+    "drawn": 40240,
+    "difference": {
+      "estimate": 0.004766495093087079,
+      "lo": -0.0031201628202658497,
+      "hi": 0.01317052920982881,
+      "width": 0.016290692030094662
+    },
+    "level": {
+      "estimate": 0.0008304358229157516,
+      "lo": -0.004453502588820578,
+      "hi": 0.008666224049271573,
+      "width": 0.01311972663809215
+    },
+    "dates": 1006,
+    "dates_by_regime": {
+      "spy_above": 732,
+      "spy_below": 274
+    },
+    "months": 48,
+    "gross": {
+      "estimate": 0.0046130641747075055,
+      "lo": -0.0032355505914372284,
+      "hi": 0.012940980137095107,
+      "width": 0.016176530728532337
+    },
+    "cost_adverse": {
+      "estimate": 0.00476203457589164,
+      "lo": -0.0031862657093330634,
+      "hi": 0.013251314049674008,
+      "width": 0.016437579759007073
+    },
+    "priced": 40199,
+    "complete_share": 0.9989811133200796
+  }
+}

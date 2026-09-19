@@ -5,7 +5,9 @@ id:            PR-027
 date:          2026-09-19
 author:        Claude, on the owner's choice of 2026-09-19 - the second of four single changes
                registered together (PR-026 carries the shared design, sections 4 and 5)
-status:        registered
+status:        reported   (2026-09-19 - results/PR-027-report.md)
+verdict:       INCONCLUSIVE - the pullback entries less all entries, -0.094% a trade
+               [-0.392, +0.176]; the exploration's +0.57% did not come back
 ```
 
 ---
