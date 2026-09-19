@@ -405,7 +405,7 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 99 script(s), of which 30 are things you type
+### The tools — 100 script(s), of which 30 are things you type
 
 #### Operator tools — 30
 
@@ -471,7 +471,7 @@ Invoked by `python tools/check_gates.py`, not singly. Listed so a failing gate c
 | `python tools/verify_parameters.py` | Enforce the parameter-registry contract. | `--registry` |
 | `python tools/verify_transcription.py` | Verify that every `verbatim` claim in the documents still matches the course. | `--course-root` · `--docs` |
 
-#### Evidence-bound research runners — 56
+#### Evidence-bound research runners — 57
 
 Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions/measurements/` and reproduces it. They ran once, on a date. Nobody types these; they exist so a number can be re-derived.
 
@@ -533,5 +533,6 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/run_pr024.py` | `PR-024` - does `CARD-001` earn more entering near the close than at the open? | `--data` · `--minutes` · `--quotes` · `--sample` · `--as-of` · `--minutes-as-of` · `--quotes-as-of` · `--resamples` · `--dates` · `--per-date` · `--parity-limit` |
 | `python tools/run_pr025.py` | `PR-025` - does an entry that joins the opening auction earn what the 15:55 entry earns? | `--data` · `--minutes` · `--quotes` · `--auctions` · `--sample` · `--as-of` · `--minutes-as-of` · `--quotes-as-of` · `--auctions-as-of` · `--resamples` |
 | `python tools/run_pr026.py` | `PR-026`..`PR-029` - four single changes to `CARD-001`, each against one baseline, read against SPY. | `--data` · `--directory` · `--directory-as-of` · `--sample` · `--as-of` · `--per-date` · `--resamples` |
+| `python tools/run_pr030.py` | `PR-030` - which ORDER should carry `CARD-001`'s entries: today's day limit, a limit-on-open, or a market-on-open? | `--data` · `--minutes` · `--quotes` · `--auctions` · `--sample` · `--as-of` · `--minutes-as-of` · `--quotes-as-of` · `--auctions-as-of` · `--resamples` · `--report` · `--power` |
 
 <!-- END GENERATED COMMANDS -->

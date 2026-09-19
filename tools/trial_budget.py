@@ -347,6 +347,10 @@ SIDE_RECORDS = {
                     "width at 10, 20 and 40 names a date on every fourth date of the window, the "
                     "verdict estimator's own, scaled to the window. Only widths leave it, under the "
                     "same level guard; the four count one each",
+    "PR-030-power": "no trials: a VARIANCE estimate for PR-030 - each reading's interval width, "
+                    "the verdict estimator's own, on the registered sample and stores before "
+                    "registration. Only widths leave it, under the same level guard; PR-030 counts "
+                    "its three",
     "PR-024-attribution": "no trials: an EXPLORATORY re-reading of PR-024's own three arms after "
                           "the run - what excluded each entry, the same C - O on populations "
                           "that drop an entry only for what the primary needs, and the shape of "

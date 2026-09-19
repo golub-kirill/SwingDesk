@@ -918,6 +918,13 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       (limit-on-open at the sizing price) in the existing evening pass — a change to `DR-027` §3.3's
       `time_in_force: day` — or keep `day`. Unmeasured either way: how often a limit-on-open at the
       sizing price fails to fill, and whether a queued `day` order already joins the cross.
+      **RULED 2026-09-19: "Сначала измерить"** — before any change, measure the three order types
+      on `PR-024`'s entries and stores: today's `day` limit at the sizing price (marketable at the
+      open pays the spread; otherwise it rests and fills at the limit if the price comes to it),
+      an `opg` limit-on-open (the cross, if at or under the limit; otherwise no entry), and a
+      market-on-open (the cross, always). Fill rate and return per DRAWN entry, a missed entry
+      counting as cash. The owner also chose the next research line: **intraday momentum on
+      `SPY`/`QQQ`, long only** (the item below).
 
 - [ ] **`[v]` THE RATIFIED EXIT COSTS 0.098R OF GROSS AND THE COMPARISON HAS NEVER BEEN MADE ON
       SELECTED ENTRIES.** Raised 2026-09-08 from `EVIDENCE_SUMMARY` §10 and the exit surface.
