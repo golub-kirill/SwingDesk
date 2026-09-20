@@ -1782,6 +1782,20 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **RULED 2026-09-20: "Да, проверяем"** — `PR-034` registers it: `IJR` and `VB` carry the
       verdict, `MDY` is the boundary case, and the two gates `PR-033` failed (a cent a share, and
       beating the funds held) are in the decision rule.
+      **MEASURED 2026-09-20 (`PR-034`, `ACCEPT`):** the night on `IJR`+`VB` earns **13.8% a year at
+      a Sharpe ratio of 1.06** against holding's 0.59, survives a whole cent a share (11.7%), and
+      the last 590 sessions are its best (15.7% at 1.24). The session loses 5.4% a year. **The
+      first result in this project to beat holding the asset per unit of risk.**
+
+- [ ] **`[v]` OWNER'S CALL: A SPECIFICATION AND A PAPER TRIAL FOR THE OVERNIGHT RULE?** Raised
+      2026-09-20 by `PR-034`'s `ACCEPT`, which licenses *a specification for a paper trial* and
+      nothing more. What it needs that does not exist: a pass that places `cls` orders before
+      15:50 ET and one that places `opg` orders after 19:00 ET (`DR-027` §3.3 places `day` orders
+      only), and `CARD-002` as a card with its own version and clock. What it would displace:
+      `CARD-001` holds up to four positions for twenty sessions and the two cannot share the paper
+      account's capital honestly - the day `CARD-002` starts, `CARD-001` stops and goes `Retired`.
+      Unmeasured and worth stating in the specification: the auctions' own fills (this project has
+      priced auctions on stocks only), and that every gain is short-term.
 
 - [ ] **`[v]` A STUDY'S EXCLUSIONS MUST BE PER READING — `PR-024`'s runner dropped an entry from the
       verdict when an UNREAD arm or a perturbation failed.** `run_pr024.price_entry` returns the

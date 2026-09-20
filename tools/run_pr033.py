@@ -270,7 +270,9 @@ def power(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def report(payload: Mapping[str, Any]) -> None:
-    print(f"PR-033   verdict {payload['verdict']}   branch {payload['branch']}")
+    # The study's own id, so a runner that borrows this printer does not print PR-033's name.
+    print(f"{payload.get('prereg', 'PR-033')}   verdict {payload['verdict']}   "
+          f"branch {payload['branch']}")
     print(f"  excluded {payload['excluded']}   dividends {payload['dividends_paid']}")
     print(f"  arms add up to holding, worst gap {payload.get('arms_add_up_to_holding')}")
     for name, cell in payload["cells"].items():
