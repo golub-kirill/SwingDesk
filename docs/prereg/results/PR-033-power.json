@@ -1,0 +1,91 @@
+{
+  "for": "PR-033",
+  "as_of": {
+    "minutes": "2026-09-19T21:38:38.502579-05:00",
+    "bars": "2026-09-20T04:28:27.411162+00:00"
+  },
+  "resamples": 2000,
+  "widths": {
+    "basket-N": {
+      "width": 0.000557,
+      "days": 2692
+    },
+    "basket-D": {
+      "width": 0.000466,
+      "days": 2692
+    },
+    "basket-N-recent": {
+      "width": 0.000961,
+      "days": 590
+    },
+    "basket-N-less-D": {
+      "width": 0.000798,
+      "days": 2692
+    },
+    "basket-hold": {
+      "width": 0.000592,
+      "days": 2692
+    },
+    "SPY-N": {
+      "width": 0.00055,
+      "days": 2692
+    },
+    "SPY-D": {
+      "width": 0.00047,
+      "days": 2692
+    },
+    "SPY-hold": {
+      "width": 0.000555,
+      "days": 2692
+    },
+    "QQQ-N": {
+      "width": 0.000579,
+      "days": 2689
+    },
+    "QQQ-D": {
+      "width": 0.000658,
+      "days": 2689
+    },
+    "QQQ-hold": {
+      "width": 0.000758,
+      "days": 2689
+    },
+    "IWM-N": {
+      "width": 0.000722,
+      "days": 2692
+    },
+    "IWM-D": {
+      "width": 0.000649,
+      "days": 2692
+    },
+    "IWM-hold": {
+      "width": 0.000855,
+      "days": 2692
+    },
+    "DIA-N": {
+      "width": 0.000532,
+      "days": 2692
+    },
+    "DIA-D": {
+      "width": 0.000426,
+      "days": 2692
+    },
+    "DIA-hold": {
+      "width": 0.00056,
+      "days": 2692
+    },
+    "EFA-N": {
+      "width": 0.000604,
+      "days": 2692
+    },
+    "EFA-D": {
+      "width": 0.000424,
+      "days": 2692
+    },
+    "EFA-hold": {
+      "width": 0.000615,
+      "days": 2692
+    }
+  },
+  "power_floor_width": 0.0008
+}

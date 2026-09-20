@@ -1770,6 +1770,9 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       where the effect lives (the funds with the deepest options flow — a new registration), or
       leave the family and take the next candidate (overnight against intraday, the minutes are
       already stored).
+      **RULED 2026-09-19: "Ночь против дня"** — the owner picked the overnight effect as the next
+      candidate over specifying a paper trial for the momentum rule. `PR-033` registers it: two
+      arms on all five funds whose minutes this project holds, dividends paid to the night.
 
 - [ ] **`[v]` A STUDY'S EXCLUSIONS MUST BE PER READING — `PR-024`'s runner dropped an entry from the
       verdict when an UNREAD arm or a perturbation failed.** `run_pr024.price_entry` returns the
