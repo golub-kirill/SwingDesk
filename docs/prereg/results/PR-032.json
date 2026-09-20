@@ -1,0 +1,227 @@
+{
+  "prereg": "PR-032",
+  "trials": 3,
+  "verdict": "inconclusive",
+  "branch": "NULL",
+  "country": "USA and developed markets",
+  "as_of": {
+    "minutes": "2026-09-19T21:38:38.502579-05:00"
+  },
+  "measured_span": {
+    "first_session": "2024-05-13",
+    "last_session": "2026-09-18"
+  },
+  "split": {
+    "registered": "none - PR-031's rule, unchanged, on three funds it never read",
+    "buys": "nothing a split could buy: no constant is chosen here"
+  },
+  "perturbations": {
+    "registered": [
+      "paper",
+      "cost_adverse",
+      "gross"
+    ],
+    "run": [
+      "paper",
+      "cost_adverse",
+      "gross"
+    ]
+  },
+  "registered_settings": {
+    "funds": [
+      "IWM",
+      "DIA",
+      "EFA"
+    ],
+    "since": "2024-05-13",
+    "primary": "basket",
+    "rule": "run_pr031, long only",
+    "costs_per_share": {
+      "net": 0.005,
+      "paper": 0.0045,
+      "cost_adverse": 0.01,
+      "gross": 0.0
+    },
+    "bootstrap": {
+      "unit": "month",
+      "block": 3,
+      "seed": 20260922,
+      "resamples": 10000
+    },
+    "power_floor": 0.0008,
+    "min_days": 500,
+    "min_months": 24,
+    "min_complete_share": 0.9
+  },
+  "cells": {
+    "basket": {
+      "estimate": -5.3949967606585894e-05,
+      "lo": -0.0002929256937908566,
+      "hi": 0.0001993511108502119,
+      "width": 0.0004922768046410686,
+      "days": 590,
+      "sessions": 590,
+      "complete_share": 1.0,
+      "months": 29,
+      "described": {
+        "days": 590,
+        "annual_mean": -0.013595391836859642,
+        "annual_volatility": 0.0638847798149927,
+        "sharpe": -0.21281112459385876,
+        "cagr": -0.01550339586665228,
+        "max_drawdown": -0.07253207734965939
+      }
+    },
+    "basket-paper": {
+      "estimate": -4.821571095631007e-05,
+      "lo": -0.00028721511503356173,
+      "hi": 0.00020516762631943397,
+      "width": 0.0004923827413529957,
+      "days": 590,
+      "sessions": 590,
+      "complete_share": 1.0,
+      "months": 29
+    },
+    "basket-cost_adverse": {
+      "estimate": -0.00011129253410934402,
+      "lo": -0.00035236283708700166,
+      "hi": 0.0001422850830374029,
+      "width": 0.0004946479201244046,
+      "days": 590,
+      "sessions": 590,
+      "complete_share": 1.0,
+      "months": 29
+    },
+    "basket-gross": {
+      "estimate": 3.3925988961721715e-06,
+      "lo": -0.00023575869694789702,
+      "hi": 0.0002575783022669631,
+      "width": 0.0004933369992148601,
+      "days": 590,
+      "sessions": 590,
+      "complete_share": 1.0,
+      "months": 29
+    },
+    "basket-before-publication": {
+      "estimate": 3.486657890084116e-05,
+      "lo": -9.156563065025825e-05,
+      "hi": 0.00015871080767522076,
+      "width": 0.000250276438325479,
+      "days": 2678,
+      "sessions": 2693,
+      "complete_share": 0.9944300037133309,
+      "months": 129,
+      "described": {
+        "days": 2678,
+        "annual_mean": 0.008786377883011972,
+        "annual_volatility": 0.06380533748234113,
+        "sharpe": 0.1377060012486213,
+        "cagr": 0.006781130978503747,
+        "max_drawdown": -0.10165761586737887
+      }
+    },
+    "IWM": {
+      "estimate": -0.00017925099151561705,
+      "lo": -0.0005705994329113303,
+      "hi": 0.00018493642526109098,
+      "width": 0.0007555358581724214,
+      "days": 590,
+      "sessions": 590,
+      "complete_share": 1.0,
+      "months": 29,
+      "described": {
+        "days": 590,
+        "annual_mean": -0.0451712498619355,
+        "annual_volatility": 0.09056119160486333,
+        "sharpe": -0.4987925739650903,
+        "cagr": -0.048067190283016425,
+        "max_drawdown": -0.14567577127037767
+      },
+      "holding": {
+        "hold_days": 589,
+        "hold_annual_mean": 0.16255991602493933,
+        "hold_annual_volatility": 0.2118021784843252,
+        "hold_sharpe": 0.7675082342789495,
+        "hold_cagr": 0.15048330871660776,
+        "hold_max_drawdown": -0.27863508829839934,
+        "correlation": 0.27429373497355636
+      },
+      "mean_leverage": 1.7409863313183285,
+      "days_traded": 177
+    },
+    "DIA": {
+      "estimate": -5.152575016654704e-05,
+      "lo": -0.00045911386674493443,
+      "hi": 0.00033135814701048096,
+      "width": 0.0007904720137554154,
+      "days": 590,
+      "sessions": 590,
+      "complete_share": 1.0,
+      "months": 29,
+      "described": {
+        "days": 590,
+        "annual_mean": -0.012984489041969855,
+        "annual_volatility": 0.09540493033262547,
+        "sharpe": -0.13609872148850122,
+        "cagr": -0.01736162780475503,
+        "max_drawdown": -0.1345731470165792
+      },
+      "holding": {
+        "hold_days": 589,
+        "hold_annual_mean": 0.12530678984133553,
+        "hold_annual_volatility": 0.14512905601734366,
+        "hold_sharpe": 0.8634162812053345,
+        "hold_cagr": 0.12165047715911825,
+        "hold_max_drawdown": -0.1647298855672854,
+        "correlation": 0.2891713620687738
+      },
+      "mean_leverage": 2.692004047873349,
+      "days_traded": 188
+    },
+    "EFA": {
+      "estimate": 6.89268388624064e-05,
+      "lo": -0.00011422909671191862,
+      "hi": 0.0002835886085981364,
+      "width": 0.000397817705310055,
+      "days": 590,
+      "sessions": 590,
+      "complete_share": 1.0,
+      "months": 29,
+      "described": {
+        "days": 590,
+        "annual_mean": 0.017369563393326414,
+        "annual_volatility": 0.0629977028440126,
+        "sharpe": 0.27571740887655627,
+        "cagr": 0.015519708801723597,
+        "max_drawdown": -0.05719843150993087
+      },
+      "holding": {
+        "hold_days": 589,
+        "hold_annual_mean": 0.12769400053392418,
+        "hold_annual_volatility": 0.16292965920730265,
+        "hold_sharpe": 0.7837369890490807,
+        "hold_cagr": 0.12124163293685641,
+        "hold_max_drawdown": -0.14063604240282757,
+        "correlation": 0.2817350990374361
+      },
+      "mean_leverage": 2.37520159248685,
+      "days_traded": 164
+    }
+  },
+  "excluded": {
+    "IWM": {
+      "warm_up": 15
+    },
+    "DIA": {
+      "warm_up": 15
+    },
+    "EFA": {
+      "warm_up": 15
+    }
+  },
+  "reproduces_pr031": {
+    "checked": true,
+    "days": 590,
+    "differs_by": 1.0164395367051604e-20
+  }
+}
