@@ -1480,3 +1480,22 @@ against holding's 0.56 — one of ten arms, read after the fact, and worth exact
 registration on funds this study never read. The arms compound back to holding to 3e-16, so the
 decomposition is exact.
 
+## 32. The first thing here that beats holding the asset per unit of risk — small caps, overnight only
+
+**`PR-034`, 2026-09-20, `ACCEPT`** (`docs/prereg/results/PR-034-report.md`). `PR-033`'s two arms,
+imported unchanged, on `IJR` and `VB` — chosen for what they are, before a minute of them was
+fetched. Over 2,692 sessions the night earned **+13.8% a year at a Sharpe ratio of 1.06**; the
+session **LOST 5.4% a year** at −0.32; holding the same two funds earned 12.9% at 0.59. §3 predicted
++0.048% a day before the run and the measurement is +0.0549%.
+
+**Every gate `PR-033` failed was cleared**: a whole cent a share a side (+11.7% a year, interval
+above zero), the last 590 sessions (+15.7% a year at 1.24), and beating holding per unit of risk.
+`VB` alone reads 17.3% a year at 1.36; `MDY`, the mid-cap boundary counted and never read, is
+weaker on both sides — the ordering by company size the hypothesis predicted, now across eight
+funds.
+
+**What it does not establish** (§0, written before the run): `IJR`, `VB` and `IWM` hold overlapping
+companies, so this is not an independent second sample. Its drawdown is −31.6% — an equity
+drawdown. Every fill is an auction, and this project has priced auctions only on stocks. **What it
+licenses is a specification for a paper trial**, which is the owner's call.
+

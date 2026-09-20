@@ -6,8 +6,11 @@ date:          2026-09-20
 author:        Claude, on the owner's choice of 2026-09-20. Shown PR-033's COST_FRAGILE and the
                one lead inside it - IWM's night at a Sharpe ratio of 0.91 against holding's 0.56,
                read after the fact - the owner chose "Да, проверяем"
-status:        registered, not run
-verdict:       -
+status:        reported   (2026-09-20 - results/PR-034-report.md)
+verdict:       ACCEPT - the IJR+VB basket's night +0.0549% a day [+0.0207, +0.0895], 13.8% a year
+               at a Sharpe ratio of 1.06 against holding the same funds' 0.59; +0.0463% [+0.0120,
+               +0.0809] at a whole cent a share, and +0.0624% over the last 590 sessions. All
+               three gates cleared. The session LOSES 5.4% a year on these funds
 ```
 
 ---

@@ -206,3 +206,10 @@ def test_an_ex_dividend_session_is_left_out_of_that_check(run) -> None:
     day = sessions[1].session
     assert run.adds_up(night, inside, held, {}) > 1e-4, "it does not hold on an ex-date"
     assert run.adds_up(night, inside, held, {day: 1.0}) == 0.0, "so the ex-date is skipped"
+
+
+def test_the_printer_names_the_study_that_calls_it(run, capsys) -> None:
+    """`PR-034` borrows this printer; it must not print `PR-033`'s name over another study."""
+    run.report({"prereg": "PR-034", "verdict": "accept", "branch": "ACCEPT", "excluded": {},
+                "dividends_paid": {}, "cells": {}})
+    assert capsys.readouterr().out.startswith("PR-034")
