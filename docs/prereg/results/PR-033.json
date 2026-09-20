@@ -1,0 +1,502 @@
+{
+  "prereg": "PR-033",
+  "trials": 10,
+  "verdict": "inconclusive",
+  "branch": "COST_FRAGILE",
+  "country": "USA and developed markets",
+  "as_of": {
+    "minutes": "2026-09-19T21:38:38.502579-05:00",
+    "bars": "2026-09-20T04:28:27.411162+00:00"
+  },
+  "measured_span": {
+    "first_session": "2016-01-04",
+    "last_session": "2026-09-18"
+  },
+  "split": {
+    "registered": "none - two arms of one decision on five funds, none selected",
+    "buys": "nothing a split could buy: no constant is chosen here"
+  },
+  "perturbations": {
+    "registered": [
+      "paper",
+      "cost_adverse",
+      "gross"
+    ],
+    "run": [
+      "paper",
+      "cost_adverse",
+      "gross"
+    ]
+  },
+  "registered_settings": {
+    "funds": [
+      "SPY",
+      "QQQ",
+      "IWM",
+      "DIA",
+      "EFA"
+    ],
+    "arms": [
+      "N",
+      "D"
+    ],
+    "primary": "basket-N",
+    "recent_since": "2024-05-13",
+    "costs_per_share": {
+      "net": 0.005,
+      "paper": 0.0045,
+      "cost_adverse": 0.01,
+      "gross": 0.0
+    },
+    "bootstrap": {
+      "unit": "month",
+      "block": 3,
+      "seed": 20260923,
+      "resamples": 10000
+    },
+    "power_floor": 0.0008,
+    "min_days": 1000,
+    "min_months": 24,
+    "min_complete_share": 0.9
+  },
+  "cells": {
+    "basket-N": {
+      "estimate": 0.00032452633484598016,
+      "lo": 4.507439398469688e-05,
+      "hi": 0.0006017271224746452,
+      "width": 0.0005566527284899483,
+      "days": 2692,
+      "sessions": 2692,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": 0.081780636381187,
+        "annual_volatility": 0.12266708943386838,
+        "sharpe": 0.6666876727785748,
+        "cagr": 0.07699830736299695,
+        "max_drawdown": -0.3006014886996715
+      }
+    },
+    "basket-D": {
+      "estimate": 0.00013347394046218648,
+      "lo": -8.570794838270826e-05,
+      "hi": 0.0003709926934958557,
+      "width": 0.00045670064187856396,
+      "days": 2692,
+      "sessions": 2692,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": 0.03363543299647099,
+        "annual_volatility": 0.13241242938833755,
+        "sharpe": 0.25402020906833006,
+        "cagr": 0.025193772882071475,
+        "max_drawdown": -0.25018141929644944
+      }
+    },
+    "basket-N-recent": {
+      "estimate": 0.0005058478414435805,
+      "lo": -3.6499377813130666e-05,
+      "hi": 0.0009391715839226795,
+      "width": 0.0009756709617358101,
+      "days": 590,
+      "sessions": 590,
+      "complete_share": 1.0,
+      "months": 29,
+      "described": {
+        "days": 590,
+        "annual_mean": 0.1274736560437823,
+        "annual_volatility": 0.11001412553368717,
+        "sharpe": 1.1587026250074486,
+        "cagr": 0.1290636715867055,
+        "max_drawdown": -0.15181122328752172
+      }
+    },
+    "basket-N-less-D": {
+      "estimate": 0.0001910523943837937,
+      "lo": -0.000214600761312141,
+      "hi": 0.0005876703955858592,
+      "width": 0.0008022711568980003,
+      "days": 2692,
+      "sessions": 2692,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": 0.048145203384716014,
+        "annual_volatility": 0.17954249165317826,
+        "sharpe": 0.2681549250063766,
+        "cagr": 0.03246122512786953,
+        "max_drawdown": -0.3504567298569491
+      }
+    },
+    "basket-hold": {
+      "estimate": 0.0005811030969313739,
+      "lo": 0.0002850672279914123,
+      "hi": 0.000904598447071479,
+      "width": 0.0006195312190800667,
+      "days": 2692,
+      "sessions": 2692,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": 0.14643798042670622,
+        "annual_volatility": 0.18136195703188512,
+        "sharpe": 0.8074349374216394,
+        "cagr": 0.13869654039741475,
+        "max_drawdown": -0.3437591559051826
+      }
+    },
+    "SPY-N": {
+      "estimate": 0.00036716281574660566,
+      "lo": 8.308529120856935e-05,
+      "hi": 0.0006328995753991104,
+      "width": 0.0005498142841905411,
+      "days": 2692,
+      "sessions": 2692,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": 0.09252502956814462,
+        "annual_volatility": 0.11505016138376903,
+        "sharpe": 0.8042146873615582,
+        "cagr": 0.08961209218125643,
+        "max_drawdown": -0.30520557920974134
+      }
+    },
+    "SPY-D": {
+      "estimate": 0.00019619581654623975,
+      "lo": -2.7912941913613143e-05,
+      "hi": 0.0004409909957742438,
+      "width": 0.00046890393768785695,
+      "days": 2692,
+      "sessions": 2692,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": 0.04944134576965242,
+        "annual_volatility": 0.13291953169084786,
+        "sharpe": 0.37196448964811313,
+        "cagr": 0.04145835215384541,
+        "max_drawdown": -0.2525984048641806
+      }
+    },
+    "SPY-hold": {
+      "estimate": 0.0006221516012228669,
+      "lo": 0.0003415041448532498,
+      "hi": 0.0009218121654564953,
+      "width": 0.0005803080206032455,
+      "days": 2692,
+      "sessions": 2692,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": 0.15678220350816247,
+        "annual_volatility": 0.17725683906028813,
+        "sharpe": 0.8844917033347193,
+        "cagr": 0.15140970365584794,
+        "max_drawdown": -0.33825038828799137
+      }
+    },
+    "QQQ-N": {
+      "estimate": 0.0004712372406882221,
+      "lo": 0.0001827864981085262,
+      "hi": 0.0007602737485609547,
+      "width": 0.0005774872504524284,
+      "days": 2689,
+      "sessions": 2692,
+      "complete_share": 0.9988855869242199,
+      "months": 129,
+      "described": {
+        "days": 2689,
+        "annual_mean": 0.118751784653432,
+        "annual_volatility": 0.13609659072239572,
+        "sharpe": 0.8725551758725321,
+        "cagr": 0.11561447430478067,
+        "max_drawdown": -0.28461259481992074
+      }
+    },
+    "QQQ-D": {
+      "estimate": 0.0002697269679613924,
+      "lo": -4.307062931362123e-05,
+      "hi": 0.0006050671867346133,
+      "width": 0.0006481378160482345,
+      "days": 2689,
+      "sessions": 2692,
+      "complete_share": 0.9988855869242199,
+      "months": 129,
+      "described": {
+        "days": 2689,
+        "annual_mean": 0.06797119592627088,
+        "annual_volatility": 0.17458860490264075,
+        "sharpe": 0.38932206351139004,
+        "cagr": 0.05416213463611652,
+        "max_drawdown": -0.24879489189558912
+      }
+    },
+    "QQQ-hold": {
+      "estimate": 0.0008274247583041855,
+      "lo": 0.0004490331130199416,
+      "hi": 0.0012333924279469802,
+      "width": 0.0007843593149270385,
+      "days": 2689,
+      "sessions": 2692,
+      "complete_share": 0.9988855869242199,
+      "months": 129,
+      "described": {
+        "days": 2689,
+        "annual_mean": 0.2085110390926548,
+        "annual_volatility": 0.222642735709259,
+        "sharpe": 0.9365274749630357,
+        "cagr": 0.20155109309466002,
+        "max_drawdown": -0.35115156073676124
+      }
+    },
+    "IWM-N": {
+      "estimate": 0.0005197767183015221,
+      "lo": 0.00016438802873968707,
+      "hi": 0.0008925808174339726,
+      "width": 0.0007281927886942856,
+      "days": 2692,
+      "sessions": 2692,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": 0.13098373301198357,
+        "annual_volatility": 0.14361801703725297,
+        "sharpe": 0.9120285582136106,
+        "cagr": 0.1281516336722528,
+        "max_drawdown": -0.32318688201493917
+      }
+    },
+    "IWM-D": {
+      "estimate": -0.00012928396298157697,
+      "lo": -0.00044464416262554016,
+      "hi": 0.00021735648227805743,
+      "width": 0.0006620006449035976,
+      "days": 2692,
+      "sessions": 2692,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": -0.0325795586713574,
+        "annual_volatility": 0.17810740542621062,
+        "sharpe": -0.18292085381511564,
+        "cagr": -0.04727946155014007,
+        "max_drawdown": -0.6112333939830303
+      }
+    },
+    "IWM-hold": {
+      "estimate": 0.0005068474426131555,
+      "lo": 9.162667070707338e-05,
+      "hi": 0.0009678072391052886,
+      "width": 0.0008761805683982153,
+      "days": 2692,
+      "sessions": 2692,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": 0.1277255555385152,
+        "annual_volatility": 0.2278532683285218,
+        "sharpe": 0.5605605593260959,
+        "cagr": 0.10695840183564909,
+        "max_drawdown": -0.4116696333942583
+      }
+    },
+    "DIA-N": {
+      "estimate": 0.0003279352824294225,
+      "lo": 5.571990365468009e-05,
+      "hi": 0.0005937018342916267,
+      "width": 0.0005379819306369466,
+      "days": 2692,
+      "sessions": 2692,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": 0.0826396911722145,
+        "annual_volatility": 0.11265279926537017,
+        "sharpe": 0.7335786745746513,
+        "cagr": 0.07920384616228926,
+        "max_drawdown": -0.2947102451931636
+      }
+    },
+    "DIA-D": {
+      "estimate": 0.00014870315294726326,
+      "lo": -5.4138990928557006e-05,
+      "hi": 0.00037680191463545457,
+      "width": 0.00043094090556401157,
+      "days": 2692,
+      "sessions": 2692,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": 0.03747319454271034,
+        "annual_volatility": 0.12699212520473813,
+        "sharpe": 0.29508282094102795,
+        "cagr": 0.029862996725826818,
+        "max_drawdown": -0.2551226897385266
+      }
+    },
+    "DIA-hold": {
+      "estimate": 0.0005478460000938369,
+      "lo": 0.0002804606953361706,
+      "hi": 0.0008444867648439524,
+      "width": 0.0005640260695077817,
+      "days": 2692,
+      "sessions": 2692,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": 0.13805719202364689,
+        "annual_volatility": 0.17294716195499638,
+        "sharpe": 0.798262258039086,
+        "cagr": 0.13089814293654523,
+        "max_drawdown": -0.36774460985597346
+      }
+    },
+    "EFA-N": {
+      "estimate": -6.540573295687888e-05,
+      "lo": -0.00036299496589677673,
+      "hi": 0.0002307074352134437,
+      "width": 0.0005937024011102204,
+      "days": 2692,
+      "sessions": 2692,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": -0.01648224470513348,
+        "annual_volatility": 0.14133267728084487,
+        "sharpe": -0.11662019726960451,
+        "cagr": -0.026208763720614092,
+        "max_drawdown": -0.40019723264902796
+      }
+    },
+    "EFA-D": {
+      "estimate": 0.00018162533013396564,
+      "lo": -1.4341960136555246e-05,
+      "hi": 0.0004053694360992864,
+      "width": 0.00041971139623584163,
+      "days": 2692,
+      "sessions": 2692,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": 0.045769583193759344,
+        "annual_volatility": 0.10309395104103218,
+        "sharpe": 0.44395992908975523,
+        "cagr": 0.04128861824807872,
+        "max_drawdown": -0.22793150087219594
+      }
+    },
+    "EFA-hold": {
+      "estimate": 0.00039882641334232697,
+      "lo": 9.266460117878558e-05,
+      "hi": 0.000729300806611632,
+      "width": 0.0006366362054328464,
+      "days": 2692,
+      "sessions": 2692,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": 0.1005042561622664,
+        "annual_volatility": 0.17300175442040122,
+        "sharpe": 0.5809435661446359,
+        "cagr": 0.08918928333035603,
+        "max_drawdown": -0.34170737962263253
+      }
+    },
+    "basket-N-paper": {
+      "estimate": 0.0003306457694863955,
+      "lo": 5.1386548367152114e-05,
+      "hi": 0.0006078399205578704,
+      "width": 0.0005564533721907183,
+      "days": 2692,
+      "sessions": 2692,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": 0.08332273391057167,
+        "annual_volatility": 0.12266708228378667,
+        "sharpe": 0.6792591162950057,
+        "cagr": 0.07865999140651314,
+        "max_drawdown": -0.3004748015739165
+      }
+    },
+    "basket-N-cost_adverse": {
+      "estimate": 0.0002633319884418271,
+      "lo": -1.727966083394996e-05,
+      "hi": 0.0005416954830335551,
+      "width": 0.0005589751438675051,
+      "days": 2692,
+      "sessions": 2692,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": 0.06635966108734043,
+        "annual_volatility": 0.1226674285567563,
+        "sharpe": 0.540972137983938,
+        "cagr": 0.060521024295467685,
+        "max_drawdown": -0.3018671501047132
+      }
+    },
+    "basket-N-gross": {
+      "estimate": 0.0003857206812501332,
+      "lo": 0.00010586206002495294,
+      "hi": 0.0006625530873256,
+      "width": 0.000556691027300647,
+      "days": 2692,
+      "sessions": 2692,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": 0.09720161167503358,
+        "annual_volatility": 0.12266723689686258,
+        "sharpe": 0.7924007594363583,
+        "cagr": 0.09373050057311838,
+        "max_drawdown": -0.2993336264643429
+      }
+    }
+  },
+  "excluded": {
+    "SPY": {},
+    "QQQ": {
+      "thin": 3
+    },
+    "IWM": {},
+    "DIA": {},
+    "EFA": {}
+  },
+  "dividends_paid": {
+    "SPY": 64.357,
+    "QQQ": 20.446,
+    "IWM": 24.135,
+    "DIA": 64.279,
+    "EFA": 23.23
+  },
+  "arms_add_up_to_holding": {
+    "SPY": 2.905661822261152e-16,
+    "QQQ": 3.0531133177191805e-16,
+    "IWM": 3.209238430557093e-16,
+    "DIA": 3.0184188481996443e-16,
+    "EFA": 3.0921445959286586e-16
+  },
+  "per_share_cost": 0.005
+}

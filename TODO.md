@@ -1773,6 +1773,12 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **RULED 2026-09-19: "Ночь против дня"** — the owner picked the overnight effect as the next
       candidate over specifying a paper trial for the momentum rule. `PR-033` registers it: two
       arms on all five funds whose minutes this project holds, dividends paid to the night.
+      **MEASURED 2026-09-20 (`PR-033`, `COST_FRAGILE`):** the night earns +8.2% a year net at half
+      a cent a share a side and the session +3.4%, but the night's Sharpe ratio (0.67) is under
+      holding the same basket (0.81), and at a whole cent the interval touches zero. **`IWM` is the
+      exception** — night +13.1% a year at 0.91, session −3.3%, holding 0.56 — read after the fact.
+      **The owner's call:** register small caps' night on funds this study never read (the one
+      question worth asking of this family), or leave it.
 
 - [ ] **`[v]` A STUDY'S EXCLUSIONS MUST BE PER READING — `PR-024`'s runner dropped an entry from the
       verdict when an UNREAD arm or a perturbation failed.** `run_pr024.price_entry` returns the

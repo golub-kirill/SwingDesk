@@ -1463,3 +1463,20 @@ years §29 found the rule earning 10.7% a year on `SPY` — the same basket earn
 reading that held up was chosen after the fact and cannot be read from `PR-031`. Self-check: `SPY`
 through this study's own loader reproduced `PR-031`'s estimate to 1e-20.
 
+## 31. The night pays and the session barely does — and the night still does not beat holding the fund
+
+**`PR-033`, 2026-09-20, `INCONCLUSIVE`, branch `COST_FRAGILE`**
+(`docs/prereg/results/PR-033-report.md`). On five index funds over 2016-2026, holding only
+overnight — bought in the closing auction, sold at the next open, dividends paid to the night
+because they detach at the ex-date's open — earned **+8.2% a year** net of two trades a day; the
+session earned **+3.4%**. The published claim reproduces, and §3 predicted its size before the run
+(+0.035% a day predicted, +0.0325% measured).
+
+**Two things keep it from being an edge.** The night's Sharpe ratio is **0.67** against **0.81** for
+holding the same basket with dividends — §20-§23's bar is still unbeaten. And at a whole cent a
+share a side the interval touches zero: 500 round trips a year against an edge of 1.6 bps a day.
+**The exception is `IWM`**, where the night earned 13.1% a year at 0.91 and the session lost 3.3%,
+against holding's 0.56 — one of ten arms, read after the fact, and worth exactly one new
+registration on funds this study never read. The arms compound back to holding to 3e-16, so the
+decomposition is exact.
+

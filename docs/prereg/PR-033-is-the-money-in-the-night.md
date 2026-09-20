@@ -6,8 +6,11 @@ date:          2026-09-19
 author:        Claude, on the owner's choice of 2026-09-19. Shown that PR-031's ACCEPT did not
                survive PR-032's test on funds the rule was never fitted to, the owner picked
                "Ночь против дня" - the overnight effect - as the next candidate
-status:        registered, not run
-verdict:       -
+status:        reported   (2026-09-20 - results/PR-033-report.md)
+verdict:       INCONCLUSIVE, branch COST_FRAGILE - the basket's night +0.0325% a day [+0.0045,
+               +0.0602], 8.2% a year, and +0.0263% [-0.0017, +0.0542] at a cent a share. The
+               session earned 3.4% a year. The night's Sharpe ratio, 0.67, is under holding the
+               same basket's 0.81; on IWM alone it is 0.91 against 0.56
 ```
 
 ---
