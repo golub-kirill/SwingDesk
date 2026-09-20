@@ -1,0 +1,42 @@
+{
+  "for": "PR-032",
+  "as_of": {
+    "minutes": "2026-09-19T21:38:38.502579-05:00"
+  },
+  "resamples": 2000,
+  "widths": {
+    "basket": {
+      "width": 0.000474,
+      "days": 590
+    },
+    "basket-paper": {
+      "width": 0.000474,
+      "days": 590
+    },
+    "basket-cost_adverse": {
+      "width": 0.000474,
+      "days": 590
+    },
+    "basket-gross": {
+      "width": 0.000475,
+      "days": 590
+    },
+    "basket-before-publication": {
+      "width": 0.000246,
+      "days": 2678
+    },
+    "IWM": {
+      "width": 0.00076,
+      "days": 590
+    },
+    "DIA": {
+      "width": 0.000795,
+      "days": 590
+    },
+    "EFA": {
+      "width": 0.000384,
+      "days": 590
+    }
+  },
+  "power_floor_width": 0.0008
+}
