@@ -363,6 +363,9 @@ SIDE_RECORDS = {
                     "interval width, the verdict estimator's own on the registered window and "
                     "stores before registration. Only widths leave it, under the same level "
                     "guard; PR-033 counts its ten",
+    "PR-034-power": "no trials: a VARIANCE estimate for PR-034 - each arm's and each fund's "
+                    "interval width on the registered window and stores before registration. Only "
+                    "widths leave it, under the same level guard; PR-034 counts its six",
     "PR-024-attribution": "no trials: an EXPLORATORY re-reading of PR-024's own three arms after "
                           "the run - what excluded each entry, the same C - O on populations "
                           "that drop an entry only for what the primary needs, and the shape of "

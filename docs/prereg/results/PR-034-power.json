@@ -1,0 +1,67 @@
+{
+  "for": "PR-034",
+  "as_of": {
+    "minutes": "2026-09-20T02:46:12.550112-05:00",
+    "bars": "2026-09-20T06:28:46.070772+00:00"
+  },
+  "resamples": 2000,
+  "widths": {
+    "small-N": {
+      "width": 0.000687,
+      "days": 2692
+    },
+    "small-D": {
+      "width": 0.000596,
+      "days": 2692
+    },
+    "small-N-recent": {
+      "width": 0.001387,
+      "days": 590
+    },
+    "small-N-less-D": {
+      "width": 0.000946,
+      "days": 2692
+    },
+    "small-hold": {
+      "width": 0.000839,
+      "days": 2692
+    },
+    "IJR-N": {
+      "width": 0.000728,
+      "days": 2692
+    },
+    "IJR-D": {
+      "width": 0.000634,
+      "days": 2692
+    },
+    "IJR-hold": {
+      "width": 0.000892,
+      "days": 2692
+    },
+    "VB-N": {
+      "width": 0.000639,
+      "days": 2691
+    },
+    "VB-D": {
+      "width": 0.000583,
+      "days": 2691
+    },
+    "VB-hold": {
+      "width": 0.000779,
+      "days": 2691
+    },
+    "MDY-N": {
+      "width": 0.000638,
+      "days": 2691
+    },
+    "MDY-D": {
+      "width": 0.00054,
+      "days": 2691
+    },
+    "MDY-hold": {
+      "width": 0.000728,
+      "days": 2691
+    }
+  },
+  "power_floor_width": 0.0008
+}
