@@ -1762,6 +1762,14 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **RULED 2026-09-19: "Проверить на новых ETF"** — before any specification, run the same rule
       on funds this project has never read. `PR-032` registers it: `IWM`, `DIA` and `EFA`, equally
       weighted, only the sessions since publication. The paper-trial question stays open here.
+      **MEASURED 2026-09-19 (`PR-032`, `NULL`):** the basket earns −0.0054% a day since
+      publication and +0.0003% GROSS, and — the reading the decision rule never reads — it earned
+      0.9% a year on the same funds BEFORE publication. The rule's edge was never on them, so
+      `PR-031`'s `ACCEPT` is a statement about `SPY`, which has been flat for two years. **The
+      owner's call is now narrower:** specify a paper trial anyway (on what, `SPY` or `QQQ`?), ask
+      where the effect lives (the funds with the deepest options flow — a new registration), or
+      leave the family and take the next candidate (overnight against intraday, the minutes are
+      already stored).
 
 - [ ] **`[v]` A STUDY'S EXCLUSIONS MUST BE PER READING — `PR-024`'s runner dropped an entry from the
       verdict when an UNREAD arm or a perturbation failed.** `run_pr024.price_entry` returns the

@@ -1448,3 +1448,18 @@ and never read, the rule earned 8.6% a year since publication at 1.06. **What it
 specification for a live paper trial**, which is the only way to learn whether it still works; the
 owner decides whether to build one.
 
+## 30. The intraday rule does not generalise — on three funds it was never fitted to, it earns nothing, and never did
+
+**`PR-032`, 2026-09-19, `INCONCLUSIVE`, branch `NULL`** (`docs/prereg/results/PR-032-report.md`). `PR-031`'s rule,
+imported unchanged and long only, on an equally weighted basket of `IWM`, `DIA` and `EFA` — chosen
+for what they are, before a minute of them was fetched. Since publication: **−0.0054% a day**
+[−0.0293, +0.0199], and **+0.0003% gross**, so nothing a cheaper fill could rescue. Per fund,
+`IWM` −4.5% a year, `DIA` −1.3%, `EFA` +1.7%.
+
+**The secondary reading carries the finding.** Over the 2,678 sessions BEFORE publication — the
+years §29 found the rule earning 10.7% a year on `SPY` — the same basket earned **+0.0035% a day**,
+0.9% a year, a Sharpe ratio of 0.14. **The rule's edge was never present on these funds.** So §29's
+`ACCEPT` is a statement about `SPY`, and `SPY` has been flat since the paper appeared. The `QQQ`
+reading that held up was chosen after the fact and cannot be read from `PR-031`. Self-check: `SPY`
+through this study's own loader reproduced `PR-031`'s estimate to 1e-20.
+

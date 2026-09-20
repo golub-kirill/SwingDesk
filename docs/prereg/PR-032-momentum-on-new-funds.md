@@ -6,8 +6,11 @@ date:          2026-09-19
 author:        Claude, on the owner's choice of 2026-09-19. Shown PR-031's ACCEPT and the
                near-zero two years since publication on SPY, the owner picked "Проверить на
                новых ETF" over writing a live paper-trial specification
-status:        registered, not run
-verdict:       -
+status:        reported   (2026-09-19 - results/PR-032-report.md)
+verdict:       INCONCLUSIVE, branch NULL - the basket since publication -0.0054% a day [-0.0293, +0.0199], zero inside
+               the floor, and +0.0003% gross. The secondary reading says more: BEFORE publication
+               the same basket earned +0.0035% a day, 0.9% a year - the rule was never present on
+               these funds
 ```
 
 ---
@@ -194,4 +197,10 @@ the rule still earns on three funds in a backtest; what it licenses is the same 
 
 ## 10. Amendments
 
-None.
+### A-1 — 2026-09-19, AFTER the run: the verdict's word, not its branch
+
+The runner wrote `"verdict": "null"`, a fifth word in a vocabulary of four (`accept`, `reject`,
+`inconclusive`, `refused`; `run_pr024.TOKEN`, and `tools/verify_studies.py` enforces it). A `NULL`
+branch reports as `INCONCLUSIVE` with the branch beside it, as `PR-026` did. `run_pr031.TOKEN`
+invented the word and this study inherited it. **Fixed with a test**; the branch, the decision rule
+and every number are untouched, and the re-run reproduced the first run's cells to the digit.

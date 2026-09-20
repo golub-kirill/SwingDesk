@@ -242,3 +242,10 @@ def test_the_power_mode_writes_widths_and_no_level(run, tmp_path, monkeypatch) -
     assert set(estimate["widths"]) == {"SPY-long", "QQQ-long", "SPY-both"}
     assert "cells" not in estimate
     assert not math.isnan(estimate["widths"]["SPY-long"]["whole"])
+
+
+def test_the_verdict_speaks_the_project_s_vocabulary(run) -> None:
+    """`verify_studies` knows four verdicts; a branch like NULL reports as INCONCLUSIVE."""
+    assert set(run.TOKEN.values()) <= {"accept", "reject", "inconclusive", "refused", "smoke"}
+    assert run.TOKEN["NULL"] == "inconclusive"
+    assert run.TOKEN["PUBLICATION_FRAGILE"] == "inconclusive"

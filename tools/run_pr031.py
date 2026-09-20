@@ -89,9 +89,11 @@ MIN_DAYS, MIN_MONTHS, MIN_COMPLETE_SHARE = 1000, 24, 0.90
 #: A session is read only when its minutes cover this share of the regular session.
 MIN_COVERAGE = 0.90
 
-TOKEN = {"REFUSED": "refused", "COST_FRAGILE": "cost_fragile",
-         "PUBLICATION_FRAGILE": "publication_fragile", "ACCEPT": "accept", "REJECT": "reject",
-         "INCONCLUSIVE": "inconclusive", "NULL": "null", "SMOKE": "smoke"}
+#: A result file's `verdict` speaks the project's four-word vocabulary, as `run_pr024.TOKEN` does
+#: and `tools/verify_studies.py` enforces; the BRANCH is what carries the detail. `PR-032` A-1.
+TOKEN = {"REFUSED": "refused", "COST_FRAGILE": "inconclusive",
+         "PUBLICATION_FRAGILE": "inconclusive", "ACCEPT": "accept", "REJECT": "reject",
+         "INCONCLUSIVE": "inconclusive", "NULL": "inconclusive", "SMOKE": "smoke"}
 
 
 @dataclass(frozen=True)
