@@ -1759,6 +1759,9 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       $25,000 may make three day trades in five sessions (the paper account is 100k; real capital
       10k). Open with it: which fund (`SPY` registered, `QQQ` stronger since publication but read
       after the fact), and whether a forward paper trial is the next step at all.
+      **RULED 2026-09-19: "Проверить на новых ETF"** — before any specification, run the same rule
+      on funds this project has never read. `PR-032` registers it: `IWM`, `DIA` and `EFA`, equally
+      weighted, only the sessions since publication. The paper-trial question stays open here.
 
 - [ ] **`[v]` A STUDY'S EXCLUSIONS MUST BE PER READING — `PR-024`'s runner dropped an entry from the
       verdict when an UNREAD arm or a perturbation failed.** `run_pr024.price_entry` returns the
