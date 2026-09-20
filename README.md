@@ -405,7 +405,7 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 103 script(s), of which 30 are things you type
+### The tools — 104 script(s), of which 30 are things you type
 
 #### Operator tools — 30
 
@@ -471,7 +471,7 @@ Invoked by `python tools/check_gates.py`, not singly. Listed so a failing gate c
 | `python tools/verify_parameters.py` | Enforce the parameter-registry contract. | `--registry` |
 | `python tools/verify_transcription.py` | Verify that every `verbatim` claim in the documents still matches the course. | `--course-root` · `--docs` |
 
-#### Evidence-bound research runners — 60
+#### Evidence-bound research runners — 61
 
 Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions/measurements/` and reproduces it. They ran once, on a date. Nobody types these; they exist so a number can be re-derived.
 
@@ -537,5 +537,6 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/run_pr031.py` | `PR-031` - does the published intraday momentum rule make money on `SPY`, long only, and does it still make it after publication? | `--minutes` · `--minutes-as-of` · `--resamples` · `--report` · `--power` |
 | `python tools/run_pr032.py` | `PR-032` - does the published intraday momentum rule still work on funds this project has never read, in the years since the paper appeared? | `--minutes` · `--minutes-as-of` · `--resamples` · `--report` · `--power` |
 | `python tools/run_pr033.py` | `PR-033` - is the money in the night? The overnight return against the session's own, on five index funds, net of costs. | `--minutes` · `--minutes-as-of` · `--data` · `--as-of` · `--per-share` · `--resamples` · `--report` · `--power` |
+| `python tools/run_pr034.py` | `PR-034` - small caps' night, asked properly: on funds `PR-033` never read, at a cent a share, against holding them. | `--minutes` · `--minutes-as-of` · `--data` · `--as-of` · `--per-share` · `--resamples` · `--report` · `--power` |
 
 <!-- END GENERATED COMMANDS -->

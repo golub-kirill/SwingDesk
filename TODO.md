@@ -1779,6 +1779,9 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       exception** — night +13.1% a year at 0.91, session −3.3%, holding 0.56 — read after the fact.
       **The owner's call:** register small caps' night on funds this study never read (the one
       question worth asking of this family), or leave it.
+      **RULED 2026-09-20: "Да, проверяем"** — `PR-034` registers it: `IJR` and `VB` carry the
+      verdict, `MDY` is the boundary case, and the two gates `PR-033` failed (a cent a share, and
+      beating the funds held) are in the decision rule.
 
 - [ ] **`[v]` A STUDY'S EXCLUSIONS MUST BE PER READING — `PR-024`'s runner dropped an entry from the
       verdict when an UNREAD arm or a perturbation failed.** `run_pr024.price_entry` returns the
