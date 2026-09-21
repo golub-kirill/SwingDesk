@@ -1846,6 +1846,22 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
          from the stored minutes. This is the trial's product: `PR-034` priced the auctions at half
          a cent and a cent a share and could not observe them.
       Monitoring and the trip-wires that stop the trial are the card document §5.
+      **RULED 2026-09-21 (`DR-048`):** the paper copy is submitted by this system under A-002; the
+      REAL orders are typed by the owner, order by order, so A-001 §1 stands and no charter
+      amendment is spent. **The plan pass is built** (`tools/card002_plan.py`, 26 tests, 19 of 19
+      mutants killed) and prints the card the owner types from.
+      **FOUND on its first live run against the owner's own store:** `VB` was a session behind —
+      Friday's close arrived from the vendor as `NaN`, the documented not-yet-published condition —
+      so the pass refused `VB` and planned `IJR` alone, which is the fail-closed rule working.
+      **The consequence is a precondition, not a defect:** the pass runs at 15:40 ET, before the
+      evening fetch, so **a fetch of `IJR` and `VB` must precede it** or a fund is refused for a
+      reason a two-second request would have removed:
+      ```
+      python tools\fetch_history.py --data data IJR VB
+      ```
+      **Still to build, in order:** the close pass (its own policy block and adapter method — never
+      a widened `submit`), the evening pass, the reconcile, and the fill-quality measurement that
+      takes the owner's real fills as input.
       **MEASURED 2026-09-20 (`PR-035`, `COST_FRAGILE`):** adding a `SPY` day leg makes the book
       return 18.9% a year at a Sharpe ratio of 1.01 against the index's 15.7% at 0.89 - but the
       +3.25% a year margin is +0.35% at a whole cent a share and +0.56% over the last two years.
