@@ -79,7 +79,7 @@ left blank.
 | Entry | method | **market-on-close** (`cls` time-in-force), placed by the close pass between **15:35 and 15:45 ET** — ten minutes of slack before Alpaca's 15:50 cutoff |
 | Entry | maximum entry | none. A market-on-close order cannot carry a limit, and `DR-027` §3.1's argument for a limit does not apply where the price paid IS the benchmark being measured |
 | Entry | what the fill should cost | **possibly less than modelled, and that cuts the other way.** `PR-033`..`PR-035` charged half a cent a share a side, a number inherited from `PR-031`, where fills met the continuous book. An auction order does not: `cls` and `opg` clear at the auction's single price, so the spread a taker pays is not charged at all and what remains is the fees. If the twenty sessions below show that, the night's measured 13.8% a year is the PESSIMISTIC reading and the gross 16.0% is nearer the truth. The measurement decides it in either direction |
-| Invalidation | initial stop | **none — see §4.** The exit order at the venue is the protection |
+| Invalidation | initial stop | **none — see §4**, ratified by `DR-048` §5 as a narrow exception to `DR-027` §3.2. The exit order at the venue is the protection |
 | Invalidation | cancellation | the kill switch absent, a fund's bar stale (`DR-015`), or the account short of cash |
 | Sizing | rule | equal weight: each fund gets `overnight.position_pct` — **50%, ruled 2026-09-20** — of equity, shares from the prior session's close, rounded down |
 | Sizing | portfolio constraints | `overnight.position_pct` = 50 (ruled 2026-09-20, §7), which exceeds `risk.max_position_pct` = 25 deliberately — the parameter note carries the reasoning |
@@ -142,9 +142,21 @@ Weekly report; none of these is a verdict about the strategy, which needs the jo
 Nothing on this list exists. `CHARTER` A-003 §4 records the gap and `CONSTRAINTS` §4 calls it a
 build gap rather than a scope rule.
 
+0. **The plan pass** — **built 2026-09-21**, `tools/card002_plan.py`. It sizes both funds from
+   the prior close, denominates `R`, refuses a fund whose close is missing or stale, and prints the
+   card the owner types from. It submits nothing, which is why it could be built first: `DR-048`
+   puts the REAL orders in the owner's hands, order by order, so this pass is the whole of the
+   owner's side.
+   **Its precondition, found on its first live run:** it runs at 15:40 ET, BEFORE the evening
+   fetch, so it reads the prior session's close from whatever the store already holds. On
+   2026-09-20 that store had `VB` a session behind — the vendor served Friday's close as `NaN`,
+   the documented not-yet-published condition — and the pass correctly refused `VB` and planned
+   `IJR` alone. **A fetch of these two funds must precede the pass**, or a fund will be refused for
+   a reason that a two-second request would have removed.
 1. **The close pass** — a run between 15:40 and 15:48 ET that sizes both funds from the prior close
-   and submits two `cls` market buys. Needs `BrokerPolicy` to permit `cls`, which today's policy
-   does not name.
+   and submits two `cls` market buys **to the PAPER account** (`DR-048` §1). Needs `BrokerPolicy` to
+   permit `cls`, which today's policy does not name, and its own adapter method — `submit` sends a
+   bracket with a stop, and widening it would weaken `CARD-001`'s protection as a side effect.
 2. **The evening pass** — a run after 19:05 ET that reads the filled positions and submits an `opg`
    market sell for each. It is the protection, so a failure to place it is an alert, not a log line.
 3. **The morning reconciliation** — the existing read-only broker read, after the open, checking
@@ -184,6 +196,13 @@ behind the same four guards `DR-027` §4 already imposes.
    paper trial would confirm this project's own cost model because it IS that model. An auction
    clears at one price for one share and for a thousand, so the minimum size measures it exactly,
    and the capital at risk is a few hundred dollars.
+
+6. **How the orders reach the exchange — ruled 2026-09-21.** The paper copy is submitted by
+   this system; the REAL orders are typed by the owner. `DR-048` carries the reasoning: it keeps
+   `CHARTER` A-001 §1 intact, needs no amendment to A-002, and costs one manual step twice a day
+   for twenty sessions. **The consequence to plan around is that this system cannot see the real
+   fills** — the live host is not on gate 39's allowlist — so the owner hands them back and the
+   reconcile pass takes them as input.
 
 **Still open:** when `CARD-001` stops. The two cannot share the paper account — `CARD-001` holds up
 to four positions for twenty sessions and this one wants the account every night. The proposal is

@@ -405,15 +405,16 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 107 script(s), of which 30 are things you type
+### The tools — 108 script(s), of which 31 are things you type
 
-#### Operator tools — 30
+#### Operator tools — 31
 
 Run these. Everything else below either runs itself or ran once.
 
 | command | what it does | arguments |
 |---|---|---|
 | `python tools/blocked_claims.py` | The open items in `TODO.md` that assert something is blocked, and therefore need testing. | `--list` · `--todo` |
+| `python tools/card002_plan.py` | `CARD-002`'s plan pass: what to buy into tonight's close, and what it risks. | `--data` · `--equity` · `--shares` · `--session` · `--as-of` · `--out` |
 | `python tools/classify_departures.py` | Classify the symbols that left the directory: delisting, rename, or still listed. | `--data` · `--out` |
 | `python tools/fetch_auction_prints.py --store --sessions` | Fetch the opening and closing auction prints of named sessions into an `AuctionStore`. GET only. | `--store` **(required)** · `--sessions` **(required)** · `--side` · `--refetch` |
 | `python tools/fetch_directory.py` | Download the NASDAQ Trader symbol directory and record it as one dated pull. | `--data` · `--scheduled` · `--emergency-repull` · `--reason` |
