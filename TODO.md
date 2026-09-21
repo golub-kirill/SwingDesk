@@ -32,7 +32,15 @@ retyping it.
 ### THE ONLY RATIFIED LIVE CRITERION CANNOT FIRE — found 2026-08-24
 
 - [ ] **`[v]` A restated close is detected and printed, and nothing REFUSES on it** (`DR-016`
-      §10.4). `market_data/store.py:close_revision` reports every close restated past
+      §10.4). **MEASURED 2026-09-21, so this item now carries its own cost:** the store holds at
+      least one uncorrected split - `AIXI` reads 0.472 then 3.260 the next session, a 1-for-7
+      reverse split read as +590% - and `corporate_actions` covers **7 instruments of 13,140**.
+      Against an independent vendor, though, **104 of 104 admitted-price names are on the same
+      basis** (59 random, 45 chosen for carrying a split-shaped jump), because the evening refresh
+      rewrites an admitted name's whole history on every fetch. So the guard's absence costs
+      nothing today and bites the day a study reads a name that LEFT the universe and split after.
+      `BACKTEST_PROTOCOL` §6e has the numbers and the detector that did NOT work.
+      `market_data/store.py:close_revision` reports every close restated past
       `data.revision_epsilon` and `tools/refresh_universe.py` prints them; the decision path never
       sees one. Making it a `DATA_ERR` / `Critical` is an `application/pipeline.py` change, and
       that file is **frozen** under `DR-015` §3 — a change moving decision output resets
