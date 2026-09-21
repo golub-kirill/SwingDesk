@@ -1339,12 +1339,43 @@ def _sync_fills(args: argparse.Namespace) -> int:
         # person's.
         at_venue = {holding.symbol for holding in held}
         just_closed: set[str] = set()
+
+        # OURS INCLUDES WHAT THE VENUE BUILT OUT OF OURS, and until 2026-09-21 it did not.
+        #
+        # An `oco` this system submits is ONE order to us and TWO to the venue: Alpaca makes the
+        # limit the primary, which carries our `client_order_id` and the `venue_order_id` the
+        # journal keeps, and creates the stop as a LEG with an id of its own. So a take-profit exit
+        # settles an order this can name and a STOP-OUT settles one it cannot - and `DR-038`'s
+        # attribution by id therefore recorded every winner and silently dropped every loser.
+        #
+        # Measured on the book itself: `BTSG` sold on 2026-09-17 at 57.57 on leg
+        # `64752e7f-...` of our own `swingdesk-protect-2026-09-15-BTSG`, stayed open in the book
+        # for four days, held its slot, and kept `DR-027` §11's guard stopping every entry.
+        #
+        # A leg cannot be walked upwards - fetched alone it names no parent - so the ids are
+        # collected downwards, one GET per order this system sent for a name still open here. That
+        # is bounded by the book, not by the account's history.
+        leg_ids: set[str] = set()
+        for position in store.open_as_of(now):
+            for sent_id in journal.sent_venue_order_ids(position.instrument_id):
+                try:
+                    leg_ids.update(client.legs_of(sent_id))
+                except broker_pkg.BrokerUnavailable as unreadable:
+                    # Not fatal and not silent: one unreadable order narrows what can be
+                    # attributed, and saying so is better than a close that never happens for a
+                    # reason nobody can see.
+                    refusals.append(
+                        f"{position.instrument_id}: the legs of {sent_id} could not be read "
+                        f"({unreadable}), so an exit that settled one of them cannot be attributed"
+                    )
+
+        def ours(order_id: str) -> bool:
+            return order_id in leg_ids or journal.submission_for_order(order_id) is not None
+
         for position in store.open_as_of(now):
             if position.instrument_id in at_venue:
                 continue
-            exit_ = adoption.closing_exit(
-                position, fills, lambda order_id: journal.submission_for_order(order_id) is not None
-            )
+            exit_ = adoption.closing_exit(position, fills, ours)
             if exit_ is None:
                 # No sell of ours to attribute it to. `_broker`'s reconciliation reports it and the
                 # owner closes it with `close-position`; this stays silent rather than guessing.
