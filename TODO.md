@@ -1796,6 +1796,25 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       account's capital honestly - the day `CARD-002` starts, `CARD-001` stops and goes `Retired`.
       Unmeasured and worth stating in the specification: the auctions' own fills (this project has
       priced auctions on stocks only), and that every gain is short-term.
+      **SPECIFIED 2026-09-20** on the owner's "yes, continue. Plan, specifications":
+      `docs/02-domain/CARD-002-overnight-small-caps.md` and its row in `registry/cards.yml`,
+      status `Untested`, four declared blockers. The card refuses today because
+      `overnight.position_pct` is unset - which is the design working, not a gap.
+      **The build order, each step specification-first under `A-001` (a decision record before the
+      code) and behind `DR-027` §4's four guards:**
+      1. **The close pass** - runs 15:40-15:48 ET, sizes both funds from the prior close, submits
+         two `cls` market buys. Needs `registry/broker_policy.yml` to permit the `cls`
+         time-in-force, which it does not name today.
+      2. **The evening pass** - runs after 19:05 ET, reads the filled positions, submits an `opg`
+         market sell for each. **This pass IS the card's protection** (the card has no stop because
+         nothing can execute while the exchange is shut), so a failure to place it is an alert.
+      3. **The morning reconciliation** - the existing read-only broker read, after the open:
+         every position closed, the night journalled with both fills, the dividend if the date had
+         one, and `R` as `overnight.risk_unit_lookback` defines it.
+      4. **The fill-quality measurement** - each fill against that session's official auction price
+         from the stored minutes. This is the trial's product: `PR-034` priced the auctions at half
+         a cent and a cent a share and could not observe them.
+      Monitoring and the trip-wires that stop the trial are the card document §5.
 
 - [ ] **`[v]` A STUDY'S EXCLUSIONS MUST BE PER READING — `PR-024`'s runner dropped an entry from the
       verdict when an UNREAD arm or a perturbation failed.** `run_pr024.price_entry` returns the
