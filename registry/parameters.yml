@@ -1522,3 +1522,38 @@ parameters:
       bars stays actionable, with no measurement behind it. The owner is the only instrument that can
       move it.
     ui_editable: true
+
+  - id: overnight.position_pct
+    unit: percent of account.equity, per fund
+    value: 50
+    status: owner
+    provenance: owner
+    read_by: none
+    named_in: ["authored - PR-034 and CARD-002; the course names no overnight-only position size"]
+    note: >-
+      CARD-002's only size input. RULED BY THE OWNER 2026-09-20: equal weight across IJR and VB,
+      the account fully invested every night, which is exactly what PR-034 measured - 13.8% a year
+      at a Sharpe ratio of 1.06 and a worst drawdown of -31.6%.
+      IT DELIBERATELY EXCEEDS risk.max_position_pct, which is 25% and was ratified 2026-09-13 for
+      single STOCKS carrying a 2 x ATR stop and held for twenty sessions. A broad index fund held
+      for seventeen hours while the exchange is shut is a different risk object, and the owner
+      ruled on it knowing the drawdown the measurement implies. Written here rather than by raising
+      the global cap, which governs CARD-001 and every future single-name position.
+      The size for REAL money is a separate decision and this number is not it: at 10,000 real,
+      PR-034's worst drawdown is -3,200.
+    ui_editable: true
+
+  - id: overnight.risk_unit_lookback
+    unit: sessions
+    value: 14
+    status: assumed
+    provenance: assumed:CARD-002
+    read_by: none
+    named_in: ["authored - RISK_SPEC 2 needs an R and CARD-002 has no stop to denominate it"]
+    note: >-
+      CARD-002 has no stop, so RISK_SPEC 2's R cannot be entry minus stop. R is the position's
+      notional times the standard deviation of that fund's overnight return over this many stored
+      sessions, measured at the decision close. Fourteen is the lookback PR-031..PR-034 used for
+      every volatility they measured, carried here so a night's loss is readable in the same unit
+      as every other journalled position. Fewer than this many stored sessions refuses the entry.
+    ui_editable: false

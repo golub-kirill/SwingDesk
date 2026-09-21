@@ -41,15 +41,15 @@ A parameter with no value makes its component refuse, so an `unset` count is a m
 | Derived Observations | 12 | 6 | 6 | 0 |
 | Decision Logic | 19 | 1 | 18 | 0 |
 | Trade Management | 45 | 22 | 23 | 0 |
-| *(programme-level)* | 25 | 19 | 6 | 0 |
+| *(programme-level)* | 27 | 21 | 6 | 0 |
 
 Programme-level parameters (`validation.*`, `stats.*`) govern the validation programme rather than a component, so they have no layer.
 
 | Status | Count |
 |---|---:|
 | `unset` | 57 |
-| `assumed` | 33 |
-| `owner` | 21 |
+| `assumed` | 34 |
+| `owner` | 22 |
 | `validated` | 0 |
 
 ## 3. How to read the runtime column

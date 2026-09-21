@@ -1,0 +1,39 @@
+{
+  "for": "PR-035",
+  "as_of": {
+    "minutes": "2026-09-20T02:46:12.550112-05:00",
+    "bars": "2026-09-20T06:28:46.070772+00:00"
+  },
+  "resamples": 2000,
+  "widths": {
+    "combined-less-hold-SPY": {
+      "width": 0.00027,
+      "days": 2691
+    },
+    "combined": {
+      "width": 0.000714,
+      "days": 2691
+    },
+    "hold-SPY": {
+      "width": 0.000575,
+      "days": 2691
+    },
+    "night-small-caps": {
+      "width": 0.000672,
+      "days": 2692
+    },
+    "day-SPY": {
+      "width": 0.00046,
+      "days": 2691
+    },
+    "night-SPY": {
+      "width": 0.000523,
+      "days": 2691
+    },
+    "combined-less-hold-SPY-recent": {
+      "width": 0.000582,
+      "days": 590
+    }
+  },
+  "power_floor_width": 0.0008
+}

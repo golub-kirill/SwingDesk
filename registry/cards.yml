@@ -201,3 +201,126 @@ cards:
       - k.programme_exhausted
       - k.strategy_rejected
       - b.deflated_sharpe
+
+  - card: CARD-002
+    version: 1
+    name: Overnight small caps
+    status: Untested
+    owner_selected: 2026-09-20
+    document: docs/02-domain/CARD-002-overnight-small-caps.md
+
+    rationale: >-
+      Buy IJR and VB in the closing auction, sell both in the next session's opening auction, every
+      session, unconditionally. The claim is not a signal but a measured decomposition: on these
+      funds over 2016-2026 the night earned 13.8% a year net of two trades a day at a Sharpe ratio
+      of 1.06 while the session LOST 5.4% a year, and holding them outright earned 12.9% at 0.59
+      (PR-034, the first result in this project to beat holding per unit of risk). The card owns a
+      clock, not a view: no selection, no trigger, no stop. WHAT THE BACKTEST COULD NOT MEASURE is
+      what a paper trial produces - every fill is an auction, and this project has priced auctions
+      only on stocks (PR-025, PR-030).
+
+    scope:
+      markets: [US]
+      instruments: [etf]
+      timeframe: one night - the close to the next session's open
+      excluded: >-
+        Everything else. The two funds are PR-034's verdict basket and adding a third is a new
+        configuration and a new study. IWM is PR-033's and is deliberately not held here.
+      allowed_regimes: every session - the card does not time
+      holding_horizon: the next session's opening auction
+
+    universe:
+      rule: PR-034 - the two funds its verdict read, equally weighted
+      instruments: [IJR, VB]
+      parameters: []
+
+    conditions:
+      required:
+        - the kill switch file is present (DR-027 section 4)
+        - a prior session close is stored for the fund and is fresh (DR-015)
+        - at least 14 stored sessions, so the night's R can be denominated (card document 3)
+      confirming: []
+      prohibiting:
+        - the account has less cash than the sized order needs
+        - a position in the fund is already held
+        - the entry did not fill, so there is nothing to sell at the open
+
+    entry:
+      trigger: >-
+        Every session, unconditionally. There is no selection and no price trigger, and that is the
+        family rather than an omission - the card is a clock.
+      method: market-on-close (cls), placed by the close pass before Alpaca's 15:50 ET cutoff
+      maximum_entry: unset
+
+    invalidation:
+      initial_stop: >-
+        none - the position is held only while the exchange is shut, so no stop could trigger before
+        the opening auction, which is when the card already sells in full (card document 4)
+      cancellation: the kill switch absent, a stale prior close, or insufficient cash
+
+    sizing:
+      rule: equal weight - each fund gets overnight.position_pct of equity, shares from the prior close
+      portfolio_constraints:
+        - overnight.position_pct
+        - risk.max_position_pct
+
+    exits:
+      at: market-on-open (opg) for the whole position, placed by the evening pass after 19:00 ET
+      stop: unset
+      time: the next session's opening auction - the exit IS the time exit
+      targets: unset
+      trailing: unset
+      partials: unset
+
+    data:
+      requires: [daily RAW bars for the two funds, cash dividends by ex-date, the venue for fills]
+      on_missing: refuse the session for that fund with a coded DATA skip (FAIL_CLOSED_POLICY 3)
+      on_stale: DR-015
+      on_revised: DR-016
+
+    # No course component describes "own the night". The card's dependencies are data facts and
+    # two reported studies, which the document lists; claiming a course row here would be a
+    # citation nobody can follow.
+    components: []
+
+    evidence: null
+    validation_status: Untested
+
+    blocked_by:
+      - id: unset-position-size
+        what: >-
+          CLOSED 2026-09-20 by the owner's ruling: overnight.position_pct is 50, equal weight
+          across the two funds, the account fully invested every night - PR-034 as measured. It
+          exceeds risk.max_position_pct (25%) deliberately and the parameter's note says why; that
+          cap was ratified for single stocks with a stop, not for an index fund held seventeen
+          hours while the exchange is shut.
+        why: >-
+          The size for REAL money stays a separate decision. This card is paper-only under A-002,
+          and at 10,000 real PR-034's worst drawdown is -3,200.
+      - id: no-close-pass
+        what: >-
+          Nothing places a market-on-close order. BrokerPolicy does not name the cls time-in-force
+          and no run happens between 15:40 and 15:48 ET.
+        why: >-
+          CHARTER A-003 section 4 records the intraday loop as a build gap; CONSTRAINTS 4 calls it
+          a gap rather than a scope rule. Specification-first work under A-001.
+      - id: no-evening-exit-pass
+        what: >-
+          Nothing places the opg sell that IS this card's protection. Alpaca accepts opg only
+          before 09:28 ET or after 19:00 ET, so the existing evening window fits, but the pass does
+          not exist.
+        why: >-
+          Card document 4 - the resting exit replaces the stop, so the pass that lodges it is a
+          safety component, not a convenience.
+      - id: no-fill-quality-measurement
+        what: >-
+          Nothing compares a fill to the session's official auction price. That comparison is the
+          trial's product.
+        why: >-
+          PR-034 priced the auctions at half a cent and a cent a share and could not observe them;
+          the trial exists to measure what the venue gives.
+
+    kill_criteria:
+      - k.programme_exhausted
+      - k.strategy_rejected
+      - b.deflated_sharpe
