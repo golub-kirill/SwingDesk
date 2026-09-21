@@ -1,0 +1,113 @@
+{
+  "as_of": "2026-09-21T13:17:41.981675+00:00",
+  "asked_by": "Claude, before registering PR-037 - RETURN_SOURCE_REGISTER 3.1 ranked this source first because it is the cheapest to TEST, which is not the same as being answerable",
+  "benchmark": "SPY",
+  "best_minimum_detectable_among_selective_books": 0.021647857142857142,
+  "by_book_size": {
+    "2": {
+      "excess-vs-SPY": {
+        "minimum_detectable": 0.05194214285714286,
+        "months": 320,
+        "width": 0.072719
+      },
+      "excess-vs-own-pool": {
+        "minimum_detectable": 0.04559571428571429,
+        "months": 320,
+        "width": 0.063834
+      }
+    },
+    "3": {
+      "excess-vs-SPY": {
+        "minimum_detectable": 0.04452642857142857,
+        "months": 320,
+        "width": 0.062337
+      },
+      "excess-vs-own-pool": {
+        "minimum_detectable": 0.03182714285714286,
+        "months": 320,
+        "width": 0.044558
+      }
+    },
+    "4": {
+      "excess-vs-SPY": {
+        "minimum_detectable": 0.030766428571428573,
+        "months": 320,
+        "width": 0.043073
+      },
+      "excess-vs-own-pool": {
+        "minimum_detectable": 0.023170714285714288,
+        "months": 320,
+        "width": 0.032439
+      }
+    },
+    "5": {
+      "excess-vs-SPY": {
+        "minimum_detectable": 0.030010714285714283,
+        "months": 320,
+        "width": 0.042015
+      },
+      "excess-vs-own-pool": {
+        "minimum_detectable": 0.021647857142857142,
+        "months": 320,
+        "width": 0.030307
+      }
+    },
+    "6": {
+      "excess-vs-SPY": {
+        "minimum_detectable": 0.025932142857142855,
+        "months": 320,
+        "width": 0.036305
+      },
+      "excess-vs-own-pool": {
+        "minimum_detectable": 0.01671214285714286,
+        "months": 320,
+        "width": 0.023397
+      }
+    },
+    "tercile": {
+      "excess-vs-SPY": {
+        "minimum_detectable": 0.03981428571428571,
+        "months": 320,
+        "width": 0.05574
+      },
+      "excess-vs-own-pool": {
+        "minimum_detectable": 0.028627857142857142,
+        "months": 320,
+        "width": 0.040079
+      }
+    }
+  },
+  "claimed_effect_in_the_literature": 0.02,
+  "conclusion": "NO long-only book that is still a selection can separate a 2-point-a-year effect from zero here. Against the funds' own pool, two of eleven detects 4.56 points a year, three detects 3.18, four 2.32, five 2.16, and the registered TERCILE rule 2.86 - every one of them above the two points this literature claims. Only six of eleven gets under it, at 1.67, and six of eleven is 55% of the pool. The binding constraint is the CROSS-SECTION, not the book size: eleven candidates over 320 months is too thin to rank",
+  "costs_bps_of_notional": {
+    "cost_adverse": 15.0,
+    "gross": 0.0,
+    "net": 5.0
+  },
+  "exploratory": true,
+  "formation_months": 12,
+  "funds": [
+    "XLB",
+    "XLC",
+    "XLE",
+    "XLF",
+    "XLI",
+    "XLK",
+    "XLP",
+    "XLRE",
+    "XLU",
+    "XLV",
+    "XLY"
+  ],
+  "measured": "2026-09-21",
+  "power_scale": 1.4285714285714286,
+  "resamples": 2000,
+  "selective_means": "a book of five of eleven or fewer. Six of eleven is 55% of the pool",
+  "skip_months": 1,
+  "tercile_minimum_detectable_vs_own_pool": 0.028627857142857142,
+  "tool": "tools/measure_sector_power.py",
+  "trials": 0,
+  "what_follows": "PR-037 is NOT registered on this instrument. Spending a trial raises the deflated-Sharpe hurdle for every study after it, and a design that cannot detect its own claimed effect buys nothing with that. The source stays open in RETURN_SOURCE_REGISTER 3.1 with a stated trigger: a wider cross-section - industry-level funds, or the repaired stock universe",
+  "what_this_does_NOT_settle": "whether sector momentum exists. This measures what this DESIGN could see, not what the market does, and a random ranking carries no sign. It also does not measure how the effect itself changes with book size - that would be reading the hypothesis before the registration",
+  "why_no_trial": "the ranking is RANDOM, so this carries widths and no effect. Nothing here is a reading of the hypothesis and nothing is counted against the budget"
+}

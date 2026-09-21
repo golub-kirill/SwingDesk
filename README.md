@@ -405,7 +405,7 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 109 script(s), of which 32 are things you type
+### The tools — 111 script(s), of which 32 are things you type
 
 #### Operator tools — 32
 
@@ -473,7 +473,7 @@ Invoked by `python tools/check_gates.py`, not singly. Listed so a failing gate c
 | `python tools/verify_parameters.py` | Enforce the parameter-registry contract. | `--registry` |
 | `python tools/verify_transcription.py` | Verify that every `verbatim` claim in the documents still matches the course. | `--course-root` · `--docs` |
 
-#### Evidence-bound research runners — 64
+#### Evidence-bound research runners — 66
 
 Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions/measurements/` and reproduces it. They ran once, on a date. Nobody types these; they exist so a number can be re-derived.
 
@@ -502,6 +502,7 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/measure_quoted_spread.py` | What the admitted universe actually costs to cross, from the venue's own NBBO. | `--data` · `--sample` · `--seed` · `--years` · `--against` · `--out` |
 | `python tools/measure_revisions.py` | What the vendor actually rewrites, per field, and where a threshold could cut. | `--data` · `--out` |
 | `python tools/measure_sector_cap.py` | Calibrate `risk.max_sector_risk` against the only trade log this project holds. | `--classifications` · `--data` · `--out` · `--wide` · `--refusals` |
+| `python tools/measure_sector_power.py --data` | How large an effect could a sector-momentum study on ELEVEN funds actually detect? | `--data` **(required)** · `--as-of` · `--resamples` |
 | `python tools/measure_sector_relative.py` | Sector-relative strength: the other way out of the identity `DR-018` found. | `--data` · `--out` |
 | `python tools/measure_short_leg.py` | How much of the ONE significant result survives a short leg you could actually borrow? | `--data` · `--as-of` · `--out` |
 | `python tools/measure_spread.py` | Measure the effective spread across the stored universe, to inform DR-005. | `--data` · `--limit` · `--min-pairs` · `--out` |
@@ -543,5 +544,6 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/run_pr034.py` | `PR-034` - small caps' night, asked properly: on funds `PR-033` never read, at a cent a share, against holding them. | `--minutes` · `--minutes-as-of` · `--data` · `--as-of` · `--per-share` · `--resamples` · `--report` · `--power` |
 | `python tools/run_pr035.py` | `PR-035` - the same dollar twice: small caps overnight, `SPY` through the session, against holding `SPY`. | `--minutes` · `--minutes-as-of` · `--data` · `--as-of` · `--per-share` · `--resamples` · `--report` · `--power` |
 | `python tools/run_pr036.py` | `PR-036` - did the night pay BEFORE 2016? The same two arms, on daily bars, back to 2000. | `--data` · `--as-of` · `--per-share` · `--resamples` · `--report` · `--power` |
+| `python tools/run_pr037.py` | `PR-037` - do sectors trend as a block? Industry momentum on the eleven sector funds. | `--data` · `--as-of` · `--resamples` · `--report` · `--power` |
 
 <!-- END GENERATED COMMANDS -->
