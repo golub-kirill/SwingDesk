@@ -44,8 +44,16 @@ measured — it is **what the closing and opening auctions actually give a small
 | the arms are an exact decomposition of holding (3e-16) | `PR-034` §9 |
 
 **And what it does not say**, carried here so the card cannot outrun its evidence: `IJR`, `VB` and
-`IWM` hold overlapping companies, so this is not an independent second sample; the worst drawdown is
-−31.6%, an equity drawdown; and every gain is short-term for tax.
+`IWM` hold overlapping companies, so this is not an independent second sample; and the worst
+drawdown is −31.6%, an equity drawdown.
+
+**Tax, stated correctly for THIS owner and not for a textbook.** The owner holds a TAXABLE account
+and funds it in Canadian dollars (owner, 2026-09-20). The American framing an adviser reached for —
+short-term versus long-term capital gains — **does not apply**: Canada does not distinguish them.
+What does apply is the risk that a rule trading every session is assessed as BUSINESS INCOME rather
+than capital gains, which changes the inclusion rate rather than the rate itself. That is a question
+for an accountant, it is immaterial at the twenty-session measurement size below, and it is material
+at scale. **Nothing in this project is tax advice.**
 
 ## 3. The rules, field by field
 
@@ -61,6 +69,7 @@ left blank.
 | Entry | candidate selection · setup · trigger · confirmation | **none.** Both funds, every session |
 | Entry | method | **market-on-close** (`cls` time-in-force), placed by the close pass between **15:35 and 15:45 ET** — ten minutes of slack before Alpaca's 15:50 cutoff |
 | Entry | maximum entry | none. A market-on-close order cannot carry a limit, and `DR-027` §3.1's argument for a limit does not apply where the price paid IS the benchmark being measured |
+| Entry | what the fill should cost | **possibly less than modelled, and that cuts the other way.** `PR-033`..`PR-035` charged half a cent a share a side, a number inherited from `PR-031`, where fills met the continuous book. An auction order does not: `cls` and `opg` clear at the auction's single price, so the spread a taker pays is not charged at all and what remains is the fees. If the twenty sessions below show that, the night's measured 13.8% a year is the PESSIMISTIC reading and the gross 16.0% is nearer the truth. The measurement decides it in either direction |
 | Invalidation | initial stop | **none — see §4.** The exit order at the venue is the protection |
 | Invalidation | cancellation | the kill switch absent, a fund's bar stale (`DR-015`), or the account short of cash |
 | Sizing | rule | equal weight: each fund gets `overnight.position_pct` — **50%, ruled 2026-09-20** — of equity, shares from the prior session's close, rounded down |
@@ -152,6 +161,20 @@ behind the same four guards `DR-027` §4 already imposes.
    occupy the idle day slot over using leverage. `PR-035` registers that: the same dollar owning
    small caps at night and `SPY` through the session. **If `PR-035` returns `ACCEPT`, this card
    gains a second leg and becomes version 2**; if it does not, the card stays the night alone.
+
+**Ruled 2026-09-20, the same evening, and each one changes what happens next:**
+
+3. **The account is TAXABLE and funded in Canadian dollars.** See §2 — the consequence is a question
+   for an accountant at scale, not a blocker at measurement size.
+4. **The owner can add about CAD 500 a month.** This is the largest single lever in the whole
+   project and it is recorded here because no study can move it: at this rate, five years of
+   deposits contribute roughly twice what five years of the measured edge contributes on the
+   current balance. A strategy decision that ignores it optimises the smaller term.
+5. **The owner will run the first twenty sessions at minimum REAL size** — one or two shares a fund.
+   This is the only way the fill number can be obtained: **Alpaca's paper fills are simulated**, so a
+   paper trial would confirm this project's own cost model because it IS that model. An auction
+   clears at one price for one share and for a thousand, so the minimum size measures it exactly,
+   and the capital at risk is a few hundred dollars.
 
 **Still open:** when `CARD-001` stops. The two cannot share the paper account — `CARD-001` holds up
 to four positions for twenty sessions and this one wants the account every night. The proposal is

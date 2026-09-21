@@ -1516,3 +1516,40 @@ small caps' night (13.83%) less `SPY`'s night (9.19%) less the extra trading —
 therefore stays one leg, and the fill measurement its paper week asks for is now the decisive
 number rather than a confirmation.
 
+## 34. The research was aimed at trading expressions, and it answered correctly every time — the aim changes
+
+**2026-09-20, two reviews and a ruling** (`DR-047`, `RETURN_SOURCE_REGISTER.md`). An advisory
+council read `PR-030`..`PR-035`; an external review read the whole stack. Every checkable claim was
+verified against this repository before anything was changed, and the verified ones are this
+project's own numbers:
+
+* the admitted universe correlates **0.982 with `MDY`** and 0.912 with `SPY`, trailing it by
+  **−3.02% a year** as a style gap (§26) — it was always judged against an index it does not
+  resemble;
+* `PR-016`..`PR-019` varied stop, target, hold and filters on a signal never established, and
+  `PR-015` had already found that **the decile itself does not separate from zero**, so the
+  four-name book was noise on top of nothing rather than the cause;
+* `EXPECTATION_MODEL` already said mean `R` a trade and a buy-and-hold return are not commensurable
+  — and `criteria.yml` still measured `E[R] > 0`;
+* survivorship is still open on every stock study, while `BACKTEST_PROTOCOL` §6 recorded a year ago
+  that the vendor serves **19,188 inactive assets**: the remedy is a fetch nobody ran;
+* 465 components, 166 configurations, **zero validated strategies**.
+
+**Three claims in the external review were wrong and are corrected here**: `PR-035` had already run
+(`COST_FRAGILE`, and its own warning about capital efficiency is what the run showed); the delisted
+remedy is a fetch rather than a purchase; and the four-name diagnosis is incomplete for the reason
+above.
+
+**What changed.** `DR-047`: the unit of research is a SOURCE OF RETURN with a mechanism and a
+literature, not an entry rule. A source's first test carries no stop, no target and no sizing;
+discovery reads at least twenty names; the benchmark is a set on one equity curve (the strategy,
+its own universe, `SPY`, volatility-matched `SPY`) and the primary metric is geometric excess, not
+`R`; rolling three-year excess is reported; one registration holds one hypothesis; execution
+research follows the signal rather than preceding it; and a stock study uses the repaired universe
+or refuses. Six families are **closed with their reopening triggers** in the register, so the
+hurdle is not paid twice for the same ground.
+
+**What it does not promise.** Long-only medium-term momentum is a factor tilt with a few points of
+historical excess and multi-year droughts. **This buys trustworthy answers, not bigger ones**, and
+the first study under the new rules says so in its own §3.
+

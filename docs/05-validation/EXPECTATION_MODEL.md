@@ -14,6 +14,15 @@ belongs beside the programme that produces them.
 
 ---
 
+
+> **Ruled 2026-09-20 (`DR-047` §3.5).** This document's own finding - that mean `R` a trade and a
+> buy-and-hold return are not commensurable quantities - is now binding on how a study reports.
+> **`R` a trade is an operational diagnostic**: sizing needs it and the journal carries it. The
+> metric that answers *"does this make more money than the index"* is the geometric annualised
+> excess return on one equity curve, against the benchmark set in `PREREG_TEMPLATE` rule 15.
+> `criteria.yml` `b.excess_cagr` and `b.beta_matched` carry it; `b.expectancy` is unchanged and no
+> longer carries a study's verdict.
+
 ## 1. The split, and why it is not pedantry
 
 | | Definition | Estimate |

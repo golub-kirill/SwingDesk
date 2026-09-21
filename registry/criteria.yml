@@ -173,6 +173,37 @@ track_b:
     measured_by: paired comparison on one snapshot
     status: ratified
 
+  - id: b.excess_cagr
+    criterion: >-
+      Geometric annualised return above SPY total return, on ONE equity curve from the same
+      starting capital and calendar, net of costs, bootstrap CI excluding zero
+    value: 'CAGR(strategy) - CAGR(SPY) > 0, CI excludes 0'
+    measured_by: one equity curve per study, month-clustered bootstrap
+    status: ratified
+    note: >-
+      RULED 2026-09-20 (DR-047 section 3.5). EXPECTATION_MODEL already recorded that mean R a trade
+      and a buy-and-hold return are not commensurable quantities, and every study until PR-033 was
+      reported in the first while the owner's question was the second. This is the metric that
+      answers "does it make more money than the index". b.expectancy is unchanged and stays as the
+      operational diagnostic the journal and the sizing rule need; it no longer carries a study's
+      verdict.
+      The benchmark SET is mandatory with it - the strategy, its own universe held passively, SPY,
+      and volatility-matched SPY (b.beta_matched) - because PR-021 returned a beta of 1.45 and a
+      worse result than the index, which one curve alone would have hidden.
+
+  - id: b.beta_matched
+    criterion: >-
+      The excess survives matching SPY to the strategy's own realised volatility, so exposure is
+      not read as skill
+    value: 'excess over volatility-matched SPY > 0'
+    measured_by: the same equity curve, SPY scaled to the strategy's realised volatility
+    status: ratified
+    note: >-
+      RULED 2026-09-20 (DR-047 section 3.4). Answers a different question from b.excess_cagr: not
+      "did it earn more" but "was it paid for skill or for carrying more market". A strategy that
+      beats SPY on return and loses to volatility-matched SPY has bought its excess with exposure,
+      which the owner can buy directly and more cheaply.
+
   - id: b.era_stability
     criterion: The effect does not sign-flip across eras and is not carried by a single stretch
     value: no sign flip

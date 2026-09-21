@@ -46,6 +46,8 @@ status:        registered | running | reported | abandoned
 
 ## 0. Refutation-family check
 Has this lever, or a lever of the same family, already been refuted here?
+  - return source: <the row in RETURN_SOURCE_REGISTER.md this tests, and its status>
+  - mechanism:  <why anyone is paid for bearing this, in one sentence>
   - searched:   <where, and with what terms>
   - found:      <prior studies, with their verdicts, or "none">
   - distinct because: <why this is not the same question in new clothes>
@@ -149,6 +151,34 @@ and downgrades the result to exploratory.
     of 0.033R and 0.047R against its own registered 0.05R minimum, which is the strongest null this
     programme has produced and reads on the page exactly like `PR-012`'s refusal for want of
     sample. Neither verdict was wrong by its own rule. Both rules could not say what had happened.
+
+11. **A study registers a SOURCE OF RETURN, not a trading expression.** `DR-047` §3.1, ruled
+    2026-09-20 after 166 configurations produced zero validated strategies. §0 names the row in
+    `RETURN_SOURCE_REGISTER.md` and the mechanism - why anyone is paid for bearing this. *"Rank by
+    strength and hold the top decile"* is an expression; *"cross-sectional momentum in mid-cap
+    equities"* is a source. A source the register does not hold is added in the same commit, and a
+    source the register has CLOSED is reopened by its stated trigger in a decision record, never by
+    registering it again.
+12. **A source's first test carries no stop, no target and no sizing rule.** `DR-047` §3.2. The
+    exit is the rebalance or the signal leaving. A first test that also manages risk cannot
+    separate *the source pays* from *the stop pays*, which is what `PR-016`..`PR-019` spent
+    nineteen registrations discovering. Risk management is a SECOND study, on a source that
+    survived the first.
+13. **Discovery reads at least twenty names; a smaller book is an implementation question.**
+    `DR-047` §3.3. `PR-015` measured the factor: a four-name book's intervals are 1.4x to 3.9x
+    wider than the decile's - and the decile itself did not separate from zero, which is why the
+    number of names is a floor on DISCOVERY rather than an explanation of a negative result.
+14. **One registration, one hypothesis.** `DR-047` §3.7. A parameter sweep is a search: it may be
+    run, and it declares N trials against the budget before it runs. `12-1 -> 9-1 -> 6-1 -> 126 ->
+    189 -> 252` is not a study, it is six.
+15. **A directional equity study reports a benchmark SET, on one equity curve.** `DR-047` §3.4 and
+    §3.5: the strategy, its own universe held passively, `SPY` total return, and `SPY` matched to
+    the strategy's own volatility - from the same starting capital, on the same calendar. The
+    primary metric is geometric annualised excess over `SPY` (`criteria.yml` `b.excess_cagr`), with
+    the volatility-matched reading beside it (`b.beta_matched`); mean `R` a trade is an operational
+    diagnostic and never a study's verdict. `PR-021` is why the fourth curve is mandatory: beta
+    1.45 and a worse result than the index. **Rolling three-year excess is reported**, because a
+    strategy that earns its whole advantage in one era has not been shown to have one (`PR-031`).
 
 ## 4. Section 0 deserves its own explanation
 
