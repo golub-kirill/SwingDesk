@@ -1815,6 +1815,11 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
          from the stored minutes. This is the trial's product: `PR-034` priced the auctions at half
          a cent and a cent a share and could not observe them.
       Monitoring and the trip-wires that stop the trial are the card document §5.
+      **MEASURED 2026-09-20 (`PR-035`, `COST_FRAGILE`):** adding a `SPY` day leg makes the book
+      return 18.9% a year at a Sharpe ratio of 1.01 against the index's 15.7% at 0.89 - but the
+      +3.25% a year margin is +0.35% at a whole cent a share and +0.56% over the last two years.
+      **`CARD-002` stays one leg**, and the fill measurement is now the decisive number: at half a
+      cent the day leg is worth 3.2 points a year, at a cent it is worth nothing.
 
 - [ ] **`[v]` A STUDY'S EXCLUSIONS MUST BE PER READING — `PR-024`'s runner dropped an entry from the
       verdict when an UNREAD arm or a perturbation failed.** `run_pr024.price_entry` returns the

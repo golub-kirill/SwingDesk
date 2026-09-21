@@ -7,8 +7,11 @@ author:        Claude, on the owner's choice of 2026-09-20. Shown that PR-034's 
                a year against holding SPY's 15.7%, the owner said reproducibility is not the goal
                and asked for more RETURN; of the three honest levers offered - occupy the idle day
                slot, use leverage, or add capital - they chose "Занять дневной слот"
-status:        registered, not run
-verdict:       -
+status:        reported   (2026-09-20 - results/PR-035-report.md)
+verdict:       INCONCLUSIVE, branch COST_FRAGILE - the branch section 3 rated likeliest. The book
+               less holding SPY is +0.0129% a session [+0.0002, +0.0272], +3.25% a year, and at a
+               whole cent a share a side +0.0014% [-0.0113, +0.0157]. The book itself returned
+               18.9% a year at a Sharpe ratio of 1.01 against the index's 15.7% at 0.89
 ```
 
 ---

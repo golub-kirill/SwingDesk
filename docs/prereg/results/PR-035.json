@@ -1,0 +1,251 @@
+{
+  "prereg": "PR-035",
+  "trials": 1,
+  "verdict": "inconclusive",
+  "branch": "COST_FRAGILE",
+  "country": "USA",
+  "as_of": {
+    "minutes": "2026-09-20T02:46:12.550112-05:00",
+    "bars": "2026-09-20T06:28:46.070772+00:00"
+  },
+  "measured_span": {
+    "first_session": "2016-01-04",
+    "last_session": "2026-09-18"
+  },
+  "split": {
+    "registered": "none - one book, one benchmark, both legs already measured",
+    "buys": "nothing a split could buy: no constant is chosen here"
+  },
+  "perturbations": {
+    "registered": [
+      "paper",
+      "cost_adverse",
+      "gross"
+    ],
+    "run": [
+      "paper",
+      "cost_adverse",
+      "gross"
+    ]
+  },
+  "registered_settings": {
+    "night_funds": [
+      "IJR",
+      "VB"
+    ],
+    "day_fund": "SPY",
+    "benchmark": "hold-SPY",
+    "primary": "combined-less-hold-SPY",
+    "recent_since": "2024-05-13",
+    "costs_per_share": {
+      "net": 0.005,
+      "paper": 0.0045,
+      "cost_adverse": 0.01,
+      "gross": 0.0
+    },
+    "sides_a_day": 4,
+    "gates": [
+      "cost_adverse above zero",
+      "recent estimate above zero",
+      "sharpe above holding SPY's"
+    ],
+    "bootstrap": {
+      "unit": "month",
+      "block": 3,
+      "seed": 20260925,
+      "resamples": 10000
+    },
+    "power_floor": 0.0008,
+    "min_days": 1000,
+    "min_months": 24,
+    "min_complete_share": 0.9
+  },
+  "cells": {
+    "combined-less-hold-SPY": {
+      "estimate": 0.00012877277713129124,
+      "lo": 1.921221983651517e-06,
+      "hi": 0.00027168101323323587,
+      "width": 0.00026975979124958436,
+      "days": 2691,
+      "sessions": 2691,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2691,
+        "annual_mean": 0.03245073983708539,
+        "annual_volatility": 0.04598526668753727,
+        "sharpe": 0.7056768868512413,
+        "cagr": 0.03189102536066568,
+        "max_drawdown": -0.09675031127678613
+      }
+    },
+    "combined": {
+      "estimate": 0.0007510830399848832,
+      "lo": 0.0004138378472298467,
+      "hi": 0.0011204199715250456,
+      "width": 0.000706582124295199,
+      "days": 2691,
+      "sessions": 2691,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2691,
+        "annual_mean": 0.18927292607619056,
+        "annual_volatility": 0.18706546420254452,
+        "sharpe": 1.011800477886479,
+        "cagr": 0.18726756143390721,
+        "max_drawdown": -0.3481706522738308
+      }
+    },
+    "hold-SPY": {
+      "estimate": 0.000622310262853592,
+      "lo": 0.00034131686864703574,
+      "hi": 0.0009185797491018417,
+      "width": 0.000577262880454806,
+      "days": 2691,
+      "sessions": 2691,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2691,
+        "annual_mean": 0.15682218623910518,
+        "annual_volatility": 0.17718626736767001,
+        "sharpe": 0.8850696420715926,
+        "cagr": 0.15147002995705905,
+        "max_drawdown": -0.33825038828799137
+      }
+    },
+    "night-small-caps": {
+      "estimate": 0.0005489634240969563,
+      "lo": 0.00020838395360258557,
+      "hi": 0.0008864541391638106,
+      "width": 0.000678070185561225,
+      "days": 2692,
+      "sessions": 2691,
+      "complete_share": 1.0003716090672612,
+      "months": 129,
+      "described": {
+        "days": 2692,
+        "annual_mean": 0.13833878287243298,
+        "annual_volatility": 0.13054320537394842,
+        "sharpe": 1.0597164553770049,
+        "cagr": 0.13851211424809629,
+        "max_drawdown": -0.3163593191654108
+      }
+    },
+    "day-SPY": {
+      "estimate": 0.00019887034700591302,
+      "lo": -2.9982092534895726e-05,
+      "hi": 0.00044517608304460606,
+      "width": 0.0004751581755795018,
+      "days": 2691,
+      "sessions": 2691,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2691,
+        "annual_mean": 0.05011532744549008,
+        "annual_volatility": 0.13292597723999364,
+        "sharpe": 0.3770168065419482,
+        "cagr": 0.042159499993811966,
+        "max_drawdown": -0.2525984048641806
+      }
+    },
+    "night-SPY": {
+      "estimate": 0.0003647410586332473,
+      "lo": 8.471043427102549e-05,
+      "hi": 0.0006238413349169895,
+      "width": 0.000539130900645964,
+      "days": 2691,
+      "sessions": 2691,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2691,
+        "annual_mean": 0.09191474677557833,
+        "annual_volatility": 0.1151317632142125,
+        "sharpe": 0.7983439513956117,
+        "cagr": 0.08893724250979473,
+        "max_drawdown": -0.3052055792097411
+      }
+    },
+    "combined-less-hold-SPY-recent": {
+      "estimate": 2.235377530789297e-05,
+      "lo": -0.0002676395670112835,
+      "hi": 0.0002977367540453618,
+      "width": 0.0005653763210566453,
+      "days": 590,
+      "sessions": 590,
+      "complete_share": 1.0,
+      "months": 29,
+      "described": {
+        "days": 590,
+        "annual_mean": 0.005633151377589029,
+        "annual_volatility": 0.054476217980441,
+        "sharpe": 0.10340569860432566,
+        "cagr": 0.004163111204557035,
+        "max_drawdown": -0.09675031127678513
+      }
+    },
+    "combined-less-hold-SPY-paper": {
+      "estimate": 0.00014027225432973564,
+      "lo": 1.2984540363537712e-05,
+      "hi": 0.0002830000836986702,
+      "width": 0.0002700155433351325,
+      "days": 2691,
+      "sessions": 2691,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2691,
+        "annual_mean": 0.03534860809109338,
+        "annual_volatility": 0.045985134756419015,
+        "sharpe": 0.7686964119673285,
+        "cagr": 0.03488527332236768,
+        "max_drawdown": -0.0945702114056064
+      }
+    },
+    "combined-less-hold-SPY-cost_adverse": {
+      "estimate": 1.3780970443184843e-05,
+      "lo": -0.00011271104539456845,
+      "hi": 0.00015732841955761457,
+      "width": 0.000270039464952183,
+      "days": 2691,
+      "sessions": 2691,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2691,
+        "annual_mean": 0.0034728045516825806,
+        "annual_volatility": 0.04598973296797716,
+        "sharpe": 0.07551260526128101,
+        "cagr": 0.002419682249849897,
+        "max_drawdown": -0.15083373604050065
+      }
+    },
+    "combined-less-hold-SPY-gross": {
+      "estimate": 0.00024376997526732853,
+      "lo": 0.00011561240159146076,
+      "hi": 0.00038636341154786607,
+      "width": 0.00027075100995640534,
+      "days": 2691,
+      "sessions": 2691,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2691,
+        "annual_mean": 0.0614300337673668,
+        "annual_volatility": 0.04598652284917489,
+        "sharpe": 1.335826889300655,
+        "cagr": 0.06222645660693704,
+        "max_drawdown": -0.0759744608106685
+      }
+    }
+  },
+  "arms_add_up_to_holding": {
+    "IJR": 3.0878077872387166e-16,
+    "VB": 3.0986498089635717e-16,
+    "SPY": 2.905661822261152e-16
+  },
+  "per_share_cost": 0.005
+}

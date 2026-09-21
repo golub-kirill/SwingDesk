@@ -1499,3 +1499,20 @@ companies, so this is not an independent second sample. Its drawdown is −31.6%
 drawdown. Every fill is an auction, and this project has priced auctions only on stocks. **What it
 licenses is a specification for a paper trial**, which is the owner's call.
 
+## 33. The same dollar twice returns 18.9% a year — and the 3.2 points over the index are the trading cost
+
+**`PR-035`, 2026-09-20, `INCONCLUSIVE`, branch `COST_FRAGILE`**
+(`docs/prereg/results/PR-035-report.md`). A book owning `IJR`+`VB` from each close to the next open
+and `SPY` from that open to that close returned **18.9% a year at a Sharpe ratio of 1.01**, against
+holding `SPY`'s **15.7% at 0.89**. The registered contrast — the book less the index, paired by
+session — is **+3.25% a year**, whose interval clears zero by two ten-thousandths of a point, and
+**+0.35% a year at a whole cent a share a side**, which does not. Over the last 590 sessions it is
++0.56%.
+
+**The arithmetic was written before the run and held**: the day legs cancel, so the contrast is
+small caps' night (13.83%) less `SPY`'s night (9.19%) less the extra trading — which came out at
+1.4% a year rather than the 0.4% §0 guessed, because the book never receives `SPY`'s dividends.
+**Gross the margin is 6.1% a year: the edge and four fills a day are the same size.** `CARD-002`
+therefore stays one leg, and the fill measurement its paper week asks for is now the decisive
+number rather than a confirmation.
+
