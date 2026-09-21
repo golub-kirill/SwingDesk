@@ -1787,6 +1787,29 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       the last 590 sessions are its best (15.7% at 1.24). The session loses 5.4% a year. **The
       first result in this project to beat holding the asset per unit of risk.**
 
+- [ ] **`[v]` THE RESEARCH AIM CHANGED — `DR-047`, 2026-09-20.** Two reviews (an advisory council
+      on `PR-030`..`PR-035`, and an external review of the stack) were checked against this
+      repository and largely held. The unit of research is now a SOURCE OF RETURN with a mechanism
+      and a literature, not an entry rule; `RETURN_SOURCE_REGISTER.md` holds every source with its
+      status, and six families are closed with their reopening triggers. **What this queue looks
+      like now:**
+      1. **`PR-037` — industry and sector momentum on eleven sector funds.** First because it
+         inherits no survivorship problem and needs no point-in-time index membership: 12-month
+         return excluding the latest month, top three sectors, monthly rebalance, equal weight,
+         NO stop and NO target, against the benchmark set. Data already stored.
+      2. **Repair the universe.** 19,188 inactive US assets are fetchable from the vendor
+         (`BACKTEST_PROTOCOL` §6), and until some study reads them every stock result here is
+         optimistic by an unmeasured amount. From `DR-047` §3.9 a stock study without them
+         REFUSES.
+      3. **`PR-038` — medium-term cross-sectional momentum on a universe that MATCHES its
+         benchmark**, after 2. The old pool trails `SPY` by 3.02% a year as a style gap, which is
+         most of what `PR-012`..`PR-020` were fighting.
+      4. **`CARD-002` keeps its place and gains no scope**: it is the only card that can reach live
+         orders, and the auction fill number is unobtainable on a paper account.
+      **Closed and not to be re-opened without the register's trigger:** breakout and trend
+      definitions, 5-20 day reversal, stop/target/ATR variation, four-name discovery books,
+      published intraday rules, and execution research ahead of a signal.
+
 - [ ] **`[v]` OWNER'S CALL: A SPECIFICATION AND A PAPER TRIAL FOR THE OVERNIGHT RULE?** Raised
       2026-09-20 by `PR-034`'s `ACCEPT`, which licenses *a specification for a paper trial* and
       nothing more. What it needs that does not exist: a pass that places `cls` orders before

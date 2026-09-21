@@ -136,7 +136,21 @@ An unset parameter here does not mean "pick something sensible at runtime". It m
 A protocol that silently defaults its own sample-size threshold is a protocol that will always find
 its sample sufficient.
 
-## 6. Survivorship: the requirement this project cannot meet
+## 6. Survivorship: a repair this project can run, and from 2026-09-20 must
+
+**RULED 2026-09-20 (`DR-047` §3.9), and it changes this section's title.** A pre-registration whose
+population is INDIVIDUAL EQUITIES must read a universe that includes delisted names, or carry
+`REFUSED` in its own decision rule. `survivorship: ABSENT` stops being a disclosure a study may
+choose. The remedy is the fetch described below - 19,188 inactive assets this project already has
+credentials for - and the sentence further down that calls a paid vendor "the only remedy" was
+already refuted on 2026-09-05 by measurement.
+
+**ETF-only studies are exempt**, and the reason is structural rather than a concession: a fund's
+provider maintains its own constituents, so a fund that trades today traded under the same ticker
+with the same mandate, and the survivorship question does not arise at the fund level.
+`RETURN_SOURCE_REGISTER.md` §2.3 records which studies rely on that exemption.
+
+### 6a. The section as it stood, kept because the history is the argument
 
 The course requires delisted instruments (topic 1084, and the `Пропуски` stage). ~~**No free data
 source provides them**~~ — that was established by measurement (`DATA_QUALITY_SPEC.md`): Yahoo
@@ -179,6 +193,18 @@ footnote (`PARAMETER_REGISTRY.md` §5, same rule as `assumed` parameters).
 
 Reporting a survivorship-biased result *as though* it met the standard would violate the prohibition
 in §3 directly. Reporting it with the bias named, on every display, does not.
+
+## 6b. The order of operations — `DR-047` §3.8
+
+```
+gross signal -> risk-adjusted signal -> out of sample -> cost robustness -> execution -> implementation
+```
+
+Execution research on an unproven signal answers *"how cheaply can I trade something that may be
+worth nothing"*. `PR-024`, `PR-025` and `PR-030` did exactly that, and their findings stand -
+`PR-024`'s 29 bps a trade is the largest single improvement this programme has measured. What is
+ruled out is doing that work FIRST: a source establishes itself gross, survives an untouched
+window, and survives an adverse cost assumption, and only then is the fill worth optimising.
 
 ## 7. Independent re-check (the QA stage)
 

@@ -1,0 +1,42 @@
+{
+  "for": "PR-036",
+  "as_of": {
+    "bars": "2026-09-20T06:28:46.070772+00:00"
+  },
+  "resamples": 2000,
+  "widths": {
+    "small-N-before": {
+      "width": 0.000404,
+      "days": 3002
+    },
+    "small-D-before": {
+      "width": 0.000744,
+      "days": 3002
+    },
+    "small-hold-before": {
+      "width": 0.000835,
+      "days": 3002
+    },
+    "small-N-overlap": {
+      "width": 0.00069,
+      "days": 2693
+    },
+    "small-D-overlap": {
+      "width": 0.000587,
+      "days": 2693
+    },
+    "small-hold-overlap": {
+      "width": 0.000834,
+      "days": 2693
+    },
+    "IJR-N-before": {
+      "width": 0.000475,
+      "days": 3002
+    },
+    "VB-N-before": {
+      "width": 0.000418,
+      "days": 3001
+    }
+  },
+  "power_floor_width": 0.0008
+}

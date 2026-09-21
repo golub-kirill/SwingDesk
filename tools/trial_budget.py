@@ -369,6 +369,9 @@ SIDE_RECORDS = {
     "PR-035-power": "no trials: a VARIANCE estimate for PR-035 - the book's, the benchmark's and "
                     "each leg's interval width before registration. Only widths leave it, under "
                     "the same level guard; PR-035 counts its one",
+    "PR-036-power": "no trials: a VARIANCE estimate for PR-036 - each window's interval width "
+                    "before registration, widths only under the same level guard. PR-036 itself "
+                    "spends none",
     "PR-034-attribution": "no trials: an EXPLORATORY re-reading of PR-034's own arms by calendar "
                           "year and trailing window. A window is a slice, not a configuration: no "
                           "fund, arm, cost or rule is added, nothing carries a verdict, and it "
