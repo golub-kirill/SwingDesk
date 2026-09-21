@@ -208,6 +208,19 @@ NO_SPEND_MEASUREMENTS = {
                      "takes the wrong leg (56.2%) and how often it is consulted at all (0.05% of "
                      "exits), whose product is 0.0006R. A measurement of an ASSUMPTION's size is "
                      "not a shot at the data",
+    "delisted-universe-2026-09-21": "it counts ASSETS and SYMBOLS at the broker - how many "
+                                    "inactive names sit on a real exchange and how many tickers "
+                                    "mean two companies. No return is read and no rule is "
+                                    "evaluated, so there is nothing anyone could have kept",
+    "edgar-coverage-2026-09-21": "it counts FILINGS at the SEC and joins them to those names. The "
+                                 "only quantity is a share of a census; no configuration is "
+                                 "scored and no strategy is selected",
+    "overnight-factor-alpha-2026-09-21": "it RE-READS PR-034's already-reported arms through a "
+                                         "six-factor regression (DR-049). One regression an arm, "
+                                         "no configuration chosen, nothing selected on "
+                                         "performance - the same footing as "
+                                         "tools/attribute_pr034.py's year-by-year reading. The "
+                                         "arms themselves were counted by PR-034",
     "sector-momentum-power-2026-09-21": "the WIDTH a sector-momentum design produces, measured "
                                         "with the ranking replaced by a seeded coin. Six book "
                                         "sizes were run and NONE of them is a configuration "

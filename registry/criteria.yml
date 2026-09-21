@@ -12,8 +12,8 @@
 #
 # See docs/00-charter/SUCCESS_AND_KILL_CRITERIA.md.
 
-version: 1.1.2
-date: 2026-08-30
+version: 1.2.0
+date: 2026-09-21
 status: ratified          # v1.1.0 owner-ratified 2026-08-08 and frozen; see amendments below
 
 # Amendments are appended, never applied in place. v1.0.0's content stays exactly as ratified;
@@ -56,6 +56,24 @@ amendments:
       `docs/00-charter/SUCCESS_AND_KILL_CRITERIA.md` §5, corrected forward there in this same change
       using this file's own §10.5 convention (strike through, do not silently rewrite) rather than
       as a second, disconnected governance track for one fact.
+
+  - version: 1.2.0
+    date: 2026-09-21
+    status: ratified        # owner ratified DR-047 on 2026-09-20 and DR-049 on 2026-09-21
+    change: >-
+      ADDS three criteria and touches none that exists: b.excess_cagr and b.beta_matched
+      (DR-047 sections 3.4 and 3.5) and b.factor_alpha (DR-049 section 4.1).
+    note: >-
+      THIS ENTRY IS ALSO A CORRECTION OF PROCESS, and it is recorded rather than quietly fixed.
+      b.excess_cagr and b.beta_matched were added on 2026-09-20 with no amendment entry and no
+      version bump, against this file's own header rule that a later version may ADD a criterion
+      and that amendments are appended. The criteria themselves were ruled and are sound; what was
+      missing was the record of when the file changed, which is the thing a reader checks a
+      ratified registry against. Found on 2026-09-21 while adding the third, and fixed by
+      recording all three here instead of only the new one.
+      Why a minor bump rather than a patch: 1.1.1 and 1.1.2 each corrected the WORDING of an
+      existing criterion, and 1.1.0 - the one precedent for an addition - was a minor. Adding
+      follows the precedent for adding.
 
   - version: 1.1.2
     date: 2026-08-30
@@ -203,6 +221,22 @@ track_b:
       "did it earn more" but "was it paid for skill or for carrying more market". A strategy that
       beats SPY on return and loses to volatility-matched SPY has bought its excess with exposure,
       which the owner can buy directly and more cheaply.
+
+  - id: b.factor_alpha
+    criterion: >-
+      The return the five Fama-French factors plus momentum cannot explain, with Newey-West
+      standard errors - reported for every directional equity study
+    value: 'alpha and its t, both reported; |t| > 1.96 is what "survives" means'
+    measured_by: tools/factor_attribution.py, on the arm's returns less RF
+    status: ratified
+    note: >-
+      RULED 2026-09-21 (DR-049 section 4.1). b.beta_matched answers "skill or market exposure" and
+      knows about the market alone; this answers it against size, value, profitability, investment
+      and momentum too. Measured the same day on PR-034, the project's best result: the night's
+      alpha is +5.15% a year with a t of 1.61 and does NOT survive, while holding the two funds
+      passively shows beta 1.00 and no alpha, which is what says the method is reading correctly.
+      IT CARRIES NO VETO. A source whose alpha does not survive may still be a cheaper or calmer
+      way to hold an exposure. What the criterion forbids is calling such a return skill.
 
   - id: b.era_stability
     criterion: The effect does not sign-flip across eras and is not carried by a single stretch

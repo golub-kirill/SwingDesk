@@ -507,6 +507,29 @@ rotted when the fact it cited moved, and none said where that fact lived.
 
 **The traps.** One rule, one clause on what it cost.
 
+- **A column's NAME is not its meaning — join on the entity your claim is about.** EDGAR's
+  quarterly index has a column called `Company Name`, and for a Form `25-NSE` it holds the
+  **filer**, which is the EXCHANGE: 203 of 462 rows in 2020Q1 say `Cboe BZX Exchange, Inc.` where a
+  reader expects the delisted company. `tools/measure_edgar_coverage.py` joined on that column on
+  its first run and reported **8.6% coverage** - a number that was about to be written into
+  `BACKTEST_PROTOCOL` as a finding about a broker. The issuer was one element away, inside the
+  filing itself. **Before joining two sources, read one row of each and check the key means the
+  same thing on both sides.**
+- **A rate near 0% or 100% accuses the INSTRUMENT before it accuses the world.** The exact-name
+  match rate in that run was **1.7%**. No real coverage gap looks like that; a structural defect
+  does. A measurement that lands at an extreme now says so in its own report rather than leaving a
+  reader to notice (`measure_edgar_coverage.suspect_join`).
+- **Print the items on the FAILING side, and then read them.** The bug was visible in plain text -
+  `NASDAQ Stock Market LLC` and `NYSE MKT LLC` sat in a list headed *"not found at the broker"* -
+  and it was caught by reading that list, not by any check. A measurement that reports a share
+  carries examples of what fell on each side, because a share alone cannot be wrong in a way anyone
+  can see.
+  **A gate for this was built and then deliberately thrown away**, which is worth recording:
+  matching key names against `example|unmatched|by_|per_` passed 14 of 17 committed measurements,
+  and it passed most of them on `impact_r_per_trade` and `trades_per_year` - names that carry no
+  items at all. A check that goes green for the wrong reason is the thing this file's own first
+  trap is about, so the rule stays prose and the tool carries the self-check instead.
+
 - **The worktree venv points at the main checkout** — always run gates with `PYTHONPATH=$PWD/src`.
   **The symptom is a PASS**, so knowing the rule is not enough: a suite green from a worktree
   without it is evidence about `master`. `ruff` and `mypy` take file paths and are honest; `pytest`

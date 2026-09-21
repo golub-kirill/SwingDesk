@@ -16,6 +16,11 @@ dependencies = [
     # first run. The floor is >=2 rather than the inherited >=1.1 because nothing here has been
     # run against pandas 1.x; 3.0.5 is what the owner's environment resolves today.
     "pandas>=2",
+    # `tools/factor_attribution.py` imports numpy directly for the least-squares solve and the
+    # Newey-West sandwich (DR-049 section 4.1). It resolved anyway because pandas requires it, which
+    # is EXACTLY the shape of the two defects above - yfinance, then pandas itself - so it is
+    # declared here rather than inherited. The floor is the major this code was written against.
+    "numpy>=2",
     # The registries are YAML; tools/verify_parameters.py reads them.
     # tools/build_course_index.py and tools/verify_transcription.py stay stdlib-only so the
     # transcription checks run without an environment.

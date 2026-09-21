@@ -1,0 +1,62 @@
+{
+  "active_on_a_real_exchange": 11043,
+  "ambiguity": {
+    "ambiguous_symbols": 196,
+    "clean_share": 0.9003051881993896,
+    "clean_symbols": 1770,
+    "distinct_symbols": 1966,
+    "examples_reissued_among_dead": [
+      "FTSI",
+      "HYACU",
+      "KOR",
+      "MSP",
+      "MUDSU",
+      "SLGCW",
+      "TCF"
+    ],
+    "examples_reissued_to_living": [
+      "AMBR",
+      "AMID",
+      "AMTD",
+      "APC",
+      "APXTU",
+      "ARRY",
+      "ARVR",
+      "ASPCU",
+      "ASPI",
+      "ATC",
+      "AVGG",
+      "AVX"
+    ],
+    "reissued_among_the_dead": 7,
+    "reissued_to_a_living_asset": 189
+  },
+  "as_of": "2026-09-21T14:48:51.327375+00:00",
+  "asked_by": "Claude, before designing the survivorship repair DR-047 3.9 requires - a multi-hour fetch whose shape depends on how many tickers mean one company",
+  "by_exchange": {
+    "AMEX": 60,
+    "ARCA": 428,
+    "NASDAQ": 1025,
+    "NYSE": 460
+  },
+  "exploratory": true,
+  "inactive_on_a_real_exchange": 1973,
+  "inactive_us_equity_assets": 19175,
+  "limits": {
+    "completeness_NOT_established": "this is Alpaca's own inactive list, and how much of the real delisting record it holds is unmeasured. 1,973 names on a major exchange over a decade is lower than the usual count of US delistings, which is consistent with a vendor that keeps only assets it ever listed. tools/probe_edgar.py established that the FACT and DATE of a delisting are free and official from SEC EDGAR, so this completeness is MEASURABLE and unmeasured - the same sentence BACKTEST_PROTOCOL 6 uses about the bias itself",
+    "what_a_repair_would_still_carry": "a study reading the repaired universe removes the bias from the names Alpaca remembers, and cannot state what it removes from the ones it does not. That is a smaller claim than survivorship: REPAIRED and has to be written as the smaller one",
+    "what_the_filter_actually_does": "it keeps symbols that are purely alphabetic on a major exchange. That is NOT the same as keeping common stock: SPAC units and warrants whose tickers happen to be all letters pass it - APXTU, ASPCU, HYACU and MUDSU are units and SLGCW is a warrant, and all five are in this measurement's own example lists. It also DROPS share classes spelled with a dot, which a study would have wanted. So a repair needs a further instrument-kind filter, and this count is an upper bound on the tradable names rather than the names themselves"
+  },
+  "measured": "2026-09-21",
+  "tool": "tools/measure_delisted_universe.py",
+  "trials": 0,
+  "vendor_plan": {
+    "historical_calls_per_minute": 200,
+    "historical_limitation": "the latest 15 minutes",
+    "historical_timeframe": "since 2016",
+    "plan": "Basic - the default for both paper and live trading accounts, free",
+    "read": "https://docs.alpaca.markets/docs/about-market-data-api, 2026-09-21",
+    "settles": "BACKTEST_PROTOCOL 6's limit 1 - SIP historical is a FREE-TIER entitlement, not an attribute of this account. The 2016 floor binds everybody on Basic, and 200 calls a minute is the pace the repair must hold"
+  },
+  "why_no_trial": "it counts ASSETS and SYMBOLS. No return is read, no rule is evaluated and nothing is selected on performance"
+}
