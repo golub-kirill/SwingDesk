@@ -1801,10 +1801,15 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       and a literature, not an entry rule; `RETURN_SOURCE_REGISTER.md` holds every source with its
       status, and six families are closed with their reopening triggers. **What this queue looks
       like now:**
-      1. **`PR-037` — industry and sector momentum on eleven sector funds.** First because it
-         inherits no survivorship problem and needs no point-in-time index membership: 12-month
-         return excluding the latest month, top three sectors, monthly rebalance, equal weight,
-         NO stop and NO target, against the benchmark set. Data already stored.
+      1. ~~**`PR-037` — industry and sector momentum on eleven sector funds.**~~ **MEASURED and
+         NOT REGISTERED, 2026-09-21.** The design was checked before the trial was spent, on a
+         random ranking that carries no effect: against the funds' own pool it could separate
+         **2.16% a year at best among books that are still a selection**, and **2.86% for the
+         tercile rule**, against a literature claiming about two. Only a book holding 55% of the
+         pool gets under it. **The cross-section binds — eleven candidates — not the book size or
+         the window**, so no long-only variant rescues it, and the trial was not spent. The
+         instrument (`tools/run_pr037.py`, 44 tests, 26 of 26 mutants killed) waits for a wider
+         pool; `RETURN_SOURCE_REGISTER` §3.1 holds the trigger.
       2. **Repair the universe.** 19,188 inactive US assets are fetchable from the vendor
          (`BACKTEST_PROTOCOL` §6), and until some study reads them every stock result here is
          optimistic by an unmeasured amount. From `DR-047` §3.9 a stock study without them

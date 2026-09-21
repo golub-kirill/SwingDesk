@@ -123,25 +123,58 @@ gross 16.0% is nearer the truth.
 Ranked by what `DR-047` §3.1 asks: a mechanism, a literature, and an instrument this project can
 actually reach.
 
-### 3.1 Industry and sector momentum — `open`, and first in the queue
+### 3.1 Industry and sector momentum — `open`, and NOT answerable on eleven funds
 
 **The claim:** sectors trend as a block, and a large part of individual stock momentum is industry
 momentum rather than firm-level (Moskowitz and Grinblatt, 1999).
-**Why first:** it is testable on **eleven sector funds**, so it inherits no survivorship problem,
-needs no point-in-time index membership, and the data is already stored. Monthly rebalancing keeps
-turnover and cost small.
-**How it fails:** sector dispersion has been dominated by one sector for much of the window; a
-monthly rule has ~240 observations in twenty years, which is thin for a 2% effect; and the
-benchmark is `SPY`, which IS a sector-weighted portfolio — so the comparison is against a
-competitor with the same ingredients.
-**Registered as:** `PR-037`.
 
-### 3.2 Medium-term cross-sectional momentum in a matched universe — `open`
+**It was first in this queue and it is not any more, because somebody measured.** The reason it was
+ranked first still holds — eleven sector funds inherit no survivorship problem, need no
+point-in-time index membership, and the data was a single fetch away. But *cheapest to TEST* and
+*answerable* are different properties, and only the first had been checked.
+
+**Measured 2026-09-21, before any registration**
+(`docs/decisions/measurements/sector-momentum-power-2026-09-21.json`, 0 trials): the ranking was
+replaced by a coin, so the proxy carries the design's turnover, costs, concentration and calendar
+and none of its signal. What it reports is how wide an interval the design produces — and a width
+carries no sign, which is what made it safe to run first.
+
+| the book | effect it could separate from zero, a year |
+|---|---|
+| 2 of 11 | 4.56% |
+| 3 of 11 | 3.18% |
+| 4 of 11 | 2.32% |
+| 5 of 11 | 2.16% |
+| the top tercile (3, then 4 as the pool grows) | 2.86% |
+| 6 of 11 | 1.67% — **and six of eleven is 55% of the pool, which is barely a selection** |
+
+**Against a literature claiming about two points a year.** Every book that is still a selection sits
+above it, over 320 months and 27 years. **The binding constraint is the CROSS-SECTION — eleven
+candidates — and not the book size or the window**, so no long-only variant rescues it.
+
+**So `PR-037` was not registered and no trial was spent.** Every configuration evaluated raises the
+deflated-Sharpe hurdle for every study after it, and a design that cannot detect its own claimed
+effect buys nothing with that. `tools/run_pr037.py` is the finished instrument, tested and
+mutation-tested, waiting for a pool wide enough to use it on.
+
+**Reopens on:** a wider cross-section — industry-level funds rather than eleven sector ones, or the
+repaired stock universe of §3.2 grouped by industry. Not on a new formation window, a new book size
+or a longer history: those were measured and none of them is what binds.
+
+### 3.2 Medium-term cross-sectional momentum in a matched universe — `open`, and now first
 
 **The claim:** the classical 12-month-minus-1 effect (Jegadeesh and Titman), measured on a universe
 that matches its benchmark rather than one that trails it by 3 points a year.
+
+**Why it inherits first place from §3.1**, rather than being promoted on enthusiasm: §3.1's
+measurement says the constraint that binds is the width of the cross-section, and this is the only
+source in this register with a wide one. Hundreds of names rank against each other, so the same
+2-point effect that eleven funds cannot separate is separable here — the arithmetic that made §3.1
+unanswerable is the arithmetic that makes this one worth the trial.
+
 **Blocked by:** point-in-time index membership and delisted prices. The delisted half is a fetch
-this project can run (19,188 inactive assets at the vendor); the membership half needs a source.
+this project can run (19,188 inactive assets at the vendor, `BACKTEST_PROTOCOL` §6); the membership
+half needs a source. **That fetch is the single highest-value unblocked task in this register.**
 **How it fails:** a 2025 paper on the classic 12-1 rule in the S&P 500 reports a negative net result
 after costs; long-only large-cap momentum is a factor tilt with multi-year droughts.
 

@@ -208,6 +208,15 @@ NO_SPEND_MEASUREMENTS = {
                      "takes the wrong leg (56.2%) and how often it is consulted at all (0.05% of "
                      "exits), whose product is 0.0006R. A measurement of an ASSUMPTION's size is "
                      "not a shot at the data",
+    "sector-momentum-power-2026-09-21": "the WIDTH a sector-momentum design produces, measured "
+                                        "with the ranking replaced by a seeded coin. Six book "
+                                        "sizes were run and NONE of them is a configuration "
+                                        "somebody could have kept: a random book has no return to "
+                                        "keep, and what comes back is an interval width, which "
+                                        "carries no sign. It is the reason PR-037 was never "
+                                        "registered - the design cannot separate the two points a "
+                                        "year its literature claims - so it SAVED a trial rather "
+                                        "than spending six",
     "quoted-spread-2026-09-06": "the venue's quoted spread - a cost input, not a return",
     "fill-convention-2026-09-06": "which fills happen - an execution input, not a search over "
                                   "configurations; the two columns are one convention each and "
