@@ -973,3 +973,71 @@ hand, and that position stood with nothing at the venue. The Python half broke t
 other side: the already-running process held the old `broker.policy` module and read the new
 `broker_policy.yml`, which it refused — `submit REFUSED ... permits PATCH`. One command, two kinds of
 mixed version, and a warning in prose was all that stood between them and the operator.
+
+
+## 11. `CARD-002`'s twenty sessions — what the owner runs, and when
+
+**Why the owner runs it by hand at all.** `DR-048` §1: the paper copy is submitted by this system,
+and the REAL orders are typed by the owner, order by order, so `CHARTER` A-001 §1 holds without an
+amendment. `DR-048` §6: this system cannot see the real fills either, because the live host is not
+on gate 39's allowlist. So the owner types two orders and hands two prices back.
+
+**What the twenty sessions are for**, stated once so nobody optimises the wrong thing: they measure
+**the fill**, not the return. `PR-034` priced the auctions at half a cent and a whole cent a share
+and could observe neither, and `PR-036` then made the difference decisive — over 2004-2015 the night
+is an effect at half a cent and nothing at a whole one.
+
+**Every command here is shell-agnostic**: absolute paths, one command, no `cd`, no `&&`. They run
+the same in `cmd.exe` and in the app's PowerShell panel.
+
+### 11.1 Before the close — about 15:35 ET
+
+The plan pass reads the store, and the store is only as current as last evening's fetch. Fetch the
+two funds first, or a fund will be refused for a reason a two-second request removes:
+
+```bash
+C:\PycharmProjects\SwingDesk\.venv\Scripts\python.exe -X utf8 C:\PycharmProjects\SwingDesk\tools\fetch_history.py --data C:\PycharmProjects\SwingDesk\data IJR VB
+```
+
+```bash
+C:\PycharmProjects\SwingDesk\.venv\Scripts\python.exe -X utf8 C:\PycharmProjects\SwingDesk\tools\card002_plan.py --shares 1
+```
+
+The second prints the card to type from. **Exit 2 means a fund refused** — it names which and why,
+and the other fund still trades. Enter the `MOC` buys it lists **before 15:50 ET**; the venue
+rejects a `cls` order after that, and a rejected order is not a late one.
+
+### 11.2 After 19:00 ET, or before 09:28 the next morning
+
+Enter the `MOO` sells the same printout lists, for the whole position. **That order IS the
+protection** (`DR-048` §5): there is no stop, because nothing can execute while the exchange is
+shut, and the opening auction is when the card sells anyway. **A night held with no exit order
+lodged is a defect and stops the trial** (`CARD-002` §5).
+
+### 11.3 After the open — hand the two fills back
+
+One command a fund a night, with the prices the broker actually reported:
+
+```bash
+C:\PycharmProjects\SwingDesk\.venv\Scripts\python.exe -X utf8 C:\PycharmProjects\SwingDesk\tools\card002_journal.py record --session 2026-09-22 --fund IJR --entry 138.92 --exit 139.40
+```
+
+`--session` is the session whose CLOSE the entry filled at, not the morning of the exit. The record
+is append-only: a correction is another `record` with the right numbers, never an edit.
+
+### 11.4 Reading it
+
+```bash
+C:\PycharmProjects\SwingDesk\.venv\Scripts\python.exe -X utf8 C:\PycharmProjects\SwingDesk\tools\card002_journal.py report
+```
+
+| what it prints | what it means |
+|---|---|
+| `PENDING` on a night | the next session's open is not stored yet — it prices itself tomorrow evening |
+| **MEAN COST A SIDE** | the number the whole trial exists to produce. The model charges 0.50 cents |
+| `TRIP-WIRE FIRED` (exit 2) | above **1.00 cent** a side after 20 priced nights. `CARD-002` §5 stops the trial: at that cost `PR-034`'s own edge is gone |
+| `ALERT` | the book is 25% below its peak. That is the market, not a defect — `PR-034` measured −31.6% |
+| `NO JUDGEMENT YET` | under 60 priced nights. The daily noise is about ±0.8% against a mean of +0.055% |
+
+**What is NOT yet built**, so nobody waits for it: the close and evening passes that submit the
+paper copy. The owner's side of the trial is complete without them, and they are tracked in `TODO`.

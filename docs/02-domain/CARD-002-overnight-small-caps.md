@@ -162,8 +162,12 @@ build gap rather than a scope rule.
 3. **The morning reconciliation** — the existing read-only broker read, after the open, checking
    every position closed and journalling the night: entry fill, exit fill, dividend if the date had
    one, and `R`.
-4. **The fill-quality measurement** — each fill against the stored auction price, which is what §5
-   watches and what `PR-034` could not measure.
+4. **The fill-quality measurement** — **built 2026-09-21**, `tools/card002_journal.py`. It takes
+   the owner's reported fills (`DR-048` §6: the live host is not on the allowlist, so they cannot be
+   read), prices each night against the stored daily bar — the same `(next open + dividend) / close`
+   the whole case rests on — and reports the realised cost a side against the modelled half cent,
+   with §5's trip-wires applied. An auction print is the finer benchmark and stays the later
+   refinement; it is not needed to answer *did the fill match the price the backtest assumed*.
 5. **The journal entry shape** — a night is one trade with two fills; `TRADE_JOURNAL`'s existing
    record takes it unchanged, and this list says so rather than assuming it.
 

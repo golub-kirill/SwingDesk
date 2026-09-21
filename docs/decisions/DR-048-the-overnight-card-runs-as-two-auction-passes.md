@@ -53,9 +53,17 @@ whole line.**
 | **evening** | after 19:05 | submits an `opg` market sell for each filled position | **paper** |
 | **reconcile** | after the open | reads what closed, journals the night, compares each fill with that session's official auction price | reads only |
 
-**Only the first exists today** (`tools/card002_plan.py`). The rest are `CARD-002` §6's list and
-are tracked in `TODO`; this record specifies them so the code that follows has a specification to
-follow, which is `CHARTER` A-001.
+**The plan pass and the MEASURING half of the reconcile exist** (`tools/card002_plan.py`,
+`tools/card002_journal.py`, both built 2026-09-21). Between them the owner's side of the trial is
+complete: a card to type from, and a record that turns the fills into the cost number. **The two
+submitting passes do not exist**, and nothing about the owner's twenty sessions waits for them -
+they are `CARD-002` §6's list, tracked in `TODO`, specified here so the code that follows has a
+specification, which is `CHARTER` A-001.
+
+**The reconcile's benchmark is the stored daily bar**, not an auction print: `PR-033`..`PR-036` all
+measured the night as `(next open + dividend) / close - 1` on those bars, so the difference between
+a fill and that price IS the cost the model charges for. The auction print is a finer instrument
+and `CARD-002` §6.4 keeps it as the refinement.
 
 **The clocks are the venue's, not a preference.** Alpaca accepts `cls` only before 15:50 and `opg`
 only before 09:28 or after 19:00, so the windows above carry ten minutes and five minutes of slack
@@ -123,5 +131,5 @@ verdict on a strategy.
 | §3's clocks | the two SUBMITTING passes refuse outside their own windows. **The plan pass carries no clock** and is not given one: it writes nothing, so running it at the wrong hour costs a printout, and a read-only pass that refuses by the time of day is a pass nobody can use to check tomorrow's sizing tonight |
 | §4's separate policy block | a new block and a new adapter method; `submit` is untouched |
 | §5's narrow exception | this record, cited from `CARD-002` §4 |
-| §6's hand-back | the reconcile pass takes fills as an argument |
+| §6's hand-back | `tools/card002_journal.py record`, which takes the fills as arguments and appends them; runbook §11 is the sequence |
 | §1's two accounts | gate 39's allowlist, unchanged |

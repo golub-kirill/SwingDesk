@@ -1859,9 +1859,15 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       ```
       python tools\fetch_history.py --data data IJR VB
       ```
-      **Still to build, in order:** the close pass (its own policy block and adapter method — never
-      a widened `submit`), the evening pass, the reconcile, and the fill-quality measurement that
-      takes the owner's real fills as input.
+      **BUILT 2026-09-21, the measurement half of the reconcile:** `tools/card002_journal.py`
+      (27 tests, 22 of 22 mutants killed) records the owner's reported fills, prices each night
+      against the stored daily bar and reports **the realised cost a side** — the one number the
+      twenty sessions exist to produce — with `CARD-002` §5's trip-wires applied: the cent after 20
+      priced nights (exit 2), the −25% alert, and no judgement before 60. Runbook §11 is the
+      owner's sequence.
+      **Still to build:** the close pass (its own policy block and adapter method — never a widened
+      `submit`), the evening pass, and the broker-side half of the reconcile that reads the PAPER
+      positions. **None of them blocks the owner's twenty sessions**, which is why they came second.
       **MEASURED 2026-09-20 (`PR-035`, `COST_FRAGILE`):** adding a `SPY` day leg makes the book
       return 18.9% a year at a Sharpe ratio of 1.01 against the index's 15.7% at 0.89 - but the
       +3.25% a year margin is +0.35% at a whole cent a share and +0.56% over the last two years.
