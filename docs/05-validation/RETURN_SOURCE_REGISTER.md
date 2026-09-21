@@ -97,7 +97,10 @@ session is where the risk is traded rather than paid for. Published since 2008.
 loses to holding on the basket), `PR-034` (`ACCEPT` on `IJR`+`VB`: 13.8% a year at Sharpe 1.06
 against holding's 0.59, 11.7% at a cent a share, the last 590 sessions its best), `PR-035`
 (`COST_FRAGILE`: adding an `SPY` day leg returns 18.9% against the index's 15.7%, but the margin is
-+0.35% at a cent), `PR-036` (registered: does it hold before 2016).
++0.35% at a cent), `PR-036` (**the epoch objection answered**: over 2004-2015, a window no
+study here had read, the night compounded at **10.6% against holding's 8.8%** with a −21.1%
+drawdown against −58.8%, and the session arm lost 80% peak to trough — `COST_FRAGILE`, because a
+whole cent a share touches zero at that decade's price level).
 **Status:** `CARD-002` specifies it; nothing is built. **It is exempt from `DR-047` §3.9** because
 its population is funds, not individual equities.
 **What is unmeasured and decisive:** what the closing and opening auctions actually give. No paper

@@ -7,8 +7,14 @@ author:        Claude, after an advisory council reviewed PR-030..PR-035 on 2026
                sharpest unanswered objection: 2016-2026 is an exceptional decade for the index,
                so the overnight result may be a wrapper around an epoch rather than an effect.
                Nobody had asked what the book does in a decade where the index returns nothing
-status:        registered, not run
-verdict:       -
+status:        reported   (2026-09-20 - results/PR-036-report.md)
+verdict:       INCONCLUSIVE, branch COST_FRAGILE - the IJR+VB basket's night over 2004-2015 earned
+               +0.0434% a day [+0.0225, +0.0635], 10.94% a year at a Sharpe ratio of 0.84 against
+               holding the same funds' 0.48, and compounded at 10.6% where holding compounded at
+               8.8% and fell 58.8%. At a WHOLE CENT a share a side the interval is [-0.0003,
+               +0.0408] and touches zero, which is the branch. The epoch objection is answered:
+               the effect is not a wrapper around 2016-2026. All three section 9 checks passed -
+               the overlap landed 0.57 points a year from PR-034's minute-based reading
 ```
 
 ---
