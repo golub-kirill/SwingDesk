@@ -2220,7 +2220,7 @@ def _fill(symbol: str, order_id: str = "o-1", when: str = "2026-09-02T14:31:00+0
     )
 
 
-def _stub_read_client(monkeypatch, held=(), fills=(), orders=()):
+def _stub_read_client(monkeypatch, held=(), fills=(), orders=(), legs=None, legs_raise=None):
     from swingdesk import broker as broker_pkg
 
     class _Client:
@@ -2235,6 +2235,14 @@ def _stub_read_client(monkeypatch, held=(), fills=(), orders=()):
             # the book does not record can be written down. Empty by default, which is what every
             # test written before it assumed and is why they still assert the same thing.
             return tuple(orders)
+
+        def legs_of(self, order_id):
+            # What the VENUE built out of one of our orders. Empty by default - an entry bracket's
+            # legs are not what any test written before 2026-09-21 was about - and the mapping is
+            # how the stop-out case below says "this id is a child of that one".
+            if legs_raise is not None:
+                raise legs_raise
+            return tuple((legs or {}).get(order_id, ()))
 
     monkeypatch.setattr(
         broker_pkg, "open_client",
@@ -2251,6 +2259,90 @@ def _sent_submission(instrument_id: str, stop: str = "45.00"):
         instrument_id=instrument_id, shares=17, limit_price=Decimal("50.00"),
         stop_price=Decimal(stop), outcome="sent", venue_order_id="o-1", venue_status="accepted",
     )
+
+
+def _book_position(instrument_id: str, shares: int = 17, opened=date(2026, 9, 2)):
+    """A position the BOOK holds, matching `_sent_submission`'s size so the close is not a partial.
+
+    `closing_exit` refuses a sell of a different size than the book records, which is right and
+    would otherwise read as the leg test failing for its own reason rather than the one it is about.
+    """
+    from swingdesk.contracts.position import Position
+
+    return Position(
+        position_id=f"POS-{instrument_id}-2026-09-02", version=1, instrument_id=instrument_id,
+        opened_on=opened, entry_price=Decimal("50.00"), shares=shares,
+        initial_stop=Decimal("45.00"), current_stop=Decimal("45.00"),
+        initial_costs_per_share=Decimal("0.25"),
+        knowledge_time=datetime(2026, 9, 2, 22, 31, tzinfo=UTC),
+    )
+
+
+def test_a_stop_out_on_a_venue_created_LEG_closes_the_position(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """THE DEFECT THAT RECORDED WINNERS AND DROPPED LOSERS, 2026-09-21.
+
+    An `oco` this system submits is ONE order to us and TWO to the venue: Alpaca makes the limit
+    the primary - it carries our `client_order_id` and the `venue_order_id` the journal keeps - and
+    creates the stop as a LEG with an id of its own. So a take-profit exit settled an order the
+    book could name and a STOP-OUT settled one it could not, and `DR-038`'s attribution by id
+    therefore closed every winner and left every loser open for ever.
+
+    Measured on the live book: `BTSG` sold on 2026-09-17 at 57.57 on leg `64752e7f-...` of our own
+    `swingdesk-protect-2026-09-15-BTSG`, stayed open four days, held its slot and kept `DR-027`
+    §11's guard stopping every entry.
+
+    **The test fails without the fix**, because `ours` then asks the journal about the leg's id and
+    the journal has only the parent's.
+    """
+    from swingdesk.contracts.broker import BrokerFill, FillKind, Side
+
+    sell = BrokerFill(
+        activity_id="a-stop", order_id="leg-of-ours", symbol="AIS", side=Side.SELL,
+        kind=FillKind.FILL, transaction_time=datetime(2026, 9, 3, 19, 11, tzinfo=UTC),
+        price=Decimal("44.10"), shares=Decimal(17),
+        observed_at=datetime(2026, 9, 3, 22, 30, tzinfo=UTC),
+    )
+    _stub_read_client(
+        monkeypatch, held=[], fills=[_fill("AIS"), sell],
+        # The venue's answer to "what did you build out of o-1": the stop leg that just filled.
+        legs={"o-1": ("leg-of-ours",)},
+    )
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_submission("AIS"))
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        store.record(_book_position("AIS"))
+
+    assert cli._sync_fills(_sync_args(tmp_path)) == 0
+    printed = capsys.readouterr().out
+    assert "CLOSED" in printed and "AIS" in printed
+
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        # A stop-out on a leg of our own order closes the position.
+        still_open = store.open_as_of(datetime(2026, 9, 3, 22, 30, tzinfo=UTC))
+        assert list(still_open) == []
+
+
+def test_an_unreadable_leg_list_is_reported_and_not_silently_skipped(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """One order whose legs cannot be read narrows what can be attributed, and says so."""
+    from swingdesk import broker as broker_pkg
+
+    _stub_read_client(
+        monkeypatch, held=[], fills=[_fill("AIS")],
+        legs_raise=broker_pkg.BrokerUnavailable("order: HTTP 500"),
+    )
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_submission("AIS"))
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        store.record(_book_position("AIS"))
+
+    cli._sync_fills(_sync_args(tmp_path))
+    seen = capsys.readouterr()
+    printed = (seen.out + seen.err).lower()
+    assert "legs" in printed or "could not be read" in printed
 
 
 def test_sync_records_a_position_for_an_entry_this_system_placed(

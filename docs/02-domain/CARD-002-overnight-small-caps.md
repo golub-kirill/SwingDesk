@@ -183,9 +183,15 @@ behind the same four guards `DR-027` §4 already imposes.
    reasoning and the drawdown it implies. **The size for real money is a separate decision** and
    this is not it.
 2. **The direction after it** — asked for more return than the night alone, the owner chose to
-   occupy the idle day slot over using leverage. `PR-035` registers that: the same dollar owning
-   small caps at night and `SPY` through the session. **If `PR-035` returns `ACCEPT`, this card
-   gains a second leg and becomes version 2**; if it does not, the card stays the night alone.
+   occupy the idle day slot over using leverage. `PR-035` registered that: the same dollar owning
+   small caps at night and `SPY` through the session.
+   **ANSWERED 2026-09-20: `PR-035` returned `COST_FRAGILE`, not `ACCEPT`, so the card stays the
+   night alone and there is no version 2.** The book returns 18.9% a year against holding `SPY`'s
+   15.7%, and the +3.25% between them is +0.35% at a whole cent a share — the margin IS the
+   trading cost. This paragraph read *"if `PR-035` returns `ACCEPT`"* in the future tense until
+   2026-09-21, a day after the answer existed; the result was recorded in `TODO` and
+   `EVIDENCE_SUMMARY` §33 and not here, which is the one-fact-two-places failure `AGENTS.md`
+   §10.5 is about.
 
 **Ruled 2026-09-20, the same evening, and each one changes what happens next:**
 
@@ -195,11 +201,20 @@ behind the same four guards `DR-027` §4 already imposes.
    project and it is recorded here because no study can move it: at this rate, five years of
    deposits contribute roughly twice what five years of the measured edge contributes on the
    current balance. A strategy decision that ignores it optimises the smaller term.
-5. **The owner will run the first twenty sessions at minimum REAL size** — one or two shares a fund.
-   This is the only way the fill number can be obtained: **Alpaca's paper fills are simulated**, so a
-   paper trial would confirm this project's own cost model because it IS that model. An auction
-   clears at one price for one share and for a thousand, so the minimum size measures it exactly,
-   and the capital at risk is a few hundred dollars.
+5. ~~**The owner will run the first twenty sessions at minimum REAL size**~~ — **PAUSED
+   2026-09-21, by the owner, before any real order was placed.** The reasoning behind it is
+   unchanged and still correct: **Alpaca's paper fills are simulated**, so a paper trial confirms
+   this project's own cost model because it IS that model, and an auction clears at one price for
+   one share and for a thousand. What changed is the owner's judgement about readiness — *"I am
+   sure we still have enough errors we have not found"* — and the same day had already produced
+   three of them, none caught by a gate: the delisted universe was overstated tenfold, the broker's
+   delisting memory turned out to be one event in six, and `PR-034`'s own alpha was shown not to
+   survive a six-factor regression (`DR-049` §2).
+
+   **So the fill number stays unmeasured, and the card stays `Untested` indefinitely.** That is a
+   real cost and it is stated rather than softened: `CARD-002` cannot be validated without fills,
+   and no amount of further backtesting substitutes for them. What resumes the trial is the owner's
+   word, not a milestone this project can reach on its own.
 
 6. **How the orders reach the exchange — ruled 2026-09-21.** The paper copy is submitted by
    this system; the REAL orders are typed by the owner. `DR-048` carries the reasoning: it keeps
@@ -208,7 +223,16 @@ behind the same four guards `DR-027` §4 already imposes.
    fills** — the live host is not on gate 39's allowlist — so the owner hands them back and the
    reconcile pass takes them as input.
 
-**Still open:** when `CARD-001` stops. The two cannot share the paper account — `CARD-001` holds up
+**Ruled 2026-09-21 — when `CARD-001` stops, and it is NOT today.** The owner delegated the
+timing. The reason to stop it was that `CARD-002` wanted the paper account every night, and the
+pause above removed that reason. **And stopping it today would cost more than it buys:** the only
+immediate lever is the kill switch, `broker/alpaca.py :: guards` is consulted by `protect` and
+`replace_stop` as well as by `submit`, so disarming would also stop this system restoring a
+protective stop the venue retired — which `DR-036` measured happening to all three stops at once.
+Two positions are open (`VGT`, `BTSG`). So `CARD-001` keeps running on paper, where a new entry
+costs nothing, and it is disarmed once both positions have left by their own rules.
+
+**Still open:** nothing on this card. The next move is the owner's word to resume. The two cannot share the paper account — `CARD-001` holds up
 to four positions for twenty sessions and this one wants the account every night. The proposal is
 that the day `CARD-002` first submits, `CARD-001` submits no new entries and goes `Retired` once its
 open positions have left by their own rules.

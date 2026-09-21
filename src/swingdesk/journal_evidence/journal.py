@@ -353,6 +353,25 @@ class Journal:
         ).fetchone()
         return Submission(*row) if row else None
 
+    def sent_venue_order_ids(self, instrument_id: str) -> tuple[str, ...]:
+        """Every venue order id this system was given for `instrument_id`, newest first.
+
+        `submission_for_order` answers *"is THIS id one of ours"*. This answers the question that
+        turned out to matter more: *"which ids did the venue give us, so we can ask what it built
+        out of each"*. An `oco`'s stop leg has an id we were never told at submission time, and it
+        is the order a stop-out fills.
+
+        `outcome = 'sent'` for the same reason every other lookup here restricts to it: an attempt
+        that never reached the venue was given no id.
+        """
+        rows = self._connection.execute(
+            "SELECT venue_order_id FROM submissions "
+            "WHERE instrument_id = ? AND outcome = 'sent' AND venue_order_id IS NOT NULL "
+            "ORDER BY attempted_at DESC",
+            [instrument_id],
+        ).fetchall()
+        return tuple(str(row[0]) for row in rows)
+
     def submission_for_order(self, venue_order_id: str) -> Submission | None:
         """The attempt this system made that the venue gave `venue_order_id` to, or `None`.
 

@@ -242,6 +242,34 @@ footnote (`PARAMETER_REGISTRY.md` §5, same rule as `assumed` parameters).
 Reporting a survivorship-biased result *as though* it met the standard would violate the prohibition
 in §3 directly. Reporting it with the bias named, on every display, does not.
 
+### 6d. A session missing INSIDE a hold — asked 2026-09-21, and it is not a problem here
+
+**The question, and it is the backtest's version of a live defect found the same day.** `DR-050`
+records that the live book kept every winner and dropped every loser because a stop-out settled an
+order it could not name. The engine has the same SHAPE of exposure: `run_arm` walks the STORED
+bars, so a session the vendor refused is simply absent, and a stop that would have triggered on it
+never triggers. A position survives a day it should not have. **That asymmetry favours the
+survivor, which is the direction that flatters.**
+
+**Measured rather than argued.** A seeded sample of 400 instruments drawn across the whole bar
+store, counting calendar sessions between each instrument's own first and last stored bar - so a
+listing or a delisting is not counted as a gap:
+
+| | |
+|---|---|
+| instruments measured | **366** |
+| **with ZERO missing sessions** | **363** |
+| instrument-sessions inside their own spans | 487,714 |
+| with no stored bar | **104 — 0.021%** |
+
+**101 of the 104 belong to `PCG$B`**, a preferred share. A second sample drawn a different way
+found the same concentration in `BCV$A`, also preferred. Among ordinary common stocks the whole
+decade holds **three** missing sessions, across `ALP` and `FISV`.
+
+**So the exposure is real in principle and empty in practice**, and the reason is structural rather
+than lucky: the names that lose sessions are `$`-suffixed preferred issues, which the universe rule
+does not admit. Recorded so the question is closed with a number instead of being asked again.
+
 ## 6b. The order of operations — `DR-047` §3.8
 
 ```

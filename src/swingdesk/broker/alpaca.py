@@ -492,6 +492,36 @@ class AlpacaClient:
             observed_at=observed_at,
         )
 
+    def legs_of(self, order_id: str) -> tuple[str, ...]:
+        """The venue ids of the legs the venue created UNDER one of our orders. A GET, and only a GET.
+
+        **Why this exists, and it is a defect's fix rather than a convenience.** An `oco` we submit
+        is ONE order to us and TWO to the venue: Alpaca makes the limit the primary - it carries our
+        `client_order_id` and the `venue_order_id` we journal - and creates the stop as a LEG, with
+        an id of its own that we never see at submission time. So a take-profit exit fills an order
+        we can name and a STOP-OUT fills one we cannot, and `DR-038`'s rule that a close is
+        attributed by id therefore recorded every winner and dropped every loser.
+
+        **A leg cannot be walked upwards.** Measured 2026-09-21: fetching leg
+        `64752e7f-3101-4a02-85de-aec168e06d75` alone returns `legs: None` and names no parent, so
+        the only direction that works is downwards, from the id we journalled to the ids the venue
+        made from it.
+
+        Returns an empty tuple for an order with no legs, which is the ordinary case.
+        """
+        if not SAFE_ORDER_ID.match(order_id):
+            raise BrokerUnavailable(
+                f"{order_id!r} is not a venue order id this may put in a path"
+            )
+        answered = self._get("order", query={"nested": "true"}, order_id=order_id)
+        if not isinstance(answered, dict):
+            raise BrokerUnavailable("order: expected an object")
+        legs = answered.get("legs") or []
+        if not isinstance(legs, list):
+            return ()
+        return tuple(str(leg["id"]) for leg in legs
+                     if isinstance(leg, dict) and leg.get("id"))
+
     def open_orders(self, observed_at: datetime) -> tuple[PlacedOrder, ...]:
         """Every order the venue still considers live, in symbol order. A GET, and only a GET.
 

@@ -507,6 +507,8 @@ rotted when the fact it cited moved, and none said where that fact lived.
 
 **The traps.** One rule, one clause on what it cost.
 
+- **A fixture built from the same assumption as the code is a mirror, not a check.** `DR-050`: `sync-fills` defined *"an order of ours"* as *"an id we sent"*, and every test of it sent an order and then reported a fill on that id. The venue creates LEGS out of our orders with ids of their own, so a stop-out - always the leg, never the primary - was never recorded, and the book kept every winner and dropped every loser for as long as the code existed. **Zero tests failed and zero mutants survived.** What found it was reading the live account against the live book. When a rule decides what counts as *ours*, write one test from the OTHER side's vocabulary.
+- **A lesson learned in one code path does not travel to the next one by itself.** The same `DR-050`: `open_orders` was taught on 2026-09-04 that an `oco`'s legs are separate orders and flattens them, with the measurement in its own docstring - *"a leg IS a resting order"*. The CLOSE path was written afterwards, **ninety lines below in the same file**, and did not apply it. When a measurement changes what a venue's answer MEANS, grep for every other place that reads the same answer: the second one is not found by remembering.
 - **A column's NAME is not its meaning — join on the entity your claim is about.** EDGAR's
   quarterly index has a column called `Company Name`, and for a Form `25-NSE` it holds the
   **filer**, which is the EXCHANGE: 203 of 462 rows in 2020Q1 say `Cboe BZX Exchange, Inc.` where a
