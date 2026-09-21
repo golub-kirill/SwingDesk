@@ -71,6 +71,9 @@ And what it looks like if FALSE. If both look the same, stop here - the study ca
   snapshot:      knowledge_time this study reads
   costs:         commission model, slippage model, with values
   survivorship:  present / absent - and if absent, that the result is biased upward
+  out_of_sample: the window this study will NOT read, and why that one - or `NONE AVAILABLE`
+                 (DR-049 4.2). The runner bounds itself to exclude it; opening it is a second
+                 registration
 
 ## 5. Method
   split:         train / validation / test dates - or `none`, which is a legitimate answer
@@ -179,6 +182,22 @@ and downgrades the result to exploratory.
     diagnostic and never a study's verdict. `PR-021` is why the fourth curve is mandatory: beta
     1.45 and a worse result than the index. **Rolling three-year excess is reported**, because a
     strategy that earns its whole advantage in one era has not been shown to have one (`PR-031`).
+16. **A directional equity study reports FACTOR ALPHA, and may not call an unexplained return
+    skill without it.** `DR-049` §4.1: regress the arm's returns less `RF` on Kenneth French's five
+    factors plus momentum, with Newey-West errors at lag `floor(4*(n/100)^(2/9))`, and report the
+    alpha, its `t`, every beta and R² (`criteria.yml` `b.factor_alpha`,
+    `tools/factor_attribution.py`). **It carries no veto**: a source whose alpha does not survive
+    may still be a cheaper or calmer way to hold an exposure, which is a real thing to own and a
+    different claim. What is forbidden is the word skill. `PR-034` is why the rule exists - its
+    night earns 13.8% a year and its six-factor alpha is **+5.15% with a `t` of 1.61**, which does
+    not clear the two-sided 5% test.
+17. **A study NAMES the window it will not read, before it runs.** `DR-049` §4.2: §4 carries an
+    `out_of_sample:` line naming a held-out span and why that span is the right one, the runner
+    BOUNDS itself to exclude it, and opening it later is a second registration against the budget.
+    A study whose data offers no such window writes `out_of_sample: NONE AVAILABLE`, which is a
+    disclosure and not a failure. `PR-036` is the precedent and the reason this is cheap: it read
+    an untouched decade and did the right thing, but AFTER the fact, and a holdout chosen after the
+    fact cannot be told from one chosen before it.
 
 ## 4. Section 0 deserves its own explanation
 

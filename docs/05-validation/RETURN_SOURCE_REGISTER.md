@@ -172,9 +172,15 @@ source in this register with a wide one. Hundreds of names rank against each oth
 2-point effect that eleven funds cannot separate is separable here — the arithmetic that made §3.1
 unanswerable is the arithmetic that makes this one worth the trial.
 
-**Blocked by:** point-in-time index membership and delisted prices. The delisted half is a fetch
-this project can run (19,188 inactive assets at the vendor, `BACKTEST_PROTOCOL` §6); the membership
-half needs a source. **That fetch is the single highest-value unblocked task in this register.**
+**Blocked by:** point-in-time index membership and delisted prices.
+
+**MEASURED 2026-09-21, and the delisted half is smaller and weaker than this row claimed.** The
+19,188 figure is inactive assets of every kind; **1,973** sit on a real exchange and **1,770** have
+a ticker that means one company. Against SEC EDGAR's own census of ~7,554 common-stock delistings
+over the window, the broker remembers **16.3% [12.2, 20.4]** (`BACKTEST_PROTOCOL` §6c). So the
+fetch is cheap - minutes, not hours - and it buys **about a sixth of the survivorship repair**
+rather than the repair. A study here writes `survivorship: PARTIALLY REPAIRED` with that share, and
+the membership half still needs a source.
 **How it fails:** a 2025 paper on the classic 12-1 rule in the S&P 500 reports a negative net result
 after costs; long-only large-cap momentum is a factor tilt with multi-year droughts.
 

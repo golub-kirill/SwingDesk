@@ -173,6 +173,54 @@ rather than a limit. Three limits on the refutation itself are in the probe's ow
 first — whether SIP history is a free-tier entitlement or an attribute of this account — is the one
 to settle before anything is built on it.
 
+### 6c. MEASURED 2026-09-21, and the repair is a sixth of the problem rather than the whole of it
+
+Three measurements, all zero-trial, and together they replace the headline this section carried for
+sixteen days.
+
+**The entitlement question is settled** - the probe's own first limit, *"whether SIP historical is
+a free-tier entitlement or an attribute of this account"*. Alpaca's subscription table, read
+2026-09-21: the **Basic** plan is free, is the default for both paper and live accounts, serves
+**historical data since 2016**, withholds only **the latest 15 minutes**, and allows **200
+historical calls a minute**. So the entitlement is everybody's, the 2016 floor is everybody's, and
+200 a minute is the pace any repair must hold.
+
+**The 19,188 is real and it is not the tradable universe**
+(`docs/decisions/measurements/delisted-universe-2026-09-21.json`):
+
+| | |
+|---|---|
+| inactive US equity assets | **19,175** |
+| on a real exchange, alphabetic ticker | **1,973** |
+| distinct symbols among them | 1,966 |
+| symbols reissued to a LIVING asset | **189** |
+| clean - one ticker, one company | **1,770 (90%)** |
+
+**A ticker is not an identity**, and 189 dead tickers now belong to listed companies. The bars
+endpoint is keyed by symbol, so one request for such a name returns a series spliced out of two
+businesses, reaching all the way to today - **the survivorship bias this repair exists to remove,
+reintroduced by the repair itself**. `SEMG` is the worked example: 1,147 daily bars to 2025 for a
+company acquired in 2019.
+
+**And the broker remembers about one delisting in six**
+(`docs/decisions/measurements/edgar-coverage-2026-09-21.json`). SEC EDGAR is the independent
+census: 43 quarterly indexes list **20,644** Form 25 and 25-NSE filings over 2016-2026, of which a
+stratified sample of 860 says **36.6% concern common stock** - implying about **7,554** company
+delistings. Against that:
+
+> **ALPACA REMEMBERS 16.3% of them [12.2%, 20.4%].**
+
+The unmatched names were checked by hand rather than assumed: `SolarWinds`, `PMC Sierra`,
+`Rubicon Minerals` and `Skystar Bio-Pharmaceutical` are absent from the broker's list entirely,
+active and inactive alike, so the gap is a real gap and not a name-matching artefact.
+
+**What that does to `DR-047` §3.9**, which made a repaired universe a blocker for stock studies:
+the repair available here **removes about a sixth of the survivorship bias, not all of it**. A study
+can satisfy §3.9 to the letter while five sixths of the bias remains. So a stock study reading the
+repaired universe writes `survivorship: PARTIALLY REPAIRED - 16.3% of the SEC census [12.2, 20.4]`
+and never `survivorship: REPAIRED`. **That is a smaller claim, and it is the one the evidence
+supports.**
+
 The consequence, stated without softening:
 
 - Every backtest this project runs is **survivorship-biased upward** by an amount it cannot measure.
@@ -199,6 +247,15 @@ in §3 directly. Reporting it with the bias named, on every display, does not.
 ```
 gross signal -> risk-adjusted signal -> out of sample -> cost robustness -> execution -> implementation
 ```
+
+**`out of sample` means a DECLARED window from 2026-09-21** (`DR-049` §4.2). A study names the
+span it will not read before it runs, the runner bounds itself to exclude it, and opening it later
+is a second registration. `PR-036` read an untouched decade and is the precedent - but it did so
+after `PR-034` reported, and a holdout chosen after the fact cannot be told from one chosen before.
+
+**And the stage after cost robustness now carries a FACTOR reading** (`DR-049` §4.1): the alpha the
+five Fama-French factors plus momentum cannot explain. It vetoes nothing and it renames one thing -
+a return the factors explain is an exposure, not a skill.
 
 Execution research on an unproven signal answers *"how cheaply can I trade something that may be
 worth nothing"*. `PR-024`, `PR-025` and `PR-030` did exactly that, and their findings stand -

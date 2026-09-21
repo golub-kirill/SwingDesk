@@ -1,0 +1,73 @@
+{
+  "as_of": "2026-09-21T18:07:29.307976+00:00",
+  "asked_by": "the owner, 2026-09-21 - asked what else needs measuring and to think EDGAR through so delistings can be pulled properly",
+  "broker_inactive_names": 1567,
+  "by_form": {
+    "25": 1226,
+    "25-NSE": 19418
+  },
+  "coverage_interval": [
+    0.1215616924670686,
+    0.20417120655573268
+  ],
+  "exploratory": true,
+  "filings_enumerated": 20644,
+  "implied_common_events": 7553.883194278903,
+  "limits": {
+    "2016_floor": "the window opens in 2016 because the broker serves no daily bar before it on the Basic plan. An EDGAR delisting from 2014 is real and unrepairable, and is deliberately outside this measurement rather than counted as a miss",
+    "a_filing_is_a_CLASS_not_a_company": "one company delisting its shares and its warrants files twice, so the event count is above the company count and only the common-stock rows are joined",
+    "coverage_is_not_completeness_of_PRICES": "a name the broker lists is a name whose bars can be asked for, not one whose bars are known to be there. PR-036's own fetch is the precedent - stored is not the same as served",
+    "the_join_is_by_NAME": "EDGAR carries no ticker and the broker carries no CIK, so the join is two spellings of one company. The exact and prefix-matched figures are both reported because their difference IS the name-matching error, and the truth is at or above the looser one"
+  },
+  "measured": "2026-09-21",
+  "quarters_read": 43,
+  "result": {
+    "common_stock_events": 307,
+    "common_stock_share_of_filings": 0.36591179976162097,
+    "coverage_exact": 0.03908794788273615,
+    "coverage_including_prefix": 0.16286644951140064,
+    "matched_exact": 12,
+    "matched_examples": [
+      "ROSETTA STONE INC -> RST",
+      "Voya Natural Resources Equity Income Fund -> IRR",
+      "BLACKROCK NEW YORK MUNICIPAL INCOME TRUST II -> BFY",
+      "BLACKROCK NEW YORK MUNICIPAL INCOME QUALITY TRUST -> BSE",
+      "MSG NETWORKS INC. -> MSGN",
+      "QTS Realty Trust, Inc. -> QTS",
+      "CINCINNATI BELL INC -> CBB",
+      "Navios Maritime Acquisition Corp -> NNA",
+      "BlackRock 2022 Global Income Opportunity Trust -> BGIO",
+      "CEDAR REALTY TRUST, INC. -> CDR"
+    ],
+    "matched_including_prefix": 50,
+    "read": 839,
+    "sampled": 860,
+    "unmatched_examples": [
+      "SKYSTAR BIO-PHARMACEUTICAL CO",
+      "PMC SIERRA INC",
+      "RUBICON MINERALS CORP",
+      "TELECOMMUNICATION SYSTEMS INC /FA/",
+      "SolarWinds, Inc.",
+      "RealD Inc.",
+      "BREEZE-EASTERN CORP",
+      "DEX MEDIA, INC.",
+      "VAPOR CORP.",
+      "PEABODY ENERGY CORP",
+      "STRATEGIC GLOBAL INCOME FUND INC",
+      "JAVELIN MORTGAGE INVESTMENT CORP.",
+      "Journal Media Group, Inc.",
+      "CASCADE MICROTECH INC",
+      "OVERSEAS SHIPHOLDING GROUP INC"
+    ],
+    "unreadable": 21
+  },
+  "sample": {
+    "per_quarter": 20,
+    "seed": 20260921,
+    "stratified_by": "calendar quarter"
+  },
+  "tool": "tools/measure_edgar_coverage.py",
+  "trials": 0,
+  "why_no_trial": "it counts FILINGS and NAMES. No return is read, no rule is evaluated and nothing is selected on performance",
+  "window": "2016..2026"
+}

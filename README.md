@@ -405,9 +405,9 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 111 script(s), of which 32 are things you type
+### The tools — 115 script(s), of which 33 are things you type
 
-#### Operator tools — 32
+#### Operator tools — 33
 
 Run these. Everything else below either runs itself or ran once.
 
@@ -420,6 +420,7 @@ Run these. Everything else below either runs itself or ran once.
 | `python tools/fetch_auction_prints.py --store --sessions` | Fetch the opening and closing auction prints of named sessions into an `AuctionStore`. GET only. | `--store` **(required)** · `--sessions` **(required)** · `--side` · `--refetch` |
 | `python tools/fetch_directory.py` | Download the NASDAQ Trader symbol directory and record it as one dated pull. | `--data` · `--scheduled` · `--emergency-repull` · `--reason` |
 | `python tools/fetch_entry_quotes.py --store --sessions` | Fetch quoted bid/ask windows at named moments of named sessions into a `QuoteStore`. GET only. | `--store` **(required)** · `--sessions` **(required)** · `--moment` · `--refetch` |
+| `python tools/fetch_factors.py --data` | Fetch Kenneth French's factor returns, so `DR-049`'s attribution is a rule and not a wish. | `--data` **(required)** |
 | `python tools/fetch_history.py --data` | Fetch named instruments' whole daily history, and their splits and dividends, into a store. | `symbols` · `--data` **(required)** · `--directory` · `--period` · `--pause` |
 | `python tools/fetch_minutes.py --store` | Fetch the one-minute bars of named sessions into a `MinuteStore`. GET only. `DR-042` §9. | `--store` **(required)** · `--sessions` · `--instrument` · `--from` · `--to` · `--feed` · `--adjustment` · `--refetch` |
 | `python tools/forward_record.py` | What the live paper record actually contains, so watching it costs nobody an afternoon. | `--data` |
@@ -473,7 +474,7 @@ Invoked by `python tools/check_gates.py`, not singly. Listed so a failing gate c
 | `python tools/verify_parameters.py` | Enforce the parameter-registry contract. | `--registry` |
 | `python tools/verify_transcription.py` | Verify that every `verbatim` claim in the documents still matches the course. | `--course-root` · `--docs` |
 
-#### Evidence-bound research runners — 66
+#### Evidence-bound research runners — 69
 
 Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions/measurements/` and reproduces it. They ran once, on a date. Nobody types these; they exist so a number can be re-derived.
 
@@ -487,7 +488,9 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/measure_benchmark_fit.py` | Which index is the honest passive alternative to this universe? `rs.benchmark` is `assumed`. | `--data` · `--out` |
 | `python tools/measure_correlation_cap.py` | Calibrate the correlation cap: what it would have refused, and what that would have cost. | `--data` · `--out` |
 | `python tools/measure_decile_persistence.py` | How much of the selected book survives to the next rebalance, and what that does to its cost. | `--data` · `--as-of` · `--out` |
+| `python tools/measure_delisted_universe.py` | How clean is the delisted universe, before anybody spends hours fetching it? | `--out` |
 | `python tools/measure_drawdown.py` | Report the drawdown `k.drawdown_pause` triggers on, so the criterion can be evaluated at all. | `--data` |
+| `python tools/measure_edgar_coverage.py` | How much of the real delisting record does Alpaca's inactive list actually hold? | `--per-quarter` · `--from` · `--to` · `--cache` |
 | `python tools/measure_entry_features.py --data --minutes --quotes --directory` | Which of `PR-024`'s entries were garbage? EXPLORATORY - where `PR-026`..`PR-029` came from. | `--data` **(required)** · `--minutes` **(required)** · `--quotes` **(required)** · `--directory` **(required)** · `--sample` · `--as-of` · `--minutes-as-of` · `--quotes-as-of` · `--out` |
 | `python tools/measure_execution_time.py` | Does moving the trade off the open survive the gross it gives up? `DR-040` §6, run. | `--data` · `--sample` · `--seed` · `--hold` · `--out` |
 | `python tools/measure_exit_surface.py` | Expectancy over the stop x target grid, NET of costs. `DR-029` §5's lever 1, priced. | `--data` · `--out` · `--limit` |
@@ -498,6 +501,7 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/measure_liquidity_floor.py` | Recompute DR-003's liquidity plateau over the stored population instead of a 115-name sample. | `--data` · `--min-price` · `--min-history` · `--out` |
 | `python tools/measure_long_only_horizon.py` | The one significant signal this project has found is LONG-SHORT. The system is LONG-ONLY. | `--data` · `--out` |
 | `python tools/measure_momentum_horizon.py` | Does the cross-sectional momentum spread depend on the HOLDING HORIZON, in this store? | `--data` · `--out` |
+| `python tools/measure_overnight_factors.py --data --factors` | Is `PR-034`'s overnight return skill, or is it factor exposure this project could have bought? | `--data` **(required)** · `--factors` **(required)** · `--as-of` |
 | `python tools/measure_pivots.py` | What `pivot.left` and `pivot.right` actually cost, measured on stored bars. | `--data` · `--limit` · `--min-bars` · `--out` |
 | `python tools/measure_quoted_spread.py` | What the admitted universe actually costs to cross, from the venue's own NBBO. | `--data` · `--sample` · `--seed` · `--years` · `--against` · `--out` |
 | `python tools/measure_revisions.py` | What the vendor actually rewrites, per field, and where a threshold could cut. | `--data` · `--out` |

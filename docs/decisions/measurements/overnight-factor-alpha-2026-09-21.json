@@ -1,0 +1,227 @@
+{
+  "as_of": {
+    "bars": "2026-09-20T01:28:46.070772-05:00",
+    "measured_at": "2026-09-21T17:42:12.124620+00:00"
+  },
+  "asked_by": "the owner, 2026-09-21 - 'factor / beta attribution' was the stage of their research chain DR-047 did not cover",
+  "exploratory": true,
+  "factor_source": "Kenneth French's data library, five factors plus momentum, daily",
+  "factors": [
+    "Mkt-RF",
+    "SMB",
+    "HML",
+    "RMW",
+    "CMA",
+    "MOM"
+  ],
+  "limits": {
+    "daily_bars_not_minutes": "PR-034 measured on minute prices and this reads daily bars. PR-036 checked the two against each other and they agreed within 0.57 points a year",
+    "six_factors_are_not_every_factor": "an alpha that survives these six is not an alpha that survives all of them - liquidity, betting against beta and quality are not here",
+    "the_library_ends_early": "French's series stop about two months behind the present, so the last sessions of a current window are not attributed. The row's `periods` is what was regressed and `sessions_in_window` is what the window held",
+    "the_night_is_a_SUBSET_of_the_factor_day": "a factor day is close to close and the night is close to next open, so a market beta of 0.44 says the night captures 44% of the day's move - it is not leverage"
+  },
+  "measured": "2026-09-21",
+  "rows": {
+    "hold | PR-034 window": {
+      "alpha_a_period": -6.489436776141144e-05,
+      "alpha_annual": -0.016220912118285025,
+      "alpha_survives": false,
+      "alpha_t": -1.888346015612344,
+      "betas": {
+        "CMA": 0.04826726246356733,
+        "HML": 0.15887710374333924,
+        "MOM": -0.0027925034228088864,
+        "Mkt-RF": 0.9984609115456108,
+        "RMW": 0.0321491578050161,
+        "SMB": 0.7289634494386257
+      },
+      "betas_t": {
+        "CMA": 3.135897758323845,
+        "HML": 17.126937510910054,
+        "MOM": -0.36116538178727803,
+        "Mkt-RF": 168.87987789848816,
+        "RMW": 2.593357591199233,
+        "SMB": 43.610791789033186
+      },
+      "first": "2016-01-04",
+      "hac_lag": 8,
+      "last": "2026-07-31",
+      "periods": 2659,
+      "periods_a_year": 252,
+      "r_squared": 0.979737302451098,
+      "sessions_in_window": 2693,
+      "window_claimed": [
+        "2016-01-04",
+        "2026-09-18"
+      ]
+    },
+    "hold | PR-036 window": {
+      "alpha_a_period": 1.7764571385246526e-05,
+      "alpha_annual": 0.004486667313396087,
+      "alpha_survives": false,
+      "alpha_t": 0.7442600534742929,
+      "betas": {
+        "CMA": -0.037817050938728246,
+        "HML": 0.09734908561562862,
+        "MOM": 0.002174961975268998,
+        "Mkt-RF": 1.018416333576427,
+        "RMW": 0.07422461729502657,
+        "SMB": 0.7799762785494526
+      },
+      "betas_t": {
+        "CMA": -2.013356289228319,
+        "HML": 7.574551912963062,
+        "MOM": 0.2985936173432413,
+        "Mkt-RF": 151.17573474713572,
+        "RMW": 5.190349553198795,
+        "SMB": 66.88252998210193
+      },
+      "first": "2004-01-30",
+      "hac_lag": 8,
+      "last": "2015-12-31",
+      "periods": 3002,
+      "periods_a_year": 252,
+      "r_squared": 0.9834533608070328,
+      "sessions_in_window": 3002,
+      "window_claimed": [
+        "2004-01-30",
+        "2015-12-31"
+      ]
+    },
+    "night | PR-034 window": {
+      "alpha_a_period": 0.0001992106542345591,
+      "alpha_annual": 0.05147725532834446,
+      "alpha_survives": false,
+      "alpha_t": 1.6083035834631165,
+      "betas": {
+        "CMA": -0.06622897302616194,
+        "HML": 0.22507642507538464,
+        "MOM": -0.027440264431733394,
+        "Mkt-RF": 0.43940770480994334,
+        "RMW": 0.02673037549144056,
+        "SMB": 0.0537230940689547
+      },
+      "betas_t": {
+        "CMA": -1.4648434440383868,
+        "HML": 6.185993935514791,
+        "MOM": -1.214256367758601,
+        "Mkt-RF": 11.86931101973275,
+        "RMW": 0.9907756069228854,
+        "SMB": 2.104474092914871
+      },
+      "first": "2016-01-04",
+      "hac_lag": 8,
+      "last": "2026-07-31",
+      "periods": 2659,
+      "periods_a_year": 252,
+      "r_squared": 0.4463535365746918,
+      "sessions_in_window": 2693,
+      "window_claimed": [
+        "2016-01-04",
+        "2026-09-18"
+      ]
+    },
+    "night | PR-036 window": {
+      "alpha_a_period": 0.0003041294974127189,
+      "alpha_annual": 0.07964143499027365,
+      "alpha_survives": true,
+      "alpha_t": 2.4950780360823717,
+      "betas": {
+        "CMA": -0.05841555087690949,
+        "HML": 0.017651293519355054,
+        "MOM": 0.029530403665081625,
+        "Mkt-RF": 0.3565462458242758,
+        "RMW": -0.2041729875464914,
+        "SMB": -0.14192239025156006
+      },
+      "betas_t": {
+        "CMA": -0.4127895669990575,
+        "HML": 0.3212160828321704,
+        "MOM": 1.1950700191191235,
+        "Mkt-RF": 20.486498191153267,
+        "RMW": -1.5778448319238014,
+        "SMB": -2.2860491982132842
+      },
+      "first": "2004-01-30",
+      "hac_lag": 8,
+      "last": "2015-12-31",
+      "periods": 3002,
+      "periods_a_year": 252,
+      "r_squared": 0.3033694000772874,
+      "sessions_in_window": 3002,
+      "window_claimed": [
+        "2004-01-30",
+        "2015-12-31"
+      ]
+    },
+    "session | PR-034 window": {
+      "alpha_a_period": -0.00053260011273352,
+      "alpha_annual": -0.12562941476509426,
+      "alpha_survives": true,
+      "alpha_t": -4.322502297849607,
+      "betas": {
+        "CMA": 0.1144211434481814,
+        "HML": -0.06498750274720363,
+        "MOM": 0.02480113550076774,
+        "Mkt-RF": 0.5606443716173697,
+        "RMW": 0.005321833473693648,
+        "SMB": 0.6755594804908944
+      },
+      "betas_t": {
+        "CMA": 2.2684903448480958,
+        "HML": -1.6931447001409867,
+        "MOM": 1.0190639273770736,
+        "Mkt-RF": 14.195089489867465,
+        "RMW": 0.17698102302112703,
+        "SMB": 25.237016216677965
+      },
+      "first": "2016-01-04",
+      "hac_lag": 8,
+      "last": "2026-07-31",
+      "periods": 2659,
+      "periods_a_year": 252,
+      "r_squared": 0.6478620728846345,
+      "sessions_in_window": 2693,
+      "window_claimed": [
+        "2016-01-04",
+        "2026-09-18"
+      ]
+    },
+    "session | PR-036 window": {
+      "alpha_a_period": -0.0007786418732526571,
+      "alpha_annual": -0.17822955212271507,
+      "alpha_survives": true,
+      "alpha_t": -6.584907778981061,
+      "betas": {
+        "CMA": -0.004707887965928665,
+        "HML": 0.09181180962772893,
+        "MOM": -0.024321504493919656,
+        "Mkt-RF": 0.659530920182601,
+        "RMW": 0.26005355196312424,
+        "SMB": 0.9177456309906912
+      },
+      "betas_t": {
+        "CMA": -0.03613854893486091,
+        "HML": 1.6466414409587866,
+        "MOM": -0.9359529553004635,
+        "Mkt-RF": 34.73687317445114,
+        "RMW": 2.165211103876002,
+        "SMB": 14.630916757130699
+      },
+      "first": "2004-01-30",
+      "hac_lag": 8,
+      "last": "2015-12-31",
+      "periods": 3002,
+      "periods_a_year": 252,
+      "r_squared": 0.7071756587445636,
+      "sessions_in_window": 3002,
+      "window_claimed": [
+        "2004-01-30",
+        "2015-12-31"
+      ]
+    }
+  },
+  "tool": "tools/measure_overnight_factors.py",
+  "trials": 0,
+  "why_no_trial": "it re-reads a reported result under a lens the registration did not carry. No configuration is evaluated and nothing is selected"
+}
