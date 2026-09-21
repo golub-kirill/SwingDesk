@@ -270,6 +270,52 @@ decade holds **three** missing sessions, across `ALP` and `FISV`.
 than lucky: the names that lose sessions are `$`-suffixed preferred issues, which the universe rule
 does not admit. Recorded so the question is closed with a number instead of being asked again.
 
+### 6e. An uncorrected SPLIT in the store — found 2026-09-21, real, and outside the admitted universe
+
+**The store can hold a split discontinuity, and this is what one looks like.** `AIXI`, straight
+from the owner's own bar store:
+
+```
+2026-09-04   0.472
+2026-09-08   3.260      <- +590% in one session
+```
+
+0.472 x 7 = 3.30. It is a 1-for-7 reverse split, read as a return by anything that reads the series.
+**Its `corporate_actions` rows are empty**, so nothing can detect or correct it - and store-wide only
+**7 instruments of 13,140** carry any action record at all.
+
+**The mechanism**, and it explains why this is bounded. `refresh_universe` re-fetches the admitted
+universe every evening, and the vendor back-adjusts the WHOLE history for a split on each fetch - so
+an admitted name's basis is rewritten and stays current. A name that leaves the universe stops being
+re-fetched: `AIXI`'s last stored session is **2026-09-11** against the store's **2026-09-18**. Its
+history froze on the pre-split basis, and the one bar fetched after the split sits on the new one.
+
+**Measured against an independent vendor**, because the store's own consistency cannot answer this.
+Stored closes were compared with Alpaca's daily bars at `adjustment=split` - a different vendor, a
+different adjustment pipeline - over 2026-06-01..2026-09-18, on names the universe could admit
+(median close at or above the $5 floor):
+
+| sample | same basis | different basis |
+|---|---|---|
+| 59 drawn at random | **59** | 0 |
+| 45 chosen because they CARRY a split-shaped jump since 2024 | **45** | 0 |
+
+**104 of 104.** The hazard is real and its current impact on the studies is zero, because the names
+that hold a stale basis are the ones the price floor already excludes.
+
+**A first attempt at this measurement was wrong and is recorded rather than quietly replaced.**
+Scanning the store alone for one-day moves near a round ratio reported *"29,365 split-shaped moves
+across 534 instruments"* - about fifty-five per instrument, which is absurd on its face. With 74,273
+big one-day moves in the window, a 2% tolerance around 2x catches coincidence far more often than
+splits, and `JAGX`'s correctly-adjusted 2017 price of 74 billion is what a long chain of reverse
+splits looks like rather than a defect. **The detector had to be the independent vendor, not the
+store's own shape.**
+
+**What makes it bite, so the trigger is written down:** a study reading a name that left the
+admitted universe and split afterwards. `TODO` §1 already carries the guard that would catch the
+rewrite - *"a restated close is detected and printed, and nothing REFUSES on it"* - and this is the
+measurement of what that open item is currently costing: nothing yet.
+
 ## 6b. The order of operations — `DR-047` §3.8
 
 ```
