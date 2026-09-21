@@ -1786,6 +1786,14 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       a Sharpe ratio of 1.06** against holding's 0.59, survives a whole cent a share (11.7%), and
       the last 590 sessions are its best (15.7% at 1.24). The session loses 5.4% a year. **The
       first result in this project to beat holding the asset per unit of risk.**
+      **MEASURED 2026-09-20 (`PR-036`, `COST_FRAGILE`):** the epoch objection is answered. Over
+      **2004-2015**, a window no study here had read, the night compounded at **10.6% against
+      holding's 8.8%**, with a −21.1% drawdown against −58.8%, and the session arm lost 80% peak
+      to trough. The overlap check landed **0.57 points a year** from `PR-034`'s minute-based
+      reading, so daily bars measure the same thing. The branch is `COST_FRAGILE` because a whole
+      cent touches zero at that decade's price level — these funds traded at a third of today's
+      price, so the same cent cost 2.6× more. **The fill measurement is the open question of the
+      whole line.**
 
 - [ ] **`[v]` THE RESEARCH AIM CHANGED — `DR-047`, 2026-09-20.** Two reviews (an advisory council
       on `PR-030`..`PR-035`, and an external review of the stack) were checked against this

@@ -1553,3 +1553,45 @@ hurdle is not paid twice for the same ground.
 historical excess and multi-year droughts. **This buys trustworthy answers, not bigger ones**, and
 the first study under the new rules says so in its own §3.
 
+## 35. The night was not a wrapper around this decade — it beat holding in 2004-2015 too, and the cent is where it fails
+
+**2026-09-20** (`PR-036`, `COST_FRAGILE`, 0 trials). Every overnight reading this project held —
+`PR-033`, `PR-034`, `PR-035` — covered 2016-2026, a decade in which `SPY` returned 15.7% a year.
+The council's sharpest objection was that the result might be an epoch rather than an effect. The
+two prices the arms need are in the DAILY bars, which reach back to 2000, so `PR-034`'s rule, funds,
+weighting and costs ran unchanged over **2004-01-30 .. 2015-12-31**, 3,002 sessions nobody here had
+read.
+
+| 2004-2015 | compounded a year | volatility | Sharpe | worst drawdown |
+|---|---|---|---|---|
+| **the night** | **+10.6%** | 13.0% | **0.84** | **−21.1%** |
+| the session | −12.2% | 20.3% | −0.54 | −80.1% |
+| holding the two funds | +8.8% | 23.4% | 0.48 | −58.8% |
+
+**The objection is answered.** In the decade that contains 2008, the night compounded faster than
+holding and fell a third as far, and the session — which is where 2008 actually happened — lost
+four fifths of its capital.
+
+**The study's own refutation, registered as §9 and printed first, passed all three parts**: the
+same 2016-2026 night read from daily bars landed at **13.26% against `PR-034`'s minute-based
+13.83%**, 0.57 points apart against a 2-point tolerance; the arms compounded to holding at 3.1e-16;
+and the realised half-width was 0.0205 against a predicted 0.0202. **The §3 prediction, written
+before any number was read, said +0.045% a day and about +11% a year; the realised figure is
++0.0434% and +10.94%.**
+
+**Why the verdict is still `COST_FRAGILE`.** At a whole cent a share a side the interval is
+**[−0.0003%, +0.0408%]** — it misses zero by 0.08% a year. The cause is arithmetic rather than an
+era: a fixed cent is a fraction of the share price, `IJR` and `VB` averaged **$35.76 and $74.15**
+in that decade against **$92.51 and $186.06** since, so the same cent cost **2.6× more**. This
+project's cost model was calibrated on 2016+ fills (`PR-031`) and is being applied at a price level
+it never saw.
+
+**And the two funds do not agree there.** `VB`'s night alone earns 16.67% a year at a Sharpe ratio
+of 1.26; **`IJR`'s alone does not separate from zero** ([−0.0035, +0.0436]). Both are diagnostics
+the decision rule never reads, and half the basket's pre-2016 result is one fund.
+
+**What it changes:** `CARD-002` keeps its evidence and loses the epoch objection — and the fill
+measurement it already specifies becomes the open question of the whole line, because the gap
+between half a cent and a whole cent is the gap between an effect and nothing across half the
+available history.
+

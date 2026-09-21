@@ -1,0 +1,277 @@
+{
+  "prereg": "PR-036",
+  "trials": 0,
+  "verdict": "inconclusive",
+  "branch": "COST_FRAGILE",
+  "country": "USA",
+  "as_of": {
+    "bars": "2026-09-20T06:28:46.070772+00:00"
+  },
+  "measured_span": {
+    "first_session": "2004-01-30",
+    "last_session": "2015-12-31"
+  },
+  "split": {
+    "registered": "none - PR-034's rule on a window nobody here has read",
+    "buys": "nothing a split could buy: no constant is chosen here"
+  },
+  "perturbations": {
+    "registered": [
+      "paper",
+      "cost_adverse",
+      "gross"
+    ],
+    "run": [
+      "paper",
+      "cost_adverse",
+      "gross"
+    ]
+  },
+  "registered_settings": {
+    "funds": [
+      "IJR",
+      "VB"
+    ],
+    "primary": "small-N-before",
+    "price_source": "daily bars, open and close",
+    "before": [
+      "2004-01-30",
+      "2015-12-31"
+    ],
+    "overlap": [
+      "2016-01-04",
+      "2026-09-18"
+    ],
+    "costs_per_share": {
+      "net": 0.005,
+      "paper": 0.0045,
+      "cost_adverse": 0.01,
+      "gross": 0.0
+    },
+    "gates": [
+      "cost_adverse above zero",
+      "sharpe above holding's"
+    ],
+    "bootstrap": {
+      "unit": "month",
+      "block": 3,
+      "seed": 20260926,
+      "resamples": 10000
+    },
+    "power_floor": 0.0008,
+    "min_days": 1000,
+    "min_months": 24,
+    "min_complete_share": 0.9
+  },
+  "cells": {
+    "small-N-before": {
+      "estimate": 0.0004339890469757647,
+      "lo": 0.00022512041123441776,
+      "hi": 0.0006354204483393218,
+      "width": 0.000410300037104904,
+      "days": 3002,
+      "sessions": 3002,
+      "complete_share": 1.0,
+      "months": 144,
+      "described": {
+        "days": 3002,
+        "annual_mean": 0.1093652398378927,
+        "annual_volatility": 0.13008577955303524,
+        "sharpe": 0.840716335126432,
+        "cagr": 0.10632551669204116,
+        "max_drawdown": -0.21116624152174557
+      }
+    },
+    "small-D-before": {
+      "estimate": -0.00043595974278091157,
+      "lo": -0.000816210014224167,
+      "hi": -7.579387261931747e-05,
+      "width": 0.0007404161416048495,
+      "days": 3002,
+      "sessions": 3002,
+      "complete_share": 1.0,
+      "months": 144,
+      "described": {
+        "days": 3002,
+        "annual_mean": -0.10986185518078972,
+        "annual_volatility": 0.20261379005513655,
+        "sharpe": -0.5422229906014464,
+        "cagr": -0.12238282798009281,
+        "max_drawdown": -0.8010351764815254
+      }
+    },
+    "small-hold-before": {
+      "estimate": 0.00044226266446008826,
+      "lo": 3.146989522110311e-05,
+      "hi": 0.000862061010665138,
+      "width": 0.0008305911154440349,
+      "days": 3002,
+      "sessions": 3002,
+      "complete_share": 1.0,
+      "months": 144,
+      "described": {
+        "days": 3002,
+        "annual_mean": 0.11145019144394223,
+        "annual_volatility": 0.2336108175293184,
+        "sharpe": 0.4770763298662535,
+        "cagr": 0.08770795515869345,
+        "max_drawdown": -0.5882205098091249
+      }
+    },
+    "small-N-overlap": {
+      "estimate": 0.000526261702280922,
+      "lo": 0.00018746876512877554,
+      "hi": 0.000872507944003137,
+      "width": 0.0006850391788743614,
+      "days": 2693,
+      "sessions": 2693,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2693,
+        "annual_mean": 0.13261794897479234,
+        "annual_volatility": 0.13024294615026863,
+        "sharpe": 1.0182351743009832,
+        "cagr": 0.13206750855718252,
+        "max_drawdown": -0.322966435533828
+      }
+    },
+    "small-D-overlap": {
+      "estimate": -0.00019858843787062607,
+      "lo": -0.0004793619571604277,
+      "hi": 0.00011789803981796201,
+      "width": 0.0005972599969783898,
+      "days": 2693,
+      "sessions": 2693,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2693,
+        "annual_mean": -0.05004428634339777,
+        "annual_volatility": 0.16801446884648713,
+        "sharpe": -0.2978570041436292,
+        "cagr": -0.062129772411893214,
+        "max_drawdown": -0.6345471888069091
+      }
+    },
+    "small-hold-overlap": {
+      "estimate": 0.0005039584496057474,
+      "lo": 0.00010699338280747825,
+      "hi": 0.0009416931417227822,
+      "width": 0.000834699758915304,
+      "days": 2693,
+      "sessions": 2693,
+      "complete_share": 1.0,
+      "months": 129,
+      "described": {
+        "days": 2693,
+        "annual_mean": 0.1269975293006483,
+        "annual_volatility": 0.21682802762744222,
+        "sharpe": 0.5857062423629926,
+        "cagr": 0.10889511860323786,
+        "max_drawdown": -0.4219284138937466
+      }
+    },
+    "IJR-N-before": {
+      "estimate": 0.00020676079840731436,
+      "lo": -3.45208830153391e-05,
+      "hi": 0.00043640388427188654,
+      "width": 0.0004709247672872256,
+      "days": 3002,
+      "sessions": 3002,
+      "complete_share": 1.0,
+      "months": 144,
+      "described": {
+        "days": 3002,
+        "annual_mean": 0.05210372119864322,
+        "annual_volatility": 0.13429392759028988,
+        "sharpe": 0.3879827043081477,
+        "cagr": 0.0441688336523145,
+        "max_drawdown": -0.2645885733747938
+      }
+    },
+    "VB-N-before": {
+      "estimate": 0.0006615828543892585,
+      "lo": 0.0004482313587829658,
+      "hi": 0.0008703417907414626,
+      "width": 0.0004221104319584968,
+      "days": 3001,
+      "sessions": 3001,
+      "complete_share": 1.0,
+      "months": 143,
+      "described": {
+        "days": 3001,
+        "annual_mean": 0.16671887930609314,
+        "annual_volatility": 0.13204820512125215,
+        "sharpe": 1.2625607379744763,
+        "cagr": 0.1712975679634221,
+        "max_drawdown": -0.16689476215131005
+      }
+    },
+    "small-N-before-paper": {
+      "estimate": 0.0004566593744684677,
+      "lo": 0.0002473777936424611,
+      "hi": 0.0006587147862966599,
+      "width": 0.00041133699265419874,
+      "days": 3002,
+      "sessions": 3002,
+      "complete_share": 1.0,
+      "months": 144,
+      "described": {
+        "days": 3002,
+        "annual_mean": 0.11507816236605385,
+        "annual_volatility": 0.1300872142256169,
+        "sharpe": 0.8846231587869038,
+        "cagr": 0.11266139925563379,
+        "max_drawdown": -0.20788427405352228
+      }
+    },
+    "small-N-before-cost_adverse": {
+      "estimate": 0.00020728577204873522,
+      "lo": -3.169366505946125e-06,
+      "hi": 0.0004078063915918054,
+      "width": 0.0004109757580977515,
+      "days": 3002,
+      "sessions": 3002,
+      "complete_share": 1.0,
+      "months": 144,
+      "described": {
+        "days": 3002,
+        "annual_mean": 0.052236014556281275,
+        "annual_volatility": 0.13007607411806513,
+        "sharpe": 0.40158049749309493,
+        "cagr": 0.04490943641500933,
+        "max_drawdown": -0.24325360265524265
+      }
+    },
+    "small-N-before-gross": {
+      "estimate": 0.0006606923219027941,
+      "lo": 0.00045271386322597983,
+      "hi": 0.0008659425832651564,
+      "width": 0.0004132287200391766,
+      "days": 3002,
+      "sessions": 3002,
+      "complete_share": 1.0,
+      "months": 144,
+      "described": {
+        "days": 3002,
+        "annual_mean": 0.1664944651195041,
+        "annual_volatility": 0.13010392287345734,
+        "sharpe": 1.279703651068548,
+        "cagr": 0.17133497294504196,
+        "max_drawdown": -0.17845000416857282
+      }
+    }
+  },
+  "arms_add_up_to_holding": {
+    "IJR": 3.139849491518021e-16,
+    "VB": 3.191891195797325e-16
+  },
+  "per_share_cost": 0.005,
+  "reproduces_pr034": {
+    "checked": true,
+    "daily_bars_annual": 0.13262,
+    "minutes_annual": 0.13834,
+    "differ_by": 0.00572
+  }
+}

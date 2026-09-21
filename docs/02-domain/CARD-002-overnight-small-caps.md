@@ -42,10 +42,19 @@ measured — it is **what the closing and opening auctions actually give a small
 | the night's Sharpe ratio is 1.06 against holding's 0.59 | `PR-034` — the first result in this project to beat holding per unit of risk |
 | the last 590 sessions are its best stretch (15.7% a year at 1.24) | `PR-034`'s recent gate |
 | the arms are an exact decomposition of holding (3e-16) | `PR-034` §9 |
+| **the effect is not a wrapper around this decade** — over 2004-2015 the night compounded at 10.6% against holding's 8.8%, with a −21.1% drawdown against −58.8% | `PR-036`, 3,002 sessions nobody here had read |
 
 **And what it does not say**, carried here so the card cannot outrun its evidence: `IJR`, `VB` and
 `IWM` hold overlapping companies, so this is not an independent second sample; and the worst
 drawdown is −31.6%, an equity drawdown.
+
+**And what `PR-036` added on the same evening, which raises the stakes on the fill measurement
+rather than lowering them.** The pre-2016 decade answers the epoch objection — the night beat
+holding there too, on return and on drawdown — but it returned `COST_FRAGILE`: at a whole cent a
+share a side the interval touches zero. The reason is arithmetic, not an era. A cent is a fraction
+of the share price, these funds traded at about a third of today's price in that decade, and the
+same cent cost 2.6× more. **So the card's edge is a cost question at least as much as a signal
+question**, and the twenty sessions in §7 are what settles it.
 
 **Tax, stated correctly for THIS owner and not for a textbook.** The owner holds a TAXABLE account
 and funds it in Canadian dollars (owner, 2026-09-20). The American framing an adviser reached for —
