@@ -405,7 +405,7 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 106 script(s), of which 30 are things you type
+### The tools — 107 script(s), of which 30 are things you type
 
 #### Operator tools — 30
 
@@ -471,7 +471,7 @@ Invoked by `python tools/check_gates.py`, not singly. Listed so a failing gate c
 | `python tools/verify_parameters.py` | Enforce the parameter-registry contract. | `--registry` |
 | `python tools/verify_transcription.py` | Verify that every `verbatim` claim in the documents still matches the course. | `--course-root` · `--docs` |
 
-#### Evidence-bound research runners — 63
+#### Evidence-bound research runners — 64
 
 Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions/measurements/` and reproduces it. They ran once, on a date. Nobody types these; they exist so a number can be re-derived.
 
@@ -540,5 +540,6 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/run_pr033.py` | `PR-033` - is the money in the night? The overnight return against the session's own, on five index funds, net of costs. | `--minutes` · `--minutes-as-of` · `--data` · `--as-of` · `--per-share` · `--resamples` · `--report` · `--power` |
 | `python tools/run_pr034.py` | `PR-034` - small caps' night, asked properly: on funds `PR-033` never read, at a cent a share, against holding them. | `--minutes` · `--minutes-as-of` · `--data` · `--as-of` · `--per-share` · `--resamples` · `--report` · `--power` |
 | `python tools/run_pr035.py` | `PR-035` - the same dollar twice: small caps overnight, `SPY` through the session, against holding `SPY`. | `--minutes` · `--minutes-as-of` · `--data` · `--as-of` · `--per-share` · `--resamples` · `--report` · `--power` |
+| `python tools/run_pr036.py` | `PR-036` - did the night pay BEFORE 2016? The same two arms, on daily bars, back to 2000. | `--data` · `--as-of` · `--per-share` · `--resamples` · `--report` · `--power` |
 
 <!-- END GENERATED COMMANDS -->
