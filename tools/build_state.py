@@ -217,6 +217,16 @@ def _journal_facts() -> list[tuple[str, str]]:
             "SELECT COUNT(*) FROM decisions "
             "WHERE decision = 'Skip' AND (reason_code IS NULL OR reason_code = '')"
         ).fetchone()[0]
+        # `a.decisions_coded` had NO measurement at all until 2026-09-21 - it appeared once in a
+        # test comment and nowhere else, so nothing could notice whether it held. What the
+        # criterion asks for (v1.2.1) is that no candidate leaves a run silent: a decision and a
+        # one-line reason on every row. The reason CODE is a separate question and the line above
+        # is the one that asks it.
+        silent = connection.execute(
+            "SELECT COUNT(*) FROM decisions "
+            "WHERE decision IS NULL OR TRIM(decision) = '' "
+            "   OR reason IS NULL OR TRIM(reason) = ''"
+        ).fetchone()[0]
     finally:
         connection.close()
     return [
@@ -224,7 +234,8 @@ def _journal_facts() -> list[tuple[str, str]]:
                     f"dirty tree** and therefore not replayable from their SHA"),
         ("Decisions", f"{decisions} recorded, **{instrument_days} instrument-days** once a "
                       f"re-run's repeats count once · {uncoded} uncoded refusals "
-                      f"(`a.no_uncoded_failures` requires 0)"),
+                      f"(`a.no_uncoded_failures` requires 0) · {silent} silent "
+                      f"(`a.decisions_coded` requires 0: a decision and a reason on every row)"),
     ]
 
 

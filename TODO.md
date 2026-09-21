@@ -29,6 +29,45 @@ retyping it.
 
 ## 1. Blocking now
 
+### THREE RATIFIED CRITERIA THAT NOTHING NAMED — found by audit 2026-09-21
+
+**`registry/criteria.yml` carries them, and until today nothing else in this repository did.** Not
+a gate, not a tool, not a document, not a line here. `tools/verify_criteria.py` now fails on a
+ratified criterion named nowhere outside the registry, which is what makes this section the thing
+that keeps that gate green — **by tracking the debt, not by discharging it.**
+
+**How the class was found.** `a.decisions_coded` was ratified demanding a reason CODE on every
+decision row. The journal holds 146,439 rows: all 70,548 `Skip`s carry a code and all 70,384
+`Watch` and 5,507 `Trade` rows carry none, because `contracts/position.py` defines a code as "a
+skip or exit code WHERE ONE APPLIES". The system was right and the wording was wrong, and it
+survived because outside the registry the id appeared **once**, in a test comment. Reworded at
+`criteria.yml` v1.2.1 and now measured by `build_state.py`. The sweep for others found these three.
+
+- [ ] **`[v]` `a.process_compliance_core` — "Plan, stop and journal present for every taken trade",
+      100%.** Its own note calls it *"the only hard numeric gate the course states (Appendix S,
+      first 20 trades)"*, and it has no implementation. **The data exists**: `positions.duckdb`
+      carries the stop, `journal.duckdb`'s `submissions` carry the order and `decisions` carry the
+      plan that chose it, so the join is writable today against the five positions the book holds.
+      What is missing is the definition of "present" and a tool that reports it.
+- [ ] **`[v]` `a.process_compliance_overall` — "Overall process compliance across all checklist
+      items", >= 95%.** Unmeasurable as stated: nothing enumerates the checklist items this scores
+      against. `application/checklist.py` is the nearest thing and it is a decision path, not a
+      scored list. **Either the item set is written down and scored, or the criterion is retired**
+      — and retiring is a legitimate outcome that needs the owner's word, not a silent deletion.
+- [ ] **`[v]` `a.no_critical_violations` — "No Critical-severity error codes recorded", 0.**
+      `CODES.md` §2 names five Critical codes — `WIDE_STOP`, `AVG_DOWN`, `OVERSIZE`, `REVENGE`,
+      `DATA_ERR` — and the system PREVENTS several structurally: `contracts/position.py` refuses a
+      widened stop outright, citing `WIDE_STOP` by name. **But nothing RECORDS an occurrence**, so
+      "0" today is an inference from prevention rather than a measurement. The honest reading is
+      that the criterion cannot currently fire, which is the `k.track_a_timebox` shape
+      `criteria.yml` v1.1.0 already ruled against: *a criterion evadable by inaction is not a
+      criterion*.
+
+**What this section does NOT claim.** That any of the three is violated. Two are plausibly
+satisfied and one is undefined; what is established is that **none of them could have told anyone
+either way.**
+
+
 ### THE ONLY RATIFIED LIVE CRITERION CANNOT FIRE — found 2026-08-24
 
 - [ ] **`[v]` A restated close is detected and printed, and nothing REFUSES on it** (`DR-016`

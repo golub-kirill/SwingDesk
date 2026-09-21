@@ -12,7 +12,7 @@
 #
 # See docs/00-charter/SUCCESS_AND_KILL_CRITERIA.md.
 
-version: 1.2.0
+version: 1.2.1
 date: 2026-09-21
 status: ratified          # v1.1.0 owner-ratified 2026-08-08 and frozen; see amendments below
 
@@ -56,6 +56,31 @@ amendments:
       `docs/00-charter/SUCCESS_AND_KILL_CRITERIA.md` §5, corrected forward there in this same change
       using this file's own §10.5 convention (strike through, do not silently rewrite) rather than
       as a second, disconnected governance track for one fact.
+
+  - version: 1.2.1
+    date: 2026-09-21
+    status: ratified        # a wording correction, the instrument v1.1.1 and v1.1.2 already used
+    target: a.decisions_coded.criterion
+    change: >-
+      Corrects a.decisions_coded, which asked for something the system does not and should not
+      produce. It read "Every candidate leaves the run with a decision and a reason code - 100%".
+      It now reads: "Every candidate leaves the run with a decision and a one-line reason; a reason
+      CODE where one applies" - 0 silent rows.
+    note: >-
+      FOUND BY AUDIT 2026-09-21, and the wording was never the system's problem.
+      contracts/position.py defines reason_code as "a skip or exit code WHERE ONE APPLIES. Coded,
+      not prose." Measured in the journal: 146,439 decisions, of which 70,548 are Skips and every
+      one carries a code, while 70,384 Watch and 5,507 Trade rows carry none - 75,891 uncoded, and
+      exactly the rows where no code applies. A Watch is not a refusal and has nothing to code.
+      The course rule this criterion carries is "Нет кандидатов без следующего действия" - no
+      candidate without a next action - and that IS met: `decision` and `reason` are populated on
+      every one of the 146,439 rows.
+      THE REAL DEFECT WAS THAT NOTHING MEASURED IT. Outside this file, a.decisions_coded appeared
+      in exactly one place in the repository: a comment inside tests/test_pipeline.py. No gate, no
+      tool and no generated block computed it, so a ratified criterion stated in terms the system
+      contradicts went unnoticed for as long as it existed - AGENTS.md 10.8, a claim that something
+      is CHECKED is itself a claim. tools/build_state.py now reports it beside
+      a.no_uncoded_failures, which had been measured all along.
 
   - version: 1.2.0
     date: 2026-09-21
@@ -114,11 +139,18 @@ track_a:
     status: ratified
 
   - id: a.decisions_coded
-    criterion: Every candidate leaves the run with a decision and a reason code
-    value: 100%
-    measured_by: journal query over scan results
+    criterion: >-
+      Every candidate leaves the run with a decision and a one-line reason; a reason CODE where one
+      applies
+    value: 0 silent rows
+    measured_by: tools/build_state.py, reported in HANDOFF.md section 2 beside a.no_uncoded_failures
     status: ratified
-    note: Course rule - "Нет кандидатов без следующего действия" (M32/M33 operational standard).
+    note: >-
+      Course rule - "Нет кандидатов без следующего действия" (M32/M33 operational standard).
+      REWORDED at v1.2.1: it used to demand a reason CODE on every row, which contracts/position.py
+      defines as applying only to a skip or an exit. A Watch is not a refusal and has nothing to
+      code. See that amendment for what the journal actually holds and for why the wording survived
+      so long - nothing measured it.
 
   - id: a.no_uncoded_failures
     criterion: Every refusal carries a skip or error code; no silent failures
