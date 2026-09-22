@@ -573,6 +573,17 @@ rotted when the fact it cited moved, and none said where that fact lived.
   first Trade decision today*. `SPEC_GAP_ANALYSIS` carried *"the system never places orders"* and
   *"no target exists"* for twenty days after both stopped being true, and `TODO.md` said a card
   refuses on a parameter that **the same commit had just set**.
+  **A STATUS is now the exception, and it is gated.** `tools/status_claims.py` holds one rule used
+  by gate 20 and gate 11: an id, a copula, and a word from a CLOSED set the registry itself defines
+  — `DR-039 is proposed`, `M31-T0464 is specified` (status-claim-example: this line has to
+  show the token shape) — compared against the field that owns it.
+  `CI_POLICY.md` §3 permits a gate over prose only with an exact token, and this has one;
+  `blocked_claims.py` is the counter-example and stays a worklist because "blocked" has no closed
+  vocabulary. It found four on its first run: `fees.py` gave ratified `DR-039` the status
+  `proposed` and used that as the REASON not to charge the venue's fees, `TODO.md` did the same to
+  `DR-040` and `DR-009`, and an OPEN item was headlined with `specified` for `M31-T0464` 22 days
+  after `DR-024` activated it. Everything else in this trap — a `note:`, a table cell, a claim about what code does — has no
+  closed vocabulary and is still only caught by reading.
   **Why it happens: a gate reads keys.** Nothing reads the `note:`, the `#` comment or the table
   cell, so the only thing standing between prose and drift is whoever is editing remembering to
   reread the paragraph they are not changing. **The habit: when a change makes a sentence false,

@@ -2382,7 +2382,10 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       Derive all three with `python tools/verify_reproducible.py --data …`, never from this
       table.
 
-- [ ] **`[v]` `M31-T0464` IS `specified` — 2026-08-24, and the gate caught the shortcut.**
+- [ ] **`[v]` `M31-T0464` — specified 2026-08-24, `active` since 2026-08-30, and the gate
+      caught the shortcut.** ~~IS `specified`~~ — corrected 2026-09-21: `DR-024` activated it
+      on 2026-08-30 and `registry/components.yml` has read `active` since. This headline said
+      `specified` for 22 days on an OPEN item, which is the answer a reader takes away.
       `derived_observations/relative_strength.py` computes the RS line: the ratio of an
       instrument's close to `rs.benchmark`'s, rebased to 1.0 at their first SHARED session. An
       `ALGORITHM_SPEC` record in the docstring, seven property tests, no parameters.
@@ -2398,9 +2401,18 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       row MEANS rather than about duplicated code. `M77-T1138` stays `registered` until someone
       reads the source PDFs and can say whether it names something distinct; those PDFs are not in
       this repository.
-      **Still `specified`, not `active`.** It declares no parameters and could activate on
+      ~~**Still `specified`, not `active`.** It declares no parameters and could activate on
       verification alone — it is held because activation is a decision (`ROADMAP` §9), the same
-      reason ATR and SMA are held.
+      reason ATR and SMA are held.~~
+      **`active` since 2026-08-30 (`DR-024`), and the activation condition was a CALLER rather
+      than a verification.** `COMPONENT_REGISTRY_SPEC` §3 asks that a component's output appear
+      somewhere with its status beside it; the daily run computes the RS line for every
+      candidate and the report prints it with its validation status. `DR-024` supplied that
+      caller rather than flipping a flag - `registry/cards.yml` records the same fact on
+      CARD-001's `components-not-active` blocker.
+      **And ATR is no longer held either**: `M18-T0280` reads `active`. `M25-T0382` (SMA) is
+      still `specified`, so the sentence was half true when written and is a quarter true now -
+      derive it with `python tools/verify_components.py`, never from this line.
       **Open:** `M31-T0465` (the hypothesis) and `M33-T0487` (the screen) are still `registered`,
       and both need `PR-012`'s values.
 

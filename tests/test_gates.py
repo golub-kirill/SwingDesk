@@ -2042,6 +2042,75 @@ def test_a_missing_read_by_is_a_failure() -> None:
     assert "no `read_by`" in (_reader_failure() or "")
 
 
+def test_a_file_calling_an_active_component_specified_fails(tmp_path: Path) -> None:
+    """Gate 11's half of the same rule, and it found a live one.
+
+    An OPEN `TODO.md` item was headlined with `specified` for `M31-T0464`, and said so again in
+    its body.
+    `DR-024` activated that component on 2026-08-30 - 22 days earlier - and `components.yml` had read
+    `active` ever since. The same item said ATR and SMA "are held"; `M18-T0280` (ATR) reads `active`
+    too. A reader deciding what to work on was told a component nothing calls.
+    """
+    import sys
+
+    sys.path.insert(0, str(TOOLS))
+    import status_claims
+
+    (tmp_path / "TODO.md").write_text(
+        "`M31-T0464` is `specified`, so nothing calls it.",  # status-claim-example
+        encoding="utf-8")
+    failures = status_claims.misstated(
+        tmp_path, {"M31-T0464": "active"}, id_pattern=r"M\d+-T\d+",
+        words=("registered", "specified", "active"), caller=tmp_path / "nothing.py")
+    assert len(failures) == 1, failures
+    assert "M31-T0464" in failures[0] and "active" in failures[0]
+
+
+def test_a_struck_span_above_does_not_shift_the_reported_line(tmp_path: Path) -> None:
+    """Found in this check's own first version, on 2026-09-21.
+
+    The struck spans were DELETED before matching, so every line number after one was short by the
+    newlines removed - `tests/test_gates.py` carries a struck fixture, and a claim five lines below
+    it was reported at the line of an `import`. They are blanked in place now, the same way
+    `verify_decisions.py`'s `code_of` blanks comments column by column. A check that names the wrong
+    line sends a reader to innocent code and gets disbelieved.
+    """
+    import sys
+
+    sys.path.insert(0, str(TOOLS))
+    import status_claims
+
+    (tmp_path / "TODO.md").write_text(
+        "~~one\ntwo\nthree~~\n"
+        "filler\n"
+        "`DR-001` is `proposed` on line five.\n",  # status-claim-example
+        encoding="utf-8")
+    failures = status_claims.misstated(
+        tmp_path, {"DR-001": "accepted"}, id_pattern=r"DR-\d+",
+        words=("proposed", "accepted"), caller=tmp_path / "nothing.py")
+    assert len(failures) == 1, failures
+    assert "TODO.md:5" in failures[0], failures[0]
+
+
+def test_an_id_the_registry_does_not_know_is_not_this_checks_business(tmp_path: Path) -> None:
+    """Guessing between a typo and a reference to something outside the registry invents a failure.
+
+    Another gate catches an id that resolves nowhere. This one would have to decide which word a
+    sentence MEANT, and `AGENTS.md` §12's rule is that a check accuses on evidence, not on absence.
+    """
+    import sys
+
+    sys.path.insert(0, str(TOOLS))
+    import status_claims
+
+    (tmp_path / "TODO.md").write_text(
+        "`M99-T9999` is `specified` and nobody has heard of it.",
+        encoding="utf-8")  # status-claim-example
+    assert status_claims.misstated(
+        tmp_path, {"M31-T0464": "active"}, id_pattern=r"M\d+-T\d+",
+        words=("registered", "specified", "active"), caller=tmp_path / "nothing.py") == []
+
+
 def _misstated(tmp_path: Path, body: str, *, status: str = "accepted - ratified 2026-09-01"):
     """Run the tree-wide status check over a one-file tree, with `REPO` pointed at it."""
     import sys
@@ -2110,22 +2179,40 @@ def test_the_marker_only_exempts_its_own_line(tmp_path: Path) -> None:
     assert len(failures) == 1, failures
 
 
-def test_the_check_does_not_report_itself(tmp_path: Path) -> None:
-    """`verify_decisions.py` NAMES the defect it looks for, so it is its own false positive.
+def test_the_check_does_not_report_its_own_caller(tmp_path: Path) -> None:
+    """A gate that NAMES the defect it looks for is its own false positive.
 
-    `verify_criteria.py` did exactly this three hours earlier on 2026-09-21 and reported zero,
-    because the criterion ids it was searching for lived in its own comment. Same shape, same day.
+    `verify_criteria.py` did exactly this on 2026-09-21 and reported ZERO, because the criterion ids
+    it searched for lived in its own comment. This check then did it twice on its first run, for the
+    same reason, and its docstring still explains the defect it rejects.
+
+    The exemption is built here rather than asserted against the real file's current prose: the first
+    version of this test checked that `verify_decisions.py` still contained the offending sentence,
+    and its own guard fired the moment a refactor reworded that docstring - which is the test working,
+    but it is a test of a docstring rather than of the mechanism.
     """
     import sys
 
     sys.path.insert(0, str(TOOLS))
-    import verify_decisions
+    import status_claims
 
-    source = Path(verify_decisions.__file__).read_text(encoding="utf-8")
-    assert "is `proposed`" in source, "this test is worthless if the file stops naming the defect"
-    assert not [f for f in verify_decisions.misstated_elsewhere(
-        {"DR-039": "accepted - ratified by the owner 2026-09-05"})
-        if "verify_decisions.py" in f]
+    (tmp_path / "tools").mkdir()
+    gate = tmp_path / "tools" / "a_gate.py"
+    gate.write_text(
+        '"""Rejects `DR-001` is `proposed`."""',  # status-claim-example
+        encoding="utf-8")
+    (tmp_path / "TODO.md").write_text("nothing to see", encoding="utf-8")
+
+    reported = status_claims.misstated(
+        tmp_path, {"DR-001": "accepted"}, id_pattern=r"DR-\d+",
+        words=("proposed", "accepted"), caller=gate)
+    assert reported == [], reported
+
+    # And the exemption is the CALLER's, not a blanket pass for anything under `tools/`.
+    other = status_claims.misstated(
+        tmp_path, {"DR-001": "accepted"}, id_pattern=r"DR-\d+",
+        words=("proposed", "accepted"), caller=tmp_path / "tools" / "someone_else.py")
+    assert len(other) == 1, other
 
 
 def test_two_readers_both_resolve() -> None:
