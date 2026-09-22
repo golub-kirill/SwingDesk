@@ -38,8 +38,18 @@ the whole.
 |---|---|---|
 | the interval above zero | net, at half a cent a share a side | **+0.0549%** [+0.0207, +0.0895] |
 | a whole cent a share a side | above zero | **+0.0463%** [+0.0120, +0.0809] — 11.7% a year |
-| the last 590 sessions | a positive estimate | **+0.0624%** — 15.7% a year at a Sharpe ratio of 1.24 |
+| the last 590 sessions | a positive estimate | **+0.0624%** [−0.0158, +0.1217] — 15.7% a year at a Sharpe ratio of 1.24 |
 | better than holding | a higher Sharpe ratio | **1.06 against 0.59** |
+
+**The recent row's interval is shown, added 2026-09-22, and it CONTAINS ZERO.** Nothing above
+changes: §6 registered that gate as a test of the ESTIMATE before any data was seen, the estimate is
++0.0624%, and `ACCEPT` is what the rule gives. It is printed because the two rows above it carry
+intervals and this one did not, and a reader comparing three rows should not have to open
+`PR-034.json` to learn that the third is the weakest of the three. 590 sessions is a quarter of the
+window and buys a quarter of the precision; `RECENT_FRAGILE` exists in §6 for the case where the
+estimate itself turns negative, and it did not. What this row establishes is *the recent window has
+not contradicted the ten-year reading*, which is a weaker statement than the other two rows make and
+is the one the gate was written to test.
 
 **§3 predicted +0.048% a day before the run; the measurement is +0.0549%.**
 

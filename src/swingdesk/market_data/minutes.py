@@ -56,6 +56,16 @@ CREATE TABLE IF NOT EXISTS minute_fetches (
 """
 
 
+def _basis(source: str) -> str | None:
+    """The price basis a source string claims, or `None` when it claims none.
+
+    `alpaca:sip:split` -> `split`. Two fields or fewer is a source from before the convention and
+    says nothing about adjustment; guessing one would be inventing a claim to then enforce.
+    """
+    parts = source.split(":")
+    return parts[-1] if len(parts) >= 3 else None
+
+
 @dataclass(frozen=True, slots=True)
 class Minute:
     """One one-minute bar: the instant it STARTED, its four prices, and - when the vendor served
@@ -99,10 +109,59 @@ class MinuteStore:
                     "INSERT OR REPLACE INTO minute_bars (instrument_id, session_date, minute, "
                     "knowledge_time, open, high, low, close, volume, vwap) "
                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", rows)
+        # A SECOND PRICE BASIS IS REFUSED, not merged. `INSERT OR REPLACE` would have taken it
+        # happily and left an instrument whose sessions sit on two price scales - unreadable rather
+        # than untidy, because nothing downstream carries the basis and an overnight return is a
+        # ratio of two sessions' prices. `PR-025` is what that costs: a REJECT that was a unit
+        # error.
+        #
+        # The ADJUSTMENT only, which is the last field of `alpaca:{feed}:{adjustment}`. A feed
+        # difference is a data-quality question and not two scales, and a source not in that shape
+        # makes no basis claim at all - a store written before these columns existed carries `old`,
+        # and re-sourcing it is legitimate. Accusing on a shape this cannot read is the mistake it
+        # is here to prevent.
+        incoming = _basis(source)
+        if incoming is not None:
+            held = {
+                basis for basis in (
+                    _basis(str(row[0])) for row in self._connection.execute(
+                        "SELECT DISTINCT source FROM minute_fetches WHERE instrument_id = ?",
+                        [instrument_id]).fetchall())
+                if basis is not None
+            }
+            if held - {incoming}:
+                raise ValueError(
+                    f"{instrument_id}: this store already holds minutes adjusted "
+                    f"{sorted(held)} and this fetch is {incoming!r}. Two price bases in one "
+                    f"instrument's minutes make an overnight ratio cross a split on mismatched "
+                    f"numbers. Fetch into a separate store, or re-fetch the whole instrument on "
+                    f"one basis."
+                )
         self._connection.execute(
             "INSERT OR REPLACE INTO minute_fetches VALUES (?, ?, ?, ?, ?)",
             [instrument_id, session_date, knowledge_time, source, len(rows)])
         return len(rows)
+
+    def sources(self, instrument_id: str, knowledge_time: datetime) -> tuple[str, ...]:
+        """Every price basis this instrument's minutes were fetched under, as known at an instant.
+
+        **One element, or the series is not comparable to itself.** The source string carries the
+        feed AND the adjustment - `alpaca:sip:split` against `alpaca:sip:raw` - and an overnight
+        return is a ratio of two sessions' prices. Two bases in one instrument's history means that
+        ratio crosses a split on mismatched numbers, silently, on exactly the sessions a split makes
+        interesting.
+
+        The fetch table has always recorded it; nothing read it. `minute_bars` carries no basis and
+        `session()` cannot join to one without deciding which fetch a minute belongs to, so the
+        question is asked here, by the study, before it reads anything. `PR-025` is what an
+        unchecked price basis costs: a REJECT that was a unit error, and `AGENTS.md` §12 carries it
+        as *tape prices are unadjusted*.
+        """
+        rows = self._connection.execute(
+            "SELECT DISTINCT source FROM minute_fetches "
+            "WHERE instrument_id = ? AND knowledge_time <= ? ORDER BY source",
+            [instrument_id, knowledge_time]).fetchall()
+        return tuple(str(row[0]) for row in rows)
 
     def session(self, instrument_id: str, session_date: date,
                 knowledge_time: datetime) -> tuple[Minute, ...] | None:

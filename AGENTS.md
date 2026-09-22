@@ -532,6 +532,23 @@ rotted when the fact it cited moved, and none said where that fact lived.
   items at all. A check that goes green for the wrong reason is the thing this file's own first
   trap is about, so the rule stays prose and the tool carries the self-check instead.
 
+- **A fact the store RECORDS is not a fact anything reads.** `minutes.duckdb` has carried the price
+  basis since it was built - `minute_fetches.source` holds `alpaca:sip:split` or `…:raw` - and on
+  2026-09-22 nothing read it: `minute_bars` carries no basis, `MinuteStore.session()` never joined
+  to the fetch table, and `write()` accepted any source into any store. So an `--adjustment raw`
+  probe into a `split` store leaves one instrument's sessions on two price scales, and an overnight
+  return is a RATIO of two sessions' prices - it would cross a split on mismatched numbers,
+  silently, on exactly the sessions a split makes interesting. `PR-025`'s `REJECT` is what that
+  costs once: a verdict that was a unit error.
+  **Nothing was mixed** - `fetch_minutes.py` defaults to `split` and no second basis is in any
+  committed store - so this was latent, not live. `write()` now refuses a second ADJUSTMENT for one
+  instrument, and `MinuteStore.sources()` lets a study ask what it is reading. The adjustment only:
+  `alpaca:iex:split` against `alpaca:sip:split` is a feed difference and not two scales, and a
+  source with fewer than three fields predates the convention and claims no basis at all - the
+  first cut refused any difference and broke the migration test, which is accusing on a shape the
+  check cannot read.
+  **The habit: when a store writes down a fact about its own numbers, grep for who reads it back.**
+  A column nothing joins to is a comment with a schema.
 - **A text check finds ITSELF, and then it finds the tests that prove it works.** Three times on
   2026-09-21. `verify_criteria.py` searched the tree for criterion ids, and the ids were in its own
   comment, so every criterion looked referenced and it reported **zero**. `verify_decisions.py`
