@@ -16,6 +16,18 @@ each hold their own registry to their own ids, and the matching, the exemptions 
 arithmetic are identical. This project's own rule against one logic in two places applies to its
 gates first: a second copy is a second place for the `~~struck~~` handling to be forgotten.
 
+**WHERE THIS MUST NOT BE USED, measured before trying it.** The closed set has to be closed in
+the right sense: no word in it may also be an ordinary English predicate about the thing. Criterion
+statuses fail that test. `registry/criteria.yml` uses `met` as a status value - `k.timebox_review`
+carries it - and `met` is also what every criterion IS when it is satisfied, so
+`track_a_streak.py`'s correct line *"a.run_completes is MET as of <date>"* reads as a status claim
+about a `ratified` criterion and gets accused. That is the noise `CI_POLICY.md` §3 forbids, and it
+would be a gate wrong about a runtime verdict rather than about a stale sentence. Ran it once, read
+the single hit, did not ship it. Decision statuses (`proposed`, `accepted`, `superseded`) and
+component activations (`registered`, `specified`, `active`) have no such collision, which is why
+those two are gated and criteria are not - and the criteria vocabulary is 20 `ratified` out of 22
+anyway, so the check would have had almost nothing to say even if it were safe.
+
 Three exemptions, each paid for on the day this was written:
 
   1. **The gate's own file.** A check that names the defect it looks for reports itself.

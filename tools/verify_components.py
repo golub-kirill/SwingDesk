@@ -29,6 +29,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import ast
 import importlib
 import re
 import sys
@@ -151,6 +152,11 @@ def check(
                         f"'active' means (COMPONENT_REGISTRY_SPEC 3)."
                     )
 
+        # 2b. and the verification claim RESOLVES, rather than merely being non-empty.
+        unresolved = unresolved_verification(row)
+        if unresolved:
+            failures.append(unresolved)
+
         # 3 and 4. parameters resolve, and an active component has none unset
         for parameter_id in row.get("parameters") or []:
             entry = parameters.get(parameter_id)
@@ -207,6 +213,82 @@ def check(
 
     return failures
 
+
+
+#: What a `verification` claim may say, and it is the registry's own vocabulary: six rows say
+#: `golden vectors` and one says `property test`. A value outside this set is a FAILURE rather than
+#: a pass, so the check cannot be stepped around by inventing a third word.
+GOLDEN, PROPERTY = "golden vectors", "property test"
+VERIFICATION_CLAIMS = (GOLDEN, PROPERTY)
+
+#: Where each claim has to resolve.
+GOLDEN_ROOT = REPO / "golden" / "components"
+TESTS_ROOT = REPO / "tests"
+
+
+def unresolved_verification(row: dict[str, object]) -> str | None:
+    """`None` when a component's `verification` claim resolves to something that exists.
+
+    **A field checked only for PRESENCE is the defect this project keeps finding under other
+    names.** `verify_parameters.py` says that about `read_by` in its own docstring, and it was true
+    here too: until 2026-09-21 check 2 asked only `if not row.get("verification")`, so `active` -
+    the strongest claim a component can make, the one `COMPONENT_REGISTRY_SPEC` 3 says needs
+    parameters with VALUES and verification that EXISTS - rested on a two-word string nobody
+    resolved. Both claims were true when this was written; nothing would have said so if they
+    were not, and the moment a third component is activated is exactly when a false one slips in.
+
+    Deliberately not a test-name match. `property test` resolves when some file under `tests/`
+    imports the module `implements` names - a module import is the one thing a text search reads
+    reliably, unlike an f-string-built id or a bare identifier, both of which fooled the `read_by`
+    check earlier the same day.
+    """
+    claim = str(row.get("verification") or "").strip()
+    if not claim:
+        return None                                   # check 2 above already fails an active row
+    component = str(row.get("component", "?"))
+    if claim not in VERIFICATION_CLAIMS:
+        return (f"{component}: verification {claim!r} is not one of {VERIFICATION_CLAIMS}. "
+                f"A claim nobody can resolve is not verification")
+    if claim == GOLDEN:
+        directory = GOLDEN_ROOT / component
+        if not directory.is_dir() or not any(directory.glob("*.json")):
+            return (f"{component}: verification says {GOLDEN!r} and "
+                    f"golden/components/{component}/ holds none")
+        return None
+    implements = str(row.get("implements") or "")
+    module = implements.partition(":")[0]
+    if not module:
+        return (f"{component}: verification says {PROPERTY!r} but there is no `implements` to say "
+                f"what the test would be exercising")
+    if not TESTS_ROOT.is_dir():
+        return None                                   # unavailable is not fail (AGENTS.md 12)
+    if not any(module in _imported_modules(f) for f in TESTS_ROOT.glob("test_*.py")):
+        return (f"{component}: verification says {PROPERTY!r} and no file in tests/ imports "
+                f"{module}")
+    return None
+
+
+def _imported_modules(path: Path) -> set[str]:
+    """Every module a test file imports, as a dotted name, read from the AST.
+
+    NOT a substring search over the source. `tests/test_relative_strength.py` spells its import
+    `from swingdesk.derived_observations import relative_strength`, which does not contain the
+    dotted path at all - the first cut of this check passed only because a SECOND file happens to
+    use the dotted form, which is a check passing for a reason other than the one it states. The
+    same lesson the `read_by` audit produced hours earlier, in the same direction.
+    """
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
+    except SyntaxError:                               # a file that cannot parse imports nothing
+        return set()
+    found: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            found.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module and not node.level:
+            found.add(node.module)
+            found.update(f"{node.module}.{alias.name}" for alias in node.names)
+    return found
 
 
 def misstated_activations(components: list[dict[str, object]]) -> list[str]:

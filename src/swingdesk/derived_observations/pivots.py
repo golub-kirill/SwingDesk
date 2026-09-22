@@ -76,6 +76,17 @@ def _is_swing(values: list[Decimal], pivot: int, left: int, right: int, high: bo
     all and the structure disappears; with both non-strict, every bar of a flat stretch registers one
     and the structure becomes noise. Strict-left/non-strict-right keeps exactly the first bar of a
     plateau, which is the one that actually marked the level.
+
+    **The golden vector named for this cannot check it, and the test that can is
+    `tests/test_trend.py::test_tie_handling_keeps_the_first_bar_of_a_plateau`.** Measured
+    2026-09-21 by making the LEFT side non-strict: every one of the 25 golden vectors stayed green,
+    including `M12-T0201-v5.0/plateau_keeps_first_bar.json`, whose own derivation says *"both
+    non-strict would find two"*. It records the carried-forward LEVEL rather than the pivot set, and
+    one pivot at 15 and two pivots at 15 both emit `15, 15, 15`. The vector is not wrong and its
+    derivation is not wrong; the recorded OUTPUT simply cannot separate the two cases, and the
+    manifest's hash is not worth a component version bump to say so in the file itself. Seven other
+    mutants across the six covered components all died, so this is one blind spot rather than a
+    corpus that only records.
     """
     value = values[pivot]
     for offset in range(1, left + 1):
