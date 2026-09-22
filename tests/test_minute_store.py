@@ -25,6 +25,65 @@ def _minute(i: int, volume: int | None = None, vwap: str | None = None) -> Minut
                   volume=volume, vwap=None if vwap is None else Decimal(vwap))
 
 
+def test_a_second_price_basis_is_refused(tmp_path: Path) -> None:
+    """Two adjustments in one instrument's minutes make an overnight ratio cross a split wrong.
+
+    `minute_fetches` has recorded the basis since it was written and NOTHING read it: `minute_bars`
+    carries none, `session()` never joined to the fetch table, and `write()` took any source. A
+    `--adjustment raw` probe into a `split` store left a series whose sessions sit on two price
+    scales, silently, on exactly the sessions a split makes interesting. `PR-025` is what an
+    unchecked price basis costs - a REJECT that was a unit error.
+    """
+    import pytest
+
+    with MinuteStore(tmp_path / "m.duckdb") as store:
+        store.write("SPY", SESSION, [_minute(0)], KNOWN, "alpaca:sip:split")
+        with pytest.raises(ValueError, match=r"[Tt]wo price bases"):
+            store.write("SPY", SESSION + timedelta(days=1), [_minute(1)], KNOWN, "alpaca:sip:raw")
+
+
+def test_the_same_basis_from_another_feed_is_allowed(tmp_path: Path) -> None:
+    """A feed difference is a data-quality question, not two price scales.
+
+    `alpaca:iex:split` and `alpaca:sip:split` are the same numbers from different tapes. Refusing
+    that would be guarding the wrong field, and a guard that fires on the wrong thing gets removed.
+    """
+    with MinuteStore(tmp_path / "m.duckdb") as store:
+        store.write("SPY", SESSION, [_minute(0)], KNOWN, "alpaca:sip:split")
+        store.write("SPY", SESSION + timedelta(days=1), [_minute(1)], KNOWN, "alpaca:iex:split")
+        assert store.sources("SPY", KNOWN) == ("alpaca:iex:split", "alpaca:sip:split")
+
+
+def test_a_source_that_claims_no_basis_is_not_accused(tmp_path: Path) -> None:
+    """A store written before the convention carries `old`, and re-sourcing it is legitimate.
+
+    The first cut refused any source that differed at all and broke the migration test. Accusing on
+    a shape the check cannot read is the mistake it exists to prevent.
+    """
+    with MinuteStore(tmp_path / "m.duckdb") as store:
+        store.write("SPY", SESSION, [_minute(0)], KNOWN, "old")
+        store.write("SPY", SESSION + timedelta(days=1), [_minute(1)], KNOWN, "new")
+        assert store.sources("SPY", KNOWN) == ("new", "old")
+
+
+def test_another_instrument_is_its_own_question(tmp_path: Path) -> None:
+    """One store may hold two instruments on two bases; a RATIO is only ever within one."""
+    with MinuteStore(tmp_path / "m.duckdb") as store:
+        store.write("SPY", SESSION, [_minute(0)], KNOWN, "alpaca:sip:split")
+        store.write("QQQ", SESSION, [_minute(1)], KNOWN, "alpaca:sip:raw")
+        assert store.sources("SPY", KNOWN) == ("alpaca:sip:split",)
+        assert store.sources("QQQ", KNOWN) == ("alpaca:sip:raw",)
+
+
+def test_sources_are_read_as_of_a_knowledge_time(tmp_path: Path) -> None:
+    """A study asks what it is reading AT its pinned instant, like every other read here."""
+    later = KNOWN + timedelta(days=1)
+    with MinuteStore(tmp_path / "m.duckdb") as store:
+        store.write("SPY", SESSION, [_minute(0)], later, "alpaca:sip:split")
+        assert store.sources("SPY", KNOWN) == ()
+        assert store.sources("SPY", later) == ("alpaca:sip:split",)
+
+
 def test_volume_and_vwap_round_trip(tmp_path: Path) -> None:
     served = [_minute(0, 5000, "100.02"), _minute(1, 7000, "101.01")]
     with MinuteStore(tmp_path / "m.duckdb") as store:
