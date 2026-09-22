@@ -532,10 +532,81 @@ rotted when the fact it cited moved, and none said where that fact lived.
   items at all. A check that goes green for the wrong reason is the thing this file's own first
   trap is about, so the rule stays prose and the tool carries the self-check instead.
 
-- **The worktree venv points at the main checkout** — always run gates with `PYTHONPATH=$PWD/src`.
+- **A text check finds ITSELF, and then it finds the tests that prove it works.** Three times on
+  2026-09-21. `verify_criteria.py` searched the tree for criterion ids, and the ids were in its own
+  comment, so every criterion looked referenced and it reported **zero**. `verify_decisions.py`
+  gained a check for a file stating a decision's status wrongly, and its docstring quotes the very
+  sentence it rejects - two self-reports on the first run. Then its three new tests, which must
+  CONTAIN a false status or they prove nothing, became two more.
+  **The wrong repair is a directory.** Excluding `tests/` would hide a real stale claim in a test
+  docstring, and excluding `registry/` broke two passing gate tests earlier the same day by making
+  a fixture-only tree look populated.
+  **The right one is narrow and visible**: skip `Path(__file__)`, honour this tree's `~~struck~~`
+  notation, and give the remaining cases a per-LINE marker a reviewer sees in the diff - the same
+  shape as `implementation: none`, a claim a reader can challenge rather than an absence nobody
+  notices. Then TEST the escape hatch, because an untested opt-out widens quietly.
+  **The habit: after writing a text check, run it and read every hit before believing the count** -
+  a self-report reads exactly like a finding, and a suppressed self-report reads exactly like a
+  clean tree.
+- **A markdown blockquote IS a course quote here — never set a measurement in one.** In any
+  document declaring `<!-- verbatim-sources: -->`, `verify_transcription.py` checks EVERY `>` block
+  against the course PDFs. On 2026-09-21 `BACKTEST_PROTOCOL.md` gained the line
+  `> **ALPACA REMEMBERS 16.3% of them [12.2%, 20.4%].**` — this project's own EDGAR measurement,
+  typeset in the one form reserved for the source material, which is the *nothing looks more
+  validated than it is* rule broken by punctuation. Gate 2 rejected it the same day.
+  **And CI could not have.** The course PDFs are the owner's 116 files and are not in the
+  repository, so gate 2 reports `UNAVAILABLE` on every `actions/checkout` run — it is the one gate
+  a green CI says nothing about, and it went out through a green CI on PR #225.
+  **The habit: a measurement is a bold paragraph, never a blockquote**, and before trusting green
+  CI on a documentation change, run gate 2 locally.
+- **The gated field is right and the prose beside it is wrong — check the sentence, not the key.**
+  Swept 2026-09-21 across the registries and the live documents: every STRUCTURED field held.
+  `registry/cards.yml`'s `blocked_by` entries were closed on the day each blocker closed, and
+  `verify_parameters.py` had kept every `status`, `provenance` and `named_in` honest. **Six free-text
+  claims in the same files were false, three of them by more than a fortnight.**
+  `validation.max_allowable_drawdown`'s note said *"NOT read by the decision path, deliberately…
+  measurement, not enforcement"* for eighteen days after `DR-034` made a breach halt every
+  submission. `rs.benchmark`'s said *"read_by is none because no code consumes it yet"* for sixteen
+  days after `pipeline._benchmark` started consuming it. The comment above `cards.yml`'s
+  `selection:` block said *"All three inputs are unset, so the card refuses rather than ranking"*
+  for nineteen days — the commit that falsified it is titled *CARD-001 selects. The system made its
+  first Trade decision today*. `SPEC_GAP_ANALYSIS` carried *"the system never places orders"* and
+  *"no target exists"* for twenty days after both stopped being true, and `TODO.md` said a card
+  refuses on a parameter that **the same commit had just set**.
+  **Why it happens: a gate reads keys.** Nothing reads the `note:`, the `#` comment or the table
+  cell, so the only thing standing between prose and drift is whoever is editing remembering to
+  reread the paragraph they are not changing. **The habit: when a change makes a sentence false,
+  grep the id you just changed and read every sentence it appears in** — `note:`, comments, the gap
+  table, `TODO.md`. A decision RECORD is the exception and must not be edited: `DR-006` saying a
+  parameter is unset is history, correct as of its ratification, and amending it is a later record's
+  job.
+- **The worktree venv points at the main checkout** — `ruff` and `mypy` take file paths and are
+  honest; `pytest` and `import-linter` import the package and are not.
   **The symptom is a PASS**, so knowing the rule is not enough: a suite green from a worktree
-  without it is evidence about `master`. `ruff` and `mypy` take file paths and are honest; `pytest`
-  and `import-linter` import the package and are not.
+  without it is evidence about `master`.
+  **And for 37 days that sentence was the whole of the enforcement.** This rule was written on
+  2026-08-15 saying in so many words that knowing it is not enough, and then relied on somebody
+  typing `PYTHONPATH=$PWD/src` on every invocation. On 2026-09-21 the suite was run from a
+  worktree with `Drawdown.breaches` changed from `>` to `>=` — a mutation
+  `tests/test_drawdown.py` forbids in a named assertion with a message — and the file passed 10 of
+  10, because `swingdesk` came from `C:\PycharmProjects\SwingDesk\src` by way of
+  `__editable__.swingdesk-0.0.0.pth`, which carries an ABSOLUTE path. Six worktrees existed that
+  day, on five different commits.
+  **It is now a mechanism**: `pythonpath = ["src"]` in `pyproject.toml` resolves against rootdir
+  and goes ahead of any `.pth`, and `tests/test_paths.py` fails when the imported package is not
+  under the rootdir. Four tools that imported `swingdesk` without putting their own `src` first
+  were fixed the same day; the other 155 already did.
+  **And the fix broke a gate, which is how you find out a mechanism is load-bearing.** Gate 34
+  (`verify_invariant_tests.py`) copies `src/` to a scratch directory, mutates the copy and runs the
+  named test against it through `PYTHONPATH`. An ini `pythonpath` goes in at `sys.path[0]`, AHEAD
+  of `PYTHONPATH`, so the real tree shadowed every mutated copy and all 17 mutants survived — a
+  mutation gate turned into decoration by a change that was fixing the opposite problem. It now
+  passes `-o pythonpath=<workspace>/src`, which overrides the ini value for that run only.
+  **When you make an import path a mechanism, run the gates that deliberately bend it.**
+  **The general rule this is an instance of: when the symptom of breaking a rule is a PASS, the
+  rule has to be a mechanism.** Prose cannot defend against silence. CI never saw any of this
+  because `actions/checkout` plus `pip install -e .` makes the `.pth` point at the CI checkout —
+  which is why a green CI was always real evidence and a green local worktree was not.
 - **`data/` is not in your worktree either.** The stores and the scheduler log live only in the main
   checkout; gates 23 and 24 report `UNAVAILABLE` rather than passing blind. Point them at the real
   ones with `SWINGDESK_DATA=C:/PycharmProjects/SwingDesk/data`.

@@ -208,7 +208,12 @@ census: 43 quarterly indexes list **20,644** Form 25 and 25-NSE filings over 201
 stratified sample of 860 says **36.6% concern common stock** - implying about **7,554** company
 delistings. Against that:
 
-> **ALPACA REMEMBERS 16.3% of them [12.2%, 20.4%].**
+**ALPACA REMEMBERS 16.3% of them [12.2%, 20.4%].** (Stated as a paragraph and not as a
+blockquote, deliberately: in a document declaring `verbatim-sources` every markdown blockquote is
+checked against the course PDFs by gate 2, so a MEASUREMENT set in that form is a measured number
+wearing the source material's authority. It was written as one on 2026-09-21 and gate 2 rejected it
+the same day - and CI could not have, because the course PDFs exist only on the owner's machine,
+which is the one gate `actions/checkout` can never run.)
 
 The unmatched names were checked by hand rather than assumed: `SolarWinds`, `PMC Sierra`,
 `Rubicon Minerals` and `Skystar Bio-Pharmaceutical` are absent from the broker's list entirely,
@@ -354,8 +359,13 @@ proves the code reproduces itself. This one asks whether the record supports the
 
 - [ ] Sampling rule and sample size for the QA stage. Seeded and recorded, per `DETERMINISM_SPEC.md`
       §3.4 — the seed goes in the manifest.
-- [ ] Whether a backtest may run at all while `validation.backtest_min_trades` is unset. Producing
-      trade records is useful; producing a *verdict* is not. Likely: run permitted, verdict refused.
+- [x] ~~Whether a backtest may run at all while `validation.backtest_min_trades` is unset.~~
+      **Moot since the parameter was set**, and left here as a closed item rather than deleted
+      because the answer it reached is the live rule: `validation.backtest_min_trades` is
+      `assumed:DR-007` at 200 primary / 60 holdout per arm, and PR-012 did exactly what this line
+      predicted - it ran, observed 181 to 203 trades, and refused a VERDICT rather than the run.
+      Closed 2026-09-21; the open question underneath it was the sample ceiling, which
+      `registry/cards.yml` carries as `the-capacity-cap-caps-the-sample`.
 - [ ] Cost model shape. `costs.commission_model` and `costs.slippage_model` are named as models
       rather than scalars because a flat per-trade commission and a spread-proportional slippage are
       different functions, and the course names both concepts without choosing either.

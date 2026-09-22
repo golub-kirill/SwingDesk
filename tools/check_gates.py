@@ -32,6 +32,7 @@ state is for, and extending it here is the alternative to a gate that lies quiet
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -53,9 +54,30 @@ MAY_BE_UNAVAILABLE = frozenset({
 })
 
 
+#: EVERY gate runs against THIS checkout, which is not what `subprocess.run` inherits.
+#:
+#: `swingdesk` is installed editable and `__editable__.swingdesk-0.0.0.pth` carries the MAIN
+#: checkout's `src` as an ABSOLUTE path, so a gate launched from a git worktree imported
+#: another tree's package - measured 2026-09-21, when `find_spec` from this worktree answered
+#: the main checkout. Gate 6 (import-linter) analyses `root_package = "swingdesk"` and gate 1
+#: imports it to resolve every `read_by`, so both reported on `master` while saying they were
+#: reporting on the branch. THE SYMPTOM IS A PASS.
+#:
+#: `AGENTS.md` 12 has carried the rule since 2026-08-15 - run gates with `PYTHONPATH=$PWD/src`
+#: - and enforced it by asking a human to type it every time. This is the same fix
+#: `pyproject.toml`'s `pythonpath` makes for `pytest`, at the one place every gate goes through.
+def _gate_env() -> dict[str, str]:
+    """The environment a gate runs in: this checkout's `src` ahead of anything inherited."""
+    env = dict(os.environ)
+    src = str(REPO / "src")
+    inherited = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = f"{src}{os.pathsep}{inherited}" if inherited else src
+    return env
+
+
 def _run(name: str, argv: list[str], key: str = "") -> str:
     print(f"\n=== {name}")
-    result = subprocess.run(argv, cwd=REPO)
+    result = subprocess.run(argv, cwd=REPO, env=_gate_env())
     if result.returncode == 0:
         status = PASS
     elif result.returncode == UNAVAILABLE_EXIT and key in MAY_BE_UNAVAILABLE:

@@ -57,8 +57,15 @@ cards:
       rule: DR-003
       parameters: [universe.min_price, universe.min_adtv_20d, universe.min_bar_history]
 
-    # The selection rule IS the family. All three inputs are unset, so the card refuses rather than
-    # ranking by whatever order the system happens to have - ALLOCATION_SPEC 6 rule 4.
+    # The selection rule IS the family, and ALLOCATION_SPEC 6 rule 4 forbids falling back to
+    # whatever order the system happens to have.
+    #
+    # CORRECTED 2026-09-21. This comment said "All three inputs are unset, so the card refuses
+    # rather than ranking" and had been false since 2026-09-02 - the commit that set `rs.lookback`
+    # is titled *CARD-001 selects. The system made its first Trade decision today*. All five inputs
+    # below now carry a value (`rs.benchmark` assumed:DR-018, the other four owner-set), so this
+    # card RANKS and SELECTS. Written 2026-08-23 and never revisited when the thing it described as
+    # impossible started happening, on the registry entry for the only card that has traded.
     selection:
       measure: relative strength against the index
       benchmark: rs.benchmark

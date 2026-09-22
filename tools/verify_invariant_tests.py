@@ -30,9 +30,11 @@ is a frozen file (`HANDOFF.md` §5) and two of the mutations land in it.
 
 **What is NOT covered is named on every run.** Invariant 4 is carried by a function signature and
 `INVARIANTS.md` §2 argues why that is stronger; invariant 7 is the determinism of a pure function,
-where a mutation would be testing Python rather than this code. `REQ-VALIDATION-001` also covers
-ratified CRITERIA, and `k.drawdown_pause` still cannot fire at all - a criterion with nothing to
-evaluate has no verdict to flip, which is gate 3g's subject and not this one's.
+where a mutation would be testing Python rather than this code. ~~`REQ-VALIDATION-001` also
+covers ratified CRITERIA, and `k.drawdown_pause` still cannot fire at all.~~ **It has fired since
+`DR-034`, 2026-09-03**, and
+this gate carried that exemption for eighteen days after it stopped being true - so the one
+ratified `live` criterion was the one enforcement here never checked. Two mutants cover it now.
 
 **A mutation site that no longer matches is a FAILURE, not a skip.** Refactoring the line a mutant
 targets is exactly when the check must speak up, and a silent skip would turn this gate into
@@ -173,6 +175,31 @@ MUTANTS: tuple[Mutant, ...] = (
     # ---- REQ-VALIDATION-001: every veto must have a pair of inputs producing different verdicts.
     # Each of these five evaluates on the live path today, which is what `REQUIREMENTS.md` §2 said
     # did not exist yet. `DR-006` wired three of them and `DR-015` the fourth and fifth.
+    # `k.drawdown_pause` IS A VETO NOW, and this entry replaces an exemption that expired.
+    #
+    # Until 2026-09-21 `UNCOVERED` excused the whole criteria half of `REQ-VALIDATION-001` with
+    # *"`k.drawdown_pause` cannot fire at all - nothing computes realised drawdown, so there is no
+    # verdict to flip"*. `DR-034` falsified that on 2026-09-03: `cli._drawdown_now` computes the
+    # curve and `cli._submit` compares it and halts every submission on a breach. For eighteen days
+    # the only ratified `live` criterion - the one that stops the one outward action this system
+    # has - was exempt from the mutation gate on a sentence that was no longer true.
+    Mutant(
+        claim="REQ-VALIDATION-001 criteria",
+        breaks="k.drawdown_pause admits new entries with the book past its ratified limit",
+        path="swingdesk/presentation/cli.py",
+        old="    if fall.breaches(limit):",
+        new="    if False and fall.breaches(limit):",
+        tests=("tests/test_cli.py::test_a_book_past_the_drawdown_limit_pauses_new_entries",),
+    ),
+    Mutant(
+        claim="REQ-VALIDATION-001 criteria",
+        breaks="an UNMEASURABLE drawdown admits instead of stopping - DR-006 section 3's inversion "
+               "on the highest-consequence surface this project has",
+        path="swingdesk/presentation/cli.py",
+        old="    if isinstance(fall, drawdown.Unavailable):",
+        new="    if False and isinstance(fall, drawdown.Unavailable):",
+        tests=("tests/test_cli.py::test_a_drawdown_that_cannot_be_measured_stops_submission",),
+    ),
     Mutant(
         claim="REQ-VALIDATION-001 veto",
         breaks="the concurrent-position cap admits a fifth position",
@@ -233,10 +260,6 @@ UNCOVERED = {
                    "section 2 argues that is stronger, and there is nothing to mutate",
     "invariant 7": "determinism of a pure function. A mutation that made it non-deterministic "
                    "would be testing Python rather than this code",
-    "REQ-VALIDATION-001 criteria": "the requirement also covers ratified CRITERIA, and "
-                                   "`k.drawdown_pause` cannot fire at all - nothing computes "
-                                   "realised drawdown, so there is no verdict to flip. That is "
-                                   "gate 3g's subject and `TODO.md` section 1's open item",
 }
 
 
@@ -254,8 +277,16 @@ def _run_mutant(mutant: Mutant, scratch: Path, index: int) -> str | None:
                 f"that now carries this claim; a mutant that cannot be applied proves nothing")
     target.write_text(source.replace(mutant.old, mutant.new, 1), encoding="utf-8")
 
+    # `-o pythonpath=...` and NOT the environment variable alone. `pyproject.toml` gained
+    # `pythonpath = ["src"]` on 2026-09-21 so that a suite run from a git worktree stops importing
+    # the MAIN checkout's package, and pytest inserts an ini `pythonpath` at sys.path[0] - AHEAD of
+    # `PYTHONPATH`. That shadowed the mutated copy with the real tree and every mutant survived: 17
+    # failures across 8 claims, from a change that was fixing the opposite problem. Overriding the
+    # ini value on the command line is the one place both facts hold: the mutated copy is first,
+    # and nothing else about the run has to know this gate exists.
     result = subprocess.run(
-        [sys.executable, "-m", "pytest", *mutant.tests, "-q", "-x"],
+        [sys.executable, "-m", "pytest", *mutant.tests, "-q", "-x",
+         "-o", f"pythonpath={workspace / 'src'}"],
         cwd=REPO, capture_output=True, text=True, encoding="utf-8", errors="replace",
         env={**os.environ, "PYTHONPATH": str(workspace / "src")},
     )

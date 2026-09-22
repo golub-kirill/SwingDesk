@@ -2042,6 +2042,114 @@ def test_a_missing_read_by_is_a_failure() -> None:
     assert "no `read_by`" in (_reader_failure() or "")
 
 
+def _misstated(tmp_path: Path, body: str, *, status: str = "accepted - ratified 2026-09-01"):
+    """Run the tree-wide status check over a one-file tree, with `REPO` pointed at it."""
+    import sys
+
+    sys.path.insert(0, str(TOOLS))
+    import verify_decisions
+
+    (tmp_path / "docs" / "decisions").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "decisions" / "DR-001-a-record.md").write_text(
+        f"---\nstatus:          {status}\n---\n", encoding="utf-8")
+    (tmp_path / "TODO.md").write_text(body, encoding="utf-8")
+
+    original = verify_decisions.REPO
+    verify_decisions.REPO = tmp_path
+    try:
+        return verify_decisions.misstated_elsewhere({"DR-001": status})
+    finally:
+        verify_decisions.REPO = original
+
+
+def test_a_file_calling_a_ratified_decision_proposed_fails(tmp_path: Path) -> None:
+    """A status is the one fact that says whether the owner has answered.
+
+    Measured 2026-09-21, three live places: `validation/backtest/fees.py` carried the status
+    `proposed` for `DR-039` and used it as the REASON nothing charges the venue's
+    regulatory fees - sixteen days after the owner ratified it. `TODO.md` said the same of
+    `DR-040` and `DR-009`.
+    """
+    failures = _misstated(
+        tmp_path,
+        "`DR-001` is `proposed`, so nothing may rest on it.")  # status-claim-example
+    assert len(failures) == 1, failures
+    assert "DR-001" in failures[0] and "proposed" in failures[0]
+
+
+def test_a_struck_out_claim_is_not_a_claim(tmp_path: Path) -> None:
+    """`~~...~~` is this tree's notation for *this was true and is not*.
+
+    `TODO.md` and `SPEC_GAP_ANALYSIS.md` both correct in place with it rather than deleting, which is
+    what keeps a wrong claim and its repair in one place. The first cut of this check could not see
+    the strikethrough and accused the corrections written to satisfy it - two of them, the same day.
+    """
+    assert _misstated(
+        tmp_path,
+        "~~`DR-001` is `proposed`~~ - **ratified 2026-09-01.**") == []  # status-claim-example
+
+
+def test_a_line_marked_as_an_example_is_exempt(tmp_path: Path) -> None:
+    """The per-line opt-out, and it is tested because an untested escape hatch widens quietly.
+
+    A check whose own tests must CONTAIN a false status cannot forbid one everywhere. The marker is
+    deliberately the same shape as `implementation: none` - visible in the diff, challengeable by a
+    reader - rather than a whole directory excluded where a real stale claim could then hide.
+    """
+    assert _misstated(
+        tmp_path,
+        "`DR-001` is `proposed` - status-claim-example, quoted to show what the gate rejects.") == []
+
+
+def test_the_marker_only_exempts_its_own_line(tmp_path: Path) -> None:
+    """One marked line must not licence the paragraph around it."""
+    failures = _misstated(
+        tmp_path,
+        "`DR-001` is `proposed` - status-claim-example\n"
+        "`DR-001` is `proposed`, and this line carries no marker.")  # status-claim-example
+    assert len(failures) == 1, failures
+
+
+def test_the_check_does_not_report_itself(tmp_path: Path) -> None:
+    """`verify_decisions.py` NAMES the defect it looks for, so it is its own false positive.
+
+    `verify_criteria.py` did exactly this three hours earlier on 2026-09-21 and reported zero,
+    because the criterion ids it was searching for lived in its own comment. Same shape, same day.
+    """
+    import sys
+
+    sys.path.insert(0, str(TOOLS))
+    import verify_decisions
+
+    source = Path(verify_decisions.__file__).read_text(encoding="utf-8")
+    assert "is `proposed`" in source, "this test is worthless if the file stops naming the defect"
+    assert not [f for f in verify_decisions.misstated_elsewhere(
+        {"DR-039": "accepted - ratified by the owner 2026-09-05"})
+        if "verify_decisions.py" in f]
+
+
+def test_two_readers_both_resolve() -> None:
+    """A value read in two places has two readers, and naming one of them is a half-truth.
+
+    Measured 2026-09-21 rather than preferred: the suite was run with `ParameterRegistry.use`
+    recording its calling frame, and of the 32 parameters anything actually asked for,
+    `account.equity` is read by BOTH `sizing.allowed_risk` - the risk denominator - and
+    `cli._drawdown_now` - the drawdown baseline the kill switch compares. The registry named only
+    the first, so nothing recorded that the kill switch depends on this number.
+    """
+    assert _reader_failure(
+        read_by="swingdesk.trade_management.sizing:allowed_risk,"
+                " swingdesk.presentation.cli:_drawdown_now") is None
+
+
+def test_a_second_reader_that_does_not_resolve_still_fails() -> None:
+    """The list must not become a place to hide a dead pointer behind a live one."""
+    failure = _reader_failure(
+        read_by="swingdesk.trade_management.sizing:allowed_risk,"
+                " swingdesk.trade_management.sizing:no_such_function") or ""
+    assert "no_such_function" in failure
+
+
 def test_none_is_a_FAILURE_when_the_code_asks_for_the_parameter_by_name() -> None:
     """The inverse of the direction this gate was built for, added 2026-09-05.
 

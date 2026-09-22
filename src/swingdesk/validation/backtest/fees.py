@@ -43,7 +43,9 @@ Summing per-trade fees over-charges every day holding more than one trade, becau
 sub-cent amount would round up separately. `test_fees.py` pins that difference at a factor of ten
 rather than describing it.
 
-**NOT WIRED INTO ANY STUDY.** `DR-039` is `proposed`. Charging these would change what a backtest
+**NOT WIRED INTO ANY STUDY**, and the reason is not the one this docstring gave until
+2026-09-21. `DR-039` was RATIFIED by the owner on 2026-09-05; the rates are settled and
+`registry/fee_schedule.yml` holds them effective-dated. Charging these would change what a backtest
 computes, which is a separate decision.
 """
 

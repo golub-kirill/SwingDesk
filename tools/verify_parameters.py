@@ -178,13 +178,22 @@ def reader_failure(entry: dict[str, Any]) -> str | None:
     if not isinstance(reader, str) or ":" not in reader:
         return f"{label}: `read_by` must be 'module:symbol' or 'none', got {reader!r}"
 
-    module_path, _, symbol = reader.partition(":")
-    try:
-        module = importlib.import_module(module_path)
-    except Exception as error:  # noqa: BLE001 - the message is the point
-        return f"{label}: `read_by` cannot import {module_path} ({error})"
-    if not hasattr(module, symbol):
-        return f"{label}: `read_by` names {module_path}:{symbol}, which has no {symbol!r}"
+    # A COMMA-SEPARATED LIST, because a value read in two places has two readers and naming one of
+    # them is a half-truth. Added 2026-09-21 off a measurement rather than a preference: the suite
+    # was run with `ParameterRegistry.use` recording the calling frame, and of the 32 parameters
+    # anything actually asked for, `account.equity` is read by BOTH `cli._drawdown_now` and
+    # `sizing.allowed_risk` - the drawdown baseline and the risk denominator, two different jobs.
+    # Three more named a function that never asked; see the note on each.
+    for one in [part.strip() for part in reader.split(",")]:
+        if ":" not in one:
+            return f"{label}: `read_by` entry {one!r} is not 'module:symbol'"
+        module_path, _, symbol = one.partition(":")
+        try:
+            module = importlib.import_module(module_path)
+        except Exception as error:  # noqa: BLE001 - the message is the point
+            return f"{label}: `read_by` cannot import {module_path} ({error})"
+        if not hasattr(module, symbol):
+            return f"{label}: `read_by` names {module_path}:{symbol}, which has no {symbol!r}"
     return None
 
 

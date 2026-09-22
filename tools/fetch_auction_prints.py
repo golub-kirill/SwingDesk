@@ -34,6 +34,10 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
+# A TOOL MUST IMPORT THE CHECKOUT IT LIVES IN. `swingdesk` is installed editable and the .pth
+# carries the MAIN checkout's `src` as an absolute path, so without this line a tool run from a
+# git worktree measures another tree's code. Found 2026-09-21, by the same defect in the suite.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from fetch_entry_quotes import (
