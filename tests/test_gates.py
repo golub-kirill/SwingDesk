@@ -1616,14 +1616,19 @@ def test_the_decision_count_says_how_many_instrument_days_the_rows_are(
     connection = duckdb.connect(str(tmp_path / "journal.duckdb"))
     connection.execute("CREATE TABLE runs (run_id VARCHAR, completed_at TIMESTAMP, "
                        "code_dirty BOOLEAN)")
+    # `reason` is part of the real table and `contracts/position.py` makes it required - "Why, in
+    # one line". The fixture left it out until 2026-09-21, which is why the measurement added for
+    # `a.decisions_coded` could not be written against it: a fixture narrower than the schema
+    # cannot exercise a query that reads the schema.
     connection.execute("CREATE TABLE decisions (run_id VARCHAR, recorded_at TIMESTAMP, "
-                       "instrument_id VARCHAR, decision VARCHAR, reason_code VARCHAR)")
-    connection.executemany("INSERT INTO decisions VALUES (?, ?, ?, ?, ?)", [
-        ("r1", "2026-09-10 18:40:00", "AAA", "Watch", None),
-        ("r2", "2026-09-10 19:40:00", "AAA", "Watch", None),  # the second pass, same day
-        ("r1", "2026-09-10 18:40:00", "BBB", "Skip", "DATA"),
-        ("r2", "2026-09-10 19:40:00", "BBB", "Skip", "DATA"),
-        ("r3", "2026-09-11 18:40:00", "AAA", "Watch", None),  # a new day is a new decision
+                       "instrument_id VARCHAR, decision VARCHAR, reason_code VARCHAR, "
+                       "reason VARCHAR)")
+    connection.executemany("INSERT INTO decisions VALUES (?, ?, ?, ?, ?, ?)", [
+        ("r1", "2026-09-10 18:40:00", "AAA", "Watch", None, "held for tomorrow"),
+        ("r2", "2026-09-10 19:40:00", "AAA", "Watch", None, "held for tomorrow"),  # second pass
+        ("r1", "2026-09-10 18:40:00", "BBB", "Skip", "DATA", "bar is stale"),
+        ("r2", "2026-09-10 19:40:00", "BBB", "Skip", "DATA", "bar is stale"),
+        ("r3", "2026-09-11 18:40:00", "AAA", "Watch", None, "held for tomorrow"),  # a new day
     ])
     connection.close()
     monkeypatch.setenv("SWINGDESK_DATA", str(tmp_path))
@@ -2633,6 +2638,48 @@ def test_a_ratified_criterion_whose_parameter_is_set_passes(tmp_path: Path) -> N
     code, out = run_gate("verify_criteria.py", tmp_path)
     assert code == 0, out
     assert "0 failure(s)" in out
+
+
+def test_a_criterion_named_nowhere_fails(tmp_path: Path) -> None:
+    """A ratified criterion nothing else in the tree names cannot be tracked by anyone.
+
+    The defect class, 2026-09-21: `a.decisions_coded` was ratified demanding a reason CODE on every
+    decision row, which `contracts/position.py` defines as applying to a skip or an exit only. It
+    survived because outside the registry the id appeared once, in a test comment - so nothing could
+    notice. Three more Track A criteria were then found with no reference anywhere at all.
+    """
+    _criteria_tree(tmp_path, status="owner", value="0.2")
+    (tmp_path / "docs").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "SOMETHING.md").write_text("a document that names nothing", encoding="utf-8")
+    code, out = run_gate("verify_criteria.py", tmp_path)
+    assert code == 1, out
+    assert "named NOWHERE" in out and "k.drawdown_pause" in out
+
+
+def test_a_criterion_named_in_a_document_passes(tmp_path: Path) -> None:
+    """A DOCUMENT counts, not only code. A criterion tracked in prose is still tracked."""
+    _criteria_tree(tmp_path, status="owner", value="0.2")
+    (tmp_path / "docs").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "docs" / "SOMETHING.md").write_text(
+        "k.drawdown_pause is what this section owes", encoding="utf-8")
+    code, out = run_gate("verify_criteria.py", tmp_path)
+    assert code == 0, out
+    assert "named NOWHERE" not in out
+
+
+def test_no_tracked_tree_reports_unavailable_rather_than_accusing(tmp_path: Path) -> None:
+    """`AGENTS.md` 12: unavailable is not fail, and it is not silent either.
+
+    The registry-only root the other gate tests build has no `tools`, no `docs` and no `TODO.md`.
+    Calling every criterion unreferenced there would be accusing on ABSENCE - and the first cut of
+    this check did exactly that, breaking two passing tests, because `registry/` was in the search
+    and its own two fixture files made the tree look present.
+    """
+    _criteria_tree(tmp_path, status="owner", value="0.2")
+    code, out = run_gate("verify_criteria.py", tmp_path)
+    assert code == 0, out
+    assert "UNAVAILABLE" in out
+    assert "named NOWHERE" not in out
 
 
 def test_an_amendment_may_discuss_an_unset_parameter(tmp_path: Path) -> None:
