@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from swingdesk.presentation import paths
 from swingdesk.presentation.paths import ENV, default_data
 
@@ -52,3 +54,32 @@ def test_the_fee_schedule_does_not_depend_on_the_folder_the_command_ran_in() -> 
 
     assert DEFAULT_SCHEDULE_PATH.is_absolute()
     assert DEFAULT_SCHEDULE_PATH.is_file()
+
+
+def test_the_suite_imports_the_checkout_it_is_run_from(pytestconfig: pytest.Config) -> None:
+    """The suite must test THIS tree, and until 2026-09-21 in a worktree it did not.
+
+    `swingdesk` is installed editable and `__editable__.swingdesk-0.0.0.pth` carries the ABSOLUTE
+    path of the main checkout's `src`. A git worktree collected its own `tests/` and resolved the
+    package through that .pth, so every run in every worktree exercised the MAIN CHECKOUT's source
+    - six worktrees existed when this was found, on five different commits. Green in a worktree was
+    not evidence about the worktree's code, and the two trees diverge exactly while `src/` is being
+    edited, which is the only time anybody needs the answer.
+
+    It was found by mutation, not by reading: `Drawdown.breaches` was changed from `>` to `>=`,
+    which `test_an_open_position_that_has_fallen_counts_before_anything_is_realised` forbids in so
+    many words, and the file still passed 10 of 10.
+
+    `pythonpath = ["src"]` in `pyproject.toml` fixes it by resolving against rootdir ahead of any
+    .pth. This test exists because the failure mode is SILENCE: nothing goes red, the suite simply
+    answers about a different tree, so a check that says so out loud is the only thing that can
+    keep it fixed.
+    """
+    import swingdesk
+
+    root = Path(str(pytestconfig.rootpath)).resolve()
+    package = Path(swingdesk.__file__).resolve()
+    assert root in package.parents, (
+        f"the suite is running from {root} but imported swingdesk from {package} - it is testing "
+        f"another checkout's source. Check `pythonpath` in pyproject.toml."
+    )

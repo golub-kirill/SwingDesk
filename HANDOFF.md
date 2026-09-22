@@ -123,7 +123,7 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 | | |
 |---|---|
 | Merge gates | **52**, one command: `python tools/check_gates.py` |
-| Tests | **2785**, fully offline |
+| Tests | **2788**, fully offline |
 | Docs | 211 files, Tier 0-8 · indexed by `registry/project_manifest.yml` |
 | Components | 465 catalogued · 459 registered · 4 `specified` · **2 `active`** |
 | Parameters | 113 - 57 `unset`, 34 `assumed`, 22 `owner`, **0 `validated`** |
@@ -139,17 +139,17 @@ drift, and reports `UNAVAILABLE` rather than guessing for the blocks a given che
 
 | | |
 |---|---|
-| Journal | 77 runs, 9 incomplete · **23 run(s) recorded against a dirty tree** and therefore not replayable from their SHA |
-| Decisions | 107828 recorded, **49671 instrument-days** once a re-run's repeats count once · 0 uncoded refusals (`a.no_uncoded_failures` requires 0) |
-| Bar store | 14,874,764 rows across 13,075 instruments |
+| Journal | 89 runs, 9 incomplete · **23 run(s) recorded against a dirty tree** and therefore not replayable from their SHA |
+| Decisions | 154166 recorded, **69009 instrument-days** once a re-run's repeats count once · 0 uncoded refusals (`a.no_uncoded_failures` requires 0) · 0 silent (`a.decisions_coded` requires 0: a decision and a reason on every row) |
+| Bar store | 15,581,906 rows across 13,140 instruments |
 | PIT integrity | **CLEAN** - bars whose `event_time` postdates their `knowledge_time`: 0 |
-| Directory | **30 pulls** · **20 confirmed** against the response's own `Last-Modified` (`source_session_date`); of the rest, **7** predate the field and stay permanently unattributed (`DR-008` c3); **3** do NOT - they were taken after the field existed and the vendor file had not regenerated, so `DirectoryStore.record`'s monotonicity check dropped the claim. Each of those is a re-pull of an already-recorded session, which `DR-008` says should make **zero requests** |
-| Universe coverage | bars stored for 13,075 of 13,220 listed symbols - **98.9%** |
+| Directory | **35 pulls** · **25 confirmed** against the response's own `Last-Modified` (`source_session_date`); of the rest, **7** predate the field and stay permanently unattributed (`DR-008` c3); **3** do NOT - they were taken after the field existed and the vendor file had not regenerated, so `DirectoryStore.record`'s monotonicity check dropped the claim. Each of those is a re-pull of an already-recorded session, which `DR-008` says should make **zero requests** |
+| Universe coverage | bars stored for 13,140 of 13,261 listed symbols - **99.1%** |
 | Canada | **1 instrument** with bars, 252 bars over one fetch, last 2026-08-02 · **0** `.TO` symbol(s) listed in `directory.duckdb`. `BR-9`'s per-country requirement is unmet in every reported study. Since `DR-003` gap 1 was refuted (2026-08-25) a FORWARD result is blocked by this row rather than by a missing source; a HISTORICAL one also needs point-in-time membership, which the TMX endpoint cannot supply at any price |
-| Classifications | 4,009 instrument(s) carry a sector · 3,582 (**89.3%**) report at least one non-zero weight. The stricter `look_through` count, which also drops a degenerate ETF look-through (`DR-006` §8.7), is lower - derive it with `python tools/measure_sector_cap.py --wide --classifications data/classifications.duckdb` |
-| Track A clock | **1/20** consecutive clean sessions (2026-09-14 to 2026-09-14) · counting from a **deliberate restart on 2026-09-13**, not an outage - `python tools/track_a_streak.py` prints why · `a.run_completes`, computed by `tools/track_a_streak.py` |
+| Classifications | 4,037 instrument(s) carry a sector · 3,602 (**89.2%**) report at least one non-zero weight. The stricter `look_through` count, which also drops a degenerate ETF look-through (`DR-006` §8.7), is lower - derive it with `python tools/measure_sector_cap.py --wide --classifications data/classifications.duckdb` |
+| Track A clock | **6/20** consecutive clean sessions (2026-09-14 to 2026-09-21) · counting from a **deliberate restart on 2026-09-13**, not an outage - `python tools/track_a_streak.py` prints why · `a.run_completes`, computed by `tools/track_a_streak.py` |
 
-*Measured from `data/` on 2026-09-15.*
+*Measured from `data/` on 2026-09-22.*
 
 <!-- END GENERATED: state:runtime -->
 

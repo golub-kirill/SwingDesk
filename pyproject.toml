@@ -79,6 +79,21 @@ swingdesk = ["py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# THE SUITE MUST TEST THE CHECKOUT IT IS RUN FROM, and until 2026-09-21 it did not.
+#
+# `swingdesk` is installed editable, and `__editable__.swingdesk-0.0.0.pth` holds the ABSOLUTE path
+# of the main checkout's `src`. A git worktree collects its own `tests/` but resolved `swingdesk`
+# through that .pth, so every run in every worktree exercised the MAIN CHECKOUT's source. Green in
+# a worktree was not evidence about the worktree's code - and the divergence exists exactly while
+# `src/` is being edited, which is the only time the answer matters.
+#
+# Measured, not argued: `Drawdown.breaches` was changed from `>` to `>=` in this worktree, which
+# `tests/test_drawdown.py` forbids in so many words, and the file passed 10 of 10.
+#
+# `pythonpath` entries resolve against rootdir and go to the FRONT of `sys.path`, ahead of any
+# .pth, so each checkout now imports itself. `tests/test_paths.py` fails if that ever stops being
+# true, because the failure mode is silence.
+pythonpath = ["src"]
 
 [tool.mypy]
 strict = true

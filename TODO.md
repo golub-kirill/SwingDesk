@@ -1220,24 +1220,23 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       some fees. Shall we research and take them into a project?"*
       `docs/decisions/DR-039-the-venue-bills-a-published-formula.md`, evidence in
       `docs/decisions/measurements/venue-fees-2026-09-05.json`.
-      **Three fee categories appeared on this project's first completed trade and not one of them
-      exists anywhere in this repository** — REG (SEC Section 31), FINRA TAF, CAT. Meanwhile
-      `costs.commission_model` charges `assumed:DR-004`'s 0.005/share, which on that trade is
-      **3.4× the entire real fee bill**, for a commission Alpaca does not take.
-      **Both formulas were verified against the regulators' own notices**, not estimated: Section 31
-      at $20.60 per $1M of proceeds and TAF at $0.000166 per share, each rounded up to the cent,
-      reproduce the billed $0.03 and $0.01 exactly. **One observation can do that because they are
-      FUNCTIONS, not distributions** — and the same observation says nothing whatever about
-      slippage, which this record does not touch.
-      **It changes no verdict and is not offered as one.** The fees are **0.9%** of `DR-005`'s
-      slippage term. What it replaces is an `assumed` promissory note with a citable formula.
-      **What is open is the ruling**, plus four things the record marks unestablished: whether a
-      paper account is billed the live schedule, the CAT rate, the TAF per-trade maximum during
-      FINRA's 2026 phase-in, and whether Alpaca's round-up is policy.
-      **And one thing this session could not do:** Alpaca's own fee schedule PDF is font-encoded,
-      no PDF reader exists in the venv, and installing one was declined rather than done quietly.
-      The rates here come from the SEC and FINRA, who set them; Alpaca passes them through. Reading
-      that PDF is the first thing to close.
+      **CORRECTED 2026-09-21, and this item is why the rule at the top of this file exists.** It
+      restated five measured numbers, and three of them drifted the same day they were written:
+      ~~`costs.commission_model` charges `assumed:DR-004`'s 0.005/share, 3.4× the entire real fee
+      bill~~ — `f901d45` set it to `0.00`, `owner`, *"the venue charges no commission on US
+      equities"*, on 2026-09-05. ~~TAF at $0.000166 per share, verified against the regulators' own
+      notices~~ — the schedule that BILLS says **0.000195**, and DR-039 §9 records why one 17-share
+      sell could not tell them apart: both round up to the same cent. ~~four things the record marks
+      unestablished~~ — three were resolved by reading the schedule.
+      **Every number here now lives in one place and is not repeated:**
+      `registry/fee_schedule.yml` for the rates, and
+      `docs/decisions/measurements/venue-fees-2026-09-05.json` for the observation, its materiality
+      and its `still_not_established` list.
+      **What is actually open, and it is one thing:** whether a paper account is billed the same
+      schedule as a live one. Only a live statement can say.
+      **Closed since this item was written:** the CAT rate, the TAF per-trade maximum, whether the
+      round-up is policy, and reading Alpaca's own fee-schedule PDF — which was font-encoded and
+      unreadable in this venv on 2026-09-05 and was read on 2026-09-21.
       **Accepting it is not a value swap.** `CostModel.commission()` charges symmetrically on share
       count; Section 31 is a rate on SELL PROCEEDS. §6 of the record names the signature change.
       **RULED 2026-09-14 (the owner's answer 9B): not wired now.** The fees are 0.9% of the slippage
@@ -1881,8 +1880,15 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       priced auctions on stocks only), and that every gain is short-term.
       **SPECIFIED 2026-09-20** on the owner's "yes, continue. Plan, specifications":
       `docs/02-domain/CARD-002-overnight-small-caps.md` and its row in `registry/cards.yml`,
-      status `Untested`, four declared blockers. The card refuses today because
-      `overnight.position_pct` is unset - which is the design working, not a gap.
+      status `Untested`, four declared blockers. ~~The card refuses today because
+      `overnight.position_pct` is unset - which is the design working, not a gap.~~
+      **CORRECTED 2026-09-21: that sentence was false in the commit that wrote it.** `5da3995`
+      set `overnight.position_pct = 50` on the owner's ruling and added this line in the same
+      change; `registry/cards.yml` records the blocker `unset-position-size` as CLOSED 2026-09-20.
+      The card's three OPEN blockers are the ones that matter and none is a parameter:
+      `no-close-pass`, `no-evening-exit-pass`, `no-fill-quality-measurement` - nothing places the
+      market-on-close order, nothing places the opg sell that IS this card's protection, and
+      nothing compares a fill to the official auction price.
       **The build order, each step specification-first under `A-001` (a decision record before the
       code) and behind `DR-027` §4's four guards:**
       1. **The close pass** - runs 15:40-15:48 ET, sizes both funds from the prior close, submits

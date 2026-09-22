@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from collections import Counter
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
@@ -43,6 +44,11 @@ from pathlib import Path
 from typing import Any
 
 import duckdb
+
+# A TOOL MUST IMPORT THE CHECKOUT IT LIVES IN. `swingdesk` is installed editable and the .pth
+# carries the MAIN checkout's `src` as an absolute path, so without this line a tool run from a
+# git worktree measures another tree's code. Found 2026-09-21, by the same defect in the suite.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from swingdesk.contracts.reference import ExchangeSession
 from swingdesk.market_data.minutes import Minute, MinuteStore

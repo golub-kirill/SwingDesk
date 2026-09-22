@@ -2042,6 +2042,28 @@ def test_a_missing_read_by_is_a_failure() -> None:
     assert "no `read_by`" in (_reader_failure() or "")
 
 
+def test_two_readers_both_resolve() -> None:
+    """A value read in two places has two readers, and naming one of them is a half-truth.
+
+    Measured 2026-09-21 rather than preferred: the suite was run with `ParameterRegistry.use`
+    recording its calling frame, and of the 32 parameters anything actually asked for,
+    `account.equity` is read by BOTH `sizing.allowed_risk` - the risk denominator - and
+    `cli._drawdown_now` - the drawdown baseline the kill switch compares. The registry named only
+    the first, so nothing recorded that the kill switch depends on this number.
+    """
+    assert _reader_failure(
+        read_by="swingdesk.trade_management.sizing:allowed_risk,"
+                " swingdesk.presentation.cli:_drawdown_now") is None
+
+
+def test_a_second_reader_that_does_not_resolve_still_fails() -> None:
+    """The list must not become a place to hide a dead pointer behind a live one."""
+    failure = _reader_failure(
+        read_by="swingdesk.trade_management.sizing:allowed_risk,"
+                " swingdesk.trade_management.sizing:no_such_function") or ""
+    assert "no_such_function" in failure
+
+
 def test_none_is_a_FAILURE_when_the_code_asks_for_the_parameter_by_name() -> None:
     """The inverse of the direction this gate was built for, added 2026-09-05.
 
