@@ -532,6 +532,22 @@ rotted when the fact it cited moved, and none said where that fact lived.
   items at all. A check that goes green for the wrong reason is the thing this file's own first
   trap is about, so the rule stays prose and the tool carries the self-check instead.
 
+- **A text check finds ITSELF, and then it finds the tests that prove it works.** Three times on
+  2026-09-21. `verify_criteria.py` searched the tree for criterion ids, and the ids were in its own
+  comment, so every criterion looked referenced and it reported **zero**. `verify_decisions.py`
+  gained a check for a file stating a decision's status wrongly, and its docstring quotes the very
+  sentence it rejects - two self-reports on the first run. Then its three new tests, which must
+  CONTAIN a false status or they prove nothing, became two more.
+  **The wrong repair is a directory.** Excluding `tests/` would hide a real stale claim in a test
+  docstring, and excluding `registry/` broke two passing gate tests earlier the same day by making
+  a fixture-only tree look populated.
+  **The right one is narrow and visible**: skip `Path(__file__)`, honour this tree's `~~struck~~`
+  notation, and give the remaining cases a per-LINE marker a reviewer sees in the diff - the same
+  shape as `implementation: none`, a claim a reader can challenge rather than an absence nobody
+  notices. Then TEST the escape hatch, because an untested opt-out widens quietly.
+  **The habit: after writing a text check, run it and read every hit before believing the count** -
+  a self-report reads exactly like a finding, and a suppressed self-report reads exactly like a
+  clean tree.
 - **A markdown blockquote IS a course quote here — never set a measurement in one.** In any
   document declaring `<!-- verbatim-sources: -->`, `verify_transcription.py` checks EVERY `>` block
   against the course PDFs. On 2026-09-21 `BACKTEST_PROTOCOL.md` gained the line

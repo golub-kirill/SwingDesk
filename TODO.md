@@ -1067,7 +1067,9 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       is a nine-year study and says so.
 
 - [ ] **`[v]` THE COST CONSTANT DESCRIBES THE OPENING MINUTE AND IS APPLIED TO EVERY MOMENT —
-      measured 2026-09-06, `DR-040` is `proposed` and the ruling is the owner's.**
+      measured 2026-09-06.** ~~`DR-040` is `proposed` and the ruling is the owner's.~~
+      **Corrected 2026-09-21: `DR-040` was ratified by the owner on 2026-09-14**, so the ruling is
+      not outstanding and what remains here is the work the record asks for.**
       ```bash
       PYTHONPATH=$PWD/src python tools/probe_quotes.py
       PYTHONPATH=$PWD/src python tools/measure_quoted_spread.py --data <store>
@@ -1539,8 +1541,10 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       PYTHONPATH=$PWD/src python tools/verify_parameters.py
       ```
       **What the comparison found.** `DR-004` and `DR-018` each carry a live parameter and were
-      **missing** from the list; `DR-009` is `proposed` but **no parameter rests on it**, so it
-      belongs with the unratified records in §4 rather than here. The distinction is the whole
+      **missing** from the list; ~~`DR-009` is `proposed` but **no parameter rests on it**, so it
+      belongs with the unratified records in §4 rather than here.~~ **Corrected 2026-09-21:
+      `DR-009` was ratified by the owner on 2026-09-14 as applied.** Still no parameter rests on
+      it, which was the load-bearing half; it is no longer an unratified record. The distinction is the whole
       point of the entry: a proposed record with a parameter behind it is a value whose only
       authority is a record nobody ratified, and a proposed record with none is a decision waiting
       to be taken. Ratifying is the owner's act in both cases and neither is an agent's to force.
