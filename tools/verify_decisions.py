@@ -56,6 +56,8 @@ import sys
 import tokenize
 from pathlib import Path
 
+import status_claims
+
 REPO = Path(os.environ.get("SWINGDESK_ROOT") or Path(__file__).resolve().parents[1])
 DECISIONS = REPO / "docs" / "decisions"
 HEADER = re.compile(r"^```\n(.*?)^```", re.MULTILINE | re.DOTALL)
@@ -178,82 +180,29 @@ def disagreements(records: dict[str, str], rows: dict[str, str]) -> list[str]:
     return failures
 
 
-#: A sentence anywhere in the tree asserting a record's status: "`DR-039` is `proposed`".
-#: Deliberately narrow - only the copula forms, so a record NARRATING history ("DR-018 left the form
-#: for a study") is not read as a status claim.
-STATUS_CLAIM = re.compile(
-    r"(DR-\d+)`?\s+(?:is|was|remains|stays)\s+`?(" + "|".join(STATUSES) + r")\b", re.I)
-
-#: Where a status claim can hide. `docs/decisions/` is excluded: a record narrating its own or
-#: another's history at the time it was written is the one place the past tense is correct.
-CLAIM_ROOTS = ("src", "tools", "tests", "registry", "docs", "AGENTS.md", "HANDOFF.md", "TODO.md")
-
-#: Text this tree has already struck out. `~~...~~` is its notation for *this was true and is
-#: not* - `TODO.md` and `SPEC_GAP_ANALYSIS.md` both correct in place with it rather than deleting,
-#: which is what keeps a wrong claim and its repair in one place. A check that cannot see the
-#: strikethrough accuses the correction, so the spans come out before anything is matched.
-STRUCK = re.compile(r"~~.*?~~", re.DOTALL)
-
-#: A line carrying this marker is an EXAMPLE of the defect rather than an instance of it.
-#: The tests that prove this check fires have to contain a false status, and so does the
-#: sentence in `fees.py` recording what it used to say. Excluding `tests/` wholesale would be
-#: the wrong repair - a test docstring is prose like any other, and is exactly where a stale
-#: claim would sit unread - so the opt-out is per LINE, spelled out, and a reviewer sees every
-#: one of them in the diff. Deliberately the same shape as `implementation: none`: a claim a
-#: reader can challenge rather than an absence nobody notices.
-EXAMPLE_MARKER = "status-claim-example"
-
-
 def misstated_elsewhere(records: dict[str, str]) -> list[str]:
     """Every file outside `docs/decisions/` that states a status the record contradicts.
 
     **Measured 2026-09-21, three places, all of them live.**
-    `validation/backtest/fees.py` said *"`DR-039` is `proposed`"* and used it as the REASON nothing
-    charges the venue's regulatory fees - sixteen days after the owner ratified it, so a reader
-    deciding whether to wire them was told the rates were still unsettled when only the wiring
-    decision was. `TODO.md` said the same of `DR-040` and `DR-009`, both ratified 2026-09-14.
+    `validation/backtest/fees.py` said `DR-039` carried the status `proposed` and used it as the
+    REASON nothing charges the venue's regulatory fees - sixteen days after the owner ratified it, so
+    a reader deciding whether to wire them was told the rates were still unsettled when only the
+    wiring decision was. `TODO.md` said the same of `DR-040` and `DR-009`, both ratified 2026-09-14.
 
     `disagreements` above already holds the INDEX to each record; this holds the rest of the tree to
-    it, and for the same reason. A status is the one fact about a decision that changes what somebody
-    is allowed to do next, and a `proposed` that is really `accepted` reads as *the owner has not
-    answered yet*.
+    it, and for the same reason. The rule, the exemptions and the line arithmetic live in
+    `status_claims.py` because `verify_components.py` needs the identical check over component
+    activation, and a second copy is a second place for the `~~struck~~` handling to be forgotten.
     """
-    failures: list[str] = []
-    files: list[Path] = []
-    for name in CLAIM_ROOTS:
-        root = REPO / name
-        if root.is_file():
-            files.append(root)
-        elif root.is_dir():
-            files += [f for f in root.rglob("*") if f.suffix in {".py", ".md", ".yml"}]
-    for path in sorted(files):
-        relative = path.relative_to(REPO)
-        if relative.parts[:2] == ("docs", "decisions"):
-            continue
-        if path.resolve() == Path(__file__).resolve():
-            # THIS FILE NAMES THE DEFECT IT CHECKS FOR, so without this it reports itself -
-            # which `verify_criteria.py` did three hours earlier on 2026-09-21, for exactly the
-            # same reason, and reported zero because the ids lived in its own comment.
-            continue
-        text = STRUCK.sub("", path.read_text(encoding="utf-8", errors="replace"))
-        for match in STATUS_CLAIM.finditer(text):
-            record, said = match.group(1), match.group(2).lower()
-            actual = records.get(record)
-            if actual is None:
-                continue
-            word = next((c for c in STATUSES if actual.startswith(c)), actual)
-            if said == word:
-                continue
-            line_text = text[: match.start()].rsplit(chr(10), 1)[-1] + \
-                text[match.end():].split(chr(10), 1)[0]
-            if EXAMPLE_MARKER in line_text:
-                continue
-            line = text[: match.start()].count(chr(10)) + 1
-            failures.append(
-                f"{relative.as_posix()}:{line} says {record} is {said!r}; the record says {word!r}. "
-                f"A status is what tells a reader whether the owner has answered."
-            )
-    return failures
+    words = tuple(STATUSES)
+    return status_claims.misstated(
+        REPO,
+        {record: next((c for c in STATUSES if status.startswith(c)), status)
+         for record, status in records.items()},
+        id_pattern=r"DR-\d+",
+        words=words,
+        caller=Path(__file__),
+    )
 
 
 def parse_header(text: str) -> dict[str, str]:

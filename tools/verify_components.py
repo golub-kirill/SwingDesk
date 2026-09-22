@@ -35,6 +35,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import status_claims
+
 REPO = Path(__file__).resolve().parents[1]
 COMPONENTS = REPO / "registry" / "components.yml"
 PARAMETERS = REPO / "registry" / "parameters.yml"
@@ -206,6 +208,29 @@ def check(
     return failures
 
 
+
+def misstated_activations(components: list[dict[str, object]]) -> list[str]:
+    """Every file that states a component activation the registry contradicts.
+
+    **Measured 2026-09-21.** An OPEN `TODO.md` item headlined "`M31-T0464` IS `specified`" and said
+    so again in its body - `DR-024` activated it on 2026-08-30, 22 days earlier, and the registry had
+    read `active` ever since. The same item said ATR and SMA "are held"; `M18-T0280` (ATR) reads
+    `active` too, so the sentence was half true when written.
+
+    An id whose registry rows disagree with each other is skipped rather than guessed at: two rows
+    for one bare id means a version bump, and which one a sentence meant is not decidable here.
+    """
+    by_bare: dict[str, set[str]] = {}
+    for entry in components:
+        full = str(entry.get("component", ""))
+        bare = re.match(r"(M\d+-T\d+)", full)
+        if bare:
+            by_bare.setdefault(bare.group(1), set()).add(str(entry.get("activation", "")).lower())
+    unambiguous = {name: next(iter(v)) for name, v in by_bare.items() if len(v) == 1}
+    return status_claims.misstated(
+        REPO, unambiguous, id_pattern=r"M\d+-T\d+", words=ACTIVATIONS, caller=Path(__file__))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.parse_args()
@@ -217,6 +242,9 @@ def main() -> int:
     course = course_data["topics"] if isinstance(course_data, dict) else course_data
 
     failures = check(rows, parameters, course)
+    # A claim ABOUT the registry rather than one of its rows, and counted with the rest
+    # because the repair is the same: correct the sentence. See `status_claims.py`.
+    failures += misstated_activations(rows)
 
     by_activation: dict[str, int] = {}
     for row in rows:
