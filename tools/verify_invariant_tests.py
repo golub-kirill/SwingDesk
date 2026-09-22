@@ -175,6 +175,37 @@ MUTANTS: tuple[Mutant, ...] = (
     # ---- REQ-VALIDATION-001: every veto must have a pair of inputs producing different verdicts.
     # Each of these five evaluates on the live path today, which is what `REQUIREMENTS.md` §2 said
     # did not exist yet. `DR-006` wired three of them and `DR-015` the fourth and fifth.
+    # A LONG'S STOP ONLY MOVES UP, and the LAST line holding that had no test.
+    #
+    # Three layers: `adoption.moved_stop` refuses a venue stop below the book's, `cli._respond`
+    # refuses an approval that would lower it, and `manage.apply_approved` raises. Measured
+    # 2026-09-21 by mutating all three - the first two died, and `if False and lowers_stop(...)`
+    # left the whole suite green, INCLUDING the test named for that refusal, which asserts the
+    # CLI's message and never reaches the function. Defence in depth rather than a live hole, and
+    # `apply_approved` is public in `trade_management`: the next caller gets what it promises.
+    #
+    # The live book still carries what this is about. BTSG v4 and v7, on 2026-09-10 and 09-11, each
+    # put the stop back DOWN - 57.610909 to 57.122988, then 57.610909 to 55.760208 - and the guard
+    # landed 2026-09-13.
+    Mutant(
+        claim="REQ-VALIDATION-001 veto",
+        breaks="an approved stale proposal moves a long's stop DOWN",
+        path="swingdesk/trade_management/manage.py",
+        old="    if lowers_stop(position, action):",
+        new="    if False and lowers_stop(position, action):",
+        tests=("tests/test_positions.py::"
+               "test_apply_approved_refuses_an_approval_that_would_lower_the_stop",),
+    ),
+    Mutant(
+        claim="REQ-VALIDATION-001 veto",
+        breaks="the stop-direction test reads the INITIAL stop again, which is the defect it was "
+               "written for",
+        path="swingdesk/trade_management/manage.py",
+        old="            and action.new_stop < position.current_stop)",
+        new="            and action.new_stop < position.initial_stop)",
+        tests=("tests/test_positions.py::"
+               "test_lowers_stop_reads_the_current_stop_not_the_initial_one",),
+    ),
     # `k.drawdown_pause` IS A VETO NOW, and this entry replaces an exemption that expired.
     #
     # Until 2026-09-21 `UNCOVERED` excused the whole criteria half of `REQ-VALIDATION-001` with

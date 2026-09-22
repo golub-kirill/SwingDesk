@@ -2042,6 +2042,72 @@ def test_a_missing_read_by_is_a_failure() -> None:
     assert "no `read_by`" in (_reader_failure() or "")
 
 
+def _verification(tmp_path: Path, monkeypatch, row: dict) -> str | None:
+    """Run the verification resolver with both of its roots pointed at a fixture tree."""
+    import sys
+
+    sys.path.insert(0, str(TOOLS))
+    import verify_components
+
+    monkeypatch.setattr(verify_components, "GOLDEN_ROOT", tmp_path / "golden" / "components")
+    monkeypatch.setattr(verify_components, "TESTS_ROOT", tmp_path / "tests")
+    return verify_components.unresolved_verification(row)
+
+
+def test_a_golden_claim_with_no_vectors_fails(tmp_path: Path, monkeypatch) -> None:
+    """`active` is the strongest claim a component makes, and its verification was a string.
+
+    Until 2026-09-21 check 2 asked only whether `verification` was non-empty, so
+    `COMPONENT_REGISTRY_SPEC` §3's *"verification exists"* rested on two words nobody resolved.
+    Both live claims were true when this was written - and nothing would have said so if they
+    were not.
+    """
+    failure = _verification(
+        tmp_path, monkeypatch,
+        {"component": "M99-T9999-v1.0", "verification": "golden vectors"}) or ""
+    assert "holds none" in failure, failure
+
+
+def test_a_golden_claim_with_vectors_passes(tmp_path: Path, monkeypatch) -> None:
+    """Positive control. Without it the failure above passes for any tree at all."""
+    directory = tmp_path / "golden" / "components" / "M99-T9999-v1.0"
+    directory.mkdir(parents=True)
+    (directory / "a_vector.json").write_text("{}", encoding="utf-8")
+    assert _verification(
+        tmp_path, monkeypatch,
+        {"component": "M99-T9999-v1.0", "verification": "golden vectors"}) is None
+
+
+def test_a_property_test_claim_no_test_imports_fails(tmp_path: Path, monkeypatch) -> None:
+    """The claim resolves against a module IMPORT, which is the one thing text search reads well.
+
+    Not a test-name match: an f-string-built id and a bare identifier both fooled the `read_by`
+    check earlier the same day, in opposite directions.
+    """
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "test_something.py").write_text("import os\n", encoding="utf-8")
+    failure = _verification(
+        tmp_path, monkeypatch,
+        {"component": "M99-T9999-v1.0", "verification": "property test",
+         "implements": "swingdesk.derived_observations.relative_strength:compute"}) or ""
+    assert "no file in tests/ imports" in failure, failure
+
+    (tmp_path / "tests" / "test_it.py").write_text(
+        "from swingdesk.derived_observations import relative_strength\n", encoding="utf-8")
+    assert _verification(
+        tmp_path, monkeypatch,
+        {"component": "M99-T9999-v1.0", "verification": "property test",
+         "implements": "swingdesk.derived_observations.relative_strength:compute"}) is None
+
+
+def test_an_invented_verification_word_fails(tmp_path: Path, monkeypatch) -> None:
+    """A closed vocabulary, so the check cannot be stepped around by writing a third word."""
+    failure = _verification(
+        tmp_path, monkeypatch,
+        {"component": "M99-T9999-v1.0", "verification": "looks fine to me"}) or ""
+    assert "is not one of" in failure, failure
+
+
 def test_a_file_calling_an_active_component_specified_fails(tmp_path: Path) -> None:
     """Gate 11's half of the same rule, and it found a live one.
 

@@ -186,6 +186,28 @@ def test_lowers_stop_reads_the_current_stop_not_the_initial_one() -> None:
     assert not manage.lowers_stop(_position(current_stop=Decimal(96)), action)
 
 
+def test_apply_approved_refuses_an_approval_that_would_lower_the_stop() -> None:
+    """The LAST line of defence, and until 2026-09-21 nothing exercised it.
+
+    Three layers stop a long's stop from moving down. `adoption.moved_stop` refuses a venue stop
+    below the book's; `cli._respond` refuses an approval that would lower it; and this raises. The
+    first two are tested. Deleting the check here - `if False and lowers_stop(...)` - left the whole
+    suite green, including the test NAMED for that refusal, because that one asserts the CLI's
+    message and never reaches this function.
+
+    It is defence in depth rather than a live hole: `_record_venue_stop` is the one caller that does
+    not check first, and `adoption.moved_stop` has already refused anything lower before an
+    `AdoptedStop` exists. But `apply_approved` is public in `trade_management`, and the next caller
+    gets whatever this promises. Gate 34 now carries the mutant.
+    """
+    approved = ManagementAction(
+        position_id="POS-1", proposed_at=AS_OF, kind=ActionKind.MOVE_STOP,
+        status=ActionStatus.APPROVED, reason="stale", old_stop=Decimal(96), new_stop=Decimal(97),
+    )
+    with pytest.raises(ValueError, match="DOWN from 98 to 97"):
+        manage.apply_approved(_position(current_stop=Decimal(98)), approved, AS_OF)
+
+
 def test_a_partial_exit_leaving_nothing_is_refused() -> None:
     approved = ManagementAction(
         position_id="POS-1", proposed_at=AS_OF, kind=ActionKind.PARTIAL_EXIT,
