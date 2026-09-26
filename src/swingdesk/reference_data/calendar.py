@@ -111,10 +111,32 @@ def sessions(exchange: Exchange, start: date, end: date) -> tuple[ExchangeSessio
     )
 
 
+@lru_cache(maxsize=32)
+def _year(exchange: Exchange, year: int) -> dict[date, ExchangeSession]:
+    """Every session of one calendar year, by date: what `session` answers from.
+
+    Built by the uncached body of `sessions`, so a day-by-day scan does not evict the four windows
+    that `sessions`' own callers are holding. Thirty-two entries is both exchanges over sixteen
+    years, so a research run that walks each instrument across its whole window never thrashes.
+    """
+    return {found.session_date: found
+            for found in sessions.__wrapped__(exchange, date(year, 1, 1), date(year, 12, 31))}
+
+
 def session(exchange: Exchange, on: date) -> ExchangeSession | None:
-    """The session on `on`, or None if the exchange was closed."""
-    found = sessions(exchange, on, on)
-    return found[0] if found else None
+    """The session on `on`, or None if the exchange was closed.
+
+    **Answered from the year's schedule, not from a schedule of one day.** Until 2026-09-26 this
+    asked `pandas_market_calendars` for the single date, about 12 ms a call, and the research
+    runners call it once per session per instrument: in a profile of `PR-033`'s end-to-end test it
+    was 3,175 calls and 40 of 106 profiled seconds. A whole year is built once and costs a few days'
+    worth - a cold scan of 3,911 consecutive days measured 0.45 s. The session for a date is the
+    same row either way:
+    `tests/test_calendar.py` compares the two at every weekday holiday and early close of both
+    exchanges from 2016 to 2026, and a one-off comparison of every day from 2010 to 2027 on both
+    found no difference. Thirty-two cached years measured at about 10 MB.
+    """
+    return _year(exchange, on.year).get(on)
 
 
 def is_open(exchange: Exchange, on: date) -> bool:
