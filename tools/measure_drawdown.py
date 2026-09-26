@@ -6,16 +6,24 @@ is what makes the criterion evaluable. `criteria.yml` amendment v1.1.2 fixes wha
 means: peak-to-trough drawdown of account equity **including open positions marked to market**,
 peak-relative, baseline `account.equity`.
 
-**It reports and it does nothing.** The prescribed action names the risk-off ladder,
-`risk.risk_off_ladder` is `unset`, and writing it is the owner's. Nothing in the decision path calls
-this: a measurable kill switch is not an automatic one, and wiring both in one change would have
-moved decision output for a number whose first honest answer is 0.00%.
+~~**It reports and it does nothing.** ... Nothing in the decision path calls this~~ - true
+until `DR-034` on 2026-09-03, which made a breach halt every submission. **This reports the number
+the kill switch acts on**, and since 2026-09-26 it is computed by the SAME function:
+`cli._drawdown_now`. It used to assemble the curve itself - its own sessions, its own marks, its own
+action lookup - and when the kill switch was found reading the open book only, this had the identical
+defect in its own copy. One measurement in two places had become two measurements that agreed by
+coincidence; now there is one, and the report cannot disagree with what stops the run.
+
+The prescribed action still names the risk-off ladder, `risk.risk_off_ladder` is `unset`, and that
+half - reducing size - is the owner's. What is automated is the pause.
 
 **Position store only.** Not the journal - the journal holds runs and decisions, and equity is a
 fact about positions and fills. Marks come from the bar store, because "marked to market" needs a
 price and a position record does not carry one.
 
-Read-only over `data/`.
+~~Read-only over `data/`.~~ Not quite, and a tool run against live stores should say so:
+`PositionStore` and `BarStore` open read-write and run `schema.reconcile`, which alters a
+table only when a column is missing. It writes no position, fill or bar.
 
     python tools/measure_drawdown.py --data C:/PycharmProjects/SwingDesk/data
 """
@@ -25,15 +33,14 @@ from __future__ import annotations
 import argparse
 import sys
 from datetime import UTC, datetime
-from decimal import Decimal
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from swingdesk.contracts.market import Interval, Series
 from swingdesk.journal_evidence.positions import PositionStore
 from swingdesk.market_data import BarStore
 from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset
+from swingdesk.presentation.cli import _drawdown_now
 from swingdesk.trade_management import drawdown as measurement
 
 
@@ -64,46 +71,12 @@ def main() -> int:
         PositionStore(root / "positions.duckdb") as positions_store,
         BarStore(root / "bars.duckdb") as bars,
     ):
-        positions = positions_store.open_as_of(as_of)
+        held = positions_store.latest_as_of(as_of)
+        result = _drawdown_now(positions_store, bars, registry, as_of)
 
-        fills_by_position = {p.position_id: positions_store.fills_for(p.position_id)
-                             for p in positions}
-        # Resolved fill by fill through `proposal_at`, not by zipping `actions_for` against a range.
-        # A fill names the SEQUENCE of the action it settles, and `actions_for` returns actions
-        # without their sequence numbers - so position in that list is not the sequence, and
-        # assuming it were would attribute a fill to the wrong action the first time a proposal was
-        # withdrawn.
-        actions_by_position: dict[str, dict[int, str]] = {}
-        for position in positions:
-            kinds: dict[int, str] = {}
-            for fill in fills_by_position[position.position_id]:
-                action = positions_store.proposal_at(position.position_id, fill.sequence)
-                if action is not None:
-                    kinds[fill.sequence] = str(action.kind)
-            actions_by_position[position.position_id] = kinds
-        sessions = sorted({
-            session
-            for p in positions
-            for session in _sessions_for(bars, p.instrument_id, as_of)
-        })
-
-        def mark_for(instrument_id: str, session: object) -> Decimal | None:
-            series = bars.as_of(instrument_id, Interval.DAY, Series.RAW, as_of)
-            for bar in reversed(series.bars):
-                if bar.session_date == session:
-                    return bar.close
-            return None
-
-        result = measurement.measure(
-            positions=positions,
-            fills_by_position=fills_by_position,
-            actions_by_position=actions_by_position,
-            baseline=baseline,
-            sessions=sessions,
-            mark_for=mark_for,
-        )
-
-    print(f"positions open      {len(positions)}")
+    print(f"positions           {sum(p.is_open for p in held)} open, "
+          f"{sum(not p.is_open for p in held)} closed - realised results count, not only what is "
+          f"held")
     print(f"baseline equity     {baseline}  ({equity_use.provenance})")
     if isinstance(result, measurement.Unavailable):
         print(f"drawdown            UNAVAILABLE - {result.reason}")
@@ -117,14 +90,11 @@ def main() -> int:
     if limit is not None and limit_use is not None:
         verdict = "BREACHED" if result.breaches(limit) else "within"
         print(f"k.drawdown_pause    {verdict} - limit {limit}% ({limit_use.provenance})")
-        print("                    reporting only; risk.risk_off_ladder is unset and the "
-              "prescribed action is the owner's")
+        # Not "reporting only", which this printed until 2026-09-26: since `DR-034` a breach halts
+        # every submission. What stays the owner's is the other half of the action.
+        print("                    a breach PAUSES new entries at submission (DR-034); reducing "
+              "size per risk.risk_off_ladder is the owner's, and it is unset")
     return 0
-
-
-def _sessions_for(bars: BarStore, instrument_id: str, as_of: datetime) -> list:
-    series = bars.as_of(instrument_id, Interval.DAY, Series.RAW, as_of)
-    return [bar.session_date for bar in series.bars]
 
 
 if __name__ == "__main__":

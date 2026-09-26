@@ -23,6 +23,7 @@ from swingdesk.journal_evidence.positions import PositionStore
 from swingdesk.market_data import BarStore
 from swingdesk.market_data.retry import RetryingFetcher
 from swingdesk.presentation import cli, notify
+from swingdesk.trade_management import drawdown
 
 
 @pytest.fixture(autouse=True)
@@ -2899,10 +2900,205 @@ def test_a_drawdown_that_cannot_be_measured_stops_submission(
     assert [r.outcome for r in rows] == ["stopped"]
 
 
+def _exited(book: PositionStore, bars: BarStore, *, symbol: str, entry: str, marks,
+            exit_price: str | None, kind: str = "exit_now", shares: int = 100,
+            sold: int | None = None, record: bool = True) -> None:
+    """A position bought at `entry`, then exited through the ONE chain that defines exiting.
+
+    Proposed, answered, applied and filled exactly as `respond` and `_record_venue_close` do it, so
+    what these tests measure is the book the live path produces - not a book built to agree with
+    the measurement. `record=False` stops after the approval, which is what `respond --approve` on
+    an `EXIT_NOW` leaves behind: a closed position and no price.
+    """
+    from swingdesk.contracts.position import (
+        ActionKind,
+        ActionStatus,
+        Fill,
+        ManagementAction,
+        Position,
+    )
+    from swingdesk.trade_management import manage
+
+    opened_on = marks[0][0]
+    exit_on = marks[1][0]
+    position = Position(
+        position_id=f"POS-{symbol}-{opened_on}", version=1, instrument_id=symbol,
+        opened_on=opened_on, entry_price=Decimal(entry), shares=shares,
+        initial_stop=Decimal("1.00"), current_stop=Decimal("1.00"),
+        initial_costs_per_share=Decimal(0),
+        knowledge_time=datetime(opened_on.year, opened_on.month, opened_on.day, 20, 0, tzinfo=UTC),
+    )
+    book.record(position)
+    _bars_for(bars, symbol, marks,
+              knowledge=datetime(marks[-1][0].year, marks[-1][0].month, marks[-1][0].day, 22, 0,
+                                 tzinfo=UTC))
+    at = datetime(exit_on.year, exit_on.month, exit_on.day, 21, 0, tzinfo=UTC)
+    action_kind = ActionKind(kind)
+    book.propose(ManagementAction(
+        position_id=position.position_id, proposed_at=at, kind=action_kind, reason_code="STOP",
+        reason="test", old_stop=position.current_stop,
+        shares_affected=sold if action_kind is ActionKind.PARTIAL_EXIT else None,
+    ))
+    sequence = max(book.action_kinds_for(position.position_id))
+    book.respond(position.position_id, sequence, choice=ActionStatus.APPROVED, reason="x", at=at)
+    proposal = book.proposal_at(position.position_id, sequence)
+    book.record(manage.apply_approved(
+        position, proposal.model_copy(update={"status": ActionStatus.APPROVED}), at))
+    if record and exit_price is not None:
+        book.record_fill(Fill(
+            position_id=position.position_id, sequence=sequence, filled_on=exit_on,
+            shares=sold if sold is not None else shares, price=Decimal(exit_price),
+            commission=Decimal(0), planned_price=position.current_stop, recorded_at=at,
+        ))
+
+
+def test_the_kill_switch_counts_a_loss_after_the_position_that_took_it_has_closed(
+        tmp_path: Path) -> None:
+    """THE DEFECT, measured 2026-09-26: a realised 20% loss read as 0.00%.
+
+    `_drawdown_now` asked `open_as_of`, which drops closed positions, so the loss left the curve
+    the moment it was taken. `drawdown.measure` has always counted it - its own
+    `test_a_closed_loss_stays_in_the_curve_after_the_position_is_gone` says 20.00% - and nothing
+    tested the CALLER with a closed loss: every kill-switch test built an open, fallen position,
+    which is the code's own assumption written as a fixture.
+    """
+    with PositionStore(tmp_path / "positions.duckdb") as book, \
+            BarStore(tmp_path / "bars.duckdb") as bars:
+        _exited(book, bars, symbol="LOSER", entry="50.00", exit_price="30.00",
+                marks=((date(2026, 9, 1), "50.00"), (date(2026, 9, 2), "30.00")))
+        fall = cli._drawdown_now(book, bars, _target_registry(),
+                                 datetime(2026, 9, 10, 23, 0, tzinfo=UTC))
+    assert isinstance(fall, drawdown.Drawdown), fall
+    assert fall.percent == Decimal("20.00")
+
+
+def test_a_realised_loss_past_the_limit_pauses_new_entries(
+        tmp_path: Path, monkeypatch, capsys) -> None:
+    """The goal rather than the number: the machine stops adding once the account is down.
+
+    The same 100 at 50.00, stopped out at 25.00 - a 2,500 realised loss, 25% of the account, past a
+    20% limit - and nothing open. Before 2026-09-26 this measured 0.00% and the run submitted.
+    """
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent, held=[], live_orders=[])
+    with Journal(tmp_path / "journal.duckdb") as journal, \
+            PositionStore(tmp_path / "positions.duckdb") as book, \
+            BarStore(tmp_path / "bars.duckdb") as bars:
+        _exited(book, bars, symbol="LOSER", entry="50.00", exit_price="25.00",
+                marks=((date(2026, 9, 1), "50.00"), (date(2026, 9, 2), "25.00")))
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 2, 23, 0, tzinfo=UTC), journal, _target_registry(),
+                    book, bars)
+        rows = journal.submissions_for("RUN-TEST")
+
+    assert sent == [], "an account 25% down may not add to itself because the loss is realised"
+    assert "k.drawdown_pause" in capsys.readouterr().err
+    assert [r.outcome for r in rows] == ["stopped"]
+
+
+def test_a_closed_position_with_no_exit_price_stops_submission(
+        tmp_path: Path, monkeypatch, capsys) -> None:
+    """`respond --approve` on an `EXIT_NOW` closes the position and records no price.
+
+    That is exactly how BTSG was closed on 2026-09-22, and its 18 @ 57.57 stop-out - the book's only
+    loss - was then in no ledger. An unknown result is not a zero one: the curve would show the loss
+    while it was held and then the account RECOVERING at the close. So the drawdown is unavailable,
+    the run stops, and the refusal names the position and the command that finishes the record.
+    """
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent, held=[], live_orders=[])
+    with Journal(tmp_path / "journal.duckdb") as journal, \
+            PositionStore(tmp_path / "positions.duckdb") as book, \
+            BarStore(tmp_path / "bars.duckdb") as bars:
+        _exited(book, bars, symbol="UNPRICED", entry="50.00", exit_price=None, record=False,
+                marks=((date(2026, 9, 1), "50.00"), (date(2026, 9, 2), "45.00")))
+        fall = cli._drawdown_now(book, bars, _target_registry(),
+                                 datetime(2026, 9, 2, 23, 0, tzinfo=UTC))
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 2, 23, 0, tzinfo=UTC), journal, _target_registry(),
+                    book, bars)
+
+    assert isinstance(fall, drawdown.Unavailable), fall
+    assert "UNPRICED" in fall.reason and "0 of 100" in fall.reason
+    assert "record-fill" in fall.reason, "the refusal says how to finish the record"
+    assert sent == []
+
+
+def test_a_partial_exit_is_valued_on_the_shares_bought_not_the_shares_left(
+        tmp_path: Path) -> None:
+    """`apply_approved` writes `shares = remaining`; the curve subtracts every exit itself.
+
+    Handing it the latest version subtracted a partial twice. 100 at 50.00, marked 60.00 (equity
+    11,000), then 50 sold at 60.00 and the other 50 marked 40.00: the account falls to 10,000, a
+    9.09% drawdown. With the latest version the curve sat at 10,500 throughout and read 0.00% - a
+    defect in the LEVEL, which a flat price cannot show, so this test's price has to move.
+    Latent on 2026-09-26: `exit.partial_trigger` and `exit.partial_fraction` are unset.
+    """
+    with PositionStore(tmp_path / "positions.duckdb") as book, \
+            BarStore(tmp_path / "bars.duckdb") as bars:
+        _exited(book, bars, symbol="HALF", entry="50.00", exit_price="60.00",
+                kind="partial_exit", sold=50,
+                marks=((date(2026, 9, 1), "60.00"), (date(2026, 9, 2), "40.00"),
+                       (date(2026, 9, 3), "40.00")))
+        fall = cli._drawdown_now(book, bars, _target_registry(),
+                                 datetime(2026, 9, 3, 23, 0, tzinfo=UTC))
+    assert isinstance(fall, drawdown.Drawdown), fall
+    assert fall.peak == Decimal(11_000)
+    assert fall.percent == Decimal("9.09")
+
+
+def test_a_sold_instruments_later_bars_do_not_enter_the_curve(tmp_path: Path) -> None:
+    """A closed position is marked only while it was held - after that it is a realised number.
+
+    `_drawdown_now` builds its sessions from the bars the positions actually have, by design: *a
+    session nothing can be priced on is a session the curve must not claim a value for.* Once
+    closed positions entered the measurement, an instrument the account SOLD kept contributing its
+    later bars, and a session only it traded then asked an open position for a price it never had -
+    turning a measurable account into `Unavailable` because of a stock nobody holds. The bound stops
+    that; this pins it, since a mutation removing it survived every other test.
+    """
+    from swingdesk.contracts.position import Position
+
+    with PositionStore(tmp_path / "positions.duckdb") as book, \
+            BarStore(tmp_path / "bars.duckdb") as bars:
+        # Sold 09-02, but its bars run on to 09-03 because it is still a listed stock.
+        _exited(book, bars, symbol="SOLD", entry="50.00", exit_price="50.00",
+                marks=((date(2026, 9, 1), "50.00"), (date(2026, 9, 2), "50.00"),
+                       (date(2026, 9, 3), "50.00")))
+        # Held throughout, with no bar on 09-03 - the one session only the sold stock traded.
+        book.record(Position(
+            position_id="POS-HELD-2026-09-01", version=1, instrument_id="HELD",
+            opened_on=date(2026, 9, 1), entry_price=Decimal("20.00"), shares=10,
+            initial_stop=Decimal("1.00"), current_stop=Decimal("1.00"),
+            initial_costs_per_share=Decimal(0),
+            knowledge_time=datetime(2026, 9, 1, 20, 0, tzinfo=UTC),
+        ))
+        _bars_for(bars, "HELD", ((date(2026, 9, 1), "20.00"), (date(2026, 9, 2), "20.00"),
+                                 (date(2026, 9, 4), "20.00")),
+                  knowledge=datetime(2026, 9, 4, 22, 0, tzinfo=UTC))
+        fall = cli._drawdown_now(book, bars, _target_registry(),
+                                 datetime(2026, 9, 4, 23, 0, tzinfo=UTC))
+    assert isinstance(fall, drawdown.Drawdown), fall
+    assert fall.percent == Decimal("0.00")
+
+
+def test_latest_as_of_keeps_closed_positions_and_open_as_of_does_not(tmp_path: Path) -> None:
+    """Two views of one query: the decision path wants the first, the account the second."""
+    with PositionStore(tmp_path / "positions.duckdb") as book, \
+            BarStore(tmp_path / "bars.duckdb") as bars:
+        _exited(book, bars, symbol="GONE", entry="50.00", exit_price="40.00",
+                marks=((date(2026, 9, 1), "50.00"), (date(2026, 9, 2), "40.00")))
+        now = datetime(2026, 9, 10, 23, 0, tzinfo=UTC)
+        assert [p.instrument_id for p in book.latest_as_of(now)] == ["GONE"]
+        assert book.open_as_of(now) == []
+
+
 def test_action_kinds_carry_their_real_sequence(tmp_path: Path) -> None:
     """Sequences are monotonic, not contiguous, and `actions_for` deliberately drops them.
 
-    `drawdown._exit_fills` joins a `Fill.sequence` to the kind that settles it, so pairing actions
+    `drawdown.exit_fills` joins a `Fill.sequence` to the kind that settles it, so pairing actions
     with `enumerate` would book a realised gain against an action that never transacted - straight
     into the equity curve `k.drawdown_pause` is measured on.
     """

@@ -90,8 +90,16 @@ compares it and halts every submission on a breach. The exemption outlived its r
 days, so the only ratified `live` criterion — the one that stops the one outward action this system
 has — sat outside the mutation gate on a sentence that was no longer true. Gate 34 now carries two
 mutants for it: one that admits new entries past the ratified limit, one that admits when the
-drawdown is UNMEASURABLE, and `tests/test_cli.py` catches both. **19 mutants over 9 claims, 2
-uncovered.**
+drawdown is UNMEASURABLE, and `tests/test_cli.py` catches both. ~~**19 mutants over 9 claims, 2
+uncovered.**~~ *(A count written here went stale within the session that wrote it — §10.5's own
+failure. Derive it: `python tools/verify_invariant_tests.py`.)*
+
+**And "computes the curve" was only half true until 2026-09-26.** The curve was built from
+`open_as_of`, which drops closed positions, so a realised 20% loss read **0.00%** the moment the
+position that took it closed — while the criterion's ratified trigger is *realised* drawdown. Both
+mutants above stayed caught the whole time, because they break the COMPARISON and the comparison
+was fine; what was broken was its INPUT. Gate 34 now also mutates the input: reading the open book
+only, and counting a position closed with no exit price as realising nothing.
 
 ## 3. `REQ-VALIDATION-002` — backtest and live are two code paths today
 

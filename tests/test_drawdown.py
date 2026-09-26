@@ -217,8 +217,12 @@ def test_the_measurement_prescribes_nothing() -> None:
     assert not hasattr(drawdown, "act")
     assert not hasattr(drawdown.Drawdown, "action")
     names = set(drawdown.__all__)
+    # `exit_fills` joined 2026-09-26 and it is a CLASSIFIER - which fills realised a result - not an
+    # action. The caller needs the curve's own answer to tell whether a closed position's exit was
+    # ever recorded, and a second classification would be a second place for that answer to drift.
     assert names == {
-        "Drawdown", "EquityPoint", "MarkFor", "Unavailable", "curve", "measure", "peak_to_trough"
+        "Drawdown", "EquityPoint", "MarkFor", "Unavailable", "curve", "exit_fills", "measure",
+        "peak_to_trough",
     }
 
 

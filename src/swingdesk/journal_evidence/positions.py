@@ -311,6 +311,18 @@ class PositionStore:
         then. Sorted because unordered iteration feeding a decision is the named determinism hazard
         (DETERMINISM_SPEC 3.2), and this feeds the first step of the run.
         """
+        return [position for position in self.latest_as_of(knowledge_time) if position.is_open]
+
+    def latest_as_of(self, knowledge_time: datetime) -> list[Position]:
+        """Every position known at `knowledge_time`, OPEN OR CLOSED, latest version each, by id.
+
+        **What an account-level measurement needs, and `open_as_of` is not it.** A closed position's
+        realised result is part of the account from the day it closed; a view that drops the
+        position drops the result with it. `cli._drawdown_now` asked `open_as_of` until 2026-09-26,
+        so `k.drawdown_pause` - whose ratified trigger is *realised* drawdown - saw a 2,000 loss on
+        a 10,000 account as 0.00% the moment the position closed. The decision path wants
+        `open_as_of`; anything that measures the account wants this.
+        """
         rows = self._connection.execute(
             """
             SELECT position_id, version, instrument_id, opened_on, entry_price, shares,
@@ -325,7 +337,7 @@ class PositionStore:
             """,
             [knowledge_time],
         ).fetchall()
-        return [p for p in (self._row(r) for r in rows) if p.is_open]
+        return [self._row(r) for r in rows]
 
     def history(self, position_id: str) -> list[Position]:
         """Every version, oldest first. The audit trail Appendix G requires."""
@@ -458,7 +470,7 @@ class PositionStore:
 
         **`actions_for` cannot serve this and says so**: it returns actions in sequence order but
         not the sequences themselves, so a caller pairing them with `enumerate` would be assuming
-        they run 1..n contiguously. They are monotonic, not contiguous. `drawdown._exit_fills`
+        they run 1..n contiguously. They are monotonic, not contiguous. `drawdown.exit_fills`
         joins a `Fill.sequence` to the kind that settles it, and an off-by-one there books a
         realised gain or loss against an action that never transacted - which lands in the equity
         curve `k.drawdown_pause` is measured on.

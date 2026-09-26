@@ -222,6 +222,30 @@ MUTANTS: tuple[Mutant, ...] = (
         new="    if False and fall.breaches(limit):",
         tests=("tests/test_cli.py::test_a_book_past_the_drawdown_limit_pauses_new_entries",),
     ),
+    # THE TWO MUTANTS ABOVE PROVED THE CHECK FIRES. NEITHER PROVED THE CHECK WAS FED THE ACCOUNT.
+    #
+    # Measured 2026-09-26: `_drawdown_now` read `open_as_of`, so a realised 20% loss on a 10,000
+    # account measured 0.00% the moment the position closed - and both mutants here stayed caught
+    # throughout, because they break the COMPARISON and the comparison was fine. The ratified
+    # trigger is *realised* drawdown. A criterion's enforcement is its input as well as its test.
+    Mutant(
+        claim="REQ-VALIDATION-001 criteria",
+        breaks="k.drawdown_pause measures the open book only, so a realised loss vanishes at the "
+               "close and the run keeps adding",
+        path="swingdesk/presentation/cli.py",
+        old="    every = positions.latest_as_of(now)\n",
+        new="    every = positions.open_as_of(now)\n",
+        tests=("tests/test_cli.py::test_a_realised_loss_past_the_limit_pauses_new_entries",),
+    ),
+    Mutant(
+        claim="REQ-VALIDATION-001 criteria",
+        breaks="a position closed with no exit price is counted as realising nothing, so the "
+               "account appears to recover at the close",
+        path="swingdesk/presentation/cli.py",
+        old="        if exited != acquired[position.position_id]:\n",
+        new="        if False and exited != acquired[position.position_id]:\n",
+        tests=("tests/test_cli.py::test_a_closed_position_with_no_exit_price_stops_submission",),
+    ),
     Mutant(
         claim="REQ-VALIDATION-001 criteria",
         breaks="an UNMEASURABLE drawdown admits instead of stopping - DR-006 section 3's inversion "

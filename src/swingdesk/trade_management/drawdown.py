@@ -90,7 +90,7 @@ class Unavailable:
     unpriced: tuple[tuple[str, date], ...] = ()
 
 
-def _exit_fills(
+def exit_fills(
     actions_by_position: Mapping[str, Mapping[int, str]],
     fills: Sequence[Fill],
 ) -> list[Fill]:
@@ -99,6 +99,10 @@ def _exit_fills(
     A fill settles an approved action by `sequence`, and the action's kind is what says whether
     shares left the position. A fill against a `move_stop` moves no shares and realises nothing;
     counting it would book a P&L for an action that never transacted.
+
+    Public since 2026-09-26, because `cli._drawdown_now` needs the same answer the curve uses to
+    tell whether a CLOSED position's exit was ever recorded. Two classifications of one fill would
+    be two places for the answer to diverge.
     """
     realising = {"exit_now", "partial_exit"}
     return [
@@ -117,9 +121,12 @@ def curve(
 ) -> tuple[EquityPoint, ...] | Unavailable:
     """Account equity on each of `sessions`, cheapest-correct rather than clever.
 
-    `positions` is the latest version of each position, which is what the store's `open_as_of`
-    hands back. Realised P&L accumulates from exit fills on or before the session; unrealised marks
-    whatever remains open on that session.
+    `positions` is the latest version of EVERY position the account has held - open AND closed -
+    which is what the store's `latest_as_of` hands back. ~~which is what the store's `open_as_of`
+    hands back~~ - that sentence stood here until 2026-09-26 and it was false: `open_as_of` filters
+    to open positions, the live caller followed the sentence, and `k.drawdown_pause` stopped seeing
+    a loss the moment the position that took it closed. Realised P&L accumulates from exit fills on
+    or before the session; unrealised marks whatever remains open on that session.
 
     An empty `sessions` is not an error and not an empty answer - the caller gets one point at the
     baseline, because an account that has never traded has an equity curve and it is flat. That is
@@ -140,7 +147,7 @@ def curve(
         for position_id, position in sorted(by_id.items()):
             fills = list(fills_by_position.get(position_id, ()))
             exits = [
-                fill for fill in _exit_fills(actions_by_position, fills)
+                fill for fill in exit_fills(actions_by_position, fills)
                 if fill.filled_on <= session
             ]
             gone = sum(fill.shares for fill in exits)
@@ -243,6 +250,7 @@ __all__ = [
     "MarkFor",
     "Unavailable",
     "curve",
+    "exit_fills",
     "measure",
     "peak_to_trough",
 ]
