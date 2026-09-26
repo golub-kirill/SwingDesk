@@ -432,13 +432,58 @@ def _drawdown_now(
     clock, no registry - so the shape of a run's stores is mapped onto its arguments here and the
     arithmetic stays somewhere it can be tested without one.
     """
-    open_positions = positions.open_as_of(now)
+    # EVERY POSITION THE ACCOUNT HAS HELD, NOT THE ONES IT HOLDS NOW. Until 2026-09-26 this read
+    # `positions.open_as_of(now)`, which filters to open positions, so a loss disappeared from the
+    # curve the moment the position that took it closed: 100 bought at 50 and stopped out at 30 on
+    # a 10,000 account measured 0.00%, where `drawdown.measure`'s own test says 20.00%. The
+    # criterion's ratified trigger is *realised* drawdown, and amendment 1.1.2 makes open positions
+    # marked to market an ADDITION to that, not a replacement for it.
+    #
+    # It hid behind `DR-050`. For as long as no stop-out was ever recorded, no closed LOSS existed in
+    # the book to be dropped - so the first defect made the second unobservable.
+    every = positions.latest_as_of(now)
     baseline, _use = registry.decimal_value("account.equity")
 
-    fills_by_position = {p.position_id: positions.fills_for(p.position_id) for p in open_positions}
-    actions_by_position = {
-        p.position_id: positions.action_kinds_for(p.position_id) for p in open_positions
-    }
+    fills_by_position = {p.position_id: positions.fills_for(p.position_id) for p in every}
+    actions_by_position = {p.position_id: positions.action_kinds_for(p.position_id) for p in every}
+
+    # SHARES ACQUIRED, not shares left. `apply_approved` writes `shares = remaining` after a partial
+    # exit, and `drawdown.curve` subtracts every exit fill from what it is given - so handing it the
+    # latest version subtracted a partial twice and valued 100 held as 50 before it. Measured on the
+    # pure function: 100 at 50, half sold at 60, marked 60 throughout, reads 10,500 where the account
+    # holds 11,000. Latent today - `exit.partial_trigger` and `exit.partial_fraction` are unset and
+    # `close-position` refuses a partial - and live the day either is set.
+    acquired = {p.position_id: positions.history(p.position_id)[0].shares for p in every}
+
+    # A CLOSED POSITION WHOSE EXIT WAS NEVER FULLY RECORDED IS AN UNKNOWN RESULT, NOT A ZERO ONE.
+    #
+    # `respond --approve` on an `EXIT_NOW` closes the position and records no price; the price is a
+    # separate `record-fill`, and nothing afterwards will attach a venue fill to a position already
+    # closed. Measured on the live book 2026-09-26: BTSG was closed that way on 2026-09-22 and its
+    # 18 @ 57.57 stop-out - the book's only loss - was in no ledger. Counting that position as
+    # "closed, nothing realised" is `DR-006` §3's admit-on-unavailable inversion on the kill switch:
+    # the curve would show the loss while it was held and then show the account RECOVERING at the
+    # close. `close-position` requires a price and `sync-fills` closes only on a fill, so this state
+    # has exactly one way in, and it is always an unfinished record.
+    for position in every:
+        if position.closed_on is None:
+            continue
+        exited = sum(
+            (fill.shares for fill in drawdown.exit_fills(
+                actions_by_position, fills_by_position[position.position_id])),
+            0,
+        )
+        if exited != acquired[position.position_id]:
+            return drawdown.Unavailable(
+                reason=(
+                    f"{position.instrument_id} was closed on {position.closed_on} with "
+                    f"{exited} of {acquired[position.position_id]} share(s) recorded as sold, so "
+                    f"its result - and the account's - is unknown. Record the exit: swingdesk "
+                    f"record-fill {position.position_id} <sequence> --shares <n> --price <p> "
+                    f"--commission <c> --filled-on <date>"
+                ),
+                unpriced=((position.instrument_id, position.closed_on),),
+            )
 
     # Sessions come from the BARS the positions actually have, not from a calendar range: a session
     # nothing can be priced on is a session the curve must not claim a value for.
@@ -456,11 +501,15 @@ def _drawdown_now(
 
     marks: dict[tuple[str, date], Decimal] = {}
     sessions: set[date] = set()
-    for position in open_positions:
+    for position in every:
         if position.opened_on > latest_closed:
             continue
         stored = store.as_of(position.instrument_id, Interval.DAY, Series.RAW, now)
-        priced = [bar for bar in stored.bars if bar.session_date >= position.opened_on]
+        # A closed position is marked only while it was held; after its close it is realised P&L,
+        # which comes from the exit fill and needs no price. Its close session is kept so the exit
+        # has a session to land on when it is the only position the account ever held.
+        last = position.closed_on if position.closed_on is not None else latest_closed
+        priced = [bar for bar in stored.bars if position.opened_on <= bar.session_date <= last]
         if not priced:
             # NAMED, NEVER SKIPPED. A position contributing no sessions would drop out of the union
             # below and the curve would be built from the ones that CAN be priced - reporting a
@@ -479,7 +528,7 @@ def _drawdown_now(
             sessions.add(bar.session_date)
 
     return drawdown.measure(
-        positions=open_positions,
+        positions=[p.model_copy(update={"shares": acquired[p.position_id]}) for p in every],
         fills_by_position=fills_by_position,
         actions_by_position=actions_by_position,
         baseline=baseline,

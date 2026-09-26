@@ -532,6 +532,21 @@ rotted when the fact it cited moved, and none said where that fact lived.
   items at all. A check that goes green for the wrong reason is the thing this file's own first
   trap is about, so the rule stays prose and the tool carries the self-check instead.
 
+- **A check's INPUT is part of its enforcement, and two defects can hide each other.** On
+  2026-09-26 the only ratified `live` criterion, `k.drawdown_pause`, read a realised 20% loss as
+  **0.00%**: `_drawdown_now` built its curve from `open_as_of`, which drops closed positions, so a
+  loss left the curve the moment it was taken. The pure `drawdown.measure` counted it correctly and
+  was tested for exactly that; the CALLER was only ever tested with an open, fallen position - the
+  code's own assumption written as a fixture. Gate 34's two mutants for this criterion stayed caught
+  throughout, because they break the comparison and the comparison was right.
+  **It was invisible because of `DR-050`.** While no stop-out was ever recorded, no closed LOSS
+  existed in the book to be dropped - the first defect made the second unobservable, and fixing the
+  first is what made the second live. **And a docstring steered it**: `drawdown.curve` said its
+  positions are *"what the store's `open_as_of` hands back"*, which was false, and the caller did
+  as it said.
+  **The habit: when you test a measurement, test the CALLER with the case the measurement exists
+  for** - here, a closed loss - and when a mutant proves a check fires, write a second one that
+  proves it is fed the right thing.
 - **A fact the store RECORDS is not a fact anything reads.** `minutes.duckdb` has carried the price
   basis since it was built - `minute_fetches.source` holds `alpaca:sip:split` or `…:raw` - and on
   2026-09-22 nothing read it: `minute_bars` carries no basis, `MinuteStore.session()` never joined

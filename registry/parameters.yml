@@ -1311,6 +1311,13 @@ parameters:
       described the opposite for eighteen days. What survives of the old sentence is the half
       DR-034 kept - the criterion also prescribes reducing size per the risk-off ladder,
       risk.risk_off_ladder is unset, and that half is NOT automated and NOT approximated.
+      CORRECTED AGAIN 2026-09-26. "Measures it against the meaning v1.1.2 fixes" above was false
+      for the live measurement: cli._drawdown_now built the curve from open_as_of, which drops
+      closed positions, so a realised 20% loss read 0.00% the moment its position closed - and
+      tools/measure_drawdown.py had its own copy of the same assembly with the same defect. Both
+      now use PositionStore.latest_as_of, and the tool calls _drawdown_now rather than keeping a
+      second implementation. A position closed with no exit price makes the drawdown UNAVAILABLE,
+      because an unknown realised result is not a zero one.
     ui_editable: true
 
   - id: validation.go_live_criteria

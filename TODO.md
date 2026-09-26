@@ -29,6 +29,35 @@ retyping it.
 
 ## 1. Blocking now
 
+### BTSG'S EXIT HAS NO PRICE, AND FROM THE NEXT PULL THE KILL SWITCH SAYS SO — owner action
+
+- [ ] **`[v]` Record BTSG's stop-out.** `POS-BTSG-2026-09-03` was closed on 2026-09-22 by
+      `swingdesk respond ... 26 --approve`, which closes a position and records no price. The venue
+      filled the protective OCO's stop leg on 2026-09-17: **18 shares at 57.57**, activities
+      `20260917151100478::…` (4) and `20260917151101633::…` (14), order `64752e7f-…`, a leg of
+      `bc16021e-…`. Read-only from the paper account on 2026-09-26. Until it is recorded the book
+      carries four winners and no loser, and `k.drawdown_pause` - which now measures the account
+      rather than the open book - reports UNAVAILABLE and stops every submission, naming BTSG.
+      Rehearsed on a copy of the live store, which then measured the account well inside its limit:
+      ```bash
+      swingdesk record-fill POS-BTSG-2026-09-03 26 --shares 18 --price 57.57 --commission 0 --filled-on 2026-09-17
+      ```
+      **How it happened, and it was advice rather than code:** the command that closed it was handed
+      over in chat without saying the fill is a second step. `respond --approve` on an `EXIT_NOW`
+      expects a later `record-fill`, and nothing attaches a venue fill to a position already closed.
+- [ ] **`[v]` The owner's call: should `sync-fills` attach a venue fill to a position `respond` has
+      already closed?** Today nothing can. `sync-fills` closes OPEN positions from a fill traced to
+      an order this system sent (`DR-038`, and `DR-050` for legs), so a position closed first by
+      `respond --approve` on an `EXIT_NOW` never gets its price from the venue - only a person's
+      `record-fill` supplies it. Since 2026-09-26 that is no longer silent: `k.drawdown_pause`
+      reports UNAVAILABLE and stops submission until the exit is recorded. So every approved
+      `EXIT_NOW` now halts the paper run until someone remembers the second command. Attaching the
+      fill automatically would remove the halt, and it is a write to the book on the venue's word
+      for a position a person closed - the same boundary `DR-031`/`DR-038` drew for opening and
+      closing, extended one step. That extension is a decision, not a fix, so it is not built.
+
+
+
 ### THREE RATIFIED CRITERIA THAT NOTHING NAMED — found by audit 2026-09-21
 
 **`registry/criteria.yml` carries them, and until today nothing else in this repository did.** Not
