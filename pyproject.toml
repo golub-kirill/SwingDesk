@@ -54,6 +54,7 @@ swingdesk = "swingdesk.presentation.cli:main"
 # a gate whose tooling is undeclared is a gate that stops running on a fresh checkout.
 dev = [
     "pytest>=8",
+    "pytest-xdist>=3",    # gate 8 across every core - see check_gates.py for what it measured
     "hypothesis>=6",      # property tests carry the invariants (TEST_STRATEGY 2)
     "import-linter>=2",   # the dependency law, executed (DEPENDENCY_LAW)
     "ruff>=0.16",         # gate 4

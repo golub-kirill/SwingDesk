@@ -1085,9 +1085,18 @@ the same evidence, later.
 The two exceptions, both real: after a **merge** (step 8, from the main checkout — a different tree),
 and when a gate has actually failed and you are checking a fix.
 
-The costs, so nobody has to guess at them: the whole gate set is about **50 seconds**, of which gate
-34 (mutation) is half; the suite is about **3½ minutes** single-process. (The gate *count* is in
-`HANDOFF.md` §2, generated — §10.5, and gate 14 caught this paragraph naming it.)
+~~The costs, so nobody has to guess at them: the whole gate set is about **50 seconds**, of which
+gate 34 (mutation) is half; the suite is about **3½ minutes** single-process.~~ **Those figures were
+typed, and by 2026-09-26 they were wrong by a factor of three**: the gates outside the suite took
+154 s and the suite about 540 s single-process, eleven and a half minutes a run. §10.6's rule
+applied to time: `check_gates.py` now prints each gate's seconds and the five slowest at the end, so
+the cost is read off the run rather than off this paragraph. What changed it, measured the same day:
+the suite runs across every core (`pytest-xdist`, gate 8 only - a single test file stays
+single-process, because starting sixteen workers costs more than the file), and gate 33 stopped
+walking 88 squash-merged local branches git could never recognise as merged. **The current total is
+on the last screen of every run, and deliberately not here.** Most of what is left is the research
+runners' end-to-end tests, bound by a per-session DuckDB read in `MinuteStore.session()`. (The gate *count* is in `HANDOFF.md` §2,
+generated — §10.5, and gate 14 caught this paragraph naming it.)
 
 **The order is the rule, not the list.** Gates before merge, review before commit, validation before
 build. A step taken out of order is a step not taken, and step 4 is the one most easily skipped

@@ -35,6 +35,7 @@ from __future__ import annotations
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
@@ -75,16 +76,27 @@ def _gate_env() -> dict[str, str]:
     return env
 
 
+#: Seconds each gate took this run, in the order they ran - printed at the end, slowest first.
+#:
+#: DERIVED RATHER THAN WRITTEN DOWN, because the written-down version rotted: `AGENTS.md` §18 said
+#: the whole set was "about 50 seconds" and the suite "about 3½ minutes". Measured 2026-09-26 the
+#: gates outside the suite took 154 s - gate 33 alone 70 s - and the suite about 540 s. §10.6: a fact
+#: a tool can derive, the tool derives. Nothing reads these; they are for whoever is waiting.
+ELAPSED: list[tuple[str, float]] = []
+
+
 def _run(name: str, argv: list[str], key: str = "") -> str:
     print(f"\n=== {name}")
+    started = time.perf_counter()
     result = subprocess.run(argv, cwd=REPO, env=_gate_env())
+    ELAPSED.append((name, time.perf_counter() - started))
     if result.returncode == 0:
         status = PASS
     elif result.returncode == UNAVAILABLE_EXIT and key in MAY_BE_UNAVAILABLE:
         status = UNAVAILABLE
     else:
         status = FAIL
-    print(f"--- {name}: {status}")
+    print(f"--- {name}: {status}  ({ELAPSED[-1][1]:.1f}s)")
     return status
 
 
@@ -151,7 +163,14 @@ def main() -> int:
         "7 no wall clock": _run("no wall clock in the pure packages, no date literal in src",
                                 [python, "tools/verify_no_wall_clock.py"]),
         "7b golden vectors": _run("golden vectors", [python, "tools/golden.py"]),
-        "8 tests": _run("pytest", [python, "-m", "pytest", "tests/", "-q"]),
+        # ACROSS EVERY CORE, and only here. Measured 2026-09-26 on a 16-core machine: the suite ran
+        # in about 540 s single-process, 132 s under `-n auto`, and 118 s with `--dist worksteal`,
+        # which lets an idle worker take tests a busy one has queued. The floor is one test, not the
+        # core count: the research runners' end-to-end tests are about 85% of the suite's time, the
+        # slowest near 70 s alone. NOT in `addopts`: a run of one test file - §17's move while
+        # building - would then pay for sixteen workers to start, which is slower than the test.
+        "8 tests": _run("pytest", [python, "-m", "pytest", "tests/", "-q",
+                                   "-n", "auto", "--dist", "worksteal"]),
         "9 determinism replay": _run("determinism replay", [python, "tools/replay.py"]),
         "16 branch census": _run("parallel worktrees declared in HANDOFF",
                               [python, "tools/verify_branches.py"]),
@@ -227,6 +246,11 @@ def main() -> int:
         print(f"  {status:11s}  {name}")
     failed = [name for name, status in results.items() if status == FAIL]
     unavailable = [name for name, status in results.items() if status == UNAVAILABLE]
+    print("=" * 62)
+    total = sum(seconds for _, seconds in ELAPSED)
+    print(f"where the {total:.0f} s went, slowest first:")
+    for name, seconds in sorted(ELAPSED, key=lambda row: -row[1])[:5]:
+        print(f"  {seconds:6.1f}s  {name}")
     print("=" * 62)
 
     if failed:
