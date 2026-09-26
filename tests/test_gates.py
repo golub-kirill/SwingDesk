@@ -2826,6 +2826,54 @@ def test_a_failed_task_is_pointed_at_the_log_its_own_command_writes(
     assert verify_schedule.log_of(record) == log
 
 
+def _weekly(days: str, last: str, following: str) -> dict[str, str]:
+    """A task record as `schtasks /V /FO CSV` prints one on this machine."""
+    return {"Schedule Type": "Weekly", "Days": days, "Last Run Time": last,
+            "Next Run Time": following}
+
+
+@pytest.mark.parametrize(("days", "last", "following"), [
+    ("SUN", "9/20/2026 11:00:00 AM", "9/27/2026 11:00:00 AM"),           # a week, as scheduled
+    ("MON, TUE, WED, THU, FRI", "9/25/2026 6:30:00 PM", "9/28/2026 6:30:00 PM"),   # the weekend
+    ("MON, TUE, WED, THU, FRI", "9/23/2026 6:30:00 PM", "9/24/2026 6:30:00 PM"),   # one night
+    ("SUN", "9/20/2026 11:04:10 AM", "9/27/2026 11:00:00 AM"),           # caught up a little late
+])
+def test_a_normal_gap_between_runs_is_not_a_missed_run(days: str, last: str, following: str) -> None:
+    assert verify_schedule.missed_run(_weekly(days, last, following)) is None
+
+
+@pytest.mark.parametrize(("days", "last", "following"), [
+    ("SUN", "9/13/2026 11:00:00 AM", "9/27/2026 11:00:00 AM"),           # a Sunday never ran
+    ("MON, TUE, WED, THU, FRI", "9/24/2026 6:30:00 PM", "9/28/2026 6:30:00 PM"),   # Friday skipped
+])
+def test_a_trigger_that_passed_with_no_run_is_caught(days: str, last: str, following: str) -> None:
+    """A task that stopped running keeps its last `0`, which is all gate 26 read until 2026-09-26."""
+    skipped = verify_schedule.missed_run(_weekly(days, last, following))
+    assert skipped is not None and skipped[0] is True, skipped
+
+
+@pytest.mark.parametrize(("last", "expected"), [
+    ("9/20/2026 11:00:00 AM", 0),
+    ("9/13/2026 11:00:00 AM", 1),
+])
+def test_gate_26_fails_on_a_skipped_run_whose_last_result_was_clean(
+        monkeypatch, capsys, last: str, expected: int) -> None:
+    """The wiring, not just the arithmetic: a clean `0` from two weeks ago is no longer a PASS."""
+    monkeypatch.setattr(verify_schedule.sys, "platform", "win32")
+    monkeypatch.setattr(verify_schedule, "_query", lambda task: {
+        "Last Result": "0", "Scheduled Task State": "Enabled", "Next Run Time": "9/27/2026 11:00:00 AM",
+        "Last Run Time": last, "Schedule Type": "Weekly", "Days": "SUN", "Task To Run": ""})
+
+    assert verify_schedule.main() == expected
+    assert ("never happened" in capsys.readouterr().out) is bool(expected)
+
+
+def test_a_run_time_that_cannot_be_read_is_said_rather_than_passed() -> None:
+    skipped = verify_schedule.missed_run(_weekly("SUN", "N/A", "9/27/2026 11:00:00 AM"))
+    assert skipped is not None and skipped[0] is False
+    assert verify_schedule.missed_run({"Schedule Type": "One Time Only"})[0] is False
+
+
 def test_a_command_that_cannot_be_read_names_no_log() -> None:
     """A guess at a log path is worse than saying none could be read."""
     assert verify_schedule.log_of({"Task To Run": r"C:\nowhere\missing.cmd"}) is None

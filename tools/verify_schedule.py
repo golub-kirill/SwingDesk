@@ -43,6 +43,7 @@ from swingdesk.platform.schedule import (
     HAZARDS,
     TASKS,
     log_of,
+    missed_run,
     verdict,
 )
 from swingdesk.platform.schedule import (
@@ -94,6 +95,16 @@ def main() -> int:
                 f"{task}: last run {last_run} failed - {phrase}. See "
                 f"{log_of(record) or 'the log its command writes'}"
             )
+        if judgement != "pending":
+            # A result code says how the LAST run ended and nothing about the ones that never
+            # started - see `missed_run` for the week this hid.
+            skipped = missed_run(record)
+            if skipped is not None:
+                missed, why = skipped
+                if missed:
+                    failures.append(f"{task}: {why}")
+                else:
+                    print(f"      NOTE        skipped runs not checked: {why}")
 
     for failure in failures:
         print(f"  {failure}")

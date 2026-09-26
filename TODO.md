@@ -955,13 +955,21 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       (`data/widen_universe.log`) stops at 11:04, and the System event log has a clean restart at
       11:04:33 with no event naming who asked for it. It exited `0xC000013A`, nothing retried it,
       and the next attempt is its next weekly trigger - **one restart cost a week of coverage.** The
-      classification and re-measurement passes have the same single weekly attempt. Two remedies,
-      both the owner's because both change the machine rather than this repository: a
-      restart-on-failure setting on the weekly tasks (`schtasks`/Task Scheduler, "if the task
-      fails, restart every …"), or Windows Update active hours covering Sunday late morning. Gate
-      26 now names the cause and the right log (`platform/schedule.py :: log_of`, and the
-      `0xC000013A` row in `DIAGNOSED`); it clears on its own at the next clean pass. `swingdesk
-      status` or `python tools/verify_schedule.py` shows the state.
+      classification and re-measurement passes have the same single weekly attempt, and all three
+      carry `StartWhenAvailable=False` (`Get-ScheduledTask`, read 2026-09-26), so a machine off or
+      asleep at the trigger skips the week too.
+      ~~Remedy (a): a restart-on-failure setting on the weekly tasks.~~ **The owner chose it on
+      2026-09-26 and it does not work, which was not checked before it was offered:** Task
+      Scheduler restarts a task only when it FAILS TO START; a process that started and then died -
+      an error exit, or a reboot - counts as a successful launch and is never retried (Microsoft's
+      own forum answer, archived at learn.microsoft.com, "Restarting scheduled task that has
+      failed"; practitioner rank). **Put back to the owner with the options that do work:** a
+      daily catch-up trigger on each weekly task plus a wrapper that skips when a clean pass
+      finished in the last six days, and `StartWhenAvailable` on; or `StartWhenAvailable` alone,
+      which catches a missed trigger and not a killed run; or nothing. Gate 26 now names the cause,
+      the right log (`platform/schedule.py :: log_of`, the `0xC000013A` row in `DIAGNOSED`) and,
+      since the same day, a trigger that passed with no run (`missed_run`) - which a clean `0` from
+      weeks ago used to hide. `python tools/verify_schedule.py` shows the state.
 - [ ] **`[v]` OWNER'S CALL: MOVE `CARD-001`'S ENTRY FROM THE OPEN TO 15:55?** Raised 2026-09-17 by
       `PR-024`'s `ACCEPT` (`EVIDENCE_SUMMARY` §25): +0.311% a trade [+0.228, +0.418], all of it the
       spread, and the card breaks even at 15:55 rather than losing about 0.29% at the open. It is a
