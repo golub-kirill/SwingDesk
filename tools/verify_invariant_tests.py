@@ -45,6 +45,7 @@ decoration the first time someone renamed a variable.
 
 from __future__ import annotations
 
+import concurrent.futures
 import os
 import shutil
 import subprocess
@@ -339,11 +340,17 @@ def _run_mutant(mutant: Mutant, scratch: Path, index: int) -> str | None:
     # failures across 8 claims, from a change that was fixing the opposite problem. Overriding the
     # ini value on the command line is the one place both facts hold: the mutated copy is first,
     # and nothing else about the run has to know this gate exists.
+    # CONCURRENT SINCE 2026-09-26, so each run owns everything it writes. `--basetemp` gives it a
+    # private `tmp_path` root - pytest's shared numbered directories prune old ones, and a sibling
+    # mutant's run could remove a directory still in use. No cache provider, because twenty-odd
+    # processes writing one `.pytest_cache` in the same cwd is a race nobody needs. No bytecode, for
+    # the same reason on `tests/__pycache__`, which every run shares.
     result = subprocess.run(
         [sys.executable, "-m", "pytest", *mutant.tests, "-q", "-x",
-         "-o", f"pythonpath={workspace / 'src'}"],
+         "-o", f"pythonpath={workspace / 'src'}",
+         "-p", "no:cacheprovider", f"--basetemp={workspace / 'tmp'}"],
         cwd=REPO, capture_output=True, text=True, encoding="utf-8", errors="replace",
-        env={**os.environ, "PYTHONPATH": str(workspace / "src")},
+        env={**os.environ, "PYTHONPATH": str(workspace / "src"), "PYTHONDONTWRITEBYTECODE": "1"},
     )
     if "no tests ran" in result.stdout or "ERROR" in result.stdout:
         return (f"the named test did not run: {', '.join(mutant.tests)}. A missing test is not a "
@@ -356,10 +363,17 @@ def _run_mutant(mutant: Mutant, scratch: Path, index: int) -> str | None:
 
 def main() -> int:
     failures: list[str] = []
+    # THE MUTANTS RUN AT ONCE, one per core, because nothing connects them: each copies `src/` into
+    # its own directory, mutates that copy and runs pytest against it. Measured 2026-09-26: 23 in
+    # sequence took 36-40 s, most of it pytest starting up 23 times over. Results are printed in
+    # MUTANTS order whatever order they finish in, so the report reads the same as before.
     with tempfile.TemporaryDirectory(prefix="swingdesk-mutants-") as raw:
         scratch = Path(raw)
-        for index, mutant in enumerate(MUTANTS):
-            problem = _run_mutant(mutant, scratch, index)
+        workers = max(1, min(len(MUTANTS), os.cpu_count() or 1))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+            problems = list(pool.map(
+                lambda pair: _run_mutant(pair[1], scratch, pair[0]), enumerate(MUTANTS)))
+        for mutant, problem in zip(MUTANTS, problems, strict=True):
             print(f"  {'killed ' if problem is None else 'MISSED '} "
                   f"{mutant.claim}: {mutant.breaks}")
             if problem is not None:

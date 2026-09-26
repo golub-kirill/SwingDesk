@@ -21,9 +21,10 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import duckdb
 
@@ -66,6 +67,32 @@ def _basis(source: str) -> str | None:
     return parts[-1] if len(parts) >= 3 else None
 
 
+#: A request for a date within this many days AFTER the previous one, for the same instrument and
+#: instant, is a SCAN - the research runners walk a calendar session by session - and is served from
+#: a window read in one query. Anything else is a point read, exactly as before.
+_SCAN_GAP = timedelta(days=7)
+
+#: How far ahead a scan reads in one query: about eighty sessions of one instrument, which bounds the
+#: memory at a few tens of thousands of rows rather than the instrument's whole history.
+_SCAN_AHEAD = timedelta(days=120)
+
+
+@dataclass(slots=True)
+class _Window:
+    """One instrument's minutes over a date range, as known at one instant. Private to the store."""
+
+    instrument_id: str
+    knowledge_time: datetime
+    first: date
+    last: date
+    fetched: frozenset[date]
+    rows: dict[date, list[tuple[Any, ...]]]
+
+    def covers(self, instrument_id: str, session_date: date, knowledge_time: datetime) -> bool:
+        return (self.instrument_id == instrument_id and self.knowledge_time == knowledge_time
+                and self.first <= session_date <= self.last)
+
+
 @dataclass(frozen=True, slots=True)
 class Minute:
     """One one-minute bar: the instant it STARTED, its four prices, and - when the vendor served
@@ -89,6 +116,8 @@ class MinuteStore:
         self._connection = duckdb.connect(str(self.path))
         self._connection.execute(_SCHEMA)
         schema.reconcile(self._connection, _SCHEMA)
+        self._window: _Window | None = None
+        self._previous: tuple[str, datetime, date] | None = None
 
     def close(self) -> None:
         self._connection.close()
@@ -140,6 +169,7 @@ class MinuteStore:
         self._connection.execute(
             "INSERT OR REPLACE INTO minute_fetches VALUES (?, ?, ?, ?, ?)",
             [instrument_id, session_date, knowledge_time, source, len(rows)])
+        self._window = None    # what was read ahead may no longer be what the store holds
         return len(rows)
 
     def sources(self, instrument_id: str, knowledge_time: datetime) -> tuple[str, ...]:
@@ -169,21 +199,50 @@ class MinuteStore:
 
         `None` when no fetch of the session is known at that instant; `()` when one is and it served
         nothing. The latest version of each minute wins, as in `BarStore.as_of`.
+
+        **Read ahead when scanned, one session otherwise - and the answer is identical either way.**
+        Until 2026-09-26 every call ran two queries, and the research runners call it once per
+        session - 3,175 calls in `PR-033`'s end-to-end test alone. The window took the tests that
+        read minutes from 297 s to 265 s; most of what was left there was `calendar.session`, whose
+        own docstring says what it cost. A request within `_SCAN_GAP` after the previous one, for
+        the same instrument and instant, now reads `_SCAN_AHEAD` in one query and serves the rest
+        from memory. A request
+        that does not look like a scan - one entry's session, a backtest exit - is still a point
+        read, because reading eighty sessions to answer one would make the sparse callers slower.
+        The window partitions by `(session_date, minute)`, the same set the point query filtered
+        to before it ranked versions, so each session's rows are the rows the point read returns.
         """
-        fetched = self._connection.execute(
-            "SELECT count(*) FROM minute_fetches "
-            "WHERE instrument_id = ? AND session_date = ? AND knowledge_time <= ?",
-            [instrument_id, session_date, knowledge_time]).fetchone()
-        if fetched is None or fetched[0] == 0:
+        previous = self._previous
+        self._previous = (instrument_id, knowledge_time, session_date)
+        window = self._window
+        if window is None or not window.covers(instrument_id, session_date, knowledge_time):
+            scanning = (previous is not None and previous[0] == instrument_id
+                        and previous[1] == knowledge_time
+                        and previous[2] < session_date <= previous[2] + _SCAN_GAP)
+            last = session_date + _SCAN_AHEAD if scanning else session_date
+            window = self._window = self._read(instrument_id, session_date, last, knowledge_time)
+        if session_date not in window.fetched:
             return None
-        rows = self._connection.execute(
-            """
-            SELECT minute, open, high, low, close, volume, vwap FROM minute_bars
-            WHERE instrument_id = ? AND session_date = ? AND knowledge_time <= ?
-            QUALIFY ROW_NUMBER() OVER (PARTITION BY minute ORDER BY knowledge_time DESC) = 1
-            ORDER BY minute
-            """,
-            [instrument_id, session_date, knowledge_time]).fetchall()
         return tuple(Minute(at=row[0], open=row[1], high=row[2], low=row[3], close=row[4],
                             volume=None if row[5] is None else int(row[5]), vwap=row[6])
-                     for row in rows)
+                     for row in window.rows.get(session_date, ()))
+
+    def _read(self, instrument_id: str, first: date, last: date,
+              knowledge_time: datetime) -> _Window:
+        """Every session of one instrument between two dates, as known at one instant: two queries."""
+        fetched = frozenset(row[0] for row in self._connection.execute(
+            "SELECT DISTINCT session_date FROM minute_fetches "
+            "WHERE instrument_id = ? AND session_date BETWEEN ? AND ? AND knowledge_time <= ?",
+            [instrument_id, first, last, knowledge_time]).fetchall())
+        rows: dict[date, list[tuple[Any, ...]]] = {}
+        for row in self._connection.execute(
+            """
+            SELECT session_date, minute, open, high, low, close, volume, vwap FROM minute_bars
+            WHERE instrument_id = ? AND session_date BETWEEN ? AND ? AND knowledge_time <= ?
+            QUALIFY ROW_NUMBER() OVER (
+                PARTITION BY session_date, minute ORDER BY knowledge_time DESC) = 1
+            ORDER BY session_date, minute
+            """,
+            [instrument_id, first, last, knowledge_time]).fetchall():
+            rows.setdefault(row[0], []).append(row[1:])
+        return _Window(instrument_id, knowledge_time, first, last, fetched, rows)
