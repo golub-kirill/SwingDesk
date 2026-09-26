@@ -970,6 +970,13 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       the right log (`platform/schedule.py :: log_of`, the `0xC000013A` row in `DIAGNOSED`) and,
       since the same day, a trigger that passed with no run (`missed_run`) - which a clean `0` from
       weeks ago used to hide. `python tools/verify_schedule.py` shows the state.
+      **RULED 2026-09-26: the first option, and the owner asked the agent to make the machine
+      change.** Built: `tools/weekly_pass.py` and the three wrappers, tested by running the real
+      batch files against fake passes (`tests/test_weekly_pass.py`), and the runbook's commands.
+      **Still open until done and read back:** each weekly task's trigger moved to DAILY at its
+      current time with `StartWhenAvailable` on - applied only AFTER the wrappers reach the main
+      checkout, because a daily trigger in front of the old wrapper would run every pass daily and
+      append a re-measurement point every day. Closes when gate 26 reads the three daily triggers.
 - [ ] **`[v]` OWNER'S CALL: MOVE `CARD-001`'S ENTRY FROM THE OPEN TO 15:55?** Raised 2026-09-17 by
       `PR-024`'s `ACCEPT` (`EVIDENCE_SUMMARY` §25): +0.311% a trade [+0.228, +0.418], all of it the
       spread, and the card breaks even at 15:55 rather than losing about 0.29% at the open. It is a

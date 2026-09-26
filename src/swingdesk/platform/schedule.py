@@ -124,13 +124,21 @@ def missed_run(record: dict[str, str]) -> tuple[bool, str] | None:
     cannot read, returns `(False, why)` - the check could not be made, which is neither a miss nor
     a pass, and the caller prints it rather than passing silently.
     """
-    if (record.get("Schedule Type") or "").strip() != "Weekly":
+    kind = (record.get("Schedule Type") or "").strip()
+    if kind == "Daily":
+        # The weekly passes fire daily since 2026-09-26 and skip in seconds once this week's pass
+        # finished (`tools/weekly_pass.py`). Every N days, as `schtasks` words it; N is 1 here.
+        every = re.search(r"Every (\d+) day", " ".join(
+            (record.get(field) or "") for field in ("Days", "Months", "Repeat: Every")))
+        longest = int(every.group(1)) if every else 1
+    elif kind == "Weekly":
+        days = sorted(_WEEKDAYS.index(day.strip()) for day in (record.get("Days") or "").split(",")
+                      if day.strip() in _WEEKDAYS)
+        if not days:
+            return False, f"the scheduled days {record.get('Days')!r} could not be read"
+        longest = max((days[(i + 1) % len(days)] - day) % 7 or 7 for i, day in enumerate(days))
+    else:
         return False, f"schedule type {record.get('Schedule Type')!r} is not one this check reads"
-    days = sorted(_WEEKDAYS.index(day.strip()) for day in (record.get("Days") or "").split(",")
-                  if day.strip() in _WEEKDAYS)
-    if not days:
-        return False, f"the scheduled days {record.get('Days')!r} could not be read"
-    longest = max((days[(i + 1) % len(days)] - day) % 7 or 7 for i, day in enumerate(days))
     # Naive on purpose: both are the scheduler's local wall time and only their DIFFERENCE is used.
     # A daylight-saving change moves that difference by an hour, which the hour of slack absorbs.
     try:

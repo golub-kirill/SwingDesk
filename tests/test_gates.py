@@ -2868,6 +2868,15 @@ def test_gate_26_fails_on_a_skipped_run_whose_last_result_was_clean(
     assert ("never happened" in capsys.readouterr().out) is bool(expected)
 
 
+def test_a_daily_trigger_is_read_too() -> None:
+    """The weekly passes fire daily since 2026-09-26; a day with no run is a missed run."""
+    daily = {"Schedule Type": "Daily", "Days": "Every 1 day(s)",
+             "Last Run Time": "9/27/2026 11:00:00 AM", "Next Run Time": "9/28/2026 11:00:00 AM"}
+    assert verify_schedule.missed_run(daily) is None
+    skipped = verify_schedule.missed_run({**daily, "Last Run Time": "9/25/2026 11:00:00 AM"})
+    assert skipped is not None and skipped[0] is True
+
+
 def test_a_run_time_that_cannot_be_read_is_said_rather_than_passed() -> None:
     skipped = verify_schedule.missed_run(_weekly("SUN", "N/A", "9/27/2026 11:00:00 AM"))
     assert skipped is not None and skipped[0] is False

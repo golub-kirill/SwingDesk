@@ -62,6 +62,15 @@ if not exist "%PY%" (
   exit /b 3
 )
 
+REM DAILY TRIGGER, WEEKLY PASS (2026-09-26). The task fires every day and this asks
+REM whether this week's pass has already finished; if it has, the wrapper exits 0 in
+REM seconds. A pass killed by a reboot - the coverage pass of 2026-09-20 - or missed
+REM because the machine was off therefore runs the next day instead of a week later.
+REM Task Scheduler's "restart on failure" cannot do this: it retries only a task that
+REM failed to START. See tools\weekly_pass.py.
+"%PY%" -X utf8 "%REPO%\tools\weekly_pass.py" due classification --data "%REPO%\data" >> "%LOG%" 2>&1
+if errorlevel 10 exit /b 0
+
 REM Same preflight and the same reason as the other two wrappers: an interpreter
 REM that exists is not an environment that works, and this pass talks to the
 REM vendor.
@@ -81,6 +90,10 @@ echo ===== [%DATE% %TIME%] classification pass starting, budget %BUDGET% >> "%LO
 set RC=%ERRORLEVEL%
 
 echo ===== [%DATE% %TIME%] classification pass finished, exit %RC% >> "%LOG%"
+REM Done only on a clean code: 0, or 2 - the coded refusal gate 26 counts as clean.
+REM A crash records nothing, so tomorrow's trigger runs the pass again.
+if %RC%==0 "%PY%" -X utf8 "%REPO%\tools\weekly_pass.py" done classification --data "%REPO%\data" >> "%LOG%" 2>&1
+if %RC%==2 "%PY%" -X utf8 "%REPO%\tools\weekly_pass.py" done classification --data "%REPO%\data" >> "%LOG%" 2>&1
 
 REM `HANDOFF.md` section 2 owns the classification census and is generated
 REM (`AGENTS.md` 10.6), so the pass that CHANGES it rebuilds it. A held store is

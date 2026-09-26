@@ -127,7 +127,10 @@ def test_the_weekly_pass_runs_every_study_and_keeps_the_first_failure():
     runs = [line for line in wrapper.splitlines() if "remeasure.py" in line
             and not line.startswith("REM")]
     assert [line.split("remeasure.py\" ")[1].split()[0] for line in runs] == ["PR-019b", "PR-016"]
-    assert "if %RC%==0 set RC=%ERRORLEVEL%" in wrapper
+    # Since 2026-09-26 each study is asked whether it is due, so PR-016's code is held in STUDY
+    # before its done-check runs. `tests/test_weekly_pass.py` runs the batch file itself and
+    # asserts the first failure survives a clean PR-016; this line only pins the text.
+    assert "if %RC%==0 set RC=%STUDY%" in wrapper
 
 
 def test_the_report_says_how_far_the_read_quantity_has_moved(tool, capsys):

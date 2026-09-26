@@ -40,12 +40,27 @@ for %%F in ("%LOG%") do if %%~zF GTR 50000000 move /Y "%LOG%" "%LOG%.1" >nul 2>&
 echo. >> "%LOG%"
 echo ===== [%DATE% %TIME%] re-measurement pass starting >> "%LOG%"
 
+REM DAILY TRIGGER, WEEKLY POINTS (2026-09-26), asked PER STUDY: a pass killed after
+REM PR-019b's point landed must not append a second PR-019b point this week when it
+REM retries - a point per scheduled week is what AGENTS.md 19.7's guard rests on.
+REM Only the codes each study returns are aggregated; a study already done this week
+REM contributes 0. See tools\weekly_pass.py.
+set RC=0
+"%PY%" -X utf8 "%REPO%\tools\weekly_pass.py" due remeasure-PR-019b --data "%REPO%\data" >> "%LOG%" 2>&1
+if errorlevel 10 goto :pr016
 "%PY%" -X utf8 "%REPO%\tools\remeasure.py" PR-019b --data "%REPO%\data" >> "%LOG%" 2>&1
 set RC=%ERRORLEVEL%
+if %RC%==0 "%PY%" -X utf8 "%REPO%\tools\weekly_pass.py" done remeasure-PR-019b --data "%REPO%\data" >> "%LOG%" 2>&1
 REM PR-016 runs whatever PR-019b returned: a point skipped because another failed is a point the
 REM series never gets back. The first failure is the exit code either way.
+:pr016
+"%PY%" -X utf8 "%REPO%\tools\weekly_pass.py" due remeasure-PR-016 --data "%REPO%\data" >> "%LOG%" 2>&1
+if errorlevel 10 goto :finished
 "%PY%" -X utf8 "%REPO%\tools\remeasure.py" PR-016 --data "%REPO%\data" >> "%LOG%" 2>&1
-if %RC%==0 set RC=%ERRORLEVEL%
+set STUDY=%ERRORLEVEL%
+if %STUDY%==0 "%PY%" -X utf8 "%REPO%\tools\weekly_pass.py" done remeasure-PR-016 --data "%REPO%\data" >> "%LOG%" 2>&1
+if %RC%==0 set RC=%STUDY%
+:finished
 
 echo ===== [%DATE% %TIME%] re-measurement pass finished, exit %RC% >> "%LOG%"
 
