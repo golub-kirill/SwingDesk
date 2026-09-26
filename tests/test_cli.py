@@ -2221,7 +2221,8 @@ def _fill(symbol: str, order_id: str = "o-1", when: str = "2026-09-02T14:31:00+0
     )
 
 
-def _stub_read_client(monkeypatch, held=(), fills=(), orders=(), legs=None, legs_raise=None):
+def _stub_read_client(monkeypatch, held=(), fills=(), orders=(), legs=None, legs_raise=None,
+                      asked_after=None):
     from swingdesk import broker as broker_pkg
 
     class _Client:
@@ -2229,7 +2230,12 @@ def _stub_read_client(monkeypatch, held=(), fills=(), orders=(), legs=None, legs
             return tuple(held)
 
         def fills(self, now, after=None):
-            return tuple(fills)
+            if asked_after is None:
+                return tuple(fills)
+            # `DR-051`'s window test: the venue serves only what is at or after the window it is
+            # asked for, as the real feed does, and the test reads back what was asked.
+            asked_after.append(after)
+            return tuple(f for f in fills if after is None or f.transaction_time >= after)
 
         def open_orders(self, now):
             # `DR-041`: `sync-fills` asks what is RESTING so a trigger the venue holds at a price
@@ -2344,6 +2350,365 @@ def test_an_unreadable_leg_list_is_reported_and_not_silently_skipped(
     seen = capsys.readouterr()
     printed = (seen.out + seen.err).lower()
     assert "legs" in printed or "could not be read" in printed
+
+
+# --------------------------------------------------------------------------------------------
+# `DR-051`: an exit a PERSON closed gets its price from the venue.
+#
+# `respond --approve` on an `EXIT_NOW` closes a position and records no price. Since 2026-09-26
+# `k.drawdown_pause` counts closed positions, so that exit halted the paper run until somebody
+# typed `record-fill`. `BTSG` is the case: sold on a stop leg 2026-09-17, closed by approval
+# 2026-09-22, priced by hand 2026-09-26. The book is built here the way the OWNER built it - a
+# proposal answered through `swingdesk respond` - not by writing the closed state directly.
+
+
+def _closed_by_approval(tmp_path: Path, symbol: str = "AIS", *, reason_code: str = "STOP",
+                        approved: str = "2026-09-04T15:00:00", opened=date(2026, 9, 2)) -> str:
+    """A position the book opened, raised a stop on, then exited on the owner's approval. No fill.
+
+    Built through `swingdesk respond`, as the owner built `BTSG`'s - and with an approved
+    `MOVE_STOP` first, because a real position carries those and they are approved actions no fill
+    settles either: `BTSG`'s exit was its twenty-sixth proposal.
+    """
+    from datetime import timedelta
+
+    from swingdesk.contracts.position import ActionKind, ManagementAction
+
+    at = datetime.fromisoformat(approved).replace(tzinfo=UTC)
+    position = _book_position(symbol, opened=opened)
+
+    def answer(sequence: int, when: datetime) -> None:
+        assert cli.main(["respond", position.position_id, str(sequence), "--approve", "--reason",
+                         "agreed", "--data", str(tmp_path),
+                         "--as-of", when.replace(tzinfo=None).isoformat()]) == 0
+
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        store.record(position)
+        store.propose(ManagementAction(
+            position_id=position.position_id, proposed_at=at - timedelta(hours=14),
+            kind=ActionKind.MOVE_STOP, reason_code="TRAIL", reason="raise the stop",
+            old_stop=Decimal("45.00"), new_stop=Decimal("46.00"),
+        ))
+        raised = max(store.action_kinds_for(position.position_id))
+    answer(raised, at - timedelta(hours=13))
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        store.propose(ManagementAction(
+            position_id=position.position_id, proposed_at=at - timedelta(hours=12),
+            kind=ActionKind.EXIT_NOW, reason_code=reason_code,
+            reason="closed below the stop",
+            old_stop=store.history(position.position_id)[-1].current_stop,
+        ))
+        sequence = max(store.action_kinds_for(position.position_id))
+    answer(sequence, at)
+    return position.position_id
+
+
+def _sell(symbol: str, order_id: str, when: str, price: str = "44.10", shares: int = 17):
+    from swingdesk.contracts.broker import BrokerFill, FillKind, Side
+
+    return BrokerFill(
+        activity_id=f"a-sell-{symbol}-{order_id}", order_id=order_id, symbol=symbol,
+        side=Side.SELL, kind=FillKind.FILL, transaction_time=datetime.fromisoformat(when),
+        price=Decimal(price), shares=Decimal(shares),
+        observed_at=datetime(2026, 9, 4, 22, 30, tzinfo=UTC),
+    )
+
+
+def _sync_on(tmp_path: Path, when: str = "2026-09-04T22:30:00", dry_run: bool = False):
+    import argparse
+
+    return argparse.Namespace(data=tmp_path, as_of=when, dry_run=dry_run)
+
+
+def test_sync_prices_an_exit_the_owner_closed_from_the_venues_own_stop_leg(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """THE BTSG CASE. Sold on a LEG before the owner approved; the approval closed it priceless."""
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_submission("AIS"))
+    position_id = _closed_by_approval(tmp_path)
+    capsys.readouterr()
+    _stub_read_client(monkeypatch, held=[],
+                      fills=[_fill("AIS"), _sell("AIS", "leg-of-ours", "2026-09-03T19:11:00+00:00")],
+                      legs={"o-1": ("leg-of-ours",)})
+
+    assert cli._sync_fills(_sync_on(tmp_path)) == 0
+    assert "PRICED" in capsys.readouterr().out
+
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        (fill,) = store.fills_for(position_id)
+        kinds = store.action_kinds_for(position_id)
+        closed_on = store.history(position_id)[-1].closed_on
+    assert kinds[fill.sequence] == "exit_now", "the fill settles the approved EXIT_NOW"
+    assert (fill.shares, fill.price) == (17, Decimal("44.10")), "the VENUE's size and price"
+    assert fill.filled_on == date(2026, 9, 3), "the day it SOLD, not the day it was approved"
+    assert fill.planned_price == Decimal("46.00"), "a stop exit slips against the stop it had"
+    assert closed_on == date(2026, 9, 4), "the owner's close is left as the owner made it"
+
+
+def test_the_kill_switch_measures_again_once_the_venue_prices_the_exit(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """The point of the change: the halt `k.drawdown_pause` raised for a priceless exit lifts."""
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_submission("AIS"))
+    _closed_by_approval(tmp_path)
+    now = datetime(2026, 9, 4, 22, 30, tzinfo=UTC)
+    with BarStore(tmp_path / "bars.duckdb") as bars:
+        _bars_for(bars, "AIS", ((date(2026, 9, 2), "50.00"), (date(2026, 9, 3), "44.10")),
+                  knowledge=datetime(2026, 9, 3, 22, 0, tzinfo=UTC))
+
+    def fall():
+        with PositionStore(tmp_path / "positions.duckdb") as book, \
+                BarStore(tmp_path / "bars.duckdb") as store:
+            return cli._drawdown_now(book, store, _target_registry(), now)
+
+    assert isinstance(fall(), drawdown.Unavailable), "an exit with no price is an unknown result"
+    _stub_read_client(monkeypatch, held=[],
+                      fills=[_fill("AIS"), _sell("AIS", "o-1", "2026-09-03T19:11:00+00:00")])
+    assert cli._sync_fills(_sync_on(tmp_path)) == 0
+    measured = fall()
+    assert isinstance(measured, drawdown.Drawdown), measured
+    assert measured.percent > 0, "the stop-out is a loss, and the curve now carries it"
+
+
+def test_a_sale_that_is_not_ours_is_left_to_a_person(tmp_path: Path, monkeypatch, capsys) -> None:
+    """Somebody sold by hand. Attributing it would be this command deciding what a sale meant."""
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_submission("AIS"))
+    position_id = _closed_by_approval(tmp_path)
+    _stub_read_client(monkeypatch, held=[],
+                      fills=[_fill("AIS"), _sell("AIS", "hand-sold", "2026-09-04T14:00:00+00:00")])
+
+    assert cli._sync_fills(_sync_on(tmp_path)) == 0
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        assert store.fills_for(position_id) == []
+    assert "PRICED" not in capsys.readouterr().out
+
+
+def test_a_sale_of_a_different_size_is_refused_not_recorded(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """`closing_exit`'s refusals apply unchanged: the book closed 17 and the venue sold 10."""
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_submission("AIS"))
+    position_id = _closed_by_approval(tmp_path)
+    _stub_read_client(monkeypatch, held=[], fills=[
+        _fill("AIS"), _sell("AIS", "o-1", "2026-09-04T14:00:00+00:00", shares=10)])
+
+    assert cli._sync_fills(_sync_on(tmp_path)) == 2
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        assert store.fills_for(position_id) == []
+    assert "partial exit" in capsys.readouterr().err
+
+
+def test_the_fills_window_reaches_back_to_a_sale_older_than_the_open_book(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """With nothing open, the window used to start three days before TODAY and miss the sale."""
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_submission("AIS"))
+    position_id = _closed_by_approval(tmp_path, approved="2026-09-20T15:00:00")
+    asked: list = []
+    _stub_read_client(monkeypatch, held=[], asked_after=asked,
+                      fills=[_fill("AIS"), _sell("AIS", "o-1", "2026-09-03T19:11:00+00:00")])
+
+    assert cli._sync_fills(_sync_on(tmp_path, "2026-09-20T22:30:00")) == 0
+    assert asked and asked[0].date() <= date(2026, 9, 2), asked
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        assert len(store.fills_for(position_id)) == 1
+
+
+def test_a_holding_the_owner_closed_but_has_not_sold_is_awaiting_a_sale_not_adopted(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """Approved, not yet sold: the venue still holds it. Adopting it would open a SECOND position.
+
+    Until 2026-09-26 the only thing that stopped it was the new position's id colliding with the
+    old one's, which failed as `could not be recorded: ... already recorded` and exit 2 - an
+    accident, not a rule, and one a different first-fill date in the window would have walked past.
+    """
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_submission("AIS"))
+    position_id = _closed_by_approval(tmp_path)
+    _stub_read_client(monkeypatch, held=[_venue_position("AIS", shares="17")],
+                      fills=[_fill("AIS", when="2026-09-03T14:31:00+00:00")])
+
+    assert cli._sync_fills(_sync_on(tmp_path)) == 0
+    out = capsys.readouterr().out
+    assert "AWAITING SALE" in out and "nothing to record" not in out
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        book = store.latest_as_of(datetime(2026, 9, 4, 23, 0, tzinfo=UTC))
+    assert [p.position_id for p in book] == [position_id], "no second position was opened"
+
+
+def test_two_approved_exits_with_no_fill_are_a_persons_question(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """Which one a sale settles cannot be read from the book, so nothing is chosen for them."""
+    from swingdesk.contracts.position import ActionKind, ActionStatus, ManagementAction
+
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_submission("AIS"))
+    position_id = _closed_by_approval(tmp_path)
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        store.propose(ManagementAction(
+            position_id=position_id, proposed_at=datetime(2026, 9, 4, 16, 0, tzinfo=UTC),
+            kind=ActionKind.EXIT_NOW, reason_code="STOP", reason="again",
+            old_stop=Decimal("45.00"),
+        ))
+        second = max(store.action_kinds_for(position_id))
+        store.respond(position_id, second, choice=ActionStatus.APPROVED, reason="again",
+                      at=datetime(2026, 9, 4, 16, 0, tzinfo=UTC))
+    _stub_read_client(monkeypatch, held=[],
+                      fills=[_fill("AIS"), _sell("AIS", "o-1", "2026-09-04T14:00:00+00:00")])
+
+    assert cli._sync_fills(_sync_on(tmp_path)) == 2
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        assert store.fills_for(position_id) == []
+    assert "a person's question" in capsys.readouterr().err
+
+
+def test_a_rejected_exit_is_not_one_a_sale_can_settle(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """Only an APPROVED `EXIT_NOW` is waiting for a price - a rejected one closed nothing."""
+    from swingdesk.contracts.position import ActionKind, ActionStatus, ManagementAction
+
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_submission("AIS"))
+    position_id = _closed_by_approval(tmp_path)
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        store.propose(ManagementAction(
+            position_id=position_id, proposed_at=datetime(2026, 9, 4, 16, 0, tzinfo=UTC),
+            kind=ActionKind.EXIT_NOW, reason_code="STOP", reason="again",
+            old_stop=Decimal("46.00"),
+        ))
+        rejected = max(store.action_kinds_for(position_id))
+        store.respond(position_id, rejected, choice=ActionStatus.REJECTED, reason="no",
+                      at=datetime(2026, 9, 4, 16, 0, tzinfo=UTC))
+    _stub_read_client(monkeypatch, held=[],
+                      fills=[_fill("AIS"), _sell("AIS", "o-1", "2026-09-04T14:00:00+00:00")])
+
+    assert cli._sync_fills(_sync_on(tmp_path)) == 0
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        (fill,) = store.fills_for(position_id)
+    assert fill.sequence != rejected
+
+
+def test_a_dry_run_prices_nothing(tmp_path: Path, monkeypatch, capsys) -> None:
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_submission("AIS"))
+    position_id = _closed_by_approval(tmp_path)
+    _stub_read_client(monkeypatch, held=[],
+                      fills=[_fill("AIS"), _sell("AIS", "o-1", "2026-09-04T14:00:00+00:00")])
+
+    assert cli._sync_fills(_sync_on(tmp_path, dry_run=True)) == 0
+    assert "WOULD PRICE" in capsys.readouterr().out
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        assert store.fills_for(position_id) == []
+
+
+# --------------------------------------------------------------------------------------------
+# `DR-052`: a holding is adopted from the ORDER its buys filled.
+#
+# Until 2026-09-26 the open half dated a holding by the earliest fill of ANY side in its symbol and
+# took the stop of the LATEST order sent in it. `AIS` has been held twice, and orders sent in a
+# name include `swingdesk-protect-…` SELLs. The stub below returns every fill whatever window is
+# asked for, which is the wide window these cases need.
+
+
+def _sent_order(instrument_id: str, venue_order_id: str, *, stop: str, at: datetime,
+                client_order_id: str | None = None):
+    from swingdesk.journal_evidence.journal import Submission
+
+    return Submission(
+        run_id="RUN-SENT", client_order_id=client_order_id or f"swingdesk-{at:%Y-%m-%d}-{instrument_id}",
+        attempted_at=at, session_date=at.date(), instrument_id=instrument_id, shares=17,
+        limit_price=Decimal("50.00"), stop_price=Decimal(stop), outcome="sent",
+        venue_order_id=venue_order_id, venue_status="accepted",
+    )
+
+
+def _trade(symbol: str, order_id: str, when: str, side: str = "buy", shares: int = 17):
+    from swingdesk.contracts.broker import BrokerFill, FillKind, Side
+
+    return BrokerFill(
+        activity_id=f"a-{order_id}-{when}", order_id=order_id, symbol=symbol,
+        side=Side(side), kind=FillKind.FILL, transaction_time=datetime.fromisoformat(when),
+        price=Decimal("50.00"), shares=Decimal(shares),
+        observed_at=datetime(2026, 9, 3, 22, 30, tzinfo=UTC),
+    )
+
+
+def test_a_name_held_twice_is_adopted_from_its_own_entry_not_the_first_positions(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """The first position's buy is ours and sits in the same feed. It must not date the second.
+
+    Before `DR-052` the earliest fill in the symbol dated the holding, so it was recorded as
+    `POS-AIS-2026-08-20` - the FIRST position's id, which the store refuses - and the venue went on
+    holding a name the book did not carry, which stops every entry.
+    """
+    first = _book_position("AIS").model_copy(update={
+        "position_id": "POS-AIS-2026-08-20", "opened_on": date(2026, 8, 20)})
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_order(
+            "AIS", "o-old", stop="40.00", at=datetime(2026, 8, 19, 22, 0, tzinfo=UTC)))
+        journal.record_submission(_sent_order(
+            "AIS", "o-new", stop="45.00", at=datetime(2026, 9, 1, 22, 0, tzinfo=UTC)))
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        store.record(first)
+        store.record(first.model_copy(update={"version": 2, "closed_on": date(2026, 8, 25)}))
+    _stub_read_client(monkeypatch, held=[_venue_position("AIS", shares="17")], fills=[
+        _trade("AIS", "o-old", "2026-08-20T13:31:00+00:00"),
+        _trade("AIS", "o-old-leg", "2026-08-25T15:00:00+00:00", side="sell"),
+        _trade("AIS", "o-new", "2026-09-02T13:31:00+00:00"),
+    ])
+
+    assert cli._sync_fills(_sync_args(tmp_path)) == 0
+
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        (adopted,) = store.open_as_of(datetime(2026, 9, 3, 22, 30, tzinfo=UTC))
+    assert adopted.opened_on == date(2026, 9, 2), "the session ITS order filled in"
+    assert adopted.position_id == "POS-AIS-2026-09-02"
+    assert adopted.initial_stop == Decimal("45.00"), "the stop of the order that filled"
+
+
+def test_the_stop_comes_from_the_entry_that_filled_not_the_latest_order_sent(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """A protective SELL sent after the entry is the latest order in the name, and not an entry."""
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_order(
+            "AIS", "o-1", stop="45.00", at=datetime(2026, 9, 1, 22, 0, tzinfo=UTC)))
+        journal.record_submission(_sent_order(
+            "AIS", "p-1", stop="47.00", at=datetime(2026, 9, 2, 21, 0, tzinfo=UTC),
+            client_order_id="swingdesk-protect-2026-09-02-AIS"))
+    _stub_read_client(monkeypatch, held=[_venue_position("AIS", shares="17")],
+                      fills=[_trade("AIS", "o-1", "2026-09-02T13:31:00+00:00")])
+
+    assert cli._sync_fills(_sync_args(tmp_path)) == 0
+
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        (adopted,) = store.open_as_of(datetime(2026, 9, 3, 22, 30, tzinfo=UTC))
+    assert adopted.initial_stop == Decimal("45.00")
+
+
+def test_a_hand_bought_holding_in_a_name_we_once_traded_is_not_adopted(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """A buy by an order that is not ours is somebody trading by hand, whatever we sent before."""
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_order(
+            "AIS", "o-old", stop="40.00", at=datetime(2026, 8, 19, 22, 0, tzinfo=UTC)))
+    _stub_read_client(monkeypatch, held=[_venue_position("AIS", shares="17")],
+                      fills=[_trade("AIS", "by-hand", "2026-09-02T13:31:00+00:00")])
+
+    assert cli._sync_fills(_sync_args(tmp_path)) == 3
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        assert store.open_as_of(datetime(2026, 9, 3, 22, 30, tzinfo=UTC)) == []
+    assert "trace to no order" in capsys.readouterr().err
 
 
 def test_sync_records_a_position_for_an_entry_this_system_placed(
@@ -2553,6 +2918,64 @@ def test_our_own_resting_order_no_longer_halts_the_retry_pass(
         "the retry may still submit a name the first pass did not"
 
 
+def _our_resting_bracket(symbol: str):
+    """What the VENUE returns for a bracket we sent that has not filled: the parent and two legs.
+
+    `open_orders` asks with `nested=true` and flattens the legs (`DR-036`, measured 2026-09-04);
+    each leg carries an id the venue generated and, since `DR-043`, its parent's. The fixture above
+    is the parent alone - an order as WE think of it - and that is why the test built on it passed
+    while every real retry pass stopped (`DR-053`).
+    """
+    from swingdesk.contracts.broker import PlacedOrder
+
+    parent = _our_order(symbol)
+    legs = [
+        PlacedOrder(
+            order_id=f"{kind}-{symbol}", client_order_id=f"venue-made-{kind}-{symbol}",
+            symbol=symbol, status="held", order_type=kind, side="sell",
+            stop_price=Decimal("45.00") if kind == "stop" else None,
+            parent_client_order_id=parent.client_order_id,
+            submitted_at=parent.submitted_at, observed_at=parent.observed_at,
+        )
+        for kind in ("limit", "stop")
+    ]
+    return [parent, *legs]
+
+
+def test_our_resting_BRACKET_does_not_halt_the_retry_pass(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """`DR-053`, measured: on 2026-09-07 and 2026-09-22 - both evenings a first pass sent entries -
+    the 19:30 pass stopped with `TECH: the venue holds N symbol(s) this system's book does not
+    carry`, naming exactly the names the 18:30 pass had sent. 392 and 313 candidates stopped."""
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent, live_orders=_our_resting_bracket("OURS"))
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book, \
+            BarStore(tmp_path / 'bars.duckdb') as bars:
+        journal.record_submission(_sent_for("OURS"))
+        cli._submit(_result_with_trades(_trade_outcome("LATER", "energy")), tmp_path,
+                    datetime(2026, 9, 2, 23, 31, tzinfo=UTC), journal, _target_registry(), book, bars)
+
+    printed = capsys.readouterr()
+    assert "TECH" not in printed.err, "the legs the venue built out of our order are ours"
+    assert [order.symbol for order in sent] == ["LATER"]
+
+
+def test_a_leg_whose_parent_is_not_ours_is_still_exposure() -> None:
+    """The widening is to OUR legs only: a bracket somebody typed by hand still stops submission."""
+    from swingdesk.broker import uncommitted_exposure
+
+    theirs = [order.model_copy(update={"parent_client_order_id": "typed-by-hand"})
+              for order in _our_resting_bracket("THEIRS")[1:]]
+    sent_ids = frozenset({"swingdesk-2026-09-02-OURS"})
+
+    assert uncommitted_exposure([], [], theirs, "NYSE", sent_order_ids=sent_ids) == ("THEIRS",)
+    assert uncommitted_exposure([], [], _our_resting_bracket("OURS"), "NYSE",
+                                sent_order_ids=sent_ids) == ()
+
+
 def test_a_resting_order_of_ours_still_consumes_a_slot_in_the_caps(
     tmp_path: Path, monkeypatch, capsys
 ) -> None:
@@ -2580,6 +3003,33 @@ def test_a_resting_order_of_ours_still_consumes_a_slot_in_the_caps(
     assert sent[0].symbol == "NEW0", "the one taken is the one the ranking put first"
     assert "3 live order(s) of ours already hold" in capsys.readouterr().out
     assert [rows[f"NEW{n}"].outcome for n in range(4)] == ["sent", "stopped", "stopped", "stopped"]
+
+
+def test_the_retry_does_not_offer_again_a_name_already_resting(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """What the 19:30 pass actually sees: the 18:30 pass's names come back as `Trade` decisions.
+
+    The resting order already holds its slot through `committed`. Offering the same name again
+    would take a SECOND slot for it and send a duplicate - and a slot spent on a duplicate is one a
+    new name could have had. `DR-053` is what made this reachable: until it, the retry stopped
+    before it got this far.
+    """
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent, live_orders=_our_resting_bracket("R1"))
+    again_and_new = [_trade_outcome("R1", "energy"), _trade_outcome("NEW0", "utilities")]
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book, \
+            BarStore(tmp_path / 'bars.duckdb') as bars:
+        journal.record_submission(_sent_for("R1"))
+        cli._submit(_result_with_trades(*again_and_new), tmp_path,
+                    datetime(2026, 9, 2, 23, 31, tzinfo=UTC), journal, _target_registry(), book, bars)
+        rows = {row.instrument_id: row for row in journal.submissions_for("RUN-TEST")}
+
+    assert [order.symbol for order in sent] == ["NEW0"], "R1 is resting; only NEW0 is new"
+    assert rows["R1"].outcome == "stopped" and "already resting" in (rows["R1"].detail or "")
+    assert "NOT JOURNALLED" not in capsys.readouterr().err, "every attempt reaches the journal"
 
 
 def test_an_order_we_did_not_send_still_halts_everything(

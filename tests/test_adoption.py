@@ -235,17 +235,61 @@ def test_selling_MORE_than_the_book_holds_REFUSES() -> None:
     assert "20" in result.reason
 
 
-def test_a_sell_dated_BEFORE_the_position_opened_REFUSES() -> None:
-    """It cannot have closed this position, so the book and the venue disagree about which position
-    this is - and dating a close from it would put the exit before the entry."""
+def test_a_sell_dated_BEFORE_the_position_opened_closes_NOTHING() -> None:
+    """It cannot have closed this position, and dating a close from it would put the exit before
+    the entry. Until 2026-09-26 this REFUSED - see the next test for what that cost."""
     result = adoption.closing_exit(
         _position(),
         [_fill(transaction_time=datetime(2026, 8, 30, 15, 0, tzinfo=UTC))],
         OURS,
     )
 
-    assert isinstance(result, Refusal)
-    assert "cannot have closed" in result.reason
+    assert result is None
+
+
+def test_a_name_held_twice_closes_on_its_own_sale_not_the_earlier_positions() -> None:
+    """`AIS` was held twice. The first position's sale is one of ours and sits in the same feed.
+
+    Refusing on it - the behaviour until 2026-09-26 - meant the SECOND position's stop-out could
+    never be recorded once the fills window reached back to the first sale, and a position the
+    venue had closed stayed open in the book, stopping every entry: `BTSG`'s shape, from another
+    direction.
+    """
+    earlier = _fill(activity_id="first-position", shares=Decimal(40),
+                    transaction_time=datetime(2026, 8, 30, 15, 0, tzinfo=UTC))
+    result = adoption.closing_exit(_position(), [earlier, _fill()], OURS)
+
+    assert isinstance(result, adoption.VenueExit), result
+    assert result.shares == 17
+    assert result.activity_ids == (_fill().activity_id,)
+
+
+def test_the_opening_entry_is_the_latest_of_our_orders_to_fill_dated_by_its_first_share() -> None:
+    """`DR-052`. Two of our entries in one name, a sale between them, and a stranger's buy."""
+    from swingdesk.contracts.broker import Side
+
+    fills = [
+        _fill(activity_id="1", order_id="entry-1", side=Side.BUY,
+              transaction_time=datetime(2026, 8, 20, 13, 31, tzinfo=UTC)),
+        _fill(activity_id="2", order_id="exit-1", side=Side.SELL,
+              transaction_time=datetime(2026, 8, 25, 15, 0, tzinfo=UTC)),
+        _fill(activity_id="3", order_id="entry-2", side=Side.BUY,
+              transaction_time=datetime(2026, 9, 2, 19, 59, tzinfo=UTC)),
+        _fill(activity_id="4", order_id="entry-2", side=Side.BUY,
+              transaction_time=datetime(2026, 9, 3, 13, 31, tzinfo=UTC)),
+        _fill(activity_id="5", order_id="stranger", side=Side.BUY,
+              transaction_time=datetime(2026, 9, 4, 13, 31, tzinfo=UTC)),
+        # Ours, and the LATEST fill in the name - a partial sale is not an entry.
+        _fill(activity_id="6", order_id="trim-2", side=Side.SELL, shares=Decimal(5),
+              transaction_time=datetime(2026, 9, 5, 15, 0, tzinfo=UTC)),
+    ]
+    mine = {"entry-1", "exit-1", "entry-2", "trim-2"}.__contains__
+
+    entry = adoption.opening_entry("AIS", fills, mine)
+
+    assert entry == adoption.EntryFill(order_id="entry-2", opened_on=date(2026, 9, 2))
+    assert adoption.opening_entry("AIS", fills, lambda _order: False) is None
+    assert adoption.opening_entry("DINO", fills, mine) is None
 
 
 def test_a_BUY_fill_is_not_an_exit() -> None:

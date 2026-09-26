@@ -133,6 +133,48 @@ VENUE_CURRENCY = "USD"
 
 
 @dataclass(frozen=True, slots=True)
+class EntryFill:
+    """The order of ours a holding came from, and the session its first share printed in."""
+
+    order_id: str
+    opened_on: date
+
+
+def opening_entry(
+    symbol: str,
+    fills: Sequence[BrokerFill],
+    ours: Callable[[str], bool],
+) -> EntryFill | None:
+    """Which order of ours a holding came from, found by the ORDER its buys filled. `DR-052`.
+
+    **Keyed on the order, never on the symbol.** Until 2026-09-26 a holding was dated by the
+    earliest fill of ANY side in its symbol, and given the stop of the LATEST order sent in its
+    symbol. `AIS` has been held twice: with the fills window reaching back past 2026-09-03, the
+    second position would have been dated from the first one's buy - and recorded under the first
+    one's id, which is refused, so the holding is never adopted and `DR-027` §11 stops everything.
+    And the latest order sent in a name is as often a `swingdesk-protect-…` SELL as an entry.
+
+    The MOST RECENT of our entries to fill is the one the holding is: this system holds a name at
+    most once at a time, so an earlier entry's shares were sold before a later one could fill.
+    `None` when no BUY fill in `symbol` settles an order of ours - which the caller splits into a
+    holding it cannot date (no buy in the feed at all) and one somebody else bought.
+
+    Pure: no store, no clock, no network.
+    """
+    by_order: dict[str, list[BrokerFill]] = {}
+    for fill in fills:
+        if fill.symbol == symbol and fill.side is Side.BUY and ours(fill.order_id):
+            by_order.setdefault(fill.order_id, []).append(fill)
+    if not by_order:
+        return None
+    order_id, bought = max(
+        by_order.items(), key=lambda item: max(fill.transaction_time for fill in item[1]),
+    )
+    return EntryFill(order_id=order_id,
+                     opened_on=min(fill.transaction_time for fill in bought).date())
+
+
+@dataclass(frozen=True, slots=True)
 class VenueExit:
     """The venue's own account of how a position ended: what filled, at what, and settling which order."""
 
@@ -162,13 +204,21 @@ def closing_exit(
     `DR-031` applies to shares arriving. `None` means the venue offered no such record, and the
     caller leaves the divergence to a person (`DR-027` §11).
 
-    Three refusals, each a fact the book cannot describe rather than a threshold:
+    Two refusals, each a fact the book cannot describe rather than a threshold:
 
       - fewer shares sold than held - a PARTIAL exit, which is a different action with different
         vocabulary and a size the book would otherwise record wrongly;
       - more shares sold than held - the book and the venue disagree about the size, and guessing
-        which is right is exactly what a reconciliation guard exists to prevent;
-      - a sell dated before the position opened, which cannot have closed it.
+        which is right is exactly what a reconciliation guard exists to prevent.
+
+    **A sell dated before the position opened is IGNORED, not refused - since 2026-09-26.** It
+    cannot have closed this position, and the reason it exists is almost always an EARLIER position
+    in the same name: `AIS` was held twice, `POS-AIS-2026-09-03` and `POS-AIS-2026-09-23`, and the
+    first one's sale is one of ours. Until then this refused on it, so once the fills window reached
+    back to the first sale the second position's own stop-out could not be recorded - `BTSG`'s four
+    idle days, reached from a different direction (`DR-051` §"found while building it"). Ignoring
+    it writes nothing it did not write before: with no sale on or after the opening, the answer is
+    still `None` and the divergence is still a person's.
 
     Pure, like everything else here: no store, no clock, no network.
     """
@@ -177,18 +227,10 @@ def closing_exit(
         if fill.symbol == position.instrument_id
         and fill.side is Side.SELL
         and ours(fill.order_id)
+        and fill.transaction_time.date() >= position.opened_on
     ]
     if not relevant:
         return None
-
-    early = [f for f in relevant if f.transaction_time.date() < position.opened_on]
-    if early:
-        return Refusal(
-            "TECH",
-            f"{position.instrument_id}: a sell dated {min(f.transaction_time.date() for f in early)} "
-            f"cannot have closed a position opened {position.opened_on}. The book and the venue "
-            f"disagree about which position this is.",
-        )
 
     sold = sum((fill.shares for fill in relevant), start=Decimal(0))
     if sold < position.shares:

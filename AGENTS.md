@@ -508,7 +508,7 @@ rotted when the fact it cited moved, and none said where that fact lived.
 **The traps.** One rule, one clause on what it cost.
 
 - **A fixture built from the same assumption as the code is a mirror, not a check.** `DR-050`: `sync-fills` defined *"an order of ours"* as *"an id we sent"*, and every test of it sent an order and then reported a fill on that id. The venue creates LEGS out of our orders with ids of their own, so a stop-out - always the leg, never the primary - was never recorded, and the book kept every winner and dropped every loser for as long as the code existed. **Zero tests failed and zero mutants survived.** What found it was reading the live account against the live book. When a rule decides what counts as *ours*, write one test from the OTHER side's vocabulary.
-- **A lesson learned in one code path does not travel to the next one by itself.** The same `DR-050`: `open_orders` was taught on 2026-09-04 that an `oco`'s legs are separate orders and flattens them, with the measurement in its own docstring - *"a leg IS a resting order"*. The CLOSE path was written afterwards, **ninety lines below in the same file**, and did not apply it. When a measurement changes what a venue's answer MEANS, grep for every other place that reads the same answer: the second one is not found by remembering.
+- **A lesson learned in one code path does not travel to the next one by itself.** The same `DR-050`: `open_orders` was taught on 2026-09-04 that an `oco`'s legs are separate orders and flattens them, with the measurement in its own docstring - *"a leg IS a resting order"*. The CLOSE path was written afterwards, **ninety lines below in the same file**, and did not apply it. When a measurement changes what a venue's answer MEANS, grep for every other place that reads the same answer: the second one is not found by remembering. **Second instance, 2026-09-26 (`DR-052`), in the same function:** `journal.submission_for_order` was built for the close half as *"an exact anchor rather than the latest row for a symbol"*, and the open half went on dating a holding by the symbol's earliest fill and reading its stop from the symbol's latest order - so `AIS`, held twice, would have been recorded under its first position's id and refused. Reproduced on a copy of the live account; it had not happened only because no older position was open that evening. **Third, the same day (`DR-053`):** `DR-043` gave every flattened leg its parent's id so our own legs would read as ours, and only the stop-raise check used it - so `uncommitted_exposure` called our own resting bracket foreign, and the 19:30 retry stopped on 2026-09-07 and 2026-09-22, the only two evenings a first pass had traded. `DR-050` §4 had recorded that check as already safe; it had checked a different function.
 - **A column's NAME is not its meaning — join on the entity your claim is about.** EDGAR's
   quarterly index has a column called `Company Name`, and for a Form `25-NSE` it holds the
   **filer**, which is the EXCHANGE: 203 of 462 rows in 2020Q1 say `Cboe BZX Exchange, Inc.` where a
@@ -811,6 +811,11 @@ rotted when the fact it cited moved, and none said where that fact lived.
 
 **The habits:**
 
+- **Rehearse a command you hand to the owner on a COPY of the store it will write, and say every
+  step it leaves undone.** On 2026-09-22 a bare `respond --approve` was handed over to close `BTSG`;
+  it closed the position and recorded no price, and nobody said the price is a second command. The
+  book lost its only loss for four days and, once the kill switch counted closed positions, the
+  paper run stopped on it. `DR-051` removed that particular second step; the habit is for the next.
 - **Name the owner before making the claim.** *Which artifact owns this, and have I opened it?* It
   is the only thing that catches the proxy trap, because a proxy answer feels exactly like a checked
   one and no gate can help.
@@ -1094,9 +1099,12 @@ the cost is read off the run rather than off this paragraph. What changed it, me
 the suite runs across every core (`pytest-xdist`, gate 8 only - a single test file stays
 single-process, because starting sixteen workers costs more than the file), and gate 33 stopped
 walking 88 squash-merged local branches git could never recognise as merged. **The current total is
-on the last screen of every run, and deliberately not here.** Most of what is left is the research
-runners' end-to-end tests, bound by a per-session DuckDB read in `MinuteStore.session()`. (The gate *count* is in `HANDOFF.md` §2,
-generated — §10.5, and gate 14 caught this paragraph naming it.)
+on the last screen of every run, and deliberately not here.** The research runners' end-to-end
+tests were the next cost, and the profile named a different culprit than this paragraph did:
+~~bound by a per-session DuckDB read in `MinuteStore.session()`~~ - that read was the smaller half,
+and `calendar.session()` building a pandas schedule for every single day was the larger. Both were
+fixed on 2026-09-26; their docstrings carry the measurements. (The gate *count* is in `HANDOFF.md`
+§2, generated — §10.5, and gate 14 caught this paragraph naming it.)
 
 **The order is the rule, not the list.** Gates before merge, review before commit, validation before
 build. A step taken out of order is a step not taken, and step 4 is the one most easily skipped

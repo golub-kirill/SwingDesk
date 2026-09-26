@@ -2792,3 +2792,17 @@ positives, and gate 28 remains the one shape exact enough to compare — a param
 does.** `docs/08-pm/TRIAL_BUDGET.md` §6 records it and the document is `frozen`. The proposed 25 and
 its allocation were not adopted; §2's three counting rules were. `tools/trial_budget.py` derives the
 count, and no gate runs it — `tools/check_gates.py` registers none.
+
+## `BTSG`'s exit had no price, and `sync-fills` could not supply one — closed 2026-09-26
+
+**The owner recorded it** on 2026-09-26 — `record-fill POS-BTSG-2026-09-03 26 --shares 18 --price
+57.57 --commission 0 --filled-on 2026-09-17`, slippage 0.0074R against the 57.61 stop — and **ruled
+the same day that `sync-fills` should do it from now on**: `DR-051`.
+
+**The lesson is promoted, which is why this entry may move.** Two halves. The advice half — a
+closing command handed over without saying the price is a second step — is `AGENTS.md` §12's first
+habit: rehearse a handed-over command on a copy of the store it writes. The mechanism half is `DR-051`: an
+approved `EXIT_NOW` now gets its price from the venue's own sale of an order of ours, and a holding
+approved for exit but not yet sold is `AWAITING SALE` rather than adopted as a second position.
+Checked on a copy of the live stores with the hand-typed fill removed: `sync-fills` re-derived it
+exactly.
