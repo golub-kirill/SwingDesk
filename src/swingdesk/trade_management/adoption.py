@@ -133,6 +133,48 @@ VENUE_CURRENCY = "USD"
 
 
 @dataclass(frozen=True, slots=True)
+class EntryFill:
+    """The order of ours a holding came from, and the session its first share printed in."""
+
+    order_id: str
+    opened_on: date
+
+
+def opening_entry(
+    symbol: str,
+    fills: Sequence[BrokerFill],
+    ours: Callable[[str], bool],
+) -> EntryFill | None:
+    """Which order of ours a holding came from, found by the ORDER its buys filled. `DR-052`.
+
+    **Keyed on the order, never on the symbol.** Until 2026-09-26 a holding was dated by the
+    earliest fill of ANY side in its symbol, and given the stop of the LATEST order sent in its
+    symbol. `AIS` has been held twice: with the fills window reaching back past 2026-09-03, the
+    second position would have been dated from the first one's buy - and recorded under the first
+    one's id, which is refused, so the holding is never adopted and `DR-027` §11 stops everything.
+    And the latest order sent in a name is as often a `swingdesk-protect-…` SELL as an entry.
+
+    The MOST RECENT of our entries to fill is the one the holding is: this system holds a name at
+    most once at a time, so an earlier entry's shares were sold before a later one could fill.
+    `None` when no BUY fill in `symbol` settles an order of ours - which the caller splits into a
+    holding it cannot date (no buy in the feed at all) and one somebody else bought.
+
+    Pure: no store, no clock, no network.
+    """
+    by_order: dict[str, list[BrokerFill]] = {}
+    for fill in fills:
+        if fill.symbol == symbol and fill.side is Side.BUY and ours(fill.order_id):
+            by_order.setdefault(fill.order_id, []).append(fill)
+    if not by_order:
+        return None
+    order_id, bought = max(
+        by_order.items(), key=lambda item: max(fill.transaction_time for fill in item[1]),
+    )
+    return EntryFill(order_id=order_id,
+                     opened_on=min(fill.transaction_time for fill in bought).date())
+
+
+@dataclass(frozen=True, slots=True)
 class VenueExit:
     """The venue's own account of how a position ended: what filled, at what, and settling which order."""
 

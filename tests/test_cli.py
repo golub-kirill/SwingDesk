@@ -2609,6 +2609,108 @@ def test_a_dry_run_prices_nothing(tmp_path: Path, monkeypatch, capsys) -> None:
         assert store.fills_for(position_id) == []
 
 
+# --------------------------------------------------------------------------------------------
+# `DR-052`: a holding is adopted from the ORDER its buys filled.
+#
+# Until 2026-09-26 the open half dated a holding by the earliest fill of ANY side in its symbol and
+# took the stop of the LATEST order sent in it. `AIS` has been held twice, and orders sent in a
+# name include `swingdesk-protect-…` SELLs. The stub below returns every fill whatever window is
+# asked for, which is the wide window these cases need.
+
+
+def _sent_order(instrument_id: str, venue_order_id: str, *, stop: str, at: datetime,
+                client_order_id: str | None = None):
+    from swingdesk.journal_evidence.journal import Submission
+
+    return Submission(
+        run_id="RUN-SENT", client_order_id=client_order_id or f"swingdesk-{at:%Y-%m-%d}-{instrument_id}",
+        attempted_at=at, session_date=at.date(), instrument_id=instrument_id, shares=17,
+        limit_price=Decimal("50.00"), stop_price=Decimal(stop), outcome="sent",
+        venue_order_id=venue_order_id, venue_status="accepted",
+    )
+
+
+def _trade(symbol: str, order_id: str, when: str, side: str = "buy", shares: int = 17):
+    from swingdesk.contracts.broker import BrokerFill, FillKind, Side
+
+    return BrokerFill(
+        activity_id=f"a-{order_id}-{when}", order_id=order_id, symbol=symbol,
+        side=Side(side), kind=FillKind.FILL, transaction_time=datetime.fromisoformat(when),
+        price=Decimal("50.00"), shares=Decimal(shares),
+        observed_at=datetime(2026, 9, 3, 22, 30, tzinfo=UTC),
+    )
+
+
+def test_a_name_held_twice_is_adopted_from_its_own_entry_not_the_first_positions(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """The first position's buy is ours and sits in the same feed. It must not date the second.
+
+    Before `DR-052` the earliest fill in the symbol dated the holding, so it was recorded as
+    `POS-AIS-2026-08-20` - the FIRST position's id, which the store refuses - and the venue went on
+    holding a name the book did not carry, which stops every entry.
+    """
+    first = _book_position("AIS").model_copy(update={
+        "position_id": "POS-AIS-2026-08-20", "opened_on": date(2026, 8, 20)})
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_order(
+            "AIS", "o-old", stop="40.00", at=datetime(2026, 8, 19, 22, 0, tzinfo=UTC)))
+        journal.record_submission(_sent_order(
+            "AIS", "o-new", stop="45.00", at=datetime(2026, 9, 1, 22, 0, tzinfo=UTC)))
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        store.record(first)
+        store.record(first.model_copy(update={"version": 2, "closed_on": date(2026, 8, 25)}))
+    _stub_read_client(monkeypatch, held=[_venue_position("AIS", shares="17")], fills=[
+        _trade("AIS", "o-old", "2026-08-20T13:31:00+00:00"),
+        _trade("AIS", "o-old-leg", "2026-08-25T15:00:00+00:00", side="sell"),
+        _trade("AIS", "o-new", "2026-09-02T13:31:00+00:00"),
+    ])
+
+    assert cli._sync_fills(_sync_args(tmp_path)) == 0
+
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        (adopted,) = store.open_as_of(datetime(2026, 9, 3, 22, 30, tzinfo=UTC))
+    assert adopted.opened_on == date(2026, 9, 2), "the session ITS order filled in"
+    assert adopted.position_id == "POS-AIS-2026-09-02"
+    assert adopted.initial_stop == Decimal("45.00"), "the stop of the order that filled"
+
+
+def test_the_stop_comes_from_the_entry_that_filled_not_the_latest_order_sent(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """A protective SELL sent after the entry is the latest order in the name, and not an entry."""
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_order(
+            "AIS", "o-1", stop="45.00", at=datetime(2026, 9, 1, 22, 0, tzinfo=UTC)))
+        journal.record_submission(_sent_order(
+            "AIS", "p-1", stop="47.00", at=datetime(2026, 9, 2, 21, 0, tzinfo=UTC),
+            client_order_id="swingdesk-protect-2026-09-02-AIS"))
+    _stub_read_client(monkeypatch, held=[_venue_position("AIS", shares="17")],
+                      fills=[_trade("AIS", "o-1", "2026-09-02T13:31:00+00:00")])
+
+    assert cli._sync_fills(_sync_args(tmp_path)) == 0
+
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        (adopted,) = store.open_as_of(datetime(2026, 9, 3, 22, 30, tzinfo=UTC))
+    assert adopted.initial_stop == Decimal("45.00")
+
+
+def test_a_hand_bought_holding_in_a_name_we_once_traded_is_not_adopted(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """A buy by an order that is not ours is somebody trading by hand, whatever we sent before."""
+    with Journal(tmp_path / "journal.duckdb") as journal:
+        journal.record_submission(_sent_order(
+            "AIS", "o-old", stop="40.00", at=datetime(2026, 8, 19, 22, 0, tzinfo=UTC)))
+    _stub_read_client(monkeypatch, held=[_venue_position("AIS", shares="17")],
+                      fills=[_trade("AIS", "by-hand", "2026-09-02T13:31:00+00:00")])
+
+    assert cli._sync_fills(_sync_args(tmp_path)) == 3
+    with PositionStore(tmp_path / "positions.duckdb") as store:
+        assert store.open_as_of(datetime(2026, 9, 3, 22, 30, tzinfo=UTC)) == []
+    assert "trace to no order" in capsys.readouterr().err
+
+
 def test_sync_records_a_position_for_an_entry_this_system_placed(
     tmp_path: Path, monkeypatch, capsys
 ) -> None:

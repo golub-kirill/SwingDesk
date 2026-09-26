@@ -1308,13 +1308,9 @@ def _sync_fills(args: argparse.Namespace) -> int:
         print(f"sync UNAVAILABLE  {unavailable}", file=sys.stderr)
         return 2
 
-    opened_on: dict[str, date] = {}
-    for fill in fills:
-        # EARLIEST fill wins. A position built up over several partial fills was opened when the
-        # first one printed, not when the last one completed it.
-        session = fill.transaction_time.date()
-        if fill.symbol not in opened_on or session < opened_on[fill.symbol]:
-            opened_on[fill.symbol] = session
+    from swingdesk.contracts.broker import Side
+
+    bought = {fill.symbol for fill in fills if fill.side is Side.BUY}
 
     print(f"{policy.label}  {len(held)} holding(s) at the venue")
 
@@ -1349,16 +1345,31 @@ def _sync_fills(args: argparse.Namespace) -> int:
                 unsold += 1
                 continue
 
-            submission = journal.latest_sent_submission(holding.symbol)
-            if submission is None:
+            if journal.latest_sent_submission(holding.symbol) is None:
                 # NOT adopted, and this is the branch that keeps the system honest. A holding we
                 # cannot trace to an order of ours is somebody trading by hand, and `DR-027` §11's
                 # guard should go on stopping submission until a person deals with it.
                 untraceable.append(holding.symbol)
                 continue
 
-            if holding.symbol not in opened_on:
-                # A holding with no fill in the feed cannot be dated, and `opened_on` is what every
+            # `DR-052`: the ORDER the holding's buys filled decides its date and its stop - never
+            # the earliest fill in the symbol, nor the latest order sent in it. `submission_for_order`
+            # was built as that exact anchor for the CLOSE half and says so; the open half kept
+            # reading by symbol until 2026-09-26.
+            entry = adoption.opening_entry(
+                holding.symbol, fills,
+                lambda order_id: journal.submission_for_order(order_id) is not None,
+            )
+            submission = (None if entry is None
+                          else journal.submission_for_order(entry.order_id))
+            if entry is None or submission is None:
+                if holding.symbol in bought:
+                    # Bought in the window, by no order of ours: a hand trade in a name this system
+                    # has traded before. Crediting it to our latest order would put that order's
+                    # stop on somebody else's position.
+                    untraceable.append(holding.symbol)
+                    continue
+                # A holding with no buy in the feed cannot be dated, and `opened_on` is what every
                 # holding-period rule counts from. Refused rather than dated from a clock.
                 refusals.append(
                     f"{holding.symbol}: held at the venue with no fill in the activities feed, so "
@@ -1373,7 +1384,7 @@ def _sync_fills(args: argparse.Namespace) -> int:
                     stop_price=submission.stop_price,
                     client_order_id=submission.client_order_id,
                 ),
-                opened_on=opened_on[holding.symbol],
+                opened_on=entry.opened_on,
                 knowledge_time=now,
                 registry=registry,
                 strategy=STRATEGY_TAG,
