@@ -274,9 +274,25 @@ def uncommitted_exposure(
     at_venue = {holding.symbol for holding in held}
     at_venue |= {
         order.symbol for order in live_orders
-        if order.client_order_id not in sent_order_ids
+        if not _sent_by_us(order, sent_order_ids)
     }
     return tuple(sorted(at_venue - known))
+
+
+def _sent_by_us(order: PlacedOrder, sent_order_ids: frozenset[str]) -> bool:
+    """Our id, or a leg the venue built out of one of ours. `DR-053`.
+
+    **Until 2026-09-26 this asked only the order's own id, and the retry pass never survived a first
+    pass that traded.** A bracket we send comes back from `open_orders` as the parent AND its two
+    legs, flattened (`DR-036`), and each leg carries an id the venue generated. So the legs of our
+    own resting entry read as somebody else's exposure, and on both evenings a first pass sent
+    entries - 2026-09-07 and 2026-09-22 - the 19:30 pass stopped with `TECH` naming exactly those
+    names. `DR-043` gave every leg its parent's id for this reason; `unprotected` used it and this
+    did not. The same lesson as `DR-050`, in the third place that asks *is this order ours*.
+    """
+    return (order.client_order_id in sent_order_ids
+            or (bool(order.parent_client_order_id)
+                and order.parent_client_order_id in sent_order_ids))
 
 
 #: The venue's own word for an order that triggers at a price. `stop_limit` is included because it
@@ -375,8 +391,7 @@ def own_stop(
         return (f"{len(stops)} stops are resting for {symbol} ({triggers}). Raising one leaves the "
                 f"other standing, so none is touched; cancel the one that should not be there")
     stop = stops[0]
-    if (stop.client_order_id in sent_order_ids
-            or (stop.parent_client_order_id and stop.parent_client_order_id in sent_order_ids)):
+    if _sent_by_us(stop, sent_order_ids):
         return stop
     return (f"the stop resting for {symbol} at {stop.stop_price} (order {stop.order_id}) was not "
             f"placed by this system, so it is left alone (DR-043 3.3). Move it by hand, or cancel "

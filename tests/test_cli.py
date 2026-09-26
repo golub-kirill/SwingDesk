@@ -2918,6 +2918,64 @@ def test_our_own_resting_order_no_longer_halts_the_retry_pass(
         "the retry may still submit a name the first pass did not"
 
 
+def _our_resting_bracket(symbol: str):
+    """What the VENUE returns for a bracket we sent that has not filled: the parent and two legs.
+
+    `open_orders` asks with `nested=true` and flattens the legs (`DR-036`, measured 2026-09-04);
+    each leg carries an id the venue generated and, since `DR-043`, its parent's. The fixture above
+    is the parent alone - an order as WE think of it - and that is why the test built on it passed
+    while every real retry pass stopped (`DR-053`).
+    """
+    from swingdesk.contracts.broker import PlacedOrder
+
+    parent = _our_order(symbol)
+    legs = [
+        PlacedOrder(
+            order_id=f"{kind}-{symbol}", client_order_id=f"venue-made-{kind}-{symbol}",
+            symbol=symbol, status="held", order_type=kind, side="sell",
+            stop_price=Decimal("45.00") if kind == "stop" else None,
+            parent_client_order_id=parent.client_order_id,
+            submitted_at=parent.submitted_at, observed_at=parent.observed_at,
+        )
+        for kind in ("limit", "stop")
+    ]
+    return [parent, *legs]
+
+
+def test_our_resting_BRACKET_does_not_halt_the_retry_pass(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """`DR-053`, measured: on 2026-09-07 and 2026-09-22 - both evenings a first pass sent entries -
+    the 19:30 pass stopped with `TECH: the venue holds N symbol(s) this system's book does not
+    carry`, naming exactly the names the 18:30 pass had sent. 392 and 313 candidates stopped."""
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent, live_orders=_our_resting_bracket("OURS"))
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book, \
+            BarStore(tmp_path / 'bars.duckdb') as bars:
+        journal.record_submission(_sent_for("OURS"))
+        cli._submit(_result_with_trades(_trade_outcome("LATER", "energy")), tmp_path,
+                    datetime(2026, 9, 2, 23, 31, tzinfo=UTC), journal, _target_registry(), book, bars)
+
+    printed = capsys.readouterr()
+    assert "TECH" not in printed.err, "the legs the venue built out of our order are ours"
+    assert [order.symbol for order in sent] == ["LATER"]
+
+
+def test_a_leg_whose_parent_is_not_ours_is_still_exposure() -> None:
+    """The widening is to OUR legs only: a bracket somebody typed by hand still stops submission."""
+    from swingdesk.broker import uncommitted_exposure
+
+    theirs = [order.model_copy(update={"parent_client_order_id": "typed-by-hand"})
+              for order in _our_resting_bracket("THEIRS")[1:]]
+    sent_ids = frozenset({"swingdesk-2026-09-02-OURS"})
+
+    assert uncommitted_exposure([], [], theirs, "NYSE", sent_order_ids=sent_ids) == ("THEIRS",)
+    assert uncommitted_exposure([], [], _our_resting_bracket("OURS"), "NYSE",
+                                sent_order_ids=sent_ids) == ()
+
+
 def test_a_resting_order_of_ours_still_consumes_a_slot_in_the_caps(
     tmp_path: Path, monkeypatch, capsys
 ) -> None:
