@@ -13,6 +13,7 @@ colorama==0.4.6
 curl-cffi==0.16.0
 duckdb==1.5.5
 exchange-calendars==4.13.2
+execnet==2.1.2
 grimp==3.15
 hypothesis==6.165.0
 idna==3.18
@@ -41,6 +42,7 @@ pydantic-core==2.46.4
 pygments==2.20.0
 pyluach==2.3.0
 pytest==9.1.1
+pytest-xdist==3.8.0
 python-dateutil==2.9.0.post0
 pytz==2026.3.post1
 pyyaml==6.0.3
