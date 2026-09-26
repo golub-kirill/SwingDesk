@@ -86,5 +86,24 @@ exposure again, and the retry stops as before. Fail-closed, and visible in the l
 | a stranger's legs are not | the same | `test_a_leg_whose_parent_is_not_ours_is_still_exposure` |
 | one rule, two callers | `uncommitted_exposure` and the stop-raise check both call `_sent_by_us` | four mutants, all caught — including restoring the own-id-only test and reverting either caller |
 
+## What this woke up, and it is fixed in the same change
+
+**A retry that no longer stops reaches code that had never run with a resting name in it.** The
+19:30 pass sees the 18:30 pass's names come back as `Trade` decisions. `_allocate` offered them
+alongside `committed` - our resting orders - so each resting name took a SECOND slot and was sent a
+SECOND time. A test built the way the retry actually sees it (one resting bracket for `R1`, and
+`R1` and `NEW0` as candidates) sent **`['R1', 'R1', 'NEW0']`** and printed `NOT JOURNALLED R1 ...
+Duplicate key`. The venue would have refused the duplicates on their repeated `client_order_id`, so
+no position would have doubled; the costs were slots spent on duplicates that a new name could have
+had, and attempts that never reached the journal, which `DR-027` §6 requires of every one.
+
+**A name already resting is now spent capacity, not a candidate:** it is taken out of the ranked
+list before the walk and journalled as `stopped`, with the reason. The existing slot test had used
+fresh names distinct from the resting ones — the second mirror fixture in this record.
+
+| clause | where it lives | enforced by |
+|---|---|---|
+| a resting name is not offered twice, and is journalled | `cli.py :: _allocate` | `test_the_retry_does_not_offer_again_a_name_already_resting`; two mutants, both caught |
+
 `DR-050` is accepted and is not edited. Its §4 sentence about `_uncommitted_exposure` is corrected
 here, and `AGENTS.md` §12's trap on lessons that do not travel records this as its third instance.

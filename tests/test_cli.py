@@ -3005,6 +3005,33 @@ def test_a_resting_order_of_ours_still_consumes_a_slot_in_the_caps(
     assert [rows[f"NEW{n}"].outcome for n in range(4)] == ["sent", "stopped", "stopped", "stopped"]
 
 
+def test_the_retry_does_not_offer_again_a_name_already_resting(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """What the 19:30 pass actually sees: the 18:30 pass's names come back as `Trade` decisions.
+
+    The resting order already holds its slot through `committed`. Offering the same name again
+    would take a SECOND slot for it and send a duplicate - and a slot spent on a duplicate is one a
+    new name could have had. `DR-053` is what made this reachable: until it, the retry stopped
+    before it got this far.
+    """
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent, live_orders=_our_resting_bracket("R1"))
+    again_and_new = [_trade_outcome("R1", "energy"), _trade_outcome("NEW0", "utilities")]
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book, \
+            BarStore(tmp_path / 'bars.duckdb') as bars:
+        journal.record_submission(_sent_for("R1"))
+        cli._submit(_result_with_trades(*again_and_new), tmp_path,
+                    datetime(2026, 9, 2, 23, 31, tzinfo=UTC), journal, _target_registry(), book, bars)
+        rows = {row.instrument_id: row for row in journal.submissions_for("RUN-TEST")}
+
+    assert [order.symbol for order in sent] == ["NEW0"], "R1 is resting; only NEW0 is new"
+    assert rows["R1"].outcome == "stopped" and "already resting" in (rows["R1"].detail or "")
+    assert "NOT JOURNALLED" not in capsys.readouterr().err, "every attempt reaches the journal"
+
+
 def test_an_order_we_did_not_send_still_halts_everything(
     tmp_path: Path, monkeypatch, capsys
 ) -> None:

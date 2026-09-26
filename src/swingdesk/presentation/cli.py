@@ -769,6 +769,18 @@ def _allocate(
         key=lambda outcome: (screen.rank_of(outcome.instrument.id) or len(tradeable) + 1,
                              outcome.instrument.id),
     )
+    # A NAME ALREADY RESTING IS SPENT CAPACITY, NOT A CANDIDATE. `DR-053`. The 19:30 retry sees the
+    # 18:30 pass's names come back as `Trade` decisions; offered again, each took a second slot and
+    # was sent a second time - measured in a test, `['R1', 'R1', 'NEW0']` for one resting name.
+    # Unreachable until `DR-053`, because the retry stopped on its own orders before it got here.
+    resting = {entry.instrument_id for entry in committed}
+    already: list[tuple[InstrumentOutcome, str]] = [
+        (outcome, "an entry of ours for this name is already resting at the venue and holds its "
+                  "slot; it is not offered twice")
+        for outcome in ranked if outcome.instrument.id in resting
+    ]
+    ranked = [outcome for outcome in ranked if outcome.instrument.id not in resting]
+
     offered: list[portfolio.Allocatable] = []
     for outcome in ranked:
         if not isinstance(outcome.sector, portfolio.SectorCapacity):
@@ -791,10 +803,12 @@ def _allocate(
     )
     by_id = {outcome.instrument.id: outcome for outcome in ranked}
     # The committed entries carry no outcome and are dropped from both lists: they were not decided
-    # by this run and reporting them as passed over would invent a candidate.
+    # by this run and reporting them as passed over would invent a candidate. Filtering by id is
+    # exact only because a resting name was taken out of `ranked` above.
     verdicts = tuple(v for v in verdicts if v.instrument_id in by_id)
     submittable = [by_id[v.instrument_id] for v in verdicts if v.taken]
-    passed_over = [(by_id[v.instrument_id], v.reason) for v in verdicts if not v.taken]
+    passed_over = [*already,
+                   *((by_id[v.instrument_id], v.reason) for v in verdicts if not v.taken)]
     return submittable, passed_over
 
 
