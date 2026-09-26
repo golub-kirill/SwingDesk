@@ -2595,6 +2595,17 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 ## 6. Code & gates
 
+- [ ] **`[v]` A TAKE-PROFIT EXIT'S FILL RECORDS THE STOP AS ITS PLANNED PRICE.** Found 2026-09-26.
+      `cli._record_venue_close` (`DR-038`) writes `planned_price=position.current_stop` for every
+      close it records, whichever leg filled. Read from `positions.duckdb`'s `fills` on 2026-09-26:
+      the `AIS` (first position), `DINO`, `VGT` and `XMTR` exits, all at their targets, carry a
+      "slippage" of 6.43 to 15.88 a share - the whole distance from stop to fill. Only `BTSG`'s,
+      a stop-out, is right (−0.04). **Nothing
+      reads it today**: `Fill.slippage_per_share` is printed only by `record-fill` for the fill it
+      just wrote (`git grep planned_price`), so no number anyone sees is wrong yet. It becomes wrong
+      the day an execution-quality measure reads the stored fills. The leg that filled is knowable
+      (a stop leg's id is in `leg_ids`; the primary is the limit), and the honest fallback is
+      `None`, which `Fill` already defines as *the plan named no price*.
 - [ ] **`[v]` A STUDY HOLDS THE WHOLE UNIVERSE IN MEMORY, AND THAT IS THE HOUR IT TAKES.** Measured
       2026-09-08 on `PR-018`: about fifty minutes at **23.4 GB**, against a query-plus-construction
       estimate of 3.6 minutes. Re-measured 2026-09-12 on `PR-019`: past **18 GB** while still
