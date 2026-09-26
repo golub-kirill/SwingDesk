@@ -677,7 +677,20 @@ there discards a working registration:
 Then, once:
 
 ```bash
-schtasks /Create /TN "SwingDesk coverage pass" /TR "C:\PycharmProjects\SwingDesk\tools\widen_universe.cmd" /SC WEEKLY /D SUN /ST 09:00
+schtasks /Create /TN "SwingDesk coverage pass" /TR "C:\PycharmProjects\SwingDesk\tools\widen_universe.cmd" /SC DAILY /ST 11:00
+```
+
+**DAILY, ON PURPOSE, SINCE 2026-09-26 - and the pass still runs once a week.** Each weekly task
+fires every day and its wrapper asks `tools/weekly_pass.py` whether this week's pass (the week
+starts Sunday 00:00) already finished cleanly; if it has, the wrapper exits 0 in seconds. So a pass
+killed mid-run - the coverage pass of 2026-09-20, by a reboot - or missed because the machine was
+off runs the next day instead of a week later, and the cadence stays on Sunday. Task Scheduler's
+own *"restart on failure"* was measured not to do this: it retries only a task that failed to
+START. After registering, turn on start-when-available for the three, so a trigger missed while
+the machine was off fires when it comes back:
+
+```bash
+powershell -NoProfile -Command "foreach ($n in 'SwingDesk coverage pass','SwingDesk classification pass','SwingDesk re-measurement pass') { $t = Get-ScheduledTask -TaskName $n; $t.Settings.StartWhenAvailable = $true; Set-ScheduledTask -InputObject $t | Out-Null }"
 ```
 
 **Sunday morning, and the reason is a constraint rather than a preference.** The stores are
@@ -724,7 +737,7 @@ preflight, a rotated log at `data/widen_classifications.log`, a preserved exit c
 Then, once:
 
 ```bash
-schtasks /Create /TN "SwingDesk classification pass" /TR "C:\PycharmProjects\SwingDesk\tools\widen_classifications.cmd" /SC WEEKLY /D SUN /ST 13:00
+schtasks /Create /TN "SwingDesk classification pass" /TR "C:\PycharmProjects\SwingDesk\tools\widen_classifications.cmd" /SC DAILY /ST 13:00
 ```
 
 **Sunday, and AFTER the coverage pass, and that order is a constraint rather than a preference.**
@@ -770,7 +783,7 @@ in time. The tool also refuses a point earlier than the series' last.
 Then, once:
 
 ```bash
-schtasks /Create /TN "SwingDesk re-measurement pass" /TR "C:\PycharmProjects\SwingDesk\tools\remeasure.cmd" /SC WEEKLY /D SUN /ST 16:00
+schtasks /Create /TN "SwingDesk re-measurement pass" /TR "C:\PycharmProjects\SwingDesk\tools\remeasure.cmd" /SC DAILY /ST 16:00
 ```
 
 **Sunday 16:00, after both widening passes.** It only READS — through the streamed loader, about
@@ -885,9 +898,10 @@ offers to REPLACE it, and a wrong keystroke discards a working registration:
 ```bash
 schtasks /Create /TN "SwingDesk daily run" /TR "C:\PycharmProjects\SwingDesk\tools\daily_run.cmd" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 18:30
 schtasks /Create /TN "SwingDesk second pass" /TR "\"C:\PycharmProjects\SwingDesk\tools\daily_run.cmd\" second-pass" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 19:30
-schtasks /Create /TN "SwingDesk coverage pass" /TR "C:\PycharmProjects\SwingDesk\tools\widen_universe.cmd" /SC WEEKLY /D SUN /ST 09:00
-schtasks /Create /TN "SwingDesk classification pass" /TR "C:\PycharmProjects\SwingDesk\tools\widen_classifications.cmd" /SC WEEKLY /D SUN /ST 13:00
-schtasks /Create /TN "SwingDesk re-measurement pass" /TR "C:\PycharmProjects\SwingDesk\tools\remeasure.cmd" /SC WEEKLY /D SUN /ST 16:00
+schtasks /Create /TN "SwingDesk coverage pass" /TR "C:\PycharmProjects\SwingDesk\tools\widen_universe.cmd" /SC DAILY /ST 11:00
+schtasks /Create /TN "SwingDesk classification pass" /TR "C:\PycharmProjects\SwingDesk\tools\widen_classifications.cmd" /SC DAILY /ST 13:00
+schtasks /Create /TN "SwingDesk re-measurement pass" /TR "C:\PycharmProjects\SwingDesk\tools\remeasure.cmd" /SC DAILY /ST 16:00
+powershell -NoProfile -Command "foreach ($n in 'SwingDesk coverage pass','SwingDesk classification pass','SwingDesk re-measurement pass') { $t = Get-ScheduledTask -TaskName $n; $t.Settings.StartWhenAvailable = $true; Set-ScheduledTask -InputObject $t | Out-Null }"
 ```
 
 **The first of those lines was recorded NOWHERE until 2026-09-04.** The runbook carried the

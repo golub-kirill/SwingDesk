@@ -405,9 +405,9 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 116 script(s), of which 33 are things you type
+### The tools — 117 script(s), of which 34 are things you type
 
-#### Operator tools — 33
+#### Operator tools — 34
 
 Run these. Everything else below either runs itself or ran once.
 
@@ -446,6 +446,7 @@ Run these. Everything else below either runs itself or ran once.
 | `python tools/verify_reproducible.py` | `a.reproducible`, measured against the real universe instead of three synthetic instruments. | `--data` · `--limit` |
 | `python tools/verify_submission_guards.py` | Run every guard a submission runs, in its order, against the LIVE state. Sends nothing. | `--data` · `--as-of` |
 | `python tools/wait_for_first_pass.py` | Hold the 19:30 second pass until the 18:30 daily run has finished - owner ruling 2026-09-14. | `--task` · `--limit-minutes` · `--poll-seconds` |
+| `python tools/weekly_pass.py --data` | Is a weekly pass due? The question a daily trigger asks so that a killed or missed pass retries. | `action` · `name` · `--data` **(required)** |
 
 #### Generators — 8
 

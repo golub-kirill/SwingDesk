@@ -13,6 +13,7 @@ import re
 import subprocess
 import sys
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from pathlib import Path
 
 #: The two passes that produce a run. `swingdesk status` shows these; gate 26 checks every task in
@@ -99,6 +100,59 @@ DIAGNOSED = {
         "task's next trigger"
     ),
 }
+
+
+#: `schtasks /V`'s day names, in week order, as the `Days` column prints them.
+_WEEKDAYS = ("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN")
+
+#: How `schtasks` prints a time on this machine's locale (en-US, read 2026-09-26). A time it prints
+#: any other way is reported as unreadable rather than guessed at.
+_SCHTASKS_TIME = "%m/%d/%Y %I:%M:%S %p"
+
+
+def missed_run(record: dict[str, str]) -> tuple[bool, str] | None:
+    """Did a trigger pass with no run? `(True, why)` if one did, `None` if the gap is normal.
+
+    **What paid for it, 2026-09-26.** Gate 26 judged only `Last Result`, so a task that stopped
+    running kept last week's `0` and read as PASS for as long as it stayed stopped - and the three
+    weekly passes carry `StartWhenAvailable=False`, so a machine that is off or asleep at the
+    trigger skips the week without a line anywhere. The check needs no calendar: the gap from the
+    last run to the next one can be at most the longest gap between two scheduled days, and
+    anything longer means an occurrence in between never ran.
+
+    Weekly schedules only, which is what every task in `TASKS` is; any other shape, or a time this
+    cannot read, returns `(False, why)` - the check could not be made, which is neither a miss nor
+    a pass, and the caller prints it rather than passing silently.
+    """
+    kind = (record.get("Schedule Type") or "").strip()
+    if kind == "Daily":
+        # The weekly passes fire daily since 2026-09-26 and skip in seconds once this week's pass
+        # finished (`tools/weekly_pass.py`). Every N days, as `schtasks` words it; N is 1 here.
+        every = re.search(r"Every (\d+) day", " ".join(
+            (record.get(field) or "") for field in ("Days", "Months", "Repeat: Every")))
+        longest = int(every.group(1)) if every else 1
+    elif kind == "Weekly":
+        days = sorted(_WEEKDAYS.index(day.strip()) for day in (record.get("Days") or "").split(",")
+                      if day.strip() in _WEEKDAYS)
+        if not days:
+            return False, f"the scheduled days {record.get('Days')!r} could not be read"
+        longest = max((days[(i + 1) % len(days)] - day) % 7 or 7 for i, day in enumerate(days))
+    else:
+        return False, f"schedule type {record.get('Schedule Type')!r} is not one this check reads"
+    # Naive on purpose: both are the scheduler's local wall time and only their DIFFERENCE is used.
+    # A daylight-saving change moves that difference by an hour, which the hour of slack absorbs.
+    try:
+        last = datetime.strptime(  # noqa: DTZ007
+            (record.get("Last Run Time") or "").strip(), _SCHTASKS_TIME)
+        following = datetime.strptime(  # noqa: DTZ007
+            (record.get("Next Run Time") or "").strip(), _SCHTASKS_TIME)
+    except ValueError:
+        return False, "its last or next run time could not be read, so a skipped run is not ruled out"
+    if following - last > timedelta(days=longest, hours=1):
+        return True, (f"last ran {last:%Y-%m-%d %H:%M} and next runs {following:%Y-%m-%d %H:%M}: "
+                      f"at least one scheduled run in between never happened (the machine was off "
+                      f"or asleep at the trigger, and nothing catches it up)")
+    return None
 
 
 def log_of(record: dict[str, str]) -> str | None:
