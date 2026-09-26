@@ -2801,6 +2801,37 @@ def test_a_diagnosed_failure_is_still_a_crash_and_now_says_what_happened() -> No
     assert phrase != "exited -2147020576"
 
 
+def test_an_interrupted_run_is_a_crash_that_says_it_was_interrupted() -> None:
+    """The coverage pass of 2026-09-20, killed four minutes in by a restart: 0xC000013A."""
+    judgement, phrase = verify_schedule.verdict("-1073741510")
+    assert judgement == "crash", "interrupted is still a run that did not finish"
+    assert "0xC000013A" in phrase and "interrupted" in phrase
+
+
+@pytest.mark.parametrize(("task_to_run", "log"), [
+    (r"{repo}\tools\daily_run.cmd ", r"data\daily_run.log"),
+    (r'{repo}\tools\daily_run.cmd" second-pass"', r"data\daily_run.log"),
+    (r"{repo}\tools\widen_universe.cmd ", r"data\widen_universe.log"),
+    (r"{repo}\tools\widen_classifications.cmd ", r"data\widen_classifications.log"),
+    (r"{repo}\tools\remeasure.cmd ", r"data\remeasure.log"),
+])
+def test_a_failed_task_is_pointed_at_the_log_its_own_command_writes(
+        task_to_run: str, log: str) -> None:
+    """Every failure used to say "See data/daily_run.log", including the passes that never write it.
+
+    The records are shaped like `schtasks /V` prints them - the second pass's quoting included - and
+    point at this checkout's own commands, so a script whose `set LOG=` line moves fails here.
+    """
+    record = {"Task To Run": task_to_run.replace("{repo}", str(REPO))}
+    assert verify_schedule.log_of(record) == log
+
+
+def test_a_command_that_cannot_be_read_names_no_log() -> None:
+    """A guess at a log path is worse than saying none could be read."""
+    assert verify_schedule.log_of({"Task To Run": r"C:\nowhere\missing.cmd"}) is None
+    assert verify_schedule.log_of({"Task To Run": ""}) is None
+
+
 def test_a_diagnosed_code_is_not_a_code_the_wrapper_can_return() -> None:
     """Same guard the two pending statuses carry: a named code must not shadow a real exit code."""
     assert not set(verify_schedule.DIAGNOSED) & set(verify_schedule.CLEAN_RESULTS)

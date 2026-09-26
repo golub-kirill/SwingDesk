@@ -811,6 +811,11 @@ rotted when the fact it cited moved, and none said where that fact lived.
 
 **The habits:**
 
+- **Rehearse a command you hand to the owner on a COPY of the store it will write, and say every
+  step it leaves undone.** On 2026-09-22 a bare `respond --approve` was handed over to close `BTSG`;
+  it closed the position and recorded no price, and nobody said the price is a second command. The
+  book lost its only loss for four days and, once the kill switch counted closed positions, the
+  paper run stopped on it. `DR-051` removed that particular second step; the habit is for the next.
 - **Name the owner before making the claim.** *Which artifact owns this, and have I opened it?* It
   is the only thing that catches the proxy trap, because a proxy answer feels exactly like a checked
   one and no gate can help.
@@ -1094,9 +1099,12 @@ the cost is read off the run rather than off this paragraph. What changed it, me
 the suite runs across every core (`pytest-xdist`, gate 8 only - a single test file stays
 single-process, because starting sixteen workers costs more than the file), and gate 33 stopped
 walking 88 squash-merged local branches git could never recognise as merged. **The current total is
-on the last screen of every run, and deliberately not here.** Most of what is left is the research
-runners' end-to-end tests, bound by a per-session DuckDB read in `MinuteStore.session()`. (The gate *count* is in `HANDOFF.md` §2,
-generated — §10.5, and gate 14 caught this paragraph naming it.)
+on the last screen of every run, and deliberately not here.** The research runners' end-to-end
+tests were the next cost, and the profile named a different culprit than this paragraph did:
+~~bound by a per-session DuckDB read in `MinuteStore.session()`~~ - that read was the smaller half,
+and `calendar.session()` building a pandas schedule for every single day was the larger. Both were
+fixed on 2026-09-26; their docstrings carry the measurements. (The gate *count* is in `HANDOFF.md`
+§2, generated — §10.5, and gate 14 caught this paragraph naming it.)
 
 **The order is the rule, not the list.** Gates before merge, review before commit, validation before
 build. A step taken out of order is a step not taken, and step 4 is the one most easily skipped

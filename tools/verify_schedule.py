@@ -42,6 +42,7 @@ from swingdesk.platform.schedule import (
 from swingdesk.platform.schedule import (
     HAZARDS,
     TASKS,
+    log_of,
     verdict,
 )
 from swingdesk.platform.schedule import (
@@ -90,7 +91,8 @@ def main() -> int:
             print(f"      NOTE        {phrase} - this check says nothing about that run")
         elif judgement == "crash":
             failures.append(
-                f"{task}: last run {last_run} failed - {phrase}. See data/daily_run.log"
+                f"{task}: last run {last_run} failed - {phrase}. See "
+                f"{log_of(record) or 'the log its command writes'}"
             )
 
     for failure in failures:

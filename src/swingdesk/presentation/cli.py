@@ -478,9 +478,10 @@ def _drawdown_now(
                 reason=(
                     f"{position.instrument_id} was closed on {position.closed_on} with "
                     f"{exited} of {acquired[position.position_id]} share(s) recorded as sold, so "
-                    f"its result - and the account's - is unknown. Record the exit: swingdesk "
-                    f"record-fill {position.position_id} <sequence> --shares <n> --price <p> "
-                    f"--commission <c> --filled-on <date>"
+                    f"its result - and the account's - is unknown. `sync-fills` records the price "
+                    f"once the venue shows a sale by an order of ours (DR-051); otherwise record "
+                    f"it: swingdesk record-fill {position.position_id} <sequence> --shares <n> "
+                    f"--price <p> --commission <c> --filled-on <date>"
                 ),
                 unpriced=((position.instrument_id, position.closed_on),),
             )
@@ -1242,6 +1243,11 @@ def _sync_fills(args: argparse.Namespace) -> int:
     happened, which is exactly what `open-position` does, with the typing done from our own record
     instead of by an operator at 18:35.
 
+    **And since `DR-051` it prices an exit a person closed.** `respond --approve` on an `EXIT_NOW`
+    closes a position without a price; the venue's own sale, traced to an order of ours, supplies
+    it. A holding the book closed that way and the venue still holds is reported as AWAITING SALE
+    and never adopted as a new position.
+
     Three exit codes, and the middle one is the point:
 
         0  the book now describes every holding this system placed
@@ -1281,7 +1287,11 @@ def _sync_fills(args: argparse.Namespace) -> int:
     # walk and raises rather than returning a partial answer that looks complete.
     with PositionStore(args.data / "positions.duckdb") as book:
         open_now = book.open_as_of(now)
-    earliest = min((p.opened_on for p in open_now), default=now.date())
+        # `DR-051`: a position the book closed without a price is still waiting for its sale, and
+        # the sale cannot predate the opening - so it widens the window exactly as an open one does.
+        unpriced = _closed_without_a_price(book, now)
+    earliest = min((p.opened_on for p in [*open_now, *(p for p, _ in unpriced)]),
+                   default=now.date())
     since = datetime.combine(earliest, time.min, tzinfo=UTC) - timedelta(days=FILL_WINDOW_MARGIN)
 
     try:
@@ -1311,8 +1321,11 @@ def _sync_fills(args: argparse.Namespace) -> int:
     recorded = 0
     closed = 0
     adopted = 0
+    priced = 0
+    unsold = 0
     untraceable: list[str] = []
     refusals: list[str] = []
+    awaiting_sale = {position.instrument_id: position for position, _ in unpriced}
 
     with (
         Journal(args.data / "journal.duckdb") as journal,
@@ -1321,6 +1334,19 @@ def _sync_fills(args: argparse.Namespace) -> int:
         known = {position.instrument_id for position in store.open_as_of(now)}
         for holding in held:
             if holding.symbol in known:
+                continue
+
+            closing = awaiting_sale.get(holding.symbol)
+            if closing is not None:
+                # `DR-051`: the owner approved the exit and the venue still holds the shares - the
+                # sale has not happened yet. NOT adopted: re-recording the holding would open a
+                # second position for one the owner has just closed, and until 2026-09-26 the only
+                # thing preventing that was the new position's id colliding with the old one's.
+                print(f"  AWAITING SALE  {holding.symbol:<10} {closing.position_id} was closed by "
+                      f"an approved EXIT_NOW on {closing.closed_on} and the venue still holds "
+                      f"{holding.shares} share(s). Sell them at the venue; the next sync-fills "
+                      f"records the price.")
+                unsold += 1
                 continue
 
             submission = journal.latest_sent_submission(holding.symbol)
@@ -1405,7 +1431,9 @@ def _sync_fills(args: argparse.Namespace) -> int:
         # collected downwards, one GET per order this system sent for a name still open here. That
         # is bounded by the book, not by the account's history.
         leg_ids: set[str] = set()
-        for position in store.open_as_of(now):
+        # `DR-051`: and for a name the book closed without a price, because its sale is as likely
+        # to be a stop leg as a take-profit primary - `DR-050`'s point, one step further.
+        for position in [*store.open_as_of(now), *awaiting_sale.values()]:
             for sent_id in journal.sent_venue_order_ids(position.instrument_id):
                 try:
                     leg_ids.update(client.legs_of(sent_id))
@@ -1453,6 +1481,66 @@ def _sync_fills(args: argparse.Namespace) -> int:
             just_closed.add(position.position_id)
             print(f"  CLOSED    {position.instrument_id:<10} {exit_.shares} sh "
                   f"at {exit_.price} on {exit_.closed_on}")
+
+        # ------------------------------------------------------------------ DR-051: the price half
+        #
+        # `respond --approve` on an `EXIT_NOW` closes a position and records no price, and until
+        # 2026-09-26 only a person's `record-fill` could supply one. Since `k.drawdown_pause` began
+        # counting closed positions that same day, an exit with no price is an account whose result
+        # is unknown - so every approved `EXIT_NOW` halted the paper run until somebody remembered
+        # the second command. `BTSG` is the instance: sold on a stop leg on 2026-09-17, closed in
+        # the book on 2026-09-22, priced by hand on 2026-09-26.
+        #
+        # **The same standard as the close half, and nothing looser.** A price is attached only
+        # from a SELL traced by order id - a leg included - to something this system sent, of
+        # exactly the size the book closed. Anything else stays the person's: `closing_exit`'s
+        # refusals apply unchanged, and a sale that is not ours is left alone, silently, because
+        # the kill switch already names the position and the command that prices it.
+        #
+        # **It writes a Fill and nothing else.** The position stays as the owner closed it,
+        # `closed_on` included - the curve realises a result from the FILL's date, and `closed_on`
+        # only stops the marking - and nothing is sent to the venue.
+        for position, sequences in unpriced:
+            if len(sequences) != 1:
+                refusals.append(
+                    f"{position.instrument_id}: {position.position_id} carries "
+                    f"{len(sequences)} approved EXIT_NOW proposals with no fill "
+                    f"(#{', #'.join(str(s) for s in sequences)}), and which one a sale settles is "
+                    f"a person's question: swingdesk record-fill {position.position_id} <sequence>"
+                )
+                continue
+            sequence = sequences[0]
+            exit_ = adoption.closing_exit(position, fills, ours)
+            if exit_ is None:
+                continue
+            if isinstance(exit_, Refusal):
+                refusals.append(f"{position.instrument_id}: {exit_}")
+                continue
+            action = store.proposal_at(position.position_id, sequence)
+            if action is None:  # pragma: no cover - the sequence came from this store's own index
+                refusals.append(f"{position.position_id} #{sequence} vanished while pricing it")
+                continue
+
+            if args.dry_run:
+                print(f"  WOULD PRICE   {position.instrument_id:<10} {exit_.shares} sh "
+                      f"at {exit_.price} on {exit_.closed_on}  ({position.position_id} #{sequence})")
+                priced += 1
+                continue
+
+            try:
+                store.record_fill(Fill(
+                    position_id=position.position_id, sequence=sequence,
+                    filled_on=exit_.closed_on, shares=exit_.shares, price=exit_.price,
+                    commission=Decimal(0), planned_price=_planned_price(action), recorded_at=now,
+                ))
+            except (ValueError, ValidationError) as unwritable:
+                refusals.append(f"{position.instrument_id}: the venue's price could not be "
+                                f"recorded: {unwritable}")
+                continue
+            priced += 1
+            print(f"  PRICED    {position.instrument_id:<10} {exit_.shares} sh "
+                  f"at {exit_.price} on {exit_.closed_on}  ({position.position_id} #{sequence}, "
+                  f"orders {', '.join(exit_.order_ids)})")
 
         # --------------------------------------------------------------- DR-041: the moved stop
         #
@@ -1513,7 +1601,7 @@ def _sync_fills(args: argparse.Namespace) -> int:
             print(f"  ADOPTED   {taken.instrument_id:<10} stop {taken.book_stop} -> "
                   f"{taken.venue_stop}  (tighter)")
 
-    if not recorded and not closed and not adopted and not untraceable and not refusals:
+    if not (recorded or closed or adopted or priced or unsold or untraceable or refusals):
         print("  nothing to record - the book already describes every holding")
 
     for reason in refusals:
@@ -1616,6 +1704,44 @@ def _record_venue_close(
         shares=exit_.shares, price=exit_.price, commission=Decimal(0),
         planned_price=position.current_stop, recorded_at=now,
     ))
+
+def _planned_price(action: ManagementAction) -> Decimal | None:
+    """The price an exit planned to leave at, or `None` when it planned none.
+
+    `old_stop` is the plan's price for a stop exit and is carried on every proposal. A time exit
+    sets it too, but its reason code says the holding period ran out - it did not plan to sell AT
+    the stop, so that stop is not a reference a fill slipped against. One rule for both writers of
+    an exit's fill, `record-fill` and `sync-fills` (`DR-051`), so slippage cannot mean two things.
+    """
+    return action.old_stop if (action.reason_code or "").lower().startswith("stop") else None
+
+
+def _closed_without_a_price(
+    store: PositionStore, now: datetime,
+) -> list[tuple[Position, tuple[int, ...]]]:
+    """Every position the book CLOSED through an approved `EXIT_NOW` that no fill settles. `DR-051`.
+
+    `respond --approve` on an `EXIT_NOW` closes a position and records no price: the owner may not
+    have sold yet, and when they have, the price is the venue's. Each entry carries the approved,
+    unfilled `EXIT_NOW` sequences - more than one is a book this cannot read, and the caller
+    refuses it rather than choosing.
+    """
+    out: list[tuple[Position, tuple[int, ...]]] = []
+    for position in store.latest_as_of(now):
+        if position.is_open:
+            continue
+        filled = {fill.sequence for fill in store.fills_for(position.position_id)}
+        waiting = []
+        for sequence, kind in store.action_kinds_for(position.position_id).items():
+            if kind != ActionKind.EXIT_NOW.value or sequence in filled:
+                continue
+            answer = store.response_for(position.position_id, sequence)
+            if answer is not None and answer.choice is ActionStatus.APPROVED:
+                waiting.append(sequence)
+        if waiting:
+            out.append((position, tuple(waiting)))
+    return out
+
 
 def _broker(args: argparse.Namespace) -> int:
     """Read the paper account, print it, and say whether it agrees with the book.
@@ -1838,10 +1964,7 @@ def _record_fill(args: argparse.Namespace) -> int:
             print(f"fill REFUSED  no action {args.position_id} #{args.sequence}", file=sys.stderr)
             return 2
 
-        # `old_stop` is the plan's price for a stop exit and is carried on every proposal. A time
-        # exit sets it too, but its reason code says the holding period ran out - it did not plan
-        # to sell AT the stop, so that stop is not a reference this fill slipped against.
-        planned = action.old_stop if (action.reason_code or "").lower().startswith("stop") else None
+        planned = _planned_price(action)
 
         try:
             positions.record_fill(Fill(

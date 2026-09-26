@@ -9,9 +9,11 @@ imports nothing above it. Read-only: it queries and never creates, replaces or d
 from __future__ import annotations
 
 import csv
+import re
 import subprocess
 import sys
 from dataclasses import dataclass
+from pathlib import Path
 
 #: The two passes that produce a run. `swingdesk status` shows these; gate 26 checks every task in
 #: `TASKS`, which begins with them.
@@ -86,7 +88,38 @@ DIAGNOSED = {
         "catch-up fires both triggers together, so this is the day the retry was most needed and "
         "least able to run - TODO.md section 6"
     ),
+    # **What paid for this row, 2026-09-26.** The coverage pass of 2026-09-20 started at 11:00:01
+    # and its log stops at 11:04; the System event log has a clean restart at 11:04:33 and no
+    # event saying who asked for it. Nothing retries a pass killed that way, and its next trigger
+    # is a week later - so one restart cost a week of coverage, and gate 26 was red for six days
+    # over a number nobody had named.
+    "-1073741510": (
+        "the run was interrupted - its console closed, Ctrl+C, or Windows shut down or logged off "
+        "mid-run (0xC000013A, STATUS_CONTROL_C_EXIT). Nothing retries it: the next attempt is the "
+        "task's next trigger"
+    ),
 }
+
+
+def log_of(record: dict[str, str]) -> str | None:
+    """The log the task's OWN command writes, read from that command's `set LOG=` line.
+
+    Derived rather than listed, from the command the Task Scheduler actually runs, so a task
+    re-pointed at another script names that script's log. Until 2026-09-26 gate 26 said *"See
+    data/daily_run.log"* for every task: the coverage pass writes `data/widen_universe.log`, and
+    `daily_run.log` had by then rotated past the failed day and never held a line of it.
+    `None` when the command or its `set LOG=` line cannot be read.
+    """
+    command = (record.get("Task To Run") or "").strip()
+    script = re.search(r"([A-Za-z]:\\[^\"]+?\.cmd)", command)
+    if script is None:
+        return None
+    try:
+        text = Path(script.group(1)).read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+    line = re.search(r"^set LOG=%REPO%\\(\S+)\s*$", text, re.MULTILINE | re.IGNORECASE)
+    return line.group(1) if line else None
 
 #: Settings that make a task silently not run, and that only the verbose query shows. Neither is a
 #: fault this can fix - both are the owner's environment - but both explain an evening with no log
