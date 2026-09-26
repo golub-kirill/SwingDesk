@@ -1,0 +1,19 @@
+{
+  "prereg": "PR-039",
+  "trials": 0,
+  "resamples": 10000,
+  "block": 3,
+  "seed": 20260927,
+  "gap_rate_difference": {
+    "null_low": -0.03742177722152691,
+    "null_high": 0.0422016187383264,
+    "half_width": 0.03981169797992666,
+    "minimum_detectable": 0.05687385425703808
+  },
+  "mean_r_difference": {
+    "null_low": -0.19165804568082973,
+    "null_high": 0.19520969003873495,
+    "half_width": 0.19343386785978234,
+    "minimum_detectable": 0.2763340969425462
+  }
+}

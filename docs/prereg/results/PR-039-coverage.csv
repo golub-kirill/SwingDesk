@@ -1,0 +1,1526 @@
+symbol,cik,status,count,is_etf,entity_type,sic,sic_description,name
+AAAU,1708646,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,Goldman Sachs Physical Gold ETF
+AAMI,1748824,with_announcements,30,false,operating,6282,Investment Advice,Acadian Asset Management Inc.
+AAOI,1158114,with_announcements,55,false,operating,3674,Semiconductors & Related Devices,"APPLIED OPTOELECTRONICS, INC."
+AAON,824142,with_announcements,44,false,operating,3585,Air-Cond & Warm Air Heatg Equip & Comm & Indl Refrig Equip,"AAON, INC."
+AAP,1158449,with_announcements,47,false,operating,5531,Retail-Auto & Home Supply Stores,ADVANCE AUTO PARTS INC
+AAPL,320193,with_announcements,48,false,operating,3571,Electronic Computers,Apple Inc.
+AAT,1500217,with_announcements,50,false,operating,6798,Real Estate Investment Trusts,"American Assets Trust, Inc."
+AAUC,1993344,no_item_202,0,false,other,1040,Gold and Silver Ores,Allied Gold Corp
+ABR,1253986,with_announcements,47,false,operating,6798,Real Estate Investment Trusts,ARBOR REALTY TRUST INC
+ACA,1739445,with_announcements,36,false,operating,3440,Fabricated Structural Metal Products,"Arcosa, Inc."
+ACGL,947484,with_announcements,58,false,operating,6331,"Fire, Marine & Casualty Insurance",ARCH CAPITAL GROUP LTD.
+ACHC,1520697,with_announcements,50,false,operating,8093,"Services-Specialty Outpatient Facilities, NEC","Acadia Healthcare Company, Inc."
+ACLS,1113232,with_announcements,48,false,operating,3559,"Special Industry Machinery, NEC",AXCELIS TECHNOLOGIES INC
+ACMR,1680062,with_announcements,50,false,operating,3559,"Special Industry Machinery, NEC","ACM Research, Inc."
+ACN,1467373,with_announcements,46,false,operating,7389,"Services-Business Services, NEC",Accenture plc
+ACWI,,no_cik,0,true,,,,
+ACWV,,no_cik,0,true,,,,
+ACWX,,no_cik,0,true,,,,
+ADBE,796343,with_announcements,47,false,operating,7372,Services-Prepackaged Software,ADOBE INC.
+ADM,7084,with_announcements,49,false,operating,2070,Fats & Oils,Archer-Daniels-Midland Co
+ADNT,1670541,with_announcements,48,false,operating,3714,Motor Vehicle Parts & Accessories,Adient plc
+ADP,8670,with_announcements,47,false,operating,7374,Services-Computer Processing & Data Preparation,AUTOMATIC DATA PROCESSING INC
+ADSK,769397,with_announcements,51,false,operating,7372,Services-Prepackaged Software,"Autodesk, Inc."
+ADT,1703056,with_announcements,40,false,operating,7381,"Services-Detective, Guard & Armored Car Services",ADT Inc.
+ADUS,1468328,with_announcements,49,false,operating,8082,Services-Home Health Care Services,Addus HomeCare Corp
+AEE,1002910,with_announcements,48,false,operating,4931,Electric & Other Services Combined,AMEREN CORP
+AEHR,1040470,with_announcements,48,false,operating,3825,Instruments For Meas & Testing of  Electricity & Elec Signals,AEHR TEST SYSTEMS
+AEIS,927003,with_announcements,47,false,operating,3679,"Electronic Components, NEC",ADVANCED ENERGY INDUSTRIES INC
+AER,1378789,no_item_202,0,false,other,7359,"Services-Equipment Rental & Leasing, NEC",AerCap Holdings N.V.
+AEVA,1789029,with_announcements,22,false,operating,3714,Motor Vehicle Parts & Accessories,"Aeva Technologies, Inc."
+AGG,,no_cik,0,true,,,,
+AGI,1178819,no_item_202,0,false,other,1040,Gold and Silver Ores,ALAMOS GOLD INC
+AGM,845877,with_announcements,47,false,operating,6111,Federal & Federally-Sponsored Credit Agencies,FEDERAL AGRICULTURAL MORTGAGE CORP
+AGNC,1423689,with_announcements,51,false,operating,6798,Real Estate Investment Trusts,AGNC Investment Corp.
+AGO,1273813,with_announcements,98,false,operating,6351,Surety Insurance,ASSURED GUARANTY LTD
+AGQ,1415311,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,ProShares Trust II
+AGX,100591,with_announcements,47,false,operating,1700,Construction - Special Trade Contractors,ARGAN INC
+AHCO,1725255,with_announcements,29,false,operating,8082,Services-Home Health Care Services,AdaptHealth Corp.
+AHR,1632970,with_announcements,10,false,operating,6798,Real Estate Investment Trusts,"American Healthcare REIT, Inc."
+AI,1577526,with_announcements,26,false,operating,7372,Services-Prepackaged Software,"C3.ai, Inc."
+AIA,,no_cik,0,true,,,,
+AIN,819793,with_announcements,52,false,operating,2221,"Broadwoven Fabric Mills, Man Made Fiber & Silk",ALBANY INTERNATIONAL CORP /DE/
+AIR,1750,with_announcements,48,false,operating,3720,Aircraft & Parts,AAR CORP
+AIS,,no_cik,0,true,,,,
+AIT,109563,with_announcements,47,false,operating,5080,"Wholesale-Machinery, Equipment & Supplies",APPLIED INDUSTRIAL TECHNOLOGIES INC
+AJG,354190,with_announcements,47,false,operating,6411,"Insurance Agents, Brokers & Service",Arthur J. Gallagher & Co.
+AKAM,1086222,with_announcements,47,false,operating,7389,"Services-Business Services, NEC",AKAMAI TECHNOLOGIES INC
+ALAB,1736297,with_announcements,10,false,operating,3674,Semiconductors & Related Devices,"Astera Labs, Inc."
+ALAI,,no_cik,0,true,,,,
+ALB,915913,with_announcements,51,false,operating,2821,"Plastic Materials, Synth Resins & Nonvulcan Elastomers",ALBEMARLE CORP
+ALG,897077,with_announcements,49,false,operating,3523,Farm Machinery & Equipment,ALAMO GROUP INC
+ALGN,1097149,with_announcements,46,false,operating,3842,"Orthopedic, Prosthetic & Surgical Appliances & Supplies",ALIGN TECHNOLOGY INC
+ALLE,1579241,with_announcements,48,false,operating,7381,"Services-Detective, Guard & Armored Car Services",Allegion plc
+ALLY,40729,with_announcements,47,false,operating,6022,State Commercial Banks,Ally Financial Inc.
+ALRM,1459200,with_announcements,45,false,operating,7372,Services-Prepackaged Software,"Alarm.com Holdings, Inc."
+ALV,1034670,with_announcements,47,false,operating,3714,Motor Vehicle Parts & Accessories,AUTOLIV INC
+AM,1623925,with_announcements,40,false,operating,4922,Natural Gas Transmission,Antero Midstream Corp
+AMAT,6951,with_announcements,46,false,operating,3674,Semiconductors & Related Devices,APPLIED MATERIALS INC /DE
+AMCR,1748790,with_announcements,29,false,operating,3990,Miscellaneous Manufacturing Industries,Amcor plc
+AMCX,1514991,with_announcements,47,false,operating,4841,Cable & Other Pay Television Services,AMC Global Media Inc.
+AME,1037868,with_announcements,47,false,operating,3823,"Industrial Instruments For Measurement, Display, and Control",AMETEK INC/
+AMG,1004434,with_announcements,47,false,operating,6282,Investment Advice,"AFFILIATED MANAGERS GROUP, INC."
+AMH,1562401,with_announcements,49,false,operating,6798,Real Estate Investment Trusts,American Homes 4 Rent
+AMLP,,no_cik,0,true,,,,
+AMP,820027,with_announcements,46,false,operating,6282,Investment Advice,AMERIPRISE FINANCIAL INC
+AMR,1704715,with_announcements,39,false,operating,1221,Bituminous Coal & Lignite Surface Mining,"Alpha Metallurgical Resources, Inc."
+AMRC,1488139,with_announcements,47,false,operating,1700,Construction - Special Trade Contractors,"Ameresco, Inc."
+AMSF,1018979,with_announcements,47,false,operating,6331,"Fire, Marine & Casualty Insurance",AMERISAFE INC
+AMT,1053507,with_announcements,47,false,operating,6798,Real Estate Investment Trusts,AMERICAN TOWER CORP /MA/
+AMZN,1018724,with_announcements,47,false,operating,5961,Retail-Catalog & Mail-Order Houses,AMAZON COM INC
+ANAB,1370053,with_announcements,42,false,operating,2834,Pharmaceutical Preparations,"ANAPTYSBIO, INC"
+ANDE,821026,with_announcements,44,false,operating,5150,Wholesale-Farm Product Raw Materials,"Andersons, Inc."
+ANET,1596532,with_announcements,49,false,operating,3576,Computer Communications Equipment,"Arista Networks, Inc."
+ANF,1018840,with_announcements,47,false,operating,5651,Retail-Family Clothing Stores,ABERCROMBIE & FITCH CO /DE/
+ANGL,,no_cik,0,true,,,,
+AOD,1379400,no_item_202,0,false,other,,,abrdn Total Dynamic Dividend Fund
+AOK,,no_cik,0,true,,,,
+AOM,,no_cik,0,true,,,,
+AON,315293,with_announcements,47,false,operating,6411,"Insurance Agents, Brokers & Service",Aon plc
+AOR,,no_cik,0,true,,,,
+AORT,784199,with_announcements,52,false,operating,3841,Surgical & Medical Instruments & Apparatus,"ARTIVION, INC."
+APD,2969,with_announcements,49,false,operating,2810,Industrial Inorganic Chemicals,"Air Products & Chemicals, Inc."
+APEI,1201792,with_announcements,52,false,operating,8200,Services-Educational Services,AMERICAN PUBLIC EDUCATION INC
+APG,1796209,with_announcements,36,false,operating,7340,Services-To Dwellings & Other Buildings,APi Group Corp
+APH,820313,with_announcements,54,false,operating,3678,Electronic Connectors,AMPHENOL CORP /DE/
+APLE,1418121,with_announcements,49,false,operating,6798,Real Estate Investment Trusts,"Apple Hospitality REIT, Inc."
+APO,1858681,with_announcements,28,false,operating,6282,Investment Advice,"Apollo Global Management, Inc."
+APOG,6845,with_announcements,47,false,operating,3231,"Glass Products, Made of  Purchased Glass","APOGEE ENTERPRISES, INC."
+APP,1751008,with_announcements,22,false,operating,7370,"Services-Computer Programming, Data Processing, Etc.",AppLovin Corp
+APPF,1433195,with_announcements,45,false,operating,7372,Services-Prepackaged Software,APPFOLIO INC
+APPS,317788,with_announcements,52,false,operating,6794,Patent Owners & Lessors,"Digital Turbine, Inc."
+AQN,1174169,no_item_202,0,false,other,4911,Electric Services,ALGONQUIN POWER & UTILITIES CORP.
+AR,1433270,with_announcements,64,false,operating,1311,Crude Petroleum & Natural Gas,ANTERO RESOURCES Corp
+ARCB,894405,with_announcements,47,false,operating,4213,Trucking (No Local),ARCBEST CORP /TX/
+ARCC,1287750,with_announcements,49,false,operating,,,ARES CAPITAL CORP
+ARE,1035443,with_announcements,48,false,operating,6798,Real Estate Investment Trusts,"ALEXANDRIA REAL ESTATE EQUITIES, INC."
+ARES,1176948,with_announcements,48,false,operating,6282,Investment Advice,Ares Management Corp
+ARGX,1697862,no_item_202,0,false,other,2836,"Biological Products, (No Diagnostic Substances)",ARGENX SE
+ARIS,1964504,no_item_202,0,false,other,1040,Gold and Silver Ores,Aris Mining Corp
+ARKF,,no_cik,0,true,,,,
+ARKG,,no_cik,0,true,,,,
+ARKK,,no_cik,0,true,,,,
+ARKQ,,no_cik,0,true,,,,
+ARKW,,no_cik,0,true,,,,
+ARLP,1086600,with_announcements,47,false,operating,1221,Bituminous Coal & Lignite Surface Mining,ALLIANCE RESOURCE PARTNERS LP
+ARMK,1584509,with_announcements,48,false,operating,5812,Retail-Eating  Places,Aramark
+AROC,1389050,with_announcements,49,false,operating,4922,Natural Gas Transmission,"Archrock, Inc."
+ARQT,1787306,with_announcements,27,false,operating,2834,Pharmaceutical Preparations,"Arcutis Biotherapeutics, Inc."
+ARR,1428205,with_announcements,49,false,operating,6798,Real Estate Investment Trusts,"Armour Residential REIT, Inc."
+ARWR,879407,with_announcements,46,false,operating,2834,Pharmaceutical Preparations,"ARROWHEAD PHARMACEUTICALS, INC."
+AS,1988894,no_item_202,0,false,other,2300,Apparel & Other Finishd Prods of  Fabrics & Similar Matl,"Amer Sports, Inc."
+ASB,7789,with_announcements,46,false,operating,6022,State Commercial Banks,ASSOCIATED BANC-CORP
+ASC,1577437,no_item_202,0,false,other,4412,Deep Sea Foreign Transportation of  Freight,Ardmore Shipping Corp
+ASH,1674862,with_announcements,44,false,operating,5160,Wholesale-Chemicals & Allied Products,ASHLAND INC.
+ASHR,,no_cik,0,true,,,,
+ASO,1817358,with_announcements,25,false,operating,5940,Retail-Miscellaneous Shopping Goods Stores,"Academy Sports & Outdoors, Inc."
+ASTH,1083446,with_announcements,37,false,operating,8742,Services-Management Consulting Services,"Astrana Health, Inc."
+ASTS,1780312,with_announcements,32,false,operating,4899,"Communications Services, NEC","AST SpaceMobile, Inc."
+ATEN,1580808,with_announcements,53,false,operating,3576,Computer Communications Equipment,"A10 Networks, Inc."
+ATHM,1527636,no_item_202,0,false,other,7374,Services-Computer Processing & Data Preparation,Autohome Inc.
+ATI,1018963,with_announcements,53,false,operating,3317,Steel Pipe & Tubes,ATI INC
+ATKR,1666138,with_announcements,45,false,operating,3690,"Miscellaneous Electrical Machinery, Equipment & Supplies",Atkore Inc.
+ATR,896622,with_announcements,47,false,operating,3089,"Plastics Products, NEC","APTARGROUP, INC."
+ATRC,1323885,with_announcements,62,false,operating,3841,Surgical & Medical Instruments & Apparatus,"AtriCure, Inc."
+AUB,883948,with_announcements,48,false,operating,6022,State Commercial Banks,Atlantic Union Bankshares Corp
+AVAV,1368622,with_announcements,47,false,operating,3721,Aircraft,AeroVironment Inc
+AVB,,no_cik,0,false,,,,
+AVDV,,no_cik,0,true,,,,
+AVGO,1730168,with_announcements,34,false,operating,3674,Semiconductors & Related Devices,Broadcom Inc.
+AVGX,,no_cik,0,true,,,,
+AVNT,1122976,with_announcements,47,false,operating,2821,"Plastic Materials, Synth Resins & Nonvulcan Elastomers",AVIENT CORP
+AVPT,1777921,with_announcements,21,false,operating,7372,Services-Prepackaged Software,"AvePoint, Inc."
+AVSC,,no_cik,0,true,,,,
+AVT,8858,with_announcements,50,false,operating,5065,"Wholesale-Electronic Parts & Equipment, NEC",AVNET INC
+AWI,7431,with_announcements,47,false,operating,3089,"Plastics Products, NEC",ARMSTRONG WORLD INDUSTRIES INC
+AX,1299709,with_announcements,46,false,operating,6035,"Savings Institution, Federally Chartered","Axos Financial, Inc."
+AXGN,805928,with_announcements,60,false,operating,3845,Electromedical & Electrotherapeutic Apparatus,"Axogen, Inc."
+AXON,1069183,with_announcements,47,false,operating,3480,"Ordnance & Accessories, (No Vehicles/Guided Missiles)","AXON ENTERPRISE, INC."
+AXP,4962,with_announcements,47,false,operating,6199,Finance Services,AMERICAN EXPRESS CO
+AXS,1214816,with_announcements,59,false,operating,6331,"Fire, Marine & Casualty Insurance",AXIS CAPITAL HOLDINGS LTD
+AXSM,1579428,with_announcements,46,false,operating,2834,Pharmaceutical Preparations,"Axsome Therapeutics, Inc."
+AXTI,1051627,with_announcements,57,false,operating,3674,Semiconductors & Related Devices,AXT INC
+AZN,901832,no_item_202,0,false,other,2834,Pharmaceutical Preparations,ASTRAZENECA PLC
+AZO,866787,with_announcements,47,false,operating,5531,Retail-Auto & Home Supply Stores,AUTOZONE INC
+AZTA,933974,with_announcements,53,false,operating,3559,"Special Industry Machinery, NEC","Azenta, Inc."
+AZZ,8947,with_announcements,46,false,operating,3470,"Coating, Engraving & Allied Services",AZZ INC
+B,756894,no_item_202,0,false,other,1040,Gold and Silver Ores,BARRICK MINING CORP
+BA,12927,with_announcements,52,false,operating,3721,Aircraft,BOEING CO
+BABA,1577552,no_item_202,0,false,other,7389,"Services-Business Services, NEC",Alibaba Group Holding Ltd
+BAH,1443646,with_announcements,47,false,operating,8742,Services-Management Consulting Services,Booz Allen Hamilton Holding Corp
+BAI,,no_cik,0,true,,,,
+BALL,9389,with_announcements,47,false,operating,3411,Metal Cans,BALL Corp
+BAP,1001290,no_item_202,0,false,other,6029,"Commercial Banks, NEC",CREDICORP LTD
+BAR,1690437,no_item_202,0,false,operating,6221,Commodity Contracts Brokers & Dealers,GraniteShares Gold Trust
+BAX,10456,with_announcements,51,false,operating,3841,Surgical & Medical Instruments & Apparatus,BAXTER INTERNATIONAL INC
+BBAR,913059,no_item_202,0,false,other,6029,"Commercial Banks, NEC",Banco BBVA Argentina S.A.
+BBEU,,no_cik,0,true,,,,
+BBIO,1743881,with_announcements,30,false,operating,2834,Pharmaceutical Preparations,"BridgeBio Pharma, Inc."
+BBT,1108134,with_announcements,47,false,operating,6036,"Savings Institutions, Not Federally Chartered",Beacon Financial Corp
+BBVA,842180,no_item_202,0,false,other,6029,"Commercial Banks, NEC","BANCO BILBAO VIZCAYA ARGENTARIA, S.A."
+BBWI,701985,with_announcements,74,false,operating,5990,"Retail-Retail Stores, NEC","Bath & Body Works, Inc."
+BBY,764478,with_announcements,47,false,operating,5731,"Retail-Radio, Tv & Consumer Electronics Stores",BEST BUY CO INC
+BCAT,1809541,no_item_202,0,false,other,,,BlackRock Capital Allocation Term Trust
+BCO,78890,with_announcements,46,false,operating,4731,Arrangement of  Transportation of  Freight & Cargo,BRINKS CO
+BDC,913142,with_announcements,50,false,operating,3357,Drawing & Insulating of  Nonferrous Wire,BELDEN INC.
+BDX,10795,with_announcements,54,false,operating,3841,Surgical & Medical Instruments & Apparatus,BECTON DICKINSON & CO
+BE,1664703,with_announcements,33,false,operating,3620,Electrical Industrial Apparatus,Bloom Energy Corp
+BELFB,729580,with_announcements,53,false,operating,3677,"Electronic Coils, Transformers & Other Inductors",BEL FUSE INC /NJ
+BEN,38777,with_announcements,47,false,operating,6282,Investment Advice,FRANKLIN TEMPLETON INC
+BEP,1533232,no_item_202,0,false,other,4911,Electric Services,Brookfield Renewable Partners L.P.
+BEPC,1791863,no_item_202,0,false,other,4911,Electric Services,Brookfield Renewable Corp
+BF.B,14693,with_announcements,47,false,operating,2080,Beverages,BROWN FORMAN CORP
+BFH,1101215,with_announcements,47,false,operating,6141,Personal Credit Institutions,"BREAD FINANCIAL HOLDINGS, INC."
+BHC,885590,with_announcements,57,false,operating,2834,Pharmaceutical Preparations,Bausch Health Companies Inc.
+BHF,1685040,with_announcements,41,false,operating,6311,Life Insurance,"Brighthouse Financial, Inc."
+BHVN,1935979,with_announcements,16,false,operating,2834,Pharmaceutical Preparations,Biohaven Ltd.
+BIDU,1329099,no_item_202,0,false,other,7370,"Services-Computer Programming, Data Processing, Etc.","Baidu, Inc."
+BIIB,875045,with_announcements,51,false,operating,2836,"Biological Products, (No Diagnostic Substances)",BIOGEN INC.
+BILI,1723690,no_item_202,0,false,other,7374,Services-Computer Processing & Data Preparation,Bilibili Inc.
+BIPC,1788348,no_item_202,0,false,other,4923,Natural Gas Transmisison & Distribution,Brookfield Infrastructure Corp
+BIV,,no_cik,0,true,,,,
+BJRI,1013488,with_announcements,50,false,operating,5812,Retail-Eating  Places,BJs RESTAURANTS INC
+BKDV,,no_cik,0,true,,,,
+BKH,1130464,with_announcements,48,false,operating,4911,Electric Services,BLACK HILLS CORP /SD/
+BKLC,,no_cik,0,true,,,,
+BKLN,,no_cik,0,true,,,,
+BKNG,1075531,with_announcements,48,false,operating,4700,Transportation Services,Booking Holdings Inc.
+BKU,1504008,with_announcements,46,false,operating,6035,"Savings Institution, Federally Chartered","BankUnited, Inc."
+BLCR,,no_cik,0,true,,,,
+BLDR,1316835,with_announcements,51,false,operating,5211,Retail-Lumber & Other Building Materials Dealers,"Builders FirstSource, Inc."
+BLK,2012383,with_announcements,8,false,operating,6211,"Security Brokers, Dealers & Flotation Companies","BlackRock, Inc."
+BLKB,1280058,with_announcements,47,false,operating,7372,Services-Prepackaged Software,BLACKBAUD INC
+BLV,,no_cik,0,true,,,,
+BLX,890541,no_item_202,0,false,other,6029,"Commercial Banks, NEC","BLADEX, INC."
+BMA,1347426,no_item_202,0,false,other,6029,"Commercial Banks, NEC",Macro Bank Inc.
+BMI,9092,with_announcements,47,false,operating,3824,Totalizing Fluid Meters & Counting Devices,BADGER METER INC
+BMO,927971,no_item_202,0,false,operating,6029,"Commercial Banks, NEC",BANK OF MONTREAL /CAN/
+BMRN,1048477,with_announcements,52,false,operating,2834,Pharmaceutical Preparations,BIOMARIN PHARMACEUTICAL INC
+BN,1001085,no_item_202,0,false,other,6512,Opeators of  Nonresidential Buildings,BROOKFIELD Corp /ON/
+BNDX,,no_cik,0,true,,,,
+BNO,1472494,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,"United States Brent Oil Fund, LP"
+BNY,1390777,with_announcements,50,false,operating,6022,State Commercial Banks,Bank of New York Mellon Corp
+BOH,46195,with_announcements,47,false,operating,6022,State Commercial Banks,BANK OF HAWAII CORP
+BOIL,1415311,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,ProShares Trust II
+BOND,,no_cik,0,true,,,,
+BOOT,1610250,with_announcements,59,false,operating,5661,Retail-Shoe Stores,"Boot Barn Holdings, Inc."
+BOTZ,,no_cik,0,true,,,,
+BP,313807,no_item_202,0,false,other,2911,Petroleum Refining,BP PLC
+BPOP,763901,with_announcements,47,false,operating,6022,State Commercial Banks,"POPULAR, INC."
+BR,1383312,with_announcements,51,false,operating,7389,"Services-Business Services, NEC","BROADRIDGE FINANCIAL SOLUTIONS, INC."
+BRK.B,1067983,with_announcements,37,false,operating,6331,"Fire, Marine & Casualty Insurance",BERKSHIRE HATHAWAY INC
+BRO,79282,with_announcements,47,false,operating,6411,"Insurance Agents, Brokers & Service","BROWN & BROWN, INC."
+BRX,1581068,with_announcements,48,false,operating,6798,Real Estate Investment Trusts,Brixmor Property Group Inc.
+BRZU,,no_cik,0,true,,,,
+BSAC,1027552,no_item_202,0,false,other,6029,"Commercial Banks, NEC",BANCO SANTANDER CHILE
+BSTZ,1768666,no_item_202,0,false,other,,,BlackRock Science & Technology Term Trust
+BSX,885725,with_announcements,54,false,operating,3841,Surgical & Medical Instruments & Apparatus,BOSTON SCIENTIFIC CORP
+BTI,1303523,no_item_202,0,false,other,2111,Cigarettes,British American Tobacco p.l.c.
+BUFD,,no_cik,0,true,,,,
+BUFR,,no_cik,0,true,,,,
+BULZ,927971,no_item_202,0,true,operating,6029,"Commercial Banks, NEC",BANK OF MONTREAL /CAN/
+BV,1734713,with_announcements,31,false,operating,0700,Agricultural Services,"BrightView Holdings, Inc."
+BWET,1610940,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,Amplify Commodity Trust
+BWFG,1505732,with_announcements,47,false,operating,6022,State Commercial Banks,"Bankwell Financial Group, Inc."
+BWX,,no_cik,0,true,,,,
+BWXT,1486957,with_announcements,47,false,operating,3510,Engines & Turbines,"BWX Technologies, Inc."
+BX,1393818,with_announcements,47,false,operating,6282,Investment Advice,Blackstone Inc.
+BXC,1301787,with_announcements,48,false,operating,5031,"Wholesale-Lumber, Plywood, Millwork & Wood Panels",BlueLinx Holdings Inc.
+BXMT,1061630,with_announcements,50,false,operating,6798,Real Estate Investment Trusts,"BLACKSTONE MORTGAGE TRUST, INC."
+BXP,1037540,with_announcements,47,false,operating,6798,Real Estate Investment Trusts,"BXP, Inc."
+BYD,906553,with_announcements,47,false,operating,7011,Hotels & Motels,BOYD GAMING CORP
+BZH,915840,with_announcements,50,false,operating,1531,Operative Builders,BEAZER HOMES USA INC
+C,831001,with_announcements,51,false,operating,6021,National Commercial Banks,CITIGROUP INC
+CABO,1632127,with_announcements,49,false,operating,4841,Cable & Other Pay Television Services,"Cable One, Inc."
+CACC,885550,with_announcements,47,false,operating,6141,Personal Credit Institutions,CREDIT ACCEPTANCE CORP
+CAE,1173382,no_item_202,0,false,other,3690,"Miscellaneous Electrical Machinery, Equipment & Supplies",CAE INC
+CAH,721371,with_announcements,51,false,operating,5122,"Wholesale-Drugs, Proprietaries & Druggists' Sundries",CARDINAL HEALTH INC
+CAKE,887596,with_announcements,48,false,operating,5812,Retail-Eating  Places,CHEESECAKE FACTORY INC
+CALM,16160,with_announcements,46,false,operating,0200,Agricultural Prod-Livestock & Animal Specialties,CAL-MAINE FOODS INC
+CALX,1406666,with_announcements,49,false,operating,4899,"Communications Services, NEC","CALIX, INC"
+CAR,723612,with_announcements,50,false,operating,7510,Services-Auto Rental & Leasing (No Drivers),"AVIS BUDGET GROUP, INC."
+CARR,1783180,with_announcements,26,false,operating,3585,Air-Cond & Warm Air Heatg Equip & Comm & Indl Refrig Equip,CARRIER GLOBAL Corp
+CASH,907471,with_announcements,48,false,operating,6021,National Commercial Banks,"PATHWARD FINANCIAL, INC."
+CAT,18230,with_announcements,49,false,operating,3531,Construction Machinery & Equip,CATERPILLAR INC
+CATY,861842,with_announcements,47,false,operating,6022,State Commercial Banks,CATHAY GENERAL BANCORP
+CBSH,22356,with_announcements,44,false,operating,6022,State Commercial Banks,COMMERCE BANCSHARES INC /MO/
+CBT,16040,with_announcements,48,false,operating,2890,Miscellaneous Chemical Products,CABOT CORP
+CBZ,944148,with_announcements,46,false,operating,7389,"Services-Business Services, NEC","CBIZ, Inc."
+CCL,815097,with_announcements,49,false,operating,4400,Water Transportation,Carnival Corp Ltd.
+CCOI,1158324,with_announcements,48,false,operating,4899,"Communications Services, NEC","COGENT COMMUNICATIONS HOLDINGS, INC."
+CCS,1576940,with_announcements,47,false,operating,1531,Operative Builders,"Century Communities, Inc."
+CDE,215466,with_announcements,70,false,operating,1040,Gold and Silver Ores,"Coeur Mining, Inc."
+CDNA,1217234,with_announcements,63,false,operating,8071,Services-Medical Laboratories,"CareDx, Inc."
+CDNS,813672,with_announcements,47,false,operating,7372,Services-Prepackaged Software,CADENCE DESIGN SYSTEMS INC
+CDRE,1860543,with_announcements,20,false,operating,3842,"Orthopedic, Prosthetic & Surgical Appliances & Supplies","Cadre Holdings, Inc."
+CELC,1603454,with_announcements,36,false,operating,8071,Services-Medical Laboratories,Celcuity Inc.
+CENT,887733,with_announcements,48,false,operating,5190,Wholesale-Miscellaneous Nondurable Goods,CENTRAL GARDEN & PET CO
+CF,1324404,with_announcements,94,false,operating,2870,Agricultural Chemicals,"CF Industries Holdings, Inc."
+CFG,759944,with_announcements,47,false,operating,6022,State Commercial Banks,CITIZENS FINANCIAL GROUP INC/RI
+CGAU,1854640,no_item_202,0,false,other,1040,Gold and Silver Ores,Centerra Gold Inc.
+CGGO,,no_cik,0,true,,,,
+CGNG,,no_cik,0,true,,,,
+CGON,1991792,with_announcements,10,false,operating,2836,"Biological Products, (No Diagnostic Substances)","CG Oncology, Inc."
+CHAT,,no_cik,0,true,,,,
+CHCT,1631569,with_announcements,45,false,operating,6798,Real Estate Investment Trusts,Community Healthcare Trust Inc
+CHDN,20212,with_announcements,48,false,operating,7948,"Services-Racing, Including Track Operation",Churchill Downs Inc
+CHH,1046311,with_announcements,47,false,operating,7011,Hotels & Motels,CHOICE HOTELS INTERNATIONAL INC /DE
+CHKP,1015922,no_item_202,0,false,other,7372,Services-Prepackaged Software,CHECK POINT SOFTWARE TECHNOLOGIES LTD
+CHRD,1486159,with_announcements,56,false,operating,1311,Crude Petroleum & Natural Gas,Chord Energy Corp
+CHRW,1043277,with_announcements,47,false,operating,4731,Arrangement of  Transportation of  Freight & Cargo,"C. H. ROBINSON WORLDWIDE, INC."
+CHWY,1766502,with_announcements,30,false,operating,5961,Retail-Catalog & Mail-Order Houses,"Chewy, Inc."
+CI,1739940,with_announcements,30,false,operating,6324,Hospital & Medical Service Plans,Cigna Group
+CIBR,,no_cik,0,true,,,,
+CIEN,936395,with_announcements,49,false,operating,3661,Telephone & Telegraph Apparatus,CIENA CORP
+CIFR,1819989,with_announcements,20,false,operating,6199,Finance Services,Cipher Digital Inc.
+CIM,1409493,with_announcements,47,false,operating,6798,Real Estate Investment Trusts,CHIMERA INVESTMENT CORP
+CINF,20286,with_announcements,55,false,operating,6331,"Fire, Marine & Casualty Insurance",CINCINNATI FINANCIAL CORP
+CL,21665,with_announcements,46,false,operating,2844,"Perfumes, Cosmetics & Other Toilet Preparations",COLGATE PALMOLIVE CO
+CLB,1958086,with_announcements,13,false,operating,1389,"Oil & Gas Field Services, NEC",Core Laboratories Inc. /DE/
+CLDX,744218,with_announcements,48,false,operating,2835,In Vitro & In Vivo Diagnostic Substances,"Celldex Therapeutics, Inc."
+CLH,822818,with_announcements,46,false,operating,4955,Hazardous Waste Management,CLEAN HARBORS INC
+CLIK,2020027,no_item_202,0,false,other,7361,Services-Employment Agencies,Click Holdings Ltd.
+CLM,814083,no_item_202,0,false,other,0000,,"Cornerstone Strategic Investment Fund, Inc."
+CLS,1030894,with_announcements,7,false,operating,3672,Printed Circuit Boards,CELESTICA INC
+CLX,21076,with_announcements,48,false,operating,2842,"Specialty Cleaning, Polishing and Sanitation Preparations",CLOROX CO /DE/
+CM,1045520,no_item_202,0,false,other,6029,"Commercial Banks, NEC",CANADIAN IMPERIAL BANK OF COMMERCE /CAN/
+CMCSA,1166691,with_announcements,47,false,operating,4841,Cable & Other Pay Television Services,COMCAST CORP
+CME,1156375,with_announcements,47,false,operating,6200,"Security & Commodity Brokers, Dealers, Exchanges & Services",CME GROUP INC.
+CMPR,1262976,with_announcements,49,false,operating,2750,Commercial Printing,CIMPRESS plc
+CMPS,1816590,with_announcements,17,false,operating,2834,Pharmaceutical Preparations,COMPASS Pathways plc
+CMRE,1503584,no_item_202,0,false,other,4412,Deep Sea Foreign Transportation of  Freight,Costamare Inc.
+CMS,811156,with_announcements,48,false,operating,4931,Electric & Other Services Combined,CMS ENERGY CORP
+CNA,21175,with_announcements,51,false,operating,6331,"Fire, Marine & Casualty Insurance",CNA FINANCIAL CORP
+CNC,1071739,with_announcements,57,false,operating,6324,Hospital & Medical Service Plans,CENTENE CORP
+CNI,16868,no_item_202,0,false,operating,4011,"Railroads, Line-Haul Operating",CANADIAN NATIONAL RAILWAY CO
+CNK,1385280,with_announcements,48,false,operating,7830,Services-Motion Picture Theaters,"Cinemark Holdings, Inc."
+CNM,1856525,with_announcements,22,false,operating,5099,"Wholesale-Durable Goods, NEC","Core & Main, Inc."
+CNMD,816956,with_announcements,49,false,operating,3845,Electromedical & Electrotherapeutic Apparatus,CONMED Corp
+CNNE,1704720,with_announcements,36,false,operating,5810,Retail-Eating & Drinking Places,"Cannae Holdings, Inc."
+CNO,1224608,with_announcements,66,false,operating,6321,Accident & Health Insurance,"CNO Financial Group, Inc."
+CNP,1130310,with_announcements,52,false,operating,4911,Electric Services,CENTERPOINT ENERGY INC
+CNQ,1017413,no_item_202,0,false,other,1311,Crude Petroleum & Natural Gas,CANADIAN NATURAL RESOURCES Ltd
+CNX,1070412,with_announcements,50,false,operating,1311,Crude Petroleum & Natural Gas,CNX Resources Corp
+CODI,1345126,with_announcements,48,false,operating,2510,Household Furniture,Compass Diversified Holdings
+COF,927628,with_announcements,47,false,operating,6021,National Commercial Banks,CAPITAL ONE FINANCIAL CORP
+COGT,1622229,with_announcements,35,false,operating,2834,Pharmaceutical Preparations,"Cogent Biosciences, Inc."
+COHR,820318,with_announcements,47,false,operating,3827,Optical Instruments & Lenses,COHERENT CORP.
+COKE,317540,with_announcements,46,false,operating,2086,Bottled & Canned Soft Drinks & Carbonated Waters,"Coca-Cola Consolidated, Inc."
+COLL,1267565,with_announcements,48,false,operating,2834,Pharmaceutical Preparations,"COLLEGIUM PHARMACEUTICAL, INC"
+COMT,,no_cik,0,true,,,,
+CONY,,no_cik,0,true,,,,
+COO,711404,with_announcements,46,false,operating,3851,Ophthalmic Goods,"COOPER COMPANIES, INC."
+COR,1140859,with_announcements,47,false,operating,5122,"Wholesale-Drugs, Proprietaries & Druggists' Sundries","Cencora, Inc."
+CORN,1471824,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,Teucrium Commodity Trust
+CORP,,no_cik,0,true,,,,
+CORT,1088856,with_announcements,55,false,operating,2834,Pharmaceutical Preparations,CORCEPT THERAPEUTICS INC
+COST,909832,with_announcements,47,false,operating,5331,Retail-Variety Stores,COSTCO WHOLESALE CORP /NEW
+CPA,1345105,no_item_202,0,false,other,4512,"Air Transportation, Scheduled","Copa Holdings, S.A."
+CPAY,1175454,with_announcements,48,false,operating,7389,"Services-Business Services, NEC","CORPAY, INC."
+CPF,701347,with_announcements,48,false,operating,6022,State Commercial Banks,CENTRAL PACIFIC FINANCIAL CORP
+CPNG,1834584,with_announcements,22,false,operating,5961,Retail-Catalog & Mail-Order Houses,"Coupang, Inc."
+CPRI,1530721,with_announcements,48,false,operating,3100,Leather & Leather Products,Capri Holdings Ltd
+CPRT,900075,with_announcements,47,false,operating,5500,Retail-Auto Dealers & Gasoline Stations,COPART INC
+CPS,1320461,with_announcements,46,false,operating,3714,Motor Vehicle Parts & Accessories,Cooper-Standard Holdings Inc.
+CPT,906345,with_announcements,46,false,operating,6798,Real Estate Investment Trusts,CAMDEN PROPERTY TRUST
+CQP,1383650,with_announcements,47,false,operating,4924,Natural Gas Distribution,"Cheniere Energy Partners, L.P."
+CRC,1609253,with_announcements,54,false,operating,1311,Crude Petroleum & Natural Gas,California Resources Corp
+CRF,33934,no_item_202,0,false,other,,,CORNERSTONE TOTAL RETURN FUND INC
+CRI,1060822,with_announcements,49,false,operating,2300,Apparel & Other Finishd Prods of  Fabrics & Similar Matl,CARTERS INC
+CRK,23194,with_announcements,47,false,operating,1311,Crude Petroleum & Natural Gas,COMSTOCK RESOURCES INC
+CRL,1100682,with_announcements,50,false,operating,8731,Services-Commercial Physical & Biological Research,"CHARLES RIVER LABORATORIES INTERNATIONAL, INC."
+CRM,1108524,with_announcements,48,false,operating,7372,Services-Prepackaged Software,"Salesforce, Inc."
+CRNC,1768267,with_announcements,31,false,operating,7372,Services-Prepackaged Software,Cerence Inc.
+CROX,1334036,with_announcements,48,false,operating,3021,Rubber & Plastics Footwear,"Crocs, Inc."
+CRS,17843,with_announcements,97,false,operating,3312,"Steel Works, Blast Furnaces & Rolling Mills (Coke Ovens)",CARPENTER TECHNOLOGY CORP
+CRSP,1674416,with_announcements,38,false,operating,2836,"Biological Products, (No Diagnostic Substances)",CRISPR Therapeutics AG
+CRUS,772406,with_announcements,48,false,operating,3674,Semiconductors & Related Devices,"CIRRUS LOGIC, INC."
+CRVL,874866,with_announcements,48,false,operating,6411,"Insurance Agents, Brokers & Service",CORVEL CORP
+CSCO,858877,with_announcements,47,false,operating,3576,Computer Communications Equipment,"CISCO SYSTEMS, INC."
+CSGP,1057352,with_announcements,48,false,operating,7389,"Services-Business Services, NEC","COSTAR GROUP, INC."
+CSIQ,1375877,no_item_202,0,false,other,3674,Semiconductors & Related Devices,Canadian Solar Inc.
+CSL,790051,with_announcements,48,false,operating,3060,"Fabricated Rubber Products, NEC",CARLISLE COMPANIES INC
+CSTM,1563411,with_announcements,7,false,operating,3341,Secondary Smelting & Refining of  Nonferrous Metals,CONSTELLIUM SE
+CSW,1624794,with_announcements,26,false,operating,2891,Adhesives & Sealants,"CSW INDUSTRIALS, INC."
+CSX,277948,with_announcements,47,false,operating,4011,"Railroads, Line-Haul Operating",CSX CORP
+CTAS,723254,with_announcements,46,false,operating,2320,"Men's & Boys' Furnishgs, Work Clothg, & Allied Garments",CINTAS CORP
+CTRN,1318484,with_announcements,61,false,operating,5600,Retail-Apparel & Accessory Stores,Citi Trends Inc
+CTVA,1755672,with_announcements,31,false,operating,0100,Agricultural Production-Crops,"Corteva, Inc."
+CUBE,1298675,with_announcements,108,false,operating,6798,Real Estate Investment Trusts,CubeSmart
+CUBI,1488813,with_announcements,48,false,operating,6022,State Commercial Banks,"Customers Bancorp, Inc."
+CVBF,354647,with_announcements,47,false,operating,6022,State Commercial Banks,CVB FINANCIAL CORP
+CVCO,278166,with_announcements,45,false,operating,2451,Mobile Homes,"CAVCO INDUSTRIES, INC."
+CVE,1475260,no_item_202,0,false,other,1311,Crude Petroleum & Natural Gas,CENOVUS ENERGY INC.
+CVI,1376139,with_announcements,61,false,operating,2911,Petroleum Refining,CVR ENERGY INC
+CVLT,1169561,with_announcements,48,false,operating,7372,Services-Prepackaged Software,COMMVAULT SYSTEMS INC
+CVNA,1690820,with_announcements,40,false,operating,5500,Retail-Auto Dealers & Gasoline Stations,CARVANA CO.
+CVS,64803,with_announcements,53,false,operating,5912,Retail-Drug Stores and Proprietary Stores,CVS HEALTH Corp
+CVSA,730464,with_announcements,48,false,operating,8200,Services-Educational Services,Covista Inc.
+CVX,93410,with_announcements,50,false,operating,2911,Petroleum Refining,CHEVRON CORP
+CWI,,no_cik,0,true,,,,
+CX,1076378,no_item_202,0,false,other,3241,"Cement, Hydraulic",CEMEX SAB DE CV
+CXT,25445,with_announcements,47,false,operating,3490,Miscellaneous Fabricated Metal Products,"Crane NXT, Co."
+CYRX,1124524,with_announcements,42,false,operating,2834,Pharmaceutical Preparations,"Cryoport, Inc."
+CYTK,1061983,with_announcements,48,false,operating,2834,Pharmaceutical Preparations,CYTOKINETICS INC
+CZR,1590895,with_announcements,49,false,operating,7011,Hotels & Motels,"Caesars Entertainment, Inc."
+DAC,1369241,no_item_202,0,false,other,4412,Deep Sea Foreign Transportation of  Freight,Danaos Corp
+DAN,26780,with_announcements,53,false,operating,3714,Motor Vehicle Parts & Accessories,DANA Inc
+DAR,916540,with_announcements,51,false,operating,2070,Fats & Oils,DARLING INGREDIENTS INC.
+DB,1159508,no_item_202,0,false,other,6022,State Commercial Banks,DEUTSCHE BANK AKTIENGESELLSCHAFT
+DBJP,,no_cik,0,true,,,,
+DBMF,,no_cik,0,true,,,,
+DBO,1383058,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,Invesco DB Oil Fund
+DCH,1062231,with_announcements,47,false,operating,3714,Motor Vehicle Parts & Accessories,Dauch Corp
+DD,1666700,with_announcements,42,false,operating,2821,"Plastic Materials, Synth Resins & Nonvulcan Elastomers","DuPont de Nemours, Inc."
+DDS,28917,with_announcements,47,false,operating,5311,Retail-Department Stores,"DILLARD'S, INC."
+DE,315189,with_announcements,47,false,operating,3523,Farm Machinery & Equipment,DEERE & CO
+DEA,1622194,with_announcements,46,false,operating,6798,Real Estate Investment Trusts,"Easterly Government Properties, Inc."
+DECK,910521,with_announcements,47,false,operating,3021,Rubber & Plastics Footwear,DECKERS OUTDOOR CORP
+DEI,1364250,with_announcements,47,false,operating,6798,Real Estate Investment Trusts,Douglas Emmett Inc
+DELL,1571996,with_announcements,42,false,operating,3571,Electronic Computers,Dell Technologies Inc.
+DFAE,,no_cik,0,true,,,,
+DFAR,,no_cik,0,true,,,,
+DFAS,,no_cik,0,true,,,,
+DFEM,,no_cik,0,true,,,,
+DFEN,,no_cik,0,true,,,,
+DFH,1825088,with_announcements,23,false,operating,1531,Operative Builders,"Dream Finders Homes, Inc."
+DFIC,,no_cik,0,true,,,,
+DFIN,1669811,with_announcements,40,false,operating,7380,Services-Miscellaneous Business Services,"Donnelley Financial Solutions, Inc."
+DFIV,,no_cik,0,true,,,,
+DFSV,,no_cik,0,true,,,,
+DGP,1159508,no_item_202,0,false,other,6022,State Commercial Banks,DEUTSCHE BANK AKTIENGESELLSCHAFT
+DGRO,,no_cik,0,true,,,,
+DHC,1075415,with_announcements,50,false,operating,6798,Real Estate Investment Trusts,DIVERSIFIED HEALTHCARE TRUST
+DHR,313616,with_announcements,61,false,operating,3823,"Industrial Instruments For Measurement, Display, and Control",DANAHER CORP /DE/
+DIN,49754,with_announcements,49,false,operating,5812,Retail-Eating  Places,"Dine Brands Global, Inc."
+DIS,1744489,with_announcements,30,false,operating,7990,Services-Miscellaneous Amusement & Recreation,Walt Disney Co
+DIVB,,no_cik,0,true,,,,
+DLX,27996,with_announcements,52,false,operating,2780,"Blankbooks, Looseleaf Binders & Bookbindg & Relatd Work",DELUXE CORP
+DNOW,1599617,with_announcements,47,false,operating,3533,Oil & Gas Field Machinery & Equipment,DNOW Inc.
+DOC,765880,with_announcements,47,false,operating,6798,Real Estate Investment Trusts,"HEALTHPEAK PROPERTIES, INC."
+DOCN,1582961,with_announcements,26,false,operating,7370,"Services-Computer Programming, Data Processing, Etc.","DigitalOcean Holdings, Inc."
+DOCS,1516513,with_announcements,21,false,operating,7371,Services-Computer Programming Services,"Doximity, Inc."
+DOCU,1261333,with_announcements,34,false,operating,7372,Services-Prepackaged Software,"DOCUSIGN, INC."
+DOG,,no_cik,0,true,,,,
+DORM,868780,with_announcements,48,false,operating,3714,Motor Vehicle Parts & Accessories,"Dorman Products, Inc."
+DOW,1751788,with_announcements,29,false,operating,2821,"Plastic Materials, Synth Resins & Nonvulcan Elastomers",DOW INC.
+DPST,,no_cik,0,true,,,,
+DPZ,1286681,with_announcements,50,false,operating,5140,Wholesale-Groceries & Related Products,DOMINOS PIZZA INC
+DQ,1477641,no_item_202,0,false,other,3674,Semiconductors & Related Devices,DAQO NEW ENERGY CORP.
+DRVN,1804745,with_announcements,24,false,operating,7500,"Services-Automotive Repair, Services & Parking",Driven Brands Holdings Inc.
+DSGN,1807120,with_announcements,22,false,operating,2834,Pharmaceutical Preparations,"Design Therapeutics, Inc."
+DSGX,1050140,no_item_202,0,false,other,7372,Services-Prepackaged Software,DESCARTES SYSTEMS GROUP INC
+DSL,1566388,no_item_202,0,false,other,,,DoubleLine Income Solutions Fund
+DSY,1999297,no_item_202,0,false,other,2670,Converted Paper & Paperboard Prods (No Contaners/Boxes),Big Tree Cloud Holdings Ltd
+DT,1773383,with_announcements,29,false,operating,7372,Services-Prepackaged Software,"Dynatrace, Inc."
+DTE,936340,with_announcements,94,false,operating,4911,Electric Services,DTE ENERGY CO
+DTM,1842022,with_announcements,21,false,operating,4922,Natural Gas Transmission,"DT Midstream, Inc."
+DUK,1326160,with_announcements,60,false,operating,4931,Electric & Other Services Combined,Duke Energy CORP
+DV,1819928,with_announcements,26,false,operating,7370,"Services-Computer Programming, Data Processing, Etc.","DoubleVerify Holdings, Inc."
+DVA,927066,with_announcements,48,false,operating,8090,"Services-Misc Health & Allied Services, NEC",DAVITA INC.
+DVY,,no_cik,0,true,,,,
+DXC,1688568,with_announcements,39,false,operating,7374,Services-Computer Processing & Data Preparation,DXC Technology Co
+DXJ,,no_cik,0,true,,,,
+DXYZ,1843974,no_item_202,0,false,other,,,Destiny Tech100 Inc.
+DY,67215,with_announcements,69,false,operating,1623,"Water, Sewer, Pipeline, Comm & Power Line Construction",DYCOM INDUSTRIES INC
+DYN,1818794,with_announcements,27,false,operating,2834,Pharmaceutical Preparations,"Dyne Therapeutics, Inc."
+EAT,703351,with_announcements,47,false,operating,5812,Retail-Eating  Places,"BRINKER INTERNATIONAL, INC"
+EBAY,1065088,with_announcements,49,false,operating,7389,"Services-Business Services, NEC",EBAY INC
+EBS,1367644,with_announcements,59,false,operating,2834,Pharmaceutical Preparations,Emergent BioSolutions Inc.
+EC,1444406,no_item_202,0,false,other,1311,Crude Petroleum & Natural Gas,ECOPETROL S.A.
+ECL,31462,with_announcements,64,false,operating,2840,"Soap, Detergents, Cleang Preparations, Perfumes, Cosmetics",ECOLAB INC.
+EDC,,no_cik,0,true,,,,
+EDU,1372920,no_item_202,0,false,other,8200,Services-Educational Services,New Oriental Education & Technology Group Inc.
+EEMV,,no_cik,0,true,,,,
+EFAV,,no_cik,0,true,,,,
+EFC,1411342,with_announcements,52,false,operating,6500,Real Estate,Ellington Financial Inc.
+EFG,,no_cik,0,true,,,,
+EFX,33185,with_announcements,50,false,operating,7320,"Services-Consumer Credit Reporting, Collection Agencies",EQUIFAX INC
+EFXT,1904856,no_item_202,0,false,other,3560,General Industrial Machinery & Equipment,Enerflex Ltd.
+EG,1095073,with_announcements,48,false,operating,6331,"Fire, Marine & Casualty Insurance","EVEREST GROUP, LTD."
+EGBN,1050441,with_announcements,47,false,operating,6022,State Commercial Banks,EAGLE BANCORP INC
+EIDO,,no_cik,0,true,,,,
+EIX,827052,with_announcements,47,false,operating,4911,Electric Services,EDISON INTERNATIONAL
+ELF,1600033,with_announcements,40,false,operating,2844,"Perfumes, Cosmetics & Other Toilet Preparations","e.l.f. Beauty, Inc."
+EMB,,no_cik,0,true,,,,
+EMBJ,1355444,no_item_202,0,false,other,3721,Aircraft,EMBRAER S.A.
+EME,105634,with_announcements,48,false,operating,1731,Electrical Work,"EMCOR Group, Inc."
+EMGF,,no_cik,0,true,,,,
+EMLC,,no_cik,0,true,,,,
+EMN,915389,with_announcements,49,false,operating,2821,"Plastic Materials, Synth Resins & Nonvulcan Elastomers",EASTMAN CHEMICAL CO
+EMXC,,no_cik,0,true,,,,
+ENB,895728,with_announcements,35,false,operating,4610,Pipe Lines (No Natural Gas),ENBRIDGE INC
+ENPH,1463101,with_announcements,49,false,operating,3674,Semiconductors & Related Devices,"Enphase Energy, Inc."
+ENS,1289308,with_announcements,53,false,operating,3690,"Miscellaneous Electrical Machinery, Equipment & Supplies",EnerSys
+ENVA,1529864,with_announcements,49,false,operating,6141,Personal Credit Institutions,"Enova International, Inc."
+EOG,821189,with_announcements,54,false,operating,1311,Crude Petroleum & Natural Gas,EOG RESOURCES INC
+EOLS,1570562,with_announcements,46,false,operating,2834,Pharmaceutical Preparations,"Evolus, Inc."
+EPAC,6955,with_announcements,49,false,operating,3590,Misc Industrial & Commercial Machinery & Equipment,ENERPAC TOOL GROUP CORP
+EPC,1096752,with_announcements,47,false,operating,2844,"Perfumes, Cosmetics & Other Toilet Preparations",EDGEWELL PERSONAL CARE Co
+EPD,1061219,with_announcements,47,false,operating,4922,Natural Gas Transmission,ENTERPRISE PRODUCTS PARTNERS L.P.
+EPHE,,no_cik,0,true,,,,
+EPI,,no_cik,0,true,,,,
+EPP,,no_cik,0,true,,,,
+EPR,1045450,with_announcements,50,false,operating,6798,Real Estate Investment Trusts,EPR PROPERTIES
+EPRT,1728951,with_announcements,33,false,operating,6798,Real Estate Investment Trusts,"ESSENTIAL PROPERTIES REALTY TRUST, INC."
+EQIX,1101239,with_announcements,47,false,operating,6798,Real Estate Investment Trusts,EQUINIX INC
+EQNR,1140625,no_item_202,0,false,other,2911,Petroleum Refining,EQUINOR ASA
+EQX,1756607,no_item_202,0,false,other,1040,Gold and Silver Ores,Equinox Gold Corp.
+ERIC,717826,no_item_202,0,false,other,3663,Radio & Tv Broadcasting & Communications Equipment,ERICSSON LM TELEPHONE CO
+ERIE,922621,with_announcements,47,false,operating,6411,"Insurance Agents, Brokers & Service",ERIE INDEMNITY CO
+ERX,,no_cik,0,true,,,,
+ES,72741,with_announcements,52,false,operating,4911,Electric Services,EVERSOURCE ENERGY
+ESE,866706,with_announcements,50,false,operating,3669,"Communications Equipment, NEC",ESCO TECHNOLOGIES INC
+ESGE,,no_cik,0,true,,,,
+ESGV,,no_cik,0,true,,,,
+ESNT,1448893,with_announcements,48,false,operating,6351,Surety Insurance,Essent Group Ltd.
+ETD,896156,with_announcements,48,false,operating,2511,"Wood Household Furniture, (No Upholstered)",ETHAN ALLEN INTERIORS INC
+ETHE,1725210,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,Grayscale Ethereum Staking ETF
+ETN,1551182,with_announcements,50,false,operating,3590,Misc Industrial & Commercial Machinery & Equipment,Eaton Corp plc
+ETON,1710340,with_announcements,30,false,operating,2834,Pharmaceutical Preparations,"Eton Pharmaceuticals, Inc."
+EUFN,,no_cik,0,true,,,,
+EVR,1360901,with_announcements,47,false,operating,6282,Investment Advice,Evercore Inc.
+EVRG,1711269,with_announcements,33,false,operating,4931,Electric & Other Services Combined,"Evergy, Inc."
+EVTC,1559865,with_announcements,48,false,operating,7374,Services-Computer Processing & Data Preparation,"EVERTEC, Inc."
+EW,1099800,with_announcements,47,false,operating,3842,"Orthopedic, Prosthetic & Surgical Appliances & Supplies",Edwards Lifesciences Corp
+EWBC,1069157,with_announcements,46,false,operating,6022,State Commercial Banks,EAST WEST BANCORP INC
+EWG,,no_cik,0,true,,,,
+EWH,,no_cik,0,true,,,,
+EWI,,no_cik,0,true,,,,
+EWL,,no_cik,0,true,,,,
+EWP,,no_cik,0,true,,,,
+EWQ,,no_cik,0,true,,,,
+EWS,,no_cik,0,true,,,,
+EWT,,no_cik,0,true,,,,
+EWU,,no_cik,0,true,,,,
+EWY,,no_cik,0,true,,,,
+EWZ,,no_cik,0,true,,,,
+EXI,,no_cik,0,true,,,,
+EXPD,746515,with_announcements,61,false,operating,4731,Arrangement of  Transportation of  Freight & Cargo,EXPEDITORS INTERNATIONAL OF WASHINGTON INC
+EYE,1710155,with_announcements,39,false,operating,3851,Ophthalmic Goods,"National Vision Holdings, Inc."
+EYPT,1314102,with_announcements,59,false,operating,3826,Laboratory Analytical Instruments,"EyePoint, Inc."
+EZA,,no_cik,0,true,,,,
+EZPW,876523,with_announcements,49,false,operating,5900,Retail-Miscellaneous Retail,EZCORP INC
+FANG,1539838,with_announcements,65,false,operating,1311,Crude Petroleum & Natural Gas,"Diamondback Energy, Inc."
+FAS,,no_cik,0,true,,,,
+FAZ,,no_cik,0,true,,,,
+FBCG,,no_cik,0,true,,,,
+FBNC,811589,with_announcements,47,false,operating,6022,State Commercial Banks,FIRST BANCORP /NC/
+FBRT,1562528,with_announcements,22,false,operating,6798,Real Estate Investment Trusts,"Franklin BSP Realty Trust, Inc."
+FBT,,no_cik,0,true,,,,
+FCEL,886128,with_announcements,48,false,operating,3620,Electrical Industrial Apparatus,FUELCELL ENERGY INC
+FCFS,840489,with_announcements,46,false,operating,5900,Retail-Miscellaneous Retail,"FirstCash Holdings, Inc."
+FCN,887936,with_announcements,127,false,operating,8742,Services-Management Consulting Services,"FTI CONSULTING, INC"
+FCNCA,798941,with_announcements,47,false,operating,6022,State Commercial Banks,FIRST CITIZENS BANCSHARES INC /DE/
+FDIS,,no_cik,0,true,,,,
+FDMT,1650648,with_announcements,26,false,operating,2836,"Biological Products, (No Diagnostic Substances)","4D Molecular Therapeutics, Inc."
+FDN,,no_cik,0,true,,,,
+FDS,1013237,with_announcements,46,false,operating,7370,"Services-Computer Programming, Data Processing, Etc.",FACTSET RESEARCH SYSTEMS INC
+FDUS,1513363,with_announcements,51,false,operating,,,FIDUS INVESTMENT Corp
+FELE,38725,with_announcements,48,false,operating,3621,Motors & Generators,FRANKLIN ELECTRIC CO INC
+FELG,,no_cik,0,true,,,,
+FENY,,no_cik,0,true,,,,
+FERG,2011641,with_announcements,9,false,operating,5070,Wholesale-Hardware & Plumbing & Heating Equipment & Supplies,Ferguson Enterprises Inc. /DE/
+FEZ,,no_cik,0,true,,,,
+FFBC,708955,with_announcements,48,false,operating,6021,National Commercial Banks,FIRST FINANCIAL BANCORP /OH/
+FFIV,1048695,with_announcements,49,false,operating,3576,Computer Communications Equipment,"F5, INC."
+FHI,1056288,with_announcements,47,false,operating,6282,Investment Advice,"FEDERATED HERMES, INC."
+FHLC,,no_cik,0,true,,,,
+FHN,36966,with_announcements,75,false,operating,6021,National Commercial Banks,FIRST HORIZON CORP
+FICO,814547,with_announcements,47,false,operating,7389,"Services-Business Services, NEC",FAIR ISAAC CORP
+FIDU,,no_cik,0,true,,,,
+FIGS,1846576,with_announcements,22,false,operating,2300,Apparel & Other Finishd Prods of  Fabrics & Similar Matl,"FIGS, Inc."
+FIS,1136893,with_announcements,55,false,operating,7389,"Services-Business Services, NEC","Fidelity National Information Services, Inc."
+FISV,798354,with_announcements,52,false,operating,7389,"Services-Business Services, NEC",FISERV INC
+FITB,35527,with_announcements,47,false,operating,6022,State Commercial Banks,FIFTH THIRD BANCORP
+FIVN,1288847,with_announcements,49,false,operating,7374,Services-Computer Processing & Data Preparation,"Five9, Inc."
+FIZZ,69891,with_announcements,48,false,operating,2086,Bottled & Canned Soft Drinks & Carbonated Waters,NATIONAL BEVERAGE CORP
+FLCB,,no_cik,0,true,,,,
+FLEX,866374,with_announcements,47,false,operating,3672,Printed Circuit Boards,FLEX LTD.
+FLJP,,no_cik,0,true,,,,
+FLNG,1772253,no_item_202,0,false,other,4400,Water Transportation,Flex LNG Ltd.
+FLO,1128928,with_announcements,48,false,operating,2000,Food and Kindred Products,FLOWERS FOODS INC
+FLOT,,no_cik,0,true,,,,
+FLR,1124198,with_announcements,51,false,operating,1600,Heavy Construction Other Than Bldg Const - Contractors,FLUOR CORP
+FLRN,,no_cik,0,true,,,,
+FMB,,no_cik,0,true,,,,
+FN,1408710,with_announcements,46,false,operating,3661,Telephone & Telegraph Apparatus,Fabrinet
+FNB,37808,with_announcements,48,false,operating,6021,National Commercial Banks,FNB CORP/PA/
+FND,1507079,with_announcements,40,false,operating,5211,Retail-Lumber & Other Building Materials Dealers,"Floor & Decor Holdings, Inc."
+FNDA,,no_cik,0,true,,,,
+FNDF,,no_cik,0,true,,,,
+FNF,1331875,with_announcements,47,false,operating,6361,Title Insurance,"Fidelity National Financial, Inc."
+FNKO,1704711,with_announcements,38,false,operating,3944,"Games, Toys & Children's Vehicles (No Dolls & Bicycles)","Funko, Inc."
+FORM,1039399,with_announcements,47,false,operating,3674,Semiconductors & Related Devices,FORMFACTOR INC
+FOUR,1794669,with_announcements,25,false,operating,7389,"Services-Business Services, NEC","Shift4 Payments, Inc."
+FR,921825,with_announcements,47,false,operating,6798,Real Estate Investment Trusts,FIRST INDUSTRIAL REALTY TRUST INC
+FRDM,,no_cik,0,true,,,,
+FRPT,1611647,with_announcements,49,false,operating,2040,Grain Mill Products,"Freshpet, Inc."
+FSK,1422183,with_announcements,93,false,operating,,,FS KKR Capital Corp
+FSLR,1274494,with_announcements,49,false,operating,3674,Semiconductors & Related Devices,"FIRST SOLAR, INC."
+FSS,277509,no_item_202,0,false,operating,3711,Motor Vehicles & Passenger Car Bodies,FEDERAL SIGNAL CORP /DE/
+FTAI,1590364,with_announcements,47,false,operating,7350,Services-Miscellaneous Equipment Rental & Leasing,FTAI Aviation Ltd.
+FTCS,,no_cik,0,true,,,,
+FTDR,1727263,with_announcements,32,false,operating,7340,Services-To Dwellings & Other Buildings,"Frontdoor, Inc."
+FTGC,,no_cik,0,true,,,,
+FTGS,,no_cik,0,true,,,,
+FTHI,,no_cik,0,true,,,,
+FTI,1681459,with_announcements,39,false,operating,3533,Oil & Gas Field Machinery & Equipment,TechnipFMC plc
+FTLS,,no_cik,0,true,,,,
+FTNT,1262039,with_announcements,49,false,operating,3577,"Computer Peripheral Equipment, NEC","Fortinet, Inc."
+FTV,1659166,with_announcements,46,false,operating,3823,"Industrial Instruments For Measurement, Display, and Control",Fortive Corp
+FUBO,1484769,with_announcements,34,false,operating,7812,Services-Motion Picture & Video Tape Production,FuboTV Inc.
+FUTU,1754581,no_item_202,0,false,other,6211,"Security Brokers, Dealers & Flotation Companies",Futu Holdings Ltd
+FVD,,no_cik,0,true,,,,
+FWONA,1560385,with_announcements,52,false,operating,4833,Television Broadcasting Stations,Liberty Media Corp
+FWONK,1560385,with_announcements,52,false,operating,4833,Television Broadcasting Stations,Liberty Media Corp
+FWRD,912728,with_announcements,59,false,operating,4731,Arrangement of  Transportation of  Freight & Cargo,FORWARD AIR CORP
+FXN,,no_cik,0,true,,,,
+FXZ,,no_cik,0,true,,,,
+GAP,39911,with_announcements,58,false,operating,5651,Retail-Family Clothing Stores,GAP INC
+GBIL,,no_cik,0,true,,,,
+GCO,18498,with_announcements,47,false,operating,5661,Retail-Shoe Stores,GENESCO INC
+GCT,1857816,with_announcements,10,false,operating,5961,Retail-Catalog & Mail-Order Houses,GigaCloud Technology Inc
+GDDY,1609711,with_announcements,48,false,operating,7373,Services-Computer Integrated Systems Design,GoDaddy Inc.
+GDE,,no_cik,0,true,,,,
+GDX,,no_cik,0,true,,,,
+GE,40545,with_announcements,50,false,operating,3600,Electronic & Other Electrical Equipment (No Computer Equip),GENERAL ELECTRIC CO
+GENI,1834489,no_item_202,0,false,other,7990,Services-Miscellaneous Amusement & Recreation,Genius Sports Ltd
+GEO,923796,with_announcements,50,false,operating,1520,General Bldg Contractors - Residential Bldgs,GEO GROUP INC
+GFF,50725,with_announcements,47,false,operating,3442,"Metal Doors, Sash, Frames, Moldings & Trim",GRIFFON CORP
+GFL,1780232,no_item_202,0,false,other,4953,Refuse Systems,GFL Environmental Inc.
+GFS,1709048,no_item_202,0,false,other,3674,Semiconductors & Related Devices,GLOBALFOUNDRIES Inc.
+GGAL,1114700,no_item_202,0,false,other,6029,"Commercial Banks, NEC",GRUPO FINANCIERO GALICIA SA
+GGG,42888,with_announcements,12,false,operating,3561,Pumps & Pumping Equipment,GRACO INC
+GHC,104889,with_announcements,47,false,operating,8200,Services-Educational Services,Graham Holdings Co
+GIB,1061574,no_item_202,0,false,other,8742,Services-Management Consulting Services,CGI INC
+GIS,40704,with_announcements,48,false,operating,2040,Grain Mill Products,GENERAL MILLS INC
+GLD,1222333,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,SPDR GOLD TRUST
+GLDM,1618181,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,World Gold Trust
+GLPI,1575965,with_announcements,45,false,operating,6798,Real Estate Investment Trusts,"Gaming & Leisure Properties, Inc."
+GLTR,1483386,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,abrdn Precious Metals Basket ETF Trust
+GMAB,1434265,no_item_202,0,false,other,2834,Pharmaceutical Preparations,GENMAB A/S
+GMED,1237831,with_announcements,58,false,operating,3841,Surgical & Medical Instruments & Apparatus,GLOBUS MEDICAL INC
+GNRC,1474735,with_announcements,48,false,operating,3621,Motors & Generators,GENERAC HOLDINGS INC.
+GO,1771515,with_announcements,32,false,operating,5411,Retail-Grocery Stores,Grocery Outlet Holding Corp.
+GOF,1380936,no_item_202,0,false,other,,,GUGGENHEIM STRATEGIC OPPORTUNITIES FUND
+GOOGL,1652044,with_announcements,45,false,operating,7370,"Services-Computer Programming, Data Processing, Etc.",Alphabet Inc.
+GOOS,1690511,no_item_202,0,false,other,2300,Apparel & Other Finishd Prods of  Fabrics & Similar Matl,Canada Goose Holdings Inc.
+GPCR,1888886,with_announcements,15,false,operating,2834,Pharmaceutical Preparations,Structure Therapeutics Inc.
+GPK,1408075,with_announcements,48,false,operating,2650,Paperboard Containers & Boxes,GRAPHIC PACKAGING HOLDING CO
+GPOR,874499,with_announcements,48,false,operating,1311,Crude Petroleum & Natural Gas,GULFPORT ENERGY CORP
+GRBK,1373670,with_announcements,46,false,operating,1531,Operative Builders,"Green Brick Partners, Inc."
+GRID,,no_cik,0,true,,,,
+GRND,1820144,with_announcements,18,false,operating,7370,"Services-Computer Programming, Data Processing, Etc.",Grindr Inc.
+GRPN,1490281,with_announcements,48,false,operating,7311,Services-Advertising Agencies,"Groupon, Inc."
+GS,886982,with_announcements,50,false,operating,6211,"Security Brokers, Dealers & Flotation Companies",GOLDMAN SACHS GROUP INC
+GSG,1332174,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,iShares S&P GSCI Commodity-Indexed Trust
+GSK,1131399,no_item_202,0,false,other,2834,Pharmaceutical Preparations,GSK plc
+GSL,1430725,no_item_202,0,false,other,4412,Deep Sea Foreign Transportation of  Freight,"Global Ship Lease, Inc."
+GSUS,,no_cik,0,true,,,,
+GSY,,no_cik,0,true,,,,
+GT,42582,with_announcements,51,false,operating,3011,Tires & Inner Tubes,GOODYEAR TIRE & RUBBER CO /OH/
+GTES,1718512,with_announcements,33,false,operating,3560,General Industrial Machinery & Equipment,Gates Industrial Corp Ltd.
+GTLB,1653482,with_announcements,21,false,operating,7372,Services-Prepackaged Software,Gitlab Inc.
+GWRE,1528396,with_announcements,47,false,operating,7372,Services-Prepackaged Software,"Guidewire Software, Inc."
+H,1468174,with_announcements,52,false,operating,7011,Hotels & Motels,Hyatt Hotels Corp
+HACK,,no_cik,0,true,,,,
+HASI,1561894,with_announcements,51,false,operating,6799,"Investors, NEC","HA Sustainable Infrastructure Capital, Inc."
+HBM,1322422,no_item_202,0,false,other,1000,Metal Mining,Hudbay Minerals Inc.
+HCA,860730,with_announcements,57,false,operating,8062,"Services-General Medical & Surgical Hospitals, NEC","HCA Healthcare, Inc."
+HCC,1691303,with_announcements,35,false,operating,1220,Silver Ores,"WARRIOR MET COAL, INC."
+HCSG,731012,with_announcements,49,false,operating,8050,Services-Nursing & Personal Care Facilities,HEALTHCARE SERVICES GROUP INC
+HDB,1144967,no_item_202,0,false,other,6029,"Commercial Banks, NEC",HDFC BANK LTD
+HEFA,,no_cik,0,true,,,,
+HEI,46619,with_announcements,48,false,operating,3724,Aircraft Engines & Engine Parts,HEICO CORP
+HEI.A,46619,with_announcements,48,false,operating,3724,Aircraft Engines & Engine Parts,HEICO CORP
+HESM,1789832,with_announcements,27,false,operating,1311,Crude Petroleum & Natural Gas,Hess Midstream LP
+HFXI,,no_cik,0,true,,,,
+HGV,1674168,with_announcements,41,false,operating,7000,"Hotels, Rooming Houses, Camps & Other Lodging Places",Hilton Grand Vacations Inc.
+HHH,1981792,with_announcements,12,false,operating,6798,Real Estate Investment Trusts,Howard Hughes Holdings Inc.
+HIG,874766,with_announcements,52,false,operating,6331,"Fire, Marine & Casualty Insurance","HARTFORD INSURANCE GROUP, INC."
+HII,1501585,with_announcements,47,false,operating,3730,Ship & Boat Building & Repairing,"HUNTINGTON INGALLS INDUSTRIES, INC."
+HIMX,1342338,no_item_202,0,false,other,3674,Semiconductors & Related Devices,"Himax Technologies, Inc."
+HLF,1180262,with_announcements,52,false,operating,5122,"Wholesale-Drugs, Proprietaries & Druggists' Sundries",HERBALIFE LTD.
+HLI,1302215,with_announcements,43,false,operating,6282,Investment Advice,"HOULIHAN LOKEY, INC."
+HLIO,1024795,with_announcements,47,false,operating,3490,Miscellaneous Fabricated Metal Products,"HELIOS TECHNOLOGIES, INC."
+HLNE,1433642,with_announcements,38,false,operating,6282,Investment Advice,Hamilton Lane INC
+HLT,1585689,with_announcements,50,false,operating,7011,Hotels & Motels,Hilton Worldwide Holdings Inc.
+HMC,715153,no_item_202,0,false,other,3711,Motor Vehicles & Passenger Car Bodies,HONDA MOTOR CO LTD
+HMN,850141,with_announcements,52,false,operating,6331,"Fire, Marine & Casualty Insurance",HORACE MANN EDUCATORS CORP /DE/
+HOMB,1331520,with_announcements,50,false,operating,6022,State Commercial Banks,HOME BANCSHARES INC
+HOOD,1783879,with_announcements,33,false,operating,6211,"Security Brokers, Dealers & Flotation Companies","Robinhood Markets, Inc."
+HPP,1482512,with_announcements,47,false,operating,6500,Real Estate,"Hudson Pacific Properties, Inc."
+HQY,1428336,with_announcements,55,false,operating,7389,"Services-Business Services, NEC","HEALTHEQUITY, INC."
+HRB,12659,with_announcements,48,false,operating,7200,Services-Personal Services,H&R BLOCK INC
+HRMY,1802665,with_announcements,29,false,operating,2834,Pharmaceutical Preparations,"Harmony Biosciences Holdings, Inc."
+HSBC,1089113,no_item_202,0,false,other,6035,"Savings Institution, Federally Chartered",HSBC HOLDINGS PLC
+HTGC,1280784,with_announcements,60,false,operating,,,"Hercules Capital, Inc."
+HUBB,48898,with_announcements,48,false,operating,3670,Electronic Components & Accessories,HUBBELL INC
+HUBS,1404655,with_announcements,47,false,operating,7372,Services-Prepackaged Software,HUBSPOT INC
+HUM,49071,with_announcements,52,false,operating,6324,Hospital & Medical Service Plans,HUMANA INC
+HWM,4281,with_announcements,57,false,operating,3350,Rolling Drawing & Extruding of  Nonferrous Metals,Howmet Aerospace Inc.
+HYD,,no_cik,0,true,,,,
+HYLB,,no_cik,0,true,,,,
+HYMB,,no_cik,0,true,,,,
+IAG,1203464,no_item_202,0,false,other,1040,Gold and Silver Ores,IAMGOLD CORP
+IAGG,,no_cik,0,true,,,,
+IAI,,no_cik,0,true,,,,
+IART,917520,with_announcements,59,false,operating,3841,Surgical & Medical Instruments & Apparatus,INTEGRA LIFESCIENCES HOLDINGS CORP
+IBB,,no_cik,0,true,,,,
+IBDR,,no_cik,0,true,,,,
+IBEX,1720420,with_announcements,13,false,operating,7374,Services-Computer Processing & Data Preparation,IBEX Ltd
+IBG,1924482,no_item_202,0,false,other,2080,Beverages,Innovation Beverage Group Ltd
+IBKR,1381197,with_announcements,48,false,operating,6211,"Security Brokers, Dealers & Flotation Companies","Interactive Brokers Group, Inc."
+IBM,51143,with_announcements,57,false,operating,3570,Computer & office Equipment,INTERNATIONAL BUSINESS MACHINES CORP
+IBN,1103838,no_item_202,0,false,other,6029,"Commercial Banks, NEC",ICICI BANK LTD
+IBTG,,no_cik,0,true,,,,
+ICFI,1362004,with_announcements,91,false,operating,8742,Services-Management Consulting Services,"ICF International, Inc."
+ICHR,1652535,with_announcements,50,false,operating,3674,Semiconductors & Related Devices,"ICHOR HOLDINGS, LTD."
+ICSH,,no_cik,0,true,,,,
+ICUI,883984,with_announcements,46,false,operating,3841,Surgical & Medical Instruments & Apparatus,ICU MEDICAL INC/DE
+IDCC,1405495,with_announcements,48,false,operating,6794,Patent Owners & Lessors,"InterDigital, Inc."
+IDMO,,no_cik,0,true,,,,
+IDU,,no_cik,0,true,,,,
+IDXX,874716,with_announcements,48,false,operating,2835,In Vitro & In Vivo Diagnostic Substances,IDEXX LABORATORIES INC /DE
+IDYA,1676725,with_announcements,32,false,operating,2834,Pharmaceutical Preparations,"IDEAYA Biosciences, Inc."
+IE,1879016,with_announcements,2,false,operating,1000,Metal Mining,Ivanhoe Electric Inc.
+IEO,,no_cik,0,true,,,,
+IEP,813762,with_announcements,48,false,operating,2911,Petroleum Refining,ICAHN ENTERPRISES L.P.
+IESC,1048268,with_announcements,47,false,operating,1731,Electrical Work,"IES Holdings, Inc."
+IETC,,no_cik,0,true,,,,
+IEV,,no_cik,0,true,,,,
+IEZ,,no_cik,0,true,,,,
+IFF,51253,with_announcements,49,false,operating,2860,Industrial Organic Chemicals,INTERNATIONAL FLAVORS & FRAGRANCES INC
+IGE,,no_cik,0,true,,,,
+IGEB,,no_cik,0,true,,,,
+IGIB,,no_cik,0,true,,,,
+IGM,,no_cik,0,true,,,,
+IGSB,,no_cik,0,true,,,,
+IGV,,no_cik,0,true,,,,
+IHE,,no_cik,0,true,,,,
+IHG,858446,no_item_202,0,false,other,7011,Hotels & Motels,INTERCONTINENTAL HOTELS GROUP PLC /NEW/
+IIPR,1677576,with_announcements,40,false,operating,6500,Real Estate,INNOVATIVE INDUSTRIAL PROPERTIES INC
+IJH,,no_cik,0,true,,,,
+IJK,,no_cik,0,true,,,,
+ILCG,,no_cik,0,true,,,,
+ILMN,1110803,with_announcements,67,false,operating,3826,Laboratory Analytical Instruments,"ILLUMINA, INC."
+IMNM,1472012,with_announcements,24,false,operating,2834,Pharmaceutical Preparations,Immunome Inc.
+IMVT,1764013,with_announcements,28,false,operating,2836,"Biological Products, (No Diagnostic Substances)","Immunovant, Inc."
+INDB,776901,with_announcements,46,false,operating,6022,State Commercial Banks,INDEPENDENT BANK CORP
+INMD,1742692,no_item_202,0,false,other,3845,Electromedical & Electrotherapeutic Apparatus,InMode Ltd.
+INSM,1104506,with_announcements,50,false,operating,2834,Pharmaceutical Preparations,INSMED Inc
+INSP,1609550,with_announcements,38,false,operating,3841,Surgical & Medical Instruments & Apparatus,"Inspire Medical Systems, Inc."
+INTR,1864163,no_item_202,0,false,other,6029,"Commercial Banks, NEC","Inter & Co, Inc."
+INTU,896878,with_announcements,56,false,operating,7372,Services-Prepackaged Software,INTUIT INC.
+INVH,1687229,with_announcements,38,false,operating,6510,Real Estate Operators (No Developers) & Lessors,Invitation Homes Inc.
+IOSP,1054905,with_announcements,47,false,operating,2800,Chemicals & Allied Products,INNOSPEC INC.
+IOVA,1425205,with_announcements,51,false,operating,2836,"Biological Products, (No Diagnostic Substances)","IOVANCE BIOTHERAPEUTICS, INC."
+IPGP,1111928,with_announcements,50,false,operating,3674,Semiconductors & Related Devices,IPG PHOTONICS CORP
+IQLT,,no_cik,0,true,,,,
+IQV,1478242,with_announcements,47,false,operating,8731,Services-Commercial Physical & Biological Research,IQVIA HOLDINGS INC.
+IR,1699150,with_announcements,38,false,operating,3560,General Industrial Machinery & Equipment,Ingersoll Rand Inc.
+IRDM,1418819,with_announcements,47,false,operating,4899,"Communications Services, NEC",Iridium Communications Inc.
+IRM,1020569,with_announcements,47,false,operating,6798,Real Estate Investment Trusts,IRON MOUNTAIN INC
+IRT,1466085,with_announcements,68,false,operating,6798,Real Estate Investment Trusts,"INDEPENDENCE REALTY TRUST, INC."
+ISRG,1035267,with_announcements,60,false,operating,3842,"Orthopedic, Prosthetic & Surgical Appliances & Supplies",INTUITIVE SURGICAL INC
+IT,749251,with_announcements,48,false,operating,8741,Services-Management Services,GARTNER INC
+ITA,,no_cik,0,true,,,,
+ITM,,no_cik,0,true,,,,
+ITRI,780571,with_announcements,49,false,operating,3825,Instruments For Meas & Testing of  Electricity & Elec Signals,"ITRON, INC."
+ITT,216228,with_announcements,50,false,operating,3561,Pumps & Pumping Equipment,ITT INC.
+ITUB,1132597,no_item_202,0,false,other,6022,State Commercial Banks,Itau Unibanco Holding S.A.
+ITW,49826,with_announcements,46,false,operating,3560,General Industrial Machinery & Equipment,ILLINOIS TOOL WORKS INC
+IUSG,,no_cik,0,true,,,,
+IVE,,no_cik,0,true,,,,
+IVLU,,no_cik,0,true,,,,
+IVOO,,no_cik,0,true,,,,
+IVV,,no_cik,0,true,,,,
+IVW,,no_cik,0,true,,,,
+IWD,,no_cik,0,true,,,,
+IWF,,no_cik,0,true,,,,
+IWL,,no_cik,0,true,,,,
+IWMI,,no_cik,0,true,,,,
+IWR,,no_cik,0,true,,,,
+IWV,,no_cik,0,true,,,,
+IWY,,no_cik,0,true,,,,
+IXC,,no_cik,0,true,,,,
+IXN,,no_cik,0,true,,,,
+IYE,,no_cik,0,true,,,,
+IYF,,no_cik,0,true,,,,
+IYH,,no_cik,0,true,,,,
+IYK,,no_cik,0,true,,,,
+IYM,,no_cik,0,true,,,,
+IYT,,no_cik,0,true,,,,
+IYW,,no_cik,0,true,,,,
+IYZ,,no_cik,0,true,,,,
+JAZZ,1232524,with_announcements,60,false,operating,2834,Pharmaceutical Preparations,Jazz Pharmaceuticals plc
+JBL,898293,with_announcements,46,false,operating,3672,Printed Circuit Boards,JABIL INC
+JBTM,1433660,with_announcements,49,false,operating,3550,Special Industry Machinery (No Metalworking Machinery),JBT MAREL Corp
+JCI,833444,with_announcements,50,false,operating,3585,Air-Cond & Warm Air Heatg Equip & Comm & Indl Refrig Equip,Johnson Controls International plc
+JCPB,,no_cik,0,true,,,,
+JEF,96223,with_announcements,58,false,operating,6211,"Security Brokers, Dealers & Flotation Companies",Jefferies Financial Group Inc.
+JEPI,,no_cik,0,true,,,,
+JETS,,no_cik,0,true,,,,
+JHMM,,no_cik,0,true,,,,
+JIVE,,no_cik,0,true,,,,
+JKHY,779152,with_announcements,60,false,operating,7373,Services-Computer Integrated Systems Design,JACK HENRY & ASSOCIATES INC
+JMIA,1756708,no_item_202,0,false,other,5961,Retail-Catalog & Mail-Order Houses,Jumia Technologies AG
+JNK,,no_cik,0,true,,,,
+JNUG,,no_cik,0,true,,,,
+JPM,19617,with_announcements,47,false,operating,6021,National Commercial Banks,JPMORGAN CHASE & CO
+KAI,886346,with_announcements,47,false,operating,3550,Special Industry Machinery (No Metalworking Machinery),KADANT INC
+KALU,811596,with_announcements,50,false,operating,3350,Rolling Drawing & Extruding of  Nonferrous Metals,KAISER ALUMINUM CORP
+KBE,,no_cik,0,true,,,,
+KBR,1357615,with_announcements,47,false,operating,1600,Heavy Construction Other Than Bldg Const - Contractors,"KBR, INC."
+KBWB,,no_cik,0,true,,,,
+KC,1795589,no_item_202,0,false,other,7372,Services-Prepackaged Software,Kingsoft Cloud Holdings Ltd
+KDP,1418135,with_announcements,45,false,operating,2080,Beverages,Keurig Dr Pepper Inc.
+KEX,56047,with_announcements,47,false,operating,4400,Water Transportation,KIRBY CORP
+KEYS,1601046,with_announcements,47,false,operating,3823,"Industrial Instruments For Measurement, Display, and Control","Keysight Technologies, Inc."
+KFRC,930420,with_announcements,48,false,operating,7363,Services-Help Supply Services,KFORCE INC
+KHC,1637459,with_announcements,49,false,operating,2030,"Canned, Frozen & Preservd Fruit, Veg & Food Specialties",Kraft Heinz Co
+KIE,,no_cik,0,true,,,,
+KKR,1404912,with_announcements,49,false,operating,6282,Investment Advice,KKR & Co. Inc.
+KLAC,319201,with_announcements,49,false,operating,3827,Optical Instruments & Lenses,KLA CORP
+KMX,1170010,with_announcements,47,false,operating,5500,Retail-Auto Dealers & Gasoline Stations,CARMAX INC
+KN,1587523,with_announcements,51,false,operating,3651,Household Audio & Video Equipment,Knowles Corp
+KNF,1955520,with_announcements,13,false,operating,1400,Mining & Quarrying of  Nonmetallic Minerals (No Fuels),Knife River Corp
+KNSL,1669162,with_announcements,41,false,operating,6331,"Fire, Marine & Casualty Insurance","Kinsale Capital Group, Inc."
+KO,21344,with_announcements,47,false,operating,2080,Beverages,COCA COLA CO
+KOD,1468748,with_announcements,34,false,operating,2836,"Biological Products, (No Diagnostic Substances)",Kodiak Sciences Inc.
+KOF,910631,no_item_202,0,false,other,2086,Bottled & Canned Soft Drinks & Carbonated Waters,COCA COLA FEMSA SAB DE CV
+KOMP,,no_cik,0,true,,,,
+KOP,1315257,with_announcements,53,false,operating,2400,Lumber & Wood Products (No Furniture),Koppers Holdings Inc.
+KORU,,no_cik,0,true,,,,
+KRC,1025996,with_announcements,47,false,operating,6798,Real Estate Investment Trusts,KILROY REALTY CORP
+KRE,,no_cik,0,true,,,,
+KRG,1286043,with_announcements,47,false,operating,6798,Real Estate Investment Trusts,KITE REALTY GROUP TRUST
+KRP,1657788,with_announcements,40,false,operating,1311,Crude Petroleum & Natural Gas,"Kimbell Royalty Partners, LP"
+KRYS,1711279,with_announcements,33,false,operating,2836,"Biological Products, (No Diagnostic Substances)","Krystal Biotech, Inc."
+KSA,,no_cik,0,true,,,,
+KSS,885639,with_announcements,52,false,operating,5311,Retail-Department Stores,KOHLS Corp
+KTB,1760965,with_announcements,30,false,operating,2320,"Men's & Boys' Furnishgs, Work Clothg, & Allied Garments","Kontoor Brands, Inc."
+KWEB,,no_cik,0,true,,,,
+KYIV,2062440,no_item_202,0,false,other,4812,Radiotelephone Communications,Kyivstar Group Ltd.
+KYMR,1815442,with_announcements,29,false,operating,2836,"Biological Products, (No Diagnostic Substances)","Kymera Therapeutics, Inc."
+L,60086,with_announcements,47,false,operating,6331,"Fire, Marine & Casualty Insurance",LOEWS CORP
+LABD,,no_cik,0,true,,,,
+LABU,,no_cik,0,true,,,,
+LAD,1023128,with_announcements,47,false,operating,5500,Retail-Auto Dealers & Gasoline Stations,LITHIA MOTORS INC
+LASR,1124796,with_announcements,34,false,operating,3674,Semiconductors & Related Devices,"NLIGHT, INC."
+LAUR,912766,with_announcements,41,false,operating,8200,Services-Educational Services,"LAUREATE EDUCATION, INC."
+LBRT,1694028,with_announcements,35,false,operating,1389,"Oil & Gas Field Services, NEC",Liberty Energy Inc.
+LCII,763744,with_announcements,58,false,operating,3714,Motor Vehicle Parts & Accessories,LCI INDUSTRIES
+LDOS,1336920,with_announcements,47,false,operating,7373,Services-Computer Integrated Systems Design,"Leidos Holdings, Inc."
+LECO,59527,with_announcements,48,false,operating,3540,Metalworkg Machinery & Equipment,LINCOLN ELECTRIC HOLDINGS INC
+LEN,920760,with_announcements,50,false,operating,1520,General Bldg Contractors - Residential Bldgs,LENNAR CORP /NEW/
+LEU,1065059,with_announcements,47,false,operating,1400,Mining & Quarrying of  Nonmetallic Minerals (No Fuels),CENTRUS ENERGY CORP
+LEVI,94845,with_announcements,48,false,operating,2300,Apparel & Other Finishd Prods of  Fabrics & Similar Matl,LEVI STRAUSS & CO
+LFST,1845257,with_announcements,22,false,operating,8000,Services-Health Services,"LifeStance Health Group, Inc."
+LGIH,1580670,with_announcements,47,false,operating,1531,Operative Builders,"LGI Homes, Inc."
+LGND,886163,with_announcements,49,false,operating,2834,Pharmaceutical Preparations,LIGAND PHARMACEUTICALS INC
+LHX,202058,with_announcements,52,false,operating,3812,"Search, Detection, Navigation, Guidance, Aeronautical Sys","L3HARRIS TECHNOLOGIES, INC. /DE/"
+LII,1069202,with_announcements,47,false,operating,3585,Air-Cond & Warm Air Heatg Equip & Comm & Indl Refrig Equip,LENNOX INTERNATIONAL INC
+LILAK,1712184,with_announcements,39,false,operating,4841,Cable & Other Pay Television Services,Liberty Latin America Ltd.
+LIN,1707925,with_announcements,31,false,operating,2810,Industrial Inorganic Chemicals,LINDE PLC
+LIT,,no_cik,0,true,,,,
+LITE,1633978,with_announcements,48,false,operating,3669,"Communications Equipment, NEC",Lumentum Holdings Inc.
+LKFN,721994,with_announcements,47,false,operating,6022,State Commercial Banks,LAKELAND FINANCIAL CORP
+LKQ,1065696,with_announcements,50,false,operating,5010,Wholesale-Motor Vehicles & Motor Vehicle Parts & Supplies,LKQ CORP
+LLY,59478,with_announcements,53,false,operating,2834,Pharmaceutical Preparations,ELI LILLY & Co
+LLYVA,2078416,no_item_202,0,false,operating,7900,Services-Amusement & Recreation Services,"Liberty Live Holdings, Inc."
+LMAT,1158895,with_announcements,49,false,operating,3841,Surgical & Medical Instruments & Apparatus,LEMAITRE VASCULAR INC
+LMB,1606163,with_announcements,48,false,operating,1700,Construction - Special Trade Contractors,"Limbach Holdings, Inc."
+LMBS,,no_cik,0,true,,,,
+LMND,1691421,with_announcements,25,false,operating,6331,"Fire, Marine & Casualty Insurance","Lemonade, Inc."
+LMT,936468,with_announcements,48,false,operating,3760,Guided Missiles & Space Vehicles & Parts,LOCKHEED MARTIN CORP
+LNG,3570,with_announcements,47,false,operating,4924,Natural Gas Distribution,"Cheniere Energy, Inc."
+LNN,836157,with_announcements,47,false,operating,3523,Farm Machinery & Equipment,LINDSAY CORP
+LNTH,1521036,with_announcements,47,false,operating,2835,In Vitro & In Vivo Diagnostic Substances,"Lantheus Holdings, Inc."
+LOB,1462120,with_announcements,44,false,operating,6022,State Commercial Banks,"Live Oak Bancshares, Inc."
+LOGI,1032975,with_announcements,48,false,operating,3577,"Computer Peripheral Equipment, NEC",LOGITECH INTERNATIONAL S.A.
+LPG,1596993,with_announcements,66,false,operating,4412,Deep Sea Foreign Transportation of  Freight,DORIAN LPG LTD.
+LPLA,1397911,with_announcements,47,false,operating,6200,"Security & Commodity Brokers, Dealers, Exchanges & Services",LPL Financial Holdings Inc.
+LPX,60519,with_announcements,47,false,operating,2400,Lumber & Wood Products (No Furniture),LOUISIANA-PACIFIC CORP
+LRGF,,no_cik,0,true,,,,
+LRN,1157408,with_announcements,48,false,operating,8200,Services-Educational Services,"Stride, Inc."
+LSCC,855658,with_announcements,52,false,operating,3674,Semiconductors & Related Devices,LATTICE SEMICONDUCTOR CORP
+LSTR,853816,with_announcements,51,false,operating,4213,Trucking (No Local),LANDSTAR SYSTEM INC
+LTC,887905,with_announcements,47,false,operating,6798,Real Estate Investment Trusts,LTC PROPERTIES INC
+LULU,1397187,with_announcements,47,false,operating,2300,Apparel & Other Finishd Prods of  Fabrics & Similar Matl,lululemon athletica inc.
+LVHI,,no_cik,0,true,,,,
+LW,1679273,with_announcements,39,false,operating,2030,"Canned, Frozen & Preservd Fruit, Veg & Food Specialties","Lamb Weston Holdings, Inc."
+LXP,910108,with_announcements,50,false,operating,6798,Real Estate Investment Trusts,LXP Industrial Trust
+LYB,1489393,with_announcements,48,false,operating,2860,Industrial Organic Chemicals,LyondellBasell Industries N.V.
+LYV,1335258,with_announcements,47,false,operating,7900,Services-Amusement & Recreation Services,"Live Nation Entertainment, Inc."
+MA,1141391,with_announcements,48,false,operating,7389,"Services-Business Services, NEC",Mastercard Inc
+MAA,912595,with_announcements,46,false,operating,6798,Real Estate Investment Trusts,MID AMERICA APARTMENT COMMUNITIES INC.
+MAC,912242,with_announcements,48,false,operating,6798,Real Estate Investment Trusts,MACERICH CO
+MAMA,1520358,with_announcements,14,false,operating,2013,Sausages & Other Prepared Meat Products,"Mama's Creations, Inc."
+MANH,1056696,with_announcements,47,false,operating,7372,Services-Prepackaged Software,MANHATTAN ASSOCIATES INC
+MANU,1549107,no_item_202,0,false,other,7900,Services-Amusement & Recreation Services,Manchester United plc
+MAT,63276,with_announcements,48,false,operating,3942,Dolls & Stuffed Toys,MATTEL INC /DE/
+MAX,1818383,with_announcements,29,false,operating,7389,"Services-Business Services, NEC","MediaAlpha, Inc."
+MBB,,no_cik,0,true,,,,
+MBUU,1590976,with_announcements,50,false,operating,3730,Ship & Boat Building & Repairing,"MALIBU BOATS, INC."
+MCD,63908,with_announcements,49,false,operating,5812,Retail-Eating  Places,MCDONALDS CORP
+MCHI,,no_cik,0,true,,,,
+MCK,927653,with_announcements,48,false,operating,5122,"Wholesale-Drugs, Proprietaries & Druggists' Sundries",MCKESSON CORP
+MCRI,907242,with_announcements,47,false,operating,7011,Hotels & Motels,MONARCH CASINO & RESORT INC
+MCS,62234,with_announcements,48,false,operating,7830,Services-Motion Picture Theaters,MARCUS CORP
+MD,893949,with_announcements,50,false,operating,8060,Services-Hospitals,"Pediatrix Medical Group, Inc."
+MDY,936958,no_item_202,0,true,other,,,SPDR S&P MIDCAP 400 ETF TRUST
+MDYG,,no_cik,0,true,,,,
+MEDP,1668397,with_announcements,40,false,operating,8731,Services-Commercial Physical & Biological Research,"Medpace Holdings, Inc."
+MEOH,886977,no_item_202,0,false,other,2860,Industrial Organic Chemicals,METHANEX CORP
+MET,1099219,with_announcements,77,false,operating,6311,Life Insurance,METLIFE INC
+META,1326801,with_announcements,47,false,operating,7370,"Services-Computer Programming, Data Processing, Etc.","Meta Platforms, Inc."
+METU,,no_cik,0,true,,,,
+MFC,1086888,no_item_202,0,false,other,6311,Life Insurance,MANULIFE FINANCIAL CORP
+MGA,749098,no_item_202,0,false,other,3714,Motor Vehicle Parts & Accessories,MAGNA INTERNATIONAL INC
+MGK,,no_cik,0,true,,,,
+MGNI,1595974,with_announcements,49,false,operating,7370,"Services-Computer Programming, Data Processing, Etc.","MAGNITE, INC."
+MIRM,1759425,with_announcements,36,false,operating,2834,Pharmaceutical Preparations,"Mirum Pharmaceuticals, Inc."
+MKSI,1049502,with_announcements,50,false,operating,3823,"Industrial Instruments For Measurement, Display, and Control",MKS INC
+MKTX,1278021,with_announcements,48,false,operating,6211,"Security Brokers, Dealers & Flotation Companies",MARKETAXESS HOLDINGS INC
+MLI,89439,with_announcements,43,false,operating,3350,Rolling Drawing & Extruding of  Nonferrous Metals,MUELLER INDUSTRIES INC
+MLKN,66382,with_announcements,57,false,operating,2520,Office Furniture,"MILLERKNOLL, INC."
+MMM,66740,with_announcements,56,false,operating,3841,Surgical & Medical Instruments & Apparatus,3M CO
+MMS,1032220,with_announcements,47,false,operating,7389,"Services-Business Services, NEC","MAXIMUS, INC."
+MMYT,1495153,no_item_202,0,false,other,4700,Transportation Services,MakeMyTrip Ltd
+MNDY,1845338,no_item_202,0,false,other,7372,Services-Prepackaged Software,monday.com Ltd.
+MNR,1980088,with_announcements,13,false,operating,1311,Crude Petroleum & Natural Gas,MACH NATURAL RESOURCES LP
+MNST,865752,with_announcements,47,false,operating,2086,Bottled & Canned Soft Drinks & Carbonated Waters,Monster Beverage Corp
+MOAT,,no_cik,0,true,,,,
+MOG.A,67887,with_announcements,47,false,operating,3590,Misc Industrial & Commercial Machinery & Equipment,MOOG INC.
+MOH,1179929,with_announcements,48,false,operating,6324,Hospital & Medical Service Plans,"MOLINA HEALTHCARE, INC."
+MORN,1289419,with_announcements,49,false,operating,6282,Investment Advice,"Morningstar, Inc."
+MP,1801368,with_announcements,24,false,operating,1000,Metal Mining,MP Materials Corp. / DE
+MPC,1510295,with_announcements,54,false,operating,2911,Petroleum Refining,Marathon Petroleum Corp
+MPLX,1552000,with_announcements,50,false,operating,4610,Pipe Lines (No Natural Gas),MPLX LP
+MPWR,1280452,with_announcements,47,false,operating,3674,Semiconductors & Related Devices,"MONOLITHIC POWER SYSTEMS, INC."
+MQ,1522540,with_announcements,22,false,operating,7372,Services-Prepackaged Software,"Marqeta, Inc."
+MQQQ,,no_cik,0,true,,,,
+MRCY,1049521,with_announcements,48,false,operating,3670,Electronic Components & Accessories,MERCURY SYSTEMS INC
+MRK,310158,with_announcements,48,false,operating,2834,Pharmaceutical Preparations,"Merck & Co., Inc."
+MRSH,62709,with_announcements,47,false,operating,6411,"Insurance Agents, Brokers & Service","MARSH & MCLENNAN COMPANIES, INC."
+MRTN,799167,with_announcements,48,false,operating,4213,Trucking (No Local),MARTEN TRANSPORT LTD
+MRX,1997464,no_item_202,0,false,other,6200,"Security & Commodity Brokers, Dealers, Exchanges & Services",Marex Group Ltd
+MS,895421,with_announcements,47,false,operating,6211,"Security Brokers, Dealers & Flotation Companies",MORGAN STANLEY
+MSCI,1408198,with_announcements,48,false,operating,7389,"Services-Business Services, NEC",MSCI Inc.
+MSFT,789019,with_announcements,47,false,operating,7372,Services-Prepackaged Software,MICROSOFT CORP
+MSOS,,no_cik,0,true,,,,
+MTCH,891103,with_announcements,48,false,operating,7370,"Services-Computer Programming, Data Processing, Etc.","Match Group, Inc."
+MTD,1037646,with_announcements,49,false,operating,3826,Laboratory Analytical Instruments,METTLER TOLEDO INTERNATIONAL INC/
+MTDR,1520006,with_announcements,57,false,operating,1311,Crude Petroleum & Natural Gas,Matador Resources Co
+MTG,876437,with_announcements,46,false,operating,6351,Surety Insurance,MGIC INVESTMENT CORP
+MTH,833079,with_announcements,49,false,operating,1531,Operative Builders,Meritage Homes CORP
+MTRN,1104657,with_announcements,51,false,operating,3460,Metal Forgings & Stampings,MATERION Corp
+MTSI,1493594,with_announcements,49,false,operating,3674,Semiconductors & Related Devices,"MACOM Technology Solutions Holdings, Inc."
+MTUM,,no_cik,0,true,,,,
+MTZ,15615,with_announcements,49,false,operating,1623,"Water, Sewer, Pipeline, Comm & Power Line Construction",MASTEC INC
+MUB,,no_cik,0,true,,,,
+MUR,717423,with_announcements,50,false,operating,1311,Crude Petroleum & Natural Gas,MURPHY OIL CORP
+MUX,314203,with_announcements,74,false,operating,1040,Gold and Silver Ores,McEwen Inc.
+MWA,1350593,with_announcements,48,false,operating,3490,Miscellaneous Fabricated Metal Products,"Mueller Water Products, Inc."
+MXL,1288469,with_announcements,52,false,operating,3674,Semiconductors & Related Devices,"MAXLINEAR, INC"
+NAIL,,no_cik,0,true,,,,
+NAMS,1936258,with_announcements,12,false,operating,2834,Pharmaceutical Preparations,NewAmsterdam Pharma Co N.V.
+NAVI,1593538,with_announcements,50,false,operating,6211,"Security Brokers, Dealers & Flotation Companies",NAVIENT CORP
+NBIX,914475,with_announcements,54,false,operating,2836,"Biological Products, (No Diagnostic Substances)",NEUROCRINE BIOSCIENCES INC
+NCLH,1513761,with_announcements,55,false,operating,4400,Water Transportation,Norwegian Cruise Line Holdings Ltd.
+NDAQ,1120193,with_announcements,48,false,operating,6200,"Security & Commodity Brokers, Dealers, Exchanges & Services","NASDAQ, INC."
+NEAR,,no_cik,0,true,,,,
+NEE,753308,with_announcements,48,false,operating,4911,Electric Services,NEXTERA ENERGY INC
+NEGG,1474627,no_item_202,0,false,operating,5990,"Retail-Retail Stores, NEC","Newegg Commerce, Inc."
+NEO,1077183,with_announcements,50,false,operating,8734,Services-Testing Laboratories,NEOGENOMICS INC
+NEOG,711377,with_announcements,45,false,operating,2835,In Vitro & In Vivo Diagnostic Substances,NEOGEN CORP
+NET,1477333,with_announcements,28,false,operating,7372,Services-Prepackaged Software,"Cloudflare, Inc."
+NEU,1282637,with_announcements,47,false,operating,2860,Industrial Organic Chemicals,NEWMARKET CORP
+NFLX,1065280,with_announcements,49,false,operating,7841,Services-Video Tape Rental,NETFLIX INC
+NFRA,,no_cik,0,true,,,,
+NHC,1047335,with_announcements,45,false,operating,8051,Services-Skilled Nursing Care Facilities,NATIONAL HEALTHCARE CORP
+NICE,1003935,no_item_202,0,false,other,7372,Services-Prepackaged Software,NICE Ltd.
+NJR,356309,with_announcements,47,false,operating,4924,Natural Gas Distribution,NEW JERSEY RESOURCES CORP
+NKE,320187,with_announcements,61,false,operating,3021,Rubber & Plastics Footwear,"NIKE, Inc."
+NLR,,no_cik,0,true,,,,
+NMAX,2026478,with_announcements,6,false,operating,4833,Television Broadcasting Stations,Newsmax Inc.
+NMRK,1690680,with_announcements,36,false,operating,6531,Real Estate Agents & Managers (For Others),"NEWMARK GROUP, INC."
+NN,1865631,with_announcements,20,false,operating,3812,"Search, Detection, Navigation, Guidance, Aeronautical Sys",NEXTNAV INC.
+NNI,1258602,with_announcements,48,false,operating,6141,Personal Credit Institutions,NELNET INC
+NNN,751364,with_announcements,47,false,operating,6798,Real Estate Investment Trusts,"NNN REIT, INC."
+NOC,1133421,with_announcements,47,false,operating,3812,"Search, Detection, Navigation, Guidance, Aeronautical Sys",NORTHROP GRUMMAN CORP /DE/
+NOG,1104485,with_announcements,71,false,operating,1311,Crude Petroleum & Natural Gas,"NORTHERN OIL & GAS, INC."
+NOV,1021860,with_announcements,52,false,operating,3533,Oil & Gas Field Machinery & Equipment,NOV Inc.
+NOVT,1076930,with_announcements,48,false,operating,3690,"Miscellaneous Electrical Machinery, Equipment & Supplies",NOVANTA INC
+NRG,1013871,with_announcements,48,false,operating,4911,Electric Services,"NRG ENERGY, INC."
+NRIX,1549595,with_announcements,25,false,operating,2834,Pharmaceutical Preparations,"Nurix Therapeutics, Inc."
+NSP,1000753,with_announcements,47,false,operating,7363,Services-Help Supply Services,"INSPERITY, INC."
+NSSC,69633,with_announcements,47,false,operating,3669,"Communications Equipment, NEC","NAPCO SECURITY TECHNOLOGIES, INC"
+NTCT,1078075,with_announcements,51,false,operating,7373,Services-Computer Integrated Systems Design,NETSCOUT SYSTEMS INC
+NTES,1110646,no_item_202,0,false,other,7372,Services-Prepackaged Software,"NetEase, Inc."
+NTGR,1122904,with_announcements,49,false,operating,3576,Computer Communications Equipment,"NETGEAR, INC."
+NTR,1725964,no_item_202,0,false,other,2870,Agricultural Chemicals,Nutrien Ltd.
+NTRA,1604821,with_announcements,50,false,operating,8071,Services-Medical Laboratories,"Natera, Inc."
+NU,1691493,no_item_202,0,false,other,6199,Finance Services,Nu Holdings Ltd.
+NUE,73309,with_announcements,46,false,operating,3312,"Steel Works, Blast Furnaces & Rolling Mills (Coke Ovens)",NUCOR CORP
+NUGT,,no_cik,0,true,,,,
+NULG,,no_cik,0,true,,,,
+NUTX,1479681,with_announcements,22,false,operating,7389,"Services-Business Services, NEC",Nutex Health Inc.
+NVDA,1045810,with_announcements,49,false,operating,3674,Semiconductors & Related Devices,NVIDIA CORP
+NVMI,1109345,no_item_202,0,false,other,3827,Optical Instruments & Lenses,NOVA LTD.
+NVO,353278,no_item_202,0,false,other,2834,Pharmaceutical Preparations,NOVO NORDISK A S
+NVS,1114448,no_item_202,0,false,other,2834,Pharmaceutical Preparations,NOVARTIS AG
+NVST,1757073,with_announcements,28,false,operating,3843,Dental Equipment & Supplies,Envista Holdings Corp
+NWE,1993004,with_announcements,12,false,operating,4931,Electric & Other Services Combined,"NorthWestern Energy Group, Inc."
+NWG,844150,no_item_202,0,false,other,6029,"Commercial Banks, NEC",NatWest Group plc
+NWS,1564708,with_announcements,49,false,operating,2711,Newspapers: Publishing or  Publishing & Printing,NEWS CORP
+NYT,71691,with_announcements,48,false,operating,2711,Newspapers: Publishing or  Publishing & Printing,NEW YORK TIMES CO
+NZF,1137887,no_item_202,0,false,other,,,Nuveen Municipal Credit Income Fund
+OBDC,1655888,with_announcements,64,false,operating,,,Blue Owl Capital Corp
+ODD,1907085,no_item_202,0,false,other,2844,"Perfumes, Cosmetics & Other Toilet Preparations",Oddity Tech Ltd
+ODFL,878927,with_announcements,47,false,operating,4213,Trucking (No Local),"OLD DOMINION FREIGHT LINE, INC."
+OFG,1030469,with_announcements,47,false,operating,6022,State Commercial Banks,OFG BANCORP
+OGE,1021635,with_announcements,46,false,operating,4911,Electric Services,OGE ENERGY CORP.
+OGN,1821825,with_announcements,20,false,operating,2834,Pharmaceutical Preparations,Organon & Co.
+OGS,1587732,with_announcements,55,false,operating,4924,Natural Gas Distribution,"ONE Gas, Inc."
+OHI,888491,with_announcements,49,false,operating,6798,Real Estate Investment Trusts,OMEGA HEALTHCARE INVESTORS INC
+OII,73756,with_announcements,47,false,operating,1389,"Oil & Gas Field Services, NEC",OCEANEERING INTERNATIONAL INC
+OILU,927971,no_item_202,0,true,operating,6029,"Commercial Banks, NEC",BANK OF MONTREAL /CAN/
+OKE,1039684,with_announcements,47,false,operating,4923,Natural Gas Transmisison & Distribution,ONEOK INC /NEW/
+OKLO,1849056,with_announcements,3,false,operating,4911,Electric Services,Oklo Inc.
+OLN,74303,with_announcements,55,false,operating,2800,Chemicals & Allied Products,OLIN Corp
+OMCL,926326,with_announcements,46,false,operating,3571,Electronic Computers,"OMNICELL, INC."
+OMF,1584207,with_announcements,48,false,operating,6141,Personal Credit Institutions,"OneMain Holdings, Inc."
+ON,1097864,with_announcements,47,false,operating,3674,Semiconductors & Related Devices,ON SEMICONDUCTOR CORP
+ONB,707179,with_announcements,47,false,operating,6021,National Commercial Banks,OLD NATIONAL BANCORP /IN/
+ONDS,1646188,with_announcements,29,false,operating,3663,Radio & Tv Broadcasting & Communications Equipment,Ondas Inc.
+ONEQ,,no_cik,0,true,,,,
+ONT,1643615,with_announcements,25,false,operating,8742,Services-Management Consulting Services,"Onterris, Inc."
+OPCH,1014739,with_announcements,54,false,operating,8082,Services-Home Health Care Services,"Option Care Health, Inc."
+OPLN,1395942,with_announcements,47,false,operating,5500,Retail-Auto Dealers & Gasoline Stations,"OPENLANE, Inc."
+OPY,791963,with_announcements,46,false,operating,6211,"Security Brokers, Dealers & Flotation Companies",OPPENHEIMER HOLDINGS INC
+ORI,74260,with_announcements,47,false,operating,6351,Surety Insurance,OLD REPUBLIC INTERNATIONAL CORP
+ORKA,907654,with_announcements,47,false,operating,2834,Pharmaceutical Preparations,"Oruka Therapeutics, Inc."
+ORLY,898173,with_announcements,47,false,operating,5531,Retail-Auto & Home Supply Stores,O REILLY AUTOMOTIVE INC
+OSIS,1039065,with_announcements,47,false,operating,3674,Semiconductors & Related Devices,OSI SYSTEMS INC
+OSK,775158,with_announcements,49,false,operating,3711,Motor Vehicles & Passenger Car Bodies,OSHKOSH CORP
+OSW,1758488,with_announcements,33,false,operating,7997,Services-Membership Sports & Recreation Clubs,ONESPAWORLD HOLDINGS Ltd
+OTIS,1781335,with_announcements,26,false,operating,3600,Electronic & Other Electrical Equipment (No Computer Equip),Otis Worldwide Corp
+OUNZ,1546652,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,VanEck Merk Gold ETF
+OVV,1792580,with_announcements,30,false,operating,1311,Crude Petroleum & Natural Gas,Ovintiv Inc.
+OWL,1823945,with_announcements,22,false,operating,6282,Investment Advice,BLUE OWL CAPITAL INC.
+OXLC,1495222,no_item_202,0,false,other,,,Oxford Lane Capital Corp.
+OXM,75288,with_announcements,47,false,operating,2320,"Men's & Boys' Furnishgs, Work Clothg, & Allied Garments",OXFORD INDUSTRIES INC
+OZK,1569650,no_item_202,0,false,other,,,Bank OZK
+P,1474432,with_announcements,47,false,operating,3572,Computer Storage Devices,"Everpure, Inc."
+PAA,1070423,with_announcements,47,false,operating,4610,Pipe Lines (No Natural Gas),PLAINS ALL AMERICAN PIPELINE LP
+PAG,1019849,with_announcements,48,false,operating,5500,Retail-Auto Dealers & Gasoline Stations,"PENSKE AUTOMOTIVE GROUP, INC."
+PALL,1459862,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,abrdn Palladium ETF Trust
+PANW,1327567,with_announcements,47,false,operating,3577,"Computer Peripheral Equipment, NEC",Palo Alto Networks Inc
+PAR,708821,with_announcements,49,false,operating,3578,Calculating & Accounting Machines (No Electronic Computers),PAR TECHNOLOGY CORP
+PARR,821483,with_announcements,49,false,operating,1311,Crude Petroleum & Natural Gas,"PAR PACIFIC HOLDINGS, INC."
+PAVE,,no_cik,0,true,,,,
+PAYC,1590955,with_announcements,47,false,operating,7372,Services-Prepackaged Software,"Paycom Software, Inc."
+PB,1068851,with_announcements,47,false,operating,6022,State Commercial Banks,PROSPERITY BANCSHARES INC
+PBA,1546066,no_item_202,0,false,other,1382,Oil & Gas Field Exploration Services,PEMBINA PIPELINE CORP
+PBH,1295947,with_announcements,48,false,operating,2834,Pharmaceutical Preparations,Prestige Consumer Healthcare Inc.
+PBI,78814,with_announcements,49,false,operating,3579,"Office Machines, NEC",PITNEY BOWES INC /DE/
+PBR,1119639,no_item_202,0,false,other,1311,Crude Petroleum & Natural Gas,PETROBRAS - PETROLEO BRASILEIRO SA
+PBW,,no_cik,0,true,,,,
+PCRX,1396814,with_announcements,87,false,operating,2834,Pharmaceutical Preparations,"Pacira BioSciences, Inc."
+PCTY,1591698,with_announcements,47,false,operating,7372,Services-Prepackaged Software,Paylocity Holding Corp
+PCVX,1649094,with_announcements,25,false,operating,2836,"Biological Products, (No Diagnostic Substances)","Vaxcyte, Inc."
+PDD,1737806,no_item_202,0,false,other,7389,"Services-Business Services, NEC",PDD Holdings Inc.
+PDM,1042776,with_announcements,47,false,operating,6512,Opeators of  Nonresidential Buildings,"Piedmont Realty Trust, Inc."
+PDO,1798618,no_item_202,0,false,other,,,PIMCO Dynamic Income Opportunities Fund
+PEN,1321732,with_announcements,47,false,operating,3841,Surgical & Medical Instruments & Apparatus,Penumbra Inc
+PFE,78003,with_announcements,51,false,operating,2834,Pharmaceutical Preparations,PFIZER INC
+PFFD,,no_cik,0,true,,,,
+PFSI,1745916,with_announcements,32,false,operating,6162,Mortgage Bankers & Loan Correspondents,"PennyMac Financial Services, Inc."
+PG,80424,with_announcements,47,false,operating,2840,"Soap, Detergents, Cleang Preparations, Perfumes, Cosmetics",PROCTER & GAMBLE Co
+PGNY,1551306,with_announcements,32,false,operating,8090,"Services-Misc Health & Allied Services, NEC","Progyny, Inc."
+PGR,80661,with_announcements,47,false,operating,6331,"Fire, Marine & Casualty Insurance",PROGRESSIVE CORP/OH/
+PH,76334,with_announcements,46,false,operating,3490,Miscellaneous Fabricated Metal Products,Parker-Hannifin Corp
+PHAT,1783183,with_announcements,30,false,operating,2834,Pharmaceutical Preparations,"Phathom Pharmaceuticals, Inc."
+PHM,822416,with_announcements,47,false,operating,1531,Operative Builders,PULTEGROUP INC/MI/
+PHYS,1477049,no_item_202,0,true,other,6221,Commodity Contracts Brokers & Dealers,Sprott Physical Gold Trust
+PI,1114995,with_announcements,49,false,operating,3679,"Electronic Components, NEC",IMPINJ INC
+PICK,,no_cik,0,true,,,,
+PINS,1506293,with_announcements,31,false,operating,7370,"Services-Computer Programming, Data Processing, Etc.","PINTEREST, INC."
+PIPR,1230245,with_announcements,48,false,operating,6211,"Security Brokers, Dealers & Flotation Companies",PIPER SANDLER COMPANIES
+PK,1617406,with_announcements,40,false,operating,7011,Hotels & Motels,Park Hotels & Resorts Inc.
+PKG,75677,with_announcements,47,false,operating,2650,Paperboard Containers & Boxes,PACKAGING CORP OF AMERICA
+PKX,889132,no_item_202,0,false,other,3312,"Steel Works, Blast Furnaces & Rolling Mills (Coke Ovens)",POSCO HOLDINGS INC.
+PLAB,810136,with_announcements,50,false,operating,3674,Semiconductors & Related Devices,PHOTRONICS INC
+PLAY,1525769,with_announcements,56,false,operating,5812,Retail-Eating  Places,"Dave & Buster's Entertainment, Inc."
+PLD,1045609,with_announcements,47,false,operating,6798,Real Estate Investment Trusts,"Prologis, Inc."
+PLMR,1761312,with_announcements,36,false,operating,6331,"Fire, Marine & Casualty Insurance","Palomar Holdings, Inc."
+PLTR,1321655,with_announcements,24,false,operating,7372,Services-Prepackaged Software,Palantir Technologies Inc.
+PLUS,1022408,with_announcements,47,false,operating,5045,Wholesale-Computers & Peripheral Equipment & Software,EPLUS INC
+PLXS,785786,with_announcements,48,false,operating,3672,Printed Circuit Boards,PLEXUS CORP
+PM,1413329,with_announcements,47,false,operating,2111,Cigarettes,Philip Morris International Inc.
+PMT,1464423,with_announcements,47,false,operating,6798,Real Estate Investment Trusts,PennyMac Mortgage Investment Trust
+PNR,77360,with_announcements,51,false,operating,3550,Special Industry Machinery (No Metalworking Machinery),PENTAIR plc
+PODD,1145197,with_announcements,51,false,operating,3841,Surgical & Medical Instruments & Apparatus,INSULET CORP
+POET,1437424,no_item_202,0,false,other,3674,Semiconductors & Related Devices,POET TECHNOLOGIES INC.
+POOL,945841,with_announcements,46,false,operating,5090,Wholesale-Misc Durable Goods,POOL CORP
+POWI,833640,with_announcements,47,false,operating,3674,Semiconductors & Related Devices,POWER INTEGRATIONS INC
+PPA,,no_cik,0,true,,,,
+PPC,802481,with_announcements,48,false,operating,2015,Poultry Slaughtering and Processing,PILGRIMS PRIDE CORP
+PPG,79879,with_announcements,56,false,operating,2851,"Paints, Varnishes, Lacquers, Enamels & Allied Prods",PPG INDUSTRIES INC
+PPH,,no_cik,0,true,,,,
+PPL,922224,with_announcements,53,false,operating,4911,Electric Services,PPL Corp
+PPLI,1800227,with_announcements,37,false,operating,7370,"Services-Computer Programming, Data Processing, Etc.",People Inc
+PPLT,1460235,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,abrdn Platinum ETF Trust
+PR,1658566,with_announcements,41,false,operating,1311,Crude Petroleum & Natural Gas,Permian Resources Corp
+PRAA,1185348,with_announcements,47,false,operating,6153,Short-Term Business Credit Institutions,PRA GROUP INC
+PRI,1475922,with_announcements,48,false,operating,6311,Life Insurance,"Primerica, Inc."
+PRLB,1443669,with_announcements,47,false,operating,3440,Fabricated Structural Metal Products,Proto Labs Inc
+PRMB,2042694,with_announcements,7,false,operating,2080,Beverages,Primo Brands Corp
+PRSU,884219,with_announcements,49,false,operating,7990,Services-Miscellaneous Amusement & Recreation,"Pursuit Attractions & Hospitality, Inc."
+PSI,,no_cik,0,true,,,,
+PSIX,1137091,with_announcements,40,false,operating,3510,Engines & Turbines,"POWER SOLUTIONS INTERNATIONAL, INC."
+PSKY,2041610,with_announcements,4,false,operating,4833,Television Broadcasting Stations,Paramount Skydance Corp
+PSO,938323,no_item_202,0,false,other,2731,Books: Publishing or  Publishing & Printing,PEARSON PLC
+PSX,1534701,with_announcements,48,false,operating,2911,Petroleum Refining,Phillips 66
+PTC,857005,with_announcements,50,false,operating,7372,Services-Prepackaged Software,PTC INC.
+PTCT,1070081,with_announcements,58,false,operating,2834,Pharmaceutical Preparations,"PTC THERAPEUTICS, INC."
+PTH,,no_cik,0,true,,,,
+PTLC,,no_cik,0,true,,,,
+PTON,1639825,with_announcements,29,false,operating,3949,"Sporting & Athletic Goods, NEC","PELOTON INTERACTIVE, INC."
+PTY,1190935,no_item_202,0,false,other,,,PIMCO CORPORATE & INCOME OPPORTUNITY FUND
+PUK,1116578,no_item_202,0,false,other,6311,Life Insurance,PRUDENTIAL PLC
+PVH,78239,with_announcements,51,false,operating,2320,"Men's & Boys' Furnishgs, Work Clothg, & Allied Garments",PVH CORP. /DE/
+PWB,,no_cik,0,true,,,,
+PWR,1050915,with_announcements,49,false,operating,1731,Electrical Work,"QUANTA SERVICES, INC."
+PZZA,901491,with_announcements,52,false,operating,5812,Retail-Eating  Places,PAPA JOHNS INTERNATIONAL INC
+QBTS,1907982,with_announcements,21,false,operating,7374,Services-Computer Processing & Data Preparation,D-Wave Quantum Inc.
+QCMU,,no_cik,0,true,,,,
+QDEL,1906324,with_announcements,23,false,operating,2835,In Vitro & In Vivo Diagnostic Substances,QuidelOrtho Corp
+QFIN,1741530,no_item_202,0,false,other,6199,Finance Services,"Qfin Holdings, Inc."
+QLD,,no_cik,0,true,,,,
+QLTA,,no_cik,0,true,,,,
+QNCX,1662774,with_announcements,16,false,operating,2836,"Biological Products, (No Diagnostic Substances)","Quince Therapeutics, Inc."
+QQEW,,no_cik,0,true,,,,
+QQQ,,no_cik,0,true,,,,
+QQQI,,no_cik,0,true,,,,
+QRVO,1604778,with_announcements,49,false,operating,3674,Semiconductors & Related Devices,"Qorvo, Inc."
+QTEC,,no_cik,0,true,,,,
+QTUM,,no_cik,0,true,,,,
+QTWO,1410384,with_announcements,47,false,operating,7372,Services-Prepackaged Software,"Q2 Holdings, Inc."
+QUAL,,no_cik,0,true,,,,
+QXO,1236275,with_announcements,11,false,operating,5030,Wholesale-Lumber & Other Construction Materials,"QXO, Inc."
+R,85961,with_announcements,50,false,operating,7510,Services-Auto Rental & Leasing (No Drivers),RYDER SYSTEM INC
+RACE,1648416,no_item_202,0,false,other,3711,Motor Vehicles & Passenger Car Bodies,Ferrari N.V.
+RBA,1046102,with_announcements,45,false,operating,7389,"Services-Business Services, NEC",RB GLOBAL INC.
+RBC,1324948,with_announcements,47,false,operating,3562,Ball & Roller Bearings,RBC Bearings INC
+RDVY,,no_cik,0,true,,,,
+REAX,2136387,no_item_202,0,false,other,6531,Real Estate Agents & Managers (For Others),Real REMAX Group Inc.
+REGN,872589,with_announcements,66,false,operating,2834,Pharmaceutical Preparations,"REGENERON PHARMACEUTICALS, INC."
+RELX,929869,no_item_202,0,false,other,7389,"Services-Business Services, NEC",RELX PLC
+REM,,no_cik,0,true,,,,
+REMX,,no_cik,0,true,,,,
+RES,742278,with_announcements,48,false,operating,1389,"Oil & Gas Field Services, NEC",RPC INC
+REZI,1740332,with_announcements,36,false,operating,5072,Wholesale-Hardware,"RESIDEO TECHNOLOGIES, INC."
+RF,1281761,with_announcements,48,false,operating,6021,National Commercial Banks,REGIONS FINANCIAL CORP
+RGEN,730272,with_announcements,52,false,operating,2836,"Biological Products, (No Diagnostic Substances)",REPLIGEN CORP
+RGLD,85535,with_announcements,73,false,operating,6795,Mineral Royalty Traders,ROYAL GOLD INC
+RHI,315213,with_announcements,47,false,operating,7363,Services-Help Supply Services,ROBERT HALF INC.
+RING,,no_cik,0,true,,,,
+RIO,863064,no_item_202,0,false,other,1000,Metal Mining,RIO TINTO PLC
+RKDA,1469443,with_announcements,46,false,operating,1311,Crude Petroleum & Natural Gas,"Arcadia Biosciences, Inc."
+RMD,943819,with_announcements,48,false,operating,3841,Surgical & Medical Instruments & Apparatus,RESMED INC
+RNG,1384905,with_announcements,47,false,operating,7374,Services-Computer Processing & Data Preparation,"RingCentral, Inc."
+ROG,84748,with_announcements,49,false,operating,2821,"Plastic Materials, Synth Resins & Nonvulcan Elastomers",ROGERS CORP
+ROK,1024478,with_announcements,48,false,operating,3829,"Measuring & Controlling Devices, NEC","ROCKWELL AUTOMATION, INC"
+ROKU,1428439,with_announcements,37,false,operating,4841,Cable & Other Pay Television Services,"ROKU, INC"
+ROL,84839,with_announcements,45,false,operating,7340,Services-To Dwellings & Other Buildings,ROLLINS INC
+ROM,,no_cik,0,true,,,,
+ROP,882835,with_announcements,46,false,operating,3823,"Industrial Instruments For Measurement, Display, and Control",ROPER TECHNOLOGIES INC
+ROST,745732,with_announcements,47,false,operating,5651,Retail-Family Clothing Stores,"ROSS STORES, INC."
+RPD,1560327,with_announcements,50,false,operating,7372,Services-Prepackaged Software,"Rapid7, Inc."
+RPG,,no_cik,0,true,,,,
+RPM,110621,with_announcements,48,false,operating,2851,"Paints, Varnishes, Lacquers, Enamels & Allied Prods",RPM INTERNATIONAL INC/DE/
+RPV,,no_cik,0,true,,,,
+RRR,1653653,with_announcements,43,false,operating,7011,Hotels & Motels,"Red Rock Resorts, Inc."
+RS,861884,with_announcements,47,false,operating,5051,Wholesale-Metals Service Centers & of fices,"RELIANCE, INC."
+RSG,1060391,with_announcements,47,false,operating,4953,Refuse Systems,"REPUBLIC SERVICES, INC."
+RSP,,no_cik,0,true,,,,
+RSPG,,no_cik,0,true,,,,
+RSPT,,no_cik,0,true,,,,
+RUN,1469367,with_announcements,47,false,operating,1700,Construction - Special Trade Contractors,Sunrun Inc.
+RVLV,1746618,with_announcements,29,false,operating,5961,Retail-Catalog & Mail-Order Houses,"Revolve Group, Inc."
+RVMD,1628171,with_announcements,30,false,operating,2836,"Biological Products, (No Diagnostic Substances)","Revolution Medicines, Inc."
+RVTY,31791,with_announcements,57,false,operating,3826,Laboratory Analytical Instruments,"REVVITY, INC."
+RWM,,no_cik,0,true,,,,
+RXO,1929561,with_announcements,16,false,operating,4700,Transportation Services,"RXO, Inc."
+RYAAY,1038683,no_item_202,0,false,other,4512,"Air Transportation, Scheduled",RYANAIR HOLDINGS PLC
+RYAM,1597672,with_announcements,50,false,operating,2611,Pulp Mills,RAYONIER ADVANCED MATERIALS INC.
+RYAN,1849253,with_announcements,21,false,operating,6411,"Insurance Agents, Brokers & Service","RYAN SPECIALTY HOLDINGS, INC."
+RYN,52827,with_announcements,47,false,operating,6798,Real Estate Investment Trusts,RAYONIER INC
+RYZ,1481582,with_announcements,63,false,operating,5051,Wholesale-Metals Service Centers & of fices,Ryerson Holding Corp
+SAFT,1172052,with_announcements,46,false,operating,6331,"Fire, Marine & Casualty Insurance",SAFETY INSURANCE GROUP INC
+SAH,1043509,with_announcements,49,false,operating,5500,Retail-Auto Dealers & Gasoline Stations,SONIC AUTOMOTIVE INC
+SAIC,1571123,with_announcements,48,false,operating,7373,Services-Computer Integrated Systems Design,Science Applications International Corp
+SAM,949870,with_announcements,48,false,operating,2082,Malt Beverages,BOSTON BEER CO INC
+SAN,891478,no_item_202,0,false,other,6029,"Commercial Banks, NEC","Banco Santander, S.A."
+SANM,897723,with_announcements,49,false,operating,3672,Printed Circuit Boards,SANMINA CORP
+SBAC,1034054,with_announcements,47,false,operating,6798,Real Estate Investment Trusts,SBA COMMUNICATIONS CORP
+SBCF,730708,with_announcements,47,false,operating,6022,State Commercial Banks,SEACOAST BANKING CORP OF FLORIDA
+SBLK,1386716,no_item_202,0,false,other,4412,Deep Sea Foreign Transportation of  Freight,Star Bulk Carriers Corp.
+SBSW,1786909,no_item_202,0,false,other,1040,Gold and Silver Ores,Sibanye Stillwater Ltd
+SBUX,829224,with_announcements,49,false,operating,5810,Retail-Eating & Drinking Places,STARBUCKS CORP
+SCHA,,no_cik,0,true,,,,
+SCHB,,no_cik,0,true,,,,
+SCHC,,no_cik,0,true,,,,
+SCHF,,no_cik,0,true,,,,
+SCHG,,no_cik,0,true,,,,
+SCHM,,no_cik,0,true,,,,
+SCHP,,no_cik,0,true,,,,
+SCHW,316709,with_announcements,46,false,operating,6211,"Security Brokers, Dealers & Flotation Companies",SCHWAB CHARLES CORP
+SCHZ,,no_cik,0,true,,,,
+SDVY,,no_cik,0,true,,,,
+SDY,,no_cik,0,true,,,,
+SE,1703399,no_item_202,0,false,other,7380,Services-Miscellaneous Business Services,Sea Ltd
+SEB,88121,with_announcements,47,false,operating,5150,Wholesale-Farm Product Raw Materials,SEABOARD CORP /DE/
+SEIC,350894,with_announcements,30,false,operating,6211,"Security Brokers, Dealers & Flotation Companies",SEI INVESTMENTS CO
+SETM,,no_cik,0,true,,,,
+SF,720672,with_announcements,50,false,operating,6211,"Security Brokers, Dealers & Flotation Companies",STIFEL FINANCIAL CORP
+SFBS,1430723,with_announcements,47,false,operating,6022,State Commercial Banks,"ServisFirst Bancshares, Inc."
+SFNC,90498,with_announcements,47,false,operating,6021,National Commercial Banks,SIMMONS FIRST NATIONAL CORP
+SG,1477815,with_announcements,19,false,operating,5812,Retail-Eating  Places,"Sweetgreen, Inc."
+SGDJ,,no_cik,0,true,,,,
+SGHC,1878057,no_item_202,0,false,other,7990,Services-Miscellaneous Amusement & Recreation,Super Group (SGHC) Ltd
+SGI,1206264,with_announcements,48,false,operating,2510,Household Furniture,SOMNIGROUP INTERNATIONAL INC.
+SGOL,1450923,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,abrdn Gold ETF Trust
+SGOV,,no_cik,0,true,,,,
+SGRY,1638833,with_announcements,58,false,operating,8062,"Services-General Medical & Surgical Hospitals, NEC","Surgery Partners, Inc."
+SH,,no_cik,0,true,,,,
+SHEL,1306965,no_item_202,0,false,other,1311,Crude Petroleum & Natural Gas,Shell plc
+SHLD,,no_cik,0,true,,,,
+SHM,,no_cik,0,true,,,,
+SHO,1295810,with_announcements,75,false,operating,7011,Hotels & Motels,"Sunstone Hotel Investors, Inc."
+SHOO,913241,with_announcements,41,false,operating,3140,"Footwear, (No Rubber)","STEVEN MADDEN, LTD."
+SHV,,no_cik,0,true,,,,
+SHW,89800,with_announcements,49,false,operating,5200,"Retail-Building Materials, Hardware, Garden Supply",SHERWIN WILLIAMS CO
+SHY,,no_cik,0,true,,,,
+SIG,832988,with_announcements,54,false,operating,5944,Retail-Jewelry Stores,SIGNET JEWELERS LTD
+SIGI,230557,with_announcements,51,false,operating,6331,"Fire, Marine & Casualty Insurance",SELECTIVE INSURANCE GROUP INC
+SIL,,no_cik,0,true,,,,
+SIRI,908937,with_announcements,51,false,operating,4832,Radio Broadcasting Stations,SIRIUS XM HOLDINGS INC.
+SITE,1650729,with_announcements,44,false,operating,5040,Wholesale-Professional & Commercial Equipment & Supplies,"SiteOne Landscape Supply, Inc."
+SITM,1451809,with_announcements,27,false,operating,3674,Semiconductors & Related Devices,SITIME Corp
+SJM,91419,with_announcements,47,false,operating,2033,"Canned, Fruits, Veg, Preserves, Jams & Jellies",J M SMUCKER Co
+SJNK,,no_cik,0,true,,,,
+SKWD,1519449,with_announcements,16,false,operating,6331,"Fire, Marine & Casualty Insurance","Skyward Specialty Insurance Group, Inc."
+SKYW,793733,with_announcements,47,false,operating,4512,"Air Transportation, Scheduled",SKYWEST INC
+SKYY,,no_cik,0,true,,,,
+SLAB,1038074,with_announcements,47,false,operating,3674,Semiconductors & Related Devices,SILICON LABORATORIES INC.
+SLB,87347,with_announcements,47,false,operating,1389,"Oil & Gas Field Services, NEC",SLB LIMITED/NV
+SLF,1097362,no_item_202,0,false,other,6311,Life Insurance,SUN LIFE FINANCIAL INC
+SLGN,849869,with_announcements,47,false,operating,3411,Metal Cans,SILGAN HOLDINGS INC
+SLM,1032033,with_announcements,48,false,operating,6141,Personal Credit Institutions,SLM Corp
+SLQD,,no_cik,0,true,,,,
+SLS,1390478,with_announcements,49,false,operating,2834,Pharmaceutical Preparations,"SELLAS Life Sciences Group, Inc."
+SLVM,1856485,with_announcements,20,false,operating,2621,Paper Mills,Sylvamo Corp
+SLYG,,no_cik,0,true,,,,
+SMG,825542,with_announcements,56,false,operating,2870,Agricultural Chemicals,SCOTTS MIRACLE-GRO CO
+SMH,,no_cik,0,true,,,,
+SMMT,1599298,with_announcements,31,false,operating,2834,Pharmaceutical Preparations,Summit Therapeutics Inc.
+SNA,91440,with_announcements,47,false,operating,3420,"Cutlery, Handtools & General Hardware",Snap-on Inc
+SNAP,1564408,with_announcements,41,false,operating,7370,"Services-Computer Programming, Data Processing, Etc.",Snap Inc
+SNDX,1395937,with_announcements,45,false,operating,2834,Pharmaceutical Preparations,Syndax Pharmaceuticals Inc
+SNEX,913760,with_announcements,50,false,operating,6200,"Security & Commodity Brokers, Dealers, Exchanges & Services",StoneX Group Inc.
+SNN,845982,no_item_202,0,false,other,3842,"Orthopedic, Prosthetic & Surgical Appliances & Supplies",SMITH & NEPHEW PLC
+SNPE,,no_cik,0,true,,,,
+SNPS,883241,with_announcements,49,false,operating,7372,Services-Prepackaged Software,SYNOPSYS INC
+SONY,313838,no_item_202,0,false,other,3651,Household Audio & Video Equipment,Sony Group Corp
+SOXL,,no_cik,0,true,,,,
+SPAB,,no_cik,0,true,,,,
+SPB,109177,with_announcements,47,false,operating,3690,"Miscellaneous Electrical Machinery, Equipment & Supplies","Spectrum Brands Holdings, Inc."
+SPDW,,no_cik,0,true,,,,
+SPHB,,no_cik,0,true,,,,
+SPHD,,no_cik,0,true,,,,
+SPHY,,no_cik,0,true,,,,
+SPLB,,no_cik,0,true,,,,
+SPMO,,no_cik,0,true,,,,
+SPOT,1639920,no_item_202,0,false,other,4832,Radio Broadcasting Stations,Spotify Technology S.A.
+SPSC,1092699,with_announcements,47,false,operating,7372,Services-Prepackaged Software,SPS COMMERCE INC
+SPT,1517375,with_announcements,29,false,operating,7372,Services-Prepackaged Software,"Sprout Social, Inc."
+SPTM,,no_cik,0,true,,,,
+SPTS,,no_cik,0,true,,,,
+SPXL,,no_cik,0,true,,,,
+SPXS,,no_cik,0,true,,,,
+SPXU,,no_cik,0,true,,,,
+SPYD,,no_cik,0,true,,,,
+SPYG,,no_cik,0,true,,,,
+SPYV,,no_cik,0,true,,,,
+SQM,909037,no_item_202,0,false,other,1400,Mining & Quarrying of  Nonmetallic Minerals (No Fuels),CHEMICAL & MINING CO OF CHILE INC
+SR,1126956,with_announcements,45,false,operating,4924,Natural Gas Distribution,SPIRE INC
+SRCE,34782,with_announcements,47,false,operating,6022,State Commercial Banks,1ST SOURCE CORP
+SRE,1032208,with_announcements,47,false,operating,4932,Gas & Other Services Combined,SEMPRA
+SRRK,1727196,with_announcements,35,false,operating,2836,"Biological Products, (No Diagnostic Substances)",Scholar Rock Holding Corp
+SSD,920371,with_announcements,47,false,operating,3420,"Cutlery, Handtools & General Hardware","Simpson Manufacturing Co., Inc."
+SSNC,1402436,with_announcements,48,false,operating,7372,Services-Prepackaged Software,SS&C Technologies Holdings Inc
+SSO,,no_cik,0,true,,,,
+SSYS,1517396,no_item_202,0,false,other,3577,"Computer Peripheral Equipment, NEC",STRATASYS LTD.
+STAA,718937,with_announcements,47,false,operating,3851,Ophthalmic Goods,STAAR SURGICAL CO
+STC,94344,with_announcements,47,false,operating,6361,Title Insurance,STEWART INFORMATION SERVICES CORP
+STLD,1022671,with_announcements,46,false,operating,3312,"Steel Works, Blast Furnaces & Rolling Mills (Coke Ovens)",STEEL DYNAMICS INC
+STM,932787,no_item_202,0,false,other,3674,Semiconductors & Related Devices,STMicroelectronics N.V.
+STN,1131383,no_item_202,0,false,other,8711,Services-Engineering Services,STANTEC INC
+STOK,1623526,with_announcements,31,false,operating,2834,Pharmaceutical Preparations,"Stoke Therapeutics, Inc."
+STRA,1013934,with_announcements,47,false,operating,8200,Services-Educational Services,"Strategic Education, Inc."
+STVN,1849853,no_item_202,0,false,other,3841,Surgical & Medical Instruments & Apparatus,Stevanato Group S.p.A.
+STX,1137789,with_announcements,56,false,operating,3572,Computer Storage Devices,Seagate Technology Holdings plc
+STZ,16918,with_announcements,53,false,operating,2080,Beverages,"CONSTELLATION BRANDS, INC."
+SUI,912593,with_announcements,45,false,operating,6798,Real Estate Investment Trusts,SUN COMMUNITIES INC
+SUN,1552275,with_announcements,50,false,operating,2911,Petroleum Refining,Sunoco LP
+SUPN,1356576,with_announcements,93,false,operating,2834,Pharmaceutical Preparations,"SUPERNUS PHARMACEUTICALS, INC."
+SUSA,,no_cik,0,true,,,,
+SVAL,,no_cik,0,true,,,,
+SVIX,1793497,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,VS Trust
+SVM,1340677,no_item_202,0,false,other,1040,Gold and Silver Ores,SILVERCORP METALS INC
+SVXY,1415311,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,ProShares Trust II
+SWK,93556,with_announcements,49,false,operating,3420,"Cutlery, Handtools & General Hardware","STANLEY BLACK & DECKER, INC."
+SXC,1514705,with_announcements,47,false,operating,3312,"Steel Works, Blast Furnaces & Rolling Mills (Coke Ovens)","SunCoke Energy, Inc."
+SXI,310354,with_announcements,45,false,operating,3580,Refrigeration & Service Industry Machinery,STANDEX INTERNATIONAL CORP/DE/
+SXT,310142,with_announcements,48,false,operating,2860,Industrial Organic Chemicals,SENSIENT TECHNOLOGIES CORP
+SYK,310764,with_announcements,51,false,operating,3841,Surgical & Medical Instruments & Apparatus,STRYKER CORP
+SYNA,817720,with_announcements,49,false,operating,3674,Semiconductors & Related Devices,SYNAPTICS Inc
+TAK,1395064,no_item_202,0,false,other,2834,Pharmaceutical Preparations,TAKEDA PHARMACEUTICAL CO LTD
+TAL,1499620,no_item_202,0,false,other,8200,Services-Educational Services,TAL Education Group
+TALO,1724965,with_announcements,46,false,operating,1311,Crude Petroleum & Natural Gas,TALOS ENERGY INC.
+TAN,,no_cik,0,true,,,,
+TCAI,,no_cik,0,true,,,,
+TCMD,1027838,with_announcements,47,false,operating,3841,Surgical & Medical Instruments & Apparatus,TACTILE SYSTEMS TECHNOLOGY INC
+TD,947263,no_item_202,0,false,other,6029,"Commercial Banks, NEC",TORONTO DOMINION BANK
+TDG,1260221,with_announcements,52,false,operating,3728,"Aircraft Parts & Auxiliary Equipment, NEC",TransDigm Group INC
+TDOC,1477449,with_announcements,50,false,operating,8011,Services-Offices & Clinics of  Doctors of  Medicine,"Teladoc Health, Inc."
+TDW,98222,with_announcements,45,false,operating,4400,Water Transportation,TIDEWATER INC
+TDY,1094285,with_announcements,50,false,operating,3812,"Search, Detection, Navigation, Guidance, Aeronautical Sys",TELEDYNE TECHNOLOGIES INC
+TEAM,1650372,with_announcements,17,false,operating,7372,Services-Prepackaged Software,Atlassian Corp
+TECK,886986,no_item_202,0,false,other,1400,Mining & Quarrying of  Nonmetallic Minerals (No Fuels),TECK RESOURCES LTD
+TECL,,no_cik,0,true,,,,
+TECX,1681087,with_announcements,32,false,operating,2836,"Biological Products, (No Diagnostic Substances)","Tectonic Therapeutic, Inc."
+TER,97210,with_announcements,47,false,operating,3825,Instruments For Meas & Testing of  Electricity & Elec Signals,"TERADYNE, INC"
+TEX,97216,with_announcements,93,false,operating,3537,"Industrial Trucks, Tractors, Trailors & Stackers",TEREX CORP
+TFI,,no_cik,0,true,,,,
+TFII,1588823,no_item_202,0,false,other,4210,Trucking & Courier Services (No Air),TFI International Inc.
+TFX,96943,with_announcements,48,false,operating,3841,Surgical & Medical Instruments & Apparatus,TELEFLEX INC
+TGTX,1001316,with_announcements,44,false,operating,2834,Pharmaceutical Preparations,"TG THERAPEUTICS, INC."
+THC,70318,with_announcements,60,false,operating,8062,"Services-General Medical & Surgical Hospitals, NEC",TENET HEALTHCARE CORP
+TILE,715787,with_announcements,53,false,operating,2273,Carpets & Rugs,INTERFACE INC
+TIPX,,no_cik,0,true,,,,
+TJX,109198,with_announcements,47,false,operating,5651,Retail-Family Clothing Stores,TJX COMPANIES INC /DE/
+TKO,1973266,with_announcements,15,false,operating,7900,Services-Amusement & Recreation Services,"TKO Group Holdings, Inc."
+TLN,1622536,with_announcements,15,false,operating,4911,Electric Services,Talen Energy Corp
+TLT,,no_cik,0,true,,,,
+TM,1094517,no_item_202,0,false,other,3711,Motor Vehicles & Passenger Car Bodies,TOYOTA MOTOR CORP/
+TME,1744676,no_item_202,0,false,other,4832,Radio Broadcasting Stations,Tencent Music Entertainment Group
+TMF,,no_cik,0,true,,,,
+TNA,,no_cik,0,true,,,,
+TNC,97134,with_announcements,48,false,operating,3580,Refrigeration & Service Industry Machinery,TENNANT CO
+TNET,937098,with_announcements,47,false,operating,7389,"Services-Business Services, NEC","TRINET GROUP, INC."
+TNL,1361658,with_announcements,49,false,operating,7011,Hotels & Motels,Travel & Leisure Co.
+TOST,1650164,with_announcements,20,false,operating,7374,Services-Computer Processing & Data Preparation,"Toast, Inc."
+TOWN,,no_cik,0,false,,,,
+TPB,1290677,with_announcements,47,false,operating,2100,Tobacco Products,"Turning Point Brands, Inc."
+TPL,1811074,with_announcements,23,false,operating,6792,Oil Royalty Traders,Texas Pacific Land Corp
+TPR,1116132,with_announcements,51,false,operating,3100,Leather & Leather Products,"TAPESTRY, INC."
+TQQQ,,no_cik,0,true,,,,
+TREX,1069878,with_announcements,47,false,operating,2400,Lumber & Wood Products (No Furniture),TREX CO INC
+TRGP,1389170,with_announcements,50,false,operating,4922,Natural Gas Transmission,Targa Resources Corp.
+TRIP,1526520,with_announcements,47,false,operating,7370,"Services-Computer Programming, Data Processing, Etc.","TripAdvisor, Inc."
+TRLV,1754195,with_announcements,23,false,operating,2833,Medicinal Chemicals & Botanical Products,Trulieve Cannabis Corp.
+TRMB,864749,with_announcements,52,false,operating,3829,"Measuring & Controlling Devices, NEC",TRIMBLE INC.
+TRN,99780,with_announcements,48,false,operating,3743,Railroad Equipment,TRINITY INDUSTRIES INC
+TROW,1113169,with_announcements,23,false,operating,6282,Investment Advice,PRICE T ROWE GROUP INC
+TRS,842633,with_announcements,49,false,operating,3460,Metal Forgings & Stampings,TRIMAS CORP
+TRU,1552033,with_announcements,47,false,operating,7320,"Services-Consumer Credit Reporting, Collection Agencies",TransUnion
+TRV,86312,with_announcements,49,false,operating,6331,"Fire, Marine & Casualty Insurance","TRAVELERS COMPANIES, INC."
+TSEM,928876,no_item_202,0,false,other,3674,Semiconductors & Related Devices,TOWER SEMICONDUCTOR LTD
+TSL,,no_cik,0,true,,,,
+TSLA,1318605,with_announcements,96,false,operating,3711,Motor Vehicles & Passenger Car Bodies,"Tesla, Inc."
+TSLX,1508655,with_announcements,50,false,operating,,,"Sixth Street Specialty Lending, Inc."
+TTD,1671933,with_announcements,41,false,operating,7370,"Services-Computer Programming, Data Processing, Etc.","Trade Desk, Inc."
+TTE,879764,no_item_202,0,false,other,1311,Crude Petroleum & Natural Gas,TotalEnergies SE
+TTEK,831641,with_announcements,48,false,operating,8711,Services-Engineering Services,TETRA TECH INC
+TTI,844965,with_announcements,48,false,operating,1311,Crude Petroleum & Natural Gas,TETRA TECHNOLOGIES INC
+TTWO,946581,with_announcements,46,false,operating,7372,Services-Prepackaged Software,TAKE TWO INTERACTIVE SOFTWARE INC
+TUG,,no_cik,0,true,,,,
+TUR,,no_cik,0,true,,,,
+TVTX,1438533,with_announcements,59,false,operating,2834,Pharmaceutical Preparations,"Travere Therapeutics, Inc."
+TWLO,1447669,with_announcements,47,false,operating,7372,Services-Prepackaged Software,TWILIO INC
+TWST,1581280,with_announcements,29,false,operating,2836,"Biological Products, (No Diagnostic Substances)",Twist Bioscience Corp
+TXN,97476,with_announcements,48,false,operating,3674,Semiconductors & Related Devices,TEXAS INSTRUMENTS INC
+TXNM,1108426,with_announcements,49,false,operating,4911,Electric Services,TXNM ENERGY INC
+TXRH,1289460,with_announcements,47,false,operating,5812,Retail-Eating  Places,"Texas Roadhouse, Inc."
+TXT,217346,with_announcements,46,false,operating,3720,Aircraft & Parts,TEXTRON INC
+TYL,860731,with_announcements,48,false,operating,7372,Services-Prepackaged Software,TYLER TECHNOLOGIES INC
+UAL,100517,with_announcements,69,false,operating,4512,"Air Transportation, Scheduled","United Airlines Holdings, Inc."
+UBSI,729986,with_announcements,47,false,operating,6022,State Commercial Banks,UNITED BANKSHARES INC/WV
+UCB,857855,with_announcements,48,false,operating,6022,State Commercial Banks,UNITED COMMUNITY BANKS INC
+UCO,1415311,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,ProShares Trust II
+UCTT,1275014,with_announcements,46,false,operating,3674,Semiconductors & Related Devices,"Ultra Clean Holdings, Inc."
+UDOW,,no_cik,0,true,,,,
+UE,1611547,with_announcements,46,false,operating,6500,Real Estate,Urban Edge Properties
+UFPT,914156,with_announcements,46,false,operating,3841,Surgical & Medical Instruments & Apparatus,UFP TECHNOLOGIES INC
+UGI,884614,with_announcements,48,false,operating,4932,Gas & Other Services Combined,UGI CORP /PA/
+UHAL,4457,with_announcements,11,false,operating,7510,Services-Auto Rental & Leasing (No Drivers),U-Haul Holding Co /NV/
+UI,1511737,with_announcements,48,false,operating,3663,Radio & Tv Broadcasting & Communications Equipment,Ubiquiti Inc.
+UL,217410,no_item_202,0,false,other,2840,"Soap, Detergents, Cleang Preparations, Perfumes, Cosmetics",UNILEVER PLC
+ULCC,1670076,with_announcements,25,false,operating,4512,"Air Transportation, Scheduled","Frontier Group Holdings, Inc."
+ULS,1901440,with_announcements,10,false,operating,8734,Services-Testing Laboratories,UL Solutions Inc.
+ULTA,1403568,with_announcements,47,false,operating,5990,"Retail-Retail Stores, NEC","Ulta Beauty, Inc."
+UMC,1033767,no_item_202,0,false,other,3674,Semiconductors & Related Devices,UNITED MICROELECTRONICS CORP
+UMH,752642,with_announcements,48,false,operating,6798,Real Estate Investment Trusts,"UMH PROPERTIES, INC."
+UNFI,1020859,with_announcements,50,false,operating,5141,"Wholesale-Groceries, General Line",UNITED NATURAL FOODS INC
+UNIT,2020795,with_announcements,5,false,operating,4813,Telephone Communications (No Radiotelephone),Uniti Group Inc.
+UNM,5513,with_announcements,47,false,operating,6321,Accident & Health Insurance,Unum Group
+UPBD,933036,with_announcements,52,false,operating,7359,"Services-Equipment Rental & Leasing, NEC","UPBOUND GROUP, INC."
+UPRO,,no_cik,0,true,,,,
+UPS,1090727,with_announcements,48,false,operating,4210,Trucking & Courier Services (No Air),UNITED PARCEL SERVICE INC
+UPWK,1627475,with_announcements,33,false,operating,7374,Services-Computer Processing & Data Preparation,"UPWORK, INC"
+URA,,no_cik,0,true,,,,
+URAA,,no_cik,0,true,,,,
+URBN,912615,with_announcements,12,false,operating,5651,Retail-Family Clothing Stores,URBAN OUTFITTERS INC
+URI,1067701,with_announcements,47,false,operating,7359,"Services-Equipment Rental & Leasing, NEC","UNITED RENTALS, INC."
+URTY,,no_cik,0,true,,,,
+USA,799195,no_item_202,0,false,other,,,LIBERTY ALL STAR EQUITY FUND
+USDU,,no_cik,0,true,,,,
+USFD,1665918,with_announcements,48,false,operating,5140,Wholesale-Groceries & Related Products,US Foods Holding Corp.
+USIG,,no_cik,0,true,,,,
+USLM,82020,with_announcements,47,false,operating,1400,Mining & Quarrying of  Nonmetallic Minerals (No Fuels),UNITED STATES LIME & MINERALS INC
+USO,1327068,no_item_202,0,true,operating,6221,Commodity Contracts Brokers & Dealers,"United States Oil Fund, LP"
+USPH,885978,with_announcements,51,false,operating,8000,Services-Health Services,U S PHYSICAL THERAPY INC /NV
+UTES,,no_cik,0,true,,,,
+UTHR,1082554,with_announcements,47,false,operating,2834,Pharmaceutical Preparations,UNITED THERAPEUTICS Corp
+UUUU,1385849,with_announcements,1,false,operating,1400,Mining & Quarrying of  Nonmetallic Minerals (No Fuels),ENERGY FUELS INC
+UVV,102037,with_announcements,47,false,operating,5150,Wholesale-Farm Product Raw Materials,UNIVERSAL CORP /VA/
+VB,,no_cik,0,true,,,,
+VC,1111335,with_announcements,67,false,operating,3714,Motor Vehicle Parts & Accessories,VISTEON CORP
+VCR,,no_cik,0,true,,,,
+VCSH,,no_cik,0,true,,,,
+VCYT,1384101,with_announcements,54,false,operating,8071,Services-Medical Laboratories,"VERACYTE, INC."
+VDE,,no_cik,0,true,,,,
+VECO,103145,with_announcements,49,false,operating,3559,"Special Industry Machinery, NEC",VEECO INSTRUMENTS INC
+VEEV,1393052,with_announcements,50,false,operating,7372,Services-Prepackaged Software,VEEVA SYSTEMS INC
+VET,1293135,no_item_202,0,false,other,1311,Crude Petroleum & Natural Gas,VERMILION ENERGY INC.
+VFC,103379,with_announcements,49,false,operating,2320,"Men's & Boys' Furnishgs, Work Clothg, & Allied Garments",V F CORP
+VGK,,no_cik,0,true,,,,
+VGT,,no_cik,0,true,,,,
+VHT,,no_cik,0,true,,,,
+VICI,1705696,with_announcements,36,false,operating,6798,Real Estate Investment Trusts,VICI PROPERTIES INC.
+VICR,751978,with_announcements,46,false,operating,3679,"Electronic Components, NEC",VICOR CORP
+VIG,,no_cik,0,true,,,,
+VIGI,,no_cik,0,true,,,,
+VIOO,,no_cik,0,true,,,,
+VIS,,no_cik,0,true,,,,
+VITL,1579733,with_announcements,25,false,operating,2000,Food and Kindred Products,"Vital Farms, Inc."
+VIV,1066119,no_item_202,0,false,other,4813,Telephone Communications (No Radiotelephone),TELEFONICA BRASIL S.A.
+VLO,1035002,with_announcements,50,false,operating,2911,Petroleum Refining,VALERO ENERGY CORP/TX
+VLY,714310,with_announcements,47,false,operating,6021,National Commercial Banks,VALLEY NATIONAL BANCORP
+VMBS,,no_cik,0,true,,,,
+VMI,102729,with_announcements,51,false,operating,3440,Fabricated Structural Metal Products,VALMONT INDUSTRIES INC
+VNET,1508475,no_item_202,0,false,other,7370,"Services-Computer Programming, Data Processing, Etc.","VNET Group, Inc."
+VNLA,,no_cik,0,true,,,,
+VNOM,2074176,with_announcements,4,false,operating,1311,Crude Petroleum & Natural Gas,"Viper Energy, Inc."
+VNQ,,no_cik,0,true,,,,
+VOD,839923,no_item_202,0,false,other,4812,Radiotelephone Communications,VODAFONE GROUP PUBLIC LTD CO
+VONG,,no_cik,0,true,,,,
+VOOG,,no_cik,0,true,,,,
+VOOV,,no_cik,0,true,,,,
+VOT,,no_cik,0,true,,,,
+VPU,,no_cik,0,true,,,,
+VRNS,1361113,with_announcements,48,false,operating,7372,Services-Prepackaged Software,VARONIS SYSTEMS INC
+VRRM,1682745,with_announcements,33,false,operating,4700,Transportation Services,VERRA MOBILITY Corp
+VRSK,1442145,with_announcements,46,false,operating,7374,Services-Computer Processing & Data Preparation,"Verisk Analytics, Inc."
+VRT,1674101,with_announcements,28,false,operating,3679,"Electronic Components, NEC",Vertiv Holdings Co
+VRTS,883237,with_announcements,45,false,operating,6282,Investment Advice,"VIRTUS INVESTMENT PARTNERS, INC."
+VSAT,797721,with_announcements,47,false,operating,4899,"Communications Services, NEC",VIASAT INC
+VST,1692819,with_announcements,37,false,operating,4911,Electric Services,Vistra Corp.
+VSXY,1856437,with_announcements,24,false,operating,5621,Retail-Women's Clothing Stores,Victoria's Secret & Co.
+VTES,,no_cik,0,true,,,,
+VTIP,,no_cik,0,true,,,,
+VTR,740260,with_announcements,47,false,operating,6798,Real Estate Investment Trusts,"Ventas, Inc."
+VUG,,no_cik,0,true,,,,
+VV,,no_cik,0,true,,,,
+VXF,,no_cik,0,true,,,,
+VXUS,,no_cik,0,true,,,,
+VZ,732712,with_announcements,47,false,operating,4813,Telephone Communications (No Radiotelephone),VERIZON COMMUNICATIONS INC
+W,1616707,with_announcements,46,false,operating,5961,Retail-Catalog & Mail-Order Houses,Wayfair Inc.
+WABC,311094,with_announcements,47,false,operating,6021,National Commercial Banks,WESTAMERICA BANCORPORATION
+WAFD,936528,with_announcements,47,false,operating,6021,National Commercial Banks,WAFD INC
+WAT,1000697,with_announcements,48,false,operating,3826,Laboratory Analytical Instruments,WATERS CORP /DE/
+WB,1595761,no_item_202,0,false,other,7370,"Services-Computer Programming, Data Processing, Etc.",WEIBO Corp
+WCLD,,no_cik,0,true,,,,
+WDAY,1327811,with_announcements,49,false,operating,7374,Services-Computer Processing & Data Preparation,"Workday, Inc."
+WELL,766704,with_announcements,61,false,operating,6798,Real Estate Investment Trusts,WELLTOWER INC.
+WEN,30697,with_announcements,51,false,operating,5810,Retail-Eating & Drinking Places,Wendy's Co
+WEX,1309108,with_announcements,49,false,operating,7389,"Services-Business Services, NEC",WEX Inc.
+WFC,72971,with_announcements,50,false,operating,6021,National Commercial Banks,WELLS FARGO & COMPANY/MN
+WFRD,1603923,with_announcements,46,false,operating,3533,Oil & Gas Field Machinery & Equipment,Weatherford International plc
+WGO,107687,with_announcements,48,false,operating,3716,Motor Homes,WINNEBAGO INDUSTRIES INC
+WHD,1699136,with_announcements,36,false,operating,3533,Oil & Gas Field Machinery & Equipment,"Cactus, Inc."
+WINA,908315,with_announcements,47,false,operating,5900,Retail-Miscellaneous Retail,WINMARK CORP
+WING,1636222,with_announcements,51,false,operating,5812,Retail-Eating  Places,Wingstop Inc.
+WIX,1576789,no_item_202,0,false,other,7370,"Services-Computer Programming, Data Processing, Etc.",Wix.com Ltd.
+WLY,107140,with_announcements,40,false,operating,2731,Books: Publishing or  Publishing & Printing,"JOHN WILEY & SONS, INC."
+WM,823768,with_announcements,47,false,operating,4953,Refuse Systems,WASTE MANAGEMENT INC
+WPP,806968,no_item_202,0,false,other,7311,Services-Advertising Agencies,WPP plc
+WRLD,108385,with_announcements,47,false,operating,6141,Personal Credit Institutions,WORLD ACCEPTANCE CORP
+WSFS,828944,with_announcements,48,false,operating,6021,National Commercial Banks,WSFS FINANCIAL CORP
+WSM,719955,with_announcements,47,false,operating,5700,"Retail-Home Furniture, Furnishings & Equipment Stores",WILLIAMS SONOMA INC
+WST,105770,with_announcements,50,false,operating,3841,Surgical & Medical Instruments & Apparatus,WEST PHARMACEUTICAL SERVICES INC
+WTM,776867,with_announcements,47,false,operating,6331,"Fire, Marine & Casualty Insurance",WHITE MOUNTAINS INSURANCE GROUP LTD
+WTS,795403,with_announcements,48,false,operating,3490,Miscellaneous Fabricated Metal Products,WATTS WATER TECHNOLOGIES INC
+WU,1365135,with_announcements,48,false,operating,7389,"Services-Business Services, NEC",Western Union CO
+WWD,108312,with_announcements,47,false,operating,3620,Electrical Industrial Apparatus,"Woodward, Inc."
+WY,106535,with_announcements,46,false,operating,6798,Real Estate Investment Trusts,WEYERHAEUSER CO
+WYNN,1174922,with_announcements,49,false,operating,7011,Hotels & Motels,WYNN RESORTS LTD
+XCEM,,no_cik,0,true,,,,
+XEL,72903,with_announcements,47,false,operating,4931,Electric & Other Services Combined,XCEL ENERGY INC
+XENE,1582313,with_announcements,49,false,operating,2834,Pharmaceutical Preparations,Xenon Pharmaceuticals Inc.
+XHR,1616000,with_announcements,48,false,operating,7011,Hotels & Motels,"Xenia Hotels & Resorts, Inc."
+XIFR,1603145,with_announcements,46,false,operating,4911,Electric Services,"XPLR Infrastructure, LP"
+XLB,,no_cik,0,true,,,,
+XLE,,no_cik,0,true,,,,
+XLF,,no_cik,0,true,,,,
+XLG,,no_cik,0,true,,,,
+XLK,,no_cik,0,true,,,,
+XLU,,no_cik,0,true,,,,
+XLV,,no_cik,0,true,,,,
+XLY,,no_cik,0,true,,,,
+XMMO,,no_cik,0,true,,,,
+XMTR,1657573,with_announcements,22,false,operating,7389,"Services-Business Services, NEC","Xometry, Inc."
+XOM,2115436,with_announcements,1,false,operating,2911,Petroleum Refining,ExxonMobil Holdings Corp
+XOP,,no_cik,0,true,,,,
+XP,1787425,no_item_202,0,false,other,6211,"Security Brokers, Dealers & Flotation Companies",XP Inc.
+XPEL,1767258,with_announcements,29,false,operating,3470,"Coating, Engraving & Allied Services","XPEL, Inc."
+XPEV,1810997,no_item_202,0,false,other,3711,Motor Vehicles & Passenger Car Bodies,XPENG INC.
+XPO,1166003,with_announcements,52,false,operating,4700,Transportation Services,"XPO, Inc."
+XPRO,2126198,with_announcements,1,false,operating,1389,"Oil & Gas Field Services, NEC",Expro Ltd
+XSD,,no_cik,0,true,,,,
+XSW,,no_cik,0,true,,,,
+XYL,1524472,with_announcements,50,false,operating,3561,Pumps & Pumping Equipment,Xylem Inc.
+XYZ,1512673,with_announcements,43,false,operating,7372,Services-Prepackaged Software,"Block, Inc."
+YANG,,no_cik,0,true,,,,
+YETI,1670592,with_announcements,33,false,operating,3949,"Sporting & Athletic Goods, NEC","YETI Holdings, Inc."
+YINN,,no_cik,0,true,,,,
+YOU,1856314,with_announcements,20,false,operating,7372,Services-Prepackaged Software,"Clear Secure, Inc."
+YPF,904851,no_item_202,0,false,other,2911,Petroleum Refining,YPF SOCIEDAD ANONIMA
+YUM,1041061,with_announcements,49,false,operating,5812,Retail-Eating  Places,YUM BRANDS INC
+Z,1617640,with_announcements,48,false,operating,7389,"Services-Business Services, NEC","ZILLOW GROUP, INC."
+ZBH,1136869,with_announcements,51,false,operating,3842,"Orthopedic, Prosthetic & Surgical Appliances & Supplies","ZIMMER BIOMET HOLDINGS, INC."
+ZETA,1851003,with_announcements,21,false,operating,7372,Services-Prepackaged Software,Zeta Global Holdings Corp.
+ZGN,1877787,no_item_202,0,false,other,2300,Apparel & Other Finishd Prods of  Fabrics & Similar Matl,Ermenegildo Zegna N.V.
+ZIM,1654126,no_item_202,0,false,other,4412,Deep Sea Foreign Transportation of  Freight,ZIM Integrated Shipping Services Ltd.
+ZLAB,1704292,with_announcements,23,false,operating,2834,Pharmaceutical Preparations,Zai Lab Ltd
+ZS,1713683,with_announcements,34,false,operating,7371,Services-Computer Programming Services,"Zscaler, Inc."
+ZTS,1555280,with_announcements,48,false,operating,2834,Pharmaceutical Preparations,Zoetis Inc.
+ZVRA,1434647,with_announcements,50,false,operating,2834,Pharmaceutical Preparations,"ZEVRA THERAPEUTICS, INC."
+ZWS,1439288,with_announcements,51,false,operating,3560,General Industrial Machinery & Equipment,Zurn Elkay Water Solutions Corp
