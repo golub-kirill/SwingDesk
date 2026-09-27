@@ -109,6 +109,10 @@ endpoints:
   # One order, by the venue's id. Only `DR-043`'s replace uses it, and the id is checked before it
   # goes into the path because it came from the venue.
   order: /v2/orders/{order_id}
+  # One order, by OUR id. `DR-054` §3.4: an order journalled as sent whose answer never reached
+  # the ledger is looked up here before its fills are attributed. A 404 is an answer - the order
+  # never landed - and is the one status this endpoint does not treat as the venue failing.
+  order_by_client_id: /v2/orders:by_client_order_id
   activities: /v2/account/activities/{activity_type}
 
   # The one activity type this reads. `FILL` covers both full and partial fills - the `type` field
@@ -208,6 +212,30 @@ write:
   # property is unchanged: one protective order per instrument per session, refused by the venue if
   # a second is attempted.
   protect_client_order_id_prefix: swingdesk-protect
+
+  # ---------------------------------------------------------------------------
+  # THE NIGHT ORDER, a third shape - `CARD-002`, `DR-048` §4 and `DR-054`
+  # ---------------------------------------------------------------------------
+  # `CARD-002` buys two funds in the closing auction and sells them in the next opening auction:
+  # a plain MARKET order with `cls` or `opg`, no legs and no limit. `DR-048` §4 forbids reaching
+  # it through `submit`, because making the bracket's stop optional would weaken `CARD-001`'s
+  # protection as a side effect of adding a second card. So it has its own block and its own
+  # adapter method, `submit_night`.
+  #
+  # **`night_symbols` is a boundary, not a preference.** The adapter refuses any other symbol in
+  # this shape, so an order with no stop can only ever be one of the two funds whose holding
+  # period `DR-048` §5 ratified as needing none - held only while the exchange is shut.
+  #
+  # Absent, the whole block is absent and `submit_night` refuses: a card with no permitted shape.
+  night_order_type: market
+  night_entry_time_in_force: cls
+  night_exit_time_in_force: opg
+  night_entry_side: buy
+  night_exit_side: sell
+  # Distinct from both prefixes above: the venue rejects a duplicate id across EVERY order on the
+  # account, and `DR-054` §3 identifies this card's orders by the ids it journalled.
+  night_client_order_id_prefix: swingdesk-night
+  night_symbols: [IJR, VB]
 
   # Which permitted write verb does which job. Named here rather than inferred, because with two
   # write verbs in `access.allowed_methods` the adapter would otherwise be choosing between them -

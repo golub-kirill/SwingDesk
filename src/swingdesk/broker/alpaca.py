@@ -52,6 +52,7 @@ from swingdesk.contracts.broker import (
     BrokerPosition,
     EntryOrder,
     FillKind,
+    NightOrder,
     PlacedOrder,
     PositionSide,
     ProtectiveOrder,
@@ -215,7 +216,11 @@ class AlpacaClient:
     `DR-027` 4.2, and `DR-025` 2.1 for what the opposite polarity costs here.
     """
 
-    def _get(self, endpoint: str, query: dict[str, str] | None = None, **path: str) -> Any:
+    def _get(self, endpoint: str, query: dict[str, str] | None = None, *,
+             absent_ok: bool = False, **path: str) -> Any:
+        """One read. `absent_ok` turns a 404 into `None` - for a lookup whose honest answer can be
+        *there is no such order*, and for nothing else: everywhere else a 404 is the venue failing.
+        """
         self.policy.check_method("GET")
         url = self.policy.url(endpoint, **path)
         if query:
@@ -229,6 +234,8 @@ class AlpacaClient:
             limits.request_timeout_seconds,
             limits.max_response_bytes,
         )
+        if absent_ok and status == 404:
+            return None
 
         return self._decode(endpoint, status, body)
 
@@ -464,6 +471,83 @@ class AlpacaClient:
             observed_at=observed_at,
         )
 
+    def submit_night(self, order: NightOrder, observed_at: datetime) -> PlacedOrder:
+        """Send one `CARD-002` auction order: a market buy into the close, or a sell into the open.
+
+        **Its own method, never a widened `submit`** (`DR-048` §4): that one sends a bracket with a
+        stop every time, and a flag that let it omit the stop would weaken `CARD-001`'s protection
+        as a side effect of adding a second card. This one sends no legs at all, and it refuses any
+        symbol outside `write.night_symbols` - the two funds whose holding period `DR-048` §5
+        ratified as needing no stop.
+
+        The same guards as every write, in the same order, before a payload exists.
+        """
+        self.guards()
+        write = self.policy.write
+        assert write is not None  # `guards` refuses when it is, and mypy cannot see that
+        night = write.night
+        if night is None:
+            raise SubmissionStopped(
+                "the committed policy carries no night order shape (write.night_*), so CARD-002 "
+                "has nothing it is permitted to send"
+            )
+        if order.symbol not in night.symbols:
+            raise SubmissionStopped(
+                f"{order.symbol} is not one of write.night_symbols ({', '.join(sorted(night.symbols))}). "
+                f"An order with no stop is permitted for those funds only (DR-048 section 5)."
+            )
+        if not order.client_order_id.startswith(f"{night.client_order_id_prefix}-"):
+            raise SubmissionStopped(
+                f"{order.client_order_id!r} does not carry write.night_client_order_id_prefix. "
+                f"DR-054 section 3 finds this card's orders by the ids it journalled."
+            )
+        if order.side is Side.BUY:
+            side, time_in_force = night.entry_side, night.entry_time_in_force
+        else:
+            side, time_in_force = night.exit_side, night.exit_time_in_force
+
+        payload: dict[str, Any] = {
+            "symbol": order.symbol,
+            "qty": str(order.shares),
+            "side": side,
+            "type": night.order_type,
+            "time_in_force": time_in_force,
+            "client_order_id": order.client_order_id,
+        }
+        answered = self._write("orders", payload, self.policy.write_method)
+        placed = self._order(answered, observed_at)
+        if placed.client_order_id != order.client_order_id:
+            raise BrokerUnavailable(
+                f"orders: sent {order.client_order_id!r} and the venue echoed "
+                f"{placed.client_order_id!r}. The ledger cannot attribute an order it cannot name."
+            )
+        return placed
+
+    def order(self, order_id: str, observed_at: datetime) -> PlacedOrder:
+        """One order by the venue's id, whatever its status. A GET, and only a GET.
+
+        `DR-054` §3.3 sets a `CARD-002` holding aside by what its orders FILLED, and a filled or
+        expired order is not in `open_orders` - so the quantity is asked of the order itself.
+        """
+        if not SAFE_ORDER_ID.match(order_id):
+            raise BrokerUnavailable(
+                f"{order_id!r} is not a venue order id this may put in a path"
+            )
+        return self._order(self._get("order", order_id=order_id), observed_at)
+
+    def order_by_client_id(self, client_order_id: str,
+                           observed_at: datetime) -> PlacedOrder | None:
+        """One order by OUR id, or `None` when the venue has never seen it. `DR-054` §3.4.
+
+        The one read whose 404 is an answer: an order journalled as sent and never answered either
+        landed - and this names its venue id - or it never did, and nothing it could fill exists.
+        """
+        answered = self._get("order_by_client_id",
+                             query={"client_order_id": client_order_id}, absent_ok=True)
+        if answered is None:
+            return None
+        return self._order(answered, observed_at)
+
     def account(self, observed_at: datetime) -> BrokerAccount:
         """The account as the venue describes it.
 
@@ -588,6 +672,8 @@ class AlpacaClient:
             stop_price=_optional_decimal(row, "stop_price", "orders"),
             side=str(row.get("side") or ""),
             parent_client_order_id=parent,
+            filled_average_price=_optional_decimal(row, "filled_avg_price", "orders"),
+            time_in_force=str(row.get("time_in_force") or ""),
             observed_at=observed_at,
         )
 

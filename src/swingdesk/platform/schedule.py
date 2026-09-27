@@ -48,6 +48,12 @@ TASKS = (
     # every point is recorded - an unscheduled `tools/remeasure.py` is exactly the on-demand re-run
     # that ruling's guard forbids. `docs/runbooks/README.md` §8 carries the one command.
     "SwingDesk re-measurement pass",
+    # Added 2026-09-26, RED until the owner registers them, on the same precedent. `DR-054`:
+    # `CARD-002`'s paper passes. The exit pass lodges the night's only protection, so a task that
+    # stopped running would leave a position held through a session nobody decided to hold it
+    # for - which is exactly what a named task makes visible. Runbook §11.5 carries the commands.
+    "SwingDesk night close",
+    "SwingDesk night exit",
 )
 
 #: `schtasks` reports the wrapper's exit code. `daily_run.cmd` exits 0 on a clean run and 2 on a

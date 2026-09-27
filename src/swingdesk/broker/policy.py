@@ -102,9 +102,30 @@ class WritePolicy:
     """The verb that replaces a resting stop's trigger (`DR-043`), or `None` when the policy grants
     no replace - then an approved move is printed for a person to send, as it was before."""
 
+    night: NightPolicy | None = None
+    """`CARD-002`'s market-on-close and market-on-open shape (`DR-048` §4, `DR-054`), or `None`
+    when the policy grants none - then `submit_night` refuses."""
+
     def tick_for(self, price: Decimal) -> Decimal:
         """The increment this price must be a multiple of."""
         return self.tick_size if price >= self.sub_dollar_threshold else self.sub_dollar_tick
+
+
+@dataclass(frozen=True, slots=True)
+class NightPolicy:
+    """The one order shape with no stop, and the two funds it may carry. `DR-048` §4-§5.
+
+    A separate shape rather than an optional leg on the entry: `submit` keeps sending a bracket
+    every time, so nothing about `CARD-001`'s protection depends on this block existing.
+    """
+
+    order_type: str
+    entry_time_in_force: str
+    exit_time_in_force: str
+    entry_side: str
+    exit_side: str
+    client_order_id_prefix: str
+    symbols: frozenset[str]
 
 
 @dataclass(frozen=True, slots=True)
@@ -351,6 +372,7 @@ def load(path: Path | None = None) -> BrokerPolicy:
                 str(_require(write_block, "replace_method", str, "write")).upper()
                 if write_block.get("replace_method") is not None else None
             ),
+            night=_night(write_block, source.name),
         )
         # Every write verb has exactly one job, and the job is named in the write section. Two
         # verbs with no roles would leave the adapter choosing between them; a role whose verb is
@@ -412,6 +434,57 @@ def load(path: Path | None = None) -> BrokerPolicy:
         activity_type=str(_require(endpoints, "activity_type", str, "endpoints")),
         write=write,
     )
+
+
+NIGHT_KEYS = (
+    "night_order_type", "night_entry_time_in_force", "night_exit_time_in_force",
+    "night_entry_side", "night_exit_side", "night_client_order_id_prefix", "night_symbols",
+)
+
+
+def _night(write_block: dict[str, Any], name: str) -> NightPolicy | None:
+    """`CARD-002`'s shape, all or nothing. `DR-054`.
+
+    **All or nothing**, because half a block is a shape the adapter would have to complete with a
+    guess - and the half most likely to go missing in an edit is the symbol list, which is the
+    boundary that keeps an order with no stop to the two funds `DR-048` §5 ratified.
+    """
+    present = [key for key in NIGHT_KEYS if key in write_block]
+    if not present:
+        return None
+    missing = [key for key in NIGHT_KEYS if key not in write_block]
+    if missing:
+        raise PolicyRefused(
+            f"{name}: the write section carries {', '.join(present)} and not "
+            f"{', '.join(missing)}. The night order is one shape; half of it is a guess."
+        )
+    symbols = write_block["night_symbols"]
+    if not isinstance(symbols, list) or not symbols:
+        raise PolicyRefused(f"{name}: write.night_symbols must list the funds, and lists none")
+    night = NightPolicy(
+        order_type=str(_require(write_block, "night_order_type", str, "write")),
+        entry_time_in_force=str(_require(write_block, "night_entry_time_in_force", str, "write")),
+        exit_time_in_force=str(_require(write_block, "night_exit_time_in_force", str, "write")),
+        entry_side=str(_require(write_block, "night_entry_side", str, "write")),
+        exit_side=str(_require(write_block, "night_exit_side", str, "write")),
+        client_order_id_prefix=str(
+            _require(write_block, "night_client_order_id_prefix", str, "write")
+        ),
+        symbols=frozenset(str(symbol) for symbol in symbols),
+    )
+    if night.entry_time_in_force == night.exit_time_in_force:
+        raise PolicyRefused(
+            f"{name}: the night's entry and exit are both {night.entry_time_in_force}. One buys in "
+            f"the closing auction and the other sells in the next opening one."
+        )
+    others = {str(write_block.get("client_order_id_prefix")),
+              str(write_block.get("protect_client_order_id_prefix"))}
+    if night.client_order_id_prefix in others:
+        raise PolicyRefused(
+            f"{name}: write.night_client_order_id_prefix repeats another prefix. The venue rejects "
+            f"a duplicate id across every order on the account."
+        )
+    return night
 
 
 def _positive(section: dict[str, Any], key: str) -> int:

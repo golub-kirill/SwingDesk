@@ -1929,6 +1929,20 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       **Still to build:** the close pass (its own policy block and adapter method — never a widened
       `submit`), the evening pass, and the broker-side half of the reconcile that reads the PAPER
       positions. **None of them blocks the owner's twenty sessions**, which is why they came second.
+      **RESUMED 2026-09-26 (owner), and the paper passes are now the next build:** the twenty real
+      sessions start Monday 2026-09-28 (`CARD-002` §7.5). **Found while planning the passes, and it
+      is why they need a decision record before code:** `CARD-001`'s submission path reconciles
+      the venue against its own book and stops on any divergence BEFORE it restores a protective
+      stop (`cli.py`: the `DR-035` block returns ahead of the `DR-037` restoration). An `IJR` or `VB` holding the
+      close pass bought is a `venue_only` divergence to that path, so the first paper night would
+      stop `CARD-001` from protecting its own open positions. The two cards need an explicit rule
+      for whose holding is whose.
+      **BUILT 2026-09-26 (`DR-054`):** the rule (`swingdesk.broker.night.CardView`, every venue
+      read in `cli.py` goes through it), `CARD-001`'s retirement on the first paper order, and
+      both passes (`tools/card002_paper.py`, scheduled by `tools/card002_paper.cmd`). **Open until
+      the first paper night is journalled:** the owner registers the two tasks (runbook §11.5),
+      and the first run is read by hand - it is the first `cls` and `opg` order this account has
+      ever carried, and Alpaca's paper handling of either has never been observed here.
       **MEASURED 2026-09-20 (`PR-035`, `COST_FRAGILE`):** adding a `SPY` day leg makes the book
       return 18.9% a year at a Sharpe ratio of 1.01 against the index's 15.7% at 0.89 - but the
       +3.25% a year margin is +0.35% at a whole cent a share and +0.56% over the last two years.
