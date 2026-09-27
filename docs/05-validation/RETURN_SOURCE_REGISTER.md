@@ -186,12 +186,22 @@ the membership half still needs a source.
 **How it fails:** a 2025 paper on the classic 12-1 rule in the S&P 500 reports a negative net result
 after costs; long-only large-cap momentum is a factor tilt with multi-year droughts.
 
-### 3.3 Time-series momentum across asset classes — `open`
+### 3.3 Time-series momentum across asset classes — `open`, sized and not run
 
 **The claim:** an asset's own past twelve months predicts its next month (Moskowitz, Ooi and
 Pedersen).
 **Reachable as:** ETFs standing in for futures — and that substitution is itself a limitation to
 declare, because the funds carry financing and tracking differences the futures do not.
+**Sized 2026-09-26, and NOT registered — owner ruling the same night.** The owner chose this
+source; before a registration spent a trial, `tools/measure_tsmom_power.py` measured the widths
+the design would read, from random long/flat books on the same funds and weights, no return of
+the rule read (`docs/decisions/measurements/tsmom-power-2026-09-26.json`, 0 trials). Twenty-three
+ETFs across five classes, launched by 2007-01-31, over 230 months: **the smallest separable
+excess over `SPY` is about 11 points a year, and about 9.5 over `SPY` at the book's own
+volatility.** The published premium is a few points, so the study would have returned
+`INCONCLUSIVE` by construction. Asked, the owner ruled: do not spend the trial. **What would
+reopen it:** a longer base than ETFs reach (a published series back to the 1980s), or a question
+whose contrast is narrower than a whole book against `SPY`.
 
 ### 3.4 Volatility-managed exposure — `open`, and second-order by construction
 

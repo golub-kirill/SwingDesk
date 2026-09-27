@@ -1,0 +1,58 @@
+{
+  "measurement": "tsmom-power",
+  "exploratory": true,
+  "trials_spent": 0,
+  "funds": [
+    "SPY",
+    "IWM",
+    "EFA",
+    "EEM",
+    "EWJ",
+    "VGK",
+    "FXI",
+    "EWZ",
+    "SHY",
+    "IEF",
+    "TLT",
+    "TIP",
+    "LQD",
+    "GLD",
+    "SLV",
+    "DBC",
+    "USO",
+    "FXE",
+    "FXB",
+    "FXA",
+    "FXC",
+    "FXF",
+    "VNQ"
+  ],
+  "cash": "BIL",
+  "benchmark": "SPY",
+  "window": {
+    "first_month_end": "2007-06",
+    "last_month_end": "2026-08"
+  },
+  "random_book": {
+    "p_long": 0.6,
+    "block": 3,
+    "resamples": 2000,
+    "seed": 20260927
+  },
+  "windows": {
+    "whole": {
+      "months": 230.0,
+      "excess_vs_spy_width": 0.15761238066380323,
+      "excess_vs_spy_minimum_detectable": 0.11258027190271659,
+      "vs_volatility_matched_spy_width": 0.13372945388213342,
+      "vs_volatility_matched_spy_minimum_detectable": 0.09552103848723816
+    },
+    "last_48_months": {
+      "months": 48.0,
+      "excess_vs_spy_width": 0.25215065800060255,
+      "excess_vs_spy_minimum_detectable": 0.18010761285757326,
+      "vs_volatility_matched_spy_width": 0.12392371072583686,
+      "vs_volatility_matched_spy_minimum_detectable": 0.08851693623274061
+    }
+  }
+}
