@@ -1614,3 +1614,5 @@ and here the two roughly cancel. **A filter would buy a thinner tail and nothing
 cannot run live without a forward calendar of scheduled dates, which EDGAR does not publish and
 nothing here yet reads.
 
+**Owner ruling, 2026-09-26: no filter** - *"2, net, ne nuzhen"*. The tail is measured and
+accepted as it is; `screen.earnings_buffer_days` stays `unset`.
