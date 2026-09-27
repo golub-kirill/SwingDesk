@@ -281,45 +281,6 @@ this repository.
       turns a single observation into a distribution — and `AGENTS.md` §15 rule 1 asks exactly that
       of a claim this load-bearing. Cheap shape: for the names the run refused, ask the vendor again
       each hour and record when the session first appears.
-- [ ] **`[v]` The buffer needs a ruling or a study, and the literature says the obvious framing is
-      backwards — searched 2026-08-30 under `AGENTS.md` §16.** Recorded before anyone sets the
-      value, because the reason a threshold has its value is what §16 rule 1 governs.
-      **Peer-reviewed, top rank (§16 rule 2), and it points AGAINST a blanket avoid-earnings
-      rule on return grounds.** Prices *rise* around scheduled announcements on average: Frazzini &
-      Lamont, *The Earnings Announcement Premium and Trading Volume* (NBER w13090, 2007), put the
-      premium above 7% a year and tie it to the volume surge and limited investor attention; Savor &
-      Wilson, *Earnings Announcements and Systematic Risk* (**Journal of Finance**, 2016), measure
-      an annualised abnormal return near 9.9% for scheduled announcers, persistent across stocks
-      over long horizons and priced as risk; Barber, De George, Lehavy & Trueman find the same
-      premium internationally (**JFE**, 2013). **So a rule that flattens before every announcement
-      gives up a documented positive mean.** The course names the catalyst check and quantifies
-      nothing (`EVENT_SPEC`), which is §16's situation exactly: an `Operational Course Rule`, not an
-      `Empirical Result`.
-      **What the literature does not touch, and it is why the rule may still be right here.** A mean
-      is not a stop. `PR-007` fixes the exit at 2.0 × ATR(14) with no trailing, and an overnight
-      announcement gap opens through a stop rather than at it — so the realised loss on that trade
-      is not 1R, and **1R is the unit every validation threshold in this system is expressed in**.
-      That is a claim about the denominator, not about expectancy. **Marked conjecture
-      (`AGENTS.md` §10.4): nothing here measures it.** The check that would settle it is a
-      pre-registered study over the stored bars — realised loss versus 1R on trades held through an
-      announcement, against trades that were not — and it is registrable today because the forward
-      calendar is only needed for the LIVE rule, while the historical side needs just the
-      announcement dates, which the same source serves.
-      **§16 rule 4 applies and is not discharged here:** the course and the literature disagree,
-      both are recorded, and which one the system follows is the owner's or a study's. The trap to
-      avoid is setting the buffer and letting it read as alpha; on this evidence it would be
-      variance and tail control, bought with a known cost.
-      `E11` remains one of the eight items keeping every candidate at `Research`
-      (`docs/08-pm/plans/2026-08-24-the-trade-flow.md` §2).
-      **MEASURED 2026-09-26 - `PR-039`, `ACCEPT`, branch `RISK_ONLY`** (`EVIDENCE_SUMMARY`
-      §36). The conjecture above is now a measurement: a hold that spans an announcement exits
-      THROUGH the stop at 16.0% against 3.9%, and its mean net R is no worse. **What is left is
-      the owner's, in two parts:** (1) whether to give the buffer a value - the registry holds
-      `screen.earnings_buffer_days` as `unset` - with `PR-039` as its citation, as tail control
-      with no expectancy argument; (2) if yes, where the FORWARD
-      calendar comes from - EDGAR records announcements after the fact, so a live rule needs a
-      source of scheduled dates, and choosing and building it is a separate piece of work.
-
 ### THE MOST EXPENSIVE IMPOSSIBILITY IN THE AUDIT: "Canada cannot be enumerated" — REFUTED 2026-08-25
 
 - [ ] **`[v]` What this does NOT settle, stated before anyone over-reads it.**
@@ -1824,10 +1785,9 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       earnings report is the standard remedy and needs earnings dates this project does not store;
       a name's own past gap frequency is a proxy that needs nothing new. Parked until the owner
       asks for it.
-      **ASKED 2026-09-26 and measured the same day as `PR-039`** (the earnings-buffer item in §2
-      carries the result and the two decisions left). The dates now come from SEC EDGAR through
-      `tools/fetch_earnings_dates.py`, for past announcements only; the past-gap-frequency proxy
-      is still unmeasured.
+      **ASKED 2026-09-26 and measured the same day as `PR-039`**, and the owner then ruled out an
+      earnings filter (`TODO_CLOSED.md`, "The earnings buffer"). The past-gap-frequency proxy is
+      still unmeasured and still parked.
 
 - [ ] **`[v]` THE OWNER PREFERS LONG-ONLY STRATEGIES — 2026-09-19.** *"davay tolko longovie
       strategii, esli eto proshe sdelat pribylnym."* The queued intraday momentum study

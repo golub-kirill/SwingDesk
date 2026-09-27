@@ -601,7 +601,11 @@ parameters:
     provenance: null
     read_by: none
     named_in: [M33-T0492, M34, Appendix N code EVENT]
-    note: No blackout window length stated anywhere in the course.
+    note: >-
+      No blackout window length stated anywhere in the course. MEASURED by PR-039
+      (2026-09-26): a hold spanning a results announcement exits through the stop at 16.0%
+      against 3.9%, and its mean net R is no worse. The owner ruled the same day that no
+      filter is wanted, so this stays unset and nothing reads it.
     ui_editable: true
 
   - id: screen.max_spread_pct
