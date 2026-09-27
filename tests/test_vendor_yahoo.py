@@ -18,7 +18,7 @@ The fake vendor below is a module substituted into `sys.modules`, because `fetch
 from __future__ import annotations
 
 import sys
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from types import ModuleType, SimpleNamespace
@@ -244,3 +244,36 @@ def test_the_integrity_tool_ignores_a_refusal_that_is_merely_late() -> None:
                "(ValidationError: 1 validation error for Bar close Input should be a finite "
                "number [type=finite_number, input_value=Decimal('NaN')])")
     assert vendor_integrity.violations(routine) == []
+
+
+def test_a_price_the_store_cannot_hold_is_refused_as_a_row_and_the_rest_arrive(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """2026-09-27: a serial reverse-splitter's ten-year adjusted history reached $1.24 trillion a
+    share, the store's DECIMAL(18,6) could not hold it, and the write killed the coverage pass 1,295
+    symbols in. Refused at the boundary, it costs that symbol its oldest rows and nothing else."""
+    astronomic = {"when": "2016-08-22", "Open": 1.0e12, "High": 1.2446e12, "Low": 1.0e12,
+                  "Close": 1.02e12, "Volume": 10}
+    _install(monkeypatch, _frame([astronomic, _row("2026-08-21"), _row("2026-08-24")]))
+    series = vendor_yahoo.fetch(_instrument(), Interval.DAY, KNOWN_AT)
+
+    assert len(series.bars) == 2
+    err = capsys.readouterr().err
+    assert "1 of 3 rows failed validation" in err and "beyond what the store can hold" in err
+
+
+def test_the_ceiling_is_what_the_store_can_really_hold(tmp_path: Path) -> None:
+    """The positive control: a price just under the ceiling round-trips through a real store, so
+    the constant and the column type cannot drift apart without this failing."""
+    from swingdesk.contracts.market import MAX_STORED_PRICE, Bar, Series
+    from swingdesk.market_data import BarStore
+
+    top = MAX_STORED_PRICE - Decimal("0.000001")
+    bar = Bar(instrument_id="TEST.1", interval=Interval.DAY, series=Series.RAW,
+              event_time=datetime(2026, 8, 21, 13, 30, tzinfo=UTC),
+              session_date=date(2026, 8, 21), open=top, high=top, low=top, close=top,
+              volume=1, knowledge_time=KNOWN_AT)
+    with BarStore(tmp_path / "bars.duckdb") as store:
+        store.write([bar], KNOWN_AT)
+        [back] = store.as_of("TEST.1", Interval.DAY, Series.RAW, KNOWN_AT).bars
+    assert back.high == top
