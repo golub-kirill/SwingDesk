@@ -108,7 +108,8 @@ its population is funds, not individual equities.
 account can answer it — Alpaca's paper fills are simulated, so a paper trial would confirm this
 project's own cost model because it IS that model. **The owner ruled on 2026-09-20 that the first
 twenty sessions run at minimum REAL size** (one or two shares a fund) - paused 2026-09-21 and
-resumed 2026-09-26, `CARD-002` §7.5; an auction clears at one
+resumed 2026-09-26, then CANCELLED 2026-09-27 before the first session (`DR-055`: no real money
+before proof; the cost is measured from the official auction prints instead); an auction clears at one
 price whatever the size, so the minimum measures it exactly.
 
 **And the cost assumption may be too harsh rather than too kind.** The half-cent a share came from

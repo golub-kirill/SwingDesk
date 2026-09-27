@@ -1949,6 +1949,25 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       +3.25% a year margin is +0.35% at a whole cent a share and +0.56% over the last two years.
       **`CARD-002` stays one leg**, and the fill measurement is now the decisive number: at half a
       cent the day leg is worth 3.2 points a year, at a cent it is worth nothing.
+      **RULED 2026-09-27 (`DR-055`): the real sessions are CANCELLED before the first one - no
+      real money before the main hypothesis is proven.** The fill measurement moves to the item
+      below, which needs no order.
+
+- [ ] **`[v]` THE MAIN HYPOTHESIS (`DR-055`): does `PR-035`'s book beat `SPY` at the prices an
+      auction order actually gets?** Owner ruling 2026-09-27. Three items, in this order:
+      1. **Register and run the auction-priced study** - `PR-035`'s rule unchanged, every fill at
+         the listing market's official cross from `tools/fetch_auction_prints.py`, the venue's
+         regulatory fees, excess over `SPY` held. Proof (1): the 95% interval wholly above zero
+         over 2016-2026 AND a positive excess over the last 48 months. Register BEFORE any print
+         is compared with a bar.
+      2. **The paper day leg** - `SPY` bought in the opening auction and sold in the closing one,
+         with the market-on-close sell lodged as soon as the buy fills (`DR-055` §4), so the paper
+         account carries the whole book. Proof (2): 60 sessions of it with no machinery defect.
+      3. **The third leg** - foreign equity funds held through the US session, when their home
+         markets are shut. `PR-033` saw it on `EFA` after the fact (night negative, session
+         positive); register it on funds no study here has read for this question.
+      **No real money moves on any of these** - meeting both proofs returns the question to the
+      owner (`CHARTER` A-001).
 
 - [ ] **`[v]` A STUDY'S EXCLUSIONS MUST BE PER READING — `PR-024`'s runner dropped an entry from the
       verdict when an UNREAD arm or a perturbation failed.** `run_pr024.price_entry` returns the

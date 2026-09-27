@@ -993,6 +993,10 @@ mixed version, and a warning in prose was all that stood between them and the op
 
 ## 11. `CARD-002`'s twenty sessions — what the owner runs, and when
 
+**CANCELLED 2026-09-27 before the first session (`DR-055`): no real money moves before the main
+hypothesis is proven. Do not run §11.1-§11.4.** They stay as the sequence for the day the owner
+decides otherwise. §11.5, the paper copy, runs.
+
 **Why the owner runs it by hand at all.** `DR-048` §1: the paper copy is submitted by this system,
 and the REAL orders are typed by the owner, order by order, so `CHARTER` A-001 §1 holds without an
 amendment. `DR-048` §6: this system cannot see the real fills either, because the live host is not
