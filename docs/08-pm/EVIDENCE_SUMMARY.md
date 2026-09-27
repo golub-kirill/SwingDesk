@@ -1616,3 +1616,58 @@ nothing here yet reads.
 
 **Owner ruling, 2026-09-26: no filter** - *"2, net, ne nuzhen"*. The tail is measured and
 accepted as it is; `screen.earnings_buffer_days` stays `unset`.
+
+## 37. At the prices an auction order gets, the book beats holding the index — by 4.4 points a year over the decade and 0.7 over the last four
+
+**`PR-040`, 2026-09-27, `ACCEPT`** (`docs/prereg/results/PR-040-report.md`). `PR-035`'s book, rule
+and window unchanged, with every fill priced at the listing market's official opening or closing
+cross from the SIP tape and charged the venue's regulatory fees instead of a modelled half cent.
+
+| at the crosses, with the fees | book | holding `SPY` |
+|---|---|---|
+| compound annual return | **20.2%** | 15.1% |
+| Sharpe ratio | **1.08** | 0.88 |
+| worst drawdown | −36.2% | −33.7% |
+| geometric excess, 2016-01 .. 2026-09 | **+4.39% [+0.95%, +8.30%]** | |
+| geometric excess, last 48 months | **+0.73%** | |
+
+**This is `DR-055`'s proof (1), and both of its conditions are met.** The crosses sit on the bars:
+the worst median gap is 0.78 basis points, and no single cross is on the wrong scale. Crossed and
+charged the fees, the book keeps 4.4 of the 5.5 points it earns gross. The fees cost 1.1 points.
+
+**The whole difference from §33 is the price source.** At half a cent a share a side the same
+crosses give +1.54% [−1.82%, +5.34%] and −1.41% over the last four years, so neither condition
+holds.
+
+**What is left unobserved** is whether a real `cls` or `opg` order is filled at the cross. The paper
+venue simulates its fills, and a fill half a cent worse than the cross erases the last four years'
+margin. That is why proof (2), sixty clean paper sessions of the whole book (`DR-056`), stands
+between this result and any money, and why meeting both proofs returns the question to the owner
+rather than deciding it.
+
+## 38. Asia-Pacific funds earn through the US session, as the mechanism says — and not enough to be a third leg
+
+**`PR-041`, 2026-09-27, `INCONCLUSIVE`, branch `COST_FRAGILE`**
+(`docs/prereg/results/PR-041-report.md`). The source is §32's: equity return that accrues while
+the home market is shut. It was tested on eight Asia-Pacific single-country funds, whose home
+markets are shut through the whole US session.
+
+**The session carried more of the return than the night, as predicted.** After the venue's fees
+it earned 6.05% a year, +0.0253% a day [+0.0079%, +0.0451%]; the night earned 2.75%. Two things
+stop it being a leg:
+
+* **At half a cent a share a side it is gone**, with the interval [−0.0228%, +0.0147%].
+* **It is no better per unit of risk than holding the funds**: a Sharpe ratio of 0.63 against 0.64.
+
+Unlike small caps, the other half does not lose, so timing the basket buys a smaller drawdown
+rather than excess.
+
+| the owner's question: the last three years, on bars with the fees | CAGR | Sharpe | worst drawdown |
+|---|---|---|---|
+| three legs (`IJR`+`VB` by night; the day half `SPY`, half the basket) | **24.3%** | 1.43 | −20.0% |
+| two legs (§37's book) | 23.7% | 1.33 | −21.2% |
+| holding `SPY` | 22.9% | 1.42 | −18.8% |
+
+**No interval separates the three over those three years.** Three legs over `SPY` is +1.10%
+[−7.04%, +8.83%]. Over the decade the book beats the index (+5.35% [+1.27%, +9.88%]), and the third
+leg adds +0.83% [−1.21%, +2.96%]. **The paper account keeps the two-leg book.**

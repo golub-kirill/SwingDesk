@@ -121,6 +121,17 @@ gross 16.0% is nearer the truth.
 market is shut through the whole US session** - eight Asia-Pacific single-country funds, whose
 US session is their night. `EFA`'s reading in `PR-033` was the after-the-fact hint.
 
+**Measured 2026-09-27, both studies.**
+
+* **`PR-040`, `ACCEPT`.** Priced at the official auction crosses from the SIP tape with the venue's
+  fees, the book beat holding `SPY` by +4.39% a year [+0.95%, +8.30%] over the decade and by
+  +0.73% over the last 48 months. That is `DR-055`'s proof (1). The auction PRICE is now measured;
+  what stays unmeasured is whether a real `cls`/`opg` order is filled at it, and a fill half a cent
+  a share worse removes the last four years' margin.
+* **`PR-041`, `COST_FRAGILE`.** The Asia-Pacific basket's US session earned 6.05% a year after the
+  fees, and it is gone at half a cent a share, and it is no better than holding the funds per unit
+  of risk. The source shows up; it is not a third leg.
+
 ### 2.4 Intraday momentum on index funds — `closed`, see 1.5
 
 ---
