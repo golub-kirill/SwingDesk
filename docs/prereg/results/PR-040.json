@@ -1,0 +1,241 @@
+{
+  "prereg": "PR-040",
+  "trials": 1,
+  "branch": "ACCEPT",
+  "verdict": "accept",
+  "country": "USA",
+  "as_of": {
+    "bars": "2026-09-27T16:22:36.363912+00:00",
+    "auctions": "2026-09-27T21:12:04+00:00"
+  },
+  "measured_span": {
+    "first_session": "2016-01-04",
+    "last_session": "2026-09-18",
+    "years": 10.7
+  },
+  "split": {
+    "registered": "none - one book, one benchmark, a re-pricing of a registered rule",
+    "buys": "nothing a split could buy: no constant is chosen here"
+  },
+  "perturbations": {
+    "registered": [
+      "auction_plus_half_cent",
+      "gross",
+      "bars_pr035"
+    ],
+    "run": [
+      "auction_plus_half_cent",
+      "gross",
+      "bars_pr035"
+    ]
+  },
+  "fees": {
+    "sec_rate": 2.06e-05,
+    "taf_per_share": 0.000195,
+    "cat_per_share": 3e-06,
+    "missing_cross_penalty": 0.01
+  },
+  "checks": {
+    "sessions": 2693,
+    "crossed_sessions": 2688,
+    "crossed_share": 0.9981433345711103,
+    "median_basis_gap": {
+      "IJR_open": 2.1374372372045825e-08,
+      "IJR_close": 1.860292031247474e-08,
+      "VB_open": 2.050766863082039e-08,
+      "VB_close": 2.0243939880438077e-08,
+      "SPY_open": 7.750755643135598e-05,
+      "SPY_close": 2.2348449076857457e-08
+    },
+    "basis_ok": true,
+    "pr035_mean_daily_on_bars": 0.00010815501679954057,
+    "reproduces_pr035": true,
+    "identity_worst_gap": {
+      "IJR": 3.0878077872387166e-16,
+      "VB": 2.8449465006019636e-16,
+      "SPY": 3.0617869350990645e-16
+    }
+  },
+  "cells": {
+    "auction": {
+      "estimate": 0.04392534313059371,
+      "lo": 0.009528769108581692,
+      "hi": 0.08300634428143261,
+      "width": 0.07347757517285092,
+      "recent_excess": 0.007289056187026022,
+      "recent_first_month": "2022-10",
+      "months": 129,
+      "book": {
+        "days": 2692,
+        "annual_mean": 0.20181695793150267,
+        "annual_volatility": 0.18679423310712867,
+        "sharpe": 1.0804239219513716,
+        "cagr": 0.2023088806896578,
+        "max_drawdown": -0.3617251852084935
+      },
+      "hold_SPY": {
+        "days": 2692,
+        "annual_mean": 0.1567834445247297,
+        "annual_volatility": 0.17732305874972284,
+        "sharpe": 0.8841683965423632,
+        "cagr": 0.15140660473283973,
+        "max_drawdown": -0.3369981346090808
+      },
+      "night": {
+        "days": 2692,
+        "annual_mean": 0.15128174525354923,
+        "annual_volatility": 0.1300902012136011,
+        "sharpe": 1.1628988489698218,
+        "cagr": 0.15340687124087915,
+        "max_drawdown": -0.320661158136087
+      },
+      "day_SPY": {
+        "days": 2692,
+        "annual_mean": 0.05043397833647398,
+        "annual_volatility": 0.1336587793719108,
+        "sharpe": 0.3773338240366497,
+        "cagr": 0.04239788288773472,
+        "max_drawdown": -0.25221414484694826
+      }
+    },
+    "auction_plus_half_cent": {
+      "estimate": 0.015373147873497306,
+      "lo": -0.018230247924926335,
+      "hi": 0.053383105979357026,
+      "width": 0.07161335390428336,
+      "recent_excess": -0.01412157093624189,
+      "recent_first_month": "2022-10",
+      "months": 129,
+      "book": {
+        "days": 2692,
+        "annual_mean": 0.17389105681636857,
+        "annual_volatility": 0.1867810170244785,
+        "sharpe": 0.9309889173243948,
+        "cagr": 0.16921998932413485,
+        "max_drawdown": -0.36394768037914393
+      },
+      "hold_SPY": {
+        "days": 2692,
+        "annual_mean": 0.1567834445247297,
+        "annual_volatility": 0.17732305874972284,
+        "sharpe": 0.8841683965423632,
+        "cagr": 0.15140660473283973,
+        "max_drawdown": -0.3369981346090808
+      },
+      "night": {
+        "days": 2692,
+        "annual_mean": 0.13060060974488943,
+        "annual_volatility": 0.13009278726048962,
+        "sharpe": 1.0039035406581227,
+        "cagr": 0.1298089254563115,
+        "max_drawdown": -0.32355054615505185
+      },
+      "day_SPY": {
+        "days": 2692,
+        "annual_mean": 0.0431976059503477,
+        "annual_volatility": 0.13365769696103513,
+        "sharpe": 0.32319579741779475,
+        "cagr": 0.03488294611578202,
+        "max_drawdown": -0.25843808589262107
+      }
+    },
+    "gross": {
+      "estimate": 0.05537222344884474,
+      "lo": 0.020693639084189197,
+      "hi": 0.09486976443565265,
+      "width": 0.07417612535146345,
+      "recent_excess": 0.018140878649608894,
+      "recent_first_month": "2022-10",
+      "months": 129,
+      "book": {
+        "days": 2692,
+        "annual_mean": 0.21279954145058125,
+        "annual_volatility": 0.18679782995221206,
+        "sharpe": 1.1391970747466453,
+        "cagr": 0.21557618490491492,
+        "max_drawdown": -0.361068707041029
+      },
+      "hold_SPY": {
+        "days": 2692,
+        "annual_mean": 0.1567834445247297,
+        "annual_volatility": 0.17732305874972284,
+        "sharpe": 0.8841683965423632,
+        "cagr": 0.15140660473283973,
+        "max_drawdown": -0.3369981346090808
+      },
+      "night": {
+        "days": 2692,
+        "annual_mean": 0.1569162950799155,
+        "annual_volatility": 0.13008931806166343,
+        "sharpe": 1.2062196759732098,
+        "cagr": 0.15992073002293083,
+        "max_drawdown": -0.3200928709101596
+      },
+      "day_SPY": {
+        "days": 2692,
+        "annual_mean": 0.055777496359153925,
+        "annual_volatility": 0.1336584864702495,
+        "sharpe": 0.41731354164009044,
+        "cagr": 0.047982119330588935,
+        "max_drawdown": -0.24854726973906727
+      }
+    },
+    "bars_pr035": {
+      "estimate": 0.025527014506000034,
+      "lo": -0.00841228246003678,
+      "hi": 0.06548423255773339,
+      "width": 0.07389651501777017,
+      "recent_excess": -0.003102892971648341,
+      "recent_first_month": "2022-10",
+      "months": 129,
+      "book": {
+        "days": 2692,
+        "annual_mean": 0.18402621850603382,
+        "annual_volatility": 0.18744015317825452,
+        "sharpe": 0.9817865349855213,
+        "cagr": 0.18098146541023663,
+        "max_drawdown": -0.36365445079376635
+      },
+      "hold_SPY": {
+        "days": 2692,
+        "annual_mean": 0.15677115427254962,
+        "annual_volatility": 0.1772781413586472,
+        "sharpe": 0.8843230929152718,
+        "cagr": 0.15140164509771536,
+        "max_drawdown": -0.336998135745192
+      },
+      "night": {
+        "days": 2692,
+        "annual_mean": 0.13416509157989379,
+        "annual_volatility": 0.1301759182467025,
+        "sharpe": 1.0306444800768084,
+        "cagr": 0.13382940419713285,
+        "max_drawdown": -0.3229844898656512
+      },
+      "day_SPY": {
+        "days": 2692,
+        "annual_mean": 0.049675119130877174,
+        "annual_volatility": 0.13381187604373057,
+        "sharpe": 0.371231019245579,
+        "cagr": 0.04158655705925329,
+        "max_drawdown": -0.2521846379044361
+      }
+    }
+  },
+  "factor_attribution": {
+    "alpha_annual": 0.0462198631834696,
+    "alpha_t": 3.3097998524900123,
+    "betas": {
+      "Mkt-RF": 0.9970129656156531,
+      "SMB": 0.011048522856611028,
+      "HML": 0.08334587125585272,
+      "RMW": 0.029180933592075364,
+      "CMA": 0.04653023445719906,
+      "MOM": -0.036732308442305184
+    },
+    "r_squared": 0.9473630826382289,
+    "periods": 2658,
+    "first": "2016-01-05",
+    "last": "2026-07-31"
+  }
+}

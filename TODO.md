@@ -1955,20 +1955,26 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 - [ ] **`[v]` THE MAIN HYPOTHESIS (`DR-055`): does `PR-035`'s book beat `SPY` at the prices an
       auction order actually gets?** Owner ruling 2026-09-27. Three items, in this order:
-      1. **Register and run the auction-priced study** - **REGISTERED 2026-09-27 as `PR-040`**;
-         the cross prints are being fetched. `PR-035`'s rule unchanged, every fill at
-         the listing market's official cross from `tools/fetch_auction_prints.py`, the venue's
-         regulatory fees, excess over `SPY` held. Proof (1): the 95% interval wholly above zero
-         over 2016-2026 AND a positive excess over the last 48 months. Register BEFORE any print
-         is compared with a bar.
+      1. ~~**Register and run the auction-priced study**~~ - **REPORTED 2026-09-27, `PR-040`
+         `ACCEPT`: proof (1) is MET** (`docs/prereg/results/PR-040.json`). The book beat holding
+         `SPY` by +4.39% a year [+0.95%, +8.30%] at the official crosses with the fees, and by
+         +0.73% a year over the last 48 months - narrowly. At half a cent a share a side neither
+         condition holds, so whether a real `cls`/`opg` order fills AT the cross is now the
+         assumption everything rests on, and paper cannot observe it.
       2. **The paper day leg** - `SPY` bought in the opening auction and sold in the closing one,
          with the market-on-close sell lodged as soon as the buy fills (`DR-055` §4), so the paper
          account carries the whole book. Proof (2): 60 sessions of it with no machinery defect.
-         **BUILT 2026-09-27 (`DR-056`)**; it runs once `SwingDesk day protect` is registered, and
-         the sixty sessions count from the first whole book journalled.
+         **BUILT 2026-09-27 (`DR-056`)**, and all three tasks are registered (runbook §11.5; the
+         scheduler shows `SwingDesk day protect` first due 2026-09-28 08:40 Central). The sixty
+         sessions count from the first whole book journalled.
       3. **The third leg** - foreign equity funds held through the US session, when their home
          markets are shut. `PR-033` saw it on `EFA` after the fact (night negative, session
          positive); register it on funds no study here has read for this question.
+         ~~**REGISTERED 2026-09-27 as `PR-041`**~~ - **REPORTED 2026-09-27, `COST_FRAGILE`: no
+         third leg** (`docs/prereg/results/PR-041.json`). The basket's US session earned 6.05% a
+         year after the fees, gone at half a cent and no better than holding per unit of risk;
+         over the last three years the three-leg book (24.3% a year) could not be told from the
+         two-leg one (23.7%) or `SPY` (22.9%). The paper account keeps the two-leg book.
       **No real money moves on any of these** - meeting both proofs returns the question to the
       owner (`CHARTER` A-001).
 

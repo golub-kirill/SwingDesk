@@ -6,7 +6,11 @@ date:          2026-09-27
 author:        Claude, on the owner's ruling of 2026-09-27 (DR-055): PR-035's book is the
                project's main hypothesis, no real money moves before it is proven, and proof (1)
                is this study - the book priced at the official auction prints and the venue's fees
-status:        registered - no cross print has been compared with a bar or priced into a return
+status:        reported   (2026-09-27 - results/PR-040-report.md)
+verdict:       ACCEPT - the book beat holding SPY by a geometric +4.39% a year [+0.95%, +8.30%] at
+               the official crosses with the venue's fees, and by +0.73% a year over the last 48
+               months. DR-055's proof (1) is met; at half a cent a share a side neither condition
+               holds
 ```
 
 ---

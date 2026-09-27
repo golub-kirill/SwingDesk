@@ -6,7 +6,12 @@ date:          2026-09-27
 author:        Claude, on the owner's choice of 2026-09-27 (DR-055 section 1.4): the third leg to try
                is foreign equity held through the US session. The owner asked for the three-leg
                book's last three years and chose to register first rather than look first
-status:        registered - no session or night of these funds has been read
+status:        reported   (2026-09-27 - results/PR-041-report.md)
+verdict:       INCONCLUSIVE, branch COST_FRAGILE - the basket's US session earned +0.0253% a day
+               [+0.0079, +0.0451] after the fees, 6.05% a year, and at half a cent a share a side
+               [-0.0228, +0.0147]. Its Sharpe ratio, 0.63, is not above holding's 0.64. Secondary:
+               the three-leg book returned 24.3% a year over the last three years against the
+               two-leg book's 23.7% and SPY's 22.9%, and no interval tells them apart
 ```
 
 ---
