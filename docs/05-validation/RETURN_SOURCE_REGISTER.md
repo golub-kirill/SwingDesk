@@ -117,6 +117,10 @@ price whatever the size, so the minimum measures it exactly.
 pay no spread, so if the twenty sessions show that, 13.8% a year is the pessimistic reading and the
 gross 16.0% is nearer the truth.
 
+**Extended 2026-09-27 (`DR-055` §1.4): `PR-041` registers the same source on funds whose home
+market is shut through the whole US session** - eight Asia-Pacific single-country funds, whose
+US session is their night. `EFA`'s reading in `PR-033` was the after-the-fact hint.
+
 ### 2.4 Intraday momentum on index funds — `closed`, see 1.5
 
 ---

@@ -1,0 +1,14 @@
+{
+  "for": "PR-041",
+  "as_of": {
+    "bars": "2026-09-27T18:00:00+00:00"
+  },
+  "resamples": 2000,
+  "widths": {
+    "session-auction_fees": {
+      "width": 0.000373,
+      "days": 2697
+    }
+  },
+  "power_floor_width": 0.0008
+}
