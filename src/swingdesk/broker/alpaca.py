@@ -491,20 +491,26 @@ class AlpacaClient:
                 "the committed policy carries no night order shape (write.night_*), so CARD-002 "
                 "has nothing it is permitted to send"
             )
-        if order.symbol not in night.symbols:
+        if order.symbol not in night.symbols and order.symbol not in night.day_symbols:
+            allowed = ", ".join(sorted(night.symbols | night.day_symbols))
             raise SubmissionStopped(
-                f"{order.symbol} is not one of write.night_symbols ({', '.join(sorted(night.symbols))}). "
-                f"An order with no stop is permitted for those funds only (DR-048 section 5)."
+                f"{order.symbol} is in neither write.night_symbols nor write.day_symbols "
+                f"({allowed}). An order with no stop is permitted for those funds only "
+                f"(DR-048 section 5, DR-055 section 4)."
             )
         if not order.client_order_id.startswith(f"{night.client_order_id_prefix}-"):
             raise SubmissionStopped(
                 f"{order.client_order_id!r} does not carry write.night_client_order_id_prefix. "
                 f"DR-054 section 3 finds this card's orders by the ids it journalled."
             )
+        # The day leg keeps the night's sides and reverses its auctions (`DR-056` section 4).
+        day = order.symbol in night.day_symbols
         if order.side is Side.BUY:
-            side, time_in_force = night.entry_side, night.entry_time_in_force
+            side = night.entry_side
+            time_in_force = night.day_entry_time_in_force if day else night.entry_time_in_force
         else:
-            side, time_in_force = night.exit_side, night.exit_time_in_force
+            side = night.exit_side
+            time_in_force = night.day_exit_time_in_force if day else night.exit_time_in_force
 
         payload: dict[str, Any] = {
             "symbol": order.symbol,

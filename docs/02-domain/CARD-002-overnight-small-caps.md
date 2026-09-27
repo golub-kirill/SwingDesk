@@ -200,6 +200,8 @@ behind the same four guards `DR-027` §4 already imposes.
    because its margin is the size of its costs and the costs can be measured from the official
    auction prints without an order. The paper account will carry the day leg too (`DR-055` §4);
    "no version 2" held until the question it rested on - is the margin real - became measurable.
+   **The paper day leg is built (`DR-056`)**: `SPY` from the opening cross to the closing cross,
+   bought with what the night's sale frees, its closing sell lodged by a morning pass.
 
 **Ruled 2026-09-20, the same evening, and each one changes what happens next:**
 

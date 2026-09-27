@@ -1955,7 +1955,8 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
 
 - [ ] **`[v]` THE MAIN HYPOTHESIS (`DR-055`): does `PR-035`'s book beat `SPY` at the prices an
       auction order actually gets?** Owner ruling 2026-09-27. Three items, in this order:
-      1. **Register and run the auction-priced study** - `PR-035`'s rule unchanged, every fill at
+      1. **Register and run the auction-priced study** - **REGISTERED 2026-09-27 as `PR-040`**;
+         the cross prints are being fetched. `PR-035`'s rule unchanged, every fill at
          the listing market's official cross from `tools/fetch_auction_prints.py`, the venue's
          regulatory fees, excess over `SPY` held. Proof (1): the 95% interval wholly above zero
          over 2016-2026 AND a positive excess over the last 48 months. Register BEFORE any print
@@ -1963,6 +1964,8 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       2. **The paper day leg** - `SPY` bought in the opening auction and sold in the closing one,
          with the market-on-close sell lodged as soon as the buy fills (`DR-055` §4), so the paper
          account carries the whole book. Proof (2): 60 sessions of it with no machinery defect.
+         **BUILT 2026-09-27 (`DR-056`)**; it runs once `SwingDesk day protect` is registered, and
+         the sixty sessions count from the first whole book journalled.
       3. **The third leg** - foreign equity funds held through the US session, when their home
          markets are shut. `PR-033` saw it on `EFA` after the fact (night negative, session
          positive); register it on funds no study here has read for this question.

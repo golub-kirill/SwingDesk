@@ -236,6 +236,14 @@ write:
   # account, and `DR-054` §3 identifies this card's orders by the ids it journalled.
   night_client_order_id_prefix: swingdesk-night
   night_symbols: [IJR, VB]
+  # THE DAY LEG - `DR-055` section 4 and `DR-056`. The same shape at the reversed times: bought in
+  # the opening auction and sold in the closing one, so the paper account carries `PR-035`'s whole
+  # book. Held while the exchange is OPEN and with no stop, which `DR-055` section 4 permits for
+  # this one symbol on the paper account only, with a market-on-close sell resting from the moment
+  # the buy has filled.
+  day_symbols: [SPY]
+  day_entry_time_in_force: opg
+  day_exit_time_in_force: cls
 
   # Which permitted write verb does which job. Named here rather than inferred, because with two
   # write verbs in `access.allowed_methods` the adapter would otherwise be choosing between them -
