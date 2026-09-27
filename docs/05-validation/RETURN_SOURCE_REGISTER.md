@@ -101,12 +101,14 @@ against holding's 0.59, 11.7% at a cent a share, the last 590 sessions its best)
 study here had read, the night compounded at **10.6% against holding's 8.8%** with a −21.1%
 drawdown against −58.8%, and the session arm lost 80% peak to trough — `COST_FRAGILE`, because a
 whole cent a share touches zero at that decade's price level).
-**Status:** `CARD-002` specifies it; nothing is built. **It is exempt from `DR-047` §3.9** because
+**Status:** `CARD-002` specifies it; the owner's side of the trial is built (the plan pass and the
+fill journal, 2026-09-21) and the two paper passes are not. **It is exempt from `DR-047` §3.9** because
 its population is funds, not individual equities.
 **What is unmeasured and decisive:** what the closing and opening auctions actually give. No paper
 account can answer it — Alpaca's paper fills are simulated, so a paper trial would confirm this
 project's own cost model because it IS that model. **The owner ruled on 2026-09-20 that the first
-twenty sessions run at minimum REAL size** (one or two shares a fund); an auction clears at one
+twenty sessions run at minimum REAL size** (one or two shares a fund) - paused 2026-09-21 and
+resumed 2026-09-26, `CARD-002` §7.5; an auction clears at one
 price whatever the size, so the minimum measures it exactly.
 
 **And the cost assumption may be too harsh rather than too kind.** The half-cent a share came from

@@ -1601,7 +1601,7 @@ def _result_with_one_trade():
 
 def _stub_submit_client(monkeypatch, sent: list, held=(), live_orders=(), unavailable=None,
                         protected: list | None = None, protect_raises=None,
-                        unavailable_on_reread=None):
+                        unavailable_on_reread=None, venue_orders: dict | None = None):
     """A venue stub. `held` and `live_orders` are what it already holds - empty by default.
 
     `DR-027` §11: submission reads the venue before it adds to it, because `positions.duckdb` is
@@ -1673,6 +1673,10 @@ def _stub_submit_client(monkeypatch, sent: list, held=(), live_orders=(), unavai
             )
             resting.extend((parent, leg))
             return parent
+
+        def order(self, order_id, now):
+            """One order by the venue's id - what `DR-054`'s view asks of a `CARD-002` night."""
+            return (venue_orders or {})[order_id]
 
         def submit(self, order, now):
             from swingdesk.contracts.broker import PlacedOrder
@@ -4475,3 +4479,119 @@ def test_sync_dry_run_adopts_nothing(tmp_path: Path, monkeypatch, capsys) -> Non
 
     assert cli._sync_fills(_sync_args(tmp_path, dry_run=True)) == 0
     assert "WOULD ADOPT" not in capsys.readouterr().out  # already adopted on the first pass
+
+
+# --------------------------------------------------------------------------------------------
+# `DR-054`: two cards on one paper account. `CARD-002` holds two funds every night, and every guard
+# here treats a holding the book does not carry as a defect - the submission path stops on one
+# BEFORE it restores a protective stop. The view sets aside exactly what `CARD-002`'s ledger
+# accounts for; these tests are written from the other card's side of the account.
+
+
+def _card002_night(data: Path, fund: str = "IJR", shares: int = 300) -> dict:
+    """One paper night the close pass sent and the venue filled: the ledger rows, and the order."""
+    from swingdesk.broker import night
+    from swingdesk.contracts.broker import PlacedOrder
+
+    client_id = f"swingdesk-night-2026-09-02-{fund}-buy"
+    night.append(data, {"kind": "sent", "session": "2026-09-02", "fund": fund, "side": "buy",
+                        "shares": shares, "client_order_id": client_id})
+    night.append(data, {"kind": "answered", "client_order_id": client_id,
+                        "order_id": f"night-{fund}", "status": "accepted"})
+    at = datetime(2026, 9, 2, 20, 0, tzinfo=UTC)
+    return {f"night-{fund}": PlacedOrder(
+        order_id=f"night-{fund}", client_order_id=client_id, symbol=fund, status="filled",
+        submitted_at=at, filled_shares=Decimal(shares), observed_at=at,
+    )}
+
+
+def test_a_card002_night_does_not_stop_card001_protecting_what_it_holds(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """THE DEFECT `DR-054` §3 exists for, found while planning it rather than by a run.
+
+    `CARD-001` holds `GUARDED` with no stop standing, and the account also holds `CARD-002`'s night
+    in `IJR`. Without the view, `IJR` is a `venue_only` divergence and the pass stops BEFORE it
+    restores `GUARDED`'s protection - every evening both cards run. With it, the protection is
+    placed, and only then does the retirement stop the new entry.
+    """
+    _armed(tmp_path)
+    sent: list = []
+    protected: list = []
+    orders = _card002_night(tmp_path)
+    _stub_submit_client(monkeypatch, sent,
+                        held=[_venue_position("GUARDED", shares="100", entry="50"),
+                              _venue_position("IJR", shares="300", entry="138.29")],
+                        live_orders=[], protected=protected, venue_orders=orders)
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book, \
+            BarStore(tmp_path / 'bars.duckdb') as bars:
+        _protected_book(book, bars)
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 2, 23, 0, tzinfo=UTC), journal, _target_registry(),
+                    book, bars)
+        rows = journal.submissions_for("RUN-TEST")
+
+    printed = capsys.readouterr()
+    assert "disagree" not in printed.err, "a night CARD-002's ledger accounts for is not a divergence"
+    assert [o.symbol for o in protected] == ["GUARDED"], \
+        "retiring must not take protection away, and the other card's night must not pre-empt it"
+    assert sent == [], "CARD-001 takes no new entry once CARD-002 has placed an order (DR-054 section 4)"
+    by_instrument = {row.instrument_id: row for row in rows}
+    assert by_instrument["GUARDED"].outcome == "sent", "the protection is journalled like any order"
+    candidates = [row for row in rows if row.instrument_id != "GUARDED"]
+    assert candidates and all(row.outcome == "stopped" and "DR-054" in (row.detail or "")
+                              for row in candidates)
+
+
+def test_a_holding_beyond_the_ledgers_quantity_is_still_a_divergence(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """Set aside by QUANTITY, never by symbol: 100 more `IJR` than the ledger bought is not ours.
+
+    A person's own `IJR` in the paper account is exactly what a symbol rule would hide.
+    """
+    _armed(tmp_path)
+    sent: list = []
+    orders = _card002_night(tmp_path, shares=300)
+    _stub_submit_client(monkeypatch, sent,
+                        held=[_venue_position("IJR", shares="400", entry="138.29")],
+                        live_orders=[], venue_orders=orders)
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book, \
+            BarStore(tmp_path / 'bars.duckdb') as bars:
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 2, 23, 0, tzinfo=UTC), journal, _target_registry(),
+                    book, bars)
+
+    printed = capsys.readouterr()
+    assert "disagree" in printed.err and "IJR" in printed.err
+    assert sent == []
+
+
+def test_card001_still_submits_while_card002_has_never_run(
+    tmp_path: Path, monkeypatch, capsys
+) -> None:
+    """No ledger, no retirement: the view is a pass-through until the first paper night."""
+    _armed(tmp_path)
+    sent: list = []
+    _stub_submit_client(monkeypatch, sent)
+    with Journal(tmp_path / 'journal.duckdb') as journal, \
+            PositionStore(tmp_path / 'positions.duckdb') as book, \
+            BarStore(tmp_path / 'bars.duckdb') as bars:
+        cli._submit(_result_with_one_trade(), tmp_path,
+                    datetime(2026, 9, 2, 23, 0, tzinfo=UTC), journal, _target_registry(),
+                    book, bars)
+    assert len(sent) == 1
+    assert "DR-054" not in capsys.readouterr().err
+
+
+def test_every_venue_client_in_the_cli_is_opened_through_the_view() -> None:
+    """`DR-054` §3's one construction path. A command that read the venue around the view would
+    see the other card's nights as divergences - the second copy of an ownership rule `DR-053`
+    records the cost of."""
+    source = (Path(cli.__file__)).read_text(encoding="utf-8")
+    opened = [line.strip() for line in source.splitlines() if "open_client(" in line]
+    assert opened, "the positive control: the CLI does open clients"
+    unwrapped = [line for line in opened if "_venue(" not in line]
+    assert not unwrapped, f"opened around DR-054's view: {unwrapped}"

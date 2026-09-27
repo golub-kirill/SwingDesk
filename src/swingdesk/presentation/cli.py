@@ -8,7 +8,7 @@ from collections.abc import Callable, Sequence
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from pydantic import ValidationError
 
@@ -812,6 +812,22 @@ def _allocate(
     return submittable, passed_over
 
 
+def _venue(client: AlpacaClient, data: Path) -> AlpacaClient:
+    """The paper venue as `CARD-001` sees it. `DR-054` §3, and the ONLY way this module reads it.
+
+    Two cards share one account from `CARD-002`'s first paper night, and every guard here treats a
+    holding the book does not carry as a defect - the submission path stops on one BEFORE it
+    restores a protective stop. So every read goes through the view, which sets aside exactly
+    what `CARD-002`'s ledger accounts for, by order id and by quantity; `DR-053` is the record
+    of what a second copy of an ownership rule costs.
+    """
+    from swingdesk import broker as broker_pkg
+
+    # The view forwards everything it does not filter, so it stands in for the client; the
+    # cast says so to the type checker rather than widening every signature that takes one.
+    return cast("AlpacaClient", broker_pkg.card_view(client, data))
+
+
 def _submit(
     result: RunResult, data: Path, now: datetime, journal: Journal,
     registry: ParameterRegistry, positions: PositionStore | None = None,
@@ -864,7 +880,7 @@ def _submit(
         # pass and resubmit every entry.
         session = broker_pkg.trading_session(policy.market, now)
         arming = broker_pkg.read_arming(data, policy.write)
-        client = broker_pkg.open_client(policy, arming=arming)
+        client = _venue(broker_pkg.open_client(policy, arming=arming), data)
     except broker_pkg.PolicyRefused as refused:
         print(f"submit REFUSED  {refused}", file=sys.stderr)
         return
@@ -1098,6 +1114,16 @@ def _submit(
         )
         return
 
+    # CARD-001 TAKES NO NEW ENTRIES ONCE CARD-002 HAS STARTED. `DR-054` §4.
+    #
+    # Here, and not earlier, on purpose: everything above - the reconciliation and the
+    # restoration of a stop the venue retired - is how this card protects the positions it
+    # still holds, and retiring must not take that away. Everything below adds exposure.
+    retired = broker_pkg.retirement(client)
+    if retired is not None:
+        _stop_all(retired)
+        return
+
     sent_ids = journal.sent_client_order_ids()
     unaccounted = broker_pkg.uncommitted_exposure(
         positions.open_as_of(now), held, live_orders, policy.market, sent_order_ids=sent_ids,
@@ -1282,7 +1308,7 @@ def _sync_fills(args: argparse.Namespace) -> int:
 
     try:
         policy = broker_pkg.load_policy()
-        client = broker_pkg.open_client(policy)
+        client = _venue(broker_pkg.open_client(policy), args.data)
     except broker_pkg.PolicyRefused as refused:
         print(f"sync REFUSED  {refused}", file=sys.stderr)
         return 2
@@ -1795,7 +1821,7 @@ def _broker(args: argparse.Namespace) -> int:
 
     try:
         policy = broker_pkg.load_policy()
-        client = broker_pkg.open_client(policy)
+        client = _venue(broker_pkg.open_client(policy), args.data)
     except broker_pkg.PolicyRefused as refused:
         print(f"broker REFUSED  {refused}", file=sys.stderr)
         return 2
@@ -1930,7 +1956,7 @@ def _status(args: argparse.Namespace) -> int:
     live: Sequence[PlacedOrder] = ()
     venue_error: str | None = None
     try:
-        client = broker_pkg.open_client(policy)
+        client = _venue(broker_pkg.open_client(policy), args.data)
         account = client.account(now)
         held = client.positions(now)
         live = client.open_orders(now)
@@ -2280,7 +2306,7 @@ def _send_stop_move(data: Path, position: Position, sequence: int, now: datetime
         return
 
     try:
-        client = broker_pkg.open_client(policy, arming=arming)
+        client = _venue(broker_pkg.open_client(policy, arming=arming), data)
         live = client.open_orders(now)
     except (broker_pkg.CredentialsMissing, broker_pkg.BrokerUnavailable) as unreadable:
         reason = f"the venue could not be read to find the stop: {unreadable}"

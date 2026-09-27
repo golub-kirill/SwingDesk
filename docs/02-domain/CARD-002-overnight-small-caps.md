@@ -139,8 +139,9 @@ Weekly report; none of these is a verdict about the strategy, which needs the jo
 
 ## 6. What must be built, in order
 
-Nothing on this list exists. `CHARTER` A-003 §4 records the gap and `CONSTRAINTS` §4 calls it a
-build gap rather than a scope rule.
+~~Nothing on this list exists.~~ **Items 0, 1, 2 and 4 are built; 3 is folded into the close pass,
+and 5 is a paper ledger rather than the trade journal** (`DR-054`, 2026-09-26). `CHARTER` A-003 §4
+records the gap and `CONSTRAINTS` §4 calls it a build gap rather than a scope rule.
 
 0. **The plan pass** — **built 2026-09-21**, `tools/card002_plan.py`. It sizes both funds from
    the prior close, denominates `R`, refuses a fund whose close is missing or stale, and prints the
@@ -153,13 +154,16 @@ build gap rather than a scope rule.
    the documented not-yet-published condition — and the pass correctly refused `VB` and planned
    `IJR` alone. **A fetch of these two funds must precede the pass**, or a fund will be refused for
    a reason that a two-second request would have removed.
-1. **The close pass** — a run between 15:40 and 15:48 ET that sizes both funds from the prior close
+1. **The close pass** — **built 2026-09-26, `tools/card002_paper.py close` (`DR-054`)**, running
+   once its scheduled task is registered (runbook §11.5). As specified: a run between 15:40 and 15:48 ET that sizes both funds from the prior close
    and submits two `cls` market buys **to the PAPER account** (`DR-048` §1). Needs `BrokerPolicy` to
    permit `cls`, which today's policy does not name, and its own adapter method — `submit` sends a
    bracket with a stop, and widening it would weaken `CARD-001`'s protection as a side effect.
-2. **The evening pass** — a run after 19:05 ET that reads the filled positions and submits an `opg`
+2. **The evening pass** — **built 2026-09-26, `tools/card002_paper.py exit`**. As specified: a run after 19:05 ET that reads the filled positions and submits an `opg`
    market sell for each. It is the protection, so a failure to place it is an alert, not a log line.
-3. **The morning reconciliation** — the existing read-only broker read, after the open, checking
+3. **The morning reconciliation** — **folded into the close pass (`DR-054` §2)**: it prices last
+   night before it sizes tonight, so a failed exit is refused rather than doubled. As specified:
+   the existing read-only broker read, after the open, checking
    every position closed and journalling the night: entry fill, exit fill, dividend if the date had
    one, and `R`.
 4. **The fill-quality measurement** — **built 2026-09-21**, `tools/card002_journal.py`. It takes
@@ -216,6 +220,13 @@ behind the same four guards `DR-027` §4 already imposes.
    and no amount of further backtesting substitutes for them. What resumes the trial is the owner's
    word, not a milestone this project can reach on its own.
 
+   **RESUMED 2026-09-26, by the owner.** Shown the paper book's first month - five closed trades,
+   sized on `account.equity` rather than on the paper account, and a card whose historical mean is
+   indistinguishable from zero (`EVIDENCE_SUMMARY` §17) - the owner chose three things at once: lift
+   this pause, build the two paper passes, and register a time-series momentum study. **The first
+   real session is Monday 2026-09-28**, at one share a fund; runbook §11 is the sequence, and its
+   fetch and plan commands were rehearsed on a scratch store the same evening.
+
 6. **How the orders reach the exchange — ruled 2026-09-21.** The paper copy is submitted by
    this system; the REAL orders are typed by the owner. `DR-048` carries the reasoning: it keeps
    `CHARTER` A-001 §1 intact, needs no amendment to A-002, and costs one manual step twice a day
@@ -232,10 +243,12 @@ protective stop the venue retired — which `DR-036` measured happening to all t
 Two positions are open (`VGT`, `BTSG`). So `CARD-001` keeps running on paper, where a new entry
 costs nothing, and it is disarmed once both positions have left by their own rules.
 
-**Still open:** nothing on this card. The next move is the owner's word to resume. The two cannot share the paper account — `CARD-001` holds up
+~~**Still open:** nothing on this card. The next move is the owner's word to resume.~~ **The word
+was given 2026-09-26** (§7.5). The two cannot share the paper account — `CARD-001` holds up
 to four positions for twenty sessions and this one wants the account every night. The proposal is
 that the day `CARD-002` first submits, `CARD-001` submits no new entries and goes `Retired` once its
-open positions have left by their own rules.
+open positions have left by their own rules. **Accepted by the owner 2026-09-26**, with the choice
+to build the paper passes; it binds on the paper close pass's first submission, not before.
 
 **What is NOT a choice, because `A-002` fixes it:** the trial runs on paper, and nothing here
 reaches a live venue.

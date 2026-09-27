@@ -820,7 +820,7 @@ stores — `tools/verify_secrets.py` is gate 19 and it fails on a tracked one.
 | `data/.paper-trading-armed` | the kill switch. **Absent means STOPPED**, which is its value | the owner, deliberately |
 | `.swingdesk-local.json` | the directory pull's enable flag | step 4 |
 | `APCA_API_KEY_ID` / `APCA_API_SECRET_KEY` | paper credentials, environment only | Alpaca's dashboard, §6 |
-| five scheduled tasks | the daily pass, the second pass, the coverage pass, the classification pass, the re-measurement pass | step 7 |
+| seven scheduled tasks | the daily pass, the second pass, the coverage pass, the classification pass, the re-measurement pass, and `CARD-002`'s night close and night exit (`DR-054`) | step 7 |
 | the course PDFs + `pdftotext` | gate 2 re-extracts and diffs them | outside the repo entirely |
 
 ### The sequence
@@ -888,7 +888,7 @@ symbol.
 top-up and wrong for an empty store. `--universe` queues only the names the liquidity rule can
 actually nominate rather than every symbol with bars.
 
-**7. The five scheduled tasks.** Check before creating — `schtasks /Create` on an existing name
+**7. The seven scheduled tasks.** Check before creating — `schtasks /Create` on an existing name
 offers to REPLACE it, and a wrong keystroke discards a working registration:
 
 ```bash
@@ -901,7 +901,9 @@ schtasks /Create /TN "SwingDesk second pass" /TR "\"C:\PycharmProjects\SwingDesk
 schtasks /Create /TN "SwingDesk coverage pass" /TR "C:\PycharmProjects\SwingDesk\tools\widen_universe.cmd" /SC DAILY /ST 11:00
 schtasks /Create /TN "SwingDesk classification pass" /TR "C:\PycharmProjects\SwingDesk\tools\widen_classifications.cmd" /SC DAILY /ST 13:00
 schtasks /Create /TN "SwingDesk re-measurement pass" /TR "C:\PycharmProjects\SwingDesk\tools\remeasure.cmd" /SC DAILY /ST 16:00
-powershell -NoProfile -Command "foreach ($n in 'SwingDesk coverage pass','SwingDesk classification pass','SwingDesk re-measurement pass') { $t = Get-ScheduledTask -TaskName $n; $t.Settings.StartWhenAvailable = $true; Set-ScheduledTask -InputObject $t | Out-Null }"
+schtasks /Create /TN "SwingDesk night close" /TR "\"C:\PycharmProjects\SwingDesk\tools\card002_paper.cmd\" close" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 14:35
+schtasks /Create /TN "SwingDesk night exit" /TR "\"C:\PycharmProjects\SwingDesk\tools\card002_paper.cmd\" exit" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 18:10
+powershell -NoProfile -Command "foreach ($n in 'SwingDesk coverage pass','SwingDesk classification pass','SwingDesk re-measurement pass','SwingDesk night close','SwingDesk night exit') { $t = Get-ScheduledTask -TaskName $n; $t.Settings.StartWhenAvailable = $true; Set-ScheduledTask -InputObject $t | Out-Null }"
 ```
 
 **The first of those lines was recorded NOWHERE until 2026-09-04.** The runbook carried the
@@ -1001,6 +1003,9 @@ on gate 39's allowlist. So the owner types two orders and hands two prices back.
 and could observe neither, and `PR-036` then made the difference decisive — over 2004-2015 the night
 is an effect at half a cent and nothing at a whole one.
 
+**Every clock here is ET, and this machine keeps Central time**: 15:35 ET is 14:35 on it, the
+15:50 cut-off is 14:50, 19:00 ET is 18:00 and 09:28 ET is 08:28.
+
 **Every command here is shell-agnostic**: absolute paths, one command, no `cd`, no `&&`. They run
 the same in `cmd.exe` and in the app's PowerShell panel.
 
@@ -1053,5 +1058,64 @@ C:\PycharmProjects\SwingDesk\.venv\Scripts\python.exe -X utf8 C:\PycharmProjects
 | `ALERT` | the book is 25% below its peak. That is the market, not a defect — `PR-034` measured −31.6% |
 | `NO JUDGEMENT YET` | under 60 priced nights. The daily noise is about ±0.8% against a mean of +0.055% |
 
-**What is NOT yet built**, so nobody waits for it: the close and evening passes that submit the
-paper copy. The owner's side of the trial is complete without them, and they are tracked in `TODO`.
+~~**What is NOT yet built**, so nobody waits for it: the close and evening passes that submit the
+paper copy.~~ **Built 2026-09-26 (`DR-054`)** - §11.5 below. The owner's side of the trial never
+depended on them.
+
+### 11.5 The paper copy — two scheduled passes, `DR-054`
+
+**What they do.** The close pass buys both funds into the closing auction on the PAPER account,
+half its equity a fund, capped at the cash so the card never borrows; the exit pass lodges a
+market-on-open sell for exactly what filled. The close pass first prices last night and refuses
+both funds if anything from it is still held. Paper nights go to `data/card002/paper.jsonl`,
+never to the real sessions' file, because paper fills are simulated.
+
+**What changes for `CARD-001`, and it is automatic.** From the first paper order, `CARD-001`
+submits no new entries; its open positions keep their stops and leave by their own rules
+(`DR-054` §4). Every venue read `CARD-001` makes sets aside exactly what the paper ledger accounts
+for, so a night in `IJR` is not a divergence to it.
+
+**Registering them — the owner's step.** Check first: `schtasks /Create` on an existing name offers
+to REPLACE it.
+
+```bash
+schtasks /Query /TN "SwingDesk night close"
+```
+
+```bash
+schtasks /Create /TN "SwingDesk night close" /TR "\"C:\PycharmProjects\SwingDesk\tools\card002_paper.cmd\" close" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 14:35
+```
+
+```bash
+schtasks /Create /TN "SwingDesk night exit" /TR "\"C:\PycharmProjects\SwingDesk\tools\card002_paper.cmd\" exit" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 18:10
+```
+
+```bash
+powershell -NoProfile -Command "foreach ($n in 'SwingDesk night close','SwingDesk night exit') { $t = Get-ScheduledTask -TaskName $n; $t.Settings.StartWhenAvailable = $true; Set-ScheduledTask -InputObject $t | Out-Null }"
+```
+
+The times are this machine's Central clock: 14:35 is 15:35 ET, inside the close pass's window
+(15:30-15:48 ET), and 18:10 is 19:10 ET, after the venue starts accepting market-on-open orders.
+`StartWhenAvailable` runs a missed exit pass when the machine wakes; before 09:28 ET the next
+morning it still lodges the sell, and after that it refuses and the next close pass says what is
+still held.
+
+**Rehearsing either pass without sending anything** — it reads the paper account and prints what
+it would send:
+
+```bash
+C:\PycharmProjects\SwingDesk\.venv\Scripts\python.exe -X utf8 C:\PycharmProjects\SwingDesk\tools\card002_paper.py close --dry-run
+```
+
+**Reading the result:**
+
+```bash
+C:\PycharmProjects\SwingDesk\.venv\Scripts\python.exe -X utf8 C:\PycharmProjects\SwingDesk\tools\card002_paper.py report
+```
+
+| exit | means |
+|---|---|
+| 0 | done, or nothing to do |
+| 2 | refused: outside the window, no session, a stale close, or the switch stopped |
+| **3** | **ALERT** - a night still held, or a filled buy with no exit lodged. Read `data\card002_paper.log`; sell by hand if the exit pass cannot run before 09:28 ET |
+| 4 | the venue, the store or the ledger could not be read |

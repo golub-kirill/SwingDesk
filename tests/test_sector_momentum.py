@@ -49,7 +49,12 @@ def sector():
 
 
 @pytest.fixture(scope="module")
-def power_tool():
+def power_tool(sector):
+    # AFTER `sector`, always. The tool does `import run_pr037`, which takes whatever sys.modules
+    # holds; loaded first, it imported its own copy, `_load("run_pr037")` then replaced the
+    # registered one, and a test patching `sector.power` patched a module the tool was not using.
+    # It passed only on an xdist worker that had already run another test of this file - found on
+    # 2026-09-26 when new test files moved the split, as `nan == 0.02`.
     return _load("measure_sector_power")
 
 

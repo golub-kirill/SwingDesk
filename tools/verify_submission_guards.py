@@ -74,7 +74,9 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         policy = broker_pkg.load_policy()
-        client = broker_pkg.open_client(policy)
+        # Through DR-054's view, exactly as `_submit` reads it: a second card's holding is
+        # set aside by the same rule, or this tool and the pass disagree about the venue.
+        client = broker_pkg.card_view(broker_pkg.open_client(policy), args.data)
     except broker_pkg.PolicyRefused as refused:
         print(f"guards REFUSED  {refused}", file=sys.stderr)
         return UNAVAILABLE
@@ -188,6 +190,14 @@ def main(argv: list[str] | None = None) -> int:
             print(f"   PASS  {len(book)} position(s), each with its stop standing")
         else:
             print("   PASS  nothing held")
+
+        print("\nretirement - CARD-001 adds nothing once CARD-002 has started (DR-054 §4)")
+        retired = broker_pkg.retirement(client)
+        if retired is not None:
+            stopped.append(retired)
+            print(f"   STOP  {retired[:110]}")
+        else:
+            print("   PASS  CARD-002 has placed no paper order")
 
         print("\nuncommitted exposure - nothing at the venue the caps have not seen (DR-027 §11)")
         sent_ids = journal.sent_client_order_ids()

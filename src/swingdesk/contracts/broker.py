@@ -285,6 +285,16 @@ class PlacedOrder(BaseModel):
                     "generated, so whether this system placed it is only answerable through the "
                     "parent - which is how `DR-043` tells its own stop from one a person placed.",
     )
+    filled_average_price: Decimal | None = Field(
+        default=None,
+        description="The venue's average price over what has filled, or `None` before anything "
+                    "has - never zero. `CARD-002`'s ledger prices a night from it (`DR-054`).",
+    )
+    time_in_force: str = Field(
+        default="",
+        description="The venue's own string - `day`, `gtc`, `cls`, `opg`. Read because a `cls` "
+                    "buy and an `opg` sell are what a `CARD-002` night IS (`DR-054`).",
+    )
 
     observed_at: datetime
 
@@ -335,3 +345,24 @@ class ProtectiveOrder(BaseModel):
                 f"instructions that cannot both be waiting."
             )
         return self
+
+
+class NightOrder(BaseModel):
+    """One `CARD-002` auction order: a market buy into the close or a market sell into the open.
+
+    An INTENT, like `EntryOrder`, and a separate claim from it (`DR-048` §4). It carries no stop,
+    no target and no limit: the price paid IS the auction price the card's evidence rests on, and
+    the position it opens is held only while the exchange is shut (`DR-048` §5). The funds it may
+    name are fixed by the committed policy, not by this model.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    client_order_id: str = Field(
+        description="`<prefix>-<session>-<fund>-<buy|sell>`, journalled BEFORE it is sent. The "
+                    "venue rejects a duplicate, so a retried pass cannot send one night twice.",
+    )
+    session_date: date = Field(description="The session whose CLOSE the night starts at.")
+    symbol: str
+    side: Side
+    shares: int = Field(gt=0, description="Whole shares. A night with nothing to trade sends nothing.")
