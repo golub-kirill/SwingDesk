@@ -1090,6 +1090,15 @@ protection, so a sleeping laptop must not skip it:
 powershell -NoProfile -Command "foreach ($n in 'SwingDesk night close','SwingDesk night exit') { $t = Get-ScheduledTask -TaskName $n; $t.Settings.WakeToRun = $true; $t.Settings.DisallowStartIfOnBatteries = $false; $t.Settings.StopIfGoingOnBatteries = $false; $t.Settings.ExecutionTimeLimit = 'PT30M'; Set-ScheduledTask -InputObject $t | Out-Null }"
 ```
 
+**The day leg - `DR-056`, a third task.** The exit pass also buys `SPY` in the next opening
+auction with what the night's sale frees; `SwingDesk day protect` then lodges a market-on-close
+sell for exactly what filled, and the close pass checks it is standing before it buys the night.
+So the paper account carries `PR-035`'s whole book, `DR-055`'s proof (2).
+
+```bash
+schtasks /Create /TN "SwingDesk day protect" /TR "\"C:\PycharmProjects\SwingDesk\tools\card002_paper.cmd\" morning" /SC WEEKLY /D MON,TUE,WED,THU,FRI /ST 08:40
+```
+
 **Registering them on a fresh machine.** Check first: `schtasks /Create` on an existing name offers
 to REPLACE it.
 

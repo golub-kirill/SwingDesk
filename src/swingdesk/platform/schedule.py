@@ -54,6 +54,8 @@ TASKS = (
     # for - which is exactly what a named task makes visible. Runbook §11.5 carries the commands.
     "SwingDesk night close",
     "SwingDesk night exit",
+    # `DR-056`: the day leg's protection - a market-on-close sell for the SPY the open bought.
+    "SwingDesk day protect",
 )
 
 #: `schtasks` reports the wrapper's exit code. `daily_run.cmd` exits 0 on a clean run and 2 on a

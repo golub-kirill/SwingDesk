@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import sys
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -175,7 +176,7 @@ def test_a_symbol_outside_the_policy_never_reaches_the_wire() -> None:
     """An order with no stop is permitted for the two ratified funds and nothing else."""
     client = _client()
     with pytest.raises(SubmissionStopped, match="night_symbols"):
-        client.submit_night(_night_order(symbol="SPY"), AT_CLOSE_PASS)
+        client.submit_night(_night_order(symbol="QQQ"), AT_CLOSE_PASS)
     assert client.transport.sent == []  # type: ignore[attr-defined]
 
 
@@ -451,7 +452,7 @@ class _Venue:
 
 
 def _closes(prices: dict[str, str] | None = None, stale: tuple[str, ...] = ()):
-    table = prices or {"IJR": "100.00", "VB": "200.00"}
+    table = prices or {"IJR": "100.00", "VB": "200.00", "SPY": "400.00"}
 
     def closes(fund: str, expected: date):
         if fund in stale:
@@ -666,12 +667,183 @@ def test_the_report_counts_priced_nights(paper, tmp_path, capsys) -> None:
     assert "1 fund-night(s) priced" in printed and "+200.00" in printed
 
 
-def test_the_scheduled_wrapper_fetches_the_two_funds_before_the_close_pass_only() -> None:
+def test_the_scheduled_wrapper_fetches_the_three_funds_before_the_passes_that_price() -> None:
     """Runbook 11.1's precondition, made a mechanism: the close pass sizes from the prior close,
-    and on 2026-09-20 the store held VB a session behind. The exit pass reads no bar at all."""
+    and on 2026-09-20 the store held VB a session behind. The exit pass values the night and sizes
+    the day leg from THIS session's closes, which the evening run has not fetched by 19:10 ET
+    (`DR-056` §2). The morning pass reads no bar at all."""
     lines = (REPO / "tools" / "card002_paper.cmd").read_text(encoding="ascii").splitlines()
-    fetch = next(i for i, line in enumerate(lines) if "fetch_history.py" in line)
+    fetches = [(i, line) for i, line in enumerate(lines) if "fetch_history.py" in line]
     passes = next(i for i, line in enumerate(lines) if "card002_paper.py" in line
                   and not line.startswith("REM"))
-    assert fetch < passes
-    assert lines[fetch].startswith('if "%MODE%"=="close"') and "IJR VB" in lines[fetch]
+    modes = {re.match(r'if "%MODE%"=="(\w+)"', line).group(1) for _, line in fetches}  # type: ignore[union-attr]
+    assert modes == {"close", "exit"}, "the morning pass fetches nothing"
+    assert all(i < passes and "IJR VB SPY" in line for i, line in fetches)
+
+
+# --- DR-056: the day leg - SPY from the opening auction to the closing one ----------------------
+
+TUESDAY_MORNING = datetime(2026, 9, 29, 13, 45, tzinfo=UTC)   # 09:45 ET
+TUESDAY = date(2026, 9, 29)
+
+
+def test_the_committed_policy_carries_the_day_leg_at_the_reversed_auctions() -> None:
+    night_policy = policy_module.load().write.night
+    assert night_policy.day_symbols == frozenset({"SPY"})
+    assert (night_policy.day_entry_time_in_force, night_policy.day_exit_time_in_force) == \
+        ("opg", "cls")
+
+
+def test_a_symbol_in_both_legs_refuses_to_load(tmp_path: Path) -> None:
+    """Which auction buys it would be a guess - and it decides whether it is held open or shut."""
+    with pytest.raises(PolicyRefused, match="both"):
+        _policy_with(tmp_path, day_symbols=["IJR"])
+
+
+def test_half_a_day_block_refuses_to_load(tmp_path: Path) -> None:
+    with pytest.raises(PolicyRefused, match="day leg is one shape"):
+        _policy_with(tmp_path, day_exit_time_in_force=None)
+
+
+def test_the_day_leg_buys_at_the_open_and_sells_at_the_close() -> None:
+    buy = _night_order(symbol="SPY", client_order_id="swingdesk-night-2026-09-29-SPY-buy")
+    client = _client(payload={**PLACED, "client_order_id": buy.client_order_id, "symbol": "SPY"})
+    client.submit_night(buy, AT_EXIT_PASS)
+    sell = _night_order(symbol="SPY", side=Side.SELL,
+                        client_order_id="swingdesk-night-2026-09-29-SPY-sell-1")
+    client_sell = _client(payload={**PLACED, "client_order_id": sell.client_order_id,
+                                   "symbol": "SPY", "side": "sell"})
+    client_sell.submit_night(sell, TUESDAY_MORNING)
+    [bought] = client.transport.sent  # type: ignore[attr-defined]
+    [sold] = client_sell.transport.sent  # type: ignore[attr-defined]
+    assert (bought["body"]["side"], bought["body"]["time_in_force"]) == ("buy", "opg")
+    assert (sold["body"]["side"], sold["body"]["time_in_force"]) == ("sell", "cls")
+
+
+@pytest.mark.parametrize(("equity", "cash", "freed", "close", "expected"), [
+    ("100000", "0", "99000", "400", 247),     # the night's sale funds it
+    ("100000", "95000", "99000", "400", 250),  # never more than the equity
+    ("100000", "0", "0", "400", 0),            # nothing freed, nothing bought
+    ("100000", "0", "99000", "0", 0),
+])
+def test_the_day_leg_is_what_the_night_frees_and_never_above_equity(
+    paper, equity, cash, freed, close, expected
+) -> None:
+    assert paper.day_size(Decimal(equity), Decimal(cash), Decimal(freed), Decimal(close)) == expected
+
+
+def _exit_with_day(paper, venue, data, now=AT_EXIT_PASS, closes=None):
+    return paper.exit_pass(paper.Pass(venue, data, now), closes or _closes())
+
+
+def _night_filled(paper, venue, data) -> None:
+    _close(paper, venue, data)
+    venue.fill("swingdesk-night-2026-09-28-IJR-buy", 500, "100.10")
+    venue.fill("swingdesk-night-2026-09-28-VB-buy", 250, "200.20")
+    venue.cash = Decimal("0")
+
+
+def test_the_exit_pass_buys_the_day_leg_with_what_the_night_frees(paper, tmp_path) -> None:
+    venue = _Venue()
+    _night_filled(paper, venue, tmp_path)
+    assert _exit_with_day(paper, venue, tmp_path) == paper.OK
+    [spy] = [o for o in venue.sent if o.symbol == "SPY"]
+    # 500 x 100 + 250 x 200 = 100,000 freed; at a 400 close, 250 shares.
+    assert (spy.side, spy.shares, spy.session_date) == (Side.BUY, 250, TUESDAY)
+    assert spy.client_order_id == "swingdesk-night-2026-09-29-SPY-buy"
+    assert [o.symbol for o in venue.sent[-3:]] == ["IJR", "VB", "SPY"], \
+        "the night legs are protected before the day leg is bought"
+
+
+def test_no_day_leg_while_a_night_leg_is_unprotected(paper, tmp_path) -> None:
+    venue = _Venue()
+    _night_filled(paper, venue, tmp_path)
+    venue.raise_after_landing = BrokerUnavailable("orders: read timed out")
+    assert _exit_with_day(paper, venue, tmp_path) == paper.ALERT
+    assert not [o for o in venue.sent if o.symbol == "SPY"]
+
+
+def test_the_day_leg_is_bought_once(paper, tmp_path) -> None:
+    venue = _Venue()
+    _night_filled(paper, venue, tmp_path)
+    _exit_with_day(paper, venue, tmp_path)
+    assert _exit_with_day(paper, venue, tmp_path) == paper.OK, \
+        "the ledger, not the venue's duplicate-id refusal, is what stops a second buy"
+    assert len([o for o in venue.sent if o.symbol == "SPY"]) == 1
+    sent_rows = [r for r in _rows(tmp_path) if r["kind"] == "sent" and r["fund"] == "SPY"]
+    assert len(sent_rows) == 1
+
+
+@pytest.mark.parametrize(("now", "answer"), [
+    (TUESDAY_MORNING, TUESDAY),
+    (datetime(2026, 9, 29, 13, 35, tzinfo=UTC), "too early"),    # 09:35 ET
+    (datetime(2026, 9, 29, 19, 49, tzinfo=UTC), "too late"),     # 15:49 ET
+    (datetime(2026, 10, 3, 14, 0, tzinfo=UTC), "not a"),         # a Saturday
+])
+def test_the_morning_window(paper, now, answer) -> None:
+    from swingdesk.contracts.reference import Exchange
+
+    found = paper.morning_window(Exchange("NYSE"), now)
+    if isinstance(answer, date):
+        assert found.session_date == answer
+    else:
+        assert isinstance(found, str) and answer in found
+
+
+def _day_bought(paper, venue, data) -> None:
+    _night_filled(paper, venue, data)
+    _exit_with_day(paper, venue, data)
+    venue.fill("swingdesk-night-2026-09-29-SPY-buy", 250, "401.00")
+
+
+def test_the_morning_pass_lodges_a_closing_sell_for_exactly_what_filled(paper, tmp_path) -> None:
+    venue = _Venue()
+    _day_bought(paper, venue, tmp_path)
+    assert paper.morning_pass(paper.Pass(venue, tmp_path, TUESDAY_MORNING)) == paper.OK
+    last = venue.sent[-1]
+    assert (last.symbol, last.side, last.shares) == ("SPY", Side.SELL, 250)
+    assert last.client_order_id == "swingdesk-night-2026-09-29-SPY-sell-1"
+
+
+def test_a_filled_day_leg_the_switch_will_not_protect_is_an_alert(paper, tmp_path) -> None:
+    venue = _Venue()
+    _day_bought(paper, venue, tmp_path)
+    venue.armed = False
+    assert paper.morning_pass(paper.Pass(venue, tmp_path, TUESDAY_MORNING)) == paper.ALERT
+
+
+def test_the_close_pass_lodges_a_missing_day_sell_and_sizes_the_night_with_what_it_frees(
+    paper, tmp_path
+) -> None:
+    """The morning pass never ran: the close pass must lodge the day leg's sell BEFORE buying the
+    night, and count the SPY it sells as the money the night is bought with."""
+    venue = _Venue()
+    _day_bought(paper, venue, tmp_path)
+    venue.fill("swingdesk-night-2026-09-28-IJR-sell-1", 500, "100.50")
+    venue.fill("swingdesk-night-2026-09-28-VB-sell-1", 250, "200.40")
+    assert _close(paper, venue, tmp_path, now=TUESDAY_CLOSE_PASS) == paper.OK
+    tuesday = [o for o in venue.sent if o.session_date == TUESDAY]
+    assert [(o.symbol, o.side) for o in tuesday] == [
+        ("SPY", Side.BUY), ("SPY", Side.SELL), ("IJR", Side.BUY), ("VB", Side.BUY)]
+    ijr = next(o for o in tuesday if o.symbol == "IJR" and o.side is Side.BUY)
+    # cash 0 + 250 SPY x 400 = 100,000 freed; half each, at 100: 500 shares.
+    assert ijr.shares == 500
+
+
+def test_the_day_leg_is_priced_at_the_next_close_pass(paper, tmp_path) -> None:
+    venue = _Venue()
+    _day_bought(paper, venue, tmp_path)
+    paper.morning_pass(paper.Pass(venue, tmp_path, TUESDAY_MORNING))
+    venue.fill("swingdesk-night-2026-09-28-IJR-sell-1", 500, "100.50")
+    venue.fill("swingdesk-night-2026-09-28-VB-sell-1", 250, "200.40")
+    _close(paper, venue, tmp_path, now=TUESDAY_CLOSE_PASS)
+    venue.fill("swingdesk-night-2026-09-29-SPY-sell-1", 250, "403.00")
+    venue.fill("swingdesk-night-2026-09-29-IJR-buy", 500, "100.00")
+    venue.fill("swingdesk-night-2026-09-29-VB-buy", 250, "200.00")
+    paper.exit_pass(paper.Pass(venue, tmp_path, datetime(2026, 9, 29, 23, 10, tzinfo=UTC)),
+                    _closes())
+    venue.fill("swingdesk-night-2026-09-29-IJR-sell-1", 500, "100.20")
+    venue.fill("swingdesk-night-2026-09-29-VB-sell-1", 250, "200.30")
+    _close(paper, venue, tmp_path, now=datetime(2026, 9, 30, 19, 40, tzinfo=UTC))
+    legs = {(row["session"], row["fund"]): row for row in _rows(tmp_path) if row["kind"] == "night"}
+    assert legs[("2026-09-29", "SPY")]["pnl"] == "500.00"   # 250 x (403 - 401)

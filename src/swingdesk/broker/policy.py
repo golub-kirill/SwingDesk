@@ -126,6 +126,10 @@ class NightPolicy:
     exit_side: str
     client_order_id_prefix: str
     symbols: frozenset[str]
+    day_symbols: frozenset[str] = frozenset()
+    """`DR-056`: bought in the opening auction and sold in the closing one - the reversed times."""
+    day_entry_time_in_force: str = ""
+    day_exit_time_in_force: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -440,6 +444,8 @@ NIGHT_KEYS = (
     "night_order_type", "night_entry_time_in_force", "night_exit_time_in_force",
     "night_entry_side", "night_exit_side", "night_client_order_id_prefix", "night_symbols",
 )
+#: `DR-056`'s day leg, all or nothing like the night's, and only beside a night block.
+DAY_KEYS = ("day_symbols", "day_entry_time_in_force", "day_exit_time_in_force")
 
 
 def _night(write_block: dict[str, Any], name: str) -> NightPolicy | None:
@@ -461,6 +467,20 @@ def _night(write_block: dict[str, Any], name: str) -> NightPolicy | None:
     symbols = write_block["night_symbols"]
     if not isinstance(symbols, list) or not symbols:
         raise PolicyRefused(f"{name}: write.night_symbols must list the funds, and lists none")
+    day_present = [key for key in DAY_KEYS if key in write_block]
+    if day_present and len(day_present) != len(DAY_KEYS):
+        raise PolicyRefused(
+            f"{name}: the write section carries {', '.join(day_present)} and not all of "
+            f"{', '.join(DAY_KEYS)}. The day leg is one shape; half of it is a guess."
+        )
+    day_symbols = write_block.get("day_symbols") or []
+    if day_present and (not isinstance(day_symbols, list) or not day_symbols):
+        raise PolicyRefused(f"{name}: write.day_symbols must list the fund, and lists none")
+    if set(map(str, day_symbols)) & set(map(str, symbols)):
+        raise PolicyRefused(
+            f"{name}: a symbol is in both night_symbols and day_symbols. Which auction buys it "
+            f"is then a guess, and the answer decides whether the position is held open or shut."
+        )
     night = NightPolicy(
         order_type=str(_require(write_block, "night_order_type", str, "write")),
         entry_time_in_force=str(_require(write_block, "night_entry_time_in_force", str, "write")),
@@ -471,7 +491,15 @@ def _night(write_block: dict[str, Any], name: str) -> NightPolicy | None:
             _require(write_block, "night_client_order_id_prefix", str, "write")
         ),
         symbols=frozenset(str(symbol) for symbol in symbols),
+        day_symbols=frozenset(str(symbol) for symbol in day_symbols),
+        day_entry_time_in_force=str(write_block.get("day_entry_time_in_force") or ""),
+        day_exit_time_in_force=str(write_block.get("day_exit_time_in_force") or ""),
     )
+    if night.day_symbols and night.day_entry_time_in_force == night.day_exit_time_in_force:
+        raise PolicyRefused(
+            f"{name}: the day leg's entry and exit are both {night.day_entry_time_in_force}. It buys "
+            f"in the opening auction and sells in the closing one."
+        )
     if night.entry_time_in_force == night.exit_time_in_force:
         raise PolicyRefused(
             f"{name}: the night's entry and exit are both {night.entry_time_in_force}. One buys in "
