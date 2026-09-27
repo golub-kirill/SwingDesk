@@ -405,7 +405,7 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 121 script(s), of which 36 are things you type
+### The tools — 122 script(s), of which 36 are things you type
 
 #### Operator tools — 36
 
@@ -477,7 +477,7 @@ Invoked by `python tools/check_gates.py`, not singly. Listed so a failing gate c
 | `python tools/verify_parameters.py` | Enforce the parameter-registry contract. | `--registry` |
 | `python tools/verify_transcription.py` | Verify that every `verbatim` claim in the documents still matches the course. | `--course-root` · `--docs` |
 
-#### Evidence-bound research runners — 72
+#### Evidence-bound research runners — 73
 
 Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions/measurements/` and reproduces it. They ran once, on a date. Nobody types these; they exist so a number can be re-derived.
 
@@ -555,5 +555,6 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/run_pr036.py` | `PR-036` - did the night pay BEFORE 2016? The same two arms, on daily bars, back to 2000. | `--data` · `--as-of` · `--per-share` · `--resamples` · `--report` · `--power` |
 | `python tools/run_pr037.py` | `PR-037` - do sectors trend as a block? Industry momentum on the eleven sector funds. | `--data` · `--as-of` · `--resamples` · `--report` · `--power` |
 | `python tools/run_pr039.py` | PR-039: does a hold that spans a results announcement jump the stop more often - and what would avoiding it cost? | — |
+| `python tools/run_pr040.py --data` | `PR-040` - `PR-035`'s book priced at the auctions it would trade in, against holding `SPY`. `DR-055`. | `--data` **(required)** · `--as-of` · `--auctions` · `--auctions-as-of` · `--factors` · `--power` · `--out` |
 
 <!-- END GENERATED COMMANDS -->
