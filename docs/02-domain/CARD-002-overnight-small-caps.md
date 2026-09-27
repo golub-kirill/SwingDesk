@@ -196,6 +196,10 @@ behind the same four guards `DR-027` §4 already imposes.
    2026-09-21, a day after the answer existed; the result was recorded in `TODO` and
    `EVIDENCE_SUMMARY` §33 and not here, which is the one-fact-two-places failure `AGENTS.md`
    §10.5 is about.
+   **SUPERSEDED 2026-09-27 by `DR-055`**: `PR-035`'s book is now the project's main hypothesis,
+   because its margin is the size of its costs and the costs can be measured from the official
+   auction prints without an order. The paper account will carry the day leg too (`DR-055` §4);
+   "no version 2" held until the question it rested on - is the margin real - became measurable.
 
 **Ruled 2026-09-20, the same evening, and each one changes what happens next:**
 
@@ -226,6 +230,11 @@ behind the same four guards `DR-027` §4 already imposes.
    this pause, build the two paper passes, and register a time-series momentum study. **The first
    real session is Monday 2026-09-28**, at one share a fund; runbook §11 is the sequence, and its
    fetch and plan commands were rehearsed on a scratch store the same evening.
+
+   **CANCELLED 2026-09-27, before the first session, by the owner (`DR-055`): no real money
+   before the main hypothesis is proven.** The cost the sessions existed to measure is measured
+   instead from the listing markets' official auction prints, which needs no order at all
+   (`DR-055` §2). This card is now the NIGHT leg of `PR-035`'s book, and its paper passes run.
 
 6. **How the orders reach the exchange — ruled 2026-09-21.** The paper copy is submitted by
    this system; the REAL orders are typed by the owner. `DR-048` carries the reasoning: it keeps
