@@ -1,0 +1,134 @@
+{
+  "prereg": "PR-039",
+  "trials": 1,
+  "verdict": "accept",
+  "branch": "RISK_ONLY",
+  "country": "USA",
+  "as_of": {
+    "trades": "PR-016-trades-sample.csv (committed)",
+    "calendar": "PR-039-announcements.csv (committed)"
+  },
+  "measured_span": {
+    "first_session": "2017-09-07",
+    "last_session": "2026-08-07",
+    "years": 8.91
+  },
+  "split": {
+    "registered": "none - exposed against unexposed holds of one committed sample",
+    "buys": "nothing a split could buy: no constant is chosen here"
+  },
+  "perturbations": {
+    "registered": [],
+    "run": []
+  },
+  "registered_settings": {
+    "arms": [
+      "ranked",
+      "ranked_top4",
+      "unselected",
+      "unselected_two_slot"
+    ],
+    "card_arm": "ranked_top4",
+    "primary": "stop_gap rate, exposed minus unexposed",
+    "bootstrap": {
+      "unit": "entry month",
+      "block": 3,
+      "seed": 20260927,
+      "resamples": 10000
+    },
+    "minimum_detectable": 0.05687385425703808,
+    "min_pool": 600,
+    "min_exposed": 100,
+    "min_coverage": 0.8
+  },
+  "slot_check": {
+    "announcements_since_2017": 37865,
+    "intraday_share": 0.046296051762841677,
+    "median_per_company_per_year": 4.0625
+  },
+  "counts": {
+    "exposed": 144,
+    "unexposed": 903,
+    "fund": 389,
+    "unknown": 155
+  },
+  "primary_gap_rate": {
+    "exposed": 0.1597222222222222,
+    "unexposed": 0.03875968992248062,
+    "difference": 0.12096253229974159,
+    "low": 0.05538866930171279,
+    "high": 0.194544998150399
+  },
+  "secondary_mean_net_r": {
+    "exposed": -0.025676139302107007,
+    "unexposed": -0.06133587749963663,
+    "difference": 0.03565973819752962,
+    "low": -0.2465724557206433,
+    "high": 0.2941409453290013
+  },
+  "the_filter": {
+    "exposed_share_of_company_trades": 0.13753581661891118,
+    "book_mean_r_all": -0.05643138628622281,
+    "book_mean_r_filtered": -0.06133587749963663
+  },
+  "card_001_loss_shares": {
+    "exposed": {
+      "trades": 28,
+      "share_of_trades": 0.07,
+      "loss_r": 21.545069890596267,
+      "share_of_loss": 0.10242524703788836,
+      "gap_exits": 3
+    },
+    "unexposed": {
+      "trades": 234,
+      "share_of_trades": 0.585,
+      "loss_r": 120.74581224575608,
+      "share_of_loss": 0.5740255061070856,
+      "gap_exits": 9
+    },
+    "fund": {
+      "trades": 113,
+      "share_of_trades": 0.2825,
+      "loss_r": 57.25094962330168,
+      "share_of_loss": 0.27217097406027907,
+      "gap_exits": 8
+    },
+    "unknown": {
+      "trades": 25,
+      "share_of_trades": 0.0625,
+      "loss_r": 10.807379139749315,
+      "share_of_loss": 0.05137827279474701,
+      "gap_exits": 3
+    }
+  },
+  "pool_loss_shares": {
+    "exposed": {
+      "trades": 144,
+      "share_of_trades": 0.09050911376492772,
+      "loss_r": 90.15598048935206,
+      "share_of_loss": 0.10053291598483621,
+      "gap_exits": 23
+    },
+    "unexposed": {
+      "trades": 903,
+      "share_of_trades": 0.5675675675675675,
+      "loss_r": 463.4077104003874,
+      "share_of_loss": 0.5167458460718503,
+      "gap_exits": 35
+    },
+    "fund": {
+      "trades": 389,
+      "share_of_trades": 0.24450031426775612,
+      "loss_r": 249.33104216968314,
+      "share_of_loss": 0.27802899573386425,
+      "gap_exits": 43
+    },
+    "unknown": {
+      "trades": 155,
+      "share_of_trades": 0.09742300439974859,
+      "loss_r": 93.88598404372651,
+      "share_of_loss": 0.1046922422094493,
+      "gap_exits": 22
+    }
+  }
+}

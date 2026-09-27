@@ -61,6 +61,24 @@ def _indexed() -> set[str]:
     return {f"PR-{n}" for n in REFERENCE.findall(INDEX.read_text(encoding="utf-8"))}
 
 
+#: A row of the index's table, keyed by the id in its first cell.
+ROW = re.compile(r"^\|\s*`?(PR-\d{3})`?\s*\|")
+
+#: The words the index uses for an id given back unused. An exact phrase, because a gate over prose
+#: needs one (`AGENTS.md` §12) - `PR-037`'s row carries it.
+RELEASED = "reservation released"
+
+
+def _rows() -> dict[str, list[str]]:
+    """id -> every index row that starts with it."""
+    rows: dict[str, list[str]] = {}
+    if INDEX.is_file():
+        for line in INDEX.read_text(encoding="utf-8").splitlines():
+            if match := ROW.match(line):
+                rows.setdefault(match.group(1), []).append(line)
+    return rows
+
+
 def _documents() -> dict[str, str]:
     """id -> slug, for every pre-registration document in this tree."""
     found: dict[str, str] = {}
@@ -118,6 +136,19 @@ def main() -> int:
             failures.append(
                 f"{study_id} has a document in docs/prereg/ and no row in docs/prereg/README.md"
             )
+
+    # 4 and 5, added 2026-09-26 after a study was first written as `PR-037` - an id released on
+    # 2026-09-21 whose runner was kept for a wider pool, and which that draft OVERWROTE. Check 1
+    # passed it: the id was indexed, by the OTHER study's row. A released id stays released, and
+    # one id heads one row.
+    rows = _rows()
+    for study_id, lines in sorted(rows.items()):
+        if len(lines) > 1:
+            failures.append(f"{study_id} heads {len(lines)} rows of docs/prereg/README.md - one id "
+                            f"is one study")
+        if study_id in documents and any(RELEASED in line for line in lines):
+            failures.append(f"{study_id} was released unused, and docs/prereg/ now holds "
+                            f"{study_id}-{documents[study_id]}.md - a new study takes a new id")
 
     referenced: dict[str, str] = {}
     for path in sorted(REPO.glob("docs/**/*.md")):

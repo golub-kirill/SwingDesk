@@ -1595,3 +1595,22 @@ measurement it already specifies becomes the open question of the whole line, be
 between half a cent and a whole cent is the gap between an effect and nothing across half the
 available history.
 
+## 36. A hold through a results announcement exits through a gap four times as often — and on average costs nothing
+
+**`PR-039`, 2026-09-26, `ACCEPT`, branch `RISK_ONLY`** (`docs/prereg/results/PR-039-report.md`).
+The owner's question: how much of `CARD-001`'s losses fall on results announcements. Announcements
+dated from SEC EDGAR's own Item 2.02 8-K acceptance instants; `PR-016`'s committed trade sample
+split into holds that spanned one and holds that did not.
+
+| | held through an announcement | not | difference |
+|---|---|---|---|
+| exits through a gap | **16.0%** (23 of 144) | **3.9%** (35 of 903) | **+12.1 points [+5.5, +19.5]** |
+| mean net R | −0.026 | −0.061 | +0.036R [−0.247, +0.294] |
+
+**On the card's own arm, announcements carry 10.2% of the loss from 7% of the trades.** The tail
+is real: a gap is the loss the stop cannot bound (§17.2, −1.56R against −1.03R). The average is
+not: the holds that take the gaps also collect the announcement premium the literature documents,
+and here the two roughly cancel. **A filter would buy a thinner tail and nothing else**, and it
+cannot run live without a forward calendar of scheduled dates, which EDGAR does not publish and
+nothing here yet reads.
+

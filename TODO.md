@@ -311,6 +311,14 @@ this repository.
       variance and tail control, bought with a known cost.
       `E11` remains one of the eight items keeping every candidate at `Research`
       (`docs/08-pm/plans/2026-08-24-the-trade-flow.md` §2).
+      **MEASURED 2026-09-26 - `PR-039`, `ACCEPT`, branch `RISK_ONLY`** (`EVIDENCE_SUMMARY`
+      §36). The conjecture above is now a measurement: a hold that spans an announcement exits
+      THROUGH the stop at 16.0% against 3.9%, and its mean net R is no worse. **What is left is
+      the owner's, in two parts:** (1) whether to give the buffer a value - the registry holds
+      `screen.earnings_buffer_days` as `unset` - with `PR-039` as its citation, as tail control
+      with no expectancy argument; (2) if yes, where the FORWARD
+      calendar comes from - EDGAR records announcements after the fact, so a live rule needs a
+      source of scheduled dates, and choosing and building it is a separate piece of work.
 
 ### THE MOST EXPENSIVE IMPOSSIBILITY IN THE AUDIT: "Canada cannot be enumerated" — REFUTED 2026-08-25
 
@@ -1816,6 +1824,10 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       earnings report is the standard remedy and needs earnings dates this project does not store;
       a name's own past gap frequency is a proxy that needs nothing new. Parked until the owner
       asks for it.
+      **ASKED 2026-09-26 and measured the same day as `PR-039`** (the earnings-buffer item in §2
+      carries the result and the two decisions left). The dates now come from SEC EDGAR through
+      `tools/fetch_earnings_dates.py`, for past announcements only; the past-gap-frequency proxy
+      is still unmeasured.
 
 - [ ] **`[v]` THE OWNER PREFERS LONG-ONLY STRATEGIES — 2026-09-19.** *"davay tolko longovie
       strategii, esli eto proshe sdelat pribylnym."* The queued intraday momentum study

@@ -465,6 +465,32 @@ def test_prereg_gate_does_not_read_a_report_as_a_reservation(tmp_path: Path) -> 
     assert "0 failure(s)" in out
 
 
+def test_prereg_gate_catches_one_id_heading_two_rows(tmp_path: Path) -> None:
+    index = ("| id | title |\n|---|---|\n| `PR-037` | sector momentum |\n"
+             "| `PR-037` | results announcements |\n")
+    root = _prereg_tree(tmp_path, index=index)
+    code, out = run_gate("verify_prereg_ids.py", root)
+    assert code == 1
+    assert "PR-037 heads 2 rows" in out
+
+
+def test_prereg_gate_catches_a_new_study_under_a_released_id(tmp_path: Path) -> None:
+    """2026-09-26: a study was written as `PR-037`, an id released five days earlier.
+
+    Check 1 passed it, because the id WAS indexed - by the released study's row.
+    """
+    index = ("| id | title | status |\n|---|---|---|\n"
+             "| `PR-037` | sector momentum | **reservation released, NOT registered** |\n")
+    root = _prereg_tree(tmp_path, index=index, documents=("PR-037-a-hold-through-results.md",))
+    code, out = run_gate("verify_prereg_ids.py", root)
+    assert code == 1
+    assert "PR-037 was released unused" in out
+
+    (root / "docs" / "prereg" / "PR-037-a-hold-through-results.md").unlink()
+    code, out = run_gate("verify_prereg_ids.py", root)
+    assert code == 0, "a released id with no document is simply released"
+
+
 def test_prereg_gate_says_when_the_cross_branch_half_could_not_run(tmp_path: Path) -> None:
     """A shallow clone has no other branches, and a gate that cannot measure says so.
 

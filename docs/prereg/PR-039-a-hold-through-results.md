@@ -7,8 +7,11 @@ author:        Claude, on the owner's instruction of 2026-09-26: "начнем �
                three offered: measure how much of CARD-001's losses fell on results
                announcements, and decide about a filter. TODO.md carried the question since
                2026-08-30 ("the buffer needs a ruling or a study") and named this check
-status:        registered, not run
-verdict:       -
+status:        reported   (2026-09-26 - results/PR-039-report.md)
+verdict:       ACCEPT, branch RISK_ONLY - holds spanning an announcement exit through a gap
+               at 16.0% against 3.9%: +12.1 points [+5.5, +19.5]. Their mean net R, -0.026
+               against -0.061, is +0.036R [-0.247, +0.294] and cannot be told apart. All
+               three section 9 checks passed; the width was 1.75 times the prediction
 ```
 
 ---
