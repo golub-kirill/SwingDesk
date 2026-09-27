@@ -107,6 +107,19 @@ class CorporateAction(BaseModel):
         return Decimal(1) / self.value
 
 
+#: The first price the bar store CANNOT hold: its open, high, low and close are `DECIMAL(18,6)`,
+#: twelve digits before the point. A bar at or above it is refused here, at the vendor boundary,
+#: rather than by the database mid-insert.
+#:
+#: **What paid for it, 2026-09-27.** The weekly coverage pass died 1,295 symbols into its queue
+#: with a DuckDB conversion error, and every symbol after it went unfetched. The cause was `NUWE`,
+#: a serial reverse-splitter whose ten-year split-adjusted history reaches $1.24 trillion a share -
+#: a real vendor number that no column here can store. One symbol's write sat outside the loop's
+#: per-symbol error handling, so it took the pass with it, and the daily trigger would have hit the
+#: same symbol at the same place every day. Refused as a row, the rest of the series still arrives.
+MAX_STORED_PRICE = Decimal("1000000000000")
+
+
 class Bar(BaseModel):
     """One OHLCV bar.
 
@@ -150,6 +163,10 @@ class Bar(BaseModel):
             raise ValueError(f"open {self.open} outside [{self.low}, {self.high}]")
         if not (self.low <= self.close <= self.high):
             raise ValueError(f"close {self.close} outside [{self.low}, {self.high}]")
+        if self.high >= MAX_STORED_PRICE:
+            # `high` bounds the other three, so it is the only one that needs asking.
+            raise ValueError(f"high {self.high} is beyond what the store can hold "
+                             f"(below {MAX_STORED_PRICE})")
         return self
 
 

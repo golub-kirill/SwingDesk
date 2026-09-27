@@ -1,0 +1,9 @@
+{
+  "prereg": "PR-040",
+  "power": true,
+  "months": 129,
+  "width_a_year": 0.07677550796805388,
+  "half_width": 0.03838775398402694,
+  "minimum_detectable": 0.05483964854860991,
+  "note": "bars with the fees; widths only, no estimate is written"
+}
