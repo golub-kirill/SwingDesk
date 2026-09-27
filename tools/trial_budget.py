@@ -288,6 +288,10 @@ NO_SPEND_MEASUREMENTS = {
                               "property of the price path and a check of the code, not a "
                               "configuration: nothing is selected on it, and the resolver is the "
                               "owner's ruling, not a candidate",
+    "tsmom-power-2026-09-26": "WIDTHS of RANDOM long/flat books, the power estimate for a "
+                              "time-series momentum study that was then not registered. No "
+                              "return of the rule is computed and no level is printed - the "
+                              "same footing as every power tool here, which spend nothing",
 }
 
 

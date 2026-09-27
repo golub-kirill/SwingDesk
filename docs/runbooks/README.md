@@ -1075,7 +1075,18 @@ submits no new entries; its open positions keep their stops and leave by their o
 (`DR-054` §4). Every venue read `CARD-001` makes sets aside exactly what the paper ledger accounts
 for, so a night in `IJR` is not a divergence to it.
 
-**Registering them — the owner's step.** Check first: `schtasks /Create` on an existing name offers
+**REGISTERED 2026-09-26**, by Claude on the owner's word, through `Register-ScheduledTask`
+rather than the lines below: **PowerShell 5.1 breaks the nested quotes in `schtasks /TR`**, and
+the first attempt created nothing. The `schtasks` lines are `cmd.exe` syntax and work there.
+Both tasks then got the settings the daily run already had and nothing recorded: they wake the
+machine, ignore the battery, and stop after 30 minutes - the exit pass is the night's only
+protection, so a sleeping laptop must not skip it:
+
+```bash
+powershell -NoProfile -Command "foreach ($n in 'SwingDesk night close','SwingDesk night exit') { $t = Get-ScheduledTask -TaskName $n; $t.Settings.WakeToRun = $true; $t.Settings.DisallowStartIfOnBatteries = $false; $t.Settings.StopIfGoingOnBatteries = $false; $t.Settings.ExecutionTimeLimit = 'PT30M'; Set-ScheduledTask -InputObject $t | Out-Null }"
+```
+
+**Registering them on a fresh machine.** Check first: `schtasks /Create` on an existing name offers
 to REPLACE it.
 
 ```bash

@@ -1939,8 +1939,9 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       for whose holding is whose.
       **BUILT 2026-09-26 (`DR-054`):** the rule (`swingdesk.broker.night.CardView`, every venue
       read in `cli.py` goes through it), `CARD-001`'s retirement on the first paper order, and
-      both passes (`tools/card002_paper.py`, scheduled by `tools/card002_paper.cmd`). **Open until
-      the first paper night is journalled:** the owner registers the two tasks (runbook §11.5),
+      both passes (`tools/card002_paper.py`, scheduled by `tools/card002_paper.cmd`). **The two
+      tasks were REGISTERED 2026-09-26** on the owner's word (runbook §11.5); the first close pass
+      is Monday 2026-09-28 at 14:35 Central. **Open until the first paper night is journalled**,
       and the first run is read by hand - it is the first `cls` and `opg` order this account has
       ever carried, and Alpaca's paper handling of either has never been observed here.
       **MEASURED 2026-09-20 (`PR-035`, `COST_FRAGILE`):** adding a `SPY` day leg makes the book
