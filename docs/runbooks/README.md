@@ -2,6 +2,9 @@
 
 **Status:** drafting · **Tier:** 6 (engineering)
 
+**Every scheduled task was switched off on 2026-09-28 (`DR-058`).** The procedures below describe
+the system while it ran; `DR-058` §5 says how to resume it.
+
 <!-- verbatim-sources: Module_33_Skrinery_v5.0.pdf -->
 
 One procedure per row of the fail-closed degradation table (`FAIL_CLOSED_POLICY.md` §2). The course
@@ -798,6 +801,18 @@ pass's precedent. To read the series:
 ```
 
 Every point is a RE-OBSERVATION, not a result: it never changes a verdict.
+
+**`PR-040` joined the pass on 2026-09-28** - the main hypothesis, `PR-035`'s book against
+`SPY` held, on the trailing 48 calendar months (`run_pr040.rolling`). It is re-observed on the
+daily bars standing in for the auction crosses, which `PR-040`'s own section 9 measured within
+0.78 bp at the median. **It refuses when the store lacks `IJR`'s or `VB`'s dividends** -
+the night collects every one, and a store without them reads each ex-date as an overnight
+loss. The paper passes fetch the three funds with their dividends every session
+(`card002_paper.cmd`), so the first point exists from the Sunday after the first close pass.
+
+```bash
+.\.venv\Scripts\python.exe -X utf8 tools\remeasure.py PR-040 --report
+```
 
 
 ## 9. Standing it up from nothing — the clean-install sequence

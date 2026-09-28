@@ -2886,12 +2886,33 @@ def test_gate_26_fails_on_a_skipped_run_whose_last_result_was_clean(
         monkeypatch, capsys, last: str, expected: int) -> None:
     """The wiring, not just the arithmetic: a clean `0` from two weeks ago is no longer a PASS."""
     monkeypatch.setattr(verify_schedule.sys, "platform", "win32")
+    monkeypatch.setattr(verify_schedule, "STOPPED_BY", None)
     monkeypatch.setattr(verify_schedule, "_query", lambda task: {
         "Last Result": "0", "Scheduled Task State": "Enabled", "Next Run Time": "9/27/2026 11:00:00 AM",
         "Last Run Time": last, "Schedule Type": "Weekly", "Days": "SUN", "Task To Run": ""})
 
     assert verify_schedule.main() == expected
     assert ("never happened" in capsys.readouterr().out) is bool(expected)
+
+
+@pytest.mark.parametrize(("stopped", "state", "result", "following", "expected"), [
+    (None, "Disabled", "0", "N/A", 1),         # meant to run, and switched off
+    ("DR-058", "Disabled", "0", "N/A", 0),     # stopped by a ruling: the same record is the ruling
+    ("DR-058", "Disabled", "1", "N/A", 1),     # stopped, and the last run that did happen crashed
+    # stopped, but a pass left to flatten the book is still scheduled and its trigger passed unrun
+    ("DR-058", "Enabled", "0", "9/27/2026 11:00:00 AM", 1),
+])
+def test_gate_26_reads_a_stopped_schedule_as_stopped_not_as_broken(
+        monkeypatch, stopped: str | None, state: str, result: str, following: str,
+        expected: int) -> None:
+    monkeypatch.setattr(verify_schedule.sys, "platform", "win32")
+    monkeypatch.setattr(verify_schedule, "STOPPED_BY", stopped)
+    monkeypatch.setattr(verify_schedule, "_query", lambda task: {
+        "Last Result": result, "Scheduled Task State": state, "Next Run Time": following,
+        "Last Run Time": "9/13/2026 11:00:00 AM", "Schedule Type": "Weekly", "Days": "SUN",
+        "Task To Run": ""})
+
+    assert verify_schedule.main() == expected
 
 
 def test_a_daily_trigger_is_read_too() -> None:

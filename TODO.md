@@ -7,6 +7,12 @@
 This is the **only** place open and pending work is listed. If a task is not here, it is not tracked.
 Sessions add and close items here; nowhere else keeps a parallel list.
 
+## STOPPED 2026-09-28 - every item below is parked, not open
+
+**The owner stopped the research and the paper book (`DR-058`).** Nothing below is being worked,
+and none of it is due. It is kept, not closed, because an item closed without its lesson promoted
+is lost (`AGENTS.md` §10.7). If the project resumes, re-read an item before trusting it.
+
 ## The rule this file lives under
 
 **This file holds work items. It never holds measured counts.** `AGENTS.md` §10.5 gives every
@@ -2000,7 +2006,11 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       2. **The paper book against holding `SPY`** - `card002_paper.py report` prints what the same
          equity would have made in `SPY` over the same sessions, and the whole-book session count.
          **Not before the first paper pass has run** (2026-09-28): a broken import would stop it.
-      3. **The book re-measured weekly** over the trailing 48 months (`tools/remeasure.py`, no
+      3. **BUILT 2026-09-28**: `PR-040` is the weekly pass's third study (`run_pr040.rolling`,
+         runbook re-measurement section). It refuses until the live store holds `IJR`'s and
+         `VB`'s dividends, which the paper passes now fetch. **Open until its first point is
+         recorded.** As first written: the book re-measured weekly over the trailing 48 months
+         (`tools/remeasure.py`, no
          trial, every point recorded - `AGENTS.md` §19.7). Needs `IJR`'s and `VB`'s dividends in
          the live store, which carries them for nine instruments only.
       4. ~~**Tax-loss harvesting**~~ - **DEFERRED 2026-09-28** (`RETURN_SOURCE_REGISTER` §3.6):

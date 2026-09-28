@@ -134,8 +134,8 @@ def test_the_remeasure_wrapper_retries_only_the_study_that_did_not_finish(
     root = _tree(tmp_path, scratch_python, "remeasure.cmd", ("remeasure.py",))
 
     code, ran = _run(root, "remeasure.cmd", RC_remeasure_PR_016="1")
-    assert (code, ran) == (1, ["remeasure-PR-019b", "remeasure-PR-016"]), \
-        "PR-016 runs whatever PR-019b returned, and its failure is the exit code"
+    assert (code, ran) == (1, ["remeasure-PR-019b", "remeasure-PR-016", "remeasure-PR-040"]), \
+        "PR-016 runs whatever PR-019b returned, PR-040 whatever PR-016 did, and the failure is the code"
 
     assert _run(root, "remeasure.cmd") == (0, ["remeasure-PR-016"]), "PR-019b is not re-drawn"
     assert _run(root, "remeasure.cmd") == (0, []), "both done: nothing runs"
@@ -145,3 +145,12 @@ def test_the_remeasure_wrapper_retries_only_the_study_that_did_not_finish(
     code, ran = _run(root, "remeasure.cmd", RC_remeasure_PR_019b="1")
     assert (code, ran) == (1, ["remeasure-PR-019b", "remeasure-PR-016"]), \
         "the FIRST failure is the exit code, and a clean PR-016 does not overwrite it"
+
+
+def test_the_book_is_re_observed_last_and_its_failure_is_kept(
+        tmp_path: Path, scratch_python: Path) -> None:
+    """PR-040 runs after the other two, once a week, and a failure of its own is the exit code."""
+    root = _tree(tmp_path, scratch_python, "remeasure.cmd", ("remeasure.py",))
+    code, ran = _run(root, "remeasure.cmd", RC_remeasure_PR_040="1")
+    assert (code, ran) == (1, ["remeasure-PR-019b", "remeasure-PR-016", "remeasure-PR-040"])
+    assert _run(root, "remeasure.cmd") == (0, ["remeasure-PR-040"]), "only the unfinished one"

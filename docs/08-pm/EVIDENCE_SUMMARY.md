@@ -1807,3 +1807,24 @@ over the last four years in every cell tested. Over the decade it is ahead only 
 trips are capital gains, and those rows are optimistic. A daily-turnover strategy in a taxable
 account has to beat the index by several points a year before tax just to tie it after tax,
 because the index defers its tax and the strategy cannot.
+
+## 42. The verdict for the owner's money: nothing here beats holding the index, and the research is stopped
+
+**Ruled by the owner 2026-09-28 (`DR-058`).** Every figure below is from a file already cited in
+§37, §39 and §41; this section adds no measurement and spends no trial.
+
+| the main hypothesis against holding `SPY`, a year | value |
+|---|---|
+| 2016-2026, before tax, at the auction prices | +4.39% [+0.95, +8.30] |
+| last 48 months, before tax | +0.73% [−4.90, +6.18] |
+| last 12, 24 and 36 months, before tax | −1.64%, −0.72%, −0.05% |
+| last 48 months, after tax at the owner's 20-30%, either treatment | −1.09% to −4.69% |
+
+**What this project found, in one sentence: its one surviving edge belongs to the decade's early
+years, is indistinguishable from zero in the market it would trade today, and is smaller than the
+tax a daily strategy pays and an index defers.** The directions still open could not detect less
+than six to thirteen points a year, so continuing them would have been a search for luck.
+
+**No real money was placed at any point.** `DR-055`'s rule held, and the paper book is flattened and
+its schedule off (`DR-058` §3). The one execution fact the paper account produced, a closing-auction
+buy that filled 71 of 165 shares, is in `DR-058` §4.

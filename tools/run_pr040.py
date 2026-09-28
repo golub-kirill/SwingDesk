@@ -235,7 +235,10 @@ def branch_for(primary: Mapping[str, float], recent_excess: float, checks: Mappi
     return "INCONCLUSIVE" if primary["width"] > FLOOR else "NULL"
 
 
-def load(args: argparse.Namespace, use_crosses: bool) -> dict[str, list[Priced]]:
+def load(args: argparse.Namespace, use_crosses: bool,
+         window: tuple[date, date] | None = None) -> dict[str, list[Priced]]:
+    """Each fund's priced sessions over the registered window, or over `window` when given."""
+    first, last = window or (FIRST, LAST)
     bars = BarStore(args.data / "bars.duckdb")
     as_of = p31.read_instant(args.as_of, bars.latest_knowledge_time() or datetime.now().astimezone())
     auctions = AuctionStore(args.auctions) if use_crosses else None
@@ -248,14 +251,14 @@ def load(args: argparse.Namespace, use_crosses: bool) -> dict[str, list[Priced]]
             crosses: dict[date, tuple[Any, Any]] = {}
             if auctions is not None:
                 for bar in series:
-                    if FIRST <= bar.session_date <= LAST:
+                    if first <= bar.session_date <= last:
                         day = bar.session_date
                         opening = p25.cross_price(
                             auctions.window(fund, day, OPENING, auctions_as_of), OPENING)
                         closing = p25.cross_price(
                             auctions.window(fund, day, CLOSING, auctions_as_of), CLOSING)
                         crosses[day] = (opening, closing)
-            out[fund] = priced_sessions(series, dividends, crosses, FIRST, LAST,
+            out[fund] = priced_sessions(series, dividends, crosses, first, last,
                                         bars_as_crosses=not use_crosses)
     finally:
         bars.close()
@@ -411,3 +414,66 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 if __name__ == "__main__":  # pragma: no cover - the entry point
     raise SystemExit(main())
+
+
+#: The price the re-observation reads, said on every point: the crosses are what `PR-040` registered,
+#: and fetching them weekly would add a store and a pass for a gap its own section 9 measured at
+#: 0.78 bp at worst.
+ROLLING_PRICE = ("daily bars standing in for the auction crosses - PR-040 section 9 found them "
+                 "within 0.78 bp at the median - with the venue's fees, PR-040's primary costing")
+
+
+def months_before(day: date, months: int) -> date:
+    """`months` calendar months before `day`, the day clamped to the month's length."""
+    import calendar
+
+    total = day.year * 12 + (day.month - 1) - months
+    year, month = divmod(total, 12)
+    return date(year, month + 1, min(day.day, calendar.monthrange(year, month + 1)[1]))
+
+
+def dividends_cover(dividends: Mapping[date, float], first: date, last: date, months: int) -> bool:
+    """Whether a quarterly payer's dividends are stored over the window - one ex-date in four months.
+
+    The night collects every dividend (it detaches at the open), so a store that lacks them does not
+    fail loudly: it just reads every ex-date as an overnight loss. This makes that a refusal.
+    """
+    return sum(1 for day in dividends if first <= day <= last) >= months // 4
+
+
+def rolling(data: Path, as_of: str | None, months: int) -> dict[str, Any]:
+    """`PR-040`'s book against `SPY` held over the trailing `months`, for `tools/remeasure.py`.
+
+    The registered construction and statistic - the book and `SPY` held, monthly, the paired
+    moving-block bootstrap's geometric excess - with only the window moved (`AGENTS.md` §19.7).
+    """
+    store = BarStore(data / "bars.duckdb")
+    try:
+        instant = p31.read_instant(as_of, store.latest_knowledge_time() or datetime.now().astimezone())
+        spy = store.as_of(DAY_FUND, Interval.DAY, Series.RAW, instant)
+        if spy is None or not spy.bars:
+            raise SystemExit(f"UNAVAILABLE: no {DAY_FUND} bars stored as of {instant}")
+        last = spy.bars[-1].session_date
+        # Whole calendar months, as the registration's recent window counts them: the last month
+        # (partial) and the months - 1 before it, from the first of the earliest.
+        first = months_before(last.replace(day=1), months - 1)
+        thin = [fund for fund in FUNDS
+                if not dividends_cover(p33.dividends_of(store, fund, instant), first, last, months)]
+    finally:
+        store.close()
+    if thin:
+        raise SystemExit(f"UNAVAILABLE: the store holds too few dividends for {', '.join(thin)} "
+                         f"between {first} and {last}; a night read without them is biased low")
+    args = argparse.Namespace(data=data, as_of=instant.isoformat(), auctions=None,
+                              auctions_as_of=None)
+    priced = load(args, use_crosses=False, window=(first, last))
+    book, hold, _ = book_of(priced, "auction")
+    cell = p37.paired_bootstrap(monthly(book), monthly(hold), RESAMPLES, SEED)
+    branch = ("above zero" if cell["lo"] > 0 else "below zero" if cell["hi"] < 0
+              else "contains zero")
+    return {"as_of": instant.isoformat(), "window": {"first": first.isoformat(),
+                                                     "last": last.isoformat()},
+            "months": len(monthly(book)), "trades": len(book),
+            "book_minus_spy": {"observed": cell["estimate"], "low": cell["lo"],
+                               "high": cell["hi"]},
+            "branch": branch, "price": ROLLING_PRICE}

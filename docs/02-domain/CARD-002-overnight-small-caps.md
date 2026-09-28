@@ -3,6 +3,9 @@
 **Status:** drafting · **Tier:** 2 (domain) · **Card version:** 1 · **Family selected by the
 owner:** 2026-09-20
 
+**Stopped 2026-09-28 (`DR-058`).** The paper passes are off and the paper proof is abandoned: over
+the last 48 months the book does not beat holding `SPY` after the owner's tax.
+
 **The CARD's validation status is `Untested`** — as every card starts, and as it must stay until
 journalled trades exist (`criteria.yml` v1.1.0: Track B evaluates on journalled trades only). A
 backtest is evidence about a hypothesis, never about a card.

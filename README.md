@@ -3,6 +3,11 @@
 **Decision-support software for swing trading Canadian and US equities — and a working record of
 trying to find out whether its own strategy has an edge.**
 
+**Stopped 2026-09-28 (`DR-058`), and the answer is no.** The one edge it found beat holding
+`SPY` over 2016-2026 and is indistinguishable from zero over the last four years before tax, and
+behind the index after it. No real money was ever placed. `docs/08-pm/EVIDENCE_SUMMARY.md` §42
+has the verdict.
+
 It computes the charts, indicators, market structure, setups, risk figures, journal and statistics
 defined by a 116-file swing-trading course, records every decision with an audit trail, and submits
 to a paper venue used as a research instrument. Every number it acts on is authored, dated, and
