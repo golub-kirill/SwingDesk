@@ -1671,3 +1671,84 @@ rather than excess.
 **No interval separates the three over those three years.** Three legs over `SPY` is +1.10%
 [−7.04%, +8.83%]. Over the decade the book beats the index (+5.35% [+1.27%, +9.88%]), and the third
 leg adds +0.83% [−1.21%, +2.96%]. **The paper account keeps the two-leg book.**
+
+## 39. The decade's margin is real; the current market's is not distinguishable from zero
+
+**Measured 2026-09-27, the day §37 was written, and it qualifies §37's reading**
+(`tools/attribute_pr040.py`, `docs/prereg/results/PR-040-attribution.json`). This is
+EXPLORATORY: it spends no trial and changes no verdict, and it reads `PR-040`'s own registered book
+at the crosses and the fees. `PR-040` gated the last 48 months on the SIGN of one point estimate,
+as `DR-055` §1.3 wrote the condition. The registered bootstrap puts that estimate's interval at
+**+0.73% [−4.90%, +6.18%]**, which is eleven points wide and centred almost on zero.
+
+| trailing window, at the crosses and the fees | the book over `SPY` |
+|---|---|
+| 12 months | −1.64% |
+| 24 months | −0.72% |
+| 36 months | −0.05% |
+| 48 months | +0.73% |
+
+| calendar year | 2016 | 2017 | 2018 | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026, part |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| the book over `SPY` | +10.1% | +4.0% | −0.6% | +0.9% | +8.8% | **+20.1%** | +4.3% | +6.3% | +0.7% | **−6.1%** | +0.9% |
+
+**What it establishes:**
+
+1. **§37's decade interval holds.** It clears zero, and the margin is not one year's: eight of the
+   ten whole years are positive.
+2. **The margin is LUMPY.** Four years — 2016, 2020, 2021 and 2023 — carry 92% of the decade's
+   compounded margin in log terms, and 2021 alone carries 40%.
+3. **The last two years are flat to negative, even at the auction prices.** Over the last
+   three years the book and the index cannot be told apart.
+4. **The comparison is fragile at that length.** Moving a three-year window's start by four
+   sessions (2023-09-26 against 2023-10-01) turns the book's cumulative margin from +0.85% to
+   −0.14%. This was measured the same day with `PR-041`'s code and `PR-040`'s on the same dates:
+   the two agree to the hundredth, so the swing is the sample and not either code.
+
+**So proof (1) is met as `DR-055` wrote it, and what it proves is the decade.** Whether the
+margin survives in the market of the last two years is not something 48 months of this book can
+answer. A sign condition on a window this noisy passes or fails largely by chance.
+**It is not small caps against large caps, and that was checked rather than assumed.** The day
+legs cancel (§33), so the book over `SPY` is small caps' NIGHT over `SPY`'s night, less `SPY`'s
+dividends and the fees. Held whole, small caps trailed `SPY` in 2021 and in 2023 — `IJR` +26.6%
+and +16.1% against +28.7% and +26.2% — and those are two of the book's four best years.
+
+## 40. Every night study replays to the digit; one measurement defect sat under four of them and moved no verdict
+
+**Audited 2026-09-27, on the owner's instruction to hunt this project's own errors and re-run what
+they touch.** Each night study was replayed from a snapshot of the tree at its registered instants,
+on the stores they were run on: `PR-031`..`PR-036`, `PR-040` and `PR-041`.
+
+**On the code as it stood, all eight reproduced their committed result files with zero differences
+in any number.** Two independent checks were then run on `PR-040`'s primary, the one `DR-055`'s
+proof rests on:
+
+* **An independent recomputation, from SQL and pandas with no project code**, choosing the cross
+  by listing exchange rather than by size, gave the same geometric excess, **+4.3925%** a year, and
+  the same last-48-month figure, **+0.7289%**.
+* **The data was checked against a second vendor.** Alpaca's fully adjusted daily bars agree with the
+  store's closes (median gap zero) and dividends (`IJR` 43 against 43), and with holding returns
+  within 0.01 points a year. Alpaca's `SPY` history lacks two quarterly dividends the store has, and
+  the store's closes match the official crosses where the two vendors differ in March 2020.
+
+**The defect.** Every runner that splits a day into a night and a session paired each STORED session
+with the one stored before it, so a session missing from the store folded its move into the next
+night. It sat in six places (`AGENTS.md` §12), and the data under `PR-031` and `PR-033`..`PR-035` had such a gap:
+
+| study | the gap | the primary, as published -> corrected | verdict |
+|---|---|---|---|
+| `PR-031` | `QQQ`: three thin sessions | `SPY-long` unchanged to the digit | `ACCEPT`, unchanged |
+| `PR-033` | `QQQ`: the same three | `basket-N` +0.0325% -> +0.0324% a day | `COST_FRAGILE`, unchanged |
+| `PR-034` | `VB`, `MDY`: 2019-08-12 | `small-N` +0.0549% -> +0.0551% a day | `ACCEPT`, unchanged |
+| `PR-035` | `VB`, `SPY`: 2019-08-12 | the book over `SPY` +3.25% -> +3.21% a year; its interval's lower end +0.00019% -> **+0.00003%** a day | `COST_FRAGILE`, unchanged |
+
+2019-08-12 is the session `PR-040` found without crosses on all three funds, so the tape and the
+minute feed lack it together. It is also the one-session difference between `PR-040`'s book and
+`PR-035`'s that `PR-040`'s report left unexplained.
+
+Each registration carries a dated amendment with both sets of figures. The result files are
+regenerated from the corrected code, and the published ones are kept beside them.
+
+**What moved nothing is the finding.** The evidence under the main hypothesis was reproduced, and
+recomputed by code that shares nothing with it. The defect found was real, and it was worth a few
+thousandths of a percent a day.

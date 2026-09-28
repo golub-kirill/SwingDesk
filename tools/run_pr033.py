@@ -48,6 +48,7 @@ from itertools import pairwise
 import run_pr031 as p31
 from run_pr016 import BLOCK, cluster_of
 from swingdesk.contracts.market import CorporateActionKind
+from swingdesk.contracts.reference import Exchange
 from swingdesk.market_data import BarStore
 from swingdesk.market_data.minutes import MinuteStore
 from swingdesk.reference_data import calendar as cal
@@ -113,20 +114,27 @@ def load_sessions(store: MinuteStore, fund: str, as_of: datetime,
     return out, dict(missing)
 
 
-def returns_of(sessions: Sequence[Session], per_share: float
+def returns_of(sessions: Sequence[Session], per_share: float, *, exchange: Exchange
                ) -> tuple[dict[date, float], dict[date, float], dict[date, float]]:
     """`N`, `D` and holding the fund, per session, net of two sides a day for the two arms.
 
     Holding pays no per-day cost: it trades twice in the whole window, which rounds to nothing a
     session, and the report says so rather than pretending the number is exact.
+
+    **A night and a holding day need the session before them.** Where the store lacks it, the
+    previous STORED close is two sessions back, and a night read from it carries a whole session's
+    move - so neither is written for that session (`calendar.consecutive`). Its own session arm
+    needs only its own open and close, and stays.
     """
     night: dict[date, float] = {}
     inside: dict[date, float] = {}
     held: dict[date, float] = {}
     for before, now in pairwise(sessions):
+        inside[now.session] = (now.close - now.open) / now.open - 2 * per_share / now.open
+        if not cal.consecutive(exchange, before.session, now.session):
+            continue
         night[now.session] = ((now.open + now.dividend - before.close) / before.close
                               - 2 * per_share / before.close)
-        inside[now.session] = (now.close - now.open) / now.open - 2 * per_share / now.open
         held[now.session] = (now.close + now.dividend - before.close) / before.close
     return night, inside, held
 
@@ -205,10 +213,10 @@ def build(args: argparse.Namespace, resamples: int) -> dict[str, Any]:
     for fund in FUNDS:
         dividends = dividends_of(bars, fund, bars_as_of)
         sessions, missing = load_sessions(minutes, fund, minutes_as_of, dividends)
-        night, inside, held = returns_of(sessions, args.per_share)
+        night, inside, held = returns_of(sessions, args.per_share, exchange=cal.exchange_for(fund))
         by_arm[NIGHT][fund], by_arm[SESSION][fund], by_arm["hold"][fund] = night, inside, held
         if args.per_share == 0:
-            free_night, free_inside, free_held = returns_of(sessions, 0.0)
+            free_night, free_inside, free_held = returns_of(sessions, 0.0, exchange=cal.exchange_for(fund))
             identity[fund] = adds_up(free_night, free_inside, free_held, dividends)
         excluded[fund] = missing
         counted[fund] = len(cal.sessions(cal.exchange_for(fund), START, END)) - 1

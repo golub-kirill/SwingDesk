@@ -168,4 +168,9 @@ if not met:    report the measurement and REFUSE to read it as evidence
 
 ## 10. Amendments
 
-None.
+### A-1 — 2026-09-27, AFTER the run: the calendar guard reached this runner, and nothing moved
+
+An audit the owner asked for found runners pairing each STORED session with the one stored before it
+(`AGENTS.md` §12). Here `arms` now leaves no night or holding day across a session the store lacks
+(`calendar.consecutive`). **Re-run at the registered instants, the result file reproduced to the
+digit** - this study's data miss no session - so `results/PR-041.json` is unchanged.

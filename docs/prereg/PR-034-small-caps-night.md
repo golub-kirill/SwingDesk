@@ -215,4 +215,25 @@ wrapper's, and that it clears the two gates `PR-033` failed.
 
 ## 10. Amendments
 
-None.
+### A-1 — 2026-09-27, AFTER the run: a night across a session the store lacked
+
+**What was wrong.** The runner paired each STORED session with the one stored before it. Where the
+store lacked a session, the next night ran from two closes back and carried that session's whole
+move, and so did the holding day. Here: `VB` and `MDY` each lacked 2019-08-12 - no closing minute -
+so their night into 2019-08-13 ran from 2019-08-09's close. Found in an audit of the night studies
+the owner asked for; the same shape sat in five other places (`AGENTS.md` §12).
+
+**Fixed with a test** (`calendar.consecutive`): a session whose previous session the store lacks
+keeps its session arm and has no night or holding day. **Re-run at the registered instants, the
+branch is unchanged - `ACCEPT`:**
+
+* the primary `small-N` +0.05490% [+0.02067%, +0.08953%] a day -> +0.05512% [+0.02093%, +0.08982%];
+* the gate `small-N-cost_adverse` +0.04627% [+0.01197%, +0.08093%] a day -> +0.04650% [+0.01219%,
+  +0.08121%];
+* the gate `small-N-recent` unchanged to the digit;
+* the reading `VB-N` +0.06843% [+0.03626%, +0.10150%] a day -> +0.06905% [+0.03679%, +0.10231%];
+* the reading `MDY-N` +0.03107% [-0.00166%, +0.06260%] a day -> +0.03171% [-0.00103%, +0.06326%].
+
+`results/PR-034.json` is regenerated from the corrected code. The file as published is kept as
+`results/PR-034-as-published.json` - its `prereg` key renamed `preserved_from`, so the trial count
+reads the study once - and the report, which is never edited, carries the published figures.

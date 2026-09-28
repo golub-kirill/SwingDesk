@@ -51,8 +51,10 @@ import run_pr036 as p36
 import run_pr037 as p37
 import run_pr040 as p40
 from run_pr016 import cluster_of
+from swingdesk.contracts.reference import Exchange
 from swingdesk.market_data import BarStore
 from swingdesk.market_data.auctions import CLOSING, OPENING, AuctionStore
+from swingdesk.reference_data import calendar as cal
 
 RESULT = p31.RESULTS / "PR-041.json"
 POWER = p31.RESULTS / "PR-041-power.json"
@@ -89,21 +91,27 @@ def side_cost(price: float, selling: bool, extra: float | None) -> float:
     return cost
 
 
-def arms(sessions: Sequence[p33.Session], extra: float | None
+def arms(sessions: Sequence[p33.Session], extra: float | None, *, exchange: Exchange
          ) -> tuple[dict[date, float], dict[date, float], dict[date, float]]:
-    """`PR-033`'s night, session and holding, charged per side by `side_cost`."""
+    """`PR-033`'s night, session and holding, charged per side by `side_cost`.
+
+    A session whose previous session the store lacks keeps its session arm and has no night
+    or holding day (`calendar.consecutive`, as `run_pr033.returns_of`).
+    """
     night: dict[date, float] = {}
     inside: dict[date, float] = {}
     held: dict[date, float] = {}
     for before, now in itertools.pairwise(sessions):
         if before.close <= 0 or now.open <= 0:
             continue
-        night[now.session] = ((now.open + now.dividend - before.close) / before.close
-                              - side_cost(before.close, False, extra)
-                              - side_cost(now.open, True, extra))
         inside[now.session] = ((now.close - now.open) / now.open
                                - side_cost(now.open, False, extra)
                                - side_cost(now.close, True, extra))
+        if not cal.consecutive(exchange, before.session, now.session):
+            continue
+        night[now.session] = ((now.open + now.dividend - before.close) / before.close
+                              - side_cost(before.close, False, extra)
+                              - side_cost(now.open, True, extra))
         held[now.session] = (now.close + now.dividend - before.close) / before.close
     return night, inside, held
 
@@ -147,7 +155,7 @@ def load(args: argparse.Namespace) -> tuple[dict[str, list[p33.Session]], dateti
 
 def basket(sessions: Mapping[str, Sequence[p33.Session]], funds: Sequence[str],
            extra: float | None) -> dict[str, dict[date, float]]:
-    per = {fund: arms(sessions[fund], extra) for fund in funds}
+    per = {fund: arms(sessions[fund], extra, exchange=cal.exchange_for(fund)) for fund in funds}
     return {name: p36.within(p33.basket_of({f: per[f][i] for f in funds}), FIRST, LAST)
             for i, name in enumerate(("night", "session", "hold"))}
 
@@ -208,7 +216,7 @@ def book(sessions: Mapping[str, Sequence[p33.Session]], extra: float | None,
     """
     night = basket(sessions, NIGHT_FUNDS, extra)["night"]
     asia = basket(sessions, FUNDS, extra)["session"]
-    _, spy_day, spy_hold = arms(sessions[DAY_FUND], extra)
+    _, spy_day, spy_hold = arms(sessions[DAY_FUND], extra, exchange=cal.exchange_for(DAY_FUND))
     day = {d: (1 - asia_share) * spy_day[d] + asia_share * asia.get(d, spy_day[d])
            for d in spy_day}
     return (p36.within(p35.compounded(night, day), FIRST, LAST),
@@ -251,7 +259,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     recent = statistics.fmean(recent_series.values()) if recent_series else math.nan
     identity = {}
     for fund in FUNDS:
-        night, inside, held = arms(sessions[fund], None)
+        night, inside, held = arms(sessions[fund], None, exchange=cal.exchange_for(fund))
         identity[fund] = p33.adds_up(night, inside, held,
                                      {s.session: s.dividend for s in sessions[fund]})
     branch = branch_for(primary, cells["session-half_cent"], recent,

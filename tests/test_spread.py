@@ -238,3 +238,14 @@ def test_summarise_reports_order_statistics_the_population_contains() -> None:
     assert summary.abdi_ranaldo[50] == Decimal("0.0025")
     assert all(value in {e.corwin_schultz for e in estimates}
                for value in summary.corwin_schultz.values())
+
+
+def test_a_pair_across_a_missing_session_is_skipped_not_estimated() -> None:
+    """Drop one session from the middle of a clean series: the pair that now spans it is not a
+    two-day window, and estimating it would read three days' range as two."""
+    bars = list(_synthetic(40, Decimal("0.02"), seed=7))
+    whole = study.estimate_instrument(tuple(bars))
+    weekday = next(i for i in range(10, 30) if bars[i].session_date.weekday() in (1, 2, 3))
+    holed = study.estimate_instrument(tuple(bars[:weekday] + bars[weekday + 1:]))
+    assert whole is not None and holed is not None
+    assert holed.pairs_skipped == whole.pairs_skipped + 1

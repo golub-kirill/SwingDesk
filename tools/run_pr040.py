@@ -51,8 +51,10 @@ import run_pr033 as p33
 import run_pr035 as p35
 import run_pr037 as p37
 from swingdesk.contracts.market import Interval, Series
+from swingdesk.contracts.reference import Exchange
 from swingdesk.market_data import BarStore
 from swingdesk.market_data.auctions import CLOSING, OPENING, AuctionStore
+from swingdesk.reference_data import calendar as cal
 
 RESULT = p31.RESULTS / "PR-040.json"
 POWER = p31.RESULTS / "PR-040-power.json"
@@ -169,12 +171,14 @@ def sell_cost(tape_price: float, crossed: bool, costing: str) -> float:
     return SEC_RATE + TAF_PER_SHARE / tape_price + buy_cost(tape_price, crossed, costing)
 
 
-def arms(sessions: Sequence[Priced], costing: str
+def arms(sessions: Sequence[Priced], costing: str, *, exchange: Exchange
          ) -> tuple[dict[date, float], dict[date, float], dict[date, float]]:
     """The night, the session and holding, per session - `PR-033`'s arms with auction pricing.
 
     On `bars_pr035` the prices are the bars' own, as `PR-035` priced them, so the reproduction
-    check reads the same construction on a known price source.
+    check reads the same construction on a known price source. A session whose previous
+    session the store lacks keeps its session arm and has no night or holding day
+    (`calendar.consecutive`, as `run_pr033.returns_of`).
     """
     night: dict[date, float] = {}
     inside: dict[date, float] = {}
@@ -192,12 +196,14 @@ def arms(sessions: Sequence[Priced], costing: str
             fee_c0, fee_o1, fee_c1 = before.tape_close, now.tape_open, now.tape_close
             crossed_c0, crossed_o1 = before.crossed_close, now.crossed_open
             crossed_c1 = now.crossed_close
-        night[now.session] = ((open1 + now.dividend - close0) / close0
-                              - buy_cost(fee_c0, crossed_c0, costing)
-                              - sell_cost(fee_o1, crossed_o1, costing))
         inside[now.session] = ((close1 - open1) / open1
                                - buy_cost(fee_o1, crossed_o1, costing)
                                - sell_cost(fee_c1, crossed_c1, costing))
+        if not cal.consecutive(exchange, before.session, now.session):
+            continue
+        night[now.session] = ((open1 + now.dividend - close0) / close0
+                              - buy_cost(fee_c0, crossed_c0, costing)
+                              - sell_cost(fee_o1, crossed_o1, costing))
         held[now.session] = (close1 + now.dividend - close0) / close0
     return night, inside, held
 
@@ -260,8 +266,10 @@ def load(args: argparse.Namespace, use_crosses: bool) -> dict[str, list[Priced]]
 
 def book_of(priced: Mapping[str, Sequence[Priced]], costing: str
             ) -> tuple[dict[date, float], dict[date, float], dict[str, dict[date, float]]]:
-    nights = {fund: arms(priced[fund], costing)[0] for fund in NIGHT_FUNDS}
-    _, spy_day, spy_hold = arms(priced[DAY_FUND], costing)
+    nights = {fund: arms(priced[fund], costing, exchange=cal.exchange_for(fund))[0]
+              for fund in NIGHT_FUNDS}
+    _, spy_day, spy_hold = arms(priced[DAY_FUND], costing,
+                                exchange=cal.exchange_for(DAY_FUND))
     book = p35.compounded(p33.basket_of(nights), spy_day)
     return book, spy_hold, {"night": p33.basket_of(nights), "day": spy_day}
 
@@ -281,7 +289,7 @@ def checks_of(priced: Mapping[str, Sequence[Priced]]) -> dict[str, Any]:
     mean_daily = statistics.fmean(difference) if difference else math.nan
     gross_identity = {}
     for fund in FUNDS:
-        night, inside, held = arms(priced[fund], "gross")
+        night, inside, held = arms(priced[fund], "gross", exchange=cal.exchange_for(fund))
         dividends = {s.session: s.dividend for s in priced[fund] if s.dividend}
         gross_identity[fund] = p33.adds_up(night, inside, held, dividends)
     return {

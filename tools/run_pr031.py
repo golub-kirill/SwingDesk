@@ -49,7 +49,7 @@ sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(REPO / "tools"))
 
 from run_pr016 import BLOCK, block_bootstrap, cluster_of
-from swingdesk.contracts.reference import ExchangeSession
+from swingdesk.contracts.reference import Exchange, ExchangeSession
 from swingdesk.market_data.minutes import Minute, MinuteStore
 from swingdesk.reference_data import calendar as cal
 from swingdesk.validation.backtest.intraday import regular_hours, session_for
@@ -209,8 +209,14 @@ def day_result(day: Day, prior_close: float, sigma: Sequence[float], lev: float,
     return got
 
 
-def run_instrument(days: Sequence[Day], both: bool) -> tuple[list[Traded], dict[str, int]]:
-    """Walk the sessions in order; a session is traded once 15 read sessions stand before it."""
+def run_instrument(days: Sequence[Day], both: bool, *, exchange: Exchange
+                   ) -> tuple[list[Traded], dict[str, int]]:
+    """Walk the sessions in order; a session is traded once 15 read sessions stand before it.
+
+    The band is set from the PREVIOUS SESSION's close. A session whose previous session was not
+    read - thin, or never fetched - has no such close, and is skipped rather than traded off
+    the close before it (`calendar.consecutive`).
+    """
     history: list[Day] = []
     traded: list[Traded] = []
     skipped: dict[str, int] = defaultdict(int)
@@ -219,6 +225,8 @@ def run_instrument(days: Sequence[Day], both: bool) -> tuple[list[Traded], dict[
         lev = leverage(history)
         if sigma is None or lev is None:
             skipped["warm_up"] += 1
+        elif not cal.consecutive(exchange, history[-1].session, day.session):
+            skipped["prior_session_missing"] += 1
         elif any(math.isnan(s) for s in sigma[:len(day.closes) - 1]):
             skipped["no_noise_at_some_minute"] += 1
         else:
@@ -296,10 +304,12 @@ def branch_for(cell: Mapping[str, Any], floor: float = POWER_FLOOR) -> str:
     return "INCONCLUSIVE" if mean["width"] > floor else "NULL"
 
 
-def holding(days: Sequence[Day], traded: Sequence[Traded]) -> dict[str, float]:
+def holding(days: Sequence[Day], traded: Sequence[Traded], *,
+            exchange: Exchange) -> dict[str, float]:
     """Holding the instrument close to close on the same sessions, price only - it leaves out the
     dividends, about 1.3% a year on `SPY` - beside the rule. Descriptive."""
-    close_before = {b.session: a.close for a, b in pairwise(days)}
+    close_before = {b.session: a.close for a, b in pairwise(days)
+                    if cal.consecutive(exchange, a.session, b.session)}
     by_day = {d.session: d.close for d in days}
     pairs = [(t.returns["net"], by_day[t.session] / close_before[t.session] - 1)
              for t in traded if t.session in close_before]
@@ -347,10 +357,10 @@ def build(args: argparse.Namespace, resamples: int) -> dict[str, Any]:
     cells: dict[str, Any] = {}
     for name, (instrument, both) in READINGS.items():
         days, missing, sessions = loaded[instrument]
-        traded, skipped = run_instrument(days, both)
+        traded, skipped = run_instrument(days, both, exchange=cal.exchange_for(instrument))
         cell = reading(traded, sessions - skipped.get("warm_up", 0), resamples)
         cell["excluded"] = {**missing, **skipped}
-        cell["holding"] = holding(days, traded)
+        cell["holding"] = holding(days, traded, exchange=cal.exchange_for(instrument))
         cells[name] = cell
     return {"as_of": {"minutes": as_of.isoformat()}, "cells": cells}
 

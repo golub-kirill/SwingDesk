@@ -23,7 +23,10 @@ from pathlib import Path
 
 import pytest
 
+from swingdesk.contracts.reference import Exchange
+
 REPO = Path(__file__).resolve().parents[1]
+NYSE = Exchange.NYSE
 
 
 @pytest.fixture(scope="module")
@@ -72,32 +75,32 @@ def _series(first: date, closes, opens, *, fund: str = "IJR"):
 
 def test_a_night_is_the_next_open_over_this_close(plan) -> None:
     bars = _series(date(2026, 1, 5), closes=[100.0, 101.0], opens=[99.0, 102.0])
-    nights = plan.nights_of(bars, {})
+    nights = plan.nights_of(bars, {}, exchange=NYSE)
     assert len(nights) == 1
     assert nights[0].ret == pytest.approx(102.0 / 100.0 - 1.0)
 
 
 def test_the_night_is_dated_by_the_session_it_ENDS_in(plan) -> None:
     bars = _series(date(2026, 1, 5), closes=[100.0, 101.0], opens=[99.0, 102.0])
-    assert plan.nights_of(bars, {})[0].session == date(2026, 1, 6)
+    assert plan.nights_of(bars, {}, exchange=NYSE)[0].session == date(2026, 1, 6)
 
 
 def test_the_dividend_is_paid_to_the_night_that_ends_at_its_ex_date(plan) -> None:
     bars = _series(date(2026, 1, 5), closes=[100.0, 101.0], opens=[99.0, 102.0])
-    with_dividend = plan.nights_of(bars, {date(2026, 1, 6): 1.0})[0].ret
+    with_dividend = plan.nights_of(bars, {date(2026, 1, 6): 1.0}, exchange=NYSE)[0].ret
     assert with_dividend == pytest.approx(103.0 / 100.0 - 1.0)
 
 
 def test_a_dividend_on_the_WRONG_session_does_not_reach_the_night(plan) -> None:
     bars = _series(date(2026, 1, 5), closes=[100.0, 101.0], opens=[99.0, 102.0])
-    assert plan.nights_of(bars, {date(2026, 1, 5): 1.0})[0].ret == pytest.approx(0.02)
+    assert plan.nights_of(bars, {date(2026, 1, 5): 1.0}, exchange=NYSE)[0].ret == pytest.approx(0.02)
 
 
 def test_the_session_is_read_from_session_date_and_not_from_the_timestamp(plan) -> None:
     bars = _series(date(2026, 1, 5), closes=[100.0, 101.0], opens=[99.0, 102.0])
     # The fixture's timestamp must disagree with its session, or this test proves nothing.
     assert bars[0].event_time.date() != bars[0].session_date
-    assert plan.nights_of(bars, {})[0].session == bars[1].session_date
+    assert plan.nights_of(bars, {}, exchange=NYSE)[0].session == bars[1].session_date
     # And the same for the freshness check, which is where reading the timestamp would admit a
     # fund a session behind: the bar's own timestamp is a day AHEAD of its session.
     three = _series(date(2026, 1, 5), closes=[100.0, 101.0, 102.0], opens=[99.0, 102.0, 103.0])
@@ -278,3 +281,13 @@ def test_the_venue_cutoffs_are_the_ones_DR_048_names(plan) -> None:
 
 def test_the_card_trades_exactly_the_two_funds_PR_034_accepted(plan) -> None:
     assert plan.FUNDS == ("IJR", "VB")
+
+
+def test_a_session_missing_from_the_store_is_not_a_night(plan) -> None:
+    """Tuesday 2026-01-06 is missing: Wednesday's open over Monday's close is not a night, and the
+    docstring said so for six days while the code measured it anyway."""
+    bars = [_bar(date(2026, 1, 5), 99.0, 100.0), _bar(date(2026, 1, 7), 110.0, 111.0),
+            _bar(date(2026, 1, 8), 111.0, 112.0)]
+    nights = plan.nights_of(bars, {}, exchange=NYSE)
+    assert [n.session for n in nights] == [date(2026, 1, 8)]
+    assert nights[0].ret == pytest.approx(111.0 / 111.0 - 1.0)

@@ -185,7 +185,7 @@ def test_spy_through_this_loader_must_match_pr031(run, tmp_path) -> None:
     with __import__("swingdesk.market_data.minutes", fromlist=["MinuteStore"]).MinuteStore(
             path) as store:
         loaded, _, _ = run.load_days(store, "SPY", known)
-        rows, _ = run.p31.run_instrument(loaded, both=False)
+        rows, _ = run.p31.run_instrument(loaded, both=False, exchange=run.p31.Exchange.NYSE)
         truth = statistics.fmean([r.returns["net"] for r in rows
                                   if r.session > run.p31.PUBLISHED])
         prior.write_text(json.dumps({"cells": {"SPY-long": {"after_publication": {

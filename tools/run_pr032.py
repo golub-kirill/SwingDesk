@@ -125,7 +125,7 @@ def repeats_pr031(store: MinuteStore, as_of: datetime,
     if not prior.exists():
         return {"checked": False}
     days, _, _ = load_days(store, "SPY", as_of)
-    rows, _ = p31.run_instrument(days, both=False)
+    rows, _ = p31.run_instrument(days, both=False, exchange=cal.exchange_for("SPY"))
     since = [row.returns["net"] for row in rows if row.session > p31.PUBLISHED]
     theirs = json.loads(prior.read_text(encoding="utf-8"))["cells"]["SPY-long"][
         "after_publication"]["estimate"]
@@ -143,14 +143,15 @@ def build(args: argparse.Namespace, resamples: int) -> dict[str, Any]:
     held: dict[str, dict[str, float]] = {}
     for fund in FUNDS:
         days, missing, count = load_days(store, fund, as_of)
-        rows, skipped = p31.run_instrument(days, both=False)
+        rows, skipped = p31.run_instrument(days, both=False, exchange=cal.exchange_for(fund))
         since = [row for row in rows if row.session >= SINCE]
         traded[fund] = rows
         excluded[fund] = {**missing, **skipped}
         # The denominator is the CALENDAR's sessions, so an unfetched one counts against the share.
         sessions[fund] = len(cal.sessions(cal.exchange_for(fund), SINCE, END))
         whole[fund] = count
-        held[fund] = p31.holding([d for d in days if d.session >= SINCE], since)
+        held[fund] = p31.holding([d for d in days if d.session >= SINCE], since,
+                                 exchange=cal.exchange_for(fund))
     repeats = repeats_pr031(store, as_of)
     store.close()
 

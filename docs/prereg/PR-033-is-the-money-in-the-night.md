@@ -201,4 +201,24 @@ here.
 
 ## 10. Amendments
 
-None.
+### A-1 — 2026-09-27, AFTER the run: a night across a session the store lacked
+
+**What was wrong.** The runner paired each STORED session with the one stored before it. Where the
+store lacked a session, the next night ran from two closes back and carried that session's whole
+move, and so did the holding day. Here: `QQQ` lacked 2016-02-22, 2018-05-02 and 2018-05-03 - thin
+under the 90%-coverage rule - so the nights into 2016-02-23 and 2018-05-04 carried those sessions'
+moves. Found in an audit of the night studies the owner asked for; the same shape sat in five other
+places (`AGENTS.md` §12).
+
+**Fixed with a test** (`calendar.consecutive`): a session whose previous session the store lacks
+keeps its session arm and has no night or holding day. **Re-run at the registered instants, the
+branch is unchanged - `COST_FRAGILE`:**
+
+* the primary `basket-N` +0.03245% [+0.00451%, +0.06017%] a day -> +0.03238% [+0.00444%, +0.06020%];
+* the gate `basket-N-cost_adverse` +0.02633% [-0.00173%, +0.05417%] a day -> +0.02626% [-0.00178%,
+  +0.05420%];
+* the reading `QQQ-N` +0.04712% [+0.01828%, +0.07603%] a day -> +0.04715% [+0.01829%, +0.07630%].
+
+`results/PR-033.json` is regenerated from the corrected code. The file as published is kept as
+`results/PR-033-as-published.json` - its `prereg` key renamed `preserved_from`, so the trial count
+reads the study once - and the report, which is never edited, carries the published figures.

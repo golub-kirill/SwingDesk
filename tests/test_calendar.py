@@ -85,3 +85,21 @@ def test_a_year_of_daily_lookups_builds_the_schedule_once(monkeypatch: pytest.Mo
     finally:
         cal._year.cache_clear()
     assert built == [(Exchange.NYSE, date(2024, 1, 1), date(2024, 12, 31))]
+
+
+@pytest.mark.parametrize(("earlier", "later", "expected"), [
+    (date(2026, 9, 24), date(2026, 9, 25), True),     # Thursday to Friday
+    (date(2026, 9, 25), date(2026, 9, 28), True),     # over a weekend - the exchange was shut
+    (date(2025, 12, 24), date(2025, 12, 26), True),   # over Christmas
+    (date(2025, 1, 8), date(2025, 1, 10), True),      # over the unscheduled 2025-01-09 closure
+    (date(2026, 9, 23), date(2026, 9, 25), False),    # Thursday is missing from the store
+    (date(2026, 9, 25), date(2026, 9, 29), False),    # Monday is missing
+    (date(2026, 9, 25), date(2026, 9, 25), False),
+    (date(2026, 9, 28), date(2026, 9, 25), False),
+])
+def test_consecutive_asks_the_calendar_not_the_store(earlier, later, expected) -> None:
+    assert cal.consecutive(Exchange.NYSE, earlier, later) is expected
+
+
+def test_the_unscheduled_closure_is_a_gap_on_the_exchange_that_traded() -> None:
+    assert not cal.consecutive(Exchange.TSX, date(2025, 1, 8), date(2025, 1, 10))

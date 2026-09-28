@@ -14,7 +14,10 @@ from pathlib import Path
 
 import pytest
 
+from swingdesk.contracts.reference import Exchange
+
 REPO = Path(__file__).resolve().parents[1]
+NYSE = Exchange.NYSE
 
 
 @pytest.fixture(scope="module")
@@ -51,14 +54,14 @@ def test_the_cost_of_a_side(pr41) -> None:
 
 def test_at_zero_cost_the_arms_compound_to_holding(pr41) -> None:
     sessions = _sessions(pr41, [(D1, 30, 30.5, 0), (D2, 31, 30.2, 0), (D3, 29.9, 31.4, 0)])
-    night, inside, held = pr41.arms(sessions, None)
+    night, inside, held = pr41.arms(sessions, None, exchange=NYSE)
     for day in (D2, D3):
         assert (1 + night[day]) * (1 + inside[day]) - 1 == pytest.approx(held[day], abs=1e-12)
 
 
 def test_the_dividend_belongs_to_the_night(pr41) -> None:
     sessions = _sessions(pr41, [(D1, 30, 30, 0), (D2, 29.5, 29.5, 0.5)])
-    night, inside, _ = pr41.arms(sessions, None)
+    night, inside, _ = pr41.arms(sessions, None, exchange=NYSE)
     assert night[D2] == pytest.approx(0.0) and inside[D2] == pytest.approx(0.0)
 
 
@@ -104,8 +107,8 @@ def test_a_book_with_no_asia_share_is_pr035s_two_leg_book(pr41, monkeypatch) -> 
     monkeypatch.setattr(pr41, "FIRST", D1)
     sessions = _book_sessions(pr41)
     two, _ = pr41.book(sessions, None, 0.0)
-    night = p33.basket_of({f: pr41.arms(sessions[f], None)[0] for f in pr41.NIGHT_FUNDS})
-    _, spy_day, _ = pr41.arms(sessions[pr41.DAY_FUND], None)
+    night = p33.basket_of({f: pr41.arms(sessions[f], None, exchange=NYSE)[0] for f in pr41.NIGHT_FUNDS})
+    _, spy_day, _ = pr41.arms(sessions[pr41.DAY_FUND], None, exchange=NYSE)
     assert two == pytest.approx(p35.compounded(night, spy_day))
 
 
@@ -128,3 +131,10 @@ def test_the_basis_sample_is_the_same_pairs_every_time(pr41) -> None:
     first, second = pr41.sample_sessions(sessions), pr41.sample_sessions(sessions)
     assert first == second
     assert len(first) == pr41.SAMPLE_PER_FUND * len(pr41.FUNDS)
+
+
+def test_a_session_missing_from_the_store_leaves_no_night_across_it(pr41) -> None:
+    sessions = _sessions(pr41, [(D1, 100, 100, 0), (D3, 110, 111.1, 0)])
+    night, inside, held = pr41.arms(sessions, None, exchange=NYSE)
+    assert D3 not in night and D3 not in held
+    assert inside[D3] == pytest.approx(0.01)

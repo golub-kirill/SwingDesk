@@ -204,3 +204,11 @@ The runner wrote `"verdict": "null"`, a fifth word in a vocabulary of four (`acc
 branch reports as `INCONCLUSIVE` with the branch beside it, as `PR-026` did. `run_pr031.TOKEN`
 invented the word and this study inherited it. **Fixed with a test**; the branch, the decision rule
 and every number are untouched, and the re-run reproduced the first run's cells to the digit.
+
+### A-2 — 2026-09-27, AFTER the run: the calendar guard reached this runner, and nothing moved
+
+An audit the owner asked for found runners pairing each STORED session with the one stored before it
+(`AGENTS.md` §12). Here its sessions reach `run_pr031.run_instrument`, which now skips a session
+whose previous session was not read rather than setting its band from an older close
+(`calendar.consecutive`). **Re-run at the registered instants, the result file reproduced to the
+digit** - this study's data miss no session - so `results/PR-032.json` is unchanged.

@@ -197,4 +197,21 @@ report prints.
 
 ## 10. Amendments
 
-None.
+### A-1 — 2026-09-27, AFTER the run: a night across a session the store lacked
+
+**What was wrong.** The runner paired each STORED session with the one stored before it. Where the
+store lacked a session, the next night ran from two closes back and carried that session's whole
+move, and so did the holding day. Here: nothing in its own window - its daily bars miss no session.
+Found in an audit of the night studies the owner asked for; the same shape sat in five other places
+(`AGENTS.md` §12).
+
+**Fixed with a test** (`calendar.consecutive`): a session whose previous session the store lacks
+keeps its session arm and has no night or holding day. **Re-run at the registered instants, the
+branch is unchanged - `COST_FRAGILE`:**
+
+* its own cells unchanged to the digit; its reproduction check reads `PR-034`'s regenerated file, so
+  `minutes_annual` moved 0.13834 -> 0.13891 and `differ_by` 0.00572 -> 0.00629.
+
+`results/PR-036.json` is regenerated from the corrected code. The file as published is kept as
+`results/PR-036-as-published.json` - its `prereg` key renamed `preserved_from`, so the trial count
+reads the study once - and the report, which is never edited, carries the published figures.

@@ -47,8 +47,10 @@ REPO = Path(os.environ.get("SWINGDESK_ROOT") or Path(__file__).resolve().parents
 sys.path.insert(0, str(REPO / "src"))
 
 from swingdesk.contracts.market import CorporateActionKind, Interval, Series
+from swingdesk.contracts.reference import Exchange
 from swingdesk.market_data import BarStore
 from swingdesk.platform.parameters import ParameterRegistry
+from swingdesk.reference_data import calendar as cal
 
 #: The token `DR-048` points at. The record and the code name each other, which is what
 #: `tools/verify_decisions.py` reads.
@@ -112,12 +114,15 @@ def dividends_of(store: BarStore, fund: str, as_of: datetime) -> dict[date, floa
     return dict(out)
 
 
-def nights_of(bars: Sequence[Any], dividends: Mapping[date, float]) -> list[Night]:
+def nights_of(bars: Sequence[Any], dividends: Mapping[date, float], *,
+              exchange: Exchange) -> list[Night]:
     """Every completed night in a fund's stored bars, oldest first.
 
     A night is `(next open + the dividend detaching at it) / this close - 1`. It needs two
-    consecutive stored sessions, so a gap in the store shortens the sample rather than inventing a
-    move across it - the returned list is what was MEASURED, and the caller counts it.
+    consecutive SESSIONS, and the exchange's calendar decides that rather than the store: two
+    neighbouring stored bars with a session missing between them are skipped, so a gap shortens
+    the sample rather than inventing a move across it - the returned list is what was MEASURED,
+    and the caller counts it. Until 2026-09-27 this sentence was true of the docstring only.
 
     **The session comes from `Bar.session_date`, never from `event_time.date()`** - the contract
     says so in its own field description, because a timestamp's date depends on the timezone it
@@ -129,6 +134,8 @@ def nights_of(bars: Sequence[Any], dividends: Mapping[date, float]) -> list[Nigh
         if close <= 0:
             continue
         session = later.session_date
+        if not cal.consecutive(exchange, earlier.session_date, session):
+            continue
         out.append(Night(session, (float(later.open) + dividends.get(session, 0.0)) / close - 1.0))
     return out
 
@@ -160,7 +167,7 @@ def leg_for(fund: str, bars: Sequence[Any], dividends: Mapping[date, float], *,
     # not a small sample, it is undefined - and `statistics.stdev` raises rather than returning
     # zero. A crash is the wrong shape of failure for a pass whose job is to refuse cleanly.
     needed = max(2, lookback)
-    nights = nights_of(bars, dividends)[-needed:]
+    nights = nights_of(bars, dividends, exchange=cal.exchange_for(fund))[-needed:]
     if len(nights) < needed:
         return Leg(fund, refused=f"{len(nights)} stored nights, {needed} needed for R")
 
