@@ -1987,6 +1987,31 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
          answer** on capital gains or business income for daily round trips, and the owner's
          marginal rate - with them, §41 names the one row that applies.
 
+- [ ] **`[v]` AFTER TAX, IN A TAXABLE ACCOUNT, OVER 2020-2026 - the owner's four directions, 2026-09-28.**
+      Asked what else could raise income, the owner took all four on offer. Two rulings frame them:
+      the money runs in a REGULAR taxable account (above), and *"it's useless to measure on past years;
+      2020-2026 is ok"* - no pre-2016 holdout is run. The owner's marginal rate is **about 20-30%**
+      (owner, 2026-09-28). In order:
+      1. **A tax standard for every study** - a decision record: a study that claims to raise the
+         owner's income is judged on its excess over `SPY` held AFTER tax in a taxable account, at
+         both ends of the owner's rate band, and under both treatments until an accountant rules.
+         `tax.marginal_rate_*` from the owner; `tax.treatment` `unset` - a component that needs it
+         refuses rather than choosing.
+      2. **The paper book against holding `SPY`** - `card002_paper.py report` prints what the same
+         equity would have made in `SPY` over the same sessions, and the whole-book session count.
+         **Not before the first paper pass has run** (2026-09-28): a broken import would stop it.
+      3. **The book re-measured weekly** over the trailing 48 months (`tools/remeasure.py`, no
+         trial, every point recorded - `AGENTS.md` §19.7). Needs `IJR`'s and `VB`'s dividends in
+         the live store, which carries them for nine instruments only.
+      4. **Tax-loss harvesting** - how much a harvesting rule on an index holding defers, over
+         2020-2026 at the owner's rates, with Canada's superficial loss rule (a loss is denied when
+         the SAME property is bought back within 30 days) and a switch to a similar, non-identical
+         fund. A registration: the rule's threshold is chosen before the run. Then, if it pays, a
+         decision-support module that PROPOSES the switch; the owner acts.
+      5. **TSX instruments** - fetch the Canadian funds this project has never stored (the store
+         holds one Canadian instrument) and re-read the ideas that survive in Canadian dollars: no
+         conversion, and Canadian dividends are taxed more lightly in a taxable account.
+
 - [ ] **`[v]` A STUDY'S EXCLUSIONS MUST BE PER READING — `PR-024`'s runner dropped an entry from the
       verdict when an UNREAD arm or a perturbation failed.** `run_pr024.price_entry` returns the
       first failure of any arm or costing, so the 11:00 arm's missing print and the anchored-stop
