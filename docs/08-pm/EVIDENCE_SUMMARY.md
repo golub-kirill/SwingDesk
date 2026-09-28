@@ -1799,3 +1799,11 @@ behind in the rest. The whole grid, 20% to 50% and both comparisons, is in the m
 TFSA the pre-tax figures are the owner's - **unless the activity is a business**, in which case the
 book earns its owner less than holding the index. That one question, for an accountant, decides
 whether proof (1) is worth money.
+
+**Ruled the next day, 2026-09-28: the book runs, if ever with money, in a REGULAR taxable
+account, not the TFSA.** The owner's words were that the strategy should not rest on the TFSA
+question. **So the taxed rows are the book's case.** Once taxed, the book trails holding `SPY`
+over the last four years in every cell tested. Over the decade it is ahead only if its round
+trips are capital gains, and those rows are optimistic. A daily-turnover strategy in a taxable
+account has to beat the index by several points a year before tax just to tie it after tax,
+because the index defers its tax and the strategy cannot.

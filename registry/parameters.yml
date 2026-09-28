@@ -1596,3 +1596,43 @@ parameters:
       every volatility they measured, carried here so a night's loss is readable in the same unit
       as every other journalled position. Fewer than this many stored sessions refuses the entry.
     ui_editable: false
+
+  # ---- tax: a claim about the owner's income is judged after tax (DR-057, ruled 2026-09-28) ----
+  - id: tax.marginal_rate_low
+    unit: fraction of a marginal dollar of income, combined federal and provincial
+    value: 0.20
+    status: owner
+    provenance: owner
+    read_by: none
+    named_in: ["authored - DR-057; the course names no tax treatment"]
+    note: >-
+      The low end of the owner's combined marginal rate, given as a band - the owner chose
+      "about 20-30%" from the bands offered (2026-09-28). An income claim must hold at BOTH ends of the band (DR-057 section 1.2).
+      Read by tools/measure_after_tax.py :: rate_band, a tool rather than a src module, which is
+      why read_by cannot name it. Not tax advice.
+    ui_editable: true
+
+  - id: tax.marginal_rate_high
+    unit: fraction of a marginal dollar of income, combined federal and provincial
+    value: 0.30
+    status: owner
+    provenance: owner
+    read_by: none
+    named_in: ["authored - DR-057; the course names no tax treatment"]
+    note: >-
+      The high end of the owner's combined marginal rate band (owner, 2026-09-28). Read by
+      tools/measure_after_tax.py :: rate_band. Not tax advice.
+    ui_editable: true
+
+  - id: tax.treatment
+    unit: capital_gains or business_income
+    value: null
+    status: unset
+    provenance: null
+    read_by: none
+    named_in: ["authored - DR-057; the course names no tax treatment"]
+    note: >-
+      Whether a strategy's frequent round trips are taxed as capital gains or as business income.
+      An ACCOUNTANT'S answer, not this project's (DR-057 section 1.3): while unset, every after-tax
+      reading reports both treatments and a claim must pass the less favourable one.
+    ui_editable: true

@@ -214,6 +214,11 @@ behind the same four guards `DR-027` §4 already imposes.
    15% to withholding there. `EVIDENCE_SUMMARY` §41 measures what taxation as a business would
    cost. As recorded on 2026-09-20: see §2 — the consequence is a question
    for an accountant at scale, not a blocker at measurement size.
+   **RULED 2026-09-28 by the owner: this card runs, if it ever runs with money, in a REGULAR
+   taxable account, not the TFSA** - *"davay ispravim tfsa na obychnyy akkaunt gde ya mogu legalno torgovat, ne sobirayus stroit strategiyu na narushenii zakonov"*. Trading inside a TFSA is not unlawful; its
+   profit can be taxed as business income, and the owner chose not to build on that question.
+   So `EVIDENCE_SUMMARY` §41's taxed rows are this card's case, and whether its round trips are
+   capital gains or business income is the accountant's question that remains.
 4. **The owner can add about CAD 500 a month.** This is the largest single lever in the whole
    project and it is recorded here because no study can move it: at this rate, five years of
    deposits contribute roughly twice what five years of the measured edge contributes on the

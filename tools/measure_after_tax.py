@@ -55,6 +55,7 @@ sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(REPO / "tools"))
 
 import run_pr040 as p40
+from swingdesk.platform.parameters import ParameterRegistry, ParameterUnset, UnknownParameter
 from swingdesk.reference_data import calendar as cal
 
 OUT = REPO / "docs" / "decisions" / "measurements" / "after-tax-2026-09-27.json"
@@ -153,15 +154,29 @@ def series(priced: Mapping[str, Sequence[Any]]) -> tuple[list[Day], list[Day]]:
     return book_days, hold_days
 
 
-def grid(book: Sequence[Day], hold: Sequence[Day]) -> dict[str, Any]:
+def rate_band(registry: ParameterRegistry) -> tuple[float, float] | str:
+    """The owner's marginal-rate band (`DR-057`), or why it cannot be read - never a guess."""
+    try:
+        low, _ = registry.decimal_value("tax.marginal_rate_low")
+        high, _ = registry.decimal_value("tax.marginal_rate_high")
+    except (ParameterUnset, UnknownParameter) as missing:
+        return f"the owner's rate band is not set: {missing}"
+    if not 0 <= low <= high < 1:
+        return f"the owner's rate band {low}..{high} is not a band of rates"
+    return float(low), float(high)
+
+
+def grid(book: Sequence[Day], hold: Sequence[Day],
+         band: tuple[float, float] | None = None) -> dict[str, Any]:
     first, last = book[0].session, book[-1].session
     rows: list[dict[str, Any]] = []
-    for rate in (0.0, *RATES):
+    for rate in (0.0, *sorted({*RATES, *(band or ())})):
         spy_sold = cagr(held(hold, rate, True), first, last)
         spy_kept = cagr(held(hold, rate, False), first, last)
         for treatment in TREATMENTS:
             ours = cagr(realised_yearly(book, rate, treatment), first, last)
             rows.append({"rate": rate, "treatment": treatment, "book_cagr": ours,
+                         "owner_band": band is not None and rate in band,
                          "spy_cagr_sold_at_end": spy_sold, "spy_cagr_still_held": spy_kept,
                          "excess_vs_sold": (1 + ours) / (1 + spy_sold) - 1,
                          "excess_vs_held": (1 + ours) / (1 + spy_kept) - 1})
@@ -169,6 +184,9 @@ def grid(book: Sequence[Day], hold: Sequence[Day]) -> dict[str, Any]:
 
 
 def build(args: argparse.Namespace) -> dict[str, Any]:
+    band = rate_band(ParameterRegistry.load())
+    if isinstance(band, str):
+        raise SystemExit(f"after-tax REFUSED: {band}")
     priced = p40.load(args, use_crosses=True)
     book, hold = series(priced)
     recent_book = [d for d in book if d.session >= RECENT_FROM]
@@ -181,8 +199,9 @@ def build(args: argparse.Namespace) -> dict[str, Any]:
                 "conversion costs are left out",
         "as_of": {"bars": args.as_of, "auctions": args.auctions_as_of},
         "capital_inclusion": CAPITAL_INCLUSION,
-        "whole_window": grid(book, hold),
-        "last_48_months": grid(recent_book, recent_hold),
+        "owner_rate_band": {"low": band[0], "high": band[1], "treatment": "unset - both reported"},
+        "whole_window": grid(book, hold, band),
+        "last_48_months": grid(recent_book, recent_hold, band),
     }
 
 
@@ -200,7 +219,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         block = payload[window]
         print(f"{window}: {block['first']} .. {block['last']}")
         for row in block["rows"]:
-            print(f"  rate {row['rate']:.0%}  {row['treatment']:<16} book {row['book_cagr']:+.2%}  "
+            mark = "*" if row["owner_band"] else " "
+            print(f" {mark}rate {row['rate']:.0%}  {row['treatment']:<16} book {row['book_cagr']:+.2%}  "
                   f"SPY sold {row['spy_cagr_sold_at_end']:+.2%} / held {row['spy_cagr_still_held']:+.2%}"
                   f"   excess vs sold {row['excess_vs_sold']:+.2%}  vs held {row['excess_vs_held']:+.2%}")
     print(f"written to {args.out}")
