@@ -1,0 +1,22 @@
+{
+  "measurement": "overnight-momentum-power",
+  "power": true,
+  "as_of": {
+    "bars": "2026-09-27T16:00:01.433965+00:00"
+  },
+  "months": 48,
+  "sessions": 1002,
+  "winners_per_formation": {
+    "fewest": 201,
+    "most": 280
+  },
+  "width_a_year": 0.18220382983304018,
+  "half_width": 0.09110191491652009,
+  "minimum_detectable": 0.13014559273788584,
+  "stocks_loaded": 3684,
+  "excluded": {
+    "funds_excluded": 5732,
+    "type_unknown": 104
+  },
+  "note": "bars with the fees; widths only, no estimate is written"
+}
