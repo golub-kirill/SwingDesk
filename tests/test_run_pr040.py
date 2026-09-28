@@ -179,3 +179,68 @@ def test_a_session_missing_from_the_store_leaves_no_night_across_it(pr40) -> Non
     night, inside, held = pr40.arms(sessions, "gross", exchange=NYSE)
     assert D3 not in night and D3 not in held
     assert inside[D3] == pytest.approx(0.01)
+
+
+# --- the rolling re-observation tools/remeasure.py runs weekly ---------------------------------------
+
+
+def test_a_window_is_whole_calendar_months_back_with_the_day_clamped(pr40) -> None:
+    assert pr40.months_before(date(2026, 9, 25), 48) == date(2022, 9, 25)
+    assert pr40.months_before(date(2026, 3, 31), 1) == date(2026, 2, 28)
+
+
+def test_a_quarterly_payer_needs_one_ex_date_in_four_months(pr40) -> None:
+    first, last = date(2022, 9, 25), date(2026, 9, 25)
+    quarterly = {date(2022, 12, 15) + (date(2023, 3, 15) - date(2022, 12, 15)) * k: 0.4
+                 for k in range(16)}
+    assert pr40.dividends_cover(quarterly, first, last, 48)
+    assert not pr40.dividends_cover({date(2025, 6, 15): 0.4}, first, last, 48)
+    # A long history that stops before the window covers nothing in it.
+    old = {date(2012 + k // 4, 3 * (k % 4) + 1, 15): 0.4 for k in range(40)}
+    assert not pr40.dividends_cover(old, first, last, 48)
+
+
+def _rolling_store(pr40, tmp_path, with_dividends=True):
+    from swingdesk.contracts.market import (
+        Bar,
+        CorporateAction,
+        CorporateActionKind,
+        Interval,
+        Series,
+    )
+    from swingdesk.market_data import BarStore
+    from swingdesk.reference_data import calendar as cal
+
+    known = datetime(2026, 9, 26, tzinfo=UTC)
+    sessions = cal.sessions(cal.exchange_for("SPY"), date(2022, 6, 1), date(2026, 9, 25))
+    store = BarStore(tmp_path / "bars.duckdb")
+    for step, fund in enumerate(pr40.FUNDS):
+        bars = []
+        for n, s in enumerate(sessions):
+            base = Decimal(str(round(100 + n * 0.02 * (step + 1), 4)))
+            bars.append(Bar(instrument_id=fund, session_date=s.session_date, interval=Interval.DAY,
+                            series=Series.RAW, event_time=s.open_time, knowledge_time=known,
+                            open=base, high=base + Decimal("1"), low=base - Decimal("1"),
+                            close=base + Decimal("0.05"), volume=1000))
+        store.write(bars, knowledge_time=known)
+        if with_dividends:
+            store.write_actions([CorporateAction(
+                instrument_id=fund, kind=CorporateActionKind.DIVIDEND,
+                effective_date=sessions[k].session_date, value=Decimal("0.3"),
+                knowledge_time=known) for k in range(10, len(sessions), 63)], knowledge_time=known)
+    store.close()
+    return tmp_path
+
+
+def test_the_rolling_book_is_the_registered_statistic_on_the_last_48_months(pr40, tmp_path) -> None:
+    point = pr40.rolling(_rolling_store(pr40, tmp_path), None, 48)
+    assert point["window"] == {"first": "2022-10-01", "last": "2026-09-25"}
+    assert point["months"] == 48
+    assert set(point["book_minus_spy"]) == {"observed", "low", "high"}
+    assert point["branch"] in ("above zero", "below zero", "contains zero")
+    assert "bars standing in" in point["price"]
+
+
+def test_the_rolling_book_refuses_a_store_without_dividends(pr40, tmp_path) -> None:
+    with pytest.raises(SystemExit, match="too few dividends"):
+        pr40.rolling(_rolling_store(pr40, tmp_path, with_dividends=False), None, 48)

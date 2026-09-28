@@ -114,7 +114,7 @@ def test_no_series_is_said_rather_than_printed_as_an_empty_table(tool, capsys):
 
 def test_pr016_is_re_observed_and_reported_on_its_own_quantity(tool, capsys):
     """`PR-016` reads ranked minus unselected, not `PR-019b`'s candidate minus index."""
-    assert set(tool.STUDIES) == {"PR-019b", "PR-016"} == set(tool.READS)
+    assert set(tool.STUDIES) == {"PR-019b", "PR-016", "PR-040"} == set(tool.READS)
     point = {"as_of": LAST, "window": {}, "trades": 300, "months": 48, "branch": "inconclusive",
              "ranked_minus_unselected": {"observed": 0.09, "low": 0.02, "high": 0.16}}
     tool.report([{"study": "PR-016", "recorded_at": "2026-09-13T21:00:00", **point}])
@@ -126,7 +126,8 @@ def test_the_weekly_pass_runs_every_study_and_keeps_the_first_failure():
     wrapper = (REPO / "tools" / "remeasure.cmd").read_text(encoding="utf-8")
     runs = [line for line in wrapper.splitlines() if "remeasure.py" in line
             and not line.startswith("REM")]
-    assert [line.split("remeasure.py\" ")[1].split()[0] for line in runs] == ["PR-019b", "PR-016"]
+    assert [line.split("remeasure.py\" ")[1].split()[0] for line in runs] == [
+        "PR-019b", "PR-016", "PR-040"]
     # Since 2026-09-26 each study is asked whether it is due, so PR-016's code is held in STUDY
     # before its done-check runs. `tests/test_weekly_pass.py` runs the batch file itself and
     # asserts the first failure survives a clean PR-016; this line only pins the text.
@@ -139,3 +140,16 @@ def test_the_report_says_how_far_the_read_quantity_has_moved(tool, capsys):
     tool.report([{"study": "PR-019b", "recorded_at": "2026-09-07T00:00:00", **_point(LAST)},
                  {"study": "PR-019b", "recorded_at": "2026-09-14T00:00:00", **later}])
     assert "moved +0.0500R since the first point" in capsys.readouterr().out
+
+
+def test_pr040_is_reported_as_a_return_a_year_not_in_r(tool, capsys):
+    """The book's quantity is a geometric excess a year; printing it as R would misstate the unit."""
+    point = {"as_of": LAST, "window": {}, "trades": 1004, "months": 48, "branch": "contains zero",
+             "book_minus_spy": {"observed": 0.0073, "low": -0.049, "high": 0.0618}}
+    later = {**point, "as_of": "2026-09-20T00:00:00-05:00",
+             "book_minus_spy": {"observed": 0.0010, "low": -0.05, "high": 0.06}}
+    tool.report([{"study": "PR-040", "recorded_at": "2026-09-13T21:00:00", **point},
+                 {"study": "PR-040", "recorded_at": "2026-09-20T21:00:00", **later}])
+    out = capsys.readouterr().out
+    assert "book / SPY - 1, a year" in out and "a year since the first point" in out
+    assert "R since" not in out

@@ -55,10 +55,19 @@ REM PR-016 runs whatever PR-019b returned: a point skipped because another faile
 REM series never gets back. The first failure is the exit code either way.
 :pr016
 "%PY%" -X utf8 "%REPO%\tools\weekly_pass.py" due remeasure-PR-016 --data "%REPO%\data" >> "%LOG%" 2>&1
-if errorlevel 10 goto :finished
+if errorlevel 10 goto :pr040
 "%PY%" -X utf8 "%REPO%\tools\remeasure.py" PR-016 --data "%REPO%\data" >> "%LOG%" 2>&1
 set STUDY=%ERRORLEVEL%
 if %STUDY%==0 "%PY%" -X utf8 "%REPO%\tools\weekly_pass.py" done remeasure-PR-016 --data "%REPO%\data" >> "%LOG%" 2>&1
+if %RC%==0 set RC=%STUDY%
+REM PR-040 - the main hypothesis, DR-055 - re-observed on the trailing 48 months. It reads
+REM IJR, VB and SPY with their dividends, which the paper passes fetch every session.
+:pr040
+"%PY%" -X utf8 "%REPO%\tools\weekly_pass.py" due remeasure-PR-040 --data "%REPO%\data" >> "%LOG%" 2>&1
+if errorlevel 10 goto :finished
+"%PY%" -X utf8 "%REPO%\tools\remeasure.py" PR-040 --data "%REPO%\data" >> "%LOG%" 2>&1
+set STUDY=%ERRORLEVEL%
+if %STUDY%==0 "%PY%" -X utf8 "%REPO%\tools\weekly_pass.py" done remeasure-PR-040 --data "%REPO%\data" >> "%LOG%" 2>&1
 if %RC%==0 set RC=%STUDY%
 :finished
 

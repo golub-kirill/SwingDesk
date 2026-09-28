@@ -86,13 +86,26 @@ def _pr016(data: Path, as_of: str | None) -> dict[str, Any]:
 
 
 #: The registered questions this tool re-observes, each with the function that re-runs it.
-STUDIES: dict[str, Callable[[Path, str | None], dict[str, Any]]] = {
-    "PR-019b": _pr019b, "PR-016": _pr016}
+def _pr040(data: Path, as_of: str | None) -> dict[str, Any]:
+    """`PR-040`'s book - the main hypothesis, `DR-055` - against `SPY` held, on the rolling window.
 
-#: The one quantity each study's decision rule reads, as the report prints it: label, record key.
-READS: dict[str, tuple[str, str]] = {
-    "PR-019b": ("candidate - index", "candidate_minus_index"),
-    "PR-016": ("ranked - unselected", "ranked_minus_unselected"),
+    Added 2026-09-28 on the owner's ask to watch whether the margin is alive now: over the
+    registered decade it is +4.39% a year, over its last 48 months +0.73% [-4.90, +6.18].
+    """
+    import run_pr040
+
+    return run_pr040.rolling(data, as_of, WINDOW_MONTHS)
+
+
+STUDIES: dict[str, Callable[[Path, str | None], dict[str, Any]]] = {
+    "PR-019b": _pr019b, "PR-016": _pr016, "PR-040": _pr040}
+
+#: The one quantity each study's decision rule reads, as the report prints it: label, record key,
+#: and its unit - the first two studies read R a trade, `PR-040` a return a year.
+READS: dict[str, tuple[str, str, str]] = {
+    "PR-019b": ("candidate - index", "candidate_minus_index", "R"),
+    "PR-016": ("ranked - unselected", "ranked_minus_unselected", "R"),
+    "PR-040": ("book / SPY - 1, a year", "book_minus_spy", " a year"),
 }
 
 
@@ -133,14 +146,14 @@ def report(series: list[dict[str, Any]]) -> None:
         return
     print(f"{series[0]['study']}: {len(series)} re-observation(s), a {WINDOW_MONTHS}-month window "
           f"each - RE-OBSERVATIONS, not results\n")
-    label, key = READS[series[0]["study"]]
+    label, key, unit = READS[series[0]["study"]]
     print(f"  {'recorded':20} {'as_of':12} {'trades':>7} {label:>30}  branch")
     for point in series:
         print(f"  {point['recorded_at'][:19]:20} {point['as_of'][:10]:12} {point['trades']:>7} "
               f"{_span(point.get(key)):>30}  {point['branch']}")
     first, last = series[0].get(key), series[-1].get(key)
     if first and last and len(series) > 1:
-        print(f"\n  moved {last['observed'] - first['observed']:+.4f}R since the first point")
+        print(f"\n  moved {last['observed'] - first['observed']:+.4f}{unit} since the first point")
 
 
 def main() -> int:
