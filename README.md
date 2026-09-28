@@ -405,7 +405,7 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 125 script(s), of which 36 are things you type
+### The tools — 126 script(s), of which 36 are things you type
 
 #### Operator tools — 36
 
@@ -477,7 +477,7 @@ Invoked by `python tools/check_gates.py`, not singly. Listed so a failing gate c
 | `python tools/verify_parameters.py` | Enforce the parameter-registry contract. | `--registry` |
 | `python tools/verify_transcription.py` | Verify that every `verbatim` claim in the documents still matches the course. | `--course-root` · `--docs` |
 
-#### Evidence-bound research runners — 76
+#### Evidence-bound research runners — 77
 
 Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions/measurements/` and reproduces it. They ran once, on a date. Nobody types these; they exist so a number can be re-derived.
 
@@ -507,6 +507,7 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/measure_long_only_horizon.py` | The one significant signal this project has found is LONG-SHORT. The system is LONG-ONLY. | `--data` · `--out` |
 | `python tools/measure_momentum_horizon.py` | Does the cross-sectional momentum spread depend on the HOLDING HORIZON, in this store? | `--data` · `--out` |
 | `python tools/measure_overnight_factors.py --data --factors` | Is `PR-034`'s overnight return skill, or is it factor exposure this project could have bought? | `--data` **(required)** · `--factors` **(required)** · `--as-of` |
+| `python tools/measure_overnight_momentum_power.py --data` | Overnight momentum on single stocks: the width a study of it would read. A power measurement. | `--data` **(required)** · `--as-of` · `--out` |
 | `python tools/measure_parameter_readers.py` | Which function actually asks the registry for each parameter, recorded rather than read. | `--tests` · `--json` |
 | `python tools/measure_pivots.py` | What `pivot.left` and `pivot.right` actually cost, measured on stored bars. | `--data` · `--limit` · `--min-bars` · `--out` |
 | `python tools/measure_quoted_spread.py` | What the admitted universe actually costs to cross, from the venue's own NBBO. | `--data` · `--sample` · `--seed` · `--years` · `--against` · `--out` |

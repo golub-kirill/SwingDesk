@@ -202,6 +202,23 @@ the membership half still needs a source.
 **How it fails:** a 2025 paper on the classic 12-1 rule in the S&P 500 reports a negative net result
 after costs; long-only large-cap momentum is a factor tilt with multi-year droughts.
 
+**Its overnight half, sized 2026-09-27 and NOT registered - owner ruling the same night.** Lou,
+Polk and Skouras (2019, *JFE* 134) find momentum's profit earned entirely overnight over
+1993-2013. The long-short overnight CAPM alpha is 0.98% a month (t = 3.84), against -0.02% intraday.
+That is §2.3's source applied to this signal, and the auctions remove the spread the earlier
+families died on. `tools/measure_overnight_momentum_power.py` sized a long-only book:
+* **the book:** the top decile of the admitted common stocks by twelve-minus-one, bought at each
+  closing auction and sold at the next opening one, with `SPY` held through the day;
+* **the contrast:** against `SPY` held, over the forty-eight months to 2026-08;
+* **the measurement:** widths only, no return of the rule read
+  (`docs/decisions/measurements/overnight-momentum-power-2026-09-27.json`, 0 trials).
+
+**The smallest separable excess is about 13 points a year**, above the published LONG-SHORT effect,
+of which a long-only book keeps only part. Asked, the owner ruled: do not spend the trial. **What
+would reopen it:** stock dividends in the store (a winner's ex-date now reads as an overnight loss),
+delisted prices for the survivorship half, and a contrast narrower than a whole book against `SPY`.
+One candidate is the winners' own night against their own session, which is the paper's claim.
+
 ### 3.3 Time-series momentum across asset classes — `open`, sized and not run
 
 **The claim:** an asset's own past twelve months predicts its next month (Moskowitz, Ooi and

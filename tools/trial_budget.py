@@ -293,6 +293,11 @@ NO_SPEND_MEASUREMENTS = {
                               "property of the price path and a check of the code, not a "
                               "configuration: nothing is selected on it, and the resolver is the "
                               "owner's ruling, not a candidate",
+    "overnight-momentum-power-2026-09-27": "the WIDTH of the paired bootstrap interval a study of "
+                                           "overnight momentum would read, before registration, "
+                                           "under the same level guard; the study was then not "
+                                           "registered, on the owner's ruling. No return of the "
+                                           "rule is printed or written",
     "tsmom-power-2026-09-26": "WIDTHS of RANDOM long/flat books, the power estimate for a "
                               "time-series momentum study that was then not registered. No "
                               "return of the rule is computed and no level is printed - the "
