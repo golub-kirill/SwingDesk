@@ -1752,3 +1752,36 @@ regenerated from the corrected code, and the published ones are kept beside them
 **What moved nothing is the finding.** The evidence under the main hypothesis was reproduced, and
 recomputed by code that shares nothing with it. The defect found was real, and it was worth a few
 thousandths of a percent a day.
+
+## 41. After Canadian tax on a taxable account, the book's margin over holding `SPY` mostly goes
+
+**Measured 2026-09-27** (`tools/measure_after_tax.py`,
+`docs/decisions/measurements/after-tax-2026-09-27.json`). This is arithmetic on `PR-040`'s
+registered book under a stated tax model, and it spends no trial. **Nothing here is tax advice.**
+
+The owner's real account is taxable and funded in Canadian dollars. The book turns over every
+session, so it realises every gain in the year it is made. Holding `SPY` pays tax on its dividends
+yearly and on its price gain only when sold. The model is below; which treatment applies is an
+accountant's question.
+
+| geometric excess of the book over `SPY` held, a year | 2016-2026 | last 48 months |
+|---|---|---|
+| before tax | **+4.41%** | **+0.74%** |
+| 30% marginal rate, the book as capital gains | +2.10% | −2.01% |
+| 30% marginal rate, the book as business income | **−0.26%** | **−4.69%** |
+| 40% marginal rate, capital gains | +1.33% | −2.92% |
+| 40% marginal rate, business income | −1.86% | −6.51% |
+
+**Over the last four years the book trails holding `SPY` after tax at every rate and under both
+treatments tested. Over the decade it keeps a margin only as capital gains**, and those rows are
+**optimistic**: the model leaves out the superficial loss rule. That rule defers a loss on shares
+bought back within thirty days, and the book buys the same two funds back every evening. Against
+`SPY` sold at the window's end rather than still held, every margin is larger — 0.7 to 1.9
+points over the decade — because the sale's tax is charged too; over the last four years that
+leaves the book a hair ahead in two cells (capital gains at 20% and 30%, +0.26% and +0.04%) and
+behind in the rest. The whole grid, 20% to 50% and both comparisons, is in the measurement file.
+
+**What it means for the main hypothesis.** `DR-055`'s proofs are both pre-tax. A book that beats the
+index before tax and loses to it after tax earns its owner less than holding the index, in the only
+account the owner has named. The tax treatment of this activity in any other kind of account is a
+question for an accountant, and the answer changes this table.
