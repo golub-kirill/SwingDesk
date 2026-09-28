@@ -248,6 +248,22 @@ source has passed its own test.
 **How it fails:** roughly 130 and 80 independent events respectively against a 2.70 sd hurdle. The
 sample is the problem before the effect is.
 
+### 3.6 Tax-loss harvesting on an index holding — `deferred`, nothing to offset
+
+**The claim:** selling an index position at a loss and buying a similar, non-identical fund
+realises the loss without leaving the market, so tax is deferred (Chaudhuri, Burnham and Lo, 2020,
+"An Empirical Evaluation of Tax-Loss-Harvesting Alpha"). Canada's superficial loss rule denies
+the loss when the SAME property is bought back within thirty days, so the switch has to be to a
+fund that is not identical property.
+**Why it is deferred - owner, 2026-09-28.** A harvested loss is worth something only against
+OTHER realised capital gains: this year's, or the three years' before (carried back). Without
+them it is carried forward to the eventual sale, where it offsets exactly the extra gain the
+lower cost base created - an index bought at 100, harvested at 80 and sold at 150 is taxed on 50
+either way. Asked, the owner has no such gains in a taxable account and expects none yet. **What
+would reopen it:** realised gains to offset - including the book's, if it ever runs with money in
+the regular account `DR-057` assumes. The effect is a deferral, not an excess return, and a study
+of it would be registered as one.
+
 ---
 
 ## 4. Rules for using this file

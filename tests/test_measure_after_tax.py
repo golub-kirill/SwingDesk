@@ -72,3 +72,37 @@ def test_held_dividends_are_taxed_yearly_and_their_after_tax_part_joins_the_basi
     # Taxed 0.01 on the dividend; the 0.01 reinvested is basis, so selling realises no gain.
     assert tax.held(days, 0.5, False) == pytest.approx(1.01)
     assert tax.held(days, 0.5, True) == pytest.approx(1.01)
+
+
+class _Registry:
+    def __init__(self, low, high):
+        self.values = {"tax.marginal_rate_low": low, "tax.marginal_rate_high": high}
+
+    def decimal_value(self, parameter_id):
+        from decimal import Decimal
+
+        from swingdesk.platform.parameters import ParameterUnset
+
+        value = self.values[parameter_id]
+        if value is None:
+            raise ParameterUnset(parameter_id)
+        return Decimal(value), None
+
+
+def test_the_owners_band_is_read_from_the_registry(tax) -> None:
+    assert tax.rate_band(_Registry("0.20", "0.30")) == (0.20, 0.30)
+
+
+def test_an_unset_band_refuses_rather_than_guessing(tax) -> None:
+    assert isinstance(tax.rate_band(_Registry(None, "0.30")), str)
+
+
+def test_a_band_upside_down_is_not_a_band(tax) -> None:
+    assert isinstance(tax.rate_band(_Registry("0.30", "0.20")), str)
+
+
+def test_the_owners_rows_are_marked_and_always_present(tax) -> None:
+    days = _years(tax, (2020, 0.10, 0.0), (2021, 0.05, 0.0))
+    rows = tax.grid(days, days, (0.25, 0.33))["rows"]
+    marked = {row["rate"] for row in rows if row["owner_band"]}
+    assert marked == {0.25, 0.33}
