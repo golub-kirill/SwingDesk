@@ -46,6 +46,7 @@ import run_pr034 as p34
 from run_pr016 import BLOCK, cluster_of
 from swingdesk.contracts.market import Interval, Series
 from swingdesk.market_data import BarStore
+from swingdesk.reference_data import calendar as cal
 
 RESULT = p31.RESULTS / "PR-036.json"
 POWER = p31.RESULTS / "PR-036-power.json"
@@ -117,7 +118,8 @@ def build(args: argparse.Namespace, resamples: int) -> dict[str, Any]:
     identity: dict[str, float] = {}
     for fund in FUNDS:
         sessions = sessions_from_bars(store, fund, as_of)
-        night, inside, held = p33.returns_of(sessions, args.per_share)
+        night, inside, held = p33.returns_of(sessions, args.per_share,
+                                              exchange=cal.exchange_for(fund))
         arms[NIGHT][fund], arms[SESSION][fund], arms["hold"][fund] = night, inside, held
         if args.per_share == 0:
             identity[fund] = p33.adds_up(night, inside, held,

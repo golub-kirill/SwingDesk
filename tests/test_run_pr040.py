@@ -17,7 +17,10 @@ from pathlib import Path
 
 import pytest
 
+from swingdesk.contracts.reference import Exchange
+
 REPO = Path(__file__).resolve().parents[1]
+NYSE = Exchange.NYSE
 
 
 @pytest.fixture(scope="module")
@@ -98,7 +101,7 @@ def test_at_zero_cost_the_night_and_the_session_compound_to_holding(pr40) -> Non
     bars = _bars((D1, "100", "101"), (D2, "102", "100.5"), (D3, "99", "103"))
     crosses = {d: (_Print(b.open), _Print(b.close)) for d, b in ((b.session_date, b) for b in bars)}
     sessions = pr40.priced_sessions(bars, {}, crosses, D1, D3)
-    night, inside, held = pr40.arms(sessions, "gross")
+    night, inside, held = pr40.arms(sessions, "gross", exchange=NYSE)
     for day in (D2, D3):
         assert (1 + night[day]) * (1 + inside[day]) - 1 == pytest.approx(held[day], abs=1e-12)
 
@@ -106,7 +109,7 @@ def test_at_zero_cost_the_night_and_the_session_compound_to_holding(pr40) -> Non
 def test_the_dividend_is_paid_to_the_night(pr40) -> None:
     bars = _bars((D1, "100", "100"), (D2, "99", "99"))
     sessions = pr40.priced_sessions(bars, {D2: 1.0}, {}, D1, D2, bars_as_crosses=True)
-    night, inside, _ = pr40.arms(sessions, "gross")
+    night, inside, _ = pr40.arms(sessions, "gross", exchange=NYSE)
     assert night[D2] == pytest.approx(0.0) and inside[D2] == pytest.approx(0.0)
 
 
@@ -151,7 +154,7 @@ def test_per_share_fees_are_charged_on_the_shares_that_traded(pr40) -> None:
     crosses = {D1: (_Print(Decimal("108.26")), _Print(Decimal("107.54"))),
                D2: (_Print(Decimal("108.00")), _Print(Decimal("108.40")))}
     sessions = pr40.priced_sessions(bars, {}, crosses, D1, D2)
-    night, _, _ = pr40.arms(sessions, "auction")
+    night, _, _ = pr40.arms(sessions, "auction", exchange=NYSE)
     raw = (54.00 - 53.77) / 53.77
     fee = pr40.CAT_PER_SHARE / 107.54 + pr40.SEC_RATE + (pr40.TAF_PER_SHARE + pr40.CAT_PER_SHARE) / 108.00
     assert night[D2] == pytest.approx(raw - fee, abs=1e-12)
@@ -164,5 +167,15 @@ def test_the_reproduction_costing_reads_the_bars_not_the_crosses(pr40) -> None:
     crosses = {D1: (_Print(Decimal("100.00")), _Print(Decimal("100.50"))),
                D2: (_Print(Decimal("100.80")), _Print(Decimal("101.00")))}
     sessions = pr40.priced_sessions(bars, {}, crosses, D1, D2)
-    night, _, _ = pr40.arms(sessions, "bars_pr035")
+    night, _, _ = pr40.arms(sessions, "bars_pr035", exchange=NYSE)
     assert night[D2] == pytest.approx((101.0 - 100.0) / 100.0 - 0.005 / 100.0 - 0.005 / 101.0)
+
+
+def test_a_session_missing_from_the_store_leaves_no_night_across_it(pr40) -> None:
+    """2016-01-05 is a session the store lacks: the 6th's night from the 4th's close would carry
+    the whole of the 5th, and the book holds small caps only at night."""
+    bars = _bars((D1, "100", "100"), (D3, "110", "111.1"))
+    sessions = pr40.priced_sessions(bars, {}, {}, D1, D3, bars_as_crosses=True)
+    night, inside, held = pr40.arms(sessions, "gross", exchange=NYSE)
+    assert D3 not in night and D3 not in held
+    assert inside[D3] == pytest.approx(0.01)

@@ -48,6 +48,7 @@ import run_pr034 as p34
 from run_pr016 import BLOCK, cluster_of
 from swingdesk.market_data import BarStore
 from swingdesk.market_data.minutes import MinuteStore
+from swingdesk.reference_data import calendar as cal
 
 RESULT = p31.RESULTS / "PR-035.json"
 POWER = p31.RESULTS / "PR-035-power.json"
@@ -119,14 +120,16 @@ def legs(args: argparse.Namespace
     for fund in NIGHT_FUNDS:
         dividends = p33.dividends_of(bars, fund, bars_as_of)
         sessions, _ = p34.load_sessions(minutes, fund, minutes_as_of, dividends)
-        night, inside, held = p33.returns_of(sessions, args.per_share)
+        night, inside, held = p33.returns_of(sessions, args.per_share,
+                                              exchange=cal.exchange_for(fund))
         nights[fund] = night
         if args.per_share == 0:
             identity[fund] = p33.adds_up(night, inside, held, dividends)
 
     spy_dividends = p33.dividends_of(bars, DAY_FUND, bars_as_of)
     spy_sessions, _ = p34.load_sessions(minutes, DAY_FUND, minutes_as_of, spy_dividends)
-    spy_night, spy_day, spy_hold = p33.returns_of(spy_sessions, args.per_share)
+    spy_night, spy_day, spy_hold = p33.returns_of(
+        spy_sessions, args.per_share, exchange=cal.exchange_for(DAY_FUND))
     if args.per_share == 0:
         identity[DAY_FUND] = p33.adds_up(spy_night, spy_day, spy_hold, spy_dividends)
     minutes.close()
@@ -139,7 +142,10 @@ def legs(args: argparse.Namespace
 
 def build(args: argparse.Namespace, resamples: int) -> dict[str, Any]:
     series, identity = legs(args)
-    counted = len(series["hold"])
+    # The CALENDAR's sessions, as `PR-034` counts them - not the length of one series. Counted
+    # from `SPY`'s holding series, a cell holding a day that series lacked read a complete share
+    # above one: the published `night-small-caps` cell read 1.00037.
+    counted = len(cal.sessions(cal.exchange_for(DAY_FUND), p33.START, p33.END)) - 1
     cells: dict[str, Any] = {}
 
     def add(name: str, values: Mapping[date, float], sessions: int = counted) -> None:

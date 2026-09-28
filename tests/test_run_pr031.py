@@ -158,7 +158,7 @@ def test_the_return_is_leverage_times_the_move_less_two_sides_a_trade(run) -> No
 def test_warm_up_sessions_are_not_traded(run) -> None:
     days = [_day(run, [100.0 + (i % 3)] * 390, session=date(2024, 1, 1) + timedelta(days=i))
             for i in range(20)]
-    traded, skipped = run.run_instrument(days, both=False)
+    traded, skipped = run.run_instrument(days, both=False, exchange=run.Exchange.NYSE)
     assert skipped == {"warm_up": 15} and len(traded) == 5
 
 
@@ -249,3 +249,13 @@ def test_the_verdict_speaks_the_project_s_vocabulary(run) -> None:
     assert set(run.TOKEN.values()) <= {"accept", "reject", "inconclusive", "refused", "smoke"}
     assert run.TOKEN["NULL"] == "inconclusive"
     assert run.TOKEN["PUBLICATION_FRAGILE"] == "inconclusive"
+
+
+def test_a_session_after_an_unread_one_is_not_traded_off_a_stale_close(run) -> None:
+    """2024-01-24 is missing: the 25th's band would be set from the 23rd's close."""
+    sessions = [date(2024, 1, 2) + timedelta(days=i) for i in range(30)]
+    trading = [d for d in sessions if d.weekday() < 5 and d != date(2024, 1, 24)]
+    days = [_day(run, [100.0 + (i % 3)] * 390, session=d) for i, d in enumerate(trading)]
+    traded, skipped = run.run_instrument(days, both=False, exchange=run.Exchange.NYSE)
+    assert skipped.get("prior_session_missing") == 1
+    assert date(2024, 1, 25) not in {t.session for t in traded}

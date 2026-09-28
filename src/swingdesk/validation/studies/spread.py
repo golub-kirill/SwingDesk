@@ -54,6 +54,7 @@ from enum import StrEnum
 from itertools import pairwise
 
 from swingdesk.contracts.market import Bar
+from swingdesk.reference_data import calendar as cal
 
 #: Working precision for ln / exp / sqrt. Well beyond what a spread estimate means - the point is
 #: that it is DECLARED here rather than inherited from whatever context a caller happens to run in,
@@ -216,9 +217,14 @@ def estimate_instrument(
 
     Abdi-Ranaldo is aggregated by mean-then-root, because its identity holds in expectation over the
     product and in no other order. There is no median form of it to report.
+
+    **Both are TWO-DAY estimators, and two neighbouring stored bars are not always two days.** A
+    pair with a session missing between them spans three, and its range is wider for that alone,
+    so it is counted in `pairs_skipped` rather than estimated (`calendar.consecutive`).
     """
     if len(bars) < 2:
         return None
+    exchange = cal.exchange_for(bars[0].instrument_id)
 
     corwin_schultz: list[Decimal] = []
     products: list[Decimal] = []
@@ -226,6 +232,9 @@ def estimate_instrument(
     negatives = 0
 
     for previous, current in pairwise(bars):
+        if not cal.consecutive(exchange, previous.session_date, current.session_date):
+            skipped += 1
+            continue
         pair = corwin_schultz_pair(previous, current, adjust_overnight=adjust_overnight)
         product = abdi_ranaldo_pair_squared(previous, current)
         if pair is None or product is None:

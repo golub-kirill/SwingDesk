@@ -212,4 +212,22 @@ the specification after it would have to show.
 
 ## 10. Amendments
 
-None.
+### A-1 — 2026-09-27, AFTER the run: a night across a session the store lacked
+
+**What was wrong.** The runner paired each STORED session with the one stored before it. Where the
+store lacked a session, the next night ran from two closes back and carried that session's whole
+move, and so did the holding day. Here: `QQQ` lacked 2016-02-22, 2018-05-02 and 2018-05-03 - thin
+under the 90%-coverage rule - so 2016-02-23 and 2018-05-04 set their band from a close two and three
+sessions old. Found in an audit of the night studies the owner asked for; the same shape sat in five
+other places (`AGENTS.md` §12).
+
+**Fixed with a test** (`calendar.consecutive`): a session whose previous session the store lacks
+keeps its session arm and has no night or holding day. **Re-run at the registered instants, the
+branch is unchanged - `ACCEPT`:**
+
+* the primary `SPY-long` unchanged to the digit;
+* the reading `QQQ-long` +0.04053% [+0.02055%, +0.05990%] a day -> +0.04017% [+0.02002%, +0.05966%].
+
+`results/PR-031.json` is regenerated from the corrected code. The file as published is kept as
+`results/PR-031-as-published.json` - its `prereg` key renamed `preserved_from`, so the trial count
+reads the study once - and the report, which is never edited, carries the published figures.

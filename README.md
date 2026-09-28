@@ -405,7 +405,7 @@ record positions for entries THIS system placed that have since filled (DR-031).
 | `--as-of` | ISO instant this is recorded at; defaults to now |
 | `--dry-run` | say what would be recorded and record nothing |
 
-### The tools — 123 script(s), of which 36 are things you type
+### The tools — 124 script(s), of which 36 are things you type
 
 #### Operator tools — 36
 
@@ -477,7 +477,7 @@ Invoked by `python tools/check_gates.py`, not singly. Listed so a failing gate c
 | `python tools/verify_parameters.py` | Enforce the parameter-registry contract. | `--registry` |
 | `python tools/verify_transcription.py` | Verify that every `verbatim` claim in the documents still matches the course. | `--course-root` · `--docs` |
 
-#### Evidence-bound research runners — 74
+#### Evidence-bound research runners — 75
 
 Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions/measurements/` and reproduces it. They ran once, on a date. Nobody types these; they exist so a number can be re-derived.
 
@@ -486,6 +486,7 @@ Each is bound to a committed result in `docs/prereg/results/` or `docs/decisions
 | `python tools/attribute_pr014_flip.py` | Which of the two changes flipped `PR-014`'s verdict - the cost correction or the backfill. | `--result` · `--control` · `--published` |
 | `python tools/attribute_pr024.py` | `PR-024`, after the run: what dropped each entry, and is the answer the whole book or a few names? | `--data` · `--minutes` · `--quotes` · `--sample` · `--as-of` · `--minutes-as-of` · `--quotes-as-of` · `--resamples` · `--out` · `--report` |
 | `python tools/attribute_pr034.py --minutes --data` | EXPLORATORY: `PR-034`'s own arms, re-read by calendar year and by trailing window. | `--minutes` **(required)** · `--minutes-as-of` · `--data` **(required)** · `--as-of` · `--per-share` · `--out` |
+| `python tools/attribute_pr040.py --data --as-of --auctions --auctions-as-of` | EXPLORATORY: `PR-040`'s book against `SPY`, re-read by calendar year and by trailing window. | `--data` **(required)** · `--as-of` **(required)** · `--auctions` **(required)** · `--auctions-as-of` **(required)** · `--out` |
 | `python tools/measure_banding.py` | Does a buy/hold band pay for itself here? The one cost mitigation this project has not tried. | `--data` · `--rebalance` · `--out` |
 | `python tools/measure_benchmark.py` | Which index does relative strength measure AGAINST - and can the answer change a ranking at all? | `--data` · `--out` |
 | `python tools/measure_benchmark_fit.py` | Which index is the honest passive alternative to this universe? `rs.benchmark` is `assumed`. | `--data` · `--out` |

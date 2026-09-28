@@ -537,6 +537,40 @@ def morning_pass(run: Pass) -> int:
     return OK
 
 
+#: `DR-055` §1.3's proof (2): sixty sessions of the whole book with no machinery defect.
+PROOF_SESSIONS = 60
+
+
+def previous_session(exchange: Exchange, day: date) -> date | None:
+    """The last session before `day`, from the calendar."""
+    for back in range(1, 15):
+        earlier = day - timedelta(days=back)
+        if cal.session(exchange, earlier) is not None:
+            return earlier
+    return None
+
+
+def book_sessions(rows: Sequence[dict[str, Any]], exchange: Exchange) -> list[date]:
+    """Sessions the paper account carried the WHOLE book cleanly - what `DR-055`'s proof (2) counts.
+
+    Session D counts when `SPY` was held from D's opening auction to its closing one AND both small-
+    cap funds were held from the previous session's close into D's open, each leg journalled as a
+    priced row. A leg that did not fill, or whose exit did not match its buy, leaves no priced row
+    (`reconcile_nights`), so its session does not count. The day leg's row is keyed by the session
+    it was held in; a night leg's by the session it was bought in.
+    """
+    priced = {(date.fromisoformat(row["session"]), row["fund"]) for row in rows
+              if row.get("kind") == "night" and row.get("shares")}
+    out: list[date] = []
+    for day, fund in sorted(priced):
+        if fund != DAY_FUND:
+            continue
+        prior = previous_session(exchange, day)
+        if prior is not None and all((prior, leg) in priced for leg in FUNDS):
+            out.append(day)
+    return out
+
+
 def report(data: Path) -> int:
     """What the paper nights earned. Simulated fills - the curve, not the auction's cost."""
     path = night.ledger_path(data)
@@ -550,22 +584,29 @@ def report(data: Path) -> int:
         print(f"CARD-002 paper UNAVAILABLE: {unreadable}")
         return UNAVAILABLE
 
-    nights = [row for row in rows if row.get("kind") == "night" and row.get("shares")]
+    priced = [row for row in rows if row.get("kind") == "night" and row.get("shares")]
+    nights = [row for row in priced if row["fund"] != DAY_FUND]
+    days = [row for row in priced if row["fund"] == DAY_FUND]
     first_equity = next((Decimal(row["equity"]) for row in rows
                          if row.get("kind") == "sent" and row.get("equity")), None)
-    print(f"CARD-002 on the paper account - {len(nights)} fund-night(s) priced")
-    if nights:
-        pnls = [Decimal(row["pnl"]) for row in nights]
+    whole = book_sessions(rows, Exchange.NYSE)
+    print(f"CARD-002 on the paper account - {len(nights)} fund-night(s) priced, "
+          f"{len(days)} {DAY_FUND} day leg(s) priced")
+    print(f"  whole-book sessions {len(whole)} of the {PROOF_SESSIONS} DR-055's proof (2) needs"
+          + (f"   first {whole[0]}   last {whole[-1]}" if whole else ""))
+    if priced:
+        pnls = [Decimal(row["pnl"]) for row in priced]
         total = sum(pnls, Decimal(0))
-        worst = min(nights, key=lambda row: Decimal(row["pnl"]))
+        worst = min(priced, key=lambda row: Decimal(row["pnl"]))
         up = sum(1 for pnl in pnls if pnl > 0)
-        print(f"  first {nights[0]['session']}   last {nights[-1]['session']}")
-        print(f"  realised P&L  {total:+,.2f} USD   mean {total / len(pnls):+,.2f} a fund-night")
+        print(f"  first {priced[0]['session']}   last {priced[-1]['session']}")
+        print(f"  realised P&L  {total:+,.2f} USD   mean {total / len(pnls):+,.2f} a leg")
         if first_equity:
             print(f"  on the first night's equity ({first_equity:,.2f})  "
                   f"{total / first_equity * 100:+.2f}%")
         print(f"  up {up} / down {len(pnls) - up}   worst {Decimal(worst['pnl']):+,.2f} "
-              f"({worst['fund']}, night of {worst['session']})")
+              f"({worst['fund']}, {'the day' if worst['fund'] == DAY_FUND else 'the night'} of "
+              f"{worst['session']})")
     ledger = night.read(data)
     for session, fund in ledger.open_nights():
         print(f"  open     {fund}, night of {session}")

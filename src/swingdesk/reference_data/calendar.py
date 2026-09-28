@@ -11,7 +11,7 @@ than generating dates from rules.
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from functools import lru_cache
 from typing import Any, cast
 
@@ -141,6 +141,25 @@ def session(exchange: Exchange, on: date) -> ExchangeSession | None:
 
 def is_open(exchange: Exchange, on: date) -> bool:
     return session(exchange, on) is not None
+
+
+def consecutive(exchange: Exchange, earlier: date, later: date) -> bool:
+    """True when no session of `exchange` lies strictly between `earlier` and `later`.
+
+    **A stored series is not a calendar.** Pairing each stored session with the one stored before it
+    treats a session the store lacks as if it never happened: a night read from the close before a
+    missing session to the open after it carries that whole session's move, and a prior close two
+    sessions old sets a band nobody traded. Weekends and holidays are not gaps - the exchange was
+    shut - so this asks the calendar rather than counting days.
+    """
+    if later <= earlier:
+        return False
+    day = earlier + timedelta(days=1)
+    while day < later:
+        if session(exchange, day) is not None:
+            return False
+        day += timedelta(days=1)
+    return True
 
 
 def last_completed_session(exchange: Exchange, as_of: datetime,

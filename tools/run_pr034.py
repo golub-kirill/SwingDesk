@@ -147,7 +147,8 @@ def build(args: argparse.Namespace, resamples: int) -> dict[str, Any]:
     for fund in FUNDS:
         dividends = p33.dividends_of(bars, fund, bars_as_of)
         sessions, missing = load_sessions(minutes, fund, minutes_as_of, dividends)
-        night, inside, held = p33.returns_of(sessions, args.per_share)
+        night, inside, held = p33.returns_of(sessions, args.per_share,
+                                              exchange=cal.exchange_for(fund))
         by_arm[NIGHT][fund], by_arm[SESSION][fund], by_arm["hold"][fund] = night, inside, held
         if args.per_share == 0:
             identity[fund] = p33.adds_up(night, inside, held, dividends)

@@ -1,5 +1,4 @@
 {
-  "prereg": "PR-036",
   "trials": 0,
   "verdict": "inconclusive",
   "branch": "COST_FRAGILE",
@@ -271,7 +270,8 @@
   "reproduces_pr034": {
     "checked": true,
     "daily_bars_annual": 0.13262,
-    "minutes_annual": 0.13891,
-    "differ_by": 0.00629
-  }
+    "minutes_annual": 0.13834,
+    "differ_by": 0.00572
+  },
+  "preserved_from": "PR-036"
 }

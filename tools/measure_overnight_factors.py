@@ -44,6 +44,7 @@ import factor_attribution as fa
 import run_pr033 as p33
 import run_pr036 as p36
 from swingdesk.market_data import BarStore
+from swingdesk.reference_data import calendar as cal
 
 OUT = REPO / "docs" / "decisions" / "measurements" / "overnight-factor-alpha-2026-09-21.json"
 
@@ -62,7 +63,8 @@ def arms(store: BarStore, as_of: datetime) -> dict[str, dict[str, dict[date, flo
     """Each fund's night, session and holding series from the stored daily bars."""
     out: dict[str, dict[str, dict[date, float]]] = {"night": {}, "session": {}, "hold": {}}
     for fund in p36.FUNDS:
-        night, session, held = p33.returns_of(p36.sessions_from_bars(store, fund, as_of), 0.005)
+        night, session, held = p33.returns_of(p36.sessions_from_bars(store, fund, as_of), 0.005,
+                                             exchange=cal.exchange_for(fund))
         out["night"][fund], out["session"][fund], out["hold"][fund] = night, session, held
     return out
 

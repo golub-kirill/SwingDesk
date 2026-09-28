@@ -215,4 +215,29 @@ about −35%.
 
 ## 10. Amendments
 
-None.
+### A-1 — 2026-09-27, AFTER the run: a night across a session the store lacked
+
+**What was wrong.** The runner paired each STORED session with the one stored before it. Where the
+store lacked a session, the next night ran from two closes back and carried that session's whole
+move, and so did the holding day. Here: `VB` and `SPY` each lacked 2019-08-12 - no closing minute -
+so their nights into 2019-08-13, and `SPY`'s holding day, ran from 2019-08-09's close. Separately,
+the session count was the length of `SPY`'s holding series rather than the calendar's, so the
+published `night-small-caps` cell already read a complete share of 1.00037; once the fix shortened
+that series by a day every cell over it would have. `sessions` is now the calendar's count, as
+`PR-034`'s is. Found in an audit of the night studies the owner asked for; the same shape sat in
+five other places (`AGENTS.md` §12).
+
+**Fixed with a test** (`calendar.consecutive`): a session whose previous session the store lacks
+keeps its session arm and has no night or holding day. **Re-run at the registered instants, the
+branch is unchanged - `COST_FRAGILE`:**
+
+* the primary `combined-less-hold-SPY` +0.01288% [+0.00019%, +0.02717%] a day -> +0.01275%
+  [+0.00003%, +0.02709%];
+* the gate `combined-less-hold-SPY-cost_adverse` +0.00138% [-0.01127%, +0.01573%] a day -> +0.00126%
+  [-0.01140%, +0.01564%];
+* the gate `combined-less-hold-SPY-recent` unchanged to the digit;
+* the reading `combined` +0.07511% [+0.04138%, +0.11204%] a day -> +0.07534% [+0.04160%, +0.11220%].
+
+`results/PR-035.json` is regenerated from the corrected code. The file as published is kept as
+`results/PR-035-as-published.json` - its `prereg` key renamed `preserved_from`, so the trial count
+reads the study once - and the report, which is never edited, carries the published figures.

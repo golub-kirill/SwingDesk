@@ -93,7 +93,7 @@ def test_the_verdict_speaks_the_project_s_vocabulary(run) -> None:
 # --- end to end -------------------------------------------------------------------------------------
 
 
-def _stores(run, tmp_path):
+def _stores(run, tmp_path, skip=None):
     from swingdesk.contracts.market import CorporateAction, CorporateActionKind
     from swingdesk.market_data import BarStore
     from swingdesk.market_data.minutes import Minute, MinuteStore
@@ -106,6 +106,8 @@ def _stores(run, tmp_path):
     store = MinuteStore(tmp_path / "minutes.duckdb")
     for n, s in enumerate(days):
         for fund in funds:
+            if skip == (fund, n):
+                continue
             session = session_for(fund, s.session_date)
             length = int((session.close_time - session.open_time) / timedelta(minutes=1))
             base = 100 + n * 0.3
@@ -200,3 +202,21 @@ def test_the_benchmark_cell_is_holding_spy_not_a_leg_of_it(run, tmp_path, monkey
     assert held == pytest.approx(fmean(series["hold"].values()) * 252)
     assert held != pytest.approx(fmean(series["spy_night"].values()) * 252), \
         "the benchmark is not SPY's night"
+
+
+def test_a_session_missing_from_spy_counts_against_the_calendar_not_a_series(run, tmp_path,
+                                                                            monkeypatch) -> None:
+    """SPY's minutes lack one session: its night and holding day go, the book keeps that day.
+    A share read against SPY's own series then exceeded one; against the calendar it cannot."""
+    import argparse
+
+    import run_pr033 as p33
+
+    path, known, days = _stores(run, tmp_path, skip=(run.DAY_FUND, 40))
+    monkeypatch.setattr(p33, "START", days[0].session_date)
+    monkeypatch.setattr(p33, "END", days[-1].session_date)
+    built = run.build(argparse.Namespace(
+        minutes=path / "minutes.duckdb", minutes_as_of=known.isoformat(), data=path,
+        as_of=known.isoformat(), per_share=0.0), 50)
+    assert max(cell["complete_share"] for cell in built["cells"].values()) <= 1.0
+    assert built["cells"][run.COMBINED]["sessions"] == len(days) - 1

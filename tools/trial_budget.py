@@ -411,6 +411,16 @@ SIDE_RECORDS = {
                           "that drop an entry only for what the primary needs, and the shape of "
                           "the difference. No moment, exit, cost or sample is added; its "
                           "registered population reproduces PR-024.json to the digit",
+    **{f"PR-03{n}-as-published": (
+        f"no new trials: PR-03{n}'s result file AS PUBLISHED, kept when the 2026-09-27 calendar "
+        f"guard regenerated it (the registration's amendment gives both sets of figures). The same "
+        f"configurations, counted once in PR-03{n}.json; its prereg key is renamed so this reads "
+        f"as the record it is, not a second run") for n in (1, 3, 4, 5, 6)},
+    "PR-040-attribution": "no trials: an EXPLORATORY re-reading of PR-040's registered book by "
+                          "calendar year and by the trailing 12, 24, 36 and 48 months, with the "
+                          "registered bootstrap's width for the 48 the registration read by sign "
+                          "only. Every window is fixed in the tool, no fund, price, cost or rule "
+                          "is added, and nothing carries a verdict",
 }
 
 

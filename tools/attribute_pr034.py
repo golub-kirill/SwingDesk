@@ -38,6 +38,7 @@ import run_pr033 as p33
 import run_pr034 as p34
 from swingdesk.market_data import BarStore
 from swingdesk.market_data.minutes import MinuteStore
+from swingdesk.reference_data import calendar as cal
 
 RESULT = p31.RESULTS / "PR-034-attribution.json"
 
@@ -56,7 +57,8 @@ def arms(args: argparse.Namespace) -> dict[str, dict[date, float]]:
     for fund in p34.SMALL:
         dividends = p33.dividends_of(bars, fund, bars_as_of)
         sessions, _ = p34.load_sessions(minutes, fund, minutes_as_of, dividends)
-        night, inside, held = p33.returns_of(sessions, args.per_share)
+        night, inside, held = p33.returns_of(sessions, args.per_share,
+                                              exchange=cal.exchange_for(fund))
         by_arm[p34.NIGHT][fund], by_arm[p34.SESSION][fund], by_arm["hold"][fund] = (
             night, inside, held)
     minutes.close()

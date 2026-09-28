@@ -847,3 +847,32 @@ def test_the_day_leg_is_priced_at_the_next_close_pass(paper, tmp_path) -> None:
     _close(paper, venue, tmp_path, now=datetime(2026, 9, 30, 19, 40, tzinfo=UTC))
     legs = {(row["session"], row["fund"]): row for row in _rows(tmp_path) if row["kind"] == "night"}
     assert legs[("2026-09-29", "SPY")]["pnl"] == "500.00"   # 250 x (403 - 401)
+
+
+# --- DR-055 proof (2): what counts as a session of the whole book ---------------------------------
+
+
+def _priced(session: str, fund: str, shares: int = 100) -> dict:
+    return {"kind": "night", "session": session, "fund": fund, "shares": shares, "pnl": "1.00"}
+
+
+def test_a_whole_book_session_is_the_night_into_it_and_its_own_day_leg(paper) -> None:
+    """Tuesday counts: IJR and VB bought at Monday's close and sold at Tuesday's open, SPY held
+    through Tuesday. Monday does not - nothing was held the night before it."""
+    rows = [_priced("2026-09-28", "IJR"), _priced("2026-09-28", "VB"),
+            _priced("2026-09-29", "SPY"), _priced("2026-09-28", "SPY")]
+    assert paper.book_sessions(rows, paper.Exchange.NYSE) == [TUESDAY]
+
+
+def test_a_session_missing_any_leg_does_not_count(paper) -> None:
+    whole = [_priced("2026-09-28", "IJR"), _priced("2026-09-28", "VB"), _priced("2026-09-29", "SPY")]
+    for missing in range(3):
+        rows = whole[:missing] + whole[missing + 1:]
+        assert paper.book_sessions(rows, paper.Exchange.NYSE) == []
+    unfilled = [*whole[:2], {**whole[2], "shares": 0}]
+    assert paper.book_sessions(unfilled, paper.Exchange.NYSE) == [], "a day leg that never filled"
+
+
+def test_the_night_before_a_monday_is_fridays(paper) -> None:
+    rows = [_priced("2026-09-25", "IJR"), _priced("2026-09-25", "VB"), _priced("2026-09-28", "SPY")]
+    assert paper.book_sessions(rows, paper.Exchange.NYSE) == [MONDAY]

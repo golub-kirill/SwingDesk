@@ -21,7 +21,10 @@ from types import ModuleType
 
 import pytest
 
+from swingdesk.contracts.reference import Exchange
+
 REPO = Path(__file__).resolve().parents[1]
+NYSE = Exchange.NYSE
 
 
 @pytest.fixture(scope="module")
@@ -46,7 +49,7 @@ def _sessions(run, rows):
 
 def test_the_night_is_close_to_open_and_the_session_open_to_close(run) -> None:
     sessions = _sessions(run, [(100.0, 110.0, 0.0), (121.0, 121.0, 0.0)])
-    night, inside, _ = run.returns_of(sessions, per_share=0.0)
+    night, inside, _ = run.returns_of(sessions, per_share=0.0, exchange=NYSE)
     day = sessions[1].session
     assert night[day] == pytest.approx(0.1)
     assert inside[day] == pytest.approx(0.0)
@@ -55,7 +58,7 @@ def test_the_night_is_close_to_open_and_the_session_open_to_close(run) -> None:
 def test_the_dividend_is_paid_to_the_overnight_arm_and_not_the_session(run) -> None:
     """The fund opens a dollar lower on its ex-date; the dollar went to whoever held it overnight."""
     sessions = _sessions(run, [(100.0, 100.0, 0.0), (99.0, 99.0, 1.0)])
-    night, inside, held = run.returns_of(sessions, per_share=0.0)
+    night, inside, held = run.returns_of(sessions, per_share=0.0, exchange=NYSE)
     day = sessions[1].session
     assert night[day] == pytest.approx(0.0), "down a dollar, paid a dollar"
     assert inside[day] == pytest.approx(0.0)
@@ -64,7 +67,7 @@ def test_the_dividend_is_paid_to_the_overnight_arm_and_not_the_session(run) -> N
 
 def test_holding_earns_the_dividend_too_and_pays_no_daily_cost(run) -> None:
     sessions = _sessions(run, [(100.0, 100.0, 0.0), (99.0, 101.0, 1.0)])
-    night, _, held = run.returns_of(sessions, per_share=0.01)
+    night, _, held = run.returns_of(sessions, per_share=0.01, exchange=NYSE)
     day = sessions[1].session
     assert held[day] == pytest.approx(0.02)
     assert night[day] == pytest.approx(-0.0002)
@@ -72,15 +75,35 @@ def test_holding_earns_the_dividend_too_and_pays_no_daily_cost(run) -> None:
 
 def test_each_arm_pays_two_sides_over_the_price_it_bought_at(run) -> None:
     sessions = _sessions(run, [(100.0, 200.0, 0.0), (200.0, 200.0, 0.0)])
-    night, inside, _ = run.returns_of(sessions, per_share=0.5)
+    night, inside, _ = run.returns_of(sessions, per_share=0.5, exchange=NYSE)
     day = sessions[1].session
     assert night[day] == pytest.approx(-2 * 0.5 / 200.0), "bought at the 200 close"
     assert inside[day] == pytest.approx(-2 * 0.5 / 200.0), "bought at the 200 open"
 
 
+def test_a_session_missing_from_the_store_is_not_folded_into_the_next_night(run) -> None:
+    """Thursday 2024-01-04 is a session the store lacks. Friday's night would otherwise run from
+    Wednesday's close and carry Thursday's whole move - here a 10% rally nobody held overnight."""
+    stored = [run.Session(session=date(2024, 1, 3), open=100.0, close=100.0, dividend=0.0),
+              run.Session(session=date(2024, 1, 5), open=110.0, close=111.1, dividend=0.0)]
+    night, inside, held = run.returns_of(stored, per_share=0.0, exchange=NYSE)
+    friday = date(2024, 1, 5)
+    assert friday not in night, "a night across a missing session is not a night"
+    assert friday not in held, "nor is a holding day"
+    assert inside[friday] == pytest.approx(0.01), "Friday's own session needs only Friday"
+
+
+def test_a_weekend_is_not_a_missing_session(run) -> None:
+    stored = [run.Session(session=date(2024, 1, 5), open=100.0, close=100.0, dividend=0.0),
+              run.Session(session=date(2024, 1, 8), open=101.0, close=101.0, dividend=0.0)]
+    night, _, held = run.returns_of(stored, per_share=0.0, exchange=NYSE)
+    assert night[date(2024, 1, 8)] == pytest.approx(0.01)
+    assert held[date(2024, 1, 8)] == pytest.approx(0.01)
+
+
 def test_the_first_session_has_no_night(run) -> None:
     sessions = _sessions(run, [(100.0, 100.0, 0.0), (100.0, 100.0, 0.0)])
-    night, _, _ = run.returns_of(sessions, per_share=0.0)
+    night, _, _ = run.returns_of(sessions, per_share=0.0, exchange=NYSE)
     assert list(night) == [sessions[1].session]
 
 
@@ -193,7 +216,7 @@ def test_the_power_mode_writes_widths_and_no_level(run, tmp_path, monkeypatch) -
 def test_the_two_arms_multiply_back_to_holding(run) -> None:
     """§9's first check: same two prices, so on a session with no dividend they must agree."""
     sessions = _sessions(run, [(100.0, 103.0, 0.0), (101.0, 107.0, 0.0), (99.0, 104.0, 0.0)])
-    night, inside, held = run.returns_of(sessions, per_share=0.0)
+    night, inside, held = run.returns_of(sessions, per_share=0.0, exchange=NYSE)
     assert run.adds_up(night, inside, held, {}) < 1e-12
     broken = {day: value + 0.001 for day, value in inside.items()}
     assert run.adds_up(night, broken, held, {}) > 1e-4
@@ -202,7 +225,7 @@ def test_the_two_arms_multiply_back_to_holding(run) -> None:
 def test_an_ex_dividend_session_is_left_out_of_that_check(run) -> None:
     """Compounding reinvests the dividend at the open, holding takes it as cash: not an identity."""
     sessions = _sessions(run, [(100.0, 100.0, 0.0), (99.0, 105.0, 1.0)])
-    night, inside, held = run.returns_of(sessions, per_share=0.0)
+    night, inside, held = run.returns_of(sessions, per_share=0.0, exchange=NYSE)
     day = sessions[1].session
     assert run.adds_up(night, inside, held, {}) > 1e-4, "it does not hold on an ex-date"
     assert run.adds_up(night, inside, held, {day: 1.0}) == 0.0, "so the ex-date is skipped"
