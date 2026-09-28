@@ -2,6 +2,9 @@
 
 **Status:** drafting · **Tier:** 6 (engineering)
 
+**Every scheduled task was switched off on 2026-09-28 (`DR-058`).** The procedures below describe
+the system while it ran; `DR-058` §5 says how to resume it.
+
 <!-- verbatim-sources: Module_33_Skrinery_v5.0.pdf -->
 
 One procedure per row of the fail-closed degradation table (`FAIL_CLOSED_POLICY.md` §2). The course

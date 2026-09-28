@@ -56,6 +56,13 @@ from swingdesk.platform.schedule import query_task as _query
 #: copy of it. `tests/test_gates.py` still reads `verdict`, `DIAGNOSED` and `CLEAN_RESULTS` here.
 UNAVAILABLE_EXIT = 4
 
+#: The decision that stopped the schedule, or None while it is meant to run. `DR-058`: the owner
+#: stopped the research and the paper book on 2026-09-28 and every task was switched off, so a
+#: disabled task is the ruling working, not a fault. Everything else is still judged: a crash of a
+#: run that did happen, and a trigger that passed with no run on a task still scheduled - the two
+#: passes that flatten the paper book were left to run once more, and a missed one leaves it held.
+STOPPED_BY: str | None = "DR-058"
+
 
 def main() -> int:
     if sys.platform != "win32":
@@ -84,7 +91,9 @@ def main() -> int:
         for field, (needle, consequence) in HAZARDS.items():
             if needle in (record.get(field) or ""):
                 print(f"      NOTE        {consequence} ({field}: {needle})")
-        if state.lower() != "enabled":
+        if STOPPED_BY is not None:
+            print(f"      NOTE        stopped by {STOPPED_BY}: a disabled state is not judged")
+        elif state.lower() != "enabled":
             failures.append(f"{task}: scheduled state is {state!r}, not Enabled")
         judgement, phrase = verdict(last_result)
         if judgement == "pending":

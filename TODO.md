@@ -7,6 +7,12 @@
 This is the **only** place open and pending work is listed. If a task is not here, it is not tracked.
 Sessions add and close items here; nowhere else keeps a parallel list.
 
+## STOPPED 2026-09-28 - every item below is parked, not open
+
+**The owner stopped the research and the paper book (`DR-058`).** Nothing below is being worked,
+and none of it is due. It is kept, not closed, because an item closed without its lesson promoted
+is lost (`AGENTS.md` §10.7). If the project resumes, re-read an item before trusting it.
+
 ## The rule this file lives under
 
 **This file holds work items. It never holds measured counts.** `AGENTS.md` §10.5 gives every
