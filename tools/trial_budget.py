@@ -202,6 +202,11 @@ EXPLORATORY = {
 #: Exploratory measurements that spend nothing, and why. Same distinction `NO_SPEND` draws for
 #: pre-registrations: a cost or execution input has no Sharpe to deflate.
 NO_SPEND_MEASUREMENTS = {
+    "after-tax-2026-09-27": "PR-040's registered book and SPY held, re-read through a yearly "
+                            "Canadian tax model over a fixed grid of marginal rates and both "
+                            "treatments. A cost applied to a counted configuration, not a new one: "
+                            "no fund, price, rule or window is chosen, and every cell of the grid "
+                            "is reported",
     "ambiguous-bar": "which LEG printed first on a session that reached both - a property of the "
                      "price path, not a configuration of a strategy. It evaluates no rule, "
                      "compares no return and selects nothing; it says how often DR-042's tie-break "

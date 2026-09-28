@@ -1,0 +1,203 @@
+{
+  "measurement": "after-tax-2026-09-27",
+  "of": "PR-040",
+  "exploratory": true,
+  "note": "arithmetic on PR-040's registered book under stated tax assumptions; not tax advice. Capital-gains rows are OPTIMISTIC for the book: the superficial loss rule, which would defer its losses, is not modelled. USD returns; currency and conversion costs are left out",
+  "as_of": {
+    "bars": "2026-09-27T16:22:36.363912+00:00",
+    "auctions": "2026-09-27T21:12:04+00:00"
+  },
+  "capital_inclusion": 0.5,
+  "whole_window": {
+    "first": "2016-01-05",
+    "last": "2026-09-18",
+    "rows": [
+      {
+        "rate": 0.0,
+        "treatment": "capital_gains",
+        "book_cagr": 0.2019008004324756,
+        "spy_cagr_sold_at_end": 0.151107548008786,
+        "spy_cagr_still_held": 0.151107548008786,
+        "excess_vs_sold": 0.04412554892160414,
+        "excess_vs_held": 0.04412554892160414
+      },
+      {
+        "rate": 0.0,
+        "treatment": "business_income",
+        "book_cagr": 0.2019008004324756,
+        "spy_cagr_sold_at_end": 0.151107548008786,
+        "spy_cagr_still_held": 0.151107548008786,
+        "excess_vs_sold": 0.04412554892160414,
+        "excess_vs_held": 0.04412554892160414
+      },
+      {
+        "rate": 0.2,
+        "treatment": "capital_gains",
+        "book_cagr": 0.18064547119521457,
+        "spy_cagr_sold_at_end": 0.1397807236658739,
+        "spy_cagr_still_held": 0.14761614219316055,
+        "excess_vs_sold": 0.03585316603522437,
+        "excess_vs_held": 0.028780815978183272
+      },
+      {
+        "rate": 0.2,
+        "treatment": "business_income",
+        "book_cagr": 0.1626465948714666,
+        "spy_cagr_sold_at_end": 0.1397807236658739,
+        "spy_cagr_still_held": 0.14761614219316055,
+        "excess_vs_sold": 0.02006164056894133,
+        "excess_vs_held": 0.013097108105835753
+      },
+      {
+        "rate": 0.3,
+        "treatment": "capital_gains",
+        "book_cagr": 0.16998353410910383,
+        "spy_cagr_sold_at_end": 0.13386229201629574,
+        "spy_cagr_still_held": 0.1458702794409632,
+        "excess_vs_sold": 0.03185681572369359,
+        "excess_vs_held": 0.021043616455350245
+      },
+      {
+        "rate": 0.3,
+        "treatment": "business_income",
+        "book_cagr": 0.14283643440840743,
+        "spy_cagr_sold_at_end": 0.13386229201629574,
+        "spy_cagr_still_held": 0.1458702794409632,
+        "excess_vs_sold": 0.007914666935570525,
+        "excess_vs_held": -0.002647633931160076
+      },
+      {
+        "rate": 0.4,
+        "treatment": "capital_gains",
+        "book_cagr": 0.15929768334239158,
+        "spy_cagr_sold_at_end": 0.1277532104900878,
+        "spy_cagr_still_held": 0.14412430928496134,
+        "excess_vs_sold": 0.0279710778554072,
+        "excess_vs_held": 0.013261997786685464
+      },
+      {
+        "rate": 0.4,
+        "treatment": "business_income",
+        "book_cagr": 0.12289527627539609,
+        "spy_cagr_sold_at_end": 0.1277532104900878,
+        "spy_cagr_still_held": 0.14412430928496134,
+        "excess_vs_sold": -0.004307621711474141,
+        "excess_vs_held": -0.018554830832003488
+      },
+      {
+        "rate": 0.5,
+        "treatment": "capital_gains",
+        "book_cagr": 0.14858706683097544,
+        "spy_cagr_sold_at_end": 0.12143523113034305,
+        "spy_cagr_still_held": 0.1423782310894388,
+        "excess_vs_sold": 0.024211684230095898,
+        "excess_vs_held": 0.005435008802308516
+      },
+      {
+        "rate": 0.5,
+        "treatment": "business_income",
+        "book_cagr": 0.10281549346319885,
+        "spy_cagr_sold_at_end": 0.12143523113034305,
+        "spy_cagr_still_held": 0.1423782310894388,
+        "excess_vs_sold": -0.016603489127389515,
+        "excess_vs_held": -0.034631907847640475
+      }
+    ]
+  },
+  "last_48_months": {
+    "first": "2022-10-03",
+    "last": "2026-09-18",
+    "rows": [
+      {
+        "rate": 0.0,
+        "treatment": "capital_gains",
+        "book_cagr": 0.2358519273895756,
+        "spy_cagr_sold_at_end": 0.22681648949698174,
+        "spy_cagr_still_held": 0.22681648949698174,
+        "excess_vs_sold": 0.0073649465669463066,
+        "excess_vs_held": 0.0073649465669463066
+      },
+      {
+        "rate": 0.0,
+        "treatment": "business_income",
+        "book_cagr": 0.2358519273895756,
+        "spy_cagr_sold_at_end": 0.22681648949698174,
+        "spy_cagr_still_held": 0.22681648949698174,
+        "excess_vs_sold": 0.0073649465669463066,
+        "excess_vs_held": 0.0073649465669463066
+      },
+      {
+        "rate": 0.2,
+        "treatment": "capital_gains",
+        "book_cagr": 0.2104718051912684,
+        "spy_cagr_sold_at_end": 0.20738326730345946,
+        "spy_cagr_still_held": 0.22382155316464858,
+        "excess_vs_sold": 0.0025580426459832495,
+        "excess_vs_held": -0.01090824715323846
+      },
+      {
+        "rate": 0.2,
+        "treatment": "business_income",
+        "book_cagr": 0.18855365558318238,
+        "spy_cagr_sold_at_end": 0.20738326730345946,
+        "spy_cagr_still_held": 0.22382155316464858,
+        "excess_vs_sold": -0.015595388995518156,
+        "excess_vs_held": -0.02881784316534375
+      },
+      {
+        "rate": 0.3,
+        "treatment": "capital_gains",
+        "book_cagr": 0.19779363254624416,
+        "spy_cagr_sold_at_end": 0.19737393083735144,
+        "spy_cagr_still_held": 0.22232440320092217,
+        "excess_vs_sold": 0.0003505184955874263,
+        "excess_vs_held": -0.020068952718639066
+      },
+      {
+        "rate": 0.3,
+        "treatment": "business_income",
+        "book_cagr": 0.16493724756714467,
+        "spy_cagr_sold_at_end": 0.19737393083735144,
+        "spy_cagr_still_held": 0.22232440320092217,
+        "excess_vs_sold": -0.02708985258057439,
+        "excess_vs_held": -0.046949202260461065
+      },
+      {
+        "rate": 0.4,
+        "treatment": "capital_gains",
+        "book_cagr": 0.18512303226842408,
+        "spy_cagr_sold_at_end": 0.1871548261613536,
+        "spy_cagr_still_held": 0.22082746529766428,
+        "excess_vs_sold": -0.0017114818119379205,
+        "excess_vs_held": -0.029246092543088964
+      },
+      {
+        "rate": 0.4,
+        "treatment": "business_income",
+        "book_cagr": 0.14133981101274395,
+        "spy_cagr_sold_at_end": 0.1871548261613536,
+        "spy_cagr_still_held": 0.22082746529766428,
+        "excess_vs_sold": -0.03859228311167451,
+        "excess_vs_held": -0.06510965434869165
+      },
+      {
+        "rate": 0.5,
+        "treatment": "capital_gains",
+        "book_cagr": 0.17245972205838522,
+        "spy_cagr_sold_at_end": 0.17671375715892057,
+        "spy_cagr_still_held": 0.21933073939819758,
+        "excess_vs_sold": -0.003615182600402611,
+        "excess_vs_held": -0.038439953841355345
+      },
+      {
+        "rate": 0.5,
+        "treatment": "business_income",
+        "book_cagr": 0.11775894171253931,
+        "spy_cagr_sold_at_end": 0.17671375715892057,
+        "spy_cagr_still_held": 0.21933073939819758,
+        "excess_vs_sold": -0.050101237525022935,
+        "excess_vs_held": -0.08330126880569677
+      }
+    ]
+  }
+}

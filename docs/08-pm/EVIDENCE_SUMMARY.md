@@ -1752,3 +1752,50 @@ regenerated from the corrected code, and the published ones are kept beside them
 **What moved nothing is the finding.** The evidence under the main hypothesis was reproduced, and
 recomputed by code that shares nothing with it. The defect found was real, and it was worth a few
 thousandths of a percent a day.
+
+## 41. Before tax the book beats the index; taxed as a trading business - even inside a TFSA - it does not
+
+**Measured 2026-09-27** (`tools/measure_after_tax.py`,
+`docs/decisions/measurements/after-tax-2026-09-27.json`). This is arithmetic on `PR-040`'s
+registered book under a stated tax model, and it spends no trial. **Nothing here is tax advice.**
+
+**Corrected by the owner the same evening: the money is held in a TFSA**, not in a taxable account
+as `CARD-002` §7 had recorded since 2026-09-20. A TFSA pays no tax on investment income, so the
+pre-tax row below is the owner's. There are two exceptions, and this project did not invent either:
+
+* **A TFSA that carries on a business of trading is taxed on it.** In *Ahamed v. The King*, 2023
+  TCC 17, the profits of frequent, short-held trading inside a TFSA were business income and
+  taxable. The Federal Court of Appeal upheld that in *Canadian Western Trust Co. v. The King*,
+  2024 FCA 108. The book trades both auctions every session and holds nothing longer than a night
+  or a day. **Whether that is a business is an accountant's question.** If it is, the
+  business-income rows below are its cost, at the rate the TFSA itself is taxed.
+* **US dividends lose 15% to withholding inside a TFSA, and it cannot be recovered**: the tax treaty
+  exempts RRSPs and not TFSAs. That touches both sides of the comparison. The book collects `IJR`'s
+  and `VB`'s dividends on the nights it holds them, and `SPY` held collects `SPY`'s. At about 0.2
+  points a year each they roughly cancel, and they are not modelled.
+
+In a taxable account, the book realises every gain in the year it is made, while holding `SPY` pays
+tax on its dividends yearly and on its price gain only when sold. A TFSA the CRA treats as a
+business is taxed in the business-income rows:
+
+| geometric excess of the book over `SPY` held, a year | 2016-2026 | last 48 months |
+|---|---|---|
+| before tax - a TFSA that is NOT a business | **+4.41%** | **+0.74%** |
+| 30% marginal rate, the book as capital gains | +2.10% | −2.01% |
+| 30% marginal rate, the book as business income | **−0.26%** | **−4.69%** |
+| 40% marginal rate, capital gains | +1.33% | −2.92% |
+| 40% marginal rate, business income | −1.86% | −6.51% |
+
+**Once taxed, the book trails holding `SPY` over the last four years at every rate and under both
+treatments tested. Over the decade it keeps a margin only as capital gains**, and those rows are
+**optimistic**: the model leaves out the superficial loss rule. That rule defers a loss on shares
+bought back within thirty days, and the book buys the same two funds back every evening. Against
+`SPY` sold at the window's end rather than still held, every margin is larger — 0.7 to 1.9
+points over the decade — because the sale's tax is charged too; over the last four years that
+leaves the book a hair ahead in two cells (capital gains at 20% and 30%, +0.26% and +0.04%) and
+behind in the rest. The whole grid, 20% to 50% and both comparisons, is in the measurement file.
+
+**What it means for the main hypothesis.** `DR-055`'s proofs are both pre-tax, and in the owner's
+TFSA the pre-tax figures are the owner's - **unless the activity is a business**, in which case the
+book earns its owner less than holding the index. That one question, for an accountant, decides
+whether proof (1) is worth money.
