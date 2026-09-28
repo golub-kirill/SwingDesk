@@ -2003,7 +2003,9 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       3. **The book re-measured weekly** over the trailing 48 months (`tools/remeasure.py`, no
          trial, every point recorded - `AGENTS.md` §19.7). Needs `IJR`'s and `VB`'s dividends in
          the live store, which carries them for nine instruments only.
-      4. **Tax-loss harvesting** - how much a harvesting rule on an index holding defers, over
+      4. ~~**Tax-loss harvesting**~~ - **DEFERRED 2026-09-28** (`RETURN_SOURCE_REGISTER` §3.6):
+         a harvested loss pays only against other realised gains, and the owner has none yet.
+         As first written: how much a harvesting rule on an index holding defers, over
          2020-2026 at the owner's rates, with Canada's superficial loss rule (a loss is denied when
          the SAME property is bought back within 30 days) and a switch to a similar, non-identical
          fund. A registration: the rule's threshold is chosen before the run. Then, if it pays, a
