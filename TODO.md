@@ -1980,12 +1980,12 @@ Each of these is a silent wrong-answer generator: a session reads one, acts, and
       a minimal real check of the auction fills was offered and declined.
       4. **Both proofs are PRE-TAX, and after tax the book may not beat the index at all.**
          **MEASURED 2026-09-27** (`docs/decisions/measurements/after-tax-2026-09-27.json`,
-         `EVIDENCE_SUMMARY` §41): on the owner's taxable account the book trails `SPY` held over
-         the last 48 months at every tested marginal rate and under both treatments, and keeps a
-         decade margin only as capital gains - rows that are optimistic because the superficial
-         loss rule is not modelled. **Open, and the owner's: an accountant's answer** on whether
-         daily round trips are capital gains or business income, and on how any other kind of
-         account would treat them. That answer decides whether proof (1) is worth money.
+         `EVIDENCE_SUMMARY` §41): once taxed, the book trails `SPY` held over the last 48 months at
+         every tested rate and treatment. **The owner's money is in a TFSA** (owner, 2026-09-27),
+         which pays no tax - unless it carries on a business of trading, which *Ahamed*, 2023 TCC
+         17, upheld at 2024 FCA 108, taxed as business income. **Open, and the owner's: an
+         accountant's answer** on whether the book's daily round trips inside a TFSA are a
+         business. That answer decides whether proof (1) is worth money.
 
 - [ ] **`[v]` A STUDY'S EXCLUSIONS MUST BE PER READING — `PR-024`'s runner dropped an entry from the
       verdict when an UNREAD arm or a perturbation failed.** `run_pr024.price_entry` returns the

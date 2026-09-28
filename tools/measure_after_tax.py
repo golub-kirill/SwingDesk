@@ -1,9 +1,12 @@
-"""`PR-040`'s book against holding `SPY` after Canadian tax on a taxable account. A measurement.
+"""`PR-040`'s book against holding `SPY` after Canadian tax, as a taxed account would pay it. A measurement.
 
-**Why this exists.** `PR-040` measured the book before tax. The owner's real account is TAXABLE and
-funded in Canadian dollars (`CARD-002` §7 item 3), and the two things compared are taxed on
-different clocks: the book turns over every session, so every gain it makes is realised in the year
-it is made, while `SPY` held pays tax on its dividends yearly and on its price gain only when sold.
+**Why this exists.** `PR-040` measured the book before tax. The owner's money is held in a TFSA
+(owner, 2026-09-27), which pays no tax on investment income - unless it carries on a business of
+trading, which *Ahamed v. The King*, 2023 TCC 17 (upheld, 2024 FCA 108) taxed as business income.
+The book trades both auctions every session, so that is a live question, and when it applies the
+two things compared are taxed on different clocks: the book turns over every session, so every
+gain it makes is realised in the year it is made, while `SPY` held pays tax on its dividends
+yearly and on its price gain only when sold.
 A pre-tax margin can be a post-tax loss, and nothing in this project had measured which.
 
 **What it computes.** The registered book at the crosses and the fees, and `SPY` held, as

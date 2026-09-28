@@ -56,6 +56,8 @@ of the share price, these funds traded at about a third of today's price in that
 same cent cost 2.6× more. **So the card's edge is a cost question at least as much as a signal
 question**, and the twenty sessions in §7 are what settles it.
 
+**CORRECTED 2026-09-27 by the owner: the money is held in a TFSA** - see §7 item 3 and
+`EVIDENCE_SUMMARY` §41; the paragraph below is the 2026-09-20 record.
 **Tax, stated correctly for THIS owner and not for a textbook.** The owner holds a TAXABLE account
 and funds it in Canadian dollars (owner, 2026-09-20). The American framing an adviser reached for —
 short-term versus long-term capital gains — **does not apply**: Canada does not distinguish them.
@@ -205,7 +207,12 @@ behind the same four guards `DR-027` §4 already imposes.
 
 **Ruled 2026-09-20, the same evening, and each one changes what happens next:**
 
-3. **The account is TAXABLE and funded in Canadian dollars.** See §2 — the consequence is a question
+3. ~~**The account is TAXABLE and funded in Canadian dollars.**~~ **CORRECTED 2026-09-27 by the
+   owner: the money is held in a TFSA** (*"ya derzh na TFSA, so 0tax"*). No tax on investment
+   income - unless the TFSA carries on a business of trading, which *Ahamed v. The King*, 2023 TCC
+   17, upheld at 2024 FCA 108, taxed as business income; and US dividends lose an unrecoverable
+   15% to withholding there. `EVIDENCE_SUMMARY` §41 measures what taxation as a business would
+   cost. As recorded on 2026-09-20: see §2 — the consequence is a question
    for an accountant at scale, not a blocker at measurement size.
 4. **The owner can add about CAD 500 a month.** This is the largest single lever in the whole
    project and it is recorded here because no study can move it: at this rate, five years of
